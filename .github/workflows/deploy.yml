@@ -144,10 +144,11 @@ jobs:
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml pull --ignore-buildable
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml up -d --build --remove-orphans
 
-            # Caddy only reads its config at startup — the Caddyfile bind mount
-            # updates on disk without recreating the container, so reload
-            # explicitly (zero-downtime)
-            docker compose -f docker-compose.yaml -f docker-compose.caddy.yml exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+            # The Caddyfile is a single-file bind mount: scp replaces it with a
+            # new inode, so the running container keeps seeing the OLD file and
+            # a `caddy reload` inside it reloads stale config. Recreating the
+            # container re-resolves the mount to the new file (~2s blip).
+            docker compose -f docker-compose.yaml -f docker-compose.caddy.yml up -d --force-recreate caddy
 
             # Cleanup old images
             docker image prune -f
