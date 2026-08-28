@@ -19,6 +19,15 @@ public class RoomReservedIntegrationEventHandler(
         logger.LogInformation("Handling RoomReservedIntegrationEvent: ReservationId={ReservationId}, Room={RoomName}, Customer={CustomerName}",
             @event.ReservationId, @event.RoomName.En, @event.CustomerName);
 
+        // Broadcast via SignalR first — live dashboards must not depend on
+        // whether any FCM push subscriptions exist
+        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
+        {
+            type = "room_reserved",
+            roomId = @event.RoomId,
+            reservationId = @event.ReservationId
+        });
+
         // Get admin reservation notification subscriptions for this branch
         var subscriptions = await context.Subscriptions
             .Where(s => s.Type == SubscriptionType.AdminReservationNotification
@@ -79,13 +88,5 @@ public class RoomReservedIntegrationEventHandler(
             totalSuccess, subscriptions.Count);
 
         // Note: Admin subscriptions are persistent - do NOT delete them
-
-        // Broadcast via SignalR to connected clients
-        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
-        {
-            type = "room_reserved",
-            roomId = @event.RoomId,
-            reservationId = @event.ReservationId
-        });
     }
 }

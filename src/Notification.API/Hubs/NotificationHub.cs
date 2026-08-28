@@ -33,6 +33,7 @@ public class NotificationHub : Hub
     /// <summary>
     /// Client calls this to receive admin-level updates (orders, reservations, service requests)
     /// </summary>
+    [Authorize(Policy = "Admin")]
     public async Task JoinAdminGroup() =>
         await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
 

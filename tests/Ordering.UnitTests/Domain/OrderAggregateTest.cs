@@ -119,7 +119,7 @@ public class OrderAggregateTest
         var expectedResult = 1;
 
         // Act
-        var fakeOrder = new Order(userId, userName, roomName, customerNote);
+        var fakeOrder = new Order(userId, userName, 1, roomName, customerNote);
 
         // Assert
         Assert.HasCount(expectedResult, fakeOrder.DomainEvents);
@@ -135,7 +135,7 @@ public class OrderAggregateTest
         var expectedResult = 2;
 
         // Act
-        var fakeOrder = new Order(userId, userName, roomName);
+        var fakeOrder = new Order(userId, userName, 1, roomName);
         fakeOrder.AddDomainEvent(new OrderStartedDomainEvent(fakeOrder, userId, userName));
 
         // Assert
@@ -148,7 +148,7 @@ public class OrderAggregateTest
         // Arrange
         var userId = "1";
         var userName = "fakeName";
-        var fakeOrder = new Order(userId, userName);
+        var fakeOrder = new Order(userId, userName, 1);
         var @fakeEvent = new OrderStartedDomainEvent(fakeOrder, userId, userName);
         var expectedResult = 1;
 
@@ -164,7 +164,7 @@ public class OrderAggregateTest
     public void Order_status_transitions_correctly()
     {
         // Arrange
-        var order = new Order("userId", "userName", roomName: "Room 1");
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
 
         // Assert initial status
         Assert.AreEqual(OrderStatus.AwaitingValidation, order.OrderStatus);
@@ -181,7 +181,7 @@ public class OrderAggregateTest
     public void Order_can_be_cancelled_when_submitted()
     {
         // Arrange
-        var order = new Order("userId", "userName", roomName: "Room 1");
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
         order.SetStockConfirmedStatus();
 
         // Act
@@ -195,7 +195,7 @@ public class OrderAggregateTest
     public void Order_cannot_be_cancelled_when_confirmed()
     {
         // Arrange
-        var order = new Order("userId", "userName", roomName: "Room 1");
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
         order.SetStockConfirmedStatus();
         order.SetConfirmedStatus();
 
@@ -207,7 +207,7 @@ public class OrderAggregateTest
     public void Order_cannot_be_confirmed_when_cancelled()
     {
         // Arrange
-        var order = new Order("userId", "userName", roomName: "Room 1");
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
         order.SetStockConfirmedStatus();
         order.SetCancelledStatus();
 

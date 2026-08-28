@@ -15,6 +15,13 @@ internal static class MigrateDbContextExtensions
     public static IServiceCollection AddMigration<TContext>(this IServiceCollection services, Func<TContext, IServiceProvider, Task> seeder)
         where TContext : DbContext
     {
+        // Skip migrations when the app is booted by build-time OpenAPI document
+        // generation (dotnet-getdocument); no database is available there.
+        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
+        {
+            return services;
+        }
+
         // Enable migration tracing
         services.AddOpenTelemetry().WithTracing(tracing => tracing.AddSource(ActivitySourceName));
 

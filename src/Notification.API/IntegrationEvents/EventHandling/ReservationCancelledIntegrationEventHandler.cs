@@ -19,6 +19,25 @@ public class ReservationCancelledIntegrationEventHandler(
         logger.LogInformation("Handling ReservationCancelledIntegrationEvent: ReservationId={ReservationId}, Room={RoomName}, Customer={CustomerName}",
             @event.ReservationId, @event.RoomName.En, @event.CustomerName);
 
+        // Broadcast via SignalR first — live dashboards must not depend on
+        // whether any FCM push subscriptions exist
+        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
+        {
+            type = "reservation_cancelled",
+            roomId = @event.RoomId,
+            reservationId = @event.ReservationId
+        });
+
+        if (!string.IsNullOrEmpty(@event.CustomerId))
+        {
+            await hubContext.Clients.Group($"user:{@event.CustomerId}").SendAsync("RoomStatusChanged", new
+            {
+                type = "reservation_cancelled",
+                roomId = @event.RoomId,
+                reservationId = @event.ReservationId
+            });
+        }
+
         // Get admin reservation notification subscriptions for this branch
         var subscriptions = await context.Subscriptions
             .Where(s => s.Type == SubscriptionType.AdminReservationNotification
@@ -106,22 +125,6 @@ public class ReservationCancelledIntegrationEventHandler(
                 logger.LogInformation("FCM reservation cancelled notification to customer {CustomerId} ({Lang}): {Result}",
                     @event.CustomerId, lang, success ? "sent" : "failed");
             }
-
-            // Broadcast via SignalR to the customer's personal group
-            await hubContext.Clients.Group($"user:{@event.CustomerId}").SendAsync("RoomStatusChanged", new
-            {
-                type = "reservation_cancelled",
-                roomId = @event.RoomId,
-                reservationId = @event.ReservationId
-            });
         }
-
-        // Broadcast via SignalR to admin rooms group
-        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
-        {
-            type = "reservation_cancelled",
-            roomId = @event.RoomId,
-            reservationId = @event.ReservationId
-        });
     }
 }

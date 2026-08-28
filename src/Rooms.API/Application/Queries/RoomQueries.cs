@@ -217,6 +217,47 @@ public class RoomQueries : IRoomQueries
         };
     }
 
+    public async Task<PaginatedResult<ReservationViewModel>> GetSessionHistoryAsync(
+        int branchId,
+        int pageIndex,
+        int pageSize,
+        int? roomId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
+    {
+        var query = _context.Reservations
+            .AsNoTracking()
+            .Include(r => r.Room)
+            .Include(r => r.SessionSegments)
+            .Where(r => r.Room!.BranchId == branchId)
+            .Where(r => r.Status == ReservationStatus.Completed || r.Status == ReservationStatus.Cancelled);
+
+        if (roomId.HasValue)
+            query = query.Where(r => r.RoomId == roomId.Value);
+
+        if (fromDate.HasValue)
+            query = query.Where(r => (r.EndTime ?? r.CreatedAt) >= fromDate.Value);
+
+        if (toDate.HasValue)
+            query = query.Where(r => (r.EndTime ?? r.CreatedAt) <= toDate.Value);
+
+        var totalCount = await query.CountAsync();
+
+        var reservations = await query
+            .OrderByDescending(r => r.EndTime ?? r.CreatedAt)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<ReservationViewModel>
+        {
+            Items = reservations.Select(MapToViewModel),
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
+    }
+
     public async Task<IEnumerable<ReservationViewModel>> GetRoomSessionHistoryAsync(int roomId, int limit = 20)
     {
         var reservations = await _context.Reservations

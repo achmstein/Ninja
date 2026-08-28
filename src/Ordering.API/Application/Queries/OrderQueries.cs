@@ -112,10 +112,40 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .ToListAsync();
     }
 
-    public async Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(int pageIndex, int pageSize, int branchId)
+    public async Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(
+        int pageIndex,
+        int pageSize,
+        int branchId,
+        IReadOnlyCollection<string>? statuses = null,
+        string? buyerId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
         var query = context.Orders.AsNoTracking().Include(o => o.Buyer)
             .Where(o => o.BranchId == branchId);
+
+        if (statuses is { Count: > 0 })
+        {
+            var parsedStatuses = statuses
+                .Select(s => Enum.TryParse<Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus>(s, ignoreCase: true, out var status)
+                    ? status
+                    : (Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus?)null)
+                .Where(s => s.HasValue)
+                .Select(s => s!.Value)
+                .ToList();
+
+            if (parsedStatuses.Count > 0)
+                query = query.Where(o => parsedStatuses.Contains(o.OrderStatus));
+        }
+
+        if (!string.IsNullOrEmpty(buyerId))
+            query = query.Where(o => o.Buyer != null && o.Buyer.IdentityGuid == buyerId);
+
+        if (fromDate.HasValue)
+            query = query.Where(o => o.OrderDate >= fromDate.Value);
+
+        if (toDate.HasValue)
+            query = query.Where(o => o.OrderDate <= toDate.Value);
 
         var totalCount = await query.CountAsync();
 

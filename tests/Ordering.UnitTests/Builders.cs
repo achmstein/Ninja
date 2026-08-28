@@ -16,6 +16,7 @@ public class OrderBuilder
         order = new Order(
             "userId",
             "fakeName",
+            branchId: 1,
             roomName: "Room 1",
             customerNote: "Test note");
     }
@@ -25,6 +26,7 @@ public class OrderBuilder
         order = new Order(
             "userId",
             "fakeName",
+            branchId: 1,
             roomName: roomName,
             customerNote: customerNote);
     }

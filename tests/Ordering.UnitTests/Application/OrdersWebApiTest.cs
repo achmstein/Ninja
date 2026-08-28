@@ -1,7 +1,9 @@
 namespace Chillax.Ordering.UnitTests.Application;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Chillax.Ordering.API.Application.Queries;
+using Chillax.ServiceDefaults;
 using Order = Chillax.Ordering.API.Application.Queries.Order;
 using NSubstitute.ExceptionExtensions;
 
@@ -101,7 +103,7 @@ public class OrdersWebApiTest
 
         // Act
         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.GetOrdersByUserAsync(0, 10, orderServices);
+        var result = await OrdersApi.GetOrdersByUserAsync(0, 10, null, null, orderServices);
 
         // Assert
         Assert.IsInstanceOfType<Ok<PaginatedResult<OrderSummary>>>(result);
@@ -148,12 +150,15 @@ public class OrdersWebApiTest
     {
         // Arrange
         var fakeDynamicResult = Enumerable.Empty<OrderSummary>();
-        _orderQueriesMock.GetPendingOrdersAsync()
+        _orderQueriesMock.GetPendingOrdersAsync(Arg.Any<int>())
             .Returns(Task.FromResult(fakeDynamicResult));
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
 
         // Act
         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
-        var result = await OrdersApi.GetPendingOrdersAsync(orderServices);
+        var result = await OrdersApi.GetPendingOrdersAsync(httpContext, orderServices);
 
         // Assert
         Assert.IsInstanceOfType<Ok<IEnumerable<OrderSummary>>>(result);

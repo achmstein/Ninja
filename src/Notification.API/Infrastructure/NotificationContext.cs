@@ -7,6 +7,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
     public DbSet<NotificationSubscription> Subscriptions => Set<NotificationSubscription>();
     public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
     public DbSet<NotificationPreferences> Preferences => Set<NotificationPreferences>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,6 +61,18 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
 
             // Index for pending requests
             entity.HasIndex(e => e.Status);
+        });
+
+        modelBuilder.Entity<Announcement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Body).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.SentBy).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.SentAt).IsRequired();
+
+            // Index for ordering the history list
+            entity.HasIndex(e => e.SentAt);
         });
 
         modelBuilder.Entity<NotificationPreferences>(entity =>

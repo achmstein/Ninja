@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Chillax.EventBus.Abstractions;
 using Chillax.Identity.API.IntegrationEvents;
@@ -563,14 +564,30 @@ app.MapPost("/api/identity/update-email", async (UpdateEmailRequest request, Htt
     var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
     var userEndpoint = $"{adminUrl}/admin/realms/{realm}/users/{userId}";
 
-    var emailPayload = new
-    {
-        email = request.NewEmail,
-        emailVerified = false
-    };
-
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, emailPayload);
+
+    // PUT the full representation: Keycloak's declarative user profile
+    // removes any profile field missing from the payload
+    var getResponse = await client.GetAsync(userEndpoint);
+    if (!getResponse.IsSuccessStatusCode)
+    {
+        if (getResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return Results.NotFound(new { message = "User not found" });
+        }
+        return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
+    }
+
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
+    {
+        return Results.NotFound(new { message = "User not found" });
+    }
+
+    userJson["email"] = request.NewEmail;
+    userJson["emailVerified"] = false;
+
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
@@ -629,19 +646,35 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
     var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
     var userEndpoint = $"{adminUrl}/admin/realms/{realm}/users/{userId}";
 
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+    // PUT the full representation: Keycloak's declarative user profile
+    // removes any profile field missing from the payload
+    var getResponse = await client.GetAsync(userEndpoint);
+    if (!getResponse.IsSuccessStatusCode)
+    {
+        if (getResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return Results.NotFound(new { message = "User not found" });
+        }
+        return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
+    }
+
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
+    {
+        return Results.NotFound(new { message = "User not found" });
+    }
+
     // Split name into first/last if space present (matching registration pattern)
     var nameParts = request.NewName?.Split(' ', 2) ?? [];
     var firstName = nameParts.Length > 0 ? nameParts[0] : request.NewName;
     var lastName = nameParts.Length > 1 ? nameParts[1] : "";
 
-    var namePayload = new
-    {
-        firstName = firstName,
-        lastName = lastName
-    };
+    userJson["firstName"] = firstName;
+    userJson["lastName"] = lastName;
 
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, namePayload);
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
@@ -702,44 +735,44 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
 
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-    // GET current user to preserve existing attributes
+    // GET the full representation and mutate only what changes: Keycloak's
+    // declarative user profile removes any profile field missing from the PUT
     var getResponse = await client.GetAsync(userEndpoint);
     if (!getResponse.IsSuccessStatusCode)
     {
         return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
     }
 
-    var user = await getResponse.Content.ReadFromJsonAsync<KeycloakUser>();
-    if (user == null)
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
     {
         return Results.NotFound();
     }
 
     // Merge attributes — only update phone if provided
-    var attributes = user.Attributes ?? new Dictionary<string, string[]>();
     if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
     {
-        attributes["phoneNumber"] = [request.PhoneNumber];
+        if (userJson["attributes"] is not JsonObject attributes)
+        {
+            attributes = new JsonObject();
+            userJson["attributes"] = attributes;
+        }
+        attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
     }
 
     // Split name into first/last — only if provided, otherwise keep existing
-    var firstName = user.FirstName;
-    var lastName = user.LastName;
+    var firstName = (string?)userJson["firstName"];
+    var lastName = (string?)userJson["lastName"];
     if (!string.IsNullOrWhiteSpace(request.Name))
     {
         var nameParts = request.Name.Split(' ', 2);
         firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
         lastName = nameParts.Length > 1 ? nameParts[1] : "";
+        userJson["firstName"] = firstName;
+        userJson["lastName"] = lastName;
     }
 
-    var updatePayload = new
-    {
-        firstName = firstName,
-        lastName = lastName,
-        attributes = attributes
-    };
-
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, updatePayload);
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
@@ -804,32 +837,33 @@ app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateP
         return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
     }
 
-    var user = await getResponse.Content.ReadFromJsonAsync<KeycloakUser>();
-    if (user == null)
+    // PUT the full representation: Keycloak's declarative user profile
+    // removes any profile field missing from the payload
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
     {
         return Results.NotFound(new { message = "User not found" });
     }
 
     // Merge attributes
-    var attributes = user.Attributes ?? new Dictionary<string, string[]>();
     if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
     {
-        attributes["phoneNumber"] = [request.PhoneNumber];
+        if (userJson["attributes"] is not JsonObject attributes)
+        {
+            attributes = new JsonObject();
+            userJson["attributes"] = attributes;
+        }
+        attributes["phoneNumber"] = new JsonArray(request.PhoneNumber);
     }
 
     // Split name into first/last
     var nameParts = request.Name.Split(' ', 2);
     var firstName = nameParts.Length > 0 ? nameParts[0] : request.Name;
     var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+    userJson["firstName"] = firstName;
+    userJson["lastName"] = lastName;
 
-    var updatePayload = new
-    {
-        firstName = firstName,
-        lastName = lastName,
-        attributes = attributes
-    };
-
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, updatePayload);
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
@@ -1002,17 +1036,18 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
         return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
     }
 
-    var user = await getResponse.Content.ReadFromJsonAsync<KeycloakUser>();
-    if (user == null)
+    // PUT the full representation: Keycloak's declarative user profile
+    // removes any profile field missing from the payload
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
     {
         return Results.NotFound(new { message = "User not found" });
     }
 
-    var newEnabled = !user.Enabled;
+    var newEnabled = !(userJson["enabled"]?.GetValue<bool>() ?? false);
+    userJson["enabled"] = newEnabled;
 
-    // PUT back with toggled enabled
-    var togglePayload = new { enabled = newEnabled };
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, togglePayload);
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {

@@ -41,6 +41,7 @@ var keycloak = builder.AddKeycloak("keycloak", port: 8080)
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent)
     .WithRealmImport("./KeycloakConfiguration/chillax-realm.json")
+    .WithBindMount("./KeycloakConfiguration/themes/chillax", "/opt/keycloak/themes/chillax", isReadOnly: true)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
@@ -143,7 +144,7 @@ ConfigureApiService(branchApi, "branch");
 
 // Reverse proxy - BFF for Flutter apps
 // Used by both mobile app and admin app
-builder.AddYarp("mobile-bff")
+var mobileBff = builder.AddYarp("mobile-bff")
     .WithEndpoint("http", endpoint =>
     {
         // Port 5000 to avoid conflict with Caddy on port 80 in production.
@@ -158,6 +159,40 @@ builder.AddYarp("mobile-bff")
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
     .ConfigureMobileBffRoutes(catalogApi, orderingApi, roomsApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+
+// Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
+// the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
+// directly to Keycloak (the admin-panel realm client allows the 5173 origin).
+builder.AddViteApp("admin-web", "../admin_web")
+    .WithNpm()
+    .WithEndpoint("http", endpoint =>
+    {
+        // Fixed port: the Keycloak admin-panel client whitelists
+        // http://localhost:5173 redirect URIs.
+        endpoint.Port = 5173;
+        endpoint.IsProxied = false;
+    })
+    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+    .WaitFor(mobileBff)
+    // Not part of the Docker Compose publish yet; deployment gets its own
+    // static build + Caddy route once the app is ready to ship.
+    .ExcludeFromManifest();
+
+// Customer web app (React + Vite), same wiring as admin-web.
+builder.AddViteApp("client-web", "../client_web")
+    .WithNpm()
+    .WithEndpoint("http", endpoint =>
+    {
+        // Fixed port: the Keycloak client-web realm client whitelists
+        // http://localhost:5174 redirect URIs.
+        endpoint.Port = 5174;
+        endpoint.IsProxied = false;
+    })
+    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+    .WaitFor(mobileBff)
+    .ExcludeFromManifest();
 
 builder.Build().Run();
 

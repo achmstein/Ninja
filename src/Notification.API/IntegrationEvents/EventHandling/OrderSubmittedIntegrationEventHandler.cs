@@ -19,6 +19,24 @@ public class OrderSubmittedIntegrationEventHandler(
         logger.LogInformation("Handling OrderStatusChangedToSubmittedIntegrationEvent for order {OrderId} from {BuyerName}",
             @event.OrderId, @event.BuyerName);
 
+        // Broadcast via SignalR first — live dashboards must not depend on
+        // whether any FCM push subscriptions exist
+        await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
+        {
+            type = "order_submitted",
+            orderId = @event.OrderId,
+            buyerName = @event.BuyerName
+        });
+
+        if (!string.IsNullOrEmpty(@event.BuyerIdentityGuid))
+        {
+            await hubContext.Clients.Group($"user:{@event.BuyerIdentityGuid}").SendAsync("OrderStatusChanged", new
+            {
+                type = "order_submitted",
+                orderId = @event.OrderId
+            });
+        }
+
         // Get admin order notification subscriptions for this branch
         var subscriptions = await context.Subscriptions
             .Where(s => s.Type == SubscriptionType.AdminOrderNotification
@@ -76,22 +94,5 @@ public class OrderSubmittedIntegrationEventHandler(
 
         logger.LogInformation("Sent {SuccessCount}/{TotalCount} admin notifications successfully",
             totalSuccess, subscriptions.Count);
-
-        // Broadcast via SignalR to admin group and the buyer's personal group
-        await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
-        {
-            type = "order_submitted",
-            orderId = @event.OrderId,
-            buyerName = @event.BuyerName
-        });
-
-        if (!string.IsNullOrEmpty(@event.BuyerIdentityGuid))
-        {
-            await hubContext.Clients.Group($"user:{@event.BuyerIdentityGuid}").SendAsync("OrderStatusChanged", new
-            {
-                type = "order_submitted",
-                orderId = @event.OrderId
-            });
-        }
     }
 }

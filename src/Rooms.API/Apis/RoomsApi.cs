@@ -180,6 +180,13 @@ public static class RoomsApi
             .WithTags("Sessions")
             .RequireAuthorization("Admin");
 
+        api.MapGet("/sessions/history", GetSessionHistory)
+            .WithName("GetSessionHistory")
+            .WithSummary("Get session history")
+            .WithDescription("Get completed/cancelled sessions across all rooms, paginated (Admin only)")
+            .WithTags("Sessions")
+            .RequireAuthorization("Admin");
+
         // QR scan endpoints
         api.MapGet("/{roomId:int}/scan", ScanRoom)
             .WithName("ScanRoom")
@@ -668,6 +675,21 @@ public static class RoomsApi
         [Description("Maximum number of sessions to return")] int limit = 20)
     {
         var sessions = await queries.GetRoomSessionHistoryAsync(roomId, limit);
+        return TypedResults.Ok(sessions);
+    }
+
+    public static async Task<Ok<PaginatedResult<ReservationViewModel>>> GetSessionHistory(
+        [FromServices] IRoomQueries queries,
+        HttpContext httpContext,
+        int pageIndex = 0,
+        int pageSize = 20,
+        [Description("Filter by room")] int? roomId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        var sessions = await queries.GetSessionHistoryAsync(
+            branchId, pageIndex, pageSize, roomId, fromDate, toDate);
         return TypedResults.Ok(sessions);
     }
 }

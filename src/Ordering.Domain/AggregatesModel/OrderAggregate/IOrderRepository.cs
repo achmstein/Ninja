@@ -9,6 +9,8 @@ public interface IOrderRepository : IRepository<Order>
 
     void Update(Order order);
 
+    void Delete(Order order);
+
     Task<Order> GetAsync(int orderId);
 
     void AddRating(OrderRating rating);

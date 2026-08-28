@@ -1,0 +1,222 @@
+/*
+ * Chillax login theme — a CSS-only overlay on keycloak.v2 (PatternFly v5).
+ * Dark only, mirroring the mobile app's auth screens: the script wordmark
+ * in white over the slate-950 background, shadcn-style card and controls.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --chx-background: #020618; /* slate-950 */
+  --chx-card: #0a101f;
+  --chx-foreground: #f8fafc; /* slate-50 */
+  --chx-muted: #1d293d; /* slate-800 */
+  --chx-muted-foreground: #90a1b9; /* slate-400 */
+  --chx-primary: #e2e8f0; /* slate-200 */
+  --chx-primary-hover: #cad5e2; /* slate-300 */
+  --chx-primary-foreground: #0f172b; /* slate-900 */
+  --chx-border: rgba(255, 255, 255, 0.1);
+  --chx-input-border: rgba(255, 255, 255, 0.15);
+  --chx-ring: #62748e; /* slate-500 */
+  --chx-destructive: #ff6467;
+  --chx-radius: 0.625rem;
+}
+
+/* ---- Page (dark regardless of OS preference) ---- */
+
+html {
+  color-scheme: dark;
+}
+
+body#keycloak-bg {
+  background: var(--chx-background) none;
+  font-family:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+  color: var(--chx-foreground);
+}
+
+.pf-v5-c-login {
+  --pf-v5-c-login--m-page--BackgroundColor: transparent;
+}
+
+/* ---- Brand header: the script wordmark, as on the mobile auth screens ---- */
+
+.pf-v5-c-login__header {
+  color: var(--chx-foreground);
+}
+
+#kc-header-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  /* Hide the realm displayName text — the wordmark replaces it */
+  font-size: 0;
+  line-height: 0;
+}
+
+#kc-header-wrapper::before {
+  content: '';
+  width: 13rem;
+  aspect-ratio: 1403 / 559;
+  background: url('../img/logo.png') center / contain no-repeat;
+  /* Black wordmark asset → white on the dark background */
+  filter: invert(1);
+}
+
+/* ---- Card ---- */
+
+.pf-v5-c-login__main {
+  background-color: var(--chx-card);
+  color: var(--chx-foreground);
+  border: 1px solid var(--chx-border);
+  border-radius: var(--chx-radius);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.pf-v5-c-login__main-header {
+  justify-content: center;
+}
+
+h1#kc-page-title {
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-align: center;
+  color: var(--chx-foreground);
+}
+
+/* ---- Form ---- */
+
+.pf-v5-c-form__label-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--chx-foreground);
+}
+
+span.pf-v5-c-form-control {
+  background-color: transparent;
+  border: 1px solid var(--chx-input-border);
+  border-radius: calc(var(--chx-radius) - 2px);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Kill PatternFly's accent bottom-border effect */
+span.pf-v5-c-form-control::after {
+  border: 0 !important;
+}
+
+span.pf-v5-c-form-control > input {
+  background: transparent;
+  color: var(--chx-foreground);
+  font-family: inherit;
+}
+
+span.pf-v5-c-form-control:focus-within {
+  border-color: var(--chx-ring);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--chx-ring) 40%, transparent);
+}
+
+span.pf-v5-c-form-control[aria-invalid='true'],
+span.pf-v5-c-form-control:has(input[aria-invalid='true']) {
+  border-color: var(--chx-destructive);
+}
+
+/* ---- Buttons ---- */
+
+.pf-v5-c-button {
+  font-family: inherit;
+  border-radius: calc(var(--chx-radius) - 2px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: var(--chx-primary);
+  color: var(--chx-primary-foreground);
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background-color: var(--chx-primary-hover);
+  color: var(--chx-primary-foreground);
+}
+
+/* Social / secondary actions as shadcn outline buttons */
+.pf-v5-c-button.pf-m-secondary {
+  background-color: var(--chx-card);
+  color: var(--chx-foreground);
+  border: 1px solid var(--chx-border);
+  box-shadow: none;
+}
+
+.pf-v5-c-button.pf-m-secondary::after {
+  border: 0;
+}
+
+.pf-v5-c-button.pf-m-secondary:hover,
+.pf-v5-c-button.pf-m-secondary:focus {
+  background-color: var(--chx-muted);
+  color: var(--chx-foreground);
+}
+
+.pf-v5-c-button.pf-m-secondary svg {
+  fill: currentColor;
+}
+
+/* Password-visibility toggle inside the input group */
+.pf-v5-c-button.pf-m-control {
+  color: var(--chx-muted-foreground);
+  border: 1px solid var(--chx-input-border);
+  border-radius: calc(var(--chx-radius) - 2px);
+}
+
+.pf-v5-c-button.pf-m-control::after {
+  border: 0;
+}
+
+/* ---- Links, helper text, misc ---- */
+
+.pf-v5-c-login__main a {
+  color: var(--chx-foreground);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--chx-muted-foreground);
+}
+
+.pf-v5-c-login__main a:hover {
+  text-decoration-color: var(--chx-foreground);
+}
+
+.pf-v5-c-helper-text__item-text,
+.pf-v5-c-login__main-footer-band-item {
+  color: var(--chx-muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.pf-v5-c-form__helper-text {
+  color: var(--chx-muted-foreground);
+}
+
+/* Validation / error messages */
+.pf-v5-c-helper-text__item.pf-m-error .pf-v5-c-helper-text__item-text,
+.pf-v5-c-form__helper-text.pf-m-error {
+  color: var(--chx-destructive);
+}
+
+.pf-v5-c-alert {
+  border-radius: calc(var(--chx-radius) - 2px);
+}
+
+/* Checkbox (remember me) */
+.pf-v5-c-check__label {
+  color: var(--chx-foreground);
+  font-size: 0.875rem;
+}

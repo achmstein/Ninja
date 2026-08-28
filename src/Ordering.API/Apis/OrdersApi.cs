@@ -24,6 +24,12 @@ public static class OrdersApi
             .WithSummary("Cancel a submitted order")
             .RequireAuthorization("Admin");
 
+        api.MapDelete("/{orderId:int}", DeleteOrderAsync)
+            .WithName("DeleteOrder")
+            .WithSummary("Delete a cancelled order (admin)")
+            .WithDescription("Permanently removes an order. Only cancelled orders can be deleted.")
+            .RequireAuthorization("Admin");
+
         api.MapPost("/{orderId:int}/rating", RateOrderAsync)
             .WithName("RateOrder")
             .WithSummary("Rate a confirmed order");
@@ -104,6 +110,23 @@ public static class OrdersApi
 
             return TypedResults.Ok();
         }
+    }
+
+    public static async Task<Results<NoContent, ProblemHttpResult>> DeleteOrderAsync(
+        int orderId,
+        [AsParameters] OrderServices services)
+    {
+        var deleted = await services.Mediator.Send(new DeleteOrderCommand(orderId));
+
+        if (!deleted)
+        {
+            return TypedResults.Problem(
+                detail: "Order not found, or it is not cancelled. Only cancelled orders can be deleted.",
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        services.Logger.LogInformation("Deleted cancelled order {OrderId}", orderId);
+        return TypedResults.NoContent();
     }
 
     public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> ConfirmOrderAsync(
@@ -246,10 +269,21 @@ public static class OrdersApi
         HttpContext httpContext,
         int pageIndex = 0,
         int pageSize = 20,
+        string? status = null,
+        string? buyerId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
         [AsParameters] OrderServices services = default!)
     {
         var branchId = httpContext.GetRequiredBranchId();
-        var orders = await services.Queries.GetAllOrdersAsync(pageIndex, pageSize, branchId);
+
+        // status accepts a comma-separated list, e.g. "submitted,confirmed"
+        var statuses = string.IsNullOrWhiteSpace(status)
+            ? null
+            : status.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var orders = await services.Queries.GetAllOrdersAsync(
+            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate);
         return TypedResults.Ok(orders);
     }
 

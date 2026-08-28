@@ -20,6 +20,16 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             "Handling ServiceRequestCreatedIntegrationEvent: {RequestType} for room {RoomName}",
             @event.RequestType, @event.RoomName.En);
 
+        // Broadcast via SignalR first — live dashboards must not depend on
+        // whether any FCM push subscriptions exist
+        await hubContext.Clients.Group("admin").SendAsync("ServiceRequestCreated", new
+        {
+            type = "service_request",
+            requestId = @event.RequestId,
+            requestType = @event.RequestType.ToString(),
+            roomId = @event.RoomId
+        });
+
         // Get staff subscribed to ServiceRequests for this branch
         var subscriptions = await context.Subscriptions
             .Where(s => s.Type == SubscriptionType.ServiceRequests
@@ -75,15 +85,6 @@ public class ServiceRequestCreatedIntegrationEventHandler(
         logger.LogInformation(
             "Sent {SuccessCount}/{TotalCount} total service request notifications for {RequestType} in {RoomName}",
             totalSuccess, subscriptions.Count, @event.RequestType, @event.RoomName.En);
-
-        // Broadcast via SignalR to admin group
-        await hubContext.Clients.Group("admin").SendAsync("ServiceRequestCreated", new
-        {
-            type = "service_request",
-            requestId = @event.RequestId,
-            requestType = @event.RequestType.ToString(),
-            roomId = @event.RoomId
-        });
     }
 
     private static (string title, string body) GetLocalizedNotificationContent(

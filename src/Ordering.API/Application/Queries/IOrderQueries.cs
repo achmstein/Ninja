@@ -1,3 +1,4 @@
+#nullable enable
 namespace Chillax.Ordering.API.Application.Queries;
 
 public interface IOrderQueries
@@ -12,9 +13,17 @@ public interface IOrderQueries
     Task<IEnumerable<OrderSummary>> GetPendingOrdersAsync(int branchId);
 
     /// <summary>
-    /// Get all orders paginated (admin) regardless of status, filtered by branch
+    /// Get all orders paginated (admin), filtered by branch and optionally by
+    /// status, buyer, and date range
     /// </summary>
-    Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(int pageIndex, int pageSize, int branchId);
+    Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(
+        int pageIndex,
+        int pageSize,
+        int branchId,
+        IReadOnlyCollection<string>? statuses = null,
+        string? buyerId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null);
 }
 
 /// <summary>

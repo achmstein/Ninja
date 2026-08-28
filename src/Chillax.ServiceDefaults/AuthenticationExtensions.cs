@@ -68,6 +68,24 @@ public static class AuthenticationExtensions
                     // Use "role" claim for roles (requires Keycloak mapper)
                     RoleClaimType = "role"
                 };
+
+                // Browser SignalR transports (WebSocket/SSE) cannot send an
+                // Authorization header — the JS client passes the token in the
+                // query string for hub endpoints. Native clients still use the
+                // header, which takes precedence when present.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization(options =>

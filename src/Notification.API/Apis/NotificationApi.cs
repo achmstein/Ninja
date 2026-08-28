@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Chillax.Notification.API.IntegrationEvents.Events;
 using Chillax.Notification.API.Model;
+using Chillax.Notification.API.Services;
 using Chillax.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using static Chillax.ServiceDefaults.BranchHeaderExtensions;
@@ -146,7 +147,105 @@ public static class NotificationApi
             .WithDescription("Update the current user's notification preferences")
             .WithTags("Preferences");
 
+        // Announcement endpoints (staff broadcast to customers)
+        api.MapPost("/announcements", SendAnnouncement)
+            .WithName("SendAnnouncement")
+            .WithSummary("Send an announcement")
+            .WithDescription("Push an announcement to every opted-in customer device (Admin/Owner only)")
+            .WithTags("Announcements")
+            .RequireAuthorization(policy => policy.RequireRole("Admin", "Owner"));
+
+        api.MapGet("/announcements", GetAnnouncements)
+            .WithName("GetAnnouncements")
+            .WithSummary("List sent announcements")
+            .WithDescription("Recent announcements, newest first (Admin/Owner only)")
+            .WithTags("Announcements")
+            .RequireAuthorization(policy => policy.RequireRole("Admin", "Owner"));
+
         return app;
+    }
+
+    public static async Task<Results<Ok<AnnouncementResponse>, BadRequest<string>>> SendAnnouncement(
+        NotificationContext context,
+        ClaimsPrincipal user,
+        IFcmService fcmService,
+        SendAnnouncementRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Body))
+        {
+            return TypedResults.BadRequest("Title and body are required");
+        }
+
+        // Customer devices only, excluding users who opted out of promotions
+        var optedOutUsers = await context.Preferences
+            .Where(p => !p.PromotionsAndOffers)
+            .Select(p => p.UserId)
+            .ToListAsync();
+
+        var customerTypes = new[]
+        {
+            SubscriptionType.RoomAvailability,
+            SubscriptionType.UserOrderNotification,
+            SubscriptionType.UserSessionNotification,
+        };
+
+        var tokens = await context.Subscriptions
+            .Where(s => customerTypes.Contains(s.Type))
+            .Where(s => !optedOutUsers.Contains(s.UserId))
+            .Select(s => s.FcmToken)
+            .Distinct()
+            .ToListAsync();
+
+        var result = await fcmService.SendBatchNotificationsAsync(
+            tokens,
+            request.Title.Trim(),
+            request.Body.Trim(),
+            new Dictionary<string, string> { ["type"] = "announcement" });
+
+        // Prune tokens FCM reports as unregistered (mirrors the event handlers)
+        if (result.UnregisteredTokens.Count > 0)
+        {
+            var stale = await context.Subscriptions
+                .Where(s => result.UnregisteredTokens.Contains(s.FcmToken))
+                .ToListAsync();
+            context.Subscriptions.RemoveRange(stale);
+        }
+
+        var announcement = new Announcement
+        {
+            Title = request.Title.Trim(),
+            Body = request.Body.Trim(),
+            SentBy = user.FindFirst("name")?.Value
+                ?? user.FindFirst("preferred_username")?.Value
+                ?? user.GetUserId()
+                ?? "staff",
+            RecipientCount = result.SuccessCount,
+        };
+        context.Announcements.Add(announcement);
+        await context.SaveChangesAsync();
+
+        return TypedResults.Ok(new AnnouncementResponse(
+            announcement.Id,
+            announcement.Title,
+            announcement.Body,
+            announcement.SentBy,
+            announcement.SentAt,
+            announcement.RecipientCount));
+    }
+
+    public static async Task<Ok<List<AnnouncementResponse>>> GetAnnouncements(
+        NotificationContext context,
+        [Description("Maximum number of announcements to return")] int limit = 50)
+    {
+        var announcements = await context.Announcements
+            .AsNoTracking()
+            .OrderByDescending(a => a.SentAt)
+            .Take(limit)
+            .Select(a => new AnnouncementResponse(
+                a.Id, a.Title, a.Body, a.SentBy, a.SentAt, a.RecipientCount))
+            .ToListAsync();
+
+        return TypedResults.Ok(announcements);
     }
 
     public static async Task<Results<Created<SubscriptionResponse>, Conflict<string>>> SubscribeToRoomAvailability(
@@ -783,4 +882,18 @@ public record RoomAvailabilityStatusResponse(
     bool IsSubscribed,
     int? Id = null,
     DateTime? CreatedAt = null
+);
+
+public record SendAnnouncementRequest(
+    [property: Description("Notification title")] string Title,
+    [property: Description("Notification body")] string Body
+);
+
+public record AnnouncementResponse(
+    int Id,
+    string Title,
+    string Body,
+    string SentBy,
+    DateTime SentAt,
+    int RecipientCount
 );

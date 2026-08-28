@@ -40,6 +40,11 @@ public class OrderRepository
         _context.Entry(order).State = EntityState.Modified;
     }
 
+    public void Delete(Order order)
+    {
+        _context.Orders.Remove(order);
+    }
+
     public void AddRating(OrderRating rating)
     {
         _context.OrderRatings.Add(rating);

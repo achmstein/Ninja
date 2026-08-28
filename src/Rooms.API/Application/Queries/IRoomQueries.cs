@@ -41,4 +41,30 @@ public interface IRoomQueries
     /// Get room scan info (for QR code scan-to-join)
     /// </summary>
     Task<RoomScanViewModel?> GetRoomScanInfoAsync(int roomId, string customerId);
+
+    /// <summary>
+    /// Get completed/cancelled session history across all rooms of a branch,
+    /// paginated and optionally filtered by room and date range
+    /// </summary>
+    Task<PaginatedResult<ReservationViewModel>> GetSessionHistoryAsync(
+        int branchId,
+        int pageIndex,
+        int pageSize,
+        int? roomId = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null);
+}
+
+/// <summary>
+/// Paginated result wrapper
+/// </summary>
+public record PaginatedResult<T>
+{
+    public IEnumerable<T> Items { get; init; } = Enumerable.Empty<T>();
+    public int PageIndex { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public bool HasNextPage => PageIndex < TotalPages - 1;
+    public bool HasPreviousPage => PageIndex > 0;
 }

@@ -135,8 +135,8 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             Quantity = 1,
             PictureUrl = null
         };
-        // Simplified CreateOrderRequest for cafe: UserId, UserName, RoomName, CustomerNote, PointsToRedeem, Items
-        var OrderRequest = new CreateOrderRequest("1", "TestUser", "VIP", "No ice please", 0, new List<BasketItem> { item });
+        // Simplified CreateOrderRequest for cafe: UserId, UserName, RoomName, CustomerNote, PointsToRedeem, LoyaltyDiscount, Items
+        var OrderRequest = new CreateOrderRequest("1", "TestUser", "VIP", "No ice please", 0, 0, new List<BasketItem> { item });
         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
         {
             Headers = { { "x-requestid", Guid.NewGuid().ToString() } }

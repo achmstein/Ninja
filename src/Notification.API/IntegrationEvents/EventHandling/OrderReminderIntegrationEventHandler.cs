@@ -20,6 +20,17 @@ public class OrderReminderIntegrationEventHandler(
             "Handling OrderReminderIntegrationEvent for order {OrderId}, reminder #{ReminderCount}, pending {Minutes} min",
             @event.OrderId, @event.ReminderCount, @event.MinutesPending);
 
+        // Broadcast via SignalR first — live dashboards must not depend on
+        // whether any FCM push subscriptions exist
+        await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
+        {
+            type = "order_reminder",
+            orderId = @event.OrderId,
+            buyerName = @event.BuyerName,
+            reminderCount = @event.ReminderCount,
+            minutesPending = @event.MinutesPending
+        });
+
         // Get admin order notification subscriptions for this branch
         var subscriptions = await context.Subscriptions
             .Where(s => s.Type == SubscriptionType.AdminOrderNotification
@@ -80,15 +91,5 @@ public class OrderReminderIntegrationEventHandler(
 
         logger.LogInformation("Sent {SuccessCount}/{TotalCount} admin reminder notifications for order {OrderId}",
             totalSuccess, subscriptions.Count, @event.OrderId);
-
-        // Also broadcast via SignalR for admins with the app open
-        await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
-        {
-            type = "order_reminder",
-            orderId = @event.OrderId,
-            buyerName = @event.BuyerName,
-            reminderCount = @event.ReminderCount,
-            minutesPending = @event.MinutesPending
-        });
     }
 }

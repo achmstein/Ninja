@@ -72,6 +72,16 @@ public static partial class Extensions
                 });
             }
         }
+        else
+        {
+            // Unversioned service: register a single document so the OpenAPI
+            // endpoint and build-time document generation still work.
+            builder.Services.AddOpenApi("v1", options =>
+            {
+                options.ApplyAuthorizationChecks([.. scopes.Keys]);
+                options.ApplySecuritySchemeDefinitions();
+            });
+        }
 
         return builder;
     }
