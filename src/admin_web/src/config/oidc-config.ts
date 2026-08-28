@@ -1,4 +1,4 @@
-import { User } from 'oidc-client-ts'
+import { User, WebStorageStateStore } from 'oidc-client-ts'
 import type { AuthProviderProps } from 'react-oidc-context'
 
 // OIDC configuration for Keycloak
@@ -19,16 +19,20 @@ export const oidcConfig: AuthProviderProps = {
   scope: 'openid profile email roles orders rooms catalog',
   automaticSilentRenew: true,
   loadUserInfo: true,
+  // localStorage (not the sessionStorage default) so sign-in survives new
+  // tabs and browser restarts; combined with silent renew and long Keycloak
+  // SSO sessions, staff rarely see the login page.
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {
     // Remove the code and state from the URL after successful sign-in
     window.history.replaceState({}, document.title, window.location.pathname)
   },
 }
 
-// Reads the user that react-oidc-context persisted to session storage.
+// Reads the user that react-oidc-context persisted to local storage.
 // Needed by code living outside the React tree (e.g. the axios interceptor).
 export function getStoredUser(): User | null {
-  const stored = sessionStorage.getItem(`oidc.user:${authority}:${clientId}`)
+  const stored = localStorage.getItem(`oidc.user:${authority}:${clientId}`)
   return stored ? User.fromStorageString(stored) : null
 }
 

@@ -1,4 +1,4 @@
-import { User } from 'oidc-client-ts'
+import { User, WebStorageStateStore } from 'oidc-client-ts'
 import type { AuthProviderProps } from 'react-oidc-context'
 
 // In development, VITE_KEYCLOAK_URL is injected by the Aspire AppHost
@@ -17,14 +17,18 @@ export const oidcConfig: AuthProviderProps = {
   scope: 'openid profile email roles orders rooms catalog',
   automaticSilentRenew: true,
   loadUserInfo: true,
+  // localStorage (not the sessionStorage default) so sign-in survives new
+  // tabs and browser restarts; combined with silent renew and long Keycloak
+  // SSO sessions, customers stay signed in for weeks.
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
   onSigninCallback: () => {
     window.history.replaceState({}, document.title, window.location.pathname)
   },
 }
 
-// Reads the user that react-oidc-context persisted to session storage.
+// Reads the user that react-oidc-context persisted to local storage.
 // Needed by code living outside the React tree (the axios interceptor).
 export function getStoredUser(): User | null {
-  const stored = sessionStorage.getItem(`oidc.user:${authority}:${clientId}`)
+  const stored = localStorage.getItem(`oidc.user:${authority}:${clientId}`)
   return stored ? User.fromStorageString(stored) : null
 }

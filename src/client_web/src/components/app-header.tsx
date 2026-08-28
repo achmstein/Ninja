@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { LogIn, LogOut, ShoppingBag, User } from 'lucide-react'
@@ -16,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from './branch-switcher'
+import { SignInSheet } from './sign-in-options'
 
 // Mobile IA: primary nav is Menu / Rooms / Orders; everything else lives
 // under Profile.
@@ -34,6 +36,7 @@ export function AppHeader() {
   const auth = useAuth()
   const count = useCart((s) => cartCount(s.lines))
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const [signInOpen, setSignInOpen] = useState(false)
 
   const name =
     auth.user?.profile?.name || auth.user?.profile?.preferred_username || ''
@@ -144,7 +147,7 @@ export function AppHeader() {
                   {t('signOut')}
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={() => auth.signinRedirect()}>
+                <DropdownMenuItem onClick={() => setSignInOpen(true)}>
                   <LogIn className='me-2 size-4' />
                   {t('signIn')}
                 </DropdownMenuItem>
@@ -153,6 +156,7 @@ export function AppHeader() {
           </DropdownMenu>
         </div>
       </div>
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </header>
   )
 }

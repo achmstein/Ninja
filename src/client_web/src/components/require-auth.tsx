@@ -1,6 +1,6 @@
 import { useAuth } from 'react-oidc-context'
-import { Loader2, LogIn } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { SignInOptions } from '@/components/sign-in-options'
 import { useT } from '@/lib/i18n'
 
 // Wraps pages that need a signed-in customer. Browsing stays public.
@@ -21,14 +21,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return (
       <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
         <p className='text-muted-foreground'>{t('signInPrompt')}</p>
-        <Button
-          size='lg'
-          className='rounded-full px-8'
-          onClick={() => auth.signinRedirect()}
-        >
-          <LogIn className='h-4 w-4' />
-          {t('signIn')}
-        </Button>
+        <SignInOptions />
       </div>
     )
   }

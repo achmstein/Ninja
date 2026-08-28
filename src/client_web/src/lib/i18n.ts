@@ -19,6 +19,9 @@ const webExtras = {
     ar: 'سجل دخول عشان تشوف طلباتك ونقطك',
   },
   signInToOrder: { en: 'Sign in to order', ar: 'سجل دخول عشان تطلب' },
+  continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
+  continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
+  continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
   toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },

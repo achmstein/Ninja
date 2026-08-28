@@ -9,7 +9,6 @@ import {
   KeyRound,
   LifeBuoy,
   Loader2,
-  LogIn,
   LogOut,
   Pencil,
   Phone,
@@ -58,6 +57,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { LanguageSwitch } from '@/components/language-switch'
+import { SignInOptions } from '@/components/sign-in-options'
 import { ThemeSwitch } from '@/components/theme-switch'
 
 export const Route = createFileRoute('/profile')({
@@ -320,14 +320,10 @@ function ProfilePage() {
           </AlertDialog>
         </Card>
       ) : (
-        <Button
-          size='lg'
-          className='w-full rounded-full'
-          onClick={() => auth.signinRedirect()}
-        >
-          <LogIn className='h-4 w-4' />
-          {t('signIn')}
-        </Button>
+        <div className='flex flex-col items-center gap-3 py-4'>
+          <p className='text-muted-foreground text-sm'>{t('signInPrompt')}</p>
+          <SignInOptions />
+        </div>
       )}
 
       <UpdateProfileDialog

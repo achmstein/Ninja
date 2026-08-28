@@ -56,8 +56,8 @@
   ],
   "accessTokenLifespan": 7200,
   "accessTokenLifespanForImplicitFlow": 7200,
-  "ssoSessionIdleTimeout": 0,
-  "ssoSessionMaxLifespan": 0,
+  "ssoSessionIdleTimeout": 2592000,
+  "ssoSessionMaxLifespan": 7776000,
   "offlineSessionIdleTimeout": 0,
   "offlineSessionMaxLifespan": 0,
   "roles": {

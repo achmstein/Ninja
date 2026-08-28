@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Gamepad2, LogIn, Users } from 'lucide-react'
+import { Gamepad2, Users } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type RoomViewModel } from '@/api/rooms'
 import {
@@ -14,6 +14,7 @@ import { useT, useLocalized } from '@/lib/i18n'
 import { ROOM_AVAILABLE } from '@/components/rooms/room-row'
 import { ReserveSheet } from '@/components/rooms/reserve-sheet'
 import { useProfileGate } from '@/components/profile-gate'
+import { SignInOptions } from '@/components/sign-in-options'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,14 +84,7 @@ function RoomLinkPage() {
       <div className='flex h-[70svh] flex-col items-center justify-center gap-4 px-6 text-center'>
         <Gamepad2 className='text-muted-foreground/40 h-10 w-10' />
         <p className='text-muted-foreground'>{t('signInPrompt')}</p>
-        <Button
-          size='lg'
-          className='rounded-full px-8'
-          onClick={() => auth.signinRedirect()}
-        >
-          <LogIn className='h-4 w-4' />
-          {t('signIn')}
-        </Button>
+        <SignInOptions />
       </div>
     )
   }

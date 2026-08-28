@@ -16,6 +16,7 @@ import { NotifyBanner } from '@/components/rooms/notify-banner'
 import { ReserveSheet } from '@/components/rooms/reserve-sheet'
 import { ReservedBanner } from '@/components/rooms/reserved-banner'
 import { RoomRow, ROOM_AVAILABLE } from '@/components/rooms/room-row'
+import { SignInSheet } from '@/components/sign-in-options'
 
 export const Route = createFileRoute('/rooms')({
   component: RoomsPage,
@@ -30,6 +31,7 @@ function RoomsPage() {
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [reserveRoom, setReserveRoom] = useState<RoomViewModel | null>(null)
+  const [signInOpen, setSignInOpen] = useState(false)
 
   // Live RoomStatusChanged updates + 30s fallback poll (mobile parity)
   useRoomsGroup()
@@ -51,7 +53,7 @@ function RoomsPage() {
 
   const handleReserve = async (room: RoomViewModel) => {
     if (!auth.isAuthenticated) {
-      auth.signinRedirect()
+      setSignInOpen(true)
       return
     }
     // One reservation at a time (mobile parity; the backend enforces it too)
@@ -100,6 +102,7 @@ function RoomsPage() {
         }}
       />
       {profileGateDialog}
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   )
 }

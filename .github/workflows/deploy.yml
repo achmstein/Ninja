@@ -193,11 +193,15 @@ jobs:
             done
 
             echo ""
-            echo "=== Apply login theme ==="
-            # The realm import only runs on first boot, so enforce the theme
-            # on the existing realm every deploy (idempotent)
-            docker exec "$CONTAINER" $KC update "realms/$REALM" -s loginTheme=chillax && \
-              echo "  Login theme set to chillax"
+            echo "=== Apply realm settings ==="
+            # The realm import only runs on first boot, so enforce these on
+            # the existing realm every deploy (idempotent). Long SSO sessions
+            # (30d idle / 90d max) keep web users signed in.
+            docker exec "$CONTAINER" $KC update "realms/$REALM" \
+              -s loginTheme=chillax \
+              -s ssoSessionIdleTimeout=2592000 \
+              -s ssoSessionMaxLifespan=7776000 && \
+              echo "  Theme + session lifetimes applied"
 
             echo ""
             echo "=== Enable permissions on identity providers ==="

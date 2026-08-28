@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { useProfileGate } from '@/components/profile-gate'
+import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useActiveSession } from '@/lib/session'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -63,6 +64,7 @@ function CartPage() {
 
   const { lines, setQuantity, clear } = useCart()
   const [note, setNote] = useState('')
+  const [signInOpen, setSignInOpen] = useState(false)
   const [redeemEnabled, setRedeemEnabled] = useState(false)
   const [pointsToRedeem, setPointsToRedeem] = useState(0)
 
@@ -232,7 +234,7 @@ function CartPage() {
     <Button
       size='lg'
       className='w-full rounded-full'
-      onClick={() => auth.signinRedirect()}
+      onClick={() => setSignInOpen(true)}
     >
       <LogIn className='h-4 w-4' />
       {t('signInToOrder')}
@@ -429,6 +431,7 @@ function CartPage() {
       </div>
 
       {profileGateDialog}
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   )
 }
