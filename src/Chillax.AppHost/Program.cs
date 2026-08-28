@@ -48,6 +48,18 @@ var keycloak = builder.AddKeycloak("keycloak", port: 8080)
     .WithEnvironment("KC_FEATURES", "token-exchange,admin-fine-grained-authz:v1")
     .WithExternalHttpEndpoints();
 
+if (builder.ExecutionContext.IsPublishMode)
+{
+    // In production Keycloak sits behind Caddy (TLS) + the BFF, which strips
+    // the /auth prefix. Without a fixed hostname it advertises the stripped
+    // http URL in discovery/tokens, breaking browser OIDC (404 on the auth
+    // endpoint). Backchannel stays dynamic so in-network callers
+    // (services at keycloak:8080, kcadm at localhost) keep working.
+    keycloak
+        .WithEnvironment("KC_HOSTNAME", "https://api.chillax.site/auth")
+        .WithEnvironment("KC_HOSTNAME_BACKCHANNEL_DYNAMIC", "true");
+}
+
 // Build Keycloak realm URL for services
 var keycloakEndpoint = keycloak.GetEndpoint("http");
 var keycloakRealmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/chillax");
