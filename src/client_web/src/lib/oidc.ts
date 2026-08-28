@@ -10,6 +10,19 @@ export const clientId = 'client-web'
 
 export const oidcConfig: AuthProviderProps = {
   authority,
+  // Pin the endpoints instead of fetching the discovery document at
+  // runtime: a stale cached discovery response once sent the token
+  // request to a dead http endpoint (mixed-content blocked), and these
+  // are stable, path-derived Keycloak URLs anyway.
+  metadata: {
+    issuer: authority,
+    authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
+    token_endpoint: `${authority}/protocol/openid-connect/token`,
+    userinfo_endpoint: `${authority}/protocol/openid-connect/userinfo`,
+    end_session_endpoint: `${authority}/protocol/openid-connect/logout`,
+    jwks_uri: `${authority}/protocol/openid-connect/certs`,
+    revocation_endpoint: `${authority}/protocol/openid-connect/revoke`,
+  },
   client_id: clientId,
   redirect_uri: `${window.location.origin}/auth/callback`,
   post_logout_redirect_uri: window.location.origin,

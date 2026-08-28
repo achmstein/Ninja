@@ -7,15 +7,6 @@
 #
 # Caddy handles TLS termination (auto Let's Encrypt).
 
-{
-	servers {
-		# The firewall only allows 443/tcp, so advertising HTTP/3 makes
-		# browsers attempt QUIC over blocked UDP 443 and fail fetches
-		# ("Failed to fetch"). Stick to the TCP protocols.
-		protocols h1 h2
-	}
-}
-
 chillax.site {
 	# Printed room QRs encode chillax.site/room/{id}; the customer web app
 	# handles that flow at app.chillax.site
@@ -40,6 +31,14 @@ admin.chillax.site {
 		root * /srv/admin-web
 		try_files {path} /index.html
 		file_server
+
+		# Hashed bundles cache forever; index.html must revalidate so a
+		# deploy reaches browsers immediately (heuristic caching otherwise
+		# keeps stale bundles alive)
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@nonassets not path /assets/*
+		header @nonassets Cache-Control "no-cache"
 	}
 }
 
@@ -54,5 +53,10 @@ app.chillax.site {
 		root * /srv/client-web
 		try_files {path} /index.html
 		file_server
+
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@nonassets not path /assets/*
+		header @nonassets Cache-Control "no-cache"
 	}
 }
