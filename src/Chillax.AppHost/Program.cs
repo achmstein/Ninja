@@ -57,12 +57,20 @@ if (builder.ExecutionContext.IsPublishMode)
     // (services at keycloak:8080, kcadm at localhost) keep working.
     keycloak
         .WithEnvironment("KC_HOSTNAME", "https://api.chillax.site/auth")
-        .WithEnvironment("KC_HOSTNAME_BACKCHANNEL_DYNAMIC", "true");
+        .WithEnvironment("KC_HOSTNAME_BACKCHANNEL_DYNAMIC", "true")
+        // Serve natively under /auth so the public path is proxied verbatim
+        // and request-derived URLs match KC_HOSTNAME exactly — Keycloak
+        // ignores X-Forwarded-Prefix, so path rewriting at the proxy would
+        // leave the discovery document advertising prefix-less endpoints
+        .WithEnvironment("KC_HTTP_RELATIVE_PATH", "/auth");
 }
 
-// Build Keycloak realm URL for services
+// Build Keycloak realm URL for services (in production Keycloak serves
+// under /auth, see KC_HTTP_RELATIVE_PATH above)
 var keycloakEndpoint = keycloak.GetEndpoint("http");
-var keycloakRealmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/chillax");
+var keycloakRealmUrl = builder.ExecutionContext.IsPublishMode
+    ? ReferenceExpression.Create($"{keycloakEndpoint}/auth/realms/chillax")
+    : ReferenceExpression.Create($"{keycloakEndpoint}/realms/chillax");
 
 var catalogApi = builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WithReference(rabbitMq).WaitFor(rabbitMq)

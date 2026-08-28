@@ -186,7 +186,7 @@ jobs:
             echo "Waiting for Keycloak to be ready..."
             for i in $(seq 1 30); do
               if docker exec "$CONTAINER" $KC config credentials \
-                --server http://localhost:8080 --realm master --user admin --password "$KC_PASSWORD" > /dev/null 2>&1; then
+                --server http://localhost:8080/auth --realm master --user admin --password "$KC_PASSWORD" > /dev/null 2>&1; then
                 echo "  Keycloak is ready and authenticated"
                 break
               fi

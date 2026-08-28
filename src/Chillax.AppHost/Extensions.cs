@@ -257,18 +257,26 @@ internal static class Extensions
             // both resolution paths produce identical URLs.
             const string keycloakPrefix = "/auth";
             var authRoute = yarp.AddRoute($"{keycloakPrefix}/{{*any}}", keycloak.GetEndpoint("http"))
-                .WithTransformPathRemovePrefix(keycloakPrefix)
                 // Take over proto/prefix from YARP's default X-Forwarded
                 // handling — the default transform runs after route
                 // transforms and would overwrite the explicit values below
                 .WithTransformXForwarded(
                     xProto: ForwardedTransformActions.Off,
-                    xPrefix: ForwardedTransformActions.Off)
-                .WithTransformRequestHeader("X-Forwarded-Prefix", keycloakPrefix, append: false);
+                    xPrefix: ForwardedTransformActions.Off);
             if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
             {
-                // In production TLS terminates at Caddy, one hop before YARP
+                // In production Keycloak serves natively under /auth
+                // (KC_HTTP_RELATIVE_PATH), so the path is forwarded verbatim
+                // and the resolved request URL matches KC_HOSTNAME exactly.
+                // TLS terminates at Caddy, one hop before YARP.
                 authRoute.WithTransformRequestHeader("X-Forwarded-Proto", "https", append: false);
+            }
+            else
+            {
+                // In dev Keycloak serves at the container root
+                authRoute
+                    .WithTransformPathRemovePrefix(keycloakPrefix)
+                    .WithTransformRequestHeader("X-Forwarded-Prefix", keycloakPrefix, append: false);
             }
         });
     }
