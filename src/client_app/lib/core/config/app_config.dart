@@ -52,5 +52,5 @@ class AppConfig {
 
   // App info
   static const String appName = 'Chillax';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.2';
 }
