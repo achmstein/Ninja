@@ -7,6 +7,15 @@
 #
 # Caddy handles TLS termination (auto Let's Encrypt).
 
+{
+	servers {
+		# The firewall only allows 443/tcp, so advertising HTTP/3 makes
+		# browsers attempt QUIC over blocked UDP 443 and fail fetches
+		# ("Failed to fetch"). Stick to the TCP protocols.
+		protocols h1 h2
+	}
+}
+
 chillax.site {
 	# Printed room QRs encode chillax.site/room/{id}; the customer web app
 	# handles that flow at app.chillax.site
