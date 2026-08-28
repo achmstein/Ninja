@@ -50,27 +50,18 @@ var keycloak = builder.AddKeycloak("keycloak", port: 8080)
 
 if (builder.ExecutionContext.IsPublishMode)
 {
-    // In production Keycloak sits behind Caddy (TLS) + the BFF, which strips
-    // the /auth prefix. Without a fixed hostname it advertises the stripped
-    // http URL in discovery/tokens, breaking browser OIDC (404 on the auth
-    // endpoint). Backchannel stays dynamic so in-network callers
+    // In production Keycloak has its own hostname (Caddy proxies
+    // auth.chillax.site straight to it) and must advertise that fixed URL
+    // in discovery/tokens. Backchannel stays dynamic so in-network callers
     // (services at keycloak:8080, kcadm at localhost) keep working.
     keycloak
-        .WithEnvironment("KC_HOSTNAME", "https://api.chillax.site/auth")
-        .WithEnvironment("KC_HOSTNAME_BACKCHANNEL_DYNAMIC", "true")
-        // Serve natively under /auth so the public path is proxied verbatim
-        // and request-derived URLs match KC_HOSTNAME exactly — Keycloak
-        // ignores X-Forwarded-Prefix, so path rewriting at the proxy would
-        // leave the discovery document advertising prefix-less endpoints
-        .WithEnvironment("KC_HTTP_RELATIVE_PATH", "/auth");
+        .WithEnvironment("KC_HOSTNAME", "https://auth.chillax.site")
+        .WithEnvironment("KC_HOSTNAME_BACKCHANNEL_DYNAMIC", "true");
 }
 
-// Build Keycloak realm URL for services (in production Keycloak serves
-// under /auth, see KC_HTTP_RELATIVE_PATH above)
+// Build Keycloak realm URL for services
 var keycloakEndpoint = keycloak.GetEndpoint("http");
-var keycloakRealmUrl = builder.ExecutionContext.IsPublishMode
-    ? ReferenceExpression.Create($"{keycloakEndpoint}/auth/realms/chillax")
-    : ReferenceExpression.Create($"{keycloakEndpoint}/realms/chillax");
+var keycloakRealmUrl = ReferenceExpression.Create($"{keycloakEndpoint}/realms/chillax");
 
 var catalogApi = builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WithReference(rabbitMq).WaitFor(rabbitMq)

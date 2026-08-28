@@ -41,8 +41,8 @@ jobs:
 
       - name: Build web apps
         env:
-          # The SPAs reach Keycloak through the BFF's /auth route
-          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+          # Keycloak's dedicated production host
+          VITE_KEYCLOAK_URL: https://auth.chillax.site
         run: |
           cd src/admin_web
           npm ci
@@ -186,7 +186,7 @@ jobs:
             echo "Waiting for Keycloak to be ready..."
             for i in $(seq 1 30); do
               if docker exec "$CONTAINER" $KC config credentials \
-                --server http://localhost:8080/auth --realm master --user admin --password "$KC_PASSWORD" > /dev/null 2>&1; then
+                --server http://localhost:8080 --realm master --user admin --password "$KC_PASSWORD" > /dev/null 2>&1; then
                 echo "  Keycloak is ready and authenticated"
                 break
               fi

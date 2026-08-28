@@ -2,6 +2,7 @@
 #
 # chillax.site        — static landing website
 # api.chillax.site    — reverse proxy to mobile-bff (YARP)
+# auth.chillax.site   — Keycloak (identity provider)
 # admin.chillax.site  — admin web app (SPA) + BFF proxy
 # app.chillax.site    — customer web app (SPA) + BFF proxy
 #
@@ -18,6 +19,14 @@ chillax.site {
 
 api.chillax.site {
 	reverse_proxy mobile-bff:5000
+}
+
+# Dedicated identity host — straight to Keycloak, no BFF hop. Caddy sets
+# X-Forwarded-Proto/Host itself, so Keycloak resolves public URLs correctly.
+# (api.chillax.site/auth remains as a compatibility path for installed
+# mobile apps.)
+auth.chillax.site {
+	reverse_proxy keycloak:8080
 }
 
 admin.chillax.site {

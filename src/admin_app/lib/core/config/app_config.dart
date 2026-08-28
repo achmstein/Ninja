@@ -21,8 +21,11 @@ class AppConfig {
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
 
-  // Keycloak configuration (through BFF)
-  static String get keycloakUrl => '$bffBaseUrl/auth';
+  // Keycloak configuration
+  // Release: dedicated auth subdomain (Caddy proxies straight to Keycloak).
+  // Debug: through the BFF, which strips /auth and forwards to Keycloak.
+  static String get keycloakUrl =>
+      _isRelease ? 'https://auth.chillax.site' : '$bffBaseUrl/auth';
   static const String keycloakRealm = 'chillax';
   static String get identityUrl => '$keycloakUrl/realms/$keycloakRealm';
 
