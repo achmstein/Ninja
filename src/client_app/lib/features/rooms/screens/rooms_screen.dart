@@ -403,7 +403,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                       AppText(
                         session.roomName.localized(context),
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.primaryForeground,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -413,16 +413,16 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: colors.primaryForeground.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            border: Border.all(color: colors.primaryForeground.withValues(alpha: 0.3)),
                           ),
                           child: AppText(
                             session.currentPlayerMode == 'Single'
                                 ? AppLocalizations.of(context)!.playerModeSingle
                                 : AppLocalizations.of(context)!.playerModeMulti,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: colors.primaryForeground,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -438,7 +438,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                   AppText(
                     session.formattedDuration,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colors.primaryForeground,
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
@@ -455,7 +455,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                           .toStringAsFixed(0),
                     ),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: colors.primaryForeground.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),

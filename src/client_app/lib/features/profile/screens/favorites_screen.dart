@@ -275,7 +275,7 @@ class _FavoriteItemTile extends ConsumerWidget {
             cartQuantity > 0
                 ? _QuantityStepper(
                     quantity: cartQuantity,
-                    onIncrement: () => _addToCart(ref),
+                    onIncrement: () => _incrementInCart(ref, cart, item.id),
                     onDecrement: () => _decrementFromCart(ref, cart, item.id),
                   )
                 : GestureDetector(
@@ -320,6 +320,19 @@ class _FavoriteItemTile extends ConsumerWidget {
   void _addToCart(WidgetRef ref) {
     final cartItem = CartItem.fromMenuItem(item);
     ref.read(cartProvider.notifier).addItem(cartItem);
+  }
+
+  void _incrementInCart(WidgetRef ref, Cart cart, int productId) {
+    // Bump the most recent cart line for this product so its customizations
+    // carry over — adding a bare item here would create a second,
+    // uncustomized line instead
+    for (int i = cart.items.length - 1; i >= 0; i--) {
+      if (cart.items[i].productId == productId) {
+        ref.read(cartProvider.notifier).updateQuantity(i, cart.items[i].quantity + 1);
+        return;
+      }
+    }
+    _addToCart(ref);
   }
 
   void _decrementFromCart(WidgetRef ref, Cart cart, int productId) {
