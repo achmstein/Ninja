@@ -249,8 +249,19 @@ internal static class Extensions
             yarp.AddRoute("/api/branches/{*any}", branchCluster);
 
             // Keycloak routes (for mobile app authentication)
-            yarp.AddRoute("/auth/{*any}", keycloak.GetEndpoint("http"))
-                .WithTransformPathRemovePrefix("/auth");
+            // YARP's default X-Forwarded transforms describe its own hop
+            // (plain http, /auth stripped), which makes Keycloak generate
+            // wrong URLs whenever it resolves them from the request instead
+            // of KC_HOSTNAME. Tell it the truth about the public edge so
+            // both resolution paths produce identical URLs.
+            var authRoute = yarp.AddRoute("/auth/{*any}", keycloak.GetEndpoint("http"))
+                .WithTransformPathRemovePrefix("/auth")
+                .WithTransformRequestHeader("X-Forwarded-Prefix", "/auth", append: false);
+            if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+            {
+                // In production TLS terminates at Caddy, one hop before YARP
+                authRoute.WithTransformRequestHeader("X-Forwarded-Proto", "https", append: false);
+            }
         });
     }
 
