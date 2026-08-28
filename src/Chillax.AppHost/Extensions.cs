@@ -3,6 +3,7 @@ using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Yarp;
 using Aspire.Hosting.Yarp.Transforms;
 using Yarp.ReverseProxy.Configuration;
+using Yarp.ReverseProxy.Transforms;
 
 namespace Chillax.AppHost;
 
@@ -257,6 +258,12 @@ internal static class Extensions
             const string keycloakPrefix = "/auth";
             var authRoute = yarp.AddRoute($"{keycloakPrefix}/{{*any}}", keycloak.GetEndpoint("http"))
                 .WithTransformPathRemovePrefix(keycloakPrefix)
+                // Take over proto/prefix from YARP's default X-Forwarded
+                // handling — the default transform runs after route
+                // transforms and would overwrite the explicit values below
+                .WithTransformXForwarded(
+                    xProto: ForwardedTransformActions.Off,
+                    xPrefix: ForwardedTransformActions.Off)
                 .WithTransformRequestHeader("X-Forwarded-Prefix", keycloakPrefix, append: false);
             if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
             {
