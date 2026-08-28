@@ -255,10 +255,16 @@ internal static class Extensions
             // wrong URLs whenever it resolves them from the request instead
             // of KC_HOSTNAME. Tell it the truth about the public edge so
             // both resolution paths produce identical URLs.
-            // In production auth.chillax.site is the canonical Keycloak host
-            // (Caddy proxies it directly); this route remains as the
-            // compatibility path for installed mobile apps that call
-            // api.chillax.site/auth. Take over proto/prefix from YARP's
+            // COMPATIBILITY ROUTE — scheduled for removal.
+            // auth.chillax.site is the canonical Keycloak host (Caddy
+            // proxies it directly); mobile releases from before 2026-08-29
+            // still call api.chillax.site/auth, which this route serves.
+            // Once a new mobile version (app_config.dart now points at
+            // auth.chillax.site) has shipped and old installs have aged
+            // out, DELETE this route and its transforms. In dev it is the
+            // only Keycloak path for the mobile apps, so keep the dev
+            // behavior in mind when removing.
+            // Transform note: proto/prefix are taken over from YARP's
             // default X-Forwarded handling — the default transform runs
             // after route transforms and would overwrite the explicit
             // values below.
