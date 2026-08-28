@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/auth/auth_service.dart';
@@ -411,6 +413,14 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
   late MenuRepository _menuService;
   late AuthState _authState;
 
+  // Idempotency: keep the request id across retries of the same payload, so
+  // when a slow connection times out client-side but the request actually
+  // reached the server, the retry is deduped server-side (same x-requestid)
+  // instead of creating a duplicate order. A new id is only issued when the
+  // payload changes or after a successful submission.
+  String? _requestId;
+  String? _requestSignature;
+
   @override
   CheckoutState build() {
     _orderService = ref.watch(orderRepositoryProvider);
@@ -431,18 +441,33 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     if (state.isLoading) return false; // Prevent duplicate submissions
     state = state.copyWith(isLoading: true, error: null);
 
+    final signature = jsonEncode({
+      'items': items.map((item) => item.toJson()).toList(),
+      'roomName': roomName,
+      'customerNote': customerNote,
+      'pointsToRedeem': pointsToRedeem,
+      'loyaltyDiscount': loyaltyDiscount,
+    });
+    if (_requestSignature != signature || _requestId == null) {
+      _requestSignature = signature;
+      _requestId = _uuid.v4();
+    }
+
     try {
-      final requestId = _uuid.v4();
       await _orderService.createOrder(
         items: items,
         userId: _authState.userId ?? '',
         userName: _authState.name ?? 'Guest',
-        requestId: requestId,
+        requestId: _requestId!,
         roomName: roomName,
         customerNote: customerNote,
         pointsToRedeem: pointsToRedeem,
         loyaltyDiscount: loyaltyDiscount,
       );
+
+      // The order went through — the next submission is a new order
+      _requestId = null;
+      _requestSignature = null;
 
       // Save user preferences for items with customizations
       await _saveUserPreferences(items);
