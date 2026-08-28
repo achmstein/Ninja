@@ -1,0 +1,16 @@
+import { z } from 'zod'
+import { createFileRoute } from '@tanstack/react-router'
+import { MenuManagement } from '@/features/menu'
+
+const menuSearchSchema = z.object({
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().positive().optional(),
+  q: z.string().optional(),
+  category: z.array(z.string()).optional(),
+  availability: z.array(z.string()).optional(),
+})
+
+export const Route = createFileRoute('/_authenticated/menu/')({
+  validateSearch: menuSearchSchema,
+  component: MenuManagement,
+})

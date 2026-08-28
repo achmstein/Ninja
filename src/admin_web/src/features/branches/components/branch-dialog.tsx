@@ -1,0 +1,260 @@
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
+import { toast } from '@/lib/toast'
+import { useT } from '@/lib/i18n'
+import { type BranchResponse } from '@/api/branch'
+import {
+  createBranchMutation,
+  updateBranchMutation,
+} from '@/api/branch/@tanstack/react-query.gen'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+
+interface BranchDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  branch: BranchResponse | null
+}
+
+export function BranchDialog({
+  open,
+  onOpenChange,
+  branch,
+}: BranchDialogProps) {
+  const t = useT()
+  const isEditing = !!branch
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[480px]'>
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? t('editBranch') : t('createBranch')}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? t('editBranchDescription')
+              : t('createBranchDescription')}
+          </DialogDescription>
+        </DialogHeader>
+        {/* Keyed so form state resets per branch; closing unmounts it */}
+        <BranchForm
+          key={String(branch?.id ?? 'new')}
+          branch={branch}
+          onOpenChange={onOpenChange}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function BranchForm({
+  branch,
+  onOpenChange,
+}: {
+  branch: BranchResponse | null
+  onOpenChange: (open: boolean) => void
+}) {
+  const t = useT()
+  const queryClient = useQueryClient()
+  const isEditing = !!branch
+
+  const [form, setForm] = useState({
+    nameEn: branch?.name?.en ?? '',
+    nameAr: branch?.name?.ar ?? '',
+    addressEn: branch?.address?.en ?? '',
+    addressAr: branch?.address?.ar ?? '',
+    phone: branch?.phone ?? '',
+    dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '10:00',
+    dayEndTime: branch?.dayEndTime?.slice(0, 5) ?? '02:00',
+    isActive: branch?.isActive ?? true,
+  })
+  const [error, setError] = useState('')
+
+  const onSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getAllBranches' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
+    toast.success(
+      isEditing ? t('branchUpdatedSuccess') : t('branchCreatedSuccess')
+    )
+    onOpenChange(false)
+  }
+
+  const createBranch = useMutation({
+    ...createBranchMutation(),
+    onSuccess,
+    onError: () => toast.error(t('failedToSaveBranch')),
+  })
+
+  const updateBranch = useMutation({
+    ...updateBranchMutation(),
+    onSuccess,
+    onError: () => toast.error(t('failedToSaveBranch')),
+  })
+
+  const isSaving = createBranch.isPending || updateBranch.isPending
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.nameEn.trim()) {
+      setError(t('englishNameRequired'))
+      return
+    }
+    setError('')
+
+    const name = { en: form.nameEn.trim(), ar: form.nameAr.trim() || null }
+    const address =
+      form.addressEn.trim() || form.addressAr.trim()
+        ? {
+            en: form.addressEn.trim(),
+            ar: form.addressAr.trim() || null,
+          }
+        : null
+    const phone = form.phone.trim() || null
+    const dayStartTime = `${form.dayStartTime}:00`
+    const dayEndTime = `${form.dayEndTime}:00`
+
+    if (isEditing) {
+      updateBranch.mutate({
+        path: { id: Number(branch.id) },
+        body: {
+          name,
+          address,
+          phone,
+          isActive: form.isActive,
+          displayOrder: branch.displayOrder,
+          dayStartTime,
+          dayEndTime,
+          isOrderingEnabled: branch.isOrderingEnabled,
+          isReservationsEnabled: branch.isReservationsEnabled,
+        },
+      })
+    } else {
+      createBranch.mutate({
+        body: {
+          name,
+          address,
+          phone,
+          dayStartTime,
+          dayEndTime,
+        },
+      })
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className='space-y-4'>
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
+          <Label htmlFor='branchNameEn'>{t('nameEnglish')}</Label>
+          <Input
+            id='branchNameEn'
+            value={form.nameEn}
+            onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+            autoFocus
+          />
+          {error && <p className='text-destructive text-sm'>{error}</p>}
+        </div>
+        <div className='space-y-2'>
+          <Label htmlFor='branchNameAr'>{t('nameArabic')}</Label>
+          <Input
+            id='branchNameAr'
+            dir='rtl'
+            value={form.nameAr}
+            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
+          <Label htmlFor='branchAddressEn'>{t('addressEnglish')}</Label>
+          <Input
+            id='branchAddressEn'
+            value={form.addressEn}
+            onChange={(e) => setForm({ ...form, addressEn: e.target.value })}
+          />
+        </div>
+        <div className='space-y-2'>
+          <Label htmlFor='branchAddressAr'>{t('addressArabic')}</Label>
+          <Input
+            id='branchAddressAr'
+            dir='rtl'
+            value={form.addressAr}
+            onChange={(e) => setForm({ ...form, addressAr: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className='space-y-2'>
+        <Label htmlFor='branchPhone'>{t('branchPhone')}</Label>
+        <Input
+          id='branchPhone'
+          type='tel'
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+        />
+      </div>
+
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
+          <Label htmlFor='dayStart'>{t('dayStartTime')}</Label>
+          <Input
+            id='dayStart'
+            type='time'
+            value={form.dayStartTime}
+            onChange={(e) =>
+              setForm({ ...form, dayStartTime: e.target.value })
+            }
+          />
+        </div>
+        <div className='space-y-2'>
+          <Label htmlFor='dayEnd'>{t('dayEndTime')}</Label>
+          <Input
+            id='dayEnd'
+            type='time'
+            value={form.dayEndTime}
+            onChange={(e) => setForm({ ...form, dayEndTime: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {isEditing && (
+        <div className='flex items-center justify-between rounded-lg border p-3'>
+          <Label className='text-sm'>{t('branchActive')}</Label>
+          <Switch
+            checked={form.isActive}
+            onCheckedChange={(checked) =>
+              setForm({ ...form, isActive: checked })
+            }
+          />
+        </div>
+      )}
+
+      <DialogFooter>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={() => onOpenChange(false)}
+        >
+          {t('cancel')}
+        </Button>
+        <Button type='submit' disabled={isSaving}>
+          {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+          {isEditing ? t('update') : t('create')}
+        </Button>
+      </DialogFooter>
+    </form>
+  )
+}

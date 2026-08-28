@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './theme.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    /* scrollbar-color inherits but scrollbar-width doesn't — set it here so
+       inner scrollers (dialogs, drawers) match the page scrollbar */
+    scrollbar-width: thin;
+  }
+  html {
+    /* Themed so the scrollbar track never shows as a white strip in dark mode */
+    @apply bg-background;
+    /* Subtle scrollbars, inherited by scrollable dialogs too */
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 50%, transparent)
+      transparent;
+  }
+  body {
+    @apply bg-background text-foreground min-h-svh w-full antialiased;
+  }
+
+  /* Arabic UI renders in Cairo */
+  :root[dir='rtl'] body {
+    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Toasts above dialogs/sheets (both are z-50 by default) */
+  [data-sileo-viewport] {
+    z-index: 100;
+  }
+
+  /* Sileo measures its pill geometry in LTR coordinates — keep the toast
+     box LTR so padding stays symmetric, and flip only the text itself */
+  :root[dir='rtl'] [data-sileo-toast] {
+    direction: ltr;
+  }
+  :root[dir='rtl'] [data-sileo-title],
+  :root[dir='rtl'] [data-sileo-description] {
+    direction: rtl;
+  }
+  [data-sileo-description] {
+    text-align: start;
+  }
+
+  /* Prevent focus zoom on mobile devices */
+  @media screen and (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Radix's scroll lock hides the page scrollbar and compensates with a
+   right-side body margin — the wrong side in RTL, where the scrollbar sits
+   on the left. Neutralize it (doubled attribute outweighs the injected rule)
+   and pad the logical end side ourselves: the content never shifts, and with
+   no gutter reserved the overlay dims the full window edge-to-edge. */
+body[data-scroll-locked][data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  padding-inline-end: var(--removed-body-scroll-bar-size, 0px) !important;
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

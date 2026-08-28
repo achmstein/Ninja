@@ -34,6 +34,23 @@ jobs:
       - name: Install Aspire CLI
         run: dotnet tool install --global aspire.cli --prerelease
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build web apps
+        env:
+          # The SPAs reach Keycloak through the BFF's /auth route
+          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+        run: |
+          cd src/admin_web
+          npm ci
+          npm run build
+          cd ../client_web
+          npm ci
+          npm run build
+
       - name: Generate Docker Compose artifacts
         env:
           Parameters__postgres_password: postgres
@@ -49,10 +66,26 @@ jobs:
           sed -i 's|source: ".*chillax-realm.json"|source: "./chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
           sed -i 's|target: "/opt/keycloak/data/import"|target: "/opt/keycloak/data/import/chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
 
+          # Keycloak login theme travels the same way as the realm file
+          cp -r src/Chillax.AppHost/KeycloakConfiguration/themes deploy-artifacts/keycloak-themes
+          sed -i 's|source: ".*KeycloakConfiguration/themes/chillax"|source: "./keycloak-themes/chillax"|g' deploy-artifacts/docker-compose.yaml
+
+          # Aspire publish emits no restart policy on infrastructure services (postgres,
+          # keycloak, eventbus, mobile-bff, pgadmin), which defaults to "no" — they stay
+          # exited after a host reboot while the app services come back. Force them to
+          # restart unless explicitly stopped.
+          for svc in postgres keycloak eventbus mobile-bff pgadmin; do
+            sed -i "/^  ${svc}:$/a\    restart: \"unless-stopped\"" deploy-artifacts/docker-compose.yaml
+          done
+
           # Copy Caddy files for TLS termination
           cp deploy/docker-compose.caddy.yml deploy-artifacts/docker-compose.caddy.yml
           cp deploy/Caddyfile deploy-artifacts/Caddyfile
           cp -r deploy/website deploy-artifacts/website
+
+          # Static web app bundles served by Caddy
+          cp -r src/admin_web/dist deploy-artifacts/admin-web
+          cp -r src/client_web/dist deploy-artifacts/client-web
 
           # Fill empty .env values (aspire publish generates empty placeholders)
           sed -i 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=postgres/' deploy-artifacts/.env
@@ -160,6 +193,13 @@ jobs:
             done
 
             echo ""
+            echo "=== Apply login theme ==="
+            # The realm import only runs on first boot, so enforce the theme
+            # on the existing realm every deploy (idempotent)
+            docker exec "$CONTAINER" $KC update "realms/$REALM" -s loginTheme=chillax && \
+              echo "  Login theme set to chillax"
+
+            echo ""
             echo "=== Enable permissions on identity providers ==="
             for IDP_ALIAS in google apple; do
               echo "Enabling permissions for $IDP_ALIAS..."
@@ -247,6 +287,36 @@ jobs:
                 echo "  No token-exchange permission found for $IDP_ALIAS"
               fi
             done
+
+            echo ""
+            echo "=== Ensure web app clients exist with production URIs ==="
+            # Realm import only runs on a fresh volume, so clients added to
+            # chillax-realm.json after the first deploy must be upserted here.
+            ensure_web_client() {
+              NAME="$1"; ORIGIN="$2"
+              CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
+                python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
+              if [ -z "$CID" ]; then
+                echo "  Creating $NAME..."
+                docker exec "$CONTAINER" $KC create clients -r $REALM \
+                  -s clientId="$NAME" -s enabled=true -s publicClient=true \
+                  -s standardFlowEnabled=true -s directAccessGrantsEnabled=false \
+                  -s protocol=openid-connect \
+                  -s "redirectUris=[\"$ORIGIN/*\"]" \
+                  -s "webOrigins=[\"$ORIGIN\",\"+\"]" \
+                  -s 'attributes={"pkce.code.challenge.method":"S256"}' \
+                  -s 'defaultClientScopes=["openid","profile","email","roles","orders","catalog","rooms"]' && \
+                  echo "  Created $NAME" || echo "  WARNING: failed to create $NAME"
+              else
+                echo "  Updating $NAME URIs..."
+                docker exec "$CONTAINER" $KC update "clients/$CID" -r $REALM \
+                  -s "redirectUris=[\"$ORIGIN/*\"]" \
+                  -s "webOrigins=[\"$ORIGIN\",\"+\"]" && \
+                  echo "  Updated $NAME" || echo "  WARNING: failed to update $NAME"
+              fi
+            }
+            ensure_web_client admin-panel https://admin.chillax.site
+            ensure_web_client client-web https://app.chillax.site
 
             echo ""
             echo "=== Keycloak token exchange setup complete ==="

@@ -3,10 +3,18 @@
     <Project Path="src/Accounts.API/Accounts.API.csproj" />
     <Project Path="src/Accounts.Domain/Accounts.Domain.csproj" />
     <Project Path="src/Accounts.Infrastructure/Accounts.Infrastructure.csproj" />
+    <Project Path="src/admin_web/admin_web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
     <Project Path="src/Branch.API/Branch.API.csproj" />
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
     <Project Path="src/Chillax.AppHost/Chillax.AppHost.csproj" />
     <Project Path="src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj" />
+    <Project Path="src/client_web/client_web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
     <Project Path="src/EventBus/EventBus.csproj" />
     <Project Path="src/EventBusRabbitMQ/EventBusRabbitMQ.csproj" />
     <Project Path="src/Identity.API/Identity.API.csproj" />

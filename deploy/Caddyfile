@@ -1,15 +1,49 @@
 # Caddy configuration for Chillax
 #
-# chillax.site      — static landing website
-# api.chillax.site  — reverse proxy to mobile-bff (YARP)
+# chillax.site        — static landing website
+# api.chillax.site    — reverse proxy to mobile-bff (YARP)
+# admin.chillax.site  — admin web app (SPA) + BFF proxy
+# app.chillax.site    — customer web app (SPA) + BFF proxy
 #
 # Caddy handles TLS termination (auto Let's Encrypt).
 
 chillax.site {
+	# Printed room QRs encode chillax.site/room/{id}; the customer web app
+	# handles that flow at app.chillax.site
+	redir /room/* https://app.chillax.site{uri} permanent
+
 	root * /srv/website
 	file_server
 }
 
 api.chillax.site {
 	reverse_proxy mobile-bff:5000
+}
+
+admin.chillax.site {
+	handle /api/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle /hub/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle {
+		root * /srv/admin-web
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+app.chillax.site {
+	handle /api/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle /hub/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle {
+		root * /srv/client-web
+		try_files {path} /index.html
+		file_server
+	}
 }

@@ -2,6 +2,8 @@
   "solution": {
     "path": "Chillax.slnx",
     "projects": [
+      "src\\admin_web\\admin_web.esproj",
+      "src\\client_web\\client_web.esproj",
       "src\\Accounts.API\\Accounts.API.csproj",
       "src\\Accounts.Domain\\Accounts.Domain.csproj",
       "src\\Accounts.Infrastructure\\Accounts.Infrastructure.csproj",

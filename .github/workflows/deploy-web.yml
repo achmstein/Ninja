@@ -1,0 +1,92 @@
+name: Deploy Web Apps
+
+# Fast path for SPA-only changes: builds admin_web / client_web and syncs the
+# bundles into the directories Caddy serves. No backend images, no Aspire
+# publish, no container restarts (Caddy file_server reads from disk).
+#
+# For backend changes use docker-build.yml + deploy.yml (which also ships the
+# web bundles as part of a full deploy).
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Which app to deploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - admin
+          - client
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build admin_web
+        if: ${{ github.event.inputs.app != 'client' }}
+        env:
+          # The SPAs reach Keycloak through the BFF's /auth route
+          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+        run: |
+          cd src/admin_web
+          npm ci
+          npm run build
+          mkdir -p ../../web-artifacts
+          cp -r dist ../../web-artifacts/admin-web
+
+      - name: Build client_web
+        if: ${{ github.event.inputs.app != 'admin' }}
+        env:
+          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+        run: |
+          cd src/client_web
+          npm ci
+          npm run build
+          mkdir -p ../../web-artifacts
+          cp -r dist ../../web-artifacts/client-web
+
+      - name: Copy bundles to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "web-artifacts/*"
+          target: ${{ secrets.DEPLOY_PATH }}/web-incoming
+          strip_components: 1
+
+      - name: Swap bundles into place
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # admin-web/ and client-web/ are bind-mounted into the Caddy
+            # container, so sync INTO them — replacing the directory itself
+            # would detach the mount and Caddy would keep serving old files.
+            swap() {
+              [ -d "web-incoming/$1" ] || return 0
+              mkdir -p "$1"
+              find "$1" -mindepth 1 -delete
+              cp -a "web-incoming/$1/." "$1/"
+              echo "Deployed $1"
+            }
+            swap admin-web
+            swap client-web
+            rm -rf web-incoming
