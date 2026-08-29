@@ -49,10 +49,14 @@ export function useAdminNotifications() {
     connection.on('OrderStatusChanged', (event: OrderStatusChangedEvent) => {
       invalidateOrders()
       if (event?.type === 'order_submitted') {
+        const orderId = event.orderId ?? 0
         toast.info(
           event.buyerName
-            ? `New order #${event.orderId} from ${event.buyerName}`
-            : `New order #${event.orderId}`
+            ? translate('newOrderToastFrom', {
+                orderId,
+                name: event.buyerName,
+              })
+            : translate('newOrderToast', { orderId })
         )
       }
     })
@@ -66,20 +70,40 @@ export function useAdminNotifications() {
       toast.info(translate('newServiceRequest'))
     })
 
-    const joinGroups = async () => {
-      await Promise.all([
-        connection.invoke('JoinAdminGroup'),
-        connection.invoke('JoinRoomsGroup'),
+    // Joins are independent so one failing (e.g. a policy rejection) can't
+    // silently kill the other, and every failure is named in the console —
+    // a dead connection here is otherwise invisible.
+    const joinGroups = () =>
+      Promise.allSettled([
+        connection
+          .invoke('JoinAdminGroup')
+          .catch((error) =>
+            console.warn('[signalr] JoinAdminGroup failed:', error)
+          ),
+        connection
+          .invoke('JoinRoomsGroup')
+          .catch((error) =>
+            console.warn('[signalr] JoinRoomsGroup failed:', error)
+          ),
       ])
-    }
 
-    const start = async () => {
+    let disposed = false
+    const start = async (attempt = 0) => {
       try {
         await connection.start()
         await joinGroups()
-      } catch {
-        // Initial connect failed (backend down, token expired). The
-        // visibility handler below retries; queries keep their fallback poll.
+      } catch (error) {
+        console.warn('[signalr] connect failed:', error)
+        // Back-off retry (backend still booting, transient network); the
+        // visibility handler below also retries, and queries keep their
+        // fallback poll.
+        if (
+          !disposed &&
+          attempt < 5 &&
+          connection.state === HubConnectionState.Disconnected
+        ) {
+          setTimeout(() => start(attempt + 1), 5_000 * (attempt + 1))
+        }
       }
     }
 
@@ -106,6 +130,7 @@ export function useAdminNotifications() {
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
+      disposed = true
       document.removeEventListener('visibilitychange', handleVisibility)
       connection.stop().catch(() => {})
     }

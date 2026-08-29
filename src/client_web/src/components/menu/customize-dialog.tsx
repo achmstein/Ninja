@@ -1,4 +1,3 @@
-import { toast } from '@/lib/toast'
 import { type CatalogItemDto } from '@/api/catalog'
 import { useCart } from '@/lib/cart'
 import { useLocalized } from '@/lib/i18n'
@@ -16,27 +15,49 @@ import { ItemCustomizeForm } from './item-form'
 interface CustomizeDialogProps {
   item: CatalogItemDto | null
   onOpenChange: (open: boolean) => void
+  /** Called after the item is actually added (not on plain dismissal). */
+  onAdded?: () => void
 }
 
-/** Item detail + customization picker, opened from a menu tile. */
-export function CustomizeDialog({ item, onOpenChange }: CustomizeDialogProps) {
+/**
+ * Item detail + customization picker, opened from a menu tile.
+ *
+ * Mobile: a full-height sheet (app parity — the item screen is a full page)
+ * with the image on top, scrollable options, and a pinned add-to-cart bar.
+ * Desktop: a centered two-pane card — image on the left, details on the right.
+ */
+export function CustomizeDialog({
+  item,
+  onOpenChange,
+  onAdded,
+}: CustomizeDialogProps) {
   const localized = useLocalized()
   const addToCart = useCart((s) => s.add)
 
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
-      <DialogContent className='p-0'>
+      <DialogContent
+        className={
+          // Mobile: full-height sheet (base dialog slides up from the bottom)
+          'flex h-dvh max-h-dvh flex-col gap-0 overflow-hidden rounded-none border-0 p-0 pb-0 pt-[env(safe-area-inset-top)] md:pt-0 ' +
+          // Desktop: centered card (inset-0 + m-auto centers without a
+          // transform, so the enter/exit animation still composes cleanly);
+          // the big slide gets toned down to a short rise
+          'md:inset-0 md:m-auto md:h-auto md:max-h-[85vh] md:w-[calc(100%-4rem)] md:max-w-3xl md:rounded-2xl md:border ' +
+          'md:data-[state=open]:slide-in-from-bottom-8 md:data-[state=closed]:slide-out-to-bottom-8'
+        }
+      >
         {item && (
-          <>
+          <div className='flex min-h-0 flex-1 flex-col md:flex-row'>
             {item.pictureUri && (
               <ImageWithFallback
                 src={itemPictureUrl(item.id)}
-                className='aspect-video w-full'
+                className='aspect-video w-full shrink-0 object-cover md:aspect-auto md:h-auto md:w-2/5'
                 fallbackIcon={null}
               />
             )}
-            <div className='flex flex-col gap-4 p-4 pt-0'>
-              <DialogHeader className='pt-4 text-start'>
+            <div className='flex min-h-0 flex-1 flex-col'>
+              <DialogHeader className='p-4 pb-0 text-start'>
                 <DialogTitle>{localized(item.name)}</DialogTitle>
                 {item.description && (
                   <DialogDescription>
@@ -47,6 +68,7 @@ export function CustomizeDialog({ item, onOpenChange }: CustomizeDialogProps) {
               <ItemCustomizeForm
                 key={String(item.id)}
                 item={item}
+                pinnedCta
                 onAdd={(customizations, quantity, instructions, unitPrice) => {
                   addToCart({
                     productId: Number(item.id),
@@ -60,12 +82,12 @@ export function CustomizeDialog({ item, onOpenChange }: CustomizeDialogProps) {
                     specialInstructions: instructions || undefined,
                     customizations,
                   })
-                  toast.success(localized(item.name))
                   onOpenChange(false)
+                  onAdded?.()
                 }}
               />
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>

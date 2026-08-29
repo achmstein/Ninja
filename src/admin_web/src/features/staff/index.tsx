@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTable } from '@tanstack/react-table'
-import { UserPlus } from 'lucide-react'
+import { Store, UserPlus } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { useLocale, useT } from '@/lib/i18n'
 import { useAuth } from 'react-oidc-context'
@@ -24,6 +24,7 @@ import {
   getCustomerInitials,
 } from '@/features/customers/types'
 import { AddStaffDialog } from './components/add-staff-dialog'
+import { ManageBranchesDialog } from './components/manage-branches-dialog'
 
 const columnHelper = createAppColumnHelper<Customer>()
 
@@ -33,6 +34,7 @@ export function StaffManagement() {
   const auth = useAuth()
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
+  const [branchesAdmin, setBranchesAdmin] = useState<Customer | null>(null)
 
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
@@ -143,6 +145,24 @@ export function StaffManagement() {
             />
           ),
         }),
+        columnHelper.display({
+          id: 'branches',
+          header: '',
+          cell: ({ row }) =>
+            // Owners see every branch implicitly — only Admins get assigned
+            isOwner && !(row.original.realmRoles ?? []).includes('Owner') ? (
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-8'
+                aria-label={t('assignedBranches')}
+                onClick={() => setBranchesAdmin(row.original)}
+              >
+                <Store className='h-4 w-4' />
+              </Button>
+            ) : null,
+          meta: { className: 'w-[50px]' },
+        }),
       ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isOwner, currentUserId, toggleEnabled.isPending, locale]
@@ -182,6 +202,13 @@ export function StaffManagement() {
       </Main>
 
       <AddStaffDialog open={addOpen} onOpenChange={setAddOpen} />
+
+      <ManageBranchesDialog
+        admin={branchesAdmin}
+        onOpenChange={(open) => {
+          if (!open) setBranchesAdmin(null)
+        }}
+      />
     </>
   )
 }

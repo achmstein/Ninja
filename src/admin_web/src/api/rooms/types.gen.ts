@@ -134,6 +134,26 @@ export type SessionSegmentViewModel = {
     endTime?: null | string;
 };
 
+export type SessionStats = {
+    days?: Array<SessionStatsDay>;
+    rooms?: Array<SessionStatsRoom>;
+};
+
+export type SessionStatsDay = {
+    date?: string;
+    sessions?: number | string;
+    hours?: number | string;
+    revenue?: number | string;
+};
+
+export type SessionStatsRoom = {
+    roomId?: number | string;
+    roomName?: LocalizedText;
+    sessions?: number | string;
+    hours?: number | string;
+    revenue?: number | string;
+};
+
 export type StartSessionRequest = {
     playerMode?: null | string;
 };
@@ -962,6 +982,40 @@ export type GetSessionHistoryResponses = {
 };
 
 export type GetSessionHistoryResponse = GetSessionHistoryResponses[keyof GetSessionHistoryResponses];
+
+export type GetSessionStatsData = {
+    body?: never;
+    path?: never;
+    query: {
+        fromDate: string;
+        toDate: string;
+        /**
+         * JS getTimezoneOffset() of the caller, for local-day bucketing
+         */
+        tzOffsetMinutes?: number | string;
+    };
+    url: '/api/rooms/sessions/stats';
+};
+
+export type GetSessionStatsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetSessionStatsResponses = {
+    /**
+     * OK
+     */
+    200: SessionStats;
+};
+
+export type GetSessionStatsResponse = GetSessionStatsResponses[keyof GetSessionStatsResponses];
 
 export type ScanRoomData = {
     body?: never;

@@ -16,6 +16,7 @@ import { Route as LoyaltyRouteImport } from './routes/loyalty'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as SessionsRouteImport } from './routes/sessions'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
@@ -56,6 +57,11 @@ const SessionsRoute = SessionsRouteImport.update({
   path: '/sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms'
     | '/sessions'
+    | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms'
     | '/sessions'
+    | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms'
     | '/sessions'
+    | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RoomsRoute: typeof RoomsRoute
   SessionsRoute: typeof SessionsRoute
+  SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
   RoomRoomIdRoute: typeof RoomRoomIdRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RoomsRoute: RoomsRoute,
   SessionsRoute: SessionsRoute,
+  SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
   RoomRoomIdRoute: RoomRoomIdRoute,

@@ -40,7 +40,7 @@ export function NavGroup({ title, items }: NavGroupProps) {
   const href = useLocation({ select: (location) => location.href })
 
   // Every URL in this group, so prefix matching can defer to exact matches
-  // (e.g. /orders/board highlights Live Orders, not Orders)
+  // (e.g. /menu/categories highlights Categories, not Menu Items)
   const groupUrls = items.flatMap((item) =>
     item.url
       ? [String(item.url)]
@@ -214,7 +214,7 @@ function checkIsActive(
     path === item.url || // endpoint
     !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
     // child pages without their own nav item (e.g. /rooms/history → Rooms),
-    // unless a sibling item claims the path exactly (e.g. /orders/board)
+    // unless a sibling item claims the path exactly (e.g. /menu/categories)
     (typeof item.url === 'string' &&
       item.url !== '/' &&
       path.startsWith(`${item.url}/`) &&

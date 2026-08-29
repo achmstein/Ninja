@@ -17,7 +17,9 @@ const webExtras = {
   navCatalog: { en: 'Catalog', ar: 'الكتالوج' },
   navCustomers: { en: 'Customers', ar: 'العملاء' },
   navAdministration: { en: 'Administration', ar: 'الإدارة' },
+  brandName: { en: 'Chillax', ar: 'تشيلاكس' },
   liveOrders: { en: 'Live Orders', ar: 'الطلبات اللايف' },
+  orderHistory: { en: 'Order History', ar: 'سجل الطلبات' },
   menuItems: { en: 'Menu Items', ar: 'أصناف المنيو' },
   announcements: { en: 'Announcements', ar: 'الإعلانات' },
   staff: { en: 'Staff', ar: 'الموظفين' },
@@ -189,6 +191,37 @@ const webExtras = {
   allTime: { en: 'All time', ar: 'كل الوقت' },
   last7Days: { en: 'Last 7 days', ar: 'آخر 7 أيام' },
   last30Days: { en: 'Last 30 days', ar: 'آخر 30 يوم' },
+  last90Days: { en: 'Last 90 days', ar: 'آخر 90 يوم' },
+
+  // Dashboard analytics
+  analyticsTitle: { en: 'Analytics', ar: 'الإحصائيات' },
+  revenueByDay: { en: 'Revenue', ar: 'الإيرادات' },
+  revenueByDayDescription: {
+    en: 'Daily revenue, excluding cancelled orders',
+    ar: 'الإيراد اليومي، من غير الأوردرات الملغية',
+  },
+  roomHoursByDay: { en: 'Room Hours', ar: 'ساعات الاوض' },
+  roomHoursByDayDescription: {
+    en: 'Billed hours from completed sessions',
+    ar: 'الساعات المحسوبة من الجلسات المكتملة',
+  },
+  topItemsTitle: { en: 'Top Items', ar: 'الأصناف الأكتر مبيعًا' },
+  topItemsDescription: {
+    en: 'Best sellers by units in the selected range',
+    ar: 'الأكتر مبيعًا بعدد الوحدات في الفترة المختارة',
+  },
+  hoursByRoomTitle: { en: 'Hours by Room', ar: 'الساعات لكل اوضة' },
+  hoursByRoomDescription: {
+    en: 'Billed hours per room in the selected range',
+    ar: 'الساعات المحسوبة لكل اوضة في الفترة المختارة',
+  },
+  ordersLabel: { en: 'orders', ar: 'أوردرات' },
+  sessionsLabel: { en: 'sessions', ar: 'جلسات' },
+  unitsLabel: { en: 'units', ar: 'وحدة' },
+  noAnalyticsData: {
+    en: 'No data for this range yet',
+    ar: 'مفيش بيانات للفترة دي لسه',
+  },
   reserveRoomTitle: { en: 'Reserve {name}', ar: 'حجز {name}' },
   reserveRoomDescription: {
     en: 'Hold the room for a customer. The session starts when they arrive.',
@@ -338,7 +371,7 @@ const webExtras = {
   },
   filterBundlesPlaceholder: {
     en: 'Filter bundles...',
-    ar: 'فلترة الباكدجات...',
+    ar: 'بحث في الباكدجات...',
   },
   savePercent: { en: 'Save {percent}%', ar: 'وفر {percent}%' },
 
@@ -594,7 +627,7 @@ const webExtras = {
   goToPage: { en: 'Go to page {page}', ar: 'روح لصفحة {page}' },
   noResults: { en: 'No results.', ar: 'مفيش نتايج.' },
   selectedCount: { en: '{count} selected', ar: '{count} مختار' },
-  clearFilters: { en: 'Clear filters', ar: 'امسح الفلاتر' },
+  clearFilters: { en: 'Clear filters', ar: 'امسح التصفية' },
   view: { en: 'View', ar: 'عرض' },
   toggleColumns: { en: 'Toggle columns', ar: 'إظهار وإخفاء الأعمدة' },
   sortAscending: { en: 'Asc', ar: 'تصاعدي' },
@@ -701,6 +734,14 @@ const webExtras = {
     en: 'New service request from a room',
     ar: 'طلب خدمة جديد من اوضة',
   },
+  newOrderToast: {
+    en: 'New order #{orderId}',
+    ar: 'طلب جديد #{orderId}',
+  },
+  newOrderToastFrom: {
+    en: 'New order #{orderId} from {name}',
+    ar: 'طلب جديد #{orderId} من {name}',
+  },
 
   // Order deletion (cancelled orders only — cleanup for duplicates)
   deleteOrderQuestion: { en: 'Delete Order?', ar: 'حذف الأوردر؟' },
@@ -713,6 +754,27 @@ const webExtras = {
     en: 'Could not delete the order. Only cancelled orders can be deleted.',
     ar: 'مقدرناش نحذف الأوردر. الأوردرات الملغية بس اللي ينفع تتحذف.',
   },
+  recentOrders: { en: 'Recent Orders', ar: 'آخر الطلبات' },
+  notInLoyaltyProgram: {
+    en: 'Not in the loyalty program',
+    ar: 'مش مشترك في برنامج الولاء',
+  },
+  commandMenuPlaceholder: {
+    en: 'Type a command or search...',
+    ar: 'اكتب أمر أو دور على صفحة...',
+  },
+  noResultsFound: { en: 'No results found.', ar: 'مفيش نتايج.' },
+  ordersEntity: { en: 'orders', ar: 'أوردرات' },
+  deleteOrdersQuestion: { en: 'Delete Selected Orders?', ar: 'حذف الأوردرات المحددة؟' },
+  deleteOrdersConfirmation: {
+    en: 'Permanently delete {count} cancelled orders? This cannot be undone.',
+    ar: 'حذف {count} أوردرات ملغية نهائي؟ مينفعش ترجع فيهم.',
+  },
+  ordersDeleted: { en: '{count} orders deleted', ar: 'اتحذف {count} أوردرات' },
+  failedToDeleteOrders: {
+    en: 'Could not delete some orders. Only cancelled orders can be deleted.',
+    ar: 'مقدرناش نحذف بعض الأوردرات. الأوردرات الملغية بس اللي ينفع تتحذف.',
+  },
 
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
@@ -723,7 +785,7 @@ const webExtras = {
   // Generic UI
   actions: { en: 'Actions', ar: 'إجراءات' },
   search: { en: 'Search', ar: 'بحث' },
-  filter: { en: 'Filter...', ar: 'فلترة...' },
+  filter: { en: 'Filter...', ar: 'بحث...' },
   retry: { en: 'Retry', ar: 'حاول تاني' },
   optional: { en: 'Optional', ar: 'اختياري' },
   somethingWentWrong: {

@@ -2,6 +2,7 @@ import { Check, Eye, Trash2, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Tooltip,
   TooltipContent,
@@ -52,6 +53,31 @@ export function getOrdersColumns({
   locale,
 }: OrdersColumnsCallbacks) {
   return columnHelper.columns([
+    // Only cancelled orders are deletable, so only they are selectable —
+    // enableRowSelection on the table enforces it; the checkbox just reflects it
+    columnHelper.display({
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label='Select all'
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          disabled={!row.getCanSelect()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label='Select row'
+        />
+      ),
+      meta: { className: 'w-[36px]' },
+    }),
     columnHelper.accessor('orderNumber', {
       id: 'orderNumber',
       header: t('orderHash'),

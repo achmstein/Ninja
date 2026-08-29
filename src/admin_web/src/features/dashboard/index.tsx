@@ -45,6 +45,7 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp } from '@/features/orders/status'
+import { AnalyticsSection } from './components/analytics'
 import {
   ROOM_AVAILABLE,
   SESSION_ACTIVE,
@@ -439,6 +440,10 @@ export function Dashboard() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className='mt-6'>
+          <AnalyticsSection />
         </div>
       </Main>
 

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { Ban, Search } from 'lucide-react'
+import { Ban, Search, X } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import {
   listCategoriesOptions,
@@ -17,6 +17,7 @@ import { DealsSection } from '@/components/menu/deals-section'
 import { ItemRow } from '@/components/menu/item-card'
 import { OffersCarousel } from '@/components/menu/offers-carousel'
 import { useFavorites } from '@/components/menu/use-favorites'
+import { ViewCartBar } from '@/components/menu/view-cart-bar'
 
 export const Route = createFileRoute('/')({
   component: MenuPage,
@@ -84,24 +85,55 @@ function MenuPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, categories, favorites.size, t, localized])
 
-  // Highlight the section currently in view on the category rail
+  // While a click-triggered smooth scroll runs, the spy stays quiet so it
+  // can't fight the selection the user just made
+  const spyPausedUntil = useRef(0)
+
+  // Scroll-spy for the category rail: the active section is the last one
+  // whose top has passed the spy line (just under the sticky rail). This is
+  // deterministic — unlike IntersectionObserver's changed-entries callback,
+  // it can't land on a neighbor — and at the very bottom of the page the
+  // last section wins even when it's too short to ever reach the line.
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
-            break
-          }
-        }
-      },
-      { rootMargin: '-140px 0px -60% 0px' }
-    )
-    for (const section of sections) {
-      const el = document.getElementById(section.id)
-      if (el) observer.observe(el)
+    // Just past the sections' scroll-mt-32 (128px), so a clicked section
+    // scrolled to its margin lands past the line and stays selected
+    const SPY_OFFSET = 140
+
+    const onScroll = () => {
+      if (Date.now() < spyPausedUntil.current) {
+        // Still the click's own smooth scroll: keep the pause alive until the
+        // events stop, so a clicked section near the bottom stays selected
+        // even when the page bottoms out before it reaches the spy line
+        spyPausedUntil.current = Math.max(
+          spyPausedUntil.current,
+          Date.now() + 150
+        )
+        return
+      }
+      const doc = document.documentElement
+      // scrollY > 0 keeps this from firing on transient short layouts (e.g.
+      // the remount right after clearing a search, before images size in)
+      if (
+        window.scrollY > 0 &&
+        window.innerHeight + window.scrollY >= doc.scrollHeight - 2
+      ) {
+        const last = sections[sections.length - 1]
+        if (last) setActiveSection(last.id)
+        return
+      }
+      let current = sections[0]?.id ?? ''
+      for (const section of sections) {
+        const el = document.getElementById(section.id)
+        if (!el) continue
+        if (el.getBoundingClientRect().top <= SPY_OFFSET) current = section.id
+        else break
+      }
+      setActiveSection(current)
     }
-    return () => observer.disconnect()
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [sections])
 
   const term = search.trim().toLowerCase()
@@ -137,11 +169,21 @@ function MenuPage() {
       <div className='relative'>
         <Search className='text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2' />
         <Input
-          className='rounded-full ps-9'
+          className='rounded-full pe-9 ps-9'
           placeholder={t('searchMenu')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {search && (
+          <button
+            type='button'
+            aria-label={t('cancel')}
+            className='text-muted-foreground hover:text-foreground absolute end-3 top-1/2 -translate-y-1/2'
+            onClick={() => setSearch('')}
+          >
+            <X className='h-4 w-4' />
+          </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -174,6 +216,7 @@ function MenuPage() {
             sections={sections}
             activeId={activeSection || sections[0]?.id || ''}
             onSelect={(id) => {
+              spyPausedUntil.current = Date.now() + 800
               setActiveSection(id)
               document
                 .getElementById(id)
@@ -196,11 +239,15 @@ function MenuPage() {
         </>
       )}
 
+      <ViewCartBar />
+
       <CustomizeDialog
         item={customizeItem}
         onOpenChange={(open) => {
           if (!open) setCustomizeItem(null)
         }}
+        // Adding from a search result means the search did its job
+        onAdded={() => setSearch('')}
       />
     </div>
   )

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
+import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -106,6 +106,17 @@ export const getPendingOrders = <ThrowOnError extends boolean = false>(options: 
 export const getAllOrders = <ThrowOnError extends boolean = false>(options: Options<GetAllOrdersData, ThrowOnError>): RequestResult<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/all',
+    ...options
+});
+
+/**
+ * Get aggregated order statistics (admin)
+ *
+ * Per-day order counts/revenue and top items over a date range, excluding cancelled orders.
+ */
+export const getOrderStats = <ThrowOnError extends boolean = false>(options: Options<GetOrderStatsData, ThrowOnError>): RequestResult<GetOrderStatsResponses, GetOrderStatsErrors, ThrowOnError> => (options.client ?? client).get<GetOrderStatsResponses, GetOrderStatsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/stats',
     ...options
 });
 

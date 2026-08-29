@@ -1,13 +1,15 @@
 import { useEffect, useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
+import { ArrowLeft } from 'lucide-react'
 import { type ReservationViewModel } from '@/api/rooms'
 import {
   getSessionHistoryOptions,
   listRoomsOptions,
 } from '@/api/rooms/@tanstack/react-query.gen'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -189,11 +191,20 @@ export function SessionsHistory() {
       <Header />
 
       <Main className='flex flex-col gap-4'>
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            {t('sessionHistory')}
-          </h1>
-          <p className='text-muted-foreground'>{t('sessionHistorySubtitle')}</p>
+        <div className='flex items-center gap-2'>
+          <Button size='icon' variant='ghost' className='-ms-2' asChild>
+            <Link to='/rooms' aria-label={t('rooms')}>
+              <ArrowLeft size={20} className='rtl:rotate-180' />
+            </Link>
+          </Button>
+          <div>
+            <h1 className='text-2xl font-bold tracking-tight'>
+              {t('sessionHistory')}
+            </h1>
+            <p className='text-muted-foreground'>
+              {t('sessionHistorySubtitle')}
+            </p>
+          </div>
         </div>
 
         <div className='flex items-center gap-2'>

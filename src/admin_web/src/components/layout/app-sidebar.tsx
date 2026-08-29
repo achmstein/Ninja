@@ -36,7 +36,7 @@ export function AppSidebar() {
   })
 
   const badges: Record<string, number> = {
-    '/orders/board': pendingOrders.length,
+    '/orders': pendingOrders.length,
     '/requests': serviceRequests.length,
   }
 

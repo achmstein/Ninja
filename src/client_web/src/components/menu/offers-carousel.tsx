@@ -1,5 +1,4 @@
 import { Plus, Utensils } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type CatalogItemDto } from '@/api/catalog'
 import { useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -40,7 +39,6 @@ export function OffersCarousel({
       quantity: 1,
       customizations: [],
     })
-    toast.success(localized(item.name))
   }
 
   return (

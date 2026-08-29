@@ -52,6 +52,12 @@ public static class OrdersApi
             .WithSummary("Get all orders paginated (admin)")
             .RequireAuthorization("Admin");
 
+        api.MapGet("/stats", GetOrderStatsAsync)
+            .WithName("GetOrderStats")
+            .WithSummary("Get aggregated order statistics (admin)")
+            .WithDescription("Per-day order counts/revenue and top items over a date range, excluding cancelled orders.")
+            .RequireAuthorization("Admin");
+
         api.MapGet("/user/{userId}", GetOrdersByUserIdAsync)
             .WithName("GetOrdersByUserId")
             .WithSummary("Get orders for a specific user (admin)")
@@ -285,6 +291,18 @@ public static class OrdersApi
         var orders = await services.Queries.GetAllOrdersAsync(
             pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate);
         return TypedResults.Ok(orders);
+    }
+
+    public static async Task<Ok<OrderStats>> GetOrderStatsAsync(
+        HttpContext httpContext,
+        DateTime fromDate,
+        DateTime toDate,
+        int tzOffsetMinutes = 0,
+        [AsParameters] OrderServices services = default!)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        var stats = await services.Queries.GetOrderStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes);
+        return TypedResults.Ok(stats);
     }
 
     public static async Task<OrderDraftDTO> CreateOrderDraftAsync(CreateOrderDraftCommand command, [AsParameters] OrderServices services)

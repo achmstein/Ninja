@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { Package, Plus } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { getBundlesOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { lineFromBundle, lineKey, useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -81,10 +80,7 @@ export function DealsSection({ orderingEnabled }: { orderingEnabled: boolean }) 
                       size='icon'
                       className='size-6 rounded-full'
                       aria-label={t('addToCart')}
-                      onClick={() => {
-                        add(line)
-                        toast.success(localized(bundle.name))
-                      }}
+                      onClick={() => add(line)}
                     >
                       <Plus className='h-3 w-3' />
                     </Button>

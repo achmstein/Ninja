@@ -4,14 +4,19 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n'
+import { CustomerDetailSheet } from './components/customer-detail-sheet'
 import { CustomersTable } from './components/customers-table'
 import { useCustomers, useCustomerCount } from './hooks/use-customers'
+import { type Customer } from './types'
 
 export function Customers() {
   const t = useT()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [search, setSearch] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  )
 
   // Calculate offset for API (0-based)
   const first = (page - 1) * pageSize
@@ -51,8 +56,16 @@ export function Customers() {
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
           onSearchChange={setSearch}
+          onRowClick={setSelectedCustomer}
         />
       </Main>
+
+      <CustomerDetailSheet
+        customer={selectedCustomer}
+        onOpenChange={(open) => {
+          if (!open) setSelectedCustomer(null)
+        }}
+      />
     </>
   )
 }

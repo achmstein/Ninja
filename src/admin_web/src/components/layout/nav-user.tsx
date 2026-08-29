@@ -19,8 +19,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { useT } from '@/lib/i18n'
 
 export function NavUser() {
+  const t = useT()
   const { isMobile } = useSidebar()
   const [open, setOpen] = useDialogState()
   const auth = useAuth()
@@ -81,7 +83,7 @@ export function NavUser() {
                 <DropdownMenuItem asChild>
                   <Link to='/settings'>
                     <Settings />
-                    Settings
+                    {t('settings')}
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -91,7 +93,7 @@ export function NavUser() {
                 onClick={() => setOpen(true)}
               >
                 <LogOut />
-                Sign out
+                {t('signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -96,13 +96,22 @@ interface ItemCustomizeFormProps {
     instructions: string,
     unitPrice: number
   ) => void
+  /**
+   * Dialog layout: the options scroll in their own area and the CTA stays
+   * pinned at the bottom. The default inline layout flows with the page.
+   */
+  pinnedCta?: boolean
 }
 
 /**
  * The customization form shared by the customize dialog and the item deep-link
  * page: option chips, quantity, special instructions, add-to-cart CTA.
  */
-export function ItemCustomizeForm({ item, onAdd }: ItemCustomizeFormProps) {
+export function ItemCustomizeForm({
+  item,
+  onAdd,
+  pinnedCta = false,
+}: ItemCustomizeFormProps) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
@@ -147,8 +156,8 @@ export function ItemCustomizeForm({ item, onAdd }: ItemCustomizeFormProps) {
     setOverrides({ ...selections, [key]: next })
   }
 
-  return (
-    <div className='flex flex-col gap-4'>
+  const body = (
+    <>
       {(item.customizations ?? [])
         .slice()
         .sort(
@@ -234,19 +243,39 @@ export function ItemCustomizeForm({ item, onAdd }: ItemCustomizeFormProps) {
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
       />
+    </>
+  )
 
-      <Button
-        size='lg'
-        className='w-full rounded-full'
-        disabled={!item.isAvailable || missingRequired}
-        onClick={() =>
-          onAdd(chosen, quantity, instructions.trim(), unitPrice)
-        }
-      >
-        {item.isAvailable
-          ? `${t('addToCart')} · ${price(unitPrice * quantity)}`
-          : t('unavailable')}
-      </Button>
+  const cta = (
+    <Button
+      size='lg'
+      className='w-full rounded-full'
+      disabled={!item.isAvailable || missingRequired}
+      onClick={() => onAdd(chosen, quantity, instructions.trim(), unitPrice)}
+    >
+      {item.isAvailable
+        ? `${t('addToCart')} · ${price(unitPrice * quantity)}`
+        : t('unavailable')}
+    </Button>
+  )
+
+  if (!pinnedCta) {
+    return (
+      <div className='flex flex-col gap-4'>
+        {body}
+        {cta}
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex min-h-0 flex-1 flex-col'>
+      <div className='flex flex-1 flex-col gap-4 overflow-y-auto p-4'>
+        {body}
+      </div>
+      <div className='border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-4'>
+        {cta}
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
 import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
+import { MobileTopBar } from '@/components/mobile-top-bar'
 
 type RouterContext = {
   queryClient: QueryClient
@@ -26,8 +27,12 @@ function RootLayout() {
   return (
     <DirectionProvider dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <ThemeProvider>
-        <div className='flex min-h-svh flex-col'>
+        <div className='flex min-h-svh flex-col pt-[env(safe-area-inset-top)]'>
+          {/* Installed (standalone) PWA: opaque strip under the notch/status
+              bar so scrolled content doesn't show through behind it */}
+          <div className='bg-background fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)]' />
           <AppHeader />
+          <MobileTopBar />
           <main className='mx-auto w-full max-w-lg flex-1 pb-20 md:max-w-6xl md:pb-8'>
             <Outlet />
           </main>

@@ -187,6 +187,13 @@ public static class RoomsApi
             .WithTags("Sessions")
             .RequireAuthorization("Admin");
 
+        api.MapGet("/sessions/stats", GetSessionStats)
+            .WithName("GetSessionStats")
+            .WithSummary("Get aggregated session statistics")
+            .WithDescription("Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)")
+            .WithTags("Sessions")
+            .RequireAuthorization("Admin");
+
         // QR scan endpoints
         api.MapGet("/{roomId:int}/scan", ScanRoom)
             .WithName("ScanRoom")
@@ -691,6 +698,18 @@ public static class RoomsApi
         var sessions = await queries.GetSessionHistoryAsync(
             branchId, pageIndex, pageSize, roomId, fromDate, toDate);
         return TypedResults.Ok(sessions);
+    }
+
+    public static async Task<Ok<SessionStats>> GetSessionStats(
+        [FromServices] IRoomQueries queries,
+        HttpContext httpContext,
+        DateTime fromDate,
+        DateTime toDate,
+        [Description("JS getTimezoneOffset() of the caller, for local-day bucketing")] int tzOffsetMinutes = 0)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        var stats = await queries.GetSessionStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes);
+        return TypedResults.Ok(stats);
     }
 }
 

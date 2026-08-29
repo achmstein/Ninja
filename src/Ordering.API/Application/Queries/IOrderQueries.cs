@@ -24,6 +24,13 @@ public interface IOrderQueries
         string? buyerId = null,
         DateTime? fromDate = null,
         DateTime? toDate = null);
+
+    /// <summary>
+    /// Aggregated per-day and per-item order statistics (admin dashboard),
+    /// excluding cancelled orders. tzOffsetMinutes uses JS getTimezoneOffset
+    /// semantics (UTC − local) so days bucket on the caller's calendar.
+    /// </summary>
+    Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes);
 }
 
 /// <summary>

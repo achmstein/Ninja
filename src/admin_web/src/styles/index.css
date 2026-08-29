@@ -34,24 +34,6 @@
     cursor: pointer;
   }
 
-  /* Toasts above dialogs/sheets (both are z-50 by default) */
-  [data-sileo-viewport] {
-    z-index: 100;
-  }
-
-  /* Sileo measures its pill geometry in LTR coordinates — keep the toast
-     box LTR so padding stays symmetric, and flip only the text itself */
-  :root[dir='rtl'] [data-sileo-toast] {
-    direction: ltr;
-  }
-  :root[dir='rtl'] [data-sileo-title],
-  :root[dir='rtl'] [data-sileo-description] {
-    direction: rtl;
-  }
-  [data-sileo-description] {
-    text-align: start;
-  }
-
   /* Arabic UI renders in Cairo (same as the customer apps) */
   :root[dir='rtl'] body {
     font-family: 'Cairo', 'Inter', system-ui, sans-serif;
@@ -65,6 +47,48 @@
       font-size: 16px !important;
     }
   }
+}
+
+/* Sileo overrides — OUTSIDE @layer base (with :root for specificity) so
+   they beat sileo's own runtime-injected, unlayered stylesheet. Same
+   verified block as client_web. */
+
+/* Toasts above dialogs/sheets (both are z-50 by default) */
+:root [data-sileo-viewport] {
+  z-index: 100;
+}
+
+/* Sileo ships no RTL support and measures its pill geometry in LTR
+   coordinates: keep the toast box LTR so the autopilot expansion stays
+   correct, and flip the content instead. */
+:root[dir='rtl'] [data-sileo-toast] {
+  direction: ltr;
+}
+/* The drawn pill is --_pw wide but the header only fit-contents narrower,
+   leaving sileo's designed spare space on the physical right. Spanning the
+   full pill width lets flex-end pack the content to the mirrored (right)
+   side — verified pixel-for-pixel against LTR in a headless screenshot. */
+:root[dir='rtl'] [data-sileo-header] {
+  width: var(--_pw, auto);
+  justify-content: flex-end;
+}
+/* Icon after the text (RTL reading start) via `order`, NOT row-reverse:
+   row-reverse flips the flex packing side and breaks sileo's left-anchored
+   clip/measure geometry */
+:root[dir='rtl'] [data-sileo-header-inner] [data-sileo-badge] {
+  order: 2;
+}
+/* Title-change animation: the outgoing layer is left-anchored; mirror it */
+:root[dir='rtl'] [data-sileo-header-inner][data-layer='prev'] {
+  left: auto;
+  right: 0;
+}
+:root[dir='rtl'] [data-sileo-title],
+:root[dir='rtl'] [data-sileo-description] {
+  direction: rtl;
+}
+:root[dir='rtl'] [data-sileo-description] {
+  text-align: right;
 }
 
 @utility container {

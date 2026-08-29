@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import {
   Check,
   CheckCircle2,
-  List,
+  History,
   MapPin,
   MessageSquare,
   X,
@@ -52,7 +52,7 @@ function relativeTime(
  */
 export function OrdersBoard() {
   const t = useT()
-  const { confirm, cancel, isActing } = useOrderActions()
+  const { confirm, cancel, actingOrderNumber } = useOrderActions()
 
   const pendingQuery = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
@@ -73,7 +73,7 @@ export function OrdersBoard() {
           <div>
             <div className='flex items-center gap-2'>
               <h1 className='text-2xl font-bold tracking-tight'>
-                {t('liveOrders')}
+                {t('orders')}
               </h1>
               {pending.length > 0 && (
                 <Badge variant='default' className='h-6 tabular-nums'>
@@ -83,10 +83,10 @@ export function OrdersBoard() {
             </div>
             <p className='text-muted-foreground'>{t('liveOrdersSubtitle')}</p>
           </div>
-          <Button variant='outline' asChild>
-            <Link to='/orders'>
-              <List className='me-2 h-4 w-4' />
-              {t('allOrders')}
+          {/* Same IA as Rooms: the page is the live surface, history is an icon away */}
+          <Button size='icon' variant='ghost' asChild>
+            <Link to='/orders/history' aria-label={t('orderHistory')}>
+              <History size={20} className='stroke-muted-foreground' />
             </Link>
           </Button>
         </div>
@@ -111,7 +111,8 @@ export function OrdersBoard() {
                 summary={order}
                 onConfirm={() => confirm(Number(order.orderNumber))}
                 onCancel={() => cancel(Number(order.orderNumber))}
-                isActing={isActing}
+                // Only the card being acted on shows busy
+                isActing={Number(actingOrderNumber) === Number(order.orderNumber)}
               />
             ))}
           </div>

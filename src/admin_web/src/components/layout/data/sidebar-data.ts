@@ -8,7 +8,6 @@ import {
   Megaphone,
   Package,
   ShieldCheck,
-  SquareKanban,
   Tag,
   Users,
   Award,
@@ -27,11 +26,6 @@ export const sidebarData: SidebarData = {
           title: 'dashboard',
           url: '/',
           icon: LayoutDashboard,
-        },
-        {
-          title: 'liveOrders',
-          url: '/orders/board',
-          icon: SquareKanban,
         },
         {
           title: 'orders',

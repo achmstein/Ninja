@@ -1,4 +1,5 @@
 import { useAuth } from 'react-oidc-context'
+import { useT } from '@/lib/i18n'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface SignOutDialogProps {
@@ -7,6 +8,7 @@ interface SignOutDialogProps {
 }
 
 export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
+  const t = useT()
   const auth = useAuth()
 
   const handleSignOut = () => {
@@ -18,9 +20,9 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Sign out'
-      desc='Are you sure you want to sign out? You will need to sign in again to access your account.'
-      confirmText='Sign out'
+      title={t('signOut')}
+      desc={t('signOutConfirmation')}
+      confirmText={t('signOut')}
       destructive
       handleConfirm={handleSignOut}
       className='sm:max-w-sm'

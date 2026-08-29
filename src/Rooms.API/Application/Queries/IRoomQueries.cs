@@ -53,6 +53,13 @@ public interface IRoomQueries
         int? roomId = null,
         DateTime? fromDate = null,
         DateTime? toDate = null);
+
+    /// <summary>
+    /// Aggregated per-day and per-room statistics over completed sessions
+    /// (admin dashboard). tzOffsetMinutes uses JS getTimezoneOffset semantics
+    /// (UTC − local) so days bucket on the caller's calendar.
+    /// </summary>
+    Task<SessionStats> GetSessionStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes);
 }
 
 /// <summary>

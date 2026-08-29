@@ -32,24 +32,6 @@
     cursor: pointer;
   }
 
-  /* Toasts above dialogs/sheets (both are z-50 by default) */
-  [data-sileo-viewport] {
-    z-index: 100;
-  }
-
-  /* Sileo measures its pill geometry in LTR coordinates — keep the toast
-     box LTR so padding stays symmetric, and flip only the text itself */
-  :root[dir='rtl'] [data-sileo-toast] {
-    direction: ltr;
-  }
-  :root[dir='rtl'] [data-sileo-title],
-  :root[dir='rtl'] [data-sileo-description] {
-    direction: rtl;
-  }
-  [data-sileo-description] {
-    text-align: start;
-  }
-
   /* Prevent focus zoom on mobile devices */
   @media screen and (max-width: 767px) {
     input,
@@ -58,6 +40,48 @@
       font-size: 16px !important;
     }
   }
+}
+
+/* Toasts above dialogs/sheets (both are z-50 by default); :root keeps this
+   ahead of sileo's own runtime-injected z-50 rule */
+:root [data-sileo-viewport] {
+  z-index: 100;
+}
+
+/* Sileo ships no RTL support and measures its pill geometry in LTR
+   coordinates: keep the toast box LTR so the autopilot expansion stays
+   correct, and flip the content instead — icon to the reading start via
+   row-reverse, text runs RTL and right-aligned. These rules live OUTSIDE
+   @layer base (and carry :root) so they beat sileo's own unlayered
+   stylesheet (e.g. its hardcoded `text-align: left`) in every bundle order. */
+:root[dir='rtl'] [data-sileo-toast] {
+  direction: ltr;
+}
+/* The drawn pill is --_pw wide but the header only fit-contents narrower,
+   leaving sileo's designed spare space on the physical right. Spanning the
+   full pill width lets flex-end pack the content to the mirrored (right)
+   side — verified pixel-for-pixel against LTR in a headless screenshot. */
+:root[dir='rtl'] [data-sileo-header] {
+  width: var(--_pw, auto);
+  justify-content: flex-end;
+}
+/* Icon after the text (RTL reading start) via `order`, NOT row-reverse:
+   row-reverse flips the flex packing side and breaks sileo's left-anchored
+   clip/measure geometry — order swaps only the visual sequence */
+:root[dir='rtl'] [data-sileo-header-inner] [data-sileo-badge] {
+  order: 2;
+}
+/* Title-change animation: the outgoing layer is left-anchored; mirror it */
+:root[dir='rtl'] [data-sileo-header-inner][data-layer='prev'] {
+  left: auto;
+  right: 0;
+}
+:root[dir='rtl'] [data-sileo-title],
+:root[dir='rtl'] [data-sileo-description] {
+  direction: rtl;
+}
+:root[dir='rtl'] [data-sileo-description] {
+  text-align: right;
 }
 
 /* Radix's scroll lock hides the page scrollbar and compensates with a

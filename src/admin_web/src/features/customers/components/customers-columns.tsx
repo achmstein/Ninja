@@ -52,11 +52,18 @@ export function getCustomersColumns({
       },
     },
     {
-      accessorKey: 'username',
+      // The username duplicates the email for most signups — the phone
+      // number is the useful contact column
+      accessorKey: 'phoneNumber',
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('username')} />
+        <DataTableColumnHeader column={column} title={t('phoneNumber')} />
       ),
-      cell: ({ row }) => row.original.username || '-',
+      cell: ({ row }) =>
+        row.original.phoneNumber ? (
+          <span dir='ltr'>{row.original.phoneNumber}</span>
+        ) : (
+          '-'
+        ),
     },
     {
       id: 'joinDate',

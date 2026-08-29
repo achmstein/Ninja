@@ -1,5 +1,4 @@
-import { ChevronRight, Heart, Minus, Plus, Star, Utensils } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { ChevronRight, Heart, Minus, Plus, Utensils } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import { lineKey, useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -52,6 +51,7 @@ export function ItemRow({
     item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
   const effectivePrice = onOffer ? item.offerPrice : item.price
 
+  // No toast on add — the cart bar's count/total updating is the feedback
   const addSimple = () => {
     add({
       productId: Number(item.id),
@@ -62,7 +62,6 @@ export function ItemRow({
       quantity: 1,
       customizations: [],
     })
-    toast.success(localized(item.name))
   }
 
   const handleOpen = () => {
@@ -127,14 +126,7 @@ export function ItemRow({
         className='min-w-0 flex-1 text-start'
         onClick={handleOpen}
       >
-        <div className='flex items-center gap-1.5'>
-          <span className='text-[15px] font-semibold'>
-            {localized(item.name)}
-          </span>
-          {item.isPopular && (
-            <Star className='h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400' />
-          )}
-        </div>
+        <div className='text-[15px] font-semibold'>{localized(item.name)}</div>
         {localized(item.description) && (
           <p className='text-muted-foreground line-clamp-2 text-[13px]'>
             {localized(item.description)}

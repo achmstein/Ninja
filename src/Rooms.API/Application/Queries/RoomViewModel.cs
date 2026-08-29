@@ -55,6 +55,33 @@ public record ReservationViewModel
     public List<SessionSegmentViewModel> Segments { get; init; } = new();
 }
 
+/// <summary>
+/// Aggregated session statistics for the admin dashboard.
+/// </summary>
+public record SessionStats
+{
+    public List<SessionStatsDay> Days { get; init; } = new();
+    public List<SessionStatsRoom> Rooms { get; init; } = new();
+}
+
+public record SessionStatsDay
+{
+    /// <summary>Local calendar day (per the caller's tz offset)</summary>
+    public DateOnly Date { get; init; }
+    public int Sessions { get; init; }
+    public decimal Hours { get; init; }
+    public decimal Revenue { get; init; }
+}
+
+public record SessionStatsRoom
+{
+    public int RoomId { get; init; }
+    public LocalizedText RoomName { get; init; } = new();
+    public int Sessions { get; init; }
+    public decimal Hours { get; init; }
+    public decimal Revenue { get; init; }
+}
+
 public record SessionMemberViewModel
 {
     public string CustomerId { get; init; } = "";

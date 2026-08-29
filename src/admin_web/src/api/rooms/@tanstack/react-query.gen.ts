@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMemberToSession, assignCustomerToSession, cancelMyReservation, cancelSession, changePlayerMode, createRoom, deleteRoom, endSession, getActiveSessions, getAvailableRooms, getMySessions, getRoom, getRoomSessionHistory, getSession, getSessionHistory, joinSessionByRoom, leaveSession, listRooms, type Options, removeMemberFromSession, reserveRoom, scanRoom, startSession, startWalkInSession, updateRoom, updateRoomStatus } from '../sdk.gen';
-import type { AddMemberToSessionData, AddMemberToSessionError, AssignCustomerToSessionData, AssignCustomerToSessionError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, ChangePlayerModeData, ChangePlayerModeError, CreateRoomData, CreateRoomResponse, DeleteRoomData, DeleteRoomError, EndSessionData, EndSessionError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, LeaveSessionData, LeaveSessionError, ListRoomsData, ListRoomsResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanRoomData, ScanRoomResponse, StartSessionData, StartSessionError, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdateRoomData, UpdateRoomStatusData, UpdateRoomStatusError } from '../types.gen';
+import { addMemberToSession, assignCustomerToSession, cancelMyReservation, cancelSession, changePlayerMode, createRoom, deleteRoom, endSession, getActiveSessions, getAvailableRooms, getMySessions, getRoom, getRoomSessionHistory, getSession, getSessionHistory, getSessionStats, joinSessionByRoom, leaveSession, listRooms, type Options, removeMemberFromSession, reserveRoom, scanRoom, startSession, startWalkInSession, updateRoom, updateRoomStatus } from '../sdk.gen';
+import type { AddMemberToSessionData, AddMemberToSessionError, AssignCustomerToSessionData, AssignCustomerToSessionError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, ChangePlayerModeData, ChangePlayerModeError, CreateRoomData, CreateRoomResponse, DeleteRoomData, DeleteRoomError, EndSessionData, EndSessionError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, GetSessionStatsData, GetSessionStatsResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, LeaveSessionData, LeaveSessionError, ListRoomsData, ListRoomsResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanRoomData, ScanRoomResponse, StartSessionData, StartSessionError, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdateRoomData, UpdateRoomStatusData, UpdateRoomStatusError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -483,6 +483,26 @@ export const getSessionHistoryOptions = (options?: Options<GetSessionHistoryData
         return data;
     },
     queryKey: getSessionHistoryQueryKey(options)
+});
+
+export const getSessionStatsQueryKey = (options: Options<GetSessionStatsData>) => createQueryKey('getSessionStats', options);
+
+/**
+ * Get aggregated session statistics
+ *
+ * Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)
+ */
+export const getSessionStatsOptions = (options: Options<GetSessionStatsData>) => queryOptions<GetSessionStatsResponse, AxiosError<DefaultError>, GetSessionStatsResponse, ReturnType<typeof getSessionStatsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSessionStats({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSessionStatsQueryKey(options)
 });
 
 export const scanRoomQueryKey = (options: Options<ScanRoomData>) => createQueryKey('scanRoom', options);

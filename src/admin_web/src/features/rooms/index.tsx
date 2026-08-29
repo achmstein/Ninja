@@ -217,8 +217,10 @@ export function RoomsManagement() {
           {selectedRoom ? (
             <div
               className={cn(
-                'absolute inset-0 start-full z-50 hidden w-full flex-1 flex-col border bg-background shadow-xs sm:static sm:z-auto sm:flex sm:rounded-md',
-                'inset-s-0 flex'
+                'absolute inset-0 start-full z-50 hidden w-full flex-1 flex-col border bg-background shadow-xs transition-all duration-200 sm:static sm:z-auto sm:flex sm:rounded-md',
+                // start-0 (NOT the nonexistent inset-s-0) pulls the panel
+                // on-screen — on mobile it overlays the list full-screen
+                'start-0 flex'
               )}
             >
               <RoomDetailPanel

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Coffee } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { getItemOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { useCart } from '@/lib/cart'
 import { useLocalized } from '@/lib/i18n'
@@ -86,7 +85,6 @@ function ItemPage() {
               specialInstructions: instructions || undefined,
               customizations,
             })
-            toast.success(localized(item.name))
             navigate({ to: '/' })
           }}
         />

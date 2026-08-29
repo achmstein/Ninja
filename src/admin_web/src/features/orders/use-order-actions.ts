@@ -39,14 +39,8 @@ export function useOrderActions() {
     onError: () => toast.error(t('failedToCancelOrder')),
   })
 
-  const deleteOrder = useMutation({
-    ...deleteOrderMutation(),
-    onSuccess: () => {
-      invalidateOrders()
-      toast.success(t('orderDeleted'))
-    },
-    onError: () => toast.error(t('failedToDeleteOrder')),
-  })
+  // No onSuccess/onError here: single and bulk delete toast differently
+  const deleteOrder = useMutation({ ...deleteOrderMutation() })
 
   const confirm = (orderNumber: number) =>
     confirmOrder.mutate({
@@ -62,16 +56,50 @@ export function useOrderActions() {
       query: { 'api-version': API_VERSION },
     })
 
-  const remove = (orderNumber: number) =>
-    deleteOrder.mutate({
-      path: { orderId: orderNumber },
-      query: { 'api-version': API_VERSION },
-    })
+  const remove = async (orderNumber: number) => {
+    try {
+      await deleteOrder.mutateAsync({
+        path: { orderId: orderNumber },
+        query: { 'api-version': API_VERSION },
+      })
+      invalidateOrders()
+      toast.success(t('orderDeleted'))
+    } catch {
+      toast.error(t('failedToDeleteOrder'))
+    }
+  }
+
+  const removeMany = async (orderNumbers: number[]) => {
+    const results = await Promise.allSettled(
+      orderNumbers.map((orderNumber) =>
+        deleteOrder.mutateAsync({
+          path: { orderId: orderNumber },
+          query: { 'api-version': API_VERSION },
+        })
+      )
+    )
+    invalidateOrders()
+    if (results.some((r) => r.status === 'rejected')) {
+      toast.error(t('failedToDeleteOrders'))
+    } else {
+      toast.success(t('ordersDeleted', { count: orderNumbers.length }))
+    }
+  }
+
+  // The order a confirm/cancel is currently in flight for — lets the live
+  // board mark only the touched card as busy instead of all of them
+  const actingOrderNumber = confirmOrder.isPending
+    ? confirmOrder.variables?.body?.orderNumber
+    : cancelOrder.isPending
+      ? cancelOrder.variables?.body?.orderNumber
+      : undefined
 
   return {
     confirm,
     cancel,
     remove,
+    removeMany,
+    actingOrderNumber,
     isActing:
       confirmOrder.isPending || cancelOrder.isPending || deleteOrder.isPending,
   }

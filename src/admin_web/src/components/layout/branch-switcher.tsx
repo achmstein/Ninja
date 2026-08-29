@@ -75,7 +75,7 @@ export function BranchSwitcher() {
                 className='size-8 shrink-0 object-contain dark:invert'
               />
               <div className='grid flex-1 text-start text-sm leading-tight'>
-                <span className='truncate font-semibold'>Chillax</span>
+                <span className='truncate font-semibold'>{t('brandName')}</span>
                 <span className='truncate text-xs'>
                   {localized(activeBranch?.name) || `#${branchId}`}
                 </span>

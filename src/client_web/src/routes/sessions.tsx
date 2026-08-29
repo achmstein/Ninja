@@ -8,6 +8,7 @@ import {
   SESSION_RESERVED,
   useMySessions,
 } from '@/lib/session'
+import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -80,9 +81,7 @@ function SessionsPage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>
-        {t('sessions')}
-      </h1>
+      <BackHeader title={t('sessions')} />
 
       <Tabs defaultValue='today'>
         <TabsList className='w-full'>

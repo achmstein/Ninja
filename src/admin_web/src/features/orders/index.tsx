@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { SquareKanban } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import {
   getAllOrdersOptions,
   getPendingOrdersOptions,
@@ -31,6 +31,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import {
   DataTable,
+  DataTableBulkActions,
   DataTablePagination,
   DataTableToolbar,
   dataTableFeatures,
@@ -45,10 +46,10 @@ import {
 } from '@/lib/i18n'
 import { getOrdersColumns } from './columns'
 import { OrderDetailsSheet } from './components/order-details-sheet'
-import { orderStatuses } from './status'
+import { isCancelled, orderStatuses } from './status'
 import { useOrderActions } from './use-order-actions'
 
-const route = getRouteApi('/_authenticated/orders/')
+const route = getRouteApi('/_authenticated/orders/history')
 
 type DateRange = 'today' | '7d' | '30d'
 
@@ -77,6 +78,7 @@ export function OrdersManagement() {
   const navigate = route.useNavigate()
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const {
     pagination,
@@ -121,6 +123,7 @@ export function OrdersManagement() {
     confirm: handleConfirm,
     cancel: handleCancel,
     remove: handleDelete,
+    removeMany: handleDeleteMany,
     isActing,
   } = useOrderActions()
 
@@ -148,6 +151,8 @@ export function OrdersManagement() {
     columns,
     getRowId: (row) => String(row.orderNumber),
     enableSorting: false,
+    // Deletion is restricted to cancelled orders, so selection is too
+    enableRowSelection: (row) => isCancelled(row.original.status),
     manualPagination: true,
     manualFiltering: true,
     rowCount: Number(ordersQuery.data?.totalCount ?? 0),
@@ -167,11 +172,16 @@ export function OrdersManagement() {
       <Header />
 
       <Main className='flex flex-col gap-4'>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
+        <div className='flex items-center gap-2'>
+          <Button size='icon' variant='ghost' className='-ms-2' asChild>
+            <Link to='/orders' aria-label={t('orders')}>
+              <ArrowLeft size={20} className='rtl:rotate-180' />
+            </Link>
+          </Button>
           <div>
             <div className='flex items-center gap-2'>
               <h1 className='text-2xl font-bold tracking-tight'>
-                {t('orders')}
+                {t('orderHistory')}
               </h1>
               {pendingOrders.length > 0 && (
                 <Badge variant='default' className='h-6'>
@@ -181,12 +191,6 @@ export function OrdersManagement() {
             </div>
             <p className='text-muted-foreground'>{t('ordersSubtitle')}</p>
           </div>
-          <Button variant='outline' asChild>
-            <Link to='/orders/board'>
-              <SquareKanban className='me-2 h-4 w-4' />
-              {t('liveOrders')}
-            </Link>
-          </Button>
         </div>
 
         <DataTableToolbar
@@ -244,6 +248,18 @@ export function OrdersManagement() {
         />
 
         <DataTablePagination table={table} />
+
+        <DataTableBulkActions table={table} entityName={t('ordersEntity')}>
+          <Button
+            variant='destructive'
+            size='sm'
+            disabled={isActing}
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className='me-1 h-4 w-4' />
+            {t('delete')}
+          </Button>
+        </DataTableBulkActions>
       </Main>
 
       <OrderDetailsSheet
@@ -276,6 +292,35 @@ export function OrdersManagement() {
               onClick={() => {
                 if (orderToDelete != null) handleDelete(orderToDelete)
                 setOrderToDelete(null)
+              }}
+            >
+              {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteOrdersQuestion')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteOrdersConfirmation', {
+                count: table.getSelectedRowModel().rows.length,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className='bg-destructive text-white hover:bg-destructive/90'
+              onClick={async () => {
+                const selected = table
+                  .getSelectedRowModel()
+                  .rows.map((row) => Number(row.original.orderNumber))
+                setBulkDeleteOpen(false)
+                await handleDeleteMany(selected)
+                table.resetRowSelection()
               }}
             >
               {t('delete')}

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { cancelOrder, confirmOrder, createOrder, createOrderDraft, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
-import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
+import { cancelOrder, confirmOrder, createOrder, createOrderDraft, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
+import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -197,6 +197,26 @@ export const getAllOrdersOptions = (options: Options<GetAllOrdersData>) => query
         return data;
     },
     queryKey: getAllOrdersQueryKey(options)
+});
+
+export const getOrderStatsQueryKey = (options: Options<GetOrderStatsData>) => createQueryKey('getOrderStats', options);
+
+/**
+ * Get aggregated order statistics (admin)
+ *
+ * Per-day order counts/revenue and top items over a date range, excluding cancelled orders.
+ */
+export const getOrderStatsOptions = (options: Options<GetOrderStatsData>) => queryOptions<GetOrderStatsResponse, AxiosError<DefaultError>, GetOrderStatsResponse, ReturnType<typeof getOrderStatsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOrderStats({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOrderStatsQueryKey(options)
 });
 
 export const getOrdersByUserIdQueryKey = (options: Options<GetOrdersByUserIdData>) => createQueryKey('getOrdersByUserId', options);

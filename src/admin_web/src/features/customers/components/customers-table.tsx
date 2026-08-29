@@ -41,6 +41,7 @@ interface CustomersTableProps {
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
   onSearchChange: (search: string) => void
+  onRowClick?: (customer: Customer) => void
 }
 
 export function CustomersTable({
@@ -52,6 +53,7 @@ export function CustomersTable({
   onPageChange,
   onPageSizeChange,
   onSearchChange,
+  onRowClick,
 }: CustomersTableProps) {
   const t = useT()
   const locale = useLocale()
@@ -176,7 +178,8 @@ export function CustomersTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className='group/row'
+                  className={cn('group/row', onRowClick && 'cursor-pointer')}
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

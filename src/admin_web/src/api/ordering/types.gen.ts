@@ -98,6 +98,23 @@ export type OrderRatingDto = {
     createdAt?: string;
 };
 
+export type OrderStats = {
+    days?: Array<OrderStatsDay>;
+    topItems?: Array<OrderStatsItem>;
+};
+
+export type OrderStatsDay = {
+    date?: string;
+    orders?: number | string;
+    revenue?: number | string;
+};
+
+export type OrderStatsItem = {
+    productName?: LocalizedText;
+    units?: number | string;
+    revenue?: number | string;
+};
+
 export type OrderSummary = {
     orderNumber?: number | string;
     date?: string;
@@ -460,6 +477,41 @@ export type GetAllOrdersResponses = {
 };
 
 export type GetAllOrdersResponse = GetAllOrdersResponses[keyof GetAllOrdersResponses];
+
+export type GetOrderStatsData = {
+    body?: never;
+    path?: never;
+    query: {
+        fromDate: string;
+        toDate: string;
+        tzOffsetMinutes?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/stats';
+};
+
+export type GetOrderStatsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOrderStatsResponses = {
+    /**
+     * OK
+     */
+    200: OrderStats;
+};
+
+export type GetOrderStatsResponse = GetOrderStatsResponses[keyof GetOrderStatsResponses];
 
 export type GetOrdersByUserIdData = {
     body?: never;

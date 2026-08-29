@@ -1,15 +1,8 @@
-import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { OrdersManagement } from '@/features/orders'
+import { OrdersBoard } from '@/features/orders/board'
 
-const ordersSearchSchema = z.object({
-  page: z.number().int().positive().optional(),
-  pageSize: z.number().int().positive().optional(),
-  status: z.array(z.string()).optional(),
-  range: z.enum(['today', '7d', '30d']).optional(),
-})
-
+// Orders opens on the live queue (rooms-style IA); the paginated table
+// lives behind the History icon at /orders/history
 export const Route = createFileRoute('/_authenticated/orders/')({
-  validateSearch: ordersSearchSchema,
-  component: OrdersManagement,
+  component: OrdersBoard,
 })

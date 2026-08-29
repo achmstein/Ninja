@@ -258,6 +258,58 @@ public class RoomQueries : IRoomQueries
         };
     }
 
+    public async Task<SessionStats> GetSessionStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes)
+    {
+        // Materialized (not projected) so the domain's quarter-hour billing
+        // methods stay the single source of truth for hours; a range holds at
+        // most a few hundred completed sessions.
+        var reservations = await _context.Reservations
+            .AsNoTracking()
+            .Include(r => r.Room)
+            .Include(r => r.SessionSegments)
+            .Where(r => r.Room!.BranchId == branchId)
+            .Where(r => r.Status == ReservationStatus.Completed)
+            .Where(r => (r.EndTime ?? r.CreatedAt) >= fromDate && (r.EndTime ?? r.CreatedAt) <= toDate)
+            .ToListAsync();
+
+        var rows = reservations.Select(r => new
+        {
+            // JS getTimezoneOffset is UTC − local, so local = UTC − offset
+            Date = DateOnly.FromDateTime((r.EndTime ?? r.CreatedAt).AddMinutes(-tzOffsetMinutes)),
+            r.RoomId,
+            RoomName = r.Room!.Name,
+            Hours = r.GetSingleRoundedHours() + r.GetMultiRoundedHours(),
+            Revenue = r.TotalCost ?? 0m,
+        }).ToList();
+
+        var days = rows
+            .GroupBy(r => r.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new SessionStatsDay
+            {
+                Date = g.Key,
+                Sessions = g.Count(),
+                Hours = g.Sum(r => r.Hours),
+                Revenue = g.Sum(r => r.Revenue),
+            })
+            .ToList();
+
+        var rooms = rows
+            .GroupBy(r => r.RoomId)
+            .Select(g => new SessionStatsRoom
+            {
+                RoomId = g.Key,
+                RoomName = g.First().RoomName,
+                Sessions = g.Count(),
+                Hours = g.Sum(r => r.Hours),
+                Revenue = g.Sum(r => r.Revenue),
+            })
+            .OrderByDescending(r => r.Hours)
+            .ToList();
+
+        return new SessionStats { Days = days, Rooms = rooms };
+    }
+
     public async Task<IEnumerable<ReservationViewModel>> GetRoomSessionHistoryAsync(int roomId, int limit = 20)
     {
         var reservations = await _context.Reservations

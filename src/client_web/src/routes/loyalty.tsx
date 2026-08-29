@@ -10,6 +10,7 @@ import {
   getTransactionsOptions,
 } from '@/api/loyalty/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -81,7 +82,9 @@ function LoyaltyPage() {
   // Join CTA when no loyalty account exists yet
   if (accountQuery.isError) {
     return (
-      <div className='flex h-[70svh] flex-col items-center justify-center gap-4 px-6 text-center'>
+      <div className='flex flex-col gap-4 p-4'>
+        <BackHeader title={t('loyaltyRewards')} />
+        <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
         <Award className='text-muted-foreground/40 h-12 w-12' />
         <h1 className='text-xl font-bold'>{t('joinOurLoyaltyProgram')}</h1>
         <p className='text-muted-foreground text-sm'>
@@ -103,6 +106,7 @@ function LoyaltyPage() {
           )}
           {t('joinNow')}
         </Button>
+        </div>
       </div>
     )
   }
@@ -119,9 +123,7 @@ function LoyaltyPage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>
-        {t('loyaltyRewards')}
-      </h1>
+      <BackHeader title={t('loyaltyRewards')} />
 
       {/* Membership card */}
       <div className='bg-primary text-primary-foreground flex flex-col items-center gap-1 rounded-xl p-6 shadow-sm'>
@@ -131,9 +133,8 @@ function LoyaltyPage() {
         </div>
         <div className='text-sm opacity-90'>{t('pointsBalance')}</div>
         <div className='mt-2 flex gap-4 text-xs opacity-75'>
-          <span>
-            {t('lifetimePoints')}: {lifetime}
-          </span>
+          {/* The key carries its own "{points}" placeholder and label */}
+          <span>{t('lifetimePoints', { points: lifetime })}</span>
           <span>
             ·{' '}
             {tierKeys[currentTier] ? t(tierKeys[currentTier]) : account?.currentTier}

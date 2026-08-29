@@ -5,6 +5,7 @@ import {
   getMyAccountOptions,
   getMyTransactionsOptions,
 } from '@/api/accounts/@tanstack/react-query.gen'
+import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -36,9 +37,7 @@ function AccountPage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>
-        {t('transactions')}
-      </h1>
+      <BackHeader title={t('transactions')} />
 
       {accountQuery.isLoading ? (
         <Skeleton className='h-32 rounded-xl' />

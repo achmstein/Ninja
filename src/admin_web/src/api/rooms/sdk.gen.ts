@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, ListRoomsData, ListRoomsResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses } from './types.gen';
+import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, GetSessionStatsData, GetSessionStatsErrors, GetSessionStatsResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, ListRoomsData, ListRoomsResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -267,6 +267,17 @@ export const getRoomSessionHistory = <ThrowOnError extends boolean = false>(opti
 export const getSessionHistory = <ThrowOnError extends boolean = false>(options?: Options<GetSessionHistoryData, ThrowOnError>): RequestResult<GetSessionHistoryResponses, GetSessionHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetSessionHistoryResponses, GetSessionHistoryErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/rooms/sessions/history',
+    ...options
+});
+
+/**
+ * Get aggregated session statistics
+ *
+ * Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)
+ */
+export const getSessionStats = <ThrowOnError extends boolean = false>(options: Options<GetSessionStatsData, ThrowOnError>): RequestResult<GetSessionStatsResponses, GetSessionStatsErrors, ThrowOnError> => (options.client ?? client).get<GetSessionStatsResponses, GetSessionStatsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/rooms/sessions/stats',
     ...options
 });
 

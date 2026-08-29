@@ -175,4 +175,55 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             TotalCount = totalCount
         };
     }
+
+    public async Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes)
+    {
+        // Narrow projections aggregated in memory: a range covers at most a
+        // few thousand rows, and grouping on the JSON ProductName column (or
+        // a tz-shifted date) doesn't translate to SQL anyway.
+        var baseQuery = context.Orders
+            .AsNoTracking()
+            .Where(o => o.BranchId == branchId)
+            .Where(o => o.OrderStatus != Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Cancelled)
+            .Where(o => o.OrderDate >= fromDate && o.OrderDate <= toDate);
+
+        var orders = await baseQuery
+            .Select(o => new
+            {
+                o.OrderDate,
+                Total = o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units),
+            })
+            .ToListAsync();
+
+        // JS getTimezoneOffset is UTC − local, so local = UTC − offset
+        var days = orders
+            .GroupBy(o => DateOnly.FromDateTime(o.OrderDate.AddMinutes(-tzOffsetMinutes)))
+            .OrderBy(g => g.Key)
+            .Select(g => new OrderStatsDay
+            {
+                Date = g.Key,
+                Orders = g.Count(),
+                Revenue = (double)g.Sum(o => o.Total),
+            })
+            .ToList();
+
+        var itemRows = await baseQuery
+            .SelectMany(o => o.OrderItems)
+            .Select(oi => new { oi.ProductId, oi.ProductName, oi.Units, oi.UnitPrice })
+            .ToListAsync();
+
+        var topItems = itemRows
+            .GroupBy(i => i.ProductId)
+            .Select(g => new OrderStatsItem
+            {
+                ProductName = g.First().ProductName,
+                Units = g.Sum(i => i.Units),
+                Revenue = (double)g.Sum(i => i.UnitPrice * i.Units),
+            })
+            .OrderByDescending(i => i.Units)
+            .Take(10)
+            .ToList();
+
+        return new OrderStats { Days = days, TopItems = topItems };
+    }
 }

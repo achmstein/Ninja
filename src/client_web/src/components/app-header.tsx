@@ -47,8 +47,10 @@ export function AppHeader() {
     .join('')
     .toUpperCase()
 
+  // Desktop only — mobile mirrors the app: no app bar, branding lives in
+  // the menu page (see MobileTopBar)
   return (
-    <header className='bg-background/95 sticky top-0 z-40 border-b backdrop-blur'>
+    <header className='bg-background/95 sticky top-0 z-40 hidden border-b backdrop-blur md:block'>
       <div className='mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4'>
         <Link to='/' className='flex shrink-0 items-center gap-2'>
           <img

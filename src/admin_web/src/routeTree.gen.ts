@@ -31,7 +31,7 @@ import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
-import { Route as AuthenticatedOrdersBoardRouteImport } from './routes/_authenticated/orders/board'
+import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedMenuCategoriesRouteImport } from './routes/_authenticated/menu/categories'
 import { Route as AuthenticatedMenuBundlesRouteImport } from './routes/_authenticated/menu/bundles'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
@@ -154,10 +154,10 @@ const AuthenticatedRoomsHistoryRoute =
     path: '/rooms/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedOrdersBoardRoute =
-  AuthenticatedOrdersBoardRouteImport.update({
-    id: '/orders/board',
-    path: '/orders/board',
+const AuthenticatedOrdersHistoryRoute =
+  AuthenticatedOrdersHistoryRouteImport.update({
+    id: '/orders/history',
+    path: '/orders/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMenuCategoriesRoute =
@@ -192,7 +192,7 @@ export interface FileRoutesByFullPath {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
-  '/orders/board': typeof AuthenticatedOrdersBoardRoute
+  '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
@@ -219,7 +219,7 @@ export interface FileRoutesByTo {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
-  '/orders/board': typeof AuthenticatedOrdersBoardRoute
+  '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
@@ -248,7 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/_authenticated/menu/categories': typeof AuthenticatedMenuCategoriesRoute
-  '/_authenticated/orders/board': typeof AuthenticatedOrdersBoardRoute
+  '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
@@ -277,7 +277,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/menu/bundles'
     | '/menu/categories'
-    | '/orders/board'
+    | '/orders/history'
     | '/rooms/history'
     | '/accounts'
     | '/branches'
@@ -304,7 +304,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/menu/bundles'
     | '/menu/categories'
-    | '/orders/board'
+    | '/orders/history'
     | '/rooms/history'
     | '/accounts'
     | '/branches'
@@ -332,7 +332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/errors/$error'
     | '/_authenticated/menu/bundles'
     | '/_authenticated/menu/categories'
-    | '/_authenticated/orders/board'
+    | '/_authenticated/orders/history'
     | '/_authenticated/rooms/history'
     | '/_authenticated/accounts/'
     | '/_authenticated/branches/'
@@ -515,11 +515,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRoomsHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/orders/board': {
-      id: '/_authenticated/orders/board'
-      path: '/orders/board'
-      fullPath: '/orders/board'
-      preLoaderRoute: typeof AuthenticatedOrdersBoardRouteImport
+    '/_authenticated/orders/history': {
+      id: '/_authenticated/orders/history'
+      path: '/orders/history'
+      fullPath: '/orders/history'
+      preLoaderRoute: typeof AuthenticatedOrdersHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/menu/categories': {
@@ -551,7 +551,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedMenuBundlesRoute: typeof AuthenticatedMenuBundlesRoute
   AuthenticatedMenuCategoriesRoute: typeof AuthenticatedMenuCategoriesRoute
-  AuthenticatedOrdersBoardRoute: typeof AuthenticatedOrdersBoardRoute
+  AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
@@ -571,7 +571,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedMenuBundlesRoute: AuthenticatedMenuBundlesRoute,
   AuthenticatedMenuCategoriesRoute: AuthenticatedMenuCategoriesRoute,
-  AuthenticatedOrdersBoardRoute: AuthenticatedOrdersBoardRoute,
+  AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,

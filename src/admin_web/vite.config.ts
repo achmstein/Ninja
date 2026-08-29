@@ -6,6 +6,10 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // npm injects the package.json version into every script it runs
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+  },
   plugins: [
     tanstackRouter({
       target: 'react',

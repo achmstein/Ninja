@@ -39,6 +39,30 @@ public record Order
     public OrderRatingDto? Rating { get; init; }
 }
 
+/// <summary>
+/// Aggregated order statistics for the admin dashboard.
+/// </summary>
+public record OrderStats
+{
+    public List<OrderStatsDay> Days { get; init; } = new();
+    public List<OrderStatsItem> TopItems { get; init; } = new();
+}
+
+public record OrderStatsDay
+{
+    /// <summary>Local calendar day (per the caller's tz offset)</summary>
+    public DateOnly Date { get; init; }
+    public int Orders { get; init; }
+    public double Revenue { get; init; }
+}
+
+public record OrderStatsItem
+{
+    public LocalizedText ProductName { get; init; } = new();
+    public int Units { get; init; }
+    public double Revenue { get; init; }
+}
+
 public record OrderSummary
 {
     public int OrderNumber { get; init; }
