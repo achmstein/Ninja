@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n'
 
@@ -95,7 +96,9 @@ export function RoomDialog({ room, open, onOpenChange }: RoomDialogProps) {
           <DialogTitle>{t(isEditing ? 'editRoom' : 'addRoom')}</DialogTitle>
         </DialogHeader>
 
-        <div className='space-y-4'>
+        {/* Six fields is taller than a short laptop window; scroll the fields
+            rather than pushing Save off screen */}
+        <div className='max-h-[65svh] space-y-4 overflow-y-auto px-1'>
           <div className='space-y-2'>
             <Label htmlFor='room-name-en'>{t('nameEnglish')}</Label>
             <Input
@@ -145,12 +148,15 @@ export function RoomDialog({ room, open, onOpenChange }: RoomDialogProps) {
             </div>
           </div>
 
+          {/* Descriptions run to a sentence or two - the VIP room lists its
+              consoles, screen and seating - so they get room to breathe */}
           <div className='space-y-2'>
             <Label htmlFor='room-description-en'>
               {t('descriptionEnglish')}
             </Label>
-            <Input
+            <Textarea
               id='room-description-en'
+              rows={3}
               value={descriptionEn}
               onChange={(e) => setDescriptionEn(e.target.value)}
               dir='ltr'
@@ -159,8 +165,9 @@ export function RoomDialog({ room, open, onOpenChange }: RoomDialogProps) {
 
           <div className='space-y-2'>
             <Label htmlFor='room-description-ar'>{t('descriptionArabic')}</Label>
-            <Input
+            <Textarea
               id='room-description-ar'
+              rows={3}
               value={descriptionAr}
               onChange={(e) => setDescriptionAr(e.target.value)}
               dir='rtl'
