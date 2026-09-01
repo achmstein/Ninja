@@ -31,6 +31,8 @@ public record Order
     public string Status { get; init; } = string.Empty;
     public string? Description { get; init; }
     public LocalizedText? RoomName { get; init; }
+    public int? TableId { get; init; }
+    public LocalizedText? TableName { get; init; }
     public string? CustomerNote { get; init; }
     public List<Orderitem> OrderItems { get; set; } = new();
     public decimal Total { get; set; }
@@ -72,6 +74,8 @@ public record OrderSummary
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
     public LocalizedText? RoomName { get; init; }
+    public int? TableId { get; init; }
+    public LocalizedText? TableName { get; init; }
     public string? UserName { get; init; }
     /// <summary>Buyer's identity guid — lets admin surfaces open the customer's profile.</summary>
     public string? UserId { get; init; }

@@ -24,6 +24,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             Date = order.OrderDate,
             Description = order.Description,
             RoomName = order.RoomName,
+            TableId = order.TableId,
+            TableName = order.TableName,
             CustomerNote = order.CustomerNote,
             Status = order.OrderStatus.ToString(),
             Total = order.GetTotal(),
@@ -74,6 +76,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
+                TableId = o.TableId,
+                TableName = o.TableName,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();
@@ -106,6 +110,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
+                TableId = o.TableId,
+                TableName = o.TableName,
                 UserName = o.Buyer != null ? o.Buyer.Name : null,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
@@ -163,6 +169,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
+                TableId = o.TableId,
+                TableName = o.TableName,
                 UserName = o.Buyer != null ? o.Buyer.Name : null,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null

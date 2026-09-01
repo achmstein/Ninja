@@ -27,6 +27,9 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         // Configure RoomName as JSON column (localized text)
         orderConfiguration.OwnsOne(o => o.RoomName, b => b.ToJson());
 
+        // Configure TableName as JSON column (localized text)
+        orderConfiguration.OwnsOne(o => o.TableName, b => b.ToJson());
+
         orderConfiguration.HasOne(o => o.Buyer)
             .WithMany()
             .HasForeignKey(o => o.BuyerId);

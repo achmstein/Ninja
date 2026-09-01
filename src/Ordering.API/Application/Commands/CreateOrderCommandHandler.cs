@@ -35,7 +35,9 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, boo
             message.RoomName,
             message.CustomerNote,
             pointsToRedeem: message.PointsToRedeem,
-            loyaltyDiscount: message.LoyaltyDiscount);
+            loyaltyDiscount: message.LoyaltyDiscount,
+            tableId: message.TableId,
+            tableName: message.TableName);
 
         foreach (var item in message.OrderItems)
         {

@@ -99,7 +99,9 @@ public static class OrdersApi
                 request.RoomName,
                 request.CustomerNote,
                 request.PointsToRedeem,
-                request.LoyaltyDiscount);
+                request.LoyaltyDiscount,
+                request.TableId,
+                request.TableName);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(createOrderCommand, requestId);
 
@@ -325,7 +327,9 @@ public record CreateOrderRequest(
     string? CustomerNote,
     int PointsToRedeem,
     double LoyaltyDiscount,
-    List<BasketItem> Items);
+    List<BasketItem> Items,
+    int? TableId = null,
+    LocalizedText? TableName = null);
 
 /// <summary>
 /// Request model for rating an order

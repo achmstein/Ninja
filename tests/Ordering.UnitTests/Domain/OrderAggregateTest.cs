@@ -214,4 +214,32 @@ public class OrderAggregateTest
         // Act - Assert
         Assert.ThrowsExactly<OrderingDomainException>(() => order.SetConfirmedStatus());
     }
+
+    [TestMethod]
+    public void Order_keeps_the_table_it_was_placed_from()
+    {
+        // Arrange
+        var tableName = new LocalizedText("Table 3", "ترابيزة 3");
+
+        // Act
+        var order = new Order("userId", "userName", 1, tableId: 3, tableName: tableName);
+
+        // Assert
+        Assert.AreEqual(3, order.TableId);
+        Assert.AreEqual("Table 3", order.TableName?.En);
+        Assert.AreEqual("ترابيزة 3", order.TableName?.Ar);
+        Assert.IsNull(order.RoomName);
+    }
+
+    [TestMethod]
+    public void Order_placed_from_a_room_has_no_table()
+    {
+        // Act
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+
+        // Assert
+        Assert.IsNull(order.TableId);
+        Assert.IsNull(order.TableName);
+        Assert.AreEqual("Room 1", order.RoomName?.En);
+    }
 }

@@ -26,6 +26,17 @@ public class Order
     public LocalizedText? RoomName { get; private set; }
 
     /// <summary>
+    /// The café table the order is delivered to, when the customer is not in a room.
+    /// Kept as an id as well as a name so open orders can be counted per table.
+    /// </summary>
+    public int? TableId { get; private set; }
+
+    /// <summary>
+    /// Table name captured at order time (e.g., "Table 3") - localized
+    /// </summary>
+    public LocalizedText? TableName { get; private set; }
+
+    /// <summary>
     /// Special instructions or notes from the customer
     /// </summary>
     public string? CustomerNote { get; private set; }
@@ -85,12 +96,14 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null) : this()
     {
         BuyerId = buyerId;
         OrderStatus = OrderStatus.AwaitingValidation;
         OrderDate = DateTime.UtcNow;
         RoomName = roomName;
+        TableId = tableId;
+        TableName = tableName;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         LoyaltyDiscount = loyaltyDiscount;

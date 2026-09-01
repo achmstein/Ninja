@@ -1016,6 +1016,25 @@
             "items": {
               "$ref": "#/components/schemas/BasketItem"
             }
+          },
+          "tableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tableName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           }
         }
       },
@@ -1058,6 +1077,25 @@
             ]
           },
           "roomName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "tableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tableName": {
             "oneOf": [
               {
                 "type": "null"
@@ -1374,6 +1412,25 @@
             "format": "double"
           },
           "roomName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "tableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tableName": {
             "oneOf": [
               {
                 "type": "null"

@@ -28,6 +28,18 @@ public class CreateOrderCommand : IRequest<bool>
     public LocalizedText? RoomName { get; private set; }
 
     /// <summary>
+    /// Café table the order is delivered to, when the customer is not in a room
+    /// </summary>
+    [DataMember]
+    public int? TableId { get; private set; }
+
+    /// <summary>
+    /// Table name (e.g., "Table 3") - localized
+    /// </summary>
+    [DataMember]
+    public LocalizedText? TableName { get; private set; }
+
+    /// <summary>
     /// Special instructions from customer (optional)
     /// </summary>
     [DataMember]
@@ -67,13 +79,17 @@ public class CreateOrderCommand : IRequest<bool>
         LocalizedText? roomName = null,
         string? customerNote = null,
         int pointsToRedeem = 0,
-        double loyaltyDiscount = 0)
+        double loyaltyDiscount = 0,
+        int? tableId = null,
+        LocalizedText? tableName = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         UserId = userId;
         UserName = userName;
         BranchId = branchId;
         RoomName = roomName;
+        TableId = tableId;
+        TableName = tableName;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         LoyaltyDiscount = loyaltyDiscount;

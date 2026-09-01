@@ -149,6 +149,33 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
     }
 
     [Fact]
+    public async Task AddNewOrderFromATable()
+    {
+        // Act
+        var item = new BasketItem
+        {
+            Id = "1",
+            ProductId = 12,
+            ProductName = new LocalizedText("Test"),
+            UnitPrice = 10,
+            OldUnitPrice = 9,
+            Quantity = 1,
+            PictureUrl = null
+        };
+        // A customer seated at a table rather than in a room: no RoomName, but TableId/TableName
+        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, null, 0, 0, new List<BasketItem> { item },
+            TableId: 3, TableName: new LocalizedText("Table 3", "ترابيزة 3"));
+        var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
+        {
+            Headers = { { "x-requestid", Guid.NewGuid().ToString() }, { "X-Branch-Id", "1" } }
+        };
+        var response = await _httpClient.PostAsync("api/orders", content, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task PostDraftOrder()
     {
         // Act
