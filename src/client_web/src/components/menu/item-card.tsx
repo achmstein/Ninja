@@ -5,6 +5,7 @@ import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ImageWithFallback } from '@/components/image-fallback'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function itemPictureUrl(id: number | string | undefined): string {
   return `/api/catalog/items/${id}/pic`
@@ -197,6 +198,33 @@ export function ItemRow({
             )}
           </Button>
         ))}
+    </div>
+  )
+}
+
+/**
+ * Loading placeholder for ItemRow.
+ *
+ * Deliberately lives beside the component it imitates and repeats its
+ * container classes verbatim, so a change to the row is made with its
+ * placeholder in view. A generic bar of roughly the right height leaves the
+ * page still shifting when the real rows land.
+ */
+export function ItemRowSkeleton() {
+  return (
+    <div className='flex items-center gap-3 border-b py-3 last:border-b-0'>
+      {/* Picture */}
+      <Skeleton className='size-16 shrink-0 rounded-lg' />
+
+      {/* Name, description, price */}
+      <div className='min-w-0 flex-1 space-y-2'>
+        <Skeleton className='h-4 w-2/5' />
+        <Skeleton className='h-3 w-4/5' />
+        <Skeleton className='h-4 w-16' />
+      </div>
+
+      {/* Add button */}
+      <Skeleton className='size-8 shrink-0 rounded-full' />
     </div>
   )
 }

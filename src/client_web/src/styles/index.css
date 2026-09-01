@@ -102,3 +102,23 @@ body[data-scroll-locked][data-scroll-locked] {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Skeleton shimmer: the highlight sweeps across the placeholder. Defined here
+   rather than inline because Tailwind's arbitrary animation utility can only
+   reference a named keyframe. */
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Right-to-left reads the other way, so the sweep does too */
+[dir='rtl'] [data-slot='skeleton']::after {
+  animation-name: skeleton-sweep-rtl;
+}
+
+@keyframes skeleton-sweep-rtl {
+  100% {
+    transform: translateX(-100%);
+  }
+}

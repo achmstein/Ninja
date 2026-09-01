@@ -2,6 +2,7 @@ import { CalendarPlus, Gamepad2 } from 'lucide-react'
 import { type RoomViewModel } from '@/api/spaces'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const ROOM_AVAILABLE = 1
 export const ROOM_OCCUPIED = 2
@@ -86,5 +87,20 @@ export function RoomRow({ room, canReserve, onReserve }: RoomRowProps) {
         </span>
       )}
     </button>
+  )
+}
+
+/** Loading placeholder for RoomRow, repeating its container classes so the
+ *  list does not resize when the real rows arrive. */
+export function RoomRowSkeleton() {
+  return (
+    <div className='flex w-full items-center gap-3 border-b py-3.5 last:border-b-0'>
+      <Skeleton className='size-16 shrink-0 rounded-lg' />
+      <div className='min-w-0 flex-1 space-y-2'>
+        <Skeleton className='h-4 w-1/3' />
+        <Skeleton className='h-3 w-3/4' />
+        <Skeleton className='h-4 w-24' />
+      </div>
+    </div>
   )
 }

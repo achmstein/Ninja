@@ -10,11 +10,10 @@ import {
 import { useSelectedBranch } from '@/lib/branch'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { CategoryRail, type MenuSection } from '@/components/menu/category-rail'
 import { CustomizeDialog } from '@/components/menu/customize-dialog'
 import { DealsSection } from '@/components/menu/deals-section'
-import { ItemRow } from '@/components/menu/item-card'
+import { ItemRow, ItemRowSkeleton } from '@/components/menu/item-card'
 import { OffersCarousel } from '@/components/menu/offers-carousel'
 import { useFavorites } from '@/components/menu/use-favorites'
 import { ViewCartBar } from '@/components/menu/view-cart-bar'
@@ -187,9 +186,9 @@ function MenuPage() {
       </div>
 
       {isLoading ? (
-        <div className='flex flex-col gap-3'>
+        <div className='flex flex-col'>
           {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className='h-20 rounded-xl' />
+            <ItemRowSkeleton key={i} />
           ))}
         </div>
       ) : term ? (

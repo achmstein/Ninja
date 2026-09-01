@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -9,13 +9,16 @@ import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { useActiveSession, useMyReservation } from '@/lib/session'
 import { useT } from '@/lib/i18n'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveSessionView } from '@/components/rooms/active-session'
 import { NotifyBanner } from '@/components/rooms/notify-banner'
 import { ReserveSheet } from '@/components/rooms/reserve-sheet'
 import { ReservedBanner } from '@/components/rooms/reserved-banner'
-import { RoomRow, ROOM_AVAILABLE } from '@/components/rooms/room-row'
+import {
+  RoomRow,
+  RoomRowSkeleton,
+  ROOM_AVAILABLE,
+} from '@/components/rooms/room-row'
 import { SignInSheet } from '@/components/sign-in-options'
 
 export const Route = createFileRoute('/rooms')({
@@ -77,9 +80,9 @@ function RoomsPage() {
       {allBusy && !reservation && auth.isAuthenticated && <NotifyBanner />}
 
       {isLoading ? (
-        <div className='flex flex-col gap-3'>
+        <div className='flex flex-col'>
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className='h-24 rounded-xl' />
+            <RoomRowSkeleton key={i} />
           ))}
         </div>
       ) : (

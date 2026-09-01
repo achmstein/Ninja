@@ -178,11 +178,22 @@ function OrdersPage() {
   )
 }
 
+/** Mirrors OrderCard's layout: status dot and time on one line with the total
+ *  pushed to the end, then the item lines beneath. */
 function OrdersSkeleton() {
   return (
-    <div className='flex flex-col gap-3 pt-2'>
+    <div className='flex flex-col pt-2'>
       {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className='h-20 rounded-xl' />
+        <div key={i} className='flex flex-col gap-2 py-3'>
+          <div className='flex items-center gap-2'>
+            <Skeleton className='size-2.5 shrink-0 rounded-full' />
+            <Skeleton className='h-4 w-16' />
+            <Skeleton className='h-3 w-20' />
+            <Skeleton className='ms-auto h-4 w-14 shrink-0' />
+          </div>
+          <Skeleton className='h-3 w-3/5' />
+          <Skeleton className='h-3 w-2/5' />
+        </div>
       ))}
     </div>
   )
