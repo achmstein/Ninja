@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'app_text.dart';
 import 'branch_switcher.dart';
+import 'destination_chip.dart';
 import '../providers/current_table_provider.dart';
 import '../../features/rooms/models/room.dart';
 import '../../features/rooms/services/room_service.dart';
@@ -128,7 +129,15 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         bottom: false,
         child: Column(
           children: [
-            const BranchSwitcher(),
+            // Branch at the start, where the order is going at the end. Both
+            // hide themselves when they have nothing to say, so the row
+            // collapses to nothing on a single-branch setup with no table.
+            const Row(
+              children: [
+                Expanded(child: BranchSwitcher()),
+                DestinationChip(),
+              ],
+            ),
             Expanded(child: widget.child),
           ],
         ),
