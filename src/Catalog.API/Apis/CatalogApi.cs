@@ -634,8 +634,9 @@ public static class CatalogApi
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    public static async Task<Created> CreateItem(
+    public static async Task<Created<CatalogItemDto>> CreateItem(
         [AsParameters] CatalogServices services,
+        HttpContext httpContext,
         CatalogItem product)
     {
         var item = new CatalogItem(product.Name)
@@ -655,7 +656,12 @@ public static class CatalogApi
         services.Context.CatalogItems.Add(item);
         await services.Context.SaveChangesAsync();
 
-        return TypedResults.Created($"/api/catalog/items/{item.Id}");
+        // Return the created item, as the category, customization and bundle
+        // endpoints do. Callers need its id to follow up - uploading the
+        // item's picture, for one - and a bodyless 201 left them nothing.
+        return TypedResults.Created(
+            $"/api/catalog/items/{item.Id}",
+            item.ToDto(GetBaseUrl(httpContext)));
     }
 
     public static async Task<Results<Ok, NotFound<ProblemDetails>>> UpdateItem(

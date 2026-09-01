@@ -204,7 +204,17 @@ function MenuItemForm({
 
     // The item is saved at this point — a photo problem must not read as a
     // failed save.
-    if (pictureFile && itemId) {
+    if (pictureFile) {
+      // Uploading needs the new item's id. Skipping quietly when it is missing
+      // is how a bodyless 201 from create silently dropped every new item's
+      // photo, so say so instead.
+      if (!itemId) {
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+        toast.error(t('itemSavedPhotoUploadFailed'))
+        onOpenChange(false)
+        return
+      }
+
       try {
         await uploadPicture.mutateAsync({
           path: { id: itemId },
