@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMemberToSession, assignCustomerToSession, cancelMyReservation, cancelSession, changePlayerMode, createRoom, deleteRoom, endSession, getActiveSessions, getAvailableRooms, getMySessions, getRoom, getRoomSessionHistory, getSession, getSessionHistory, getSessionStats, joinSessionByRoom, leaveSession, listRooms, type Options, removeMemberFromSession, reserveRoom, scanRoom, startSession, startWalkInSession, updateRoom, updateRoomStatus } from '../sdk.gen';
-import type { AddMemberToSessionData, AddMemberToSessionError, AssignCustomerToSessionData, AssignCustomerToSessionError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, ChangePlayerModeData, ChangePlayerModeError, CreateRoomData, CreateRoomResponse, DeleteRoomData, DeleteRoomError, EndSessionData, EndSessionError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, GetSessionStatsData, GetSessionStatsResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, LeaveSessionData, LeaveSessionError, ListRoomsData, ListRoomsResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanRoomData, ScanRoomResponse, StartSessionData, StartSessionError, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdateRoomData, UpdateRoomStatusData, UpdateRoomStatusError } from '../types.gen';
+import { addMemberToSession, assignCustomerToSession, cancelMyReservation, cancelSession, changePlayerMode, createRoom, createTable, deleteRoom, deleteTable, endSession, getActiveSessions, getAvailableRooms, getMySessions, getRoom, getRoomSessionHistory, getSession, getSessionHistory, getSessionStats, getTable, joinSessionByRoom, leaveSession, listRooms, listTables, type Options, removeMemberFromSession, reserveRoom, scanRoom, setTableActive, startSession, startWalkInSession, updateRoom, updateRoomStatus, updateTable } from '../sdk.gen';
+import type { AddMemberToSessionData, AddMemberToSessionError, AssignCustomerToSessionData, AssignCustomerToSessionError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, ChangePlayerModeData, ChangePlayerModeError, CreateRoomData, CreateRoomResponse, CreateTableData, CreateTableError, CreateTableResponse, DeleteRoomData, DeleteRoomError, DeleteTableData, EndSessionData, EndSessionError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, GetSessionStatsData, GetSessionStatsResponse, GetTableData, GetTableResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, LeaveSessionData, LeaveSessionError, ListRoomsData, ListRoomsResponse, ListTablesData, ListTablesResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanRoomData, ScanRoomResponse, SetTableActiveData, StartSessionData, StartSessionError, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdateRoomData, UpdateRoomStatusData, UpdateRoomStatusError, UpdateTableData, UpdateTableError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -534,6 +534,122 @@ export const joinSessionByRoomMutation = (options?: Partial<Options<JoinSessionB
     const mutationOptions: UseMutationOptions<JoinSessionByRoomResponse, AxiosError<JoinSessionByRoomError>, Options<JoinSessionByRoomData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await joinSessionByRoom({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listTablesQueryKey = (options?: Options<ListTablesData>) => createQueryKey('listTables', options);
+
+/**
+ * List all tables
+ *
+ * Get all café tables for the branch, including inactive ones
+ */
+export const listTablesOptions = (options?: Options<ListTablesData>) => queryOptions<ListTablesResponse, AxiosError<DefaultError>, ListTablesResponse, ReturnType<typeof listTablesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listTables({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listTablesQueryKey(options)
+});
+
+/**
+ * Create a new table
+ *
+ * Create a new café table (Admin only)
+ */
+export const createTableMutation = (options?: Partial<Options<CreateTableData>>): UseMutationOptions<CreateTableResponse, AxiosError<CreateTableError>, Options<CreateTableData>> => {
+    const mutationOptions: UseMutationOptions<CreateTableResponse, AxiosError<CreateTableError>, Options<CreateTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete a table
+ *
+ * Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)
+ */
+export const deleteTableMutation = (options?: Partial<Options<DeleteTableData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<DeleteTableData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<DeleteTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTableQueryKey = (options: Options<GetTableData>) => createQueryKey('getTable', options);
+
+/**
+ * Get table by ID
+ *
+ * Get a table by its ID. This is what a scanned table QR code resolves to.
+ */
+export const getTableOptions = (options: Options<GetTableData>) => queryOptions<GetTableResponse, AxiosError<DefaultError>, GetTableResponse, ReturnType<typeof getTableQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTable({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTableQueryKey(options)
+});
+
+/**
+ * Rename a table
+ *
+ * Update a table's name (Admin only)
+ */
+export const updateTableMutation = (options?: Partial<Options<UpdateTableData>>): UseMutationOptions<unknown, AxiosError<UpdateTableError>, Options<UpdateTableData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdateTableError>, Options<UpdateTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Activate or deactivate a table
+ *
+ * Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)
+ */
+export const setTableActiveMutation = (options?: Partial<Options<SetTableActiveData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetTableActiveData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetTableActiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setTableActive({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

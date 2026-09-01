@@ -25,6 +25,10 @@ export type CreateRoomRequest = {
     multiRate: number | string;
 };
 
+export type CreateTableRequest = {
+    name: LocalizedText;
+};
+
 export type JoinSessionResult = {
     reservationId: number | string;
     roomId: number | string;
@@ -154,6 +158,10 @@ export type SessionStatsRoom = {
     revenue?: number | string;
 };
 
+export type SetTableActiveRequest = {
+    isActive: boolean;
+};
+
 export type StartSessionRequest = {
     playerMode?: null | string;
 };
@@ -162,11 +170,22 @@ export type StartWalkInSessionResult = {
     reservationId: number | string;
 };
 
+export type TableViewModel = {
+    id?: number | string;
+    name?: LocalizedText;
+    branchId?: number | string;
+    isActive?: boolean;
+};
+
 export type UpdateRoomRequest = {
     name: LocalizedText;
     description: null | LocalizedText;
     singleRate: number | string;
     multiRate: number | string;
+};
+
+export type UpdateTableRequest = {
+    name: LocalizedText;
 };
 
 export type WalkInSessionRequest = {
@@ -1090,3 +1109,188 @@ export type JoinSessionByRoomResponses = {
 };
 
 export type JoinSessionByRoomResponse = JoinSessionByRoomResponses[keyof JoinSessionByRoomResponses];
+
+export type ListTablesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tables';
+};
+
+export type ListTablesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TableViewModel>;
+};
+
+export type ListTablesResponse = ListTablesResponses[keyof ListTablesResponses];
+
+export type CreateTableData = {
+    body: CreateTableRequest;
+    path?: never;
+    query?: never;
+    url: '/api/tables';
+};
+
+export type CreateTableErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreateTableError = CreateTableErrors[keyof CreateTableErrors];
+
+export type CreateTableResponses = {
+    /**
+     * Created
+     */
+    201: number | string;
+};
+
+export type CreateTableResponse = CreateTableResponses[keyof CreateTableResponses];
+
+export type DeleteTableData = {
+    body?: never;
+    path: {
+        /**
+         * The table ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/tables/{id}';
+};
+
+export type DeleteTableErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteTableResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetTableData = {
+    body?: never;
+    path: {
+        /**
+         * The table ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/tables/{id}';
+};
+
+export type GetTableErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTableResponses = {
+    /**
+     * OK
+     */
+    200: TableViewModel;
+};
+
+export type GetTableResponse = GetTableResponses[keyof GetTableResponses];
+
+export type UpdateTableData = {
+    body: UpdateTableRequest;
+    path: {
+        /**
+         * The table ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/tables/{id}';
+};
+
+export type UpdateTableErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateTableError = UpdateTableErrors[keyof UpdateTableErrors];
+
+export type UpdateTableResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type SetTableActiveData = {
+    body: SetTableActiveRequest;
+    path: {
+        /**
+         * The table ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/tables/{id}/active';
+};
+
+export type SetTableActiveErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetTableActiveResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};

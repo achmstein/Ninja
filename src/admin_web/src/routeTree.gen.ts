@@ -19,6 +19,7 @@ import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
@@ -30,6 +31,7 @@ import { Route as AuthenticatedLoyaltyIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
+import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenticated/tables/print'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedMenuCategoriesRouteImport } from './routes/_authenticated/menu/categories'
@@ -85,6 +87,12 @@ const authSignInRoute = authSignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTablesIndexRoute =
+  AuthenticatedTablesIndexRouteImport.update({
+    id: '/tables/',
+    path: '/tables/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -148,6 +156,12 @@ const AuthenticatedAccountsIndexRoute =
     path: '/accounts/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTablesPrintRoute =
+  AuthenticatedTablesPrintRouteImport.update({
+    id: '/tables/print',
+    path: '/tables/print',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRoomsHistoryRoute =
   AuthenticatedRoomsHistoryRouteImport.update({
     id: '/rooms/history',
@@ -194,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/tables/print': typeof AuthenticatedTablesPrintRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -205,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
+  '/tables': typeof AuthenticatedTablesIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
@@ -221,6 +237,7 @@ export interface FileRoutesByTo {
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/tables/print': typeof AuthenticatedTablesPrintRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -232,6 +249,7 @@ export interface FileRoutesByTo {
   '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
+  '/tables': typeof AuthenticatedTablesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -250,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/_authenticated/tables/print': typeof AuthenticatedTablesPrintRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
@@ -261,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
+  '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -279,6 +299,7 @@ export interface FileRouteTypes {
     | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
+    | '/tables/print'
     | '/accounts'
     | '/branches'
     | '/customers'
@@ -290,6 +311,7 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/settings'
     | '/staff'
+    | '/tables'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -306,6 +328,7 @@ export interface FileRouteTypes {
     | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
+    | '/tables/print'
     | '/accounts'
     | '/branches'
     | '/customers'
@@ -317,6 +340,7 @@ export interface FileRouteTypes {
     | '/rooms'
     | '/settings'
     | '/staff'
+    | '/tables'
   id:
     | '__root__'
     | '/_authenticated'
@@ -334,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu/categories'
     | '/_authenticated/orders/history'
     | '/_authenticated/rooms/history'
+    | '/_authenticated/tables/print'
     | '/_authenticated/accounts/'
     | '/_authenticated/branches/'
     | '/_authenticated/customers/'
@@ -345,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rooms/'
     | '/_authenticated/settings/'
     | '/_authenticated/staff/'
+    | '/_authenticated/tables/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -431,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/tables/': {
+      id: '/_authenticated/tables/'
+      path: '/tables'
+      fullPath: '/tables'
+      preLoaderRoute: typeof AuthenticatedTablesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/staff/': {
       id: '/_authenticated/staff/'
       path: '/staff'
@@ -508,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tables/print': {
+      id: '/_authenticated/tables/print'
+      path: '/tables/print'
+      fullPath: '/tables/print'
+      preLoaderRoute: typeof AuthenticatedTablesPrintRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rooms/history': {
       id: '/_authenticated/rooms/history'
       path: '/rooms/history'
@@ -553,6 +593,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMenuCategoriesRoute: typeof AuthenticatedMenuCategoriesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
+  AuthenticatedTablesPrintRoute: typeof AuthenticatedTablesPrintRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
@@ -564,6 +605,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
+  AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -573,6 +615,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMenuCategoriesRoute: AuthenticatedMenuCategoriesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
+  AuthenticatedTablesPrintRoute: AuthenticatedTablesPrintRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
@@ -584,6 +627,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
+  AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

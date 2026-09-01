@@ -1,5 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { Check, Coffee, Loader2, MapPin, MessageSquare, X } from 'lucide-react'
+import {
+  Armchair,
+  Check,
+  Coffee,
+  Loader2,
+  MapPin,
+  MessageSquare,
+  X,
+} from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
@@ -78,12 +86,20 @@ export function OrderDetailsSheet({
             </div>
           ) : order ? (
             <>
-              {(localized(order.roomName) || order.customerNote) && (
+              {(localized(order.roomName) ||
+                localized(order.tableName) ||
+                order.customerNote) && (
                 <div className='flex flex-col gap-2'>
                   {localized(order.roomName) && (
                     <div className='flex items-center gap-2 text-sm'>
                       <MapPin className='text-muted-foreground h-4 w-4' />
                       <span>{localized(order.roomName)}</span>
+                    </div>
+                  )}
+                  {localized(order.tableName) && (
+                    <div className='flex items-center gap-2 text-sm'>
+                      <Armchair className='text-muted-foreground h-4 w-4' />
+                      <span>{localized(order.tableName)}</span>
                     </div>
                   )}
                   {order.customerNote && (

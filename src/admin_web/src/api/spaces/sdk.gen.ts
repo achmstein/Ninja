@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, GetSessionStatsData, GetSessionStatsErrors, GetSessionStatsResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, ListRoomsData, ListRoomsResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses } from './types.gen';
+import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, CreateTableData, CreateTableErrors, CreateTableResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, DeleteTableData, DeleteTableErrors, DeleteTableResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, GetSessionStatsData, GetSessionStatsErrors, GetSessionStatsResponses, GetTableData, GetTableErrors, GetTableResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, ListRoomsData, ListRoomsResponses, ListTablesData, ListTablesResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, SetTableActiveData, SetTableActiveErrors, SetTableActiveResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses, UpdateTableData, UpdateTableErrors, UpdateTableResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -301,4 +301,76 @@ export const joinSessionByRoom = <ThrowOnError extends boolean = false>(options:
     responseType: 'json',
     url: '/api/rooms/sessions/join-by-room/{roomId}',
     ...options
+});
+
+/**
+ * List all tables
+ *
+ * Get all café tables for the branch, including inactive ones
+ */
+export const listTables = <ThrowOnError extends boolean = false>(options?: Options<ListTablesData, ThrowOnError>): RequestResult<ListTablesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListTablesResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tables',
+    ...options
+});
+
+/**
+ * Create a new table
+ *
+ * Create a new café table (Admin only)
+ */
+export const createTable = <ThrowOnError extends boolean = false>(options: Options<CreateTableData, ThrowOnError>): RequestResult<CreateTableResponses, CreateTableErrors, ThrowOnError> => (options.client ?? client).post<CreateTableResponses, CreateTableErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tables',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a table
+ *
+ * Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)
+ */
+export const deleteTable = <ThrowOnError extends boolean = false>(options: Options<DeleteTableData, ThrowOnError>): RequestResult<DeleteTableResponses, DeleteTableErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTableResponses, DeleteTableErrors, ThrowOnError>({ url: '/api/tables/{id}', ...options });
+
+/**
+ * Get table by ID
+ *
+ * Get a table by its ID. This is what a scanned table QR code resolves to.
+ */
+export const getTable = <ThrowOnError extends boolean = false>(options: Options<GetTableData, ThrowOnError>): RequestResult<GetTableResponses, GetTableErrors, ThrowOnError> => (options.client ?? client).get<GetTableResponses, GetTableErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tables/{id}',
+    ...options
+});
+
+/**
+ * Rename a table
+ *
+ * Update a table's name (Admin only)
+ */
+export const updateTable = <ThrowOnError extends boolean = false>(options: Options<UpdateTableData, ThrowOnError>): RequestResult<UpdateTableResponses, UpdateTableErrors, ThrowOnError> => (options.client ?? client).put<UpdateTableResponses, UpdateTableErrors, ThrowOnError>({
+    url: '/api/tables/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate or deactivate a table
+ *
+ * Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)
+ */
+export const setTableActive = <ThrowOnError extends boolean = false>(options: Options<SetTableActiveData, ThrowOnError>): RequestResult<SetTableActiveResponses, SetTableActiveErrors, ThrowOnError> => (options.client ?? client).put<SetTableActiveResponses, SetTableActiveErrors, ThrowOnError>({
+    url: '/api/tables/{id}/active',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });

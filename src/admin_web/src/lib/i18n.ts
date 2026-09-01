@@ -71,6 +71,47 @@ const webExtras = {
     en: 'Sessions and reservations.',
     ar: 'الجلسات والحجوزات.',
   },
+  // Café tables (seating customers order from - no sessions, no billing)
+  tables: { en: 'Tables', ar: 'الترابيزات' },
+  tablesSubtitle: {
+    en: 'Café seating and printable QR codes.',
+    ar: 'ترابيزات الكافيه وأكواد QR للطباعة.',
+  },
+  addTable: { en: 'Add table', ar: 'ضيف ترابيزة' },
+  editTable: { en: 'Edit table', ar: 'تعديل الترابيزة' },
+  tableNameHint: { en: 'e.g. Table 1', ar: 'مثلاً: ترابيزة 1' },
+  printQrSheet: { en: 'Print QR sheet', ar: 'اطبع ورقة الأكواد' },
+  qrSheetSubtitle: {
+    en: 'Cut along the cards and put one on each table.',
+    ar: 'قص الكروت وحط واحد على كل ترابيزة.',
+  },
+  scanToOrder: { en: 'Scan to order', ar: 'امسح الكود عشان تطلب' },
+  openOrder: { en: 'Open order', ar: 'أوردر شغال' },
+  tableInactive: { en: 'Inactive', ar: 'موقوفة' },
+  activateTable: { en: 'Activate', ar: 'تفعيل' },
+  deactivateTable: { en: 'Deactivate', ar: 'إيقاف' },
+  deleteTableQuestion: { en: 'Delete table?', ar: 'حذف الترابيزة؟' },
+  deleteTableConfirmation: {
+    en: 'Printed QR codes for {name} will stop working. Past orders keep the table name. Deactivate instead if you might bring it back.',
+    ar: 'أكواد QR المطبوعة لـ {name} هتبطل تشتغل. الأوردرات القديمة هتفضل بإسم الترابيزة. لو ممكن ترجعها، أوقفها بدل ما تحذفها.',
+  },
+  tableCreated: { en: 'Table added', ar: 'الترابيزة اتضافت' },
+  tableUpdated: { en: 'Table updated', ar: 'الترابيزة اتحدثت' },
+  tableDeleted: { en: 'Table deleted', ar: 'الترابيزة اتحذفت' },
+  failedToSaveTable: {
+    en: 'Failed to save table',
+    ar: 'معرفناش نحفظ الترابيزة',
+  },
+  failedToDeleteTable: {
+    en: 'Failed to delete table',
+    ar: 'معرفناش نحذف الترابيزة',
+  },
+  noTablesYet: {
+    en: 'No tables yet. Add your first table.',
+    ar: 'مفيش ترابيزات لسه. ضيف أول ترابيزة.',
+  },
+  copyTableLink: { en: 'Copy table QR link', ar: 'انسخ لينك الترابيزة' },
+  tableLinkCopied: { en: 'Table link copied', ar: 'اتنسخ لينك الترابيزة' },
   sessionHistorySubtitle: {
     en: 'Completed sessions across all rooms.',
     ar: 'الجلسات اللي خلصت في كل الاوض.',

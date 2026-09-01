@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Armchair,
   Coffee,
   ClipboardList,
   ConciergeBell,
@@ -36,6 +37,11 @@ export const sidebarData: SidebarData = {
           title: 'rooms',
           url: '/rooms',
           icon: Gamepad2,
+        },
+        {
+          title: 'tables',
+          url: '/tables',
+          icon: Armchair,
         },
         {
           title: 'requests',

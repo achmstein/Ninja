@@ -46,6 +46,8 @@ export type CreateOrderRequest = {
     pointsToRedeem: number | string;
     loyaltyDiscount: number | string;
     items: Array<BasketItem>;
+    tableId?: null | number | string;
+    tableName?: null | LocalizedText;
 };
 
 export type LocalizedText = {
@@ -59,6 +61,8 @@ export type Order = {
     status?: string;
     description?: null | string;
     roomName?: null | LocalizedText;
+    tableId?: null | number | string;
+    tableName?: null | LocalizedText;
     customerNote?: null | string;
     orderItems?: Array<Orderitem>;
     total?: number | string;
@@ -123,6 +127,8 @@ export type OrderSummary = {
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
     roomName?: null | LocalizedText;
+    tableId?: null | number | string;
+    tableName?: null | LocalizedText;
     userName?: null | string;
     userId?: null | string;
     ratingValue?: null | number | string;

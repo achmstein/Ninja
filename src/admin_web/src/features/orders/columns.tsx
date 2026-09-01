@@ -105,11 +105,17 @@ export function getOrdersColumns({
       header: t('customer'),
       cell: (info) => info.getValue() || '—',
     }),
-    columnHelper.accessor((row) => localized(row.roomName), {
-      id: 'room',
-      header: t('room'),
-      cell: (info) => localized(info.row.original.roomName) || '—',
-    }),
+    columnHelper.accessor(
+      (row) => localized(row.roomName) || localized(row.tableName),
+      {
+        id: 'room',
+        header: t('room'),
+        cell: (info) =>
+          localized(info.row.original.roomName) ||
+          localized(info.row.original.tableName) ||
+          '—',
+      }
+    ),
     columnHelper.accessor('status', {
       id: 'status',
       header: t('status'),

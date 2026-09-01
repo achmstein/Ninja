@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import {
   Check,
   CheckCircle2,
+  Armchair,
   Clock,
   History,
   MapPin,
@@ -215,6 +216,12 @@ function PendingOrderCard({
           <span className='flex items-center gap-1'>
             <MapPin className='h-3 w-3' />
             {localized(summary.roomName)}
+          </span>
+        )}
+        {localized(summary.tableName) && (
+          <span className='flex items-center gap-1'>
+            <Armchair className='h-3 w-3' />
+            {localized(summary.tableName)}
           </span>
         )}
       </div>
