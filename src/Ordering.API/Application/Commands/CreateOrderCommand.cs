@@ -90,6 +90,12 @@ public class CreateOrderCommand : IRequest<bool>
     /// </summary>
     public bool IsGuestOrder => string.IsNullOrWhiteSpace(UserId);
 
+    /// <summary>
+    /// Whether the order says where it goes. Mirrors Order.HasDestination —
+    /// the aggregate is the one that enforces it.
+    /// </summary>
+    public bool HasDestination => RoomName is not null || TableId.HasValue;
+
     public CreateOrderCommand()
     {
         _orderItems = new List<OrderItemDTO>();

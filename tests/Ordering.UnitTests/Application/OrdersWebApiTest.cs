@@ -351,6 +351,40 @@ public class OrdersWebApiTest
     }
 
     [TestMethod]
+    public async Task Create_guest_order_without_a_destination_is_rejected()
+    {
+        // Act — nothing anchors this to someone in the building, and ordering
+        // ahead to collect is reserved for account holders
+        var result = await CreateGuestOrderAsync(GuestRequest(tableId: null));
+
+        // Assert
+        Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+    }
+
+    [TestMethod]
+    public async Task Create_signed_in_order_without_a_destination_is_allowed()
+    {
+        // Arrange — the gate is on guests only; an account holder stays
+        // accountable wherever they order from
+        _identityServiceMock.GetUserIdentity().Returns(Guid.NewGuid().ToString());
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
+            .Returns(Task.FromResult(true));
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
+
+        var request = GuestRequest(tableId: null) with { UserName = "Nadia" };
+
+        // Act
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _loggerMock);
+        var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, httpContext, orderServices);
+
+        // Assert
+        Assert.IsInstanceOfType<Ok>(result.Result);
+    }
+
+    [TestMethod]
     public async Task Create_guest_order_success()
     {
         // Arrange
@@ -397,9 +431,14 @@ public class OrdersWebApiTest
             default);
     }
 
+    /// <summary>
+    /// A guest orders from the table they scanned, so the default request has
+    /// one — the destinationless case is its own test.
+    /// </summary>
     private static CreateOrderRequest GuestRequest(
         string? guestName = "Nadia",
-        string? guestPhone = "01012345678") =>
+        string? guestPhone = "01012345678",
+        int? tableId = 7) =>
         new(
             UserId: string.Empty,
             UserName: string.Empty,
@@ -408,6 +447,8 @@ public class OrdersWebApiTest
             PointsToRedeem: 0,
             LoyaltyDiscount: 0,
             Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = "Latte", UnitPrice = 50, Quantity = 1 }],
+            TableId: tableId,
+            TableName: tableId is null ? null : "Table 7",
             GuestName: guestName,
             GuestPhone: guestPhone);
 

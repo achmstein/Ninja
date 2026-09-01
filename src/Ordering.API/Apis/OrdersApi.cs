@@ -136,6 +136,14 @@ public static partial class OrdersApi
             {
                 return TypedResults.BadRequest("Loyalty points require an account.");
             }
+
+            // Ordering without saying where to bring it is ordering ahead, and
+            // that is for account holders — there is nobody to hand a guest's
+            // order to and nothing tying it to a visit
+            if (request.TableId is null && request.RoomName is null)
+            {
+                return TypedResults.BadRequest("A table or room is required to order as a guest.");
+            }
         }
 
         // Both the command validator and the Buyer aggregate refuse a blank

@@ -13,6 +13,7 @@ import {
   Minus,
   Package,
   Plus,
+  QrCode,
   ShoppingBag,
   Trash2,
 } from 'lucide-react'
@@ -285,9 +286,35 @@ function CartPage() {
     )
   }
 
+  // A guest orders against the table they are sitting at. Without one there is
+  // nothing anchoring the order to someone in the building, so the only ways
+  // forward are to scan the table or to sign in — the server refuses it either
+  // way, and finding that out after tapping Order would be the wrong lesson.
+  const guestNeedsTable = isGuest && !destination
+
   // Ordering never needs an account. Signing in is offered underneath rather
   // than in the way, since it is what earns points and keeps the order history.
-  const checkoutButton = (
+  const checkoutButton = guestNeedsTable ? (
+    <div className='flex flex-col gap-3 border-t pt-4'>
+      <div className='flex items-start gap-2 text-sm'>
+        <QrCode className='text-primary mt-0.5 h-4 w-4 shrink-0' />
+        <div className='flex flex-col gap-0.5'>
+          <span>{t('scanTableToOrder')}</span>
+          <span className='text-muted-foreground text-xs'>
+            {t('scanTableOrSignIn')}
+          </span>
+        </div>
+      </div>
+      <Button
+        size='lg'
+        className='w-full rounded-full'
+        onClick={() => setSignInOpen(true)}
+      >
+        <LogIn className='h-4 w-4' />
+        {t('signIn')}
+      </Button>
+    </div>
+  ) : (
     <div className='flex flex-col gap-2'>
       <Button
         size='lg'
@@ -456,8 +483,9 @@ function CartPage() {
         />
 
         {/* Where the points slider sits for a signed-in customer — the one
-            place the upsell lands without nagging */}
-        {isGuest && (
+            place the upsell lands without nagging. Suppressed when they are
+            already being asked to sign in below, which would say it twice. */}
+        {isGuest && !guestNeedsTable && (
           <div className='text-muted-foreground flex items-center gap-2 border-t pt-4 text-sm'>
             <Award className='text-primary h-4 w-4 shrink-0' />
             {t('guestOrderNoPoints')}

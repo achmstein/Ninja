@@ -37,6 +37,12 @@ public class Order
     public LocalizedText? TableName { get; private set; }
 
     /// <summary>
+    /// Whether the order says where it is going. A running room session wins
+    /// over a scanned table on the way in, so at most one of the two is set.
+    /// </summary>
+    public bool HasDestination => RoomName is not null || TableId.HasValue;
+
+    /// <summary>
     /// Special instructions or notes from the customer
     /// </summary>
     public string? CustomerNote { get; private set; }
@@ -149,6 +155,17 @@ public class Order
             GuestPhone = !string.IsNullOrWhiteSpace(guestPhone)
                 ? guestPhone
                 : throw new OrderingDomainException("A guest order needs a phone number.");
+
+            // Where they are sitting is the only thing anchoring a guest order
+            // to someone actually in the building. Without it there is nobody
+            // to carry it to, and ordering ahead — which is what a destination
+            // less order really is — is reserved for account holders who can
+            // be held to it. In practice this always means a table: a room
+            // session belongs to an account.
+            if (!HasDestination)
+            {
+                throw new OrderingDomainException("A guest order needs a table or room to be delivered to.");
+            }
         }
 
         // Add the OrderStartedDomainEvent to the domain events collection

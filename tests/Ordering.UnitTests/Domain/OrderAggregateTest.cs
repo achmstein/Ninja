@@ -242,4 +242,75 @@ public class OrderAggregateTest
         Assert.IsNull(order.TableName);
         Assert.AreEqual("Room 1", order.RoomName?.En);
     }
+
+    [TestMethod]
+    public void Guest_order_at_a_table_is_valid()
+    {
+        // Act
+        var order = NewGuestOrder(tableId: 3);
+
+        // Assert
+        Assert.IsTrue(order.IsGuestOrder);
+        Assert.IsTrue(order.HasDestination);
+        Assert.AreEqual("Nadia", order.GuestName);
+        Assert.IsNull(order.BuyerId);
+    }
+
+    [TestMethod]
+    public void Guest_order_in_a_room_is_valid()
+    {
+        // Act
+        var order = NewGuestOrder(roomName: "Room 1");
+
+        // Assert
+        Assert.IsTrue(order.HasDestination);
+    }
+
+    [TestMethod]
+    public void Guest_order_without_a_destination_is_refused()
+    {
+        // A guest order with nowhere to go is an order-ahead, and there is no
+        // account behind it to hold anyone to collecting it
+        Assert.ThrowsExactly<OrderingDomainException>(() => NewGuestOrder());
+    }
+
+    [TestMethod]
+    public void Signed_in_order_without_a_destination_is_allowed()
+    {
+        // The gate is on guests only — an account holder stays accountable
+        // wherever they order from, which is what takeaway will rest on
+        var order = new Order("userId", "userName", 1);
+
+        // Assert
+        Assert.IsFalse(order.HasDestination);
+        Assert.IsFalse(order.IsGuestOrder);
+    }
+
+    [TestMethod]
+    public void Guest_order_without_contact_details_is_refused()
+    {
+        Assert.ThrowsExactly<OrderingDomainException>(
+            () => NewGuestOrder(tableId: 3, guestName: null));
+        Assert.ThrowsExactly<OrderingDomainException>(
+            () => NewGuestOrder(tableId: 3, guestPhone: null));
+        Assert.ThrowsExactly<OrderingDomainException>(
+            () => NewGuestOrder(tableId: 3, guestId: null));
+    }
+
+    private static Order NewGuestOrder(
+        int? tableId = null,
+        LocalizedText? roomName = null,
+        string? guestId = "guest-1",
+        string? guestName = "Nadia",
+        string? guestPhone = "01012345678") =>
+        new(
+            userId: string.Empty,
+            userName: string.Empty,
+            branchId: 1,
+            roomName: roomName,
+            tableId: tableId,
+            tableName: tableId is null ? null : new LocalizedText("Table 3"),
+            guestId: guestId,
+            guestName: guestName,
+            guestPhone: guestPhone);
 }

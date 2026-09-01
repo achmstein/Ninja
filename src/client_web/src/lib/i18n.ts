@@ -26,6 +26,16 @@ const webExtras = {
   },
   orderAsGuest: { en: 'Order as guest', ar: 'اطلب كضيف' },
   signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
+  // Shown when a guest has no table: ordering without one means ordering
+  // ahead, which needs an account
+  scanTableToOrder: {
+    en: 'Scan the QR code on your table to order',
+    ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
+  },
+  scanTableOrSignIn: {
+    en: 'Or sign in to order from anywhere',
+    ar: 'أو سجل دخول عشان تطلب من أي مكان',
+  },
   guestOrderNoPoints: {
     en: 'Sign in to earn points on your orders',
     ar: 'سجل دخول عشان تجمع نقط على طلباتك',
