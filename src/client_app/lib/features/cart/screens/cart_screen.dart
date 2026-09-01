@@ -15,7 +15,7 @@ import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
-import '../../rooms/models/room.dart';
+import '../../../core/models/localized_text.dart';
 import '../../rooms/services/room_service.dart';
 import '../../../core/services/sound_service.dart';
 
@@ -206,6 +206,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 Column(
                                   children: [
                                     const SizedBox(height: 24),
+
+                                    // Where this order is going
+                                    _buildDestinationRow(colors),
 
                                     // Note
                                     Column(
@@ -437,6 +440,36 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
+  /// Where this order will be delivered, so the customer can see it before
+  /// committing. Reads orderDestinationProvider, the same source checkout uses.
+  Widget _buildDestinationRow(dynamic colors) {
+    final destination = ref.watch(orderDestinationProvider);
+    if (destination == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(
+            destination.isRoom ? FIcons.gamepad2 : FIcons.armchair,
+            size: 16,
+            color: colors.mutedForeground as Color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: AppText(
+              destination.name.localized(context),
+              style: TextStyle(
+                fontSize: 13,
+                color: colors.mutedForeground as Color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTotalSection(double orderTotal, dynamic colors) {
     final l10n = AppLocalizations.of(context)!;
     final redemption = ref.watch(loyaltyRedemptionProvider);
@@ -582,28 +615,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final note = _noteController.text.isNotEmpty ? _noteController.text : null;
     final redemption = ref.read(loyaltyRedemptionProvider);
 
-    // Get active room session's room name (if any) - send as localized object
+    // Make sure the destination reflects a session that may have started while
+    // the cart was open; room-beats-table lives in orderDestinationProvider.
     await ref.read(mySessionsProvider.notifier).refresh();
-    Map<String, dynamic>? roomName;
-    final sessionsState = ref.read(mySessionsProvider);
-    if (sessionsState.hasValue) {
-      final activeSession = sessionsState.value!
-          .where((s) => s.status == SessionStatus.active)
-          .firstOrNull;
-      if (activeSession != null) {
-        roomName = activeSession.roomName.toJson();
-      }
-    }
-
-    // Otherwise deliver to the table they scanned into: a running room session
-    // is the stronger statement about where the customer actually is.
-    final table = roomName == null ? ref.read(activeTableProvider) : null;
+    final destination = ref.read(orderDestinationProvider);
 
     final success = await ref.read(checkoutProvider.notifier).submitOrder(
           items: cart.items,
-          roomName: roomName,
-          tableId: table?.id,
-          tableName: table?.name.toJson(),
+          roomName: destination != null && destination.isRoom
+              ? destination.name.toJson()
+              : null,
+          tableId: destination?.tableId,
+          tableName: destination != null && !destination.isRoom
+              ? destination.name.toJson()
+              : null,
           customerNote: note,
           pointsToRedeem: redemption.pointsToRedeem,
           loyaltyDiscount: redemption.serverDiscount ?? 0,

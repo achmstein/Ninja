@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/localized_text.dart';
 import 'branch_provider.dart';
+import '../../features/rooms/models/room.dart';
+import '../../features/rooms/services/room_service.dart';
 
 const String _tableKey = 'current_table';
 
@@ -108,4 +110,56 @@ final activeTableProvider = Provider<CurrentTable?>((ref) {
   if (table == null || !table.isFresh) return null;
   final branchId = ref.watch(selectedBranchIdProvider);
   return table.branchId == branchId ? table : null;
+});
+
+/// Where the next order will be delivered.
+enum OrderDestinationKind { room, table }
+
+class OrderDestination {
+  final OrderDestinationKind kind;
+  final LocalizedText name;
+
+  /// Only set for a table; a room travels as a name snapshot alone.
+  final int? tableId;
+
+  const OrderDestination({
+    required this.kind,
+    required this.name,
+    this.tableId,
+  });
+
+  bool get isRoom => kind == OrderDestinationKind.room;
+}
+
+/// A running room session beats a scanned table, and forgets it: moving to a
+/// room means the customer left the table, so once the session ends they have
+/// no destination until they scan wherever they sit next. Keeping the old table
+/// warm would risk sending food to a table they had already walked away from.
+///
+/// Mirrors useOrderDestination in the web client; every surface that shows or
+/// sends the destination reads it from here so they cannot disagree.
+final orderDestinationProvider = Provider<OrderDestination?>((ref) {
+  final activeSession = ref.watch(mySessionsProvider).whenOrNull(
+        data: (sessions) => sessions
+            .where((s) => s.status == SessionStatus.active)
+            .firstOrNull,
+      );
+
+  if (activeSession != null) {
+    return OrderDestination(
+      kind: OrderDestinationKind.room,
+      name: activeSession.roomName,
+    );
+  }
+
+  final table = ref.watch(activeTableProvider);
+  if (table != null) {
+    return OrderDestination(
+      kind: OrderDestinationKind.table,
+      name: table.name,
+      tableId: table.id,
+    );
+  }
+
+  return null;
 });

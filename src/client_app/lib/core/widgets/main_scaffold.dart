@@ -6,6 +6,9 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'app_text.dart';
 import 'branch_switcher.dart';
+import '../providers/current_table_provider.dart';
+import '../../features/rooms/models/room.dart';
+import '../../features/rooms/services/room_service.dart';
 
 
 /// Tracks the current route for tab-aware refreshing
@@ -33,6 +36,25 @@ class MainScaffold extends ConsumerStatefulWidget {
 }
 
 class _MainScaffoldState extends ConsumerState<MainScaffold> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Moving into a room means the customer left their table, so forget it.
+    // Driven by the session appearing rather than by the join button, so it
+    // also covers a session a cashier starts for a walk-in.
+    ref.listenManual(mySessionsProvider, (_, next) {
+      final inRoom = next.whenOrNull(
+            data: (sessions) =>
+                sessions.any((s) => s.status == SessionStatus.active),
+          ) ??
+          false;
+      if (inRoom && ref.read(currentTableProvider) != null) {
+        ref.read(currentTableProvider.notifier).clear();
+      }
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
