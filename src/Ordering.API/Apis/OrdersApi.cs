@@ -1,18 +1,32 @@
 #nullable enable
+using System.Text.RegularExpressions;
 using Chillax.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Chillax.Ordering.Domain.Seedwork;
 using Order = Chillax.Ordering.API.Application.Queries.Order;
 
-public static class OrdersApi
+public static partial class OrdersApi
 {
+    /// <summary>
+    /// Egyptian mobile number — the same rule the apps enforce on the profile
+    /// phone, so a guest is asked for exactly what an account holder stores.
+    /// </summary>
+    [GeneratedRegex(@"^01[0-9]{9}$")]
+    private static partial Regex GuestPhoneRegex();
+
     public static RouteGroupBuilder MapOrdersApiV1(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
 
+        // Guest checkout: someone who scanned a table QR can order without an
+        // account, identified by the guest id their browser generated. Rate
+        // limited because an open create endpoint is a queue-spam vector.
         api.MapPost("/", CreateOrderAsync)
             .WithName("CreateOrder")
-            .WithSummary("Create a new cafe order");
+            .WithSummary("Create a new cafe order")
+            .WithDescription("Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.")
+            .AllowAnonymous()
+            .RequireRateLimiting(OrderRateLimiting.GuestCreatePolicy);
 
         api.MapPut("/confirm", ConfirmOrderAsync)
             .WithName("ConfirmOrder")
@@ -36,11 +50,15 @@ public static class OrdersApi
 
         api.MapGet("/{orderId:int}", GetOrderAsync)
             .WithName("GetOrder")
-            .WithSummary("Get order by ID");
+            .WithSummary("Get order by ID")
+            .WithDescription("Readable by an admin, the customer who placed it, or the guest whose X-Guest-Id matches.")
+            .AllowAnonymous();
 
         api.MapGet("/", GetOrdersByUserAsync)
             .WithName("GetOrdersByUser")
-            .WithSummary("Get current user's orders");
+            .WithSummary("Get current user's orders")
+            .WithDescription("Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.")
+            .AllowAnonymous();
 
         api.MapGet("/pending", GetPendingOrdersAsync)
             .WithName("GetPendingOrders")
@@ -76,16 +94,63 @@ public static class OrdersApi
         HttpContext httpContext,
         [AsParameters] OrderServices services)
     {
-        services.Logger.LogInformation(
-            "Creating order for user: {UserId}, Room: {RoomName}",
-            request.UserId,
-            request.RoomName);
-
         if (requestId == Guid.Empty)
         {
             services.Logger.LogWarning("Invalid request - RequestId is missing");
             return TypedResults.BadRequest("RequestId is missing.");
         }
+
+        // The identity comes from the token, never from the body: a signed-in
+        // customer must not be able to place an order in someone else's name.
+        // Only a caller with no token at all is treated as a guest.
+        var signedInUserId = services.IdentityService.GetUserIdentity();
+        var isGuest = string.IsNullOrEmpty(signedInUserId);
+
+        string? guestId = null;
+
+        if (isGuest)
+        {
+            // Validate here rather than leaning on the command validator:
+            // IdentifiedCommandHandler swallows handler exceptions and returns
+            // false, which this endpoint reports as a 200 — so a rejected guest
+            // would be told their order was placed. Fail before dispatching.
+            guestId = httpContext.GetGuestId();
+
+            if (string.IsNullOrEmpty(guestId))
+            {
+                services.Logger.LogWarning("Guest order rejected - {HeaderName} header is missing", GuestHeaderExtensions.HeaderName);
+                return TypedResults.BadRequest($"Ordering as a guest requires the {GuestHeaderExtensions.HeaderName} header.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.GuestName))
+            {
+                return TypedResults.BadRequest("A name is required to order as a guest.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.GuestPhone) || !GuestPhoneRegex().IsMatch(request.GuestPhone))
+            {
+                return TypedResults.BadRequest("A valid phone number is required to order as a guest.");
+            }
+
+            if (request.PointsToRedeem > 0 || request.LoyaltyDiscount > 0)
+            {
+                return TypedResults.BadRequest("Loyalty points require an account.");
+            }
+        }
+
+        // Both the command validator and the Buyer aggregate refuse a blank
+        // name, and a failure there would be swallowed into a false 200 — so
+        // fall back rather than lose the order over a missing display name.
+        var userName = isGuest
+            ? string.Empty
+            : request.UserName is { Length: > 0 } name && !string.IsNullOrWhiteSpace(name)
+                ? name
+                : services.IdentityService.GetUserName() ?? "Customer";
+
+        services.Logger.LogInformation(
+            "Creating order for {Customer}, Room: {RoomName}",
+            isGuest ? "a guest" : $"user {signedInUserId}",
+            request.RoomName);
 
         var branchId = httpContext.GetRequiredBranchId();
 
@@ -93,30 +158,45 @@ public static class OrdersApi
         {
             var createOrderCommand = new CreateOrderCommand(
                 request.Items,
-                request.UserId,
-                request.UserName,
+                isGuest ? string.Empty : signedInUserId!,
+                userName,
                 branchId,
                 request.RoomName,
                 request.CustomerNote,
+                // Loyalty is account-only; the validator rejects a guest that
+                // tries to redeem, rather than silently discounting the order
                 request.PointsToRedeem,
                 request.LoyaltyDiscount,
                 request.TableId,
-                request.TableName);
+                request.TableName,
+                guestId,
+                isGuest ? request.GuestName : null,
+                isGuest ? request.GuestPhone : null);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(createOrderCommand, requestId);
 
-            var result = await services.Mediator.Send(requestCreateOrder);
-
-            if (result)
+            try
             {
-                services.Logger.LogInformation("CreateOrderCommand succeeded - RequestId: {RequestId}", requestId);
-            }
-            else
-            {
-                services.Logger.LogWarning("CreateOrderCommand failed - RequestId: {RequestId}", requestId);
-            }
+                var result = await services.Mediator.Send(requestCreateOrder);
 
-            return TypedResults.Ok();
+                if (result)
+                {
+                    services.Logger.LogInformation("CreateOrderCommand succeeded - RequestId: {RequestId}", requestId);
+                }
+                else
+                {
+                    services.Logger.LogWarning("CreateOrderCommand failed - RequestId: {RequestId}", requestId);
+                }
+
+                return TypedResults.Ok();
+            }
+            catch (OrderingDomainException ex)
+            {
+                // Missing or malformed guest details are the caller's mistake,
+                // not a server fault — say so instead of returning a 500
+                services.Logger.LogWarning(ex, "Create order rejected - RequestId: {RequestId}", requestId);
+                return TypedResults.BadRequest(ex.Message);
+            }
         }
     }
 
@@ -229,8 +309,22 @@ public static class OrdersApi
         }
     }
 
-    public static async Task<Results<Ok<Order>, NotFound>> GetOrderAsync(int orderId, [AsParameters] OrderServices services)
+    public static async Task<Results<Ok<Order>, NotFound>> GetOrderAsync(
+        int orderId,
+        HttpContext httpContext,
+        [AsParameters] OrderServices services)
     {
+        // Order numbers are sequential, so the id alone proves nothing: the
+        // caller has to be an admin, the customer who placed it, or the guest
+        // holding the id it was placed under. A stranger gets the same 404 as
+        // a missing order, which keeps the endpoint from confirming what exists.
+        var ownership = await services.Queries.GetOrderOwnershipAsync(orderId);
+
+        if (ownership is null || !CanReadOrder(ownership, httpContext, services))
+        {
+            return TypedResults.NotFound();
+        }
+
         try
         {
             var order = await services.Queries.GetOrderAsync(orderId);
@@ -242,7 +336,27 @@ public static class OrdersApi
         }
     }
 
+    private static bool CanReadOrder(OrderOwnership ownership, HttpContext httpContext, OrderServices services)
+    {
+        if (httpContext.User.IsInRole(Roles.Admin))
+        {
+            return true;
+        }
+
+        var userId = services.IdentityService.GetUserIdentity();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            return ownership.BuyerIdentityGuid == userId;
+        }
+
+        var guestId = httpContext.GetGuestId();
+
+        return !string.IsNullOrEmpty(guestId) && ownership.GuestId == guestId;
+    }
+
     public static async Task<Ok<PaginatedResult<OrderSummary>>> GetOrdersByUserAsync(
+        HttpContext httpContext,
         int pageIndex = 0,
         int pageSize = 10,
         DateTime? fromDate = null,
@@ -250,6 +364,21 @@ public static class OrdersApi
         [AsParameters] OrderServices services = default!)
     {
         var userId = services.IdentityService.GetUserIdentity();
+
+        // Signed out, this is a guest asking for the orders they placed on this
+        // device. With no guest id there is nothing to look up — an empty page,
+        // not everyone's orders.
+        if (string.IsNullOrEmpty(userId))
+        {
+            var guestId = httpContext.GetGuestId();
+
+            var guestOrders = string.IsNullOrEmpty(guestId)
+                ? new PaginatedResult<OrderSummary> { PageIndex = pageIndex, PageSize = pageSize }
+                : await services.Queries.GetGuestOrdersAsync(guestId, pageIndex, pageSize, fromDate, toDate);
+
+            return TypedResults.Ok(guestOrders);
+        }
+
         var orders = await services.Queries.GetOrdersFromUserAsync(userId, pageIndex, pageSize, fromDate, toDate);
         return TypedResults.Ok(orders);
     }
@@ -318,8 +447,14 @@ public static class OrdersApi
 }
 
 /// <summary>
-/// Request model for creating a cafe order
+/// Request model for creating a cafe order.
 /// </summary>
+/// <param name="UserId">
+/// Ignored. The customer is identified by their access token, or as a guest by
+/// the X-Guest-Id header. Kept so existing clients keep compiling.
+/// </param>
+/// <param name="GuestName">Required when ordering without an account.</param>
+/// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
 public record CreateOrderRequest(
     string UserId,
     string UserName,
@@ -329,7 +464,9 @@ public record CreateOrderRequest(
     double LoyaltyDiscount,
     List<BasketItem> Items,
     int? TableId = null,
-    LocalizedText? TableName = null);
+    LocalizedText? TableName = null,
+    string? GuestName = null,
+    string? GuestPhone = null);
 
 /// <summary>
 /// Request model for rating an order

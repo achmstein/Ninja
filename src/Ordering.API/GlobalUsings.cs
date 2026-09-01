@@ -28,3 +28,4 @@ global using Chillax.Ordering.Infrastructure;
 global using Chillax.Ordering.Infrastructure.Idempotency;
 global using Chillax.Ordering.Infrastructure.Repositories;
 global using Chillax.ServiceDefaults;
+global using Chillax.ServiceDefaults.Authorization;

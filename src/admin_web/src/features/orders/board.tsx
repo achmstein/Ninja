@@ -9,6 +9,7 @@ import {
   History,
   MapPin,
   MessageSquare,
+  Phone,
   User,
   X,
 } from 'lucide-react'
@@ -212,6 +213,18 @@ function PendingOrderCard({
           ) : (
             <span>{summary.userName}</span>
           ))}
+        {/* A guest has no profile to open, so their number is the only way to
+            reach them — put it on the ticket rather than a click away */}
+        {summary.guestPhone && (
+          <a
+            href={`tel:${summary.guestPhone}`}
+            dir='ltr'
+            className='hover:text-foreground flex items-center gap-1 underline-offset-2 hover:underline'
+          >
+            <Phone className='h-3 w-3' />
+            {summary.guestPhone}
+          </a>
+        )}
         {localized(summary.roomName) && (
           <span className='flex items-center gap-1'>
             <MapPin className='h-3 w-3' />

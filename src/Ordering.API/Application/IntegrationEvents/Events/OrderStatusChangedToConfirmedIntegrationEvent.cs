@@ -17,8 +17,14 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     public decimal OrderTotal { get; }
     public int PointsToRedeem { get; }
 
+    /// <summary>
+    /// Set instead of <see cref="BuyerIdentityGuid"/> when a guest placed the
+    /// order — it is what the notification hub targets them by.
+    /// </summary>
+    public string? GuestId { get; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
-        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, LocalizedText? roomName, decimal orderTotal, int pointsToRedeem = 0)
+        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, LocalizedText? roomName, decimal orderTotal, int pointsToRedeem = 0, string? guestId = null)
     {
         OrderId = orderId;
         OrderStatus = orderStatus;
@@ -27,5 +33,6 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         RoomName = roomName;
         OrderTotal = orderTotal;
         PointsToRedeem = pointsToRedeem;
+        GuestId = guestId;
     }
 }

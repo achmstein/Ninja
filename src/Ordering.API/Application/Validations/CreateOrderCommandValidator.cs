@@ -6,10 +6,36 @@ namespace Chillax.Ordering.API.Application.Validations;
 /// </summary>
 public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {
+    // Egyptian mobile number — the same rule the apps enforce on the profile
+    // phone (client_web lib/services/identity.ts, client_app settings_service)
+    private const string GuestPhonePattern = @"^01[0-9]{9}$";
+
     public CreateOrderCommandValidator(ILogger<CreateOrderCommandValidator> logger)
     {
-        RuleFor(command => command.UserId).NotEmpty();
-        RuleFor(command => command.UserName).NotEmpty();
+        // A signed-in order is identified by its user; a guest order stands on
+        // the contact details left at checkout instead. Exactly one applies.
+        When(command => !command.IsGuestOrder, () =>
+        {
+            RuleFor(command => command.UserId).NotEmpty();
+            RuleFor(command => command.UserName).NotEmpty();
+        });
+
+        When(command => command.IsGuestOrder, () =>
+        {
+            RuleFor(command => command.GuestId).NotEmpty();
+            RuleFor(command => command.GuestName).NotEmpty();
+            RuleFor(command => command.GuestPhone)
+                .NotEmpty()
+                .Matches(GuestPhonePattern)
+                .WithMessage("A valid phone number is required to order as a guest.");
+
+            // Loyalty is account-only: there is nothing to redeem against
+            RuleFor(command => command.PointsToRedeem).Equal(0)
+                .WithMessage("Loyalty points cannot be redeemed on a guest order.");
+            RuleFor(command => command.LoyaltyDiscount).Equal(0)
+                .WithMessage("Loyalty discounts cannot be applied to a guest order.");
+        });
+
         RuleFor(command => command.OrderItems).Must(ContainOrderItems).WithMessage("No order items found");
 
         if (logger.IsEnabled(LogLevel.Trace))

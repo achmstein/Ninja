@@ -12,6 +12,7 @@
           "Orders"
         ],
         "summary": "Create a new cafe order",
+        "description": "Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.",
         "operationId": "CreateOrder",
         "parameters": [
           {
@@ -74,6 +75,7 @@
           "Orders"
         ],
         "summary": "Get current user's orders",
+        "description": "Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.",
         "operationId": "GetOrdersByUser",
         "parameters": [
           {
@@ -330,6 +332,7 @@
           "Orders"
         ],
         "summary": "Get order by ID",
+        "description": "Readable by an admin, the customer who placed it, or the guest whose X-Guest-Id matches.",
         "operationId": "GetOrder",
         "parameters": [
           {
@@ -1035,6 +1038,18 @@
                 "$ref": "#/components/schemas/LocalizedText"
               }
             ]
+          },
+          "guestName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1106,6 +1121,18 @@
             ]
           },
           "customerNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestPhone": {
             "type": [
               "null",
               "string"
@@ -1447,6 +1474,12 @@
             ]
           },
           "userId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestPhone": {
             "type": [
               "null",
               "string"

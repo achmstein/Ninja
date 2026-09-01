@@ -31,9 +31,17 @@ public class OrderSubmittedIntegrationEventHandler(
             branchId = @event.BranchId
         });
 
-        if (!string.IsNullOrEmpty(@event.BuyerIdentityGuid))
+        // The customer's personal group — their identity when signed in, their
+        // guest id when not
+        var customerGroup = !string.IsNullOrEmpty(@event.BuyerIdentityGuid)
+            ? $"user:{@event.BuyerIdentityGuid}"
+            : !string.IsNullOrEmpty(@event.GuestId)
+                ? $"guest:{@event.GuestId}"
+                : null;
+
+        if (customerGroup is not null)
         {
-            await hubContext.Clients.Group($"user:{@event.BuyerIdentityGuid}").SendAsync("OrderStatusChanged", new
+            await hubContext.Clients.Group(customerGroup).SendAsync("OrderStatusChanged", new
             {
                 type = "order_submitted",
                 orderId = @event.OrderId

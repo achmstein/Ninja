@@ -83,7 +83,7 @@ public class PendingOrderReminderService(
                 && (now - order.LastReminderSentAt.Value).TotalMinutes < 1)
                 continue;
 
-            var buyerName = order.Buyer?.Name ?? "Customer";
+            var buyerName = order.Buyer?.Name ?? order.GuestName ?? "Customer";
 
             logger.LogInformation(
                 "Sending reminder #{ReminderCount} for order {OrderId} (pending {Minutes} min)",

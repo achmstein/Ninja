@@ -1,5 +1,6 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { getGuestId } from '@/stores/guest-store'
 import { getStoredUser } from './oidc'
 
 export const API_VERSION = '1.0'
@@ -20,6 +21,13 @@ apiClient.interceptors.request.use(
     const token = getStoredUser()?.access_token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      // Only meaningful with no token: it is how a guest is recognised as the
+      // one who placed their orders. A signed-in customer is their token.
+      const guestId = getGuestId()
+      if (guestId) {
+        config.headers['X-Guest-Id'] = guestId
+      }
     }
     config.headers['X-Branch-Id'] = String(getActiveBranchId())
     return config

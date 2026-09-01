@@ -44,6 +44,8 @@ export const getOrdersByUserQueryKey = (options: Options<GetOrdersByUserData>) =
 
 /**
  * Get current user's orders
+ *
+ * Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.
  */
 export const getOrdersByUserOptions = (options: Options<GetOrdersByUserData>) => queryOptions<GetOrdersByUserResponse, AxiosError<DefaultError>, GetOrdersByUserResponse, ReturnType<typeof getOrdersByUserQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -60,6 +62,8 @@ export const getOrdersByUserOptions = (options: Options<GetOrdersByUserData>) =>
 
 /**
  * Create a new cafe order
+ *
+ * Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.
  */
 export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>): UseMutationOptions<unknown, AxiosError<CreateOrderError>, Options<CreateOrderData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CreateOrderError>, Options<CreateOrderData>> = {
@@ -132,6 +136,8 @@ export const getOrderQueryKey = (options: Options<GetOrderData>) => createQueryK
 
 /**
  * Get order by ID
+ *
+ * Readable by an admin, the customer who placed it, or the guest whose X-Guest-Id matches.
  */
 export const getOrderOptions = (options: Options<GetOrderData>) => queryOptions<GetOrderResponse, AxiosError<DefaultError>, GetOrderResponse, ReturnType<typeof getOrderQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

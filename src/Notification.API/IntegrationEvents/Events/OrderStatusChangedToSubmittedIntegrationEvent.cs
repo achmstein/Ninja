@@ -11,14 +11,18 @@ public record OrderStatusChangedToSubmittedIntegrationEvent : IntegrationEvent
     public string BuyerIdentityGuid { get; }
     public int BranchId { get; }
 
+    /// <summary>Set instead of BuyerIdentityGuid when a guest placed the order.</summary>
+    public string? GuestId { get; }
+
     public OrderStatusChangedToSubmittedIntegrationEvent(
-        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1)
+        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1, string? guestId = null)
     {
         OrderId = orderId;
         OrderStatus = orderStatus;
         BuyerName = buyerName;
         BuyerIdentityGuid = buyerIdentityGuid;
         BranchId = branchId;
+        GuestId = guestId;
     }
 }
 

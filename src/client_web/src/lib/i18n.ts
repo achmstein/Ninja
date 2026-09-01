@@ -18,7 +18,26 @@ const webExtras = {
     en: 'Sign in to see your orders and points',
     ar: 'سجل دخول عشان تشوف طلباتك ونقطك',
   },
-  signInToOrder: { en: 'Sign in to order', ar: 'سجل دخول عشان تطلب' },
+  // Guest checkout: web only. The mobile app always signs in first, so these
+  // have no ARB counterpart to share.
+  guestCheckoutMessage: {
+    en: 'Leave your name and number so we can bring your order over.',
+    ar: 'سيب اسمك ورقمك عشان نعرف نوصلك الأوردر',
+  },
+  orderAsGuest: { en: 'Order as guest', ar: 'اطلب كضيف' },
+  signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
+  guestOrderNoPoints: {
+    en: 'Sign in to earn points on your orders',
+    ar: 'سجل دخول عشان تجمع نقط على طلباتك',
+  },
+  guestOrdersKeptOnThisDevice: {
+    en: 'Guest orders are only kept on this device',
+    ar: 'طلبات الضيف محفوظة على الجهاز ده بس',
+  },
+  noGuestOrdersYet: {
+    en: 'Sign in to see your orders, or place one as a guest',
+    ar: 'سجل دخول عشان تشوف طلباتك، أو اطلب كضيف',
+  },
   continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
   continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },

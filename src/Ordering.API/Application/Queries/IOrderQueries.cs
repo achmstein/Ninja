@@ -8,6 +8,17 @@ public interface IOrderQueries
     Task<PaginatedResult<OrderSummary>> GetOrdersFromUserAsync(string userId, int pageIndex, int pageSize, DateTime? fromDate = null, DateTime? toDate = null);
 
     /// <summary>
+    /// Orders placed from one guest device, for a customer with no account.
+    /// </summary>
+    Task<PaginatedResult<OrderSummary>> GetGuestOrdersAsync(string guestId, int pageIndex, int pageSize, DateTime? fromDate = null, DateTime? toDate = null);
+
+    /// <summary>
+    /// Who an order belongs to, for authorizing a read of it. Null when no
+    /// such order exists.
+    /// </summary>
+    Task<OrderOwnership?> GetOrderOwnershipAsync(int id);
+
+    /// <summary>
     /// Get all pending orders (Submitted status) for admin review, filtered by branch
     /// </summary>
     Task<IEnumerable<OrderSummary>> GetPendingOrdersAsync(int branchId);
@@ -32,6 +43,13 @@ public interface IOrderQueries
     /// </summary>
     Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes);
 }
+
+/// <summary>
+/// The two ways an order can belong to someone: a signed-in buyer's identity,
+/// or the guest id it was placed under. Exactly one is set. Never returned to
+/// a client — the guest id is a secret, not an identifier to hand out.
+/// </summary>
+public record OrderOwnership(string? BuyerIdentityGuid, string? GuestId);
 
 /// <summary>
 /// Paginated result wrapper

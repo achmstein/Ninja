@@ -34,6 +34,10 @@ public record Order
     public int? TableId { get; init; }
     public LocalizedText? TableName { get; init; }
     public string? CustomerNote { get; init; }
+    /// <summary>Name a guest left at checkout; null on orders placed by a signed-in customer.</summary>
+    public string? GuestName { get; init; }
+    /// <summary>Phone number a guest left at checkout — the only way to reach them.</summary>
+    public string? GuestPhone { get; init; }
     public List<Orderitem> OrderItems { get; set; } = new();
     public decimal Total { get; set; }
     public int PointsToRedeem { get; init; }
@@ -76,8 +80,14 @@ public record OrderSummary
     public LocalizedText? RoomName { get; init; }
     public int? TableId { get; init; }
     public LocalizedText? TableName { get; init; }
+    /// <summary>Buyer's name, or the name a guest left at checkout.</summary>
     public string? UserName { get; init; }
-    /// <summary>Buyer's identity guid — lets admin surfaces open the customer's profile.</summary>
+    /// <summary>
+    /// Buyer's identity guid — lets admin surfaces open the customer's profile.
+    /// Null on a guest order, which has no profile behind it.
+    /// </summary>
     public string? UserId { get; init; }
+    /// <summary>Phone a guest left at checkout, so staff can reach an order with no account behind it.</summary>
+    public string? GuestPhone { get; init; }
     public int? RatingValue { get; init; }
 }

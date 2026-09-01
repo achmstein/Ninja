@@ -20,6 +20,8 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 
 /**
  * Get current user's orders
+ *
+ * Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.
  */
 export const getOrdersByUser = <ThrowOnError extends boolean = false>(options: Options<GetOrdersByUserData, ThrowOnError>): RequestResult<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError> => (options.client ?? client).get<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError>({
     responseType: 'json',
@@ -29,6 +31,8 @@ export const getOrdersByUser = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * Create a new cafe order
+ *
+ * Signed-in customers are identified by their token. A guest may order without an account by sending X-Guest-Id plus a name and phone number.
  */
 export const createOrder = <ThrowOnError extends boolean = false>(options: Options<CreateOrderData, ThrowOnError>): RequestResult<CreateOrderResponses, CreateOrderErrors, ThrowOnError> => (options.client ?? client).post<CreateOrderResponses, CreateOrderErrors, ThrowOnError>({
     url: '/api/orders',
@@ -72,6 +76,8 @@ export const deleteOrder = <ThrowOnError extends boolean = false>(options: Optio
 
 /**
  * Get order by ID
+ *
+ * Readable by an admin, the customer who placed it, or the guest whose X-Guest-Id matches.
  */
 export const getOrder = <ThrowOnError extends boolean = false>(options: Options<GetOrderData, ThrowOnError>): RequestResult<GetOrderResponses, GetOrderErrors, ThrowOnError> => (options.client ?? client).get<GetOrderResponses, GetOrderErrors, ThrowOnError>({
     responseType: 'json',

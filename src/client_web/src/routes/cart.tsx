@@ -41,9 +41,11 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { useProfileGate } from '@/components/profile-gate'
+import { useGuestGate } from '@/components/guest-gate'
 import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useOrderDestination } from '@/lib/order-destination'
+import { useGuestStore } from '@/stores/guest-store'
 import { useTableStore } from '@/stores/table-store'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
@@ -77,6 +79,11 @@ function CartPage() {
   // payload can never disagree about where the order is going
   const destination = useOrderDestination()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
+  // Checking out without an account: the same name and phone, kept on the
+  // order instead of on a profile
+  const { ensureGuestDetails, guestGateDialog } = useGuestGate()
+  const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
+  const isGuest = !auth.isAuthenticated
 
   const { lines, setQuantity, clear } = useCart()
   const [note, setNote] = useState('')
@@ -144,10 +151,13 @@ function CartPage() {
       requestIdRef.current = null
       // Keep the table alive through a long sitting with several rounds
       stampOrdered()
-      // Remember the chosen customizations for next time (mobile parity)
-      const customized = lines.filter(
-        (line) => !line.bundleId && line.customizations.length > 0
-      )
+      // Remember the chosen customizations for next time (mobile parity).
+      // Preferences hang off an account, so there is nothing to save for a guest.
+      const customized = auth.isAuthenticated
+        ? lines.filter(
+            (line) => !line.bundleId && line.customizations.length > 0
+          )
+        : []
       if (customized.length > 0) {
         savePreferences.mutate({
           body: {
@@ -171,8 +181,16 @@ function CartPage() {
   })
 
   const handleCheckout = async () => {
-    if (!(await ensureProfileComplete())) return
+    // Both paths ask for a name and a reachable phone; only where they are
+    // stored differs. A guest that dismisses the dialog has not ordered.
+    const guestContact = isGuest ? await ensureGuestDetails() : null
+    if (isGuest && !guestContact) return
+    if (!isGuest && !(await ensureProfileComplete())) return
+
     const profile = auth.user?.profile
+    // Minted on the first order that needs it, so browsers that only browse
+    // are never tagged. Set before the request so the interceptor sends it.
+    const guestId = isGuest ? ensureGuestId() : null
 
     // Same payload → same request id, so retrying a timed-out submit is
     // deduplicated server-side instead of creating a duplicate order
@@ -185,6 +203,8 @@ function CartPage() {
       ]),
       note: note.trim(),
       points: discount > 0 ? debouncedPoints : 0,
+      // Signing in mid-cart makes it a different order, not a retry
+      guest: guestId,
       // Moving between a table and a room makes it a different order, not a
       // retry of the previous one
       destination: destination
@@ -200,8 +220,12 @@ function CartPage() {
 
     placeOrder.mutate({
       body: {
+        // The server identifies the customer from the token (or, for a guest,
+        // the X-Guest-Id header) and ignores these — they stay for the shape
         userId: profile?.sub ?? '',
         userName: profile?.name || profile?.preferred_username || '',
+        guestName: guestContact?.name ?? null,
+        guestPhone: guestContact?.phone ?? null,
         // Deliver to the customer's running room session, if any
         roomName:
           destination?.kind === 'room'
@@ -219,8 +243,10 @@ function CartPage() {
               }
             : null,
         customerNote: note.trim() || null,
-        pointsToRedeem: discount > 0 ? debouncedPoints : 0,
-        loyaltyDiscount: discount,
+        // Loyalty needs an account to redeem against; the server rejects a
+        // guest order that claims either
+        pointsToRedeem: !isGuest && discount > 0 ? debouncedPoints : 0,
+        loyaltyDiscount: isGuest ? 0 : discount,
         items: lines.map((line) => ({
           id: crypto.randomUUID(),
           productId: line.productId,
@@ -259,25 +285,33 @@ function CartPage() {
     )
   }
 
-  const checkoutButton = auth.isAuthenticated ? (
-    <Button
-      size='lg'
-      className='w-full rounded-full'
-      disabled={placeOrder.isPending}
-      onClick={handleCheckout}
-    >
-      {placeOrder.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
-      {t('placeOrder')}
-    </Button>
-  ) : (
-    <Button
-      size='lg'
-      className='w-full rounded-full'
-      onClick={() => setSignInOpen(true)}
-    >
-      <LogIn className='h-4 w-4' />
-      {t('signInToOrder')}
-    </Button>
+  // Ordering never needs an account. Signing in is offered underneath rather
+  // than in the way, since it is what earns points and keeps the order history.
+  const checkoutButton = (
+    <div className='flex flex-col gap-2'>
+      <Button
+        size='lg'
+        className='w-full rounded-full'
+        disabled={placeOrder.isPending}
+        onClick={handleCheckout}
+      >
+        {placeOrder.isPending && (
+          <Loader2 className='me-2 h-4 w-4 animate-spin' />
+        )}
+        {isGuest ? t('orderAsGuest') : t('placeOrder')}
+      </Button>
+      {isGuest && (
+        <Button
+          variant='ghost'
+          size='sm'
+          className='w-full rounded-full'
+          onClick={() => setSignInOpen(true)}
+        >
+          <LogIn className='h-4 w-4' />
+          {t('signInInstead')}
+        </Button>
+      )}
+    </div>
   )
 
   return (
@@ -421,6 +455,15 @@ function CartPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
+        {/* Where the points slider sits for a signed-in customer — the one
+            place the upsell lands without nagging */}
+        {isGuest && (
+          <div className='text-muted-foreground flex items-center gap-2 border-t pt-4 text-sm'>
+            <Award className='text-primary h-4 w-4 shrink-0' />
+            {t('guestOrderNoPoints')}
+          </div>
+        )}
+
         {auth.isAuthenticated && maxRedeemable > 0 && (
           <div className='flex flex-col gap-3 border-t pt-4'>
             <div className='flex items-center justify-between'>
@@ -504,6 +547,7 @@ function CartPage() {
       </AlertDialog>
 
       {profileGateDialog}
+      {guestGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />
     </div>
   )

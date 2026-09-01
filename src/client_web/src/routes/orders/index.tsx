@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
+import { useAuth } from 'react-oidc-context'
 import { CircleAlert, Loader2, ReceiptText, Star } from 'lucide-react'
 import {
   getOrdersByUser,
@@ -31,7 +32,8 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
-import { RequireAuth } from '@/components/require-auth'
+import { SignInOptions } from '@/components/sign-in-options'
+import { useGuestStore } from '@/stores/guest-store'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -44,12 +46,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/orders/')({
-  component: () => (
-    <RequireAuth>
-      <OrdersPage />
-    </RequireAuth>
-  ),
+  component: OrdersRoute,
 })
+
+/**
+ * Open to guests: the API returns the orders placed under the guest id this
+ * browser sends. Only a visitor who has neither an account nor a guest order
+ * has nothing to show, and they get the sign-in prompt.
+ */
+function OrdersRoute() {
+  const auth = useAuth()
+  const guestId = useGuestStore((s) => s.guestId)
+
+  if (!auth.isAuthenticated && !auth.isLoading && !guestId) {
+    return <SignedOutPrompt />
+  }
+
+  return <OrdersPage />
+}
+
+function SignedOutPrompt() {
+  const t = useT()
+  return (
+    <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
+      <ReceiptText className='text-muted-foreground/40 h-12 w-12' />
+      <p className='text-muted-foreground'>{t('noGuestOrdersYet')}</p>
+      <SignInOptions />
+    </div>
+  )
+}
 
 /** Status dot colors mirroring the mobile app's _StatusDot. */
 function statusDotClass(status: string | undefined | null): string {
@@ -69,8 +94,12 @@ function OrdersPage() {
   const t = useT()
   const price = usePrice()
   const branch = useSelectedBranch()
+  const auth = useAuth()
+  const isGuest = !auth.isAuthenticated
 
-  // Today = the branch's current business day (overnight shifts included)
+  // Today = the branch's current business day (overnight shifts included).
+  // Guests get the same live updates as anyone else: the hub puts them in a
+  // group keyed on their guest id, so no polling is needed here.
   const todayQuery = useQuery(
     getOrdersByUserOptions({
       query: {
@@ -113,6 +142,14 @@ function OrdersPage() {
   return (
     <div className='flex flex-col gap-4 p-4'>
       <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('orders')}</h1>
+
+      {/* Said once, plainly: clearing site data loses this list, and an
+          account is what makes it survive */}
+      {isGuest && (
+        <p className='text-muted-foreground text-xs'>
+          {t('guestOrdersKeptOnThisDevice')}
+        </p>
+      )}
 
       <Tabs defaultValue='today'>
         <TabsList className='w-full'>
@@ -375,11 +412,16 @@ function OrderTile({ order }: { order: OrderSummary }) {
 function OrderTileDetails({ order }: { order: Order }) {
   const t = useT()
   const localized = useLocalized()
+  const auth = useAuth()
   const [rateOpen, setRateOpen] = useState(false)
 
   const rating = order.rating?.ratingValue
+  // Rating is still account-only server-side, so don't offer a guest a button
+  // that would come back 401
   const canBeRated =
-    order.status?.toLowerCase() === 'confirmed' && rating == null
+    auth.isAuthenticated &&
+    order.status?.toLowerCase() === 'confirmed' &&
+    rating == null
 
   return (
     <div className='flex flex-col gap-1'>

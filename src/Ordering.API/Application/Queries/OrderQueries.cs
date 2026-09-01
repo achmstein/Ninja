@@ -1,6 +1,7 @@
 #nullable enable
 namespace Chillax.Ordering.API.Application.Queries;
 
+using System.Linq.Expressions;
 using DomainOrder = Chillax.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
 
 /// <summary>
@@ -27,6 +28,11 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             TableId = order.TableId,
             TableName = order.TableName,
             CustomerNote = order.CustomerNote,
+            // Only an admin or the customer themselves can read an order, so
+            // the guest's contact details are safe to carry here — and staff
+            // have no other way to reach someone without an account.
+            GuestName = order.GuestName,
+            GuestPhone = order.GuestPhone,
             Status = order.OrderStatus.ToString(),
             Total = order.GetTotal(),
             PointsToRedeem = order.PointsToRedeem,
@@ -49,10 +55,34 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         };
     }
 
-    public async Task<PaginatedResult<OrderSummary>> GetOrdersFromUserAsync(string userId, int pageIndex, int pageSize, DateTime? fromDate = null, DateTime? toDate = null)
+    public Task<PaginatedResult<OrderSummary>> GetOrdersFromUserAsync(string userId, int pageIndex, int pageSize, DateTime? fromDate = null, DateTime? toDate = null)
+        => GetOwnOrdersAsync(o => o.Buyer != null && o.Buyer.IdentityGuid == userId, pageIndex, pageSize, fromDate, toDate);
+
+    public Task<PaginatedResult<OrderSummary>> GetGuestOrdersAsync(string guestId, int pageIndex, int pageSize, DateTime? fromDate = null, DateTime? toDate = null)
+        => GetOwnOrdersAsync(o => o.GuestId == guestId, pageIndex, pageSize, fromDate, toDate);
+
+    public async Task<OrderOwnership?> GetOrderOwnershipAsync(int id)
+        => await context.Orders
+            .AsNoTracking()
+            .Where(o => o.Id == id)
+            .Select(o => new OrderOwnership(
+                o.Buyer != null ? o.Buyer.IdentityGuid : null,
+                o.GuestId))
+            .FirstOrDefaultAsync();
+
+    /// <summary>
+    /// The customer's own order list. Identical whether they are signed in or
+    /// ordering as a guest — only what makes an order theirs differs — and it
+    /// deliberately carries no buyer or guest identifiers back to the client.
+    /// </summary>
+    private async Task<PaginatedResult<OrderSummary>> GetOwnOrdersAsync(
+        Expression<Func<DomainOrder, bool>> isTheirs,
+        int pageIndex,
+        int pageSize,
+        DateTime? fromDate,
+        DateTime? toDate)
     {
-        var query = context.Orders
-            .Where(o => o.Buyer != null && o.Buyer.IdentityGuid == userId);
+        var query = context.Orders.Where(isTheirs);
 
         if (fromDate.HasValue)
             query = query.Where(o => o.OrderDate >= fromDate.Value);
@@ -112,8 +142,12 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 RoomName = o.RoomName,
                 TableId = o.TableId,
                 TableName = o.TableName,
-                UserName = o.Buyer != null ? o.Buyer.Name : null,
+                // A guest has no Buyer row, so the name they left at checkout
+                // is what staff see; UserId stays null, which is what tells
+                // the admin board there is no customer profile to open.
+                UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
+                GuestPhone = o.GuestPhone,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();
@@ -171,8 +205,12 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 RoomName = o.RoomName,
                 TableId = o.TableId,
                 TableName = o.TableName,
-                UserName = o.Buyer != null ? o.Buyer.Name : null,
+                // A guest has no Buyer row, so the name they left at checkout
+                // is what staff see; UserId stays null, which is what tells
+                // the admin board there is no customer profile to open.
+                UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
+                GuestPhone = o.GuestPhone,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();

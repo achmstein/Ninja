@@ -63,8 +63,32 @@ public class CreateOrderCommand : IRequest<bool>
     [DataMember]
     public int BranchId { get; private set; }
 
+    /// <summary>
+    /// Device id of a customer ordering without an account. Set only when
+    /// <see cref="UserId"/> is empty.
+    /// </summary>
+    [DataMember]
+    public string? GuestId { get; private set; }
+
+    /// <summary>
+    /// Name a guest left at checkout
+    /// </summary>
+    [DataMember]
+    public string? GuestName { get; private set; }
+
+    /// <summary>
+    /// Phone number a guest left at checkout
+    /// </summary>
+    [DataMember]
+    public string? GuestPhone { get; private set; }
+
     [DataMember]
     public IEnumerable<OrderItemDTO> OrderItems => _orderItems;
+
+    /// <summary>
+    /// True when nobody signed in to place this order.
+    /// </summary>
+    public bool IsGuestOrder => string.IsNullOrWhiteSpace(UserId);
 
     public CreateOrderCommand()
     {
@@ -81,7 +105,10 @@ public class CreateOrderCommand : IRequest<bool>
         int pointsToRedeem = 0,
         double loyaltyDiscount = 0,
         int? tableId = null,
-        LocalizedText? tableName = null)
+        LocalizedText? tableName = null,
+        string? guestId = null,
+        string? guestName = null,
+        string? guestPhone = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         UserId = userId;
@@ -93,5 +120,8 @@ public class CreateOrderCommand : IRequest<bool>
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         LoyaltyDiscount = loyaltyDiscount;
+        GuestId = guestId;
+        GuestName = guestName;
+        GuestPhone = guestPhone;
     }
 }

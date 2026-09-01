@@ -24,6 +24,18 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .Property(o => o.CustomerNote)
             .HasMaxLength(500);
 
+        orderConfiguration
+            .Property(o => o.GuestId)
+            .HasMaxLength(64);
+
+        orderConfiguration
+            .Property(o => o.GuestName)
+            .HasMaxLength(200);
+
+        orderConfiguration
+            .Property(o => o.GuestPhone)
+            .HasMaxLength(30);
+
         // Configure RoomName as JSON column (localized text)
         orderConfiguration.OwnsOne(o => o.RoomName, b => b.ToJson());
 
@@ -47,5 +59,8 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         orderConfiguration.HasIndex(o => o.BranchId);
         orderConfiguration.HasIndex(o => o.OrderStatus);
         orderConfiguration.HasIndex(o => o.OrderDate);
+
+        // A guest's own order list is looked up by this and nothing else
+        orderConfiguration.HasIndex(o => o.GuestId);
     }
 }

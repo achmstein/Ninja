@@ -23,6 +23,16 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             "Handling OrderStatusChangedToConfirmedIntegrationEvent: OrderId={OrderId}, UserId={UserId}, Total={Total}, PointsToRedeem={PointsToRedeem}",
             @event.OrderId, @event.BuyerIdentityGuid, @event.OrderTotal, @event.PointsToRedeem);
 
+        // Guest orders carry no identity, so there is nothing to credit and
+        // nothing to match on — never let an empty id find an account.
+        if (string.IsNullOrEmpty(@event.BuyerIdentityGuid))
+        {
+            logger.LogInformation(
+                "Order {OrderId} was placed by a guest, skipping loyalty points",
+                @event.OrderId);
+            return;
+        }
+
         // Get loyalty account for user (must already exist - user joins manually)
         var account = await context.Accounts
             .FirstOrDefaultAsync(a => a.UserId == @event.BuyerIdentityGuid);

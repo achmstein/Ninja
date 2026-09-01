@@ -31,28 +31,51 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
 
         var order = await _orderRepository.GetAsync(domainEvent.OrderId);
 
-        if (order?.BuyerId == null)
+        if (order == null)
         {
-            _logger.LogWarning("Order {OrderId} has no buyer", domainEvent.OrderId);
+            _logger.LogWarning("Order {OrderId} not found", domainEvent.OrderId);
             return;
         }
 
-        var buyer = await _buyerRepository.FindByIdAsync(order.BuyerId.Value);
+        // A guest order is confirmed like any other; it just has no identity to
+        // credit, so loyalty skips it downstream on the empty guid.
+        string buyerName;
+        string buyerIdentityGuid;
 
-        if (buyer == null)
+        if (order.IsGuestOrder)
         {
-            _logger.LogWarning("Buyer {BuyerId} not found for order {OrderId}", order.BuyerId, domainEvent.OrderId);
-            return;
+            buyerName = order.GuestName!;
+            buyerIdentityGuid = string.Empty;
+        }
+        else
+        {
+            if (order.BuyerId == null)
+            {
+                _logger.LogWarning("Order {OrderId} has no buyer", domainEvent.OrderId);
+                return;
+            }
+
+            var buyer = await _buyerRepository.FindByIdAsync(order.BuyerId.Value);
+
+            if (buyer == null)
+            {
+                _logger.LogWarning("Buyer {BuyerId} not found for order {OrderId}", order.BuyerId, domainEvent.OrderId);
+                return;
+            }
+
+            buyerName = buyer.Name;
+            buyerIdentityGuid = buyer.IdentityGuid;
         }
 
         var integrationEvent = new OrderStatusChangedToConfirmedIntegrationEvent(
             order.Id,
             order.OrderStatus,
-            buyer.Name,
-            buyer.IdentityGuid,
+            buyerName,
+            buyerIdentityGuid,
             order.RoomName,
             order.GetTotal(),
-            order.PointsToRedeem);
+            order.PointsToRedeem,
+            order.GuestId);
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);
     }

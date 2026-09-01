@@ -64,10 +64,17 @@ public class OrderCancelledIntegrationEventHandler(
             }
         }
 
-        // Broadcast via SignalR to the buyer's personal group
-        if (!string.IsNullOrEmpty(@event.BuyerIdentityGuid))
+        // Broadcast via SignalR to the customer's personal group — their
+        // identity when signed in, their guest id when not
+        var customerGroup = !string.IsNullOrEmpty(@event.BuyerIdentityGuid)
+            ? $"user:{@event.BuyerIdentityGuid}"
+            : !string.IsNullOrEmpty(@event.GuestId)
+                ? $"guest:{@event.GuestId}"
+                : null;
+
+        if (customerGroup is not null)
         {
-            await hubContext.Clients.Group($"user:{@event.BuyerIdentityGuid}").SendAsync("OrderStatusChanged", new
+            await hubContext.Clients.Group(customerGroup).SendAsync("OrderStatusChanged", new
             {
                 type = "order_cancelled",
                 orderId = @event.OrderId
