@@ -39,17 +39,16 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="com.chillax.client"/>
             </intent-filter>
-            <!-- App Links: printed table QR codes encode
-                 https://chillax.site/table/{id}. Verification needs
+            <!-- App Links: printed room and table QR codes encode
+                 https://chillax.site/{room,table}/{id}. Verification needs
                  /.well-known/assetlinks.json on chillax.site to list this
                  app's signing fingerprint; until it does, the links simply
-                 open in the browser instead.
-                 Room codes are deliberately left to the browser until the app
-                 has an in-app room landing flow to hand them to. -->
+                 open in the browser instead. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/room/"/>
                 <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/table/"/>
             </intent-filter>
         </activity>

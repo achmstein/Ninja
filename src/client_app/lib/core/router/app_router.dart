@@ -8,6 +8,7 @@ import '../../features/cart/screens/cart_screen.dart';
 import '../../features/orders/screens/orders_screen.dart';
 import '../../features/rooms/screens/rooms_screen.dart';
 import '../../features/rooms/screens/sessions_screen.dart';
+import '../../features/rooms/screens/room_link_screen.dart';
 import '../../features/tables/screens/table_link_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/transactions_screen.dart';
@@ -61,6 +62,11 @@ class _AuthNotifier extends ChangeNotifier {
   }
 }
 
+/// A scanned room link held across the sign-in detour. Joining or reserving
+/// needs an account, and without this the customer would land on login and have
+/// to walk back to the room to scan the sticker again.
+String? _pendingLink;
+
 /// App router provider
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = _AuthNotifier(ref);
@@ -94,12 +100,18 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Redirect to login if not authenticated
       if (!isAuthenticated && !isLoggingIn && !isRegistering && !isTableLink) {
+        if (currentLocation.startsWith('/room/')) {
+          _pendingLink = state.uri.toString();
+        }
         return '/login';
       }
 
-      // Redirect to menu if authenticated and on login/register page
+      // Redirect to menu if authenticated and on login/register page, or back
+      // to the room link they arrived on before being sent to sign in
       if (isAuthenticated && (isLoggingIn || isRegistering)) {
-        return '/menu';
+        final pending = _pendingLink;
+        _pendingLink = null;
+        return pending ?? '/menu';
       }
 
       return null;
@@ -128,6 +140,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/table/:tableId',
         builder: (context, state) => TableLinkScreen(
           tableId: int.tryParse(state.pathParameters['tableId'] ?? '') ?? 0,
+        ),
+      ),
+
+      // Printed room QR opened as an App Link (chillax.site/room/{id})
+      GoRoute(
+        path: '/room/:roomId',
+        builder: (context, state) => RoomLinkScreen(
+          roomId: int.tryParse(state.pathParameters['roomId'] ?? '') ?? 0,
         ),
       ),
 

@@ -4,6 +4,7 @@
       {
         "appIDs": ["NT4VMTB8MK.com.chillax.client"],
         "components": [
+          { "/": "/room/*", "comment": "Printed room QR codes" },
           { "/": "/table/*", "comment": "Printed table QR codes" }
         ]
       }
