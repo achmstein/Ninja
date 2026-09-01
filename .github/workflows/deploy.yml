@@ -329,44 +329,6 @@ jobs:
             ensure_web_client client-web https://app.chillax.site
 
             echo ""
-            echo "=== Ensure the spaces client scope exists ==="
-            # "rooms" is being retired in favour of "spaces" now that the service
-            # owns tables too. Both are assigned so released clients - including
-            # installed mobile apps that cannot be updated in lockstep - keep
-            # working while they still request "rooms". Drop "rooms" only once no
-            # client in the wild asks for it.
-            SPACES_SCOPE_ID=$(docker exec "$CONTAINER" $KC get client-scopes -r $REALM --fields id,name | \
-              python3 -c "import sys,json;s=json.load(sys.stdin);print(next((x['id'] for x in s if x['name']=='spaces'),''))")
-            if [ -z "$SPACES_SCOPE_ID" ]; then
-              echo "  Creating spaces client scope..."
-              docker exec "$CONTAINER" $KC create client-scopes -r $REALM \
-                -s name=spaces \
-                -s 'description=Spaces API access (rooms and tables)' \
-                -s protocol=openid-connect \
-                -s 'attributes={"include.in.token.scope":"true","display.on.consent.screen":"true"}' && \
-                echo "  Created spaces scope" || echo "  WARNING: failed to create spaces scope"
-              SPACES_SCOPE_ID=$(docker exec "$CONTAINER" $KC get client-scopes -r $REALM --fields id,name | \
-                python3 -c "import sys,json;s=json.load(sys.stdin);print(next((x['id'] for x in s if x['name']=='spaces'),''))")
-            else
-              echo "  spaces scope already exists"
-            fi
-
-            if [ -n "$SPACES_SCOPE_ID" ]; then
-              for APP in mobile-app admin-app admin-panel client-web; do
-                APP_ID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$APP" --fields id | \
-                  python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
-                if [ -n "$APP_ID" ]; then
-                  docker exec "$CONTAINER" $KC update \
-                    "clients/$APP_ID/default-client-scopes/$SPACES_SCOPE_ID" -r $REALM 2>/dev/null && \
-                    echo "  spaces assigned to $APP" || \
-                    echo "  spaces already assigned to $APP"
-                else
-                  echo "  $APP not found - skipping"
-                fi
-              done
-            fi
-
-            echo ""
             echo "=== Keycloak token exchange setup complete ==="
 
   notify:
