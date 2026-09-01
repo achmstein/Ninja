@@ -210,7 +210,7 @@ export function BundleDeals() {
                           (item) =>
                             `${Number(item.quantity ?? 1)}Ã— ${localized(item.itemName)}`
                         )
-                        .join(' Â· ')}
+                        .join(' · ')}
                     </p>
                     <div className='flex items-center gap-2'>
                       <span className='font-medium'>{formatEgp(price)}</span>

@@ -103,7 +103,7 @@ function SettingsPage() {
     <div className='flex flex-col gap-4 p-4'>
       <BackHeader title={t('settings')} />
 
-      {/* Notifications â€” tile rows with switches, like the app */}
+      {/* Notifications — tile rows with switches, like the app */}
       {auth.isAuthenticated && preferences && (
         <section className='flex flex-col gap-2'>
           <h2 className='text-muted-foreground px-1 text-sm font-semibold'>

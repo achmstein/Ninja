@@ -56,7 +56,7 @@ export function ActiveSessionView({
   const auth = useAuth();
   const queryClient = useQueryClient();
 
-  // Only members who joined someone else's session can leave it â€” the
+  // Only members who joined someone else's session can leave it — the
   // session owner has no exit; staff end the session (mobile parity)
   const canLeave =
     session.customerId != null &&

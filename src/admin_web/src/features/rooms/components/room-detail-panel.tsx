@@ -101,7 +101,7 @@ interface RoomDetailPanelProps {
 }
 
 /** Right-hand pane of the rooms master-detail: the room's current state with
- *  session controls on top and its session history below â€” mirroring the
+ *  session controls on top and its session history below — mirroring the
  *  admin mobile app's room detail screen. Hours only, no money. */
 export function RoomDetailPanel({
   room,
@@ -372,7 +372,7 @@ export function RoomDetailPanel({
               </>
             )}
 
-            {/* Billed hours in POS quarter-hour steps â€” no money; hidden
+            {/* Billed hours in POS quarter-hour steps — no money; hidden
                 until the first quarter-hour lands (mobile-admin parity) */}
             {(singleHours > 0 || multiHours > 0) && (
               <div className='w-full max-w-xs space-y-1 rounded-lg border p-3 text-sm'>
@@ -410,7 +410,7 @@ export function RoomDetailPanel({
               onClick={() => setConfirmEnd(true)}
             >
               <Square className='me-1 h-4 w-4' />
-              {t('endSessionButton')} Â· {billedLabel}
+              {t('endSessionButton')}
             </Button>
           </div>
         ) : isReserved ? (
@@ -522,7 +522,7 @@ export function RoomDetailPanel({
                               month: 'short',
                               day: 'numeric',
                             })
-                          : 'â€”'}
+                          : '—'}
                       </div>
                       <div className='text-muted-foreground text-xs'>
                         {start &&
@@ -549,7 +549,7 @@ export function RoomDetailPanel({
                                 item.actualStartTime,
                                 item.endTime
                               )
-                            : 'â€”'}
+                            : '—'}
                         </div>
                         {billed > 0 && (
                           <div className='text-muted-foreground text-xs tabular-nums'>
