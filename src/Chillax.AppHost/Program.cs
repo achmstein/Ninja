@@ -20,7 +20,7 @@ var postgres = builder.AddPostgres("postgres")
 var accountsDb = postgres.AddDatabase("accountsdb");
 var catalogDb = postgres.AddDatabase("catalogdb");
 var orderDb = postgres.AddDatabase("orderingdb");
-var roomsDb = postgres.AddDatabase("roomsdb");
+var spacesDb = postgres.AddDatabase("spacesdb");
 var loyaltyDb = postgres.AddDatabase("loyaltydb");
 var branchDb = postgres.AddDatabase("branchdb");
 var notificationDb = postgres.AddDatabase("notificationdb");
@@ -78,8 +78,8 @@ var orderingApi = builder.AddProject<Projects.Ordering_API>("ordering-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
-var roomsApi = builder.AddProject<Projects.Rooms_API>("rooms-api")
-    .WithReference(roomsDb).WaitFor(roomsDb)
+var spacesApi = builder.AddProject<Projects.Spaces_API>("spaces-api")
+    .WithReference(spacesDb).WaitFor(spacesDb)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(keycloak)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
@@ -134,7 +134,7 @@ void ConfigureApiService(IResourceBuilder<ProjectResource> api, string imageSuff
 
 ConfigureApiService(catalogApi, "catalog");
 ConfigureApiService(orderingApi, "ordering");
-ConfigureApiService(roomsApi, "rooms");
+ConfigureApiService(spacesApi, "spaces");
 ConfigureApiService(identityApi, "identity");
 ConfigureApiService(loyaltyApi, "loyalty");
 notificationApi.PublishAsDockerComposeService((resource, service) =>
@@ -169,7 +169,7 @@ var mobileBff = builder.AddYarp("mobile-bff")
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
-    .ConfigureMobileBffRoutes(catalogApi, orderingApi, roomsApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
 
 // Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
 // the BFF, so API calls stay same-origin and need no CORS setup. Auth goes

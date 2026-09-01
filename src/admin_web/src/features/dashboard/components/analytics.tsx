@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts'
 import { getOrderStatsOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { getSessionStatsOptions } from '@/api/rooms/@tanstack/react-query.gen'
+import { getSessionStatsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import {
   useLocale,

@@ -1,4 +1,4 @@
-import { type ReservationViewModel } from '@/api/rooms'
+import { type ReservationViewModel } from '@/api/spaces'
 import { type TranslationKey } from '@/lib/i18n'
 
 // RoomDisplayStatus enum values from Rooms.API

@@ -95,7 +95,7 @@ jobs:
           # Fill port values for service discovery
           sed -i 's/^CATALOG_API_PORT=$/CATALOG_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^ORDERING_API_PORT=$/ORDERING_API_PORT=8080/' deploy-artifacts/.env
-          sed -i 's/^ROOMS_API_PORT=$/ROOMS_API_PORT=8080/' deploy-artifacts/.env
+          sed -i 's/^SPACES_API_PORT=$/SPACES_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^IDENTITY_API_PORT=$/IDENTITY_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^LOYALTY_API_PORT=$/LOYALTY_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^NOTIFICATION_API_PORT=$/NOTIFICATION_API_PORT=8080/' deploy-artifacts/.env

@@ -3,11 +3,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { ArrowLeft } from 'lucide-react'
-import { type ReservationViewModel } from '@/api/rooms'
+import { type ReservationViewModel } from '@/api/spaces'
 import {
   getSessionHistoryOptions,
   listRoomsOptions,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {

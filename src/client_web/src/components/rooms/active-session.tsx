@@ -10,8 +10,8 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
-import { type ReservationViewModel } from "@/api/rooms";
-import { leaveSessionMutation } from "@/api/rooms/@tanstack/react-query.gen";
+import { type ReservationViewModel } from "@/api/spaces";
+import { leaveSessionMutation } from "@/api/spaces/@tanstack/react-query.gen";
 import {
   createServiceRequest,
   SERVICE_REQUEST,

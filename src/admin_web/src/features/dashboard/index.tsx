@@ -28,7 +28,7 @@ import {
 import {
   getActiveSessionsOptions,
   listRoomsOptions,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import {

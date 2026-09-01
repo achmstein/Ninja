@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       catalog: ${{ steps.changes.outputs.catalog }}
-      rooms: ${{ steps.changes.outputs.rooms }}
+      spaces: ${{ steps.changes.outputs.spaces }}
       ordering: ${{ steps.changes.outputs.ordering }}
       identity: ${{ steps.changes.outputs.identity }}
       loyalty: ${{ steps.changes.outputs.loyalty }}
@@ -35,10 +35,10 @@ jobs:
           filters: |
             catalog:
               - 'src/Catalog.API/**'
-            rooms:
-              - 'src/Rooms.API/**'
-              - 'src/Rooms.Domain/**'
-              - 'src/Rooms.Infrastructure/**'
+            spaces:
+              - 'src/Spaces.API/**'
+              - 'src/Spaces.Domain/**'
+              - 'src/Spaces.Infrastructure/**'
             ordering:
               - 'src/Ordering.API/**'
               - 'src/Ordering.Domain/**'
@@ -108,11 +108,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-rooms:
+  build-spaces:
     needs: detect-changes
     if: |
-      github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || contains(github.event.inputs.services, 'rooms')) ||
-      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.rooms == 'true' || needs.detect-changes.outputs.shared == 'true')
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || contains(github.event.inputs.services, 'spaces')) ||
+      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.spaces == 'true' || needs.detect-changes.outputs.shared == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -137,7 +137,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-rooms
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-spaces
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
@@ -146,7 +146,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: src/Rooms.API/Dockerfile
+          file: src/Spaces.API/Dockerfile
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

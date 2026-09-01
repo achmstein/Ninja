@@ -4,11 +4,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Gamepad2, Users } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { type RoomViewModel } from '@/api/rooms'
+import { type RoomViewModel } from '@/api/spaces'
 import {
   joinSessionByRoomMutation,
   scanRoomOptions,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useT, useLocalized } from '@/lib/i18n'
 import { ROOM_AVAILABLE } from '@/components/rooms/room-row'

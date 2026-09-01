@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { cancelOrder, confirmOrder, createOrder, createOrderDraft, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
-import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
+import { cancelOrder, confirmOrder, createOrder, createOrderDraft, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
+import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -110,12 +110,14 @@ export const cancelOrderMutation = (options?: Partial<Options<CancelOrderData>>)
 };
 
 /**
- * Rate a confirmed order
+ * Delete a cancelled order (admin)
+ *
+ * Permanently removes an order. Only cancelled orders can be deleted.
  */
-export const rateOrderMutation = (options?: Partial<Options<RateOrderData>>): UseMutationOptions<unknown, AxiosError<RateOrderError>, Options<RateOrderData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<RateOrderError>, Options<RateOrderData>> = {
+export const deleteOrderMutation = (options?: Partial<Options<DeleteOrderData>>): UseMutationOptions<DeleteOrderResponse, AxiosError<DefaultError>, Options<DeleteOrderData>> => {
+    const mutationOptions: UseMutationOptions<DeleteOrderResponse, AxiosError<DefaultError>, Options<DeleteOrderData>> = {
         mutationFn: async (fnOptions) => {
-            const { data } = await rateOrder({
+            const { data } = await deleteOrder({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -143,6 +145,23 @@ export const getOrderOptions = (options: Options<GetOrderData>) => queryOptions<
     },
     queryKey: getOrderQueryKey(options)
 });
+
+/**
+ * Rate a confirmed order
+ */
+export const rateOrderMutation = (options?: Partial<Options<RateOrderData>>): UseMutationOptions<unknown, AxiosError<RateOrderError>, Options<RateOrderData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<RateOrderError>, Options<RateOrderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rateOrder({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getPendingOrdersQueryKey = (options: Options<GetPendingOrdersData>) => createQueryKey('getPendingOrders', options);
 
@@ -178,6 +197,26 @@ export const getAllOrdersOptions = (options: Options<GetAllOrdersData>) => query
         return data;
     },
     queryKey: getAllOrdersQueryKey(options)
+});
+
+export const getOrderStatsQueryKey = (options: Options<GetOrderStatsData>) => createQueryKey('getOrderStats', options);
+
+/**
+ * Get aggregated order statistics (admin)
+ *
+ * Per-day order counts/revenue and top items over a date range, excluding cancelled orders.
+ */
+export const getOrderStatsOptions = (options: Options<GetOrderStatsData>) => queryOptions<GetOrderStatsResponse, AxiosError<DefaultError>, GetOrderStatsResponse, ReturnType<typeof getOrderStatsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOrderStats({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOrderStatsQueryKey(options)
 });
 
 export const getOrdersByUserIdQueryKey = (options: Options<GetOrdersByUserIdData>) => createQueryKey('getOrdersByUserId', options);

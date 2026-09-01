@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Loader2, Search, X } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { type RoomViewModel } from '@/api/rooms'
+import { type RoomViewModel } from '@/api/spaces'
 import {
   assignCustomerToSessionMutation,
   reserveRoomMutation,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import {
   Dialog,
   DialogContent,

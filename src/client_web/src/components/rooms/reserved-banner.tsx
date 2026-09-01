@@ -1,8 +1,8 @@
 ﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Gamepad2, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { type ReservationViewModel } from '@/api/rooms'
-import { cancelMyReservationMutation } from '@/api/rooms/@tanstack/react-query.gen'
+import { type ReservationViewModel } from '@/api/spaces'
+import { cancelMyReservationMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import {
   AlertDialog,

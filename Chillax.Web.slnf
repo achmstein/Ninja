@@ -19,9 +19,9 @@
       "src\\Ordering.API\\Ordering.API.csproj",
       "src\\Ordering.Domain\\Ordering.Domain.csproj",
       "src\\Ordering.Infrastructure\\Ordering.Infrastructure.csproj",
-      "src\\Rooms.API\\Rooms.API.csproj",
-      "src\\Rooms.Domain\\Rooms.Domain.csproj",
-      "src\\Rooms.Infrastructure\\Rooms.Infrastructure.csproj",
+      "src\\Spaces.API\\Spaces.API.csproj",
+      "src\\Spaces.Domain\\Spaces.Domain.csproj",
+      "src\\Spaces.Infrastructure\\Spaces.Infrastructure.csproj",
       "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
       "tests\\Ordering.FunctionalTests\\Ordering.FunctionalTests.csproj",
       "tests\\Ordering.UnitTests\\Ordering.UnitTests.csproj"

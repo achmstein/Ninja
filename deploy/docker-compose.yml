@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_MULTIPLE_DATABASES: accountsdb,catalogdb,orderingdb,roomsdb,loyaltydb,notificationdb
+      POSTGRES_MULTIPLE_DATABASES: accountsdb,catalogdb,orderingdb,spacesdb,loyaltydb,notificationdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
@@ -113,13 +113,13 @@ services:
     networks:
       - chillax
 
-  rooms-api:
-    image: ghcr.io/achmstein/chillax-rooms:${IMAGE_TAG:-latest}
+  spaces-api:
+    image: ghcr.io/achmstein/chillax-spaces:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
-      ConnectionStrings__roomsdb: Host=postgres;Database=roomsdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__spacesdb: Host=postgres;Database=spacesdb;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__eventbus: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
       Identity__Url: http://keycloak:8080/realms/chillax
       Keycloak__Realm: chillax
@@ -222,7 +222,7 @@ services:
   #   depends_on:
   #     - catalog-api
   #     - ordering-api
-  #     - rooms-api
+  #     - spaces-api
   #     - identity-api
   #     - loyalty-api
   #     - notification-api

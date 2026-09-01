@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Gamepad2, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { type RoomViewModel } from '@/api/rooms'
-import { startWalkInSessionMutation } from '@/api/rooms/@tanstack/react-query.gen'
+import { type RoomViewModel } from '@/api/spaces'
+import { startWalkInSessionMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import {
   Dialog,
   DialogContent,

@@ -1,9 +1,9 @@
 #!/bin/bash
-# Reset catalog, ordering, and rooms data (keeps identity, accounts, loyalty, notifications)
+# Reset catalog, ordering, and spaces data (keeps identity, accounts, loyalty, notifications)
 # Usage: ./reset-data.sh
 #
 # This script:
-# 1. Drops catalogdb, orderingdb, roomsdb databases
+# 1. Drops catalogdb, orderingdb, spacesdb databases
 # 2. Recreates them empty
 # 3. Restarts the affected services so EF Core migrations + seeders run automatically
 
@@ -20,7 +20,7 @@ if [ -f .env ]; then
 fi
 
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-DBS_TO_RESET="catalogdb orderingdb roomsdb accountsdb loyaltydb notificationdb"
+DBS_TO_RESET="catalogdb orderingdb spacesdb accountsdb loyaltydb notificationdb"
 
 echo "=== Chillax Data Reset ==="
 echo "Databases to reset: $DBS_TO_RESET"
@@ -34,7 +34,7 @@ fi
 
 echo ""
 echo ">> Stopping affected services..."
-docker compose stop catalog-api ordering-api rooms-api accounts-api loyalty-api notification-api
+docker compose stop catalog-api ordering-api spaces-api accounts-api loyalty-api notification-api
 
 echo ""
 echo ">> Dropping and recreating databases..."
@@ -49,7 +49,7 @@ done
 
 echo ""
 echo ">> Restarting services (migrations + seeders will run automatically)..."
-docker compose start catalog-api ordering-api rooms-api accounts-api loyalty-api notification-api
+docker compose start catalog-api ordering-api spaces-api accounts-api loyalty-api notification-api
 
 echo ""
 echo "=== Done! All data has been reset and reseeded (Keycloak users preserved). ==="

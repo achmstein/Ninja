@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { getMySessionsOptions } from '@/api/rooms/@tanstack/react-query.gen'
+import { getMySessionsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 
 export const SESSION_RESERVED = 1
 export const SESSION_ACTIVE = 2

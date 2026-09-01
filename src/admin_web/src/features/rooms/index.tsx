@@ -5,11 +5,11 @@ import { Gamepad2, History, Wrench } from 'lucide-react'
 import {
   type ReservationViewModel,
   type RoomViewModel,
-} from '@/api/rooms'
+} from '@/api/spaces'
 import {
   getActiveSessionsOptions,
   listRoomsOptions,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import { cn } from '@/lib/utils'
 import {
   useLocalized,

@@ -186,7 +186,7 @@ internal static class Extensions
     public static IResourceBuilder<YarpResource> ConfigureMobileBffRoutes<TKeycloak>(this IResourceBuilder<YarpResource> builder,
         IResourceBuilder<ProjectResource> catalogApi,
         IResourceBuilder<ProjectResource> orderingApi,
-        IResourceBuilder<ProjectResource> roomsApi,
+        IResourceBuilder<ProjectResource> spacesApi,
         IResourceBuilder<ProjectResource> identityApi,
         IResourceBuilder<ProjectResource> loyaltyApi,
         IResourceBuilder<ProjectResource> notificationApi,
@@ -215,13 +215,13 @@ internal static class Extensions
             yarp.AddRoute("/api/orders/{*any}", orderingCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // Rooms routes
-            var roomsCluster = yarp.AddCluster(roomsApi);
-            yarp.AddRoute("/api/rooms/{*any}", roomsCluster)
+            // Spaces routes (rooms, sessions and tables all live in Spaces.API)
+            var spacesCluster = yarp.AddCluster(spacesApi);
+            yarp.AddRoute("/api/rooms/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
             // Sessions routes
-            yarp.AddRoute("/api/sessions/{*any}", roomsCluster)
+            yarp.AddRoute("/api/sessions/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
             // Identity routes (for user registration)

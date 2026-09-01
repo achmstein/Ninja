@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Gamepad2 } from 'lucide-react'
-import { type ReservationViewModel } from '@/api/rooms'
+import { type ReservationViewModel } from '@/api/spaces'
 import { businessDayStart } from '@/lib/business-day'
 import { useSelectedBranch } from '@/lib/branch'
 import {

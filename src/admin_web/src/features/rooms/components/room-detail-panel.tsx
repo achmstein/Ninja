@@ -23,7 +23,7 @@ import { toast } from '@/lib/toast'
 import {
   type ReservationViewModel,
   type RoomViewModel,
-} from '@/api/rooms'
+} from '@/api/spaces'
 import {
   addMemberToSessionMutation,
   assignCustomerToSessionMutation,
@@ -32,7 +32,7 @@ import {
   endSessionMutation,
   getRoomSessionHistoryOptions,
   removeMemberFromSessionMutation,
-} from '@/api/rooms/@tanstack/react-query.gen'
+} from '@/api/spaces/@tanstack/react-query.gen'
 import {
   AlertDialog,
   AlertDialogAction,

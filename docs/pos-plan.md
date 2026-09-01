@@ -4,6 +4,12 @@
 
 **Status:** proposed 2026-08-29 — awaiting decisions on the open questions at the bottom.
 
+> **Naming note (2026-09-01):** `Rooms.API` / `Rooms.Domain` / `Rooms.Infrastructure` are now
+> `Spaces.API` / `Spaces.Domain` / `Spaces.Infrastructure`, since the service owns café tables
+> alongside rooms. The database is `spacesdb` and the schema is `spaces`. Public routes are
+> unchanged (`/api/rooms`, `/api/sessions`, plus the new `/api/tables`). Paths below predate the
+> rename.
+
 ---
 
 ## 1. Where we are today

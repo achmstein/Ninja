@@ -24,9 +24,9 @@
     <Project Path="src/Ordering.API/Ordering.API.csproj" />
     <Project Path="src/Ordering.Domain/Ordering.Domain.csproj" />
     <Project Path="src/Ordering.Infrastructure/Ordering.Infrastructure.csproj" />
-    <Project Path="src/Rooms.API/Rooms.API.csproj" />
-    <Project Path="src/Rooms.Domain/Rooms.Domain.csproj" />
-    <Project Path="src/Rooms.Infrastructure/Rooms.Infrastructure.csproj" />
+    <Project Path="src/Spaces.API/Spaces.API.csproj" />
+    <Project Path="src/Spaces.Domain/Spaces.Domain.csproj" />
+    <Project Path="src/Spaces.Infrastructure/Spaces.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" />

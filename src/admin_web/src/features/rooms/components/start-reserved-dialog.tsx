@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Play } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { type ReservationViewModel } from '@/api/rooms'
-import { startSessionMutation } from '@/api/rooms/@tanstack/react-query.gen'
+import { type ReservationViewModel } from '@/api/spaces'
+import { startSessionMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import {
   Dialog,
   DialogContent,

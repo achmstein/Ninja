@@ -98,6 +98,23 @@ export type OrderRatingDto = {
     createdAt?: string;
 };
 
+export type OrderStats = {
+    days?: Array<OrderStatsDay>;
+    topItems?: Array<OrderStatsItem>;
+};
+
+export type OrderStatsDay = {
+    date?: string;
+    orders?: number | string;
+    revenue?: number | string;
+};
+
+export type OrderStatsItem = {
+    productName?: LocalizedText;
+    units?: number | string;
+    revenue?: number | string;
+};
+
 export type OrderSummary = {
     orderNumber?: number | string;
     date?: string;
@@ -107,6 +124,7 @@ export type OrderSummary = {
     loyaltyDiscount?: number | string;
     roomName?: null | LocalizedText;
     userName?: null | string;
+    userId?: null | string;
     ratingValue?: null | number | string;
 };
 
@@ -278,6 +296,78 @@ export type CancelOrderResponses = {
     200: unknown;
 };
 
+export type DeleteOrderData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}';
+};
+
+export type DeleteOrderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DeleteOrderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteOrderResponse = DeleteOrderResponses[keyof DeleteOrderResponses];
+
+export type GetOrderData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}';
+};
+
+export type GetOrderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetOrderResponses = {
+    /**
+     * OK
+     */
+    200: Order;
+};
+
+export type GetOrderResponse = GetOrderResponses[keyof GetOrderResponses];
+
 export type RateOrderData = {
     body: RateOrderRequest;
     headers: {
@@ -318,44 +408,6 @@ export type RateOrderResponses = {
      */
     200: unknown;
 };
-
-export type GetOrderData = {
-    body?: never;
-    path: {
-        orderId: number;
-    };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
-    url: '/api/orders/{orderId}';
-};
-
-export type GetOrderErrors = {
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type GetOrderResponses = {
-    /**
-     * OK
-     */
-    200: Order;
-};
-
-export type GetOrderResponse = GetOrderResponses[keyof GetOrderResponses];
 
 export type GetPendingOrdersData = {
     body?: never;
@@ -426,6 +478,41 @@ export type GetAllOrdersResponses = {
 };
 
 export type GetAllOrdersResponse = GetAllOrdersResponses[keyof GetAllOrdersResponses];
+
+export type GetOrderStatsData = {
+    body?: never;
+    path?: never;
+    query: {
+        fromDate: string;
+        toDate: string;
+        tzOffsetMinutes?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/stats';
+};
+
+export type GetOrderStatsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOrderStatsResponses = {
+    /**
+     * OK
+     */
+    200: OrderStats;
+};
+
+export type GetOrderStatsResponse = GetOrderStatsResponses[keyof GetOrderStatsResponses];
 
 export type GetOrdersByUserIdData = {
     body?: never;

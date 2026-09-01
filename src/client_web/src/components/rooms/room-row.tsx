@@ -1,5 +1,5 @@
 import { CalendarPlus, Gamepad2 } from 'lucide-react'
-import { type RoomViewModel } from '@/api/rooms'
+import { type RoomViewModel } from '@/api/spaces'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
