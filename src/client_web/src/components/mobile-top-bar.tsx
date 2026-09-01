@@ -1,8 +1,37 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { useT } from '@/lib/i18n'
+import { Armchair, X } from 'lucide-react'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useActiveTable, useTableStore } from '@/stores/table-store'
 import { BranchSwitcher } from './branch-switcher'
 
 const tabPaths = ['/', '/rooms', '/orders', '/profile']
+
+/** Scanning a table code drops the customer straight on the menu, so this is
+ *  the standing reminder of where their order is going - and the way out if
+ *  they moved or scanned the wrong sticker. */
+function TableChip() {
+  const t = useT()
+  const localized = useLocalized()
+  const table = useActiveTable()
+  const clearTable = useTableStore((s) => s.clearTable)
+
+  if (!table) return null
+
+  return (
+    <span className='bg-muted text-muted-foreground flex items-center gap-1 rounded-full py-1 ps-2.5 pe-1 text-xs font-medium'>
+      <Armchair className='h-3.5 w-3.5' />
+      {localized(table.name)}
+      <button
+        type='button'
+        onClick={clearTable}
+        aria-label={t('leaveTable')}
+        className='hover:bg-background/80 rounded-full p-0.5'
+      >
+        <X className='h-3 w-3' />
+      </button>
+    </span>
+  )
+}
 
 // Mobile parity with the app: no persistent app bar. Every tab gets the same
 // row — branding at the start, branch chip at the end — scrolling with the
@@ -25,7 +54,10 @@ export function MobileTopBar() {
           {t('appTitle')}
         </span>
       </Link>
-      <BranchSwitcher />
+      <div className='flex items-center gap-2'>
+        <TableChip />
+        <BranchSwitcher />
+      </div>
     </div>
   )
 }

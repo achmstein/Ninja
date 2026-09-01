@@ -9,9 +9,19 @@
 # Caddy handles TLS termination (auto Let's Encrypt).
 
 chillax.site {
-	# Printed room QRs encode chillax.site/room/{id}; the customer web app
-	# handles that flow at app.chillax.site
+	# Printed room and table QRs encode chillax.site/{room,table}/{id}; the
+	# customer web app handles both flows at app.chillax.site. Installed apps
+	# intercept these URLs as App Links before the redirect is followed.
 	redir /room/* https://app.chillax.site{uri} permanent
+	redir /table/* https://app.chillax.site{uri} permanent
+
+	# App Links / Universal Links association files. Apple requires
+	# application/json on an extensionless path.
+	handle /.well-known/apple-app-site-association {
+		header Content-Type application/json
+		root * /srv/website
+		file_server
+	}
 
 	root * /srv/website
 	file_server

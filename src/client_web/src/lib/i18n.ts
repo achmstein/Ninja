@@ -22,6 +22,7 @@ const webExtras = {
   continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
   continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },
+  leaveTable: { en: 'Leave table', ar: 'سيب الترابيزة' },
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
   toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },

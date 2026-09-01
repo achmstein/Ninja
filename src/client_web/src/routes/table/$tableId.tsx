@@ -1,26 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { Armchair } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 import { getTableOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useTableStore } from '@/stores/table-store'
 import { useT, useLocalized } from '@/lib/i18n'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/table/$tableId')({
   component: TableLinkPage,
 })
 
 /**
- * The printed table QR encodes https://chillax.site/table/{id}. Unlike a room,
- * there is no session to join - scanning just remembers where the customer is
- * sitting so the order they place carries the table.
+ * The printed table QR encodes https://chillax.site/table/{id}.
  *
- * Deliberately not gated on sign-in: the menu is browsable anonymously and the
- * customer should land on it straight from the camera.
+ * Someone who scans a table code wants the menu, so this route is a pass
+ * through rather than a landing page: it remembers where they are sitting and
+ * drops them straight on the menu with a toast. Nothing here is gated on
+ * sign-in, and the table shows on the cart before they check out.
  */
 function TableLinkPage() {
   const { tableId } = Route.useParams()
@@ -36,75 +34,69 @@ function TableLinkPage() {
     ...getTableOptions({ path: { id: Number(tableId) } }),
     retry: false,
   })
-  const table = tableQuery.data
 
-  // The QR belongs to a specific branch — switch to it
+  // The effect re-runs as the query settles; only act on the first outcome
+  const handled = useRef(false)
+
   useEffect(() => {
-    if (table?.branchId != null && Number(table.branchId) !== branchId) {
+    if (handled.current || tableQuery.isLoading) return
+
+    const table = tableQuery.data
+    const toMenu = () => navigate({ to: '/', replace: true })
+
+    if (tableQuery.isError || !table) {
+      handled.current = true
+      toast.error(t('invalidQrCode'))
+      toMenu()
+      return
+    }
+
+    if (!table.isActive) {
+      handled.current = true
+      clearTable()
+      toast.error(t('tableUnavailable'))
+      toMenu()
+      return
+    }
+
+    handled.current = true
+
+    // The QR belongs to a specific branch — switch to it
+    if (table.branchId != null && Number(table.branchId) !== branchId) {
       setBranchId(Number(table.branchId))
       queryClient.invalidateQueries()
     }
-  }, [table?.branchId, branchId, setBranchId, queryClient])
 
-  // Remember where they are sitting (or forget a table that has been retired)
-  useEffect(() => {
-    if (!table) return
-    if (table.isActive) {
-      setTable({
-        id: Number(table.id),
-        name: { en: table.name?.en ?? '', ar: table.name?.ar },
-        branchId: Number(table.branchId),
-      })
-    } else {
-      clearTable()
-    }
-  }, [table, setTable, clearTable])
+    setTable({
+      id: Number(table.id),
+      name: { en: table.name?.en ?? '', ar: table.name?.ar },
+      branchId: Number(table.branchId),
+    })
 
-  if (tableQuery.isLoading) {
-    return (
-      <div className='p-4'>
-        <Skeleton className='h-48 rounded-xl' />
-      </div>
-    )
-  }
+    // Not a "Success" - the table name is the headline, and the description
+    // says what it means for the order they are about to place.
+    toast.info(t('youAreAtTable', { tableName: localized(table.name) }), {
+      description: t('orderDeliveredToTable'),
+    })
+    toMenu()
+  }, [
+    tableQuery.isLoading,
+    tableQuery.isError,
+    tableQuery.data,
+    branchId,
+    setBranchId,
+    setTable,
+    clearTable,
+    queryClient,
+    navigate,
+    t,
+    localized,
+  ])
 
-  if (tableQuery.isError || !table) {
-    return (
-      <div className='text-muted-foreground flex h-[60svh] items-center justify-center px-6 text-center'>
-        {t('invalidQrCode')}
-      </div>
-    )
-  }
-
-  if (!table.isActive) {
-    return (
-      <div className='text-muted-foreground flex h-[60svh] items-center justify-center px-6 text-center'>
-        {t('tableUnavailable')}
-      </div>
-    )
-  }
-
+  // Only ever on screen for the moment the lookup takes
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <Card className='items-center gap-3 p-6 text-center'>
-        <div className='bg-primary/10 flex size-14 items-center justify-center rounded-full'>
-          <Armchair className='text-primary h-7 w-7' />
-        </div>
-        <h1 className='text-xl font-bold'>
-          {t('youAreAtTable', { tableName: localized(table.name) })}
-        </h1>
-        <p className='text-muted-foreground text-sm'>
-          {t('orderDeliveredToTable')}
-        </p>
-
-        <Button
-          size='lg'
-          className='w-full rounded-full'
-          onClick={() => navigate({ to: '/' })}
-        >
-          {t('browseMenu')}
-        </Button>
-      </Card>
+    <div className='flex h-[60svh] items-center justify-center'>
+      <Loader2 className='text-muted-foreground h-6 w-6 animate-spin' />
     </div>
   )
 }

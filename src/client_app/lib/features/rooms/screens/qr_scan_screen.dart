@@ -8,7 +8,6 @@ import '../../../core/providers/current_table_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../tables/models/cafe_table.dart';
 import '../../tables/services/table_service.dart';
 import '../models/room.dart';
 import '../services/room_service.dart';
@@ -155,79 +154,24 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
           );
 
       if (!mounted) return;
-      _showTableScanResult(table);
+
+      // Someone scanning a table code wants the menu, so close the scanner and
+      // confirm with a toast rather than making them tap through a sheet.
+      final l10n = AppLocalizations.of(context)!;
+      Navigator.of(context).pop();
+      showFToast(
+        context: context,
+        title: Text(l10n.youAreAtTable(table.name.localized(context))),
+        // Where they are sitting, not an operation that succeeded — a seat
+        // reads better here than a green tick.
+        icon: Icon(FIcons.armchair, color: context.theme.colors.primary),
+      );
     } catch (e) {
       if (mounted) {
         _showInvalidQr();
         _resumeScanning();
       }
     }
-  }
-
-  void _showTableScanResult(CafeTable table) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: colors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.mutedForeground.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              AppText(
-                l10n.youAreAtTable(table.name.localized(context)),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colors.foreground,
-                ),
-              ),
-              const SizedBox(height: 8),
-              AppText(
-                l10n.orderDeliveredToTable,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colors.mutedForeground,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                child: FButton(
-                  onPress: () {
-                    Navigator.of(sheetContext).pop(); // close sheet
-                    Navigator.of(context).pop(); // close QR screen
-                  },
-                  child: Text(l10n.browseMenu),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ).whenComplete(() {
-      if (mounted && _isProcessing) {
-        _resumeScanning();
-      }
-    });
   }
 
   void _resumeScanning() {
