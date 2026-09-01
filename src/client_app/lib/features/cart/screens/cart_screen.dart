@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/providers/current_table_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -594,9 +595,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       }
     }
 
+    // Otherwise deliver to the table they scanned into: a running room session
+    // is the stronger statement about where the customer actually is.
+    final table = roomName == null ? ref.read(activeTableProvider) : null;
+
     final success = await ref.read(checkoutProvider.notifier).submitOrder(
           items: cart.items,
           roomName: roomName,
+          tableId: table?.id,
+          tableName: table?.name.toJson(),
           customerNote: note,
           pointsToRedeem: redemption.pointsToRedeem,
           loyaltyDiscount: redemption.serverDiscount ?? 0,
@@ -605,6 +612,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (success && mounted) {
       _noteController.clear();
       ref.read(loyaltyRedemptionProvider.notifier).reset();
+      // Keep the table alive through a long sitting with several rounds
+      ref.read(currentTableProvider.notifier).stampOrdered();
 
       // Refresh loyalty info to show updated balance after order is confirmed
       ref.read(loyaltyProvider.notifier).refresh();

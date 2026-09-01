@@ -936,6 +936,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomNotAvailable => 'الاوضة مش متاحة';
 
   @override
+  String youAreAtTable(String tableName) {
+    return 'انت على $tableName';
+  }
+
+  @override
+  String get orderDeliveredToTable => 'طلبك هيوصلك على الترابيزة.';
+
+  @override
+  String get tableUnavailable => 'الترابيزة دي مش متاحة';
+
+  @override
+  String get pointCameraAtRoomOrTableQr =>
+      'وجه الكاميرا على كود الاوضة أو الترابيزة';
+
+  @override
   String get invalidPhone => 'دخل رقم موبايل صحيح (01xxxxxxxxx).';
 
   @override

@@ -12,6 +12,7 @@ import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/auth/auth_service.dart';
 import 'core/providers/branch_provider.dart';
+import 'core/providers/current_table_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/firebase_service.dart';
 import 'core/services/session_notification_service.dart';
@@ -30,6 +31,7 @@ void main() async {
 
   await initializeLocale();
   await initializeBranch();
+  await initializeCurrentTable();
 
   // Initialize Firebase before setting up Crashlytics handlers
   try {

@@ -84,6 +84,7 @@ class Order {
   final OrderStatus status;
   final String? description;
   final LocalizedText? roomName;
+  final LocalizedText? tableName;
   final String? customerNote;
   final double total;
   final int pointsToRedeem;
@@ -97,6 +98,7 @@ class Order {
     required this.status,
     this.description,
     this.roomName,
+    this.tableName,
     this.customerNote,
     required this.total,
     this.pointsToRedeem = 0,
@@ -125,6 +127,7 @@ class Order {
       status: status,
       description: json['description'] as String?,
       roomName: json['roomName'] != null ? OrderItem._parseLocalizedText(json['roomName']) : null,
+      tableName: json['tableName'] != null ? OrderItem._parseLocalizedText(json['tableName']) : null,
       customerNote: json['customerNote'] as String?,
       total: (json['total'] as num).toDouble(),
       pointsToRedeem: (json['pointsToRedeem'] ?? 0) as int,
@@ -178,16 +181,22 @@ class PaginatedOrders {
 /// Create order request
 class CreateOrderRequest {
   final Map<String, dynamic>? roomName;
+  final int? tableId;
+  final Map<String, dynamic>? tableName;
   final String? customerNote;
 
   CreateOrderRequest({
     this.roomName,
+    this.tableId,
+    this.tableName,
     this.customerNote,
   });
 
   Map<String, dynamic> toJson() {
     return {
       if (roomName != null) 'roomName': roomName,
+      if (tableId != null) 'tableId': tableId,
+      if (tableName != null) 'tableName': tableName,
       if (customerNote != null) 'customerNote': customerNote,
     };
   }

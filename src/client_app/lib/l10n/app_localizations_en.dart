@@ -950,6 +950,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomNotAvailable => 'Room not available';
 
   @override
+  String youAreAtTable(String tableName) {
+    return 'You\'re at $tableName';
+  }
+
+  @override
+  String get orderDeliveredToTable =>
+      'Your order will be brought to your table.';
+
+  @override
+  String get tableUnavailable => 'This table is not available';
+
+  @override
+  String get pointCameraAtRoomOrTableQr =>
+      'Point camera at a room or table QR code';
+
+  @override
   String get invalidPhone => 'Please enter a valid phone number (01xxxxxxxxx).';
 
   @override

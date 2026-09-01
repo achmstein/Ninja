@@ -98,6 +98,11 @@ final roomsApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.roomsApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
+final tablesApiClientProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.tablesApiUrl, branchIdGetter: _branchIdGetter(ref));
+});
+
 final notificationsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
   return ApiClient(authService, baseUrl: AppConfig.notificationsApiUrl, branchIdGetter: _branchIdGetter(ref));

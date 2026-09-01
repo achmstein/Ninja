@@ -1814,6 +1814,30 @@ abstract class AppLocalizations {
   /// **'Room not available'**
   String get roomNotAvailable;
 
+  /// No description provided for @youAreAtTable.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re at {tableName}'**
+  String youAreAtTable(String tableName);
+
+  /// No description provided for @orderDeliveredToTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order will be brought to your table.'**
+  String get orderDeliveredToTable;
+
+  /// No description provided for @tableUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This table is not available'**
+  String get tableUnavailable;
+
+  /// No description provided for @pointCameraAtRoomOrTableQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Point camera at a room or table QR code'**
+  String get pointCameraAtRoomOrTableQr;
+
   /// No description provided for @invalidPhone.
   ///
   /// In en, this message translates to:

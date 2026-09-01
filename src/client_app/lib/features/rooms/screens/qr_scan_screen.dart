@@ -4,12 +4,23 @@ import 'package:forui/forui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/providers/current_table_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../tables/models/cafe_table.dart';
+import '../../tables/services/table_service.dart';
 import '../models/room.dart';
 import '../services/room_service.dart';
 import '../../../core/services/sound_service.dart';
+
+/// A scanned chillax.site QR: either a room or a café table.
+class _ScannedTarget {
+  final bool isTable;
+  final int id;
+
+  const _ScannedTarget({required this.isTable, required this.id});
+}
 
 class QrScanScreen extends ConsumerStatefulWidget {
   const QrScanScreen({super.key});
@@ -28,14 +39,17 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     super.dispose();
   }
 
-  int? _parseRoomId(String url) {
-    // Match https://chillax.site/room/{roomId}
+  /// Match https://chillax.site/room/{id} and https://chillax.site/table/{id}
+  _ScannedTarget? _parseTarget(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
     if (uri.host != 'chillax.site') return null;
     final segments = uri.pathSegments;
-    if (segments.length != 2 || segments[0] != 'room') return null;
-    return int.tryParse(segments[1]);
+    if (segments.length != 2) return null;
+    if (segments[0] != 'room' && segments[0] != 'table') return null;
+    final id = int.tryParse(segments[1]);
+    if (id == null) return null;
+    return _ScannedTarget(isTable: segments[0] == 'table', id: id);
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -43,14 +57,21 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     final barcode = capture.barcodes.firstOrNull;
     if (barcode == null || barcode.rawValue == null) return;
 
-    final roomId = _parseRoomId(barcode.rawValue!);
-    if (roomId == null) {
+    final target = _parseTarget(barcode.rawValue!);
+    if (target == null) {
       _showInvalidQr();
       return;
     }
 
     setState(() => _isProcessing = true);
     _scannerController.stop();
+
+    if (target.isTable) {
+      await _handleTableScan(target.id);
+      return;
+    }
+
+    final roomId = target.id;
 
     try {
       final service = ref.read(roomRepositoryProvider);
@@ -97,6 +118,116 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       title: Text(l10n.invalidQrCode),
       icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
     );
+  }
+
+  /// A table has no session to join — scanning just remembers where the
+  /// customer is sitting so their next order carries the table.
+  Future<void> _handleTableScan(int tableId) async {
+    try {
+      final table = await ref.read(tableRepositoryProvider).getTable(tableId);
+
+      if (!mounted) return;
+
+      if (!table.isActive) {
+        final l10n = AppLocalizations.of(context)!;
+        showFToast(
+          context: context,
+          title: Text(l10n.tableUnavailable),
+          icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+        );
+        _resumeScanning();
+        return;
+      }
+
+      // The QR belongs to a specific branch — switch to it
+      final currentBranchId = ref.read(selectedBranchIdProvider);
+      if (table.branchId != currentBranchId) {
+        ref.read(branchProvider.notifier).selectBranch(table.branchId);
+      }
+
+      await ref.read(currentTableProvider.notifier).setTable(
+            CurrentTable(
+              id: table.id,
+              name: table.name,
+              branchId: table.branchId,
+              scannedAt: DateTime.now(),
+            ),
+          );
+
+      if (!mounted) return;
+      _showTableScanResult(table);
+    } catch (e) {
+      if (mounted) {
+        _showInvalidQr();
+        _resumeScanning();
+      }
+    }
+  }
+
+  void _showTableScanResult(CafeTable table) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.theme.colors;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.mutedForeground.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              AppText(
+                l10n.youAreAtTable(table.name.localized(context)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colors.foreground,
+                ),
+              ),
+              const SizedBox(height: 8),
+              AppText(
+                l10n.orderDeliveredToTable,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colors.mutedForeground,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                child: FButton(
+                  onPress: () {
+                    Navigator.of(sheetContext).pop(); // close sheet
+                    Navigator.of(context).pop(); // close QR screen
+                  },
+                  child: Text(l10n.browseMenu),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(() {
+      if (mounted && _isProcessing) {
+        _resumeScanning();
+      }
+    });
   }
 
   void _resumeScanning() {
@@ -298,7 +429,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
           ),
 
           // Overlay with cutout
-          _ScanOverlay(hint: l10n.pointCameraAtQr),
+          _ScanOverlay(hint: l10n.pointCameraAtRoomOrTableQr),
 
           // Loading indicator
           if (_isProcessing)

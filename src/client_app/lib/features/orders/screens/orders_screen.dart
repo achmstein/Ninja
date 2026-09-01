@@ -348,10 +348,10 @@ class _OrderTile extends ConsumerWidget {
                 timeFormat.format(order.date.toLocal()),
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: colors.foreground),
               ),
-              if (order.roomName != null) ...[
+              if (order.roomName != null || order.tableName != null) ...[
                 const SizedBox(width: 6),
                 AppText(
-                  '• ${order.roomName!.localized(context)}',
+                  '• ${(order.roomName ?? order.tableName)!.localized(context)}',
                   style: TextStyle(fontSize: 13, color: colors.mutedForeground),
                 ),
               ],

@@ -24,6 +24,8 @@ abstract class OrderRepository {
     required String userName,
     required String requestId,
     Map<String, dynamic>? roomName,
+    int? tableId,
+    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem,
     double loyaltyDiscount,
@@ -33,6 +35,8 @@ abstract class OrderRepository {
     required String userId,
     required String userName,
     Map<String, dynamic>? roomName,
+    int? tableId,
+    Map<String, dynamic>? tableName,
     UserItemPreference? preference,
   });
   Future<void> cancelOrder(int id);
@@ -90,6 +94,8 @@ class ApiOrderRepository implements OrderRepository {
     required String userName,
     required String requestId,
     Map<String, dynamic>? roomName,
+    int? tableId,
+    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
@@ -100,6 +106,8 @@ class ApiOrderRepository implements OrderRepository {
         'userId': userId,
         'userName': userName,
         'roomName': roomName,
+        'tableId': tableId,
+        'tableName': tableName,
         'customerNote': customerNote,
         'pointsToRedeem': pointsToRedeem,
         'loyaltyDiscount': loyaltyDiscount,
@@ -117,6 +125,8 @@ class ApiOrderRepository implements OrderRepository {
     required String userId,
     required String userName,
     Map<String, dynamic>? roomName,
+    int? tableId,
+    Map<String, dynamic>? tableName,
     UserItemPreference? preference,
   }) async {
     final selectedCustomizations = <SelectedCustomization>[];
@@ -191,6 +201,8 @@ class ApiOrderRepository implements OrderRepository {
       userName: userName,
       requestId: _uuid.v4(),
       roomName: roomName,
+      tableId: tableId,
+      tableName: tableName,
     );
   }
 
@@ -434,6 +446,8 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
   Future<bool> submitOrder({
     required List<CartItem> items,
     Map<String, dynamic>? roomName,
+    int? tableId,
+    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
@@ -444,6 +458,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     final signature = jsonEncode({
       'items': items.map((item) => item.toJson()).toList(),
       'roomName': roomName,
+      'tableId': tableId,
       'customerNote': customerNote,
       'pointsToRedeem': pointsToRedeem,
       'loyaltyDiscount': loyaltyDiscount,
@@ -460,6 +475,8 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         userName: _authState.name ?? 'Guest',
         requestId: _requestId!,
         roomName: roomName,
+        tableId: tableId,
+        tableName: tableName,
         customerNote: customerNote,
         pointsToRedeem: pointsToRedeem,
         loyaltyDiscount: loyaltyDiscount,

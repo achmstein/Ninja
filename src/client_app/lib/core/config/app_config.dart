@@ -15,6 +15,7 @@ class AppConfig {
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
   static String get roomsApiUrl => '$bffBaseUrl/api/rooms/';
   static String get sessionsApiUrl => '$bffBaseUrl/api/sessions/';
+  static String get tablesApiUrl => '$bffBaseUrl/api/tables/';
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';
   static String get accountsApiUrl => '$bffBaseUrl/api/accounts/';
