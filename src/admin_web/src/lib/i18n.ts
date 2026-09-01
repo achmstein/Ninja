@@ -206,6 +206,11 @@ const webExtras = {
   backToRooms: { en: 'Back to rooms', ar: 'رجوع للاوض' },
   copyRoomLink: { en: 'Copy room QR link', ar: 'انسخ لينك الاوضة' },
   roomLinkCopied: { en: 'Room link copied', ar: 'اتنسخ لينك الاوضة' },
+  roomDeletedSuccess: { en: 'Room deleted', ar: 'الاوضة اتحذفت' },
+  failedToDeleteRoom: {
+    en: 'Failed to delete room',
+    ar: 'معرفناش نحذف الاوضة',
+  },
   billedHours: { en: 'Billed hours', ar: 'الساعات المحسوبة' },
   billedHoursFormat: { en: '{hours}h', ar: '{hours} ساعة' },
   firstQuarterNotReached: {

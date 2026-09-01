@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { Gamepad2, History, Wrench } from 'lucide-react'
+import { Gamepad2, History, Plus, Wrench } from 'lucide-react'
 import {
   type ReservationViewModel,
   type RoomViewModel,
@@ -30,6 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ReserveRoomDialog } from './components/reserve-room-dialog'
+import { RoomDialog } from './components/room-dialog'
 import { RoomDetailPanel } from './components/room-detail-panel'
 import { StartReservedDialog } from './components/start-reserved-dialog'
 import { StartSessionDialog } from './components/start-session-dialog'
@@ -90,6 +91,7 @@ export function RoomsManagement() {
   const [startReserved, setStartReserved] =
     useState<ReservationViewModel | null>(null)
   const [status, setStatus] = useState('all')
+  const [addRoomOpen, setAddRoomOpen] = useState(false)
 
   const { data: rooms = [], isLoading: loadingRooms } = useQuery(
     listRoomsOptions()
@@ -143,11 +145,21 @@ export function RoomsManagement() {
                   {t('roomsSubtitle')}
                 </p>
               </div>
-              <Button size='icon' variant='ghost' asChild>
-                <Link to='/rooms/history' aria-label={t('allSessionHistory')}>
-                  <History size={20} className='stroke-muted-foreground' />
-                </Link>
-              </Button>
+              <div className='flex items-center'>
+                <Button
+                  size='icon'
+                  variant='ghost'
+                  onClick={() => setAddRoomOpen(true)}
+                  aria-label={t('addRoom')}
+                >
+                  <Plus size={20} className='stroke-muted-foreground' />
+                </Button>
+                <Button size='icon' variant='ghost' asChild>
+                  <Link to='/rooms/history' aria-label={t('allSessionHistory')}>
+                    <History size={20} className='stroke-muted-foreground' />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
             <Select value={status} onValueChange={setStatus}>
@@ -271,6 +283,10 @@ export function RoomsManagement() {
           if (!open) setStartReserved(null)
         }}
       />
+
+      {addRoomOpen && (
+        <RoomDialog room={null} open onOpenChange={setAddRoomOpen} />
+      )}
     </>
   )
 }

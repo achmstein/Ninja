@@ -10,6 +10,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock,
+  MoreHorizontal,
   Play,
   QrCode,
   Square,
@@ -29,9 +30,11 @@ import {
   assignCustomerToSessionMutation,
   cancelSessionMutation,
   changePlayerModeMutation,
+  deleteRoomMutation,
   endSessionMutation,
   getRoomSessionHistoryOptions,
   removeMemberFromSessionMutation,
+  updateRoomStatusMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import {
   AlertDialog,
@@ -44,6 +47,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -54,6 +64,8 @@ import {
   formatBillingHours,
   formatDuration,
   ROOM_MAINTENANCE,
+  ROOM_PHYSICAL_AVAILABLE,
+  ROOM_PHYSICAL_MAINTENANCE,
   roomStatusConfig,
   SESSION_ACTIVE,
   SESSION_CANCELLED,
@@ -61,6 +73,7 @@ import {
   sessionBilledHours,
 } from '../status'
 import { PlayerModeToggle, type PlayerMode } from './player-mode-toggle'
+import { RoomDialog } from './room-dialog'
 
 const HISTORY_PAGE = 20
 
@@ -154,6 +167,32 @@ export function RoomDetailPanel({
     onError: () => toast.error(t('failedToEndSession')),
   })
 
+  const setStatus = useMutation({
+    ...updateRoomStatusMutation(),
+    onSuccess: () => {
+      invalidate()
+      toast.success(t('roomSavedSuccess'))
+    },
+    onError: () => toast.error(t('failedToSaveRoom')),
+  })
+
+  const deleteRoom = useMutation({
+    ...deleteRoomMutation(),
+    onSuccess: () => {
+      invalidate()
+      setConfirmDelete(false)
+      toast.success(t('roomDeletedSuccess'))
+      // The selected room is gone, so drop back to the empty state
+      onBack()
+    },
+    // The server refuses while a session is active or reserved; surface its
+    // reason rather than a generic failure
+    onError: (error) => {
+      const problem = error.response?.data as { detail?: string } | undefined
+      toast.error(problem?.detail ?? t('failedToDeleteRoom'))
+    },
+  })
+
   const cancelSession = useMutation({
     ...cancelSessionMutation(),
     onSuccess: () => {
@@ -200,6 +239,8 @@ export function RoomDetailPanel({
   })
 
   const [confirmEnd, setConfirmEnd] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [pendingMode, setPendingMode] = useState<PlayerMode | null>(null)
   // Customer picker: adds a member (active) or assigns the owner (reserved)
@@ -271,6 +312,42 @@ export function RoomDetailPanel({
           >
             <QrCode className='h-4 w-4' />
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size='icon' variant='ghost' aria-label={t('actions')}>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                {t('edit')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={isActive || isReserved || setStatus.isPending}
+                onClick={() =>
+                  setStatus.mutate({
+                    path: { id: Number(roomId) },
+                    query: {
+                      status: isMaintenance
+                        ? ROOM_PHYSICAL_AVAILABLE
+                        : ROOM_PHYSICAL_MAINTENANCE,
+                    },
+                  })
+                }
+              >
+                {t(isMaintenance ? 'statusAvailable' : 'statusMaintenance')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant='destructive'
+                disabled={isActive || isReserved}
+                onClick={() => setConfirmDelete(true)}
+              >
+                {t('delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -696,6 +773,28 @@ export function RoomDetailPanel({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteRoom')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteRoomConfirmation', { name: localized(room.name) })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteRoom.isPending}
+              onClick={() => deleteRoom.mutate({ path: { id: roomId } })}
+            >
+              {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editOpen && <RoomDialog room={room} open onOpenChange={setEditOpen} />}
     </div>
   )
 }

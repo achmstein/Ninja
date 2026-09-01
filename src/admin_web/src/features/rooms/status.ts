@@ -1,11 +1,18 @@
 import { type ReservationViewModel } from '@/api/spaces'
 import { type TranslationKey } from '@/lib/i18n'
 
-// RoomDisplayStatus enum values from Rooms.API
+// RoomDisplayStatus enum values from Spaces.API — what listRooms returns
 export const ROOM_AVAILABLE = 1
 export const ROOM_OCCUPIED = 2
 export const ROOM_RESERVED = 3
 export const ROOM_MAINTENANCE = 4
+
+// RoomPhysicalStatus enum values — what PUT /api/rooms/{id}/status accepts.
+// Deliberately separate from the display values above: there is no Reserved
+// here, so Maintenance is 3, not 4. Passing a display value would set the room
+// to Occupied instead.
+export const ROOM_PHYSICAL_AVAILABLE = 1
+export const ROOM_PHYSICAL_MAINTENANCE = 3
 
 export const roomStatusConfig: Record<
   number,
