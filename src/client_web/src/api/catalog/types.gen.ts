@@ -272,8 +272,10 @@ export type CreateItemResponses = {
     /**
      * Created
      */
-    201: unknown;
+    201: CatalogItemDto;
 };
+
+export type CreateItemResponse = CreateItemResponses[keyof CreateItemResponses];
 
 export type BatchGetItemsData = {
     body?: never;

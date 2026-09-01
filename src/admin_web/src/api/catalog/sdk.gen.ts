@@ -35,6 +35,7 @@ export const listItems = <ThrowOnError extends boolean = false>(options?: Option
  * Create a new menu item (Admin only)
  */
 export const createItem = <ThrowOnError extends boolean = false>(options: Options<CreateItemData, ThrowOnError>): RequestResult<CreateItemResponses, CreateItemErrors, ThrowOnError> => (options.client ?? client).post<CreateItemResponses, CreateItemErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/api/catalog/items',
     ...options,
     headers: {
