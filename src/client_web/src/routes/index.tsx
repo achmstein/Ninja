@@ -94,9 +94,16 @@ function MenuPage() {
   // it can't land on a neighbor — and at the very bottom of the page the
   // last section wins even when it's too short to ever reach the line.
   useEffect(() => {
-    // Just past the sections' scroll-mt-32 (128px), so a clicked section
-    // scrolled to its margin lands past the line and stays selected
-    const SPY_OFFSET = 140
+    // Just past where a clicked section comes to rest, so it lands past the
+    // line and stays selected. Read that off the section rather than repeating
+    // it: the resting place is per-breakpoint and carries the safe-area inset
+    const spyOffset = () => {
+      const first = document.getElementById(sections[0]?.id ?? '')
+      const rest = first
+        ? parseFloat(getComputedStyle(first).scrollMarginTop) || 0
+        : 0
+      return rest + 12
+    }
 
     const onScroll = () => {
       if (Date.now() < spyPausedUntil.current) {
@@ -120,11 +127,12 @@ function MenuPage() {
         if (last) setActiveSection(last.id)
         return
       }
+      const line = spyOffset()
       let current = sections[0]?.id ?? ''
       for (const section of sections) {
         const el = document.getElementById(section.id)
         if (!el) continue
-        if (el.getBoundingClientRect().top <= SPY_OFFSET) current = section.id
+        if (el.getBoundingClientRect().top <= line) current = section.id
         else break
       }
       setActiveSection(current)
@@ -227,7 +235,11 @@ function MenuPage() {
             <section
               key={section.id}
               id={section.id}
-              className='flex scroll-mt-32 flex-col'
+              // Rest exactly under the sticky rail: its own offset (the
+              // safe-area inset on mobile, the h-14 header on desktop) plus
+              // the rail's 3.25rem. The flat 128px this replaces overshot, and
+              // the surplus showed the previous category's last row
+              className='flex scroll-mt-[calc(env(safe-area-inset-top)_+_3.25rem)] flex-col md:scroll-mt-[6.75rem]'
             >
               <h2 className='pt-2 pb-1 text-base font-bold'>{section.label}</h2>
               <div className='md:grid md:grid-cols-2 md:gap-x-10'>
