@@ -272,7 +272,7 @@
     },
     {
       "name": "rooms",
-      "description": "Rooms API access",
+      "description": "Spaces API access (rooms and tables)",
       "protocol": "openid-connect",
       "attributes": {
         "include.in.token.scope": "true",
