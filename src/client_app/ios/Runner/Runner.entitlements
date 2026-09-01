@@ -8,5 +8,10 @@
 	</array>
 	<key>aps-environment</key>
 	<string>production</string>
+	<!-- Universal Links for printed room and table QR codes -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:chillax.site</string>
+	</array>
 </dict>
 </plist>

@@ -39,7 +39,24 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="com.chillax.client"/>
             </intent-filter>
+            <!-- App Links: printed table QR codes encode
+                 https://chillax.site/table/{id}. Verification needs
+                 /.well-known/assetlinks.json on chillax.site to list this
+                 app's signing fingerprint; until it does, the links simply
+                 open in the browser instead.
+                 Room codes are deliberately left to the browser until the app
+                 has an in-app room landing flow to hand them to. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="chillax.site" android:pathPrefix="/table/"/>
+            </intent-filter>
         </activity>
+        <!-- Hand VIEW intents to Flutter so go_router routes them -->
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="true" />
         <!-- FCM default notification channel (high priority for heads-up display) -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"

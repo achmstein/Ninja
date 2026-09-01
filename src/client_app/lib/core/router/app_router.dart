@@ -8,6 +8,7 @@ import '../../features/cart/screens/cart_screen.dart';
 import '../../features/orders/screens/orders_screen.dart';
 import '../../features/rooms/screens/rooms_screen.dart';
 import '../../features/rooms/screens/sessions_screen.dart';
+import '../../features/tables/screens/table_link_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/transactions_screen.dart';
 import '../../features/profile/screens/favorites_screen.dart';
@@ -76,6 +77,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnSplash = currentLocation == '/splash';
       final isLoggingIn = currentLocation == '/login';
       final isRegistering = currentLocation == '/register';
+      // A scanned table QR must resolve before sign-in: it only remembers where
+      // the customer is sitting, and bouncing them to login would lose the
+      // table. It sends them to the menu itself, which is gated as usual.
+      final isTableLink = currentLocation.startsWith('/table/');
 
       // While initializing, stay on or go to splash
       if (isInitializing) {
@@ -88,7 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect to login if not authenticated
-      if (!isAuthenticated && !isLoggingIn && !isRegistering) {
+      if (!isAuthenticated && !isLoggingIn && !isRegistering && !isTableLink) {
         return '/login';
       }
 
@@ -116,6 +121,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      // Printed table QR opened as an App Link (chillax.site/table/{id})
+      GoRoute(
+        path: '/table/:tableId',
+        builder: (context, state) => TableLinkScreen(
+          tableId: int.tryParse(state.pathParameters['tableId'] ?? '') ?? 0,
+        ),
       ),
 
       // Cart route (separate from shell for push navigation)

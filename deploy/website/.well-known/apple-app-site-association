@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["NT4VMTB8MK.com.chillax.client"],
+        "components": [
+          { "/": "/table/*", "comment": "Printed table QR codes" }
+        ]
+      }
+    ]
+  }
+}
