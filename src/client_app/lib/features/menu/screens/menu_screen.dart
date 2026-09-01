@@ -7,6 +7,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../rooms/screens/qr_scan_screen.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -158,6 +159,16 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
         FHeader(
           title: AppText(l10n.menu, style: TextStyle(fontSize: 18)),
           suffixes: [
+            // Scanning lives here rather than under Rooms: the customer
+            // scanning a sticker is about to order, and the code they point at
+            // decides whether it is a room or a table.
+            FHeaderAction(
+              icon: const Icon(Icons.qr_code_scanner, size: 20),
+              onPress: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const QrScanScreen()),
+              ),
+            ),
+            const SizedBox(width: 6),
             FHeaderAction(
               icon: Icon(_showSearch ? FIcons.x : FIcons.search, size: 20),
               onPress: _toggleSearch,

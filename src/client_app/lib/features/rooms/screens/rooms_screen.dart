@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'qr_scan_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:forui/forui.dart';
@@ -104,12 +103,6 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     }
   }
 
-  void _openQrScanner() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const QrScanScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
@@ -122,11 +115,6 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     final l10n = AppLocalizations.of(context)!;
     final isReservationsEnabled = ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true;
 
-    // Determine if user has an active session
-    final hasActiveSession = sessionsAsync.whenOrNull(
-      data: (sessions) => sessions.any((s) => s.status == SessionStatus.active),
-    ) ?? false;
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: false,
@@ -136,17 +124,12 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
           FHeader(
             title: AppText(l10n.rooms, style: TextStyle(fontSize: 18)),
             suffixes: [
+              // Scanning moved to the Menu header: a scanned code may be a
+              // room or a table, so it does not belong under Rooms.
               FHeaderAction(
                 icon: const Icon(FIcons.history, size: 20),
                 onPress: () => context.push('/sessions'),
               ),
-              if (!hasActiveSession) ...[
-                const SizedBox(width: 6),
-                FHeaderAction(
-                  icon: const Icon(Icons.qr_code_scanner, size: 20),
-                  onPress: _openQrScanner,
-                ),
-              ],
             ],
           ),
 
