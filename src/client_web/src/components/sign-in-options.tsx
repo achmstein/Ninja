@@ -59,8 +59,12 @@ export function SignInOptions() {
       idpHint ? { extraQueryParams: { kc_idp_hint: idpHint } } : undefined,
     );
 
+  // mx-auto so the narrower max-width centres itself: in a plain block
+  // container (the profile page) it would otherwise sit at the writing
+  // direction start - left in English, right in Arabic. A no-op in the
+  // flex items-center parents this also renders in.
   return (
-    <div className="flex w-full max-w-xs flex-col gap-2.5">
+    <div className="mx-auto flex w-full max-w-xs flex-col gap-2.5">
       <Button
         size="lg"
         variant="outline"
