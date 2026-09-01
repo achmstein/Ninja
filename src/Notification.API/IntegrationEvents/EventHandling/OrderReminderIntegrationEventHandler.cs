@@ -28,7 +28,8 @@ public class OrderReminderIntegrationEventHandler(
             orderId = @event.OrderId,
             buyerName = @event.BuyerName,
             reminderCount = @event.ReminderCount,
-            minutesPending = @event.MinutesPending
+            minutesPending = @event.MinutesPending,
+            branchId = @event.BranchId
         });
 
         // Get admin order notification subscriptions for this branch

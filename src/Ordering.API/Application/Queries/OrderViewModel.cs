@@ -73,5 +73,7 @@ public record OrderSummary
     public double LoyaltyDiscount { get; init; }
     public LocalizedText? RoomName { get; init; }
     public string? UserName { get; init; }
+    /// <summary>Buyer's identity guid — lets admin surfaces open the customer's profile.</summary>
+    public string? UserId { get; init; }
     public int? RatingValue { get; init; }
 }

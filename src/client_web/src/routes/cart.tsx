@@ -7,6 +7,7 @@ import {
   Award,
   Coffee,
   Gamepad2,
+  Loader2,
   LogIn,
   Minus,
   Package,
@@ -22,6 +23,16 @@ import {
 } from '@/api/loyalty/@tanstack/react-query.gen'
 import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -65,6 +76,7 @@ function CartPage() {
   const { lines, setQuantity, clear } = useCart()
   const [note, setNote] = useState('')
   const [signInOpen, setSignInOpen] = useState(false)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [redeemEnabled, setRedeemEnabled] = useState(false)
   const [pointsToRedeem, setPointsToRedeem] = useState(0)
 
@@ -228,7 +240,8 @@ function CartPage() {
       disabled={placeOrder.isPending}
       onClick={handleCheckout}
     >
-      {placeOrder.isPending ? t('loading') : t('placeOrder')}
+      {placeOrder.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+      {t('placeOrder')}
     </Button>
   ) : (
     <Button
@@ -242,7 +255,11 @@ function CartPage() {
   )
 
   return (
-    <div className='flex flex-col gap-4 p-4 pb-10 md:grid md:grid-cols-[1fr_360px] md:items-start md:pb-4'>
+    // Mobile app parity: one scrolling column, checkout group (note → points
+    // → total → button) pushed to the screen bottom when the cart is short.
+    // min-h fills the viewport; -mb-20 cancels the root <main>'s pb-20 (that
+    // clearance was for the fixed bar this page no longer has).
+    <div className='-mb-20 flex min-h-[calc(100svh-env(safe-area-inset-top))] flex-col gap-4 p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:mb-0 md:grid md:min-h-0 md:grid-cols-[1fr_360px] md:items-start md:pb-4'>
       <div className='flex flex-col gap-3'>
         <div className='flex items-center gap-2 pt-2'>
           <Button
@@ -255,6 +272,16 @@ function CartPage() {
             <ArrowLeft className='h-5 w-5 rtl:rotate-180' />
           </Button>
           <h1 className='text-2xl font-bold tracking-tight'>{t('cart')}</h1>
+          {/* Mobile-app parity: trash in the header clears the whole cart */}
+          <Button
+            variant='ghost'
+            size='icon'
+            className='ms-auto'
+            aria-label={t('clearCart')}
+            onClick={() => setClearConfirmOpen(true)}
+          >
+            <Trash2 className='h-5 w-5' />
+          </Button>
         </div>
 
         {lines.map((line) => {
@@ -346,8 +373,9 @@ function CartPage() {
         })}
       </div>
 
-      {/* One flat summary section (bordered card only on desktop) */}
-      <div className='flex flex-col gap-4 md:rounded-xl md:border md:p-4 md:pt-4'>
+      {/* One flat summary section (bordered card only on desktop); mt-auto
+          sinks it to the bottom on mobile, mirroring the app's spaceBetween */}
+      <div className='mt-auto flex flex-col gap-4 md:mt-0 md:rounded-xl md:border md:p-4 md:pt-4'>
         {activeSession?.roomName && (
           <div className='text-muted-foreground flex items-center gap-2 text-sm'>
             <Gamepad2 className='h-4 w-4' />
@@ -420,15 +448,29 @@ function CartPage() {
           </div>
         </div>
 
-        {/* Desktop: button lives in the summary card */}
-        <div className='hidden md:block'>{checkoutButton}</div>
-      </div>
-
-      {/* Mobile: sticky checkout bar pinned to the viewport bottom (the
-          bottom nav is hidden on the cart page, mobile-app parity) */}
-      <div className='bg-background/95 fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden'>
+        {/* App parity: the button flows right under the total on mobile too */}
         {checkoutButton}
       </div>
+
+      <AlertDialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('clearCart')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('removeAllItemsFromCart')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className='bg-destructive text-white hover:bg-destructive/90'
+              onClick={() => clear()}
+            >
+              {t('clear')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {profileGateDialog}
       <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} />

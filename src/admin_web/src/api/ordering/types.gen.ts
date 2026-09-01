@@ -124,6 +124,7 @@ export type OrderSummary = {
     loyaltyDiscount?: number | string;
     roomName?: null | LocalizedText;
     userName?: null | string;
+    userId?: null | string;
     ratingValue?: null | number | string;
 };
 

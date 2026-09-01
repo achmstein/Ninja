@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -103,7 +103,7 @@ function SettingsPage() {
     <div className='flex flex-col gap-4 p-4'>
       <BackHeader title={t('settings')} />
 
-      {/* Notifications — tile rows with switches, like the app */}
+      {/* Notifications â€” tile rows with switches, like the app */}
       {auth.isAuthenticated && preferences && (
         <section className='flex flex-col gap-2'>
           <h2 className='text-muted-foreground px-1 text-sm font-semibold'>
@@ -205,7 +205,7 @@ function SettingsPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
-                    className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    className='bg-destructive text-white hover:bg-destructive/90'
                     onClick={() => removeAccount.mutate()}
                   >
                     {t('delete')}

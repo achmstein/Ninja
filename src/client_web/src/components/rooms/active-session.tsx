@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
 import {
@@ -56,7 +56,7 @@ export function ActiveSessionView({
   const auth = useAuth();
   const queryClient = useQueryClient();
 
-  // Only members who joined someone else's session can leave it — the
+  // Only members who joined someone else's session can leave it â€” the
   // session owner has no exit; staff end the session (mobile parity)
   const canLeave =
     session.customerId != null &&
@@ -234,7 +234,7 @@ export function ActiveSessionView({
             <AlertDialogFooter>
               <AlertDialogCancel>{t("noKeep")}</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-destructive text-white hover:bg-destructive/90"
                 onClick={() =>
                   leaveSession.mutate({
                     path: { sessionId: Number(session.id) },

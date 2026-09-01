@@ -12,6 +12,35 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // Orders board (KDS-style aging)
+  delayed: { en: 'Delayed', ar: 'متأخر' },
+  // Override the generated single-form ARB strings with humanized plurals
+  // (Arabic: دقيقة / دقيقتين / دقائق by CLDR category)
+  minutesAgo: {
+    plural: 'minutes',
+    en: { other: '{minutes}m ago' },
+    ar: {
+      one: 'من دقيقة',
+      two: 'من دقيقتين',
+      few: 'من {minutes} دقائق',
+      other: 'من {minutes} دقيقة',
+    },
+  },
+  hoursAgo: {
+    plural: 'hours',
+    en: { other: '{hours}h ago' },
+    ar: {
+      one: 'من ساعة',
+      two: 'من ساعتين',
+      few: 'من {hours} ساعات',
+      other: 'من {hours} ساعة',
+    },
+  },
+  orderWaitingToast: {
+    en: 'Order #{orderId} has been waiting {minutes} min',
+    ar: 'أوردر #{orderId} مستني من {minutes} دقيقة',
+  },
+
   // Navigation
   navOperations: { en: 'Operations', ar: 'التشغيل' },
   navCatalog: { en: 'Catalog', ar: 'الكتالوج' },
@@ -824,6 +853,14 @@ export const useLanguage = create<LanguageState>()(
 
 export type TranslateParams = Record<string, string | number>
 
+// CLDR plural category per language ("few" = 3–10 in Arabic, etc.), so
+// plural entries can carry proper Arabic forms (دقيقة/دقيقتين/دقائق) beyond
+// the `=N`/other shorthand
+const pluralRules: Record<Language, Intl.PluralRules> = {
+  en: new Intl.PluralRules('en-US'),
+  ar: new Intl.PluralRules('ar-EG'),
+}
+
 function format(
   entry: Message,
   language: Language,
@@ -833,7 +870,11 @@ function format(
   if ('plural' in entry) {
     const count = Number(params?.[entry.plural] ?? 0)
     const forms = entry[language]
-    template = forms[`=${count}`] ?? forms.other ?? ''
+    template =
+      forms[`=${count}`] ??
+      forms[pluralRules[language].select(count)] ??
+      forms.other ??
+      ''
   } else {
     template = entry[language] || entry.en
   }

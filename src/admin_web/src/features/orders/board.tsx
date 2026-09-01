@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
   Check,
   CheckCircle2,
+  Clock,
   History,
   MapPin,
   MessageSquare,
+  User,
   X,
 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
@@ -20,30 +23,11 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import {
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslationKey,
-  type TranslateParams,
-} from '@/lib/i18n'
-import { formatEgp } from './status'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { CustomerDetailSheet } from '@/features/customers/components/customer-detail-sheet'
+import { customersService } from '@/features/customers/services/customers-service'
+import { formatEgp, orderUrgency, relativeTime, urgencyTextClass } from './status'
 import { useOrderActions } from './use-order-actions'
-
-function relativeTime(
-  value: string | undefined,
-  t: (key: TranslationKey, params?: TranslateParams) => string,
-  locale: string
-): string {
-  if (!value) return ''
-  const minutes = Math.round((Date.now() - new Date(value).getTime()) / 60_000)
-  if (minutes < 1) return t('justNow')
-  if (minutes < 60) return t('minutesAgo', { minutes })
-  const hours = Math.round(minutes / 60)
-  return hours < 24
-    ? t('hoursAgo', { hours })
-    : new Date(value).toLocaleDateString(locale)
-}
 
 /**
  * The live queue: every submitted order with its full contents, oldest
@@ -54,6 +38,21 @@ export function OrdersBoard() {
   const t = useT()
   const { confirm, cancel, actingOrderNumber } = useOrderActions()
 
+  // Tapping a card's customer name opens their profile sheet
+  const [customerId, setCustomerId] = useState<string | null>(null)
+  const customerQuery = useQuery({
+    queryKey: ['customers', customerId],
+    queryFn: () => customersService.getCustomer(customerId!),
+    enabled: !!customerId,
+  })
+
+  // Tick every 30s so ages and urgency tiers advance without a refetch
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 30_000)
+    return () => clearInterval(timer)
+  }, [])
+
   const pendingQuery = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
     // SignalR is the primary update path; this poll is only a fallback
@@ -63,6 +62,9 @@ export function OrdersBoard() {
   const pending = [...(pendingQuery.data ?? [])].sort(
     (a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
   )
+  const delayedCount = pending.filter(
+    (order) => orderUrgency(order.date, nowMs) === 'delayed'
+  ).length
 
   return (
     <>
@@ -80,6 +82,12 @@ export function OrdersBoard() {
                   {pending.length}
                 </Badge>
               )}
+              {delayedCount > 0 && (
+                <Badge variant='destructive' className='h-6 gap-1 tabular-nums'>
+                  <Clock className='h-3 w-3' />
+                  {delayedCount} {t('delayed')}
+                </Badge>
+              )}
             </div>
             <p className='text-muted-foreground'>{t('liveOrdersSubtitle')}</p>
           </div>
@@ -92,9 +100,9 @@ export function OrdersBoard() {
         </div>
 
         {pendingQuery.isLoading ? (
-          <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3'>
+          <div className='columns-1 gap-4 md:columns-2 xl:columns-3'>
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className='h-56' />
+              <Skeleton key={i} className='mb-4 h-56 break-inside-avoid' />
             ))}
           </div>
         ) : pending.length === 0 ? (
@@ -104,13 +112,22 @@ export function OrdersBoard() {
             <p className='text-sm'>{t('newOrdersAppearInstantly')}</p>
           </div>
         ) : (
-          <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3'>
+          // Masonry via CSS columns: cards pack under each other with no
+          // row-alignment holes (a tall ticket no longer leaves white space
+          // beside it); the queue fills the start column first, KDS-rail style
+          <div className='columns-1 gap-4 md:columns-2 xl:columns-3'>
             {pending.map((order) => (
               <PendingOrderCard
                 key={String(order.orderNumber)}
                 summary={order}
+                nowMs={nowMs}
                 onConfirm={() => confirm(Number(order.orderNumber))}
                 onCancel={() => cancel(Number(order.orderNumber))}
+                onViewCustomer={
+                  order.userId
+                    ? () => setCustomerId(order.userId ?? null)
+                    : undefined
+                }
                 // Only the card being acted on shows busy
                 isActing={Number(actingOrderNumber) === Number(order.orderNumber)}
               />
@@ -118,25 +135,37 @@ export function OrdersBoard() {
           </div>
         )}
       </Main>
+
+      <CustomerDetailSheet
+        customer={customerId ? (customerQuery.data ?? null) : null}
+        onOpenChange={(open) => {
+          if (!open) setCustomerId(null)
+        }}
+      />
     </>
   )
 }
 
 function PendingOrderCard({
   summary,
+  nowMs,
   onConfirm,
   onCancel,
+  onViewCustomer,
   isActing,
 }: {
   summary: OrderSummary
+  nowMs: number
   onConfirm: () => void
   onCancel: () => void
+  onViewCustomer?: () => void
   isActing: boolean
 }) {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
   const orderId = Number(summary.orderNumber)
+  const urgency = orderUrgency(summary.date, nowMs)
 
   // The summary has no line items; each card loads its full order (cached
   // and invalidated together with the rest of the order queries)
@@ -150,16 +179,38 @@ function PendingOrderCard({
   const loyaltyDiscount = Number(order?.loyaltyDiscount ?? summary.loyaltyDiscount ?? 0)
 
   return (
-    <div className='bg-card rounded-lg border p-4 shadow-sm'>
-      {/* Who / when */}
+    <div
+      // animate-in runs on mount only — refetches reuse existing cards (stable
+      // keys), so exactly the newly arrived ticket rises in and catches the eye
+      className={`bg-card animate-in fade-in-0 zoom-in-95 slide-in-from-top-4 mb-4 break-inside-avoid rounded-lg border p-4 shadow-sm transition-[border-color,box-shadow] duration-500 ease-out ${
+        urgency === 'delayed'
+          ? 'border-destructive/70 shadow-[0_0_12px_3px_rgb(239_68_68/0.35)]'
+          : urgency === 'warning'
+            ? 'border-amber-500/70 shadow-[0_0_10px_2px_rgb(245_158_11/0.25)]'
+            : ''
+      }`}
+    >
+      {/* Who / when — the age text picks up the urgency color */}
       <div className='flex items-baseline justify-between gap-2'>
         <span className='text-lg font-semibold'>#{summary.orderNumber}</span>
-        <span className='text-muted-foreground text-xs'>
-          {relativeTime(summary.date, t, locale)}
+        <span className={`text-xs ${urgencyTextClass(urgency)}`}>
+          {relativeTime(summary.date, nowMs, t, locale)}
         </span>
       </div>
       <div className='text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm'>
-        {summary.userName && <span>{summary.userName}</span>}
+        {summary.userName &&
+          (onViewCustomer ? (
+            <button
+              type='button'
+              onClick={onViewCustomer}
+              className='hover:text-foreground flex items-center gap-1 underline-offset-2 hover:underline'
+            >
+              <User className='h-3 w-3' />
+              {summary.userName}
+            </button>
+          ) : (
+            <span>{summary.userName}</span>
+          ))}
         {localized(summary.roomName) && (
           <span className='flex items-center gap-1'>
             <MapPin className='h-3 w-3' />

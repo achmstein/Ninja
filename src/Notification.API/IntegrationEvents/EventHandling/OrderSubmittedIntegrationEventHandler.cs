@@ -21,11 +21,14 @@ public class OrderSubmittedIntegrationEventHandler(
 
         // Broadcast via SignalR first — live dashboards must not depend on
         // whether any FCM push subscriptions exist
+        // branchId lets branch-scoped dashboards ignore other branches' orders
+        // (their pending list is filtered by X-Branch-Id and can never show them)
         await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
         {
             type = "order_submitted",
             orderId = @event.OrderId,
-            buyerName = @event.BuyerName
+            buyerName = @event.BuyerName,
+            branchId = @event.BranchId
         });
 
         if (!string.IsNullOrEmpty(@event.BuyerIdentityGuid))

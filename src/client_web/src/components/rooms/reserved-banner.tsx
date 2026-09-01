@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Gamepad2, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type ReservationViewModel } from '@/api/rooms'
@@ -90,7 +90,7 @@ export function ReservedBanner({
           <AlertDialogFooter>
             <AlertDialogCancel>{t('noKeep')}</AlertDialogCancel>
             <AlertDialogAction
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              className='bg-destructive text-white hover:bg-destructive/90'
               onClick={() =>
                 cancelReservation.mutate({
                   path: { sessionId: Number(session.id) },

@@ -5,13 +5,26 @@ import {
 } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
 import { translate } from '@/lib/i18n'
+import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { getStoredUser } from '@/config/oidc-config'
 
 type OrderStatusChangedEvent = {
   type?: string
   orderId?: number
   buyerName?: string | null
+  reminderCount?: number
+  minutesPending?: number
+  branchId?: number
+}
+
+// Admin SignalR events are broadcast to every admin, but the orders board is
+// branch-scoped — alerting about an order this dashboard can never display
+// only confuses the operator (same filtering the FCM pushes already do).
+// Events without a branchId (older backend) alert everyone.
+function isForActiveBranch(event: OrderStatusChangedEvent): boolean {
+  return event.branchId == null || event.branchId === getActiveBranchId()
 }
 
 /**
@@ -48,8 +61,10 @@ export function useAdminNotifications() {
 
     connection.on('OrderStatusChanged', (event: OrderStatusChangedEvent) => {
       invalidateOrders()
+      if (!isForActiveBranch(event)) return
       if (event?.type === 'order_submitted') {
         const orderId = event.orderId ?? 0
+        playAlertSound()
         toast.info(
           event.buyerName
             ? translate('newOrderToastFrom', {
@@ -57,6 +72,19 @@ export function useAdminNotifications() {
                 name: event.buyerName,
               })
             : translate('newOrderToast', { orderId })
+        )
+      }
+      // The backend escalates reminders for unconfirmed orders (1/2/4/7/10
+      // min — same pushes that make the admin phones ring); from the third
+      // one on, ring the chime instead of politely pinging once
+      if (event?.type === 'order_reminder') {
+        const reminderCount = event.reminderCount ?? 1
+        playAlertSound(reminderCount >= 3 ? 3 : 1)
+        toast.warning(
+          translate('orderWaitingToast', {
+            orderId: event.orderId ?? 0,
+            minutes: event.minutesPending ?? 0,
+          })
         )
       }
     })

@@ -1389,6 +1389,12 @@
               "string"
             ]
           },
+          "userId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "ratingValue": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [

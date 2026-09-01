@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronRight, Loader2, Pencil, Plus, Tag, Trash2 } from 'lucide-react'
@@ -242,7 +242,7 @@ export function CategoriesList() {
                   })
                 }
                 disabled={deleteMutation.isPending}
-                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                className='bg-destructive text-white hover:bg-destructive/90'
               >
                 {deleteMutation.isPending && (
                   <Loader2 className='me-2 h-4 w-4 animate-spin' />

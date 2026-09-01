@@ -14,6 +14,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
+import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import { getMyProfile } from '@/lib/services/identity'
 import { API_VERSION } from '@/lib/api-client'
 import { useSelectedBranch } from '@/lib/branch'
@@ -38,6 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
 import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
 
@@ -82,6 +84,15 @@ function ProfilePage() {
   const loyalty = loyaltyQuery.isError ? null : loyaltyQuery.data
   const tier = (loyalty?.currentTier ?? '').toLowerCase()
 
+  const houseAccountQuery = useQuery({
+    ...getMyAccountOptions(),
+    enabled: auth.isAuthenticated,
+    retry: false,
+  })
+  const houseBalance = houseAccountQuery.isError
+    ? 0
+    : Number(houseAccountQuery.data?.balance ?? 0)
+
   return (
     <div className='flex flex-col gap-4 p-4'>
       <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('profile')}</h1>
@@ -114,6 +125,14 @@ function ProfilePage() {
             <SignInOptions />
           </div>
         </div>
+      )}
+
+      {/* Balance card, like the app's — only with an outstanding balance;
+          tap opens the account history */}
+      {auth.isAuthenticated && houseBalance !== 0 && (
+        <Link to='/account'>
+          <BalanceCard balance={houseBalance} chevron />
+        </Link>
       )}
 
       {/* Loyalty card, like the app's — tap for details */}

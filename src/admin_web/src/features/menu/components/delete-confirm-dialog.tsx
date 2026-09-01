@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+﻿import { Loader2 } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import {
   AlertDialog,
@@ -47,7 +47,7 @@ export function DeleteConfirmDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
-            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            className='bg-destructive text-white hover:bg-destructive/90'
           >
             {isLoading && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
             {t('delete')}

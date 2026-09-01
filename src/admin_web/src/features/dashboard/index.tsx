@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
   ClipboardList,
@@ -7,7 +7,6 @@ import {
   DollarSign,
   ArrowRight,
   Check,
-  X,
   DoorOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -18,23 +17,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import {
-  cancelOrderMutation,
-  confirmOrderMutation,
   getAllOrdersOptions,
   getPendingOrdersOptions,
 } from '@/api/ordering/@tanstack/react-query.gen'
@@ -43,25 +30,31 @@ import {
   listRoomsOptions,
 } from '@/api/rooms/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocale, useT } from '@/lib/i18n'
-import { formatEgp } from '@/features/orders/status'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import {
+  formatEgp,
+  orderUrgency,
+  relativeTime,
+  urgencyTextClass,
+} from '@/features/orders/status'
 import { AnalyticsSection } from './components/analytics'
 import {
   ROOM_AVAILABLE,
   SESSION_ACTIVE,
   sessionBilledHours,
 } from '@/features/rooms/status'
-import { toast } from '@/lib/toast'
-
-function generateRequestId(): string {
-  return crypto.randomUUID()
-}
 
 export function Dashboard() {
   const t = useT()
   const locale = useLocale()
-  const queryClient = useQueryClient()
-  const [cancelOrderId, setCancelOrderId] = useState<number | null>(null)
+  const localized = useLocalized()
+
+  // Tick every 30s so order ages and urgency colors advance between polls
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 30_000)
+    return () => clearInterval(timer)
+  }, [])
 
   // Midnight boundary; stable across renders so the query key doesn't churn
   const todayStart = new Date()
@@ -96,44 +89,6 @@ export function Dashboard() {
     refetchInterval: 60_000,
   })
 
-  // Mutations
-  const invalidateOrders = () => {
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getAllOrders' }] })
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getPendingOrders' }] })
-  }
-
-  const confirmMutation = useMutation({
-    ...confirmOrderMutation(),
-    onSuccess: () => {
-      invalidateOrders()
-      toast.success(t('orderConfirmed'))
-    },
-    onError: () => {
-      toast.error(t('failedToConfirmOrder'))
-    },
-  })
-
-  const cancelMutation = useMutation({
-    ...cancelOrderMutation(),
-    onSuccess: () => {
-      invalidateOrders()
-      toast.success(t('orderCancelled'))
-    },
-    onError: () => {
-      toast.error(t('failedToCancelOrder'))
-    },
-  })
-
-  const mutateOrder = (
-    mutation: typeof confirmMutation,
-    orderNumber: number
-  ) =>
-    mutation.mutate({
-      body: { orderNumber },
-      headers: { 'x-requestid': generateRequestId() },
-      query: { 'api-version': API_VERSION },
-    })
-
   // Calculate stats (the query already returns only today's orders)
   const todayOrders = todayOrdersData?.items ?? []
 
@@ -146,13 +101,6 @@ export function Dashboard() {
   const availableRoomsCount = rooms.filter(
     (r) => Number(r.displayStatus) === ROOM_AVAILABLE
   ).length
-
-  const handleCancelOrder = () => {
-    if (cancelOrderId) {
-      mutateOrder(cancelMutation, cancelOrderId)
-      setCancelOrderId(null)
-    }
-  }
 
   return (
     <>
@@ -300,54 +248,35 @@ export function Dashboard() {
                   {t('noPendingOrders')}
                 </div>
               ) : (
-                <div className='space-y-4'>
-                  {pendingOrders.slice(0, 5).map((order) => (
-                    <div
-                      key={String(order.orderNumber)}
-                      className='flex items-center justify-between rounded-lg border p-3'
-                    >
-                      <div>
-                        <div className='font-medium'>
-                          {t('orderNumber', {
-                            id: String(order.orderNumber ?? ''),
-                          })}
+                <div className='space-y-2'>
+                  {/* Glance rows only — confirming needs the line items, so
+                      acting on an order happens on the board this links to */}
+                  {pendingOrders.slice(0, 5).map((order) => {
+                    const urgency = orderUrgency(order.date, nowMs)
+                    return (
+                      <Link
+                        key={String(order.orderNumber)}
+                        to='/orders'
+                        className='hover:bg-accent flex items-center justify-between rounded-lg border p-3 transition-colors'
+                      >
+                        <div>
+                          <div className='font-medium'>
+                            {t('orderNumber', {
+                              id: String(order.orderNumber ?? ''),
+                            })}
+                          </div>
+                          <div
+                            className={`text-xs ${urgencyTextClass(urgency)}`}
+                          >
+                            {relativeTime(order.date, nowMs, t, locale)}
+                          </div>
                         </div>
-                        <div className='text-sm text-muted-foreground'>
+                        <div className='font-semibold tabular-nums'>
                           {formatEgp(order.total)}
                         </div>
-                        <div className='text-xs text-muted-foreground'>
-                          {order.date &&
-                            new Date(order.date).toLocaleTimeString(locale)}
-                        </div>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() =>
-                            setCancelOrderId(Number(order.orderNumber))
-                          }
-                          disabled={cancelMutation.isPending}
-                        >
-                          <X className='h-4 w-4 me-1' />
-                          {t('cancel')}
-                        </Button>
-                        <Button
-                          size='sm'
-                          onClick={() =>
-                            mutateOrder(
-                              confirmMutation,
-                              Number(order.orderNumber)
-                            )
-                          }
-                          disabled={confirmMutation.isPending}
-                        >
-                          <Check className='h-4 w-4 me-1' />
-                          {t('confirm')}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                      </Link>
+                    )
+                  })}
                   {pendingOrders.length > 5 && (
                     <Link to='/orders'>
                       <Button variant='ghost' className='w-full'>
@@ -396,7 +325,7 @@ export function Dashboard() {
                   {t('noActiveSessions')}
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className='space-y-2'>
                   {activeSessions
                     .filter((s) => Number(s.status) === SESSION_ACTIVE)
                     .slice(0, 5)
@@ -415,9 +344,10 @@ export function Dashboard() {
                         >
                           <div>
                             <div className='font-medium'>
-                              {room?.name?.en ?? session.roomName?.en}
+                              {localized(room?.name) ||
+                                localized(session.roomName)}
                             </div>
-                            <div className='text-muted-foreground text-sm'>
+                            <div className='text-muted-foreground text-xs'>
                               {session.customerName || t('walkIn')}
                             </div>
                           </div>
@@ -429,7 +359,11 @@ export function Dashboard() {
                             </div>
                             {session.currentPlayerMode && (
                               <div className='text-muted-foreground text-xs'>
-                                {session.currentPlayerMode}
+                                {t(
+                                  session.currentPlayerMode === 'Multi'
+                                    ? 'playerModeMulti'
+                                    : 'playerModeSingle'
+                                )}
                               </div>
                             )}
                           </div>
@@ -446,30 +380,6 @@ export function Dashboard() {
           <AnalyticsSection />
         </div>
       </Main>
-
-      {/* Cancel Order Confirmation */}
-      <AlertDialog
-        open={cancelOrderId !== null}
-        onOpenChange={(open) => !open && setCancelOrderId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('cancelOrderQuestion')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('cancelOrderConfirmation')} {t('cannotBeUndone')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('noKeep')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelOrder}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            >
-              {t('yesCancel')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

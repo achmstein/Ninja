@@ -246,16 +246,34 @@ export function ItemCustomizeForm({
     </>
   )
 
+  // Mobile-app parity: label at the start, price at the end (plus the
+  // struck-through original price when the item is on offer)
+  const originalUnitPrice =
+    Number(item.price ?? 0) +
+    chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
+
   const cta = (
     <Button
       size='lg'
-      className='w-full rounded-full'
+      className='w-full justify-between rounded-full'
       disabled={!item.isAvailable || missingRequired}
       onClick={() => onAdd(chosen, quantity, instructions.trim(), unitPrice)}
     >
-      {item.isAvailable
-        ? `${t('addToCart')} · ${price(unitPrice * quantity)}`
-        : t('unavailable')}
+      {item.isAvailable ? (
+        <>
+          <span className='font-bold'>{t('addToCart')}</span>
+          <span className='flex items-center gap-1.5 font-bold'>
+            {item.isOnOffer && originalUnitPrice > unitPrice && (
+              <span className='text-xs font-normal opacity-70 line-through'>
+                {price(originalUnitPrice * quantity)}
+              </span>
+            )}
+            {price(unitPrice * quantity)}
+          </span>
+        </>
+      ) : (
+        <span className='mx-auto'>{t('unavailable')}</span>
+      )}
     </Button>
   )
 
@@ -269,11 +287,15 @@ export function ItemCustomizeForm({
   }
 
   return (
-    <div className='flex min-h-0 flex-1 flex-col'>
-      <div className='flex flex-1 flex-col gap-4 overflow-y-auto p-4'>
+    // Mobile: the dialog scrolls as one surface, so the body just flows and
+    // the CTA sticks to the bottom of that scroll container (still pinned
+    // when content is short — flex-1 pushes it down). Desktop: the body is
+    // the scroll area and the CTA sits statically below it.
+    <div className='flex flex-1 flex-col md:min-h-0'>
+      <div className='flex flex-1 flex-col gap-4 p-4 md:overflow-y-auto'>
         {body}
       </div>
-      <div className='border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-4'>
+      <div className='bg-background sticky bottom-0 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:pb-4'>
         {cta}
       </div>
     </div>

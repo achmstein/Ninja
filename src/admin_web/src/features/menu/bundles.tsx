@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Package, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
@@ -208,9 +208,9 @@ export function BundleDeals() {
                       {(bundle.items ?? [])
                         .map(
                           (item) =>
-                            `${Number(item.quantity ?? 1)}× ${localized(item.itemName)}`
+                            `${Number(item.quantity ?? 1)}Ã— ${localized(item.itemName)}`
                         )
-                        .join(' · ')}
+                        .join(' Â· ')}
                     </p>
                     <div className='flex items-center gap-2'>
                       <span className='font-medium'>{formatEgp(price)}</span>
@@ -276,7 +276,7 @@ export function BundleDeals() {
                 })
               }
               disabled={deleteBundle.isPending}
-              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              className='bg-destructive text-white hover:bg-destructive/90'
             >
               {deleteBundle.isPending && (
                 <Loader2 className='me-2 h-4 w-4 animate-spin' />

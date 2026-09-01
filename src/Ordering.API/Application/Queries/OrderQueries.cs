@@ -107,6 +107,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
                 UserName = o.Buyer != null ? o.Buyer.Name : null,
+                UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();
@@ -163,6 +164,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
                 UserName = o.Buyer != null ? o.Buyer.Name : null,
+                UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();
