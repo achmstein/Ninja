@@ -272,6 +272,15 @@
     },
     {
       "name": "rooms",
+      "description": "Spaces API access (rooms and tables) - superseded by \"spaces\", kept until every released client requests the new name",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "spaces",
       "description": "Spaces API access (rooms and tables)",
       "protocol": "openid-connect",
       "attributes": {
@@ -312,7 +321,8 @@
         "roles",
         "orders",
         "catalog",
-        "rooms"
+        "rooms",
+        "spaces"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -362,7 +372,8 @@
         "roles",
         "orders",
         "catalog",
-        "rooms"
+        "rooms",
+        "spaces"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -411,7 +422,8 @@
         "roles",
         "orders",
         "catalog",
-        "rooms"
+        "rooms",
+        "spaces"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -455,7 +467,8 @@
         "roles",
         "orders",
         "catalog",
-        "rooms"
+        "rooms",
+        "spaces"
       ],
       "optionalClientScopes": [
         "offline_access"
