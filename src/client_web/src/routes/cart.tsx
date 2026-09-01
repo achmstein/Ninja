@@ -4,6 +4,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   ArrowLeft,
+  Armchair,
   Award,
   Coffee,
   Gamepad2,
@@ -43,6 +44,7 @@ import { useProfileGate } from '@/components/profile-gate'
 import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useActiveSession } from '@/lib/session'
+import { useActiveTable, useTableStore } from '@/stores/table-store'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -71,6 +73,10 @@ function CartPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const activeSession = useActiveSession()
+  const activeTable = useActiveTable()
+  const stampOrdered = useTableStore((s) => s.stampOrdered)
+  // A running room session wins: it says where the customer physically is
+  const deliverToTable = activeSession ? null : activeTable
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const { lines, setQuantity, clear } = useCart()
@@ -137,6 +143,8 @@ function CartPage() {
     onSuccess: () => {
       // The order landed — the next checkout is a new logical request
       requestIdRef.current = null
+      // Keep the table alive through a long sitting with several rounds
+      stampOrdered()
       // Remember the chosen customizations for next time (mobile parity)
       const customized = lines.filter(
         (line) => !line.bundleId && line.customizations.length > 0
@@ -192,6 +200,15 @@ function CartPage() {
         userName: profile?.name || profile?.preferred_username || '',
         // Deliver to the customer's running room session, if any
         roomName: activeSession?.roomName ?? null,
+        // Otherwise to the table they scanned into: being in a room is the
+        // stronger signal of where they are actually sitting
+        tableId: deliverToTable?.id ?? null,
+        tableName: deliverToTable
+          ? {
+              en: deliverToTable.name.en ?? '',
+              ar: deliverToTable.name.ar ?? null,
+            }
+          : null,
         customerNote: note.trim() || null,
         pointsToRedeem: discount > 0 ? debouncedPoints : 0,
         loyaltyDiscount: discount,
@@ -376,12 +393,17 @@ function CartPage() {
       {/* One flat summary section (bordered card only on desktop); mt-auto
           sinks it to the bottom on mobile, mirroring the app's spaceBetween */}
       <div className='mt-auto flex flex-col gap-4 md:mt-0 md:rounded-xl md:border md:p-4 md:pt-4'>
-        {activeSession?.roomName && (
+        {activeSession?.roomName ? (
           <div className='text-muted-foreground flex items-center gap-2 text-sm'>
             <Gamepad2 className='h-4 w-4' />
             {localized(activeSession.roomName)}
           </div>
-        )}
+        ) : deliverToTable ? (
+          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+            <Armchair className='h-4 w-4' />
+            {localized(deliverToTable.name)}
+          </div>
+        ) : null}
 
         <Textarea
           rows={2}

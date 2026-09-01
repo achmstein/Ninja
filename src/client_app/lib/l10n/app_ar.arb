@@ -329,6 +329,16 @@
   "invalidQrCode": "كود مش صحيح",
   "roomNotAvailable": "الاوضة مش متاحة",
 
+  "youAreAtTable": "انت على {tableName}",
+  "@youAreAtTable": {
+    "placeholders": {
+      "tableName": {"type": "String"}
+    }
+  },
+  "orderDeliveredToTable": "طلبك هيوصلك على الترابيزة.",
+  "tableUnavailable": "الترابيزة دي مش متاحة",
+  "pointCameraAtRoomOrTableQr": "وجه الكاميرا على كود الاوضة أو الترابيزة",
+
   "invalidPhone": "دخل رقم موبايل صحيح (01xxxxxxxxx).",
 
   "profileRequiredMessage": "هنحفظ بياناتك ومش هنسألك تاني",

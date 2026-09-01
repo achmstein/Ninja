@@ -472,6 +472,16 @@
   "invalidQrCode": "Invalid QR code",
   "roomNotAvailable": "Room not available",
 
+  "youAreAtTable": "You're at {tableName}",
+  "@youAreAtTable": {
+    "placeholders": {
+      "tableName": {"type": "String"}
+    }
+  },
+  "orderDeliveredToTable": "Your order will be brought to your table.",
+  "tableUnavailable": "This table is not available",
+  "pointCameraAtRoomOrTableQr": "Point camera at a room or table QR code",
+
   "invalidPhone": "Please enter a valid phone number (01xxxxxxxxx).",
 
   "profileRequiredMessage": "We'll save your info so you won't need to enter it again",

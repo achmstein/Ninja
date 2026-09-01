@@ -21,6 +21,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
 import { Route as RoomRoomIdRouteImport } from './routes/room/$roomId'
+import { Route as TableTableIdRouteImport } from './routes/table/$tableId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const RoomRoomIdRoute = RoomRoomIdRouteImport.update({
   path: '/room/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableTableIdRoute = TableTableIdRouteImport.update({
+  id: '/table/$tableId',
+  path: '/table/$tableId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
+  '/table/$tableId': typeof TableTableIdRoute
   '/orders/': typeof OrdersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
+  '/table/$tableId': typeof TableTableIdRoute
   '/orders': typeof OrdersIndexRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
+  '/table/$tableId': typeof TableTableIdRoute
   '/orders/': typeof OrdersIndexRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
+    | '/table/$tableId'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
+    | '/table/$tableId'
     | '/orders'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/item/$itemId'
     | '/room/$roomId'
+    | '/table/$tableId'
     | '/orders/'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
   RoomRoomIdRoute: typeof RoomRoomIdRoute
+  TableTableIdRoute: typeof TableTableIdRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
 }
 
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/table/$tableId': {
+      id: '/table/$tableId'
+      path: '/table/$tableId'
+      fullPath: '/table/$tableId'
+      preLoaderRoute: typeof TableTableIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
   RoomRoomIdRoute: RoomRoomIdRoute,
+  TableTableIdRoute: TableTableIdRoute,
   OrdersIndexRoute: OrdersIndexRoute,
 }
 export const routeTree = rootRouteImport
