@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getActiveBranchId } from './branch-store'
+import { getActiveBranchId, useBranchStore } from './branch-store'
 
 /** How long a scanned table stays attached to the customer. Long enough for a
  *  sitting with several rounds, short enough that yesterday's scan never
@@ -42,19 +42,25 @@ export const useTableStore = create<TableState>()(
 
 /** A stored table only counts while it is fresh and belongs to the branch the
  *  customer is actually browsing. */
-function isUsable(table: StoredTable | null): table is StoredTable {
+function isUsable(
+  table: StoredTable | null,
+  branchId: number
+): table is StoredTable {
   if (!table) return false
   if (Date.now() - table.scannedAt > TABLE_TTL_MS) return false
-  return table.branchId === getActiveBranchId()
+  return table.branchId === branchId
 }
 
 export function useActiveTable(): StoredTable | null {
   const table = useTableStore((s) => s.table)
-  return isUsable(table) ? table : null
+  // Subscribed, not read once: switching branch has to re-evaluate this, or a
+  // table from the branch just left keeps showing as the destination.
+  const branchId = useBranchStore((s) => s.branchId)
+  return isUsable(table, branchId) ? table : null
 }
 
 // For code outside the React tree
 export function getActiveTable(): StoredTable | null {
   const { table } = useTableStore.getState()
-  return isUsable(table) ? table : null
+  return isUsable(table, getActiveBranchId()) ? table : null
 }

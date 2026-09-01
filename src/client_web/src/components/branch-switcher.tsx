@@ -1,10 +1,11 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+﻿import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { Check, ChevronDown, MapPin } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getMySessionsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useBranches } from '@/lib/branch'
 import { useBranchStore } from '@/stores/branch-store'
+import { useTableStore } from '@/stores/table-store'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ export function BranchSwitcher() {
   const auth = useAuth()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
+  const clearTable = useTableStore((s) => s.clearTable)
 
   const { data: branches = [] } = useBranches()
   const { data: mySessions = [] } = useQuery({
@@ -47,6 +49,10 @@ export function BranchSwitcher() {
       return
     }
     setBranchId(id)
+    // Changing branch is a stronger "I have left" than joining a room, so the
+    // scanned table goes with it. Scanning a table auto-switches branch on its
+    // own path, which does not come through here, so that stays intact.
+    clearTable()
     // Everything on screen is branch-scoped — refetch it all
     queryClient.invalidateQueries()
   }

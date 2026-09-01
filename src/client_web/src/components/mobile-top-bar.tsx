@@ -31,8 +31,8 @@ function DestinationChip() {
         isRoom ? 'px-2.5' : 'ps-2.5 pe-1'
       }`}
     >
-      <Icon className='h-3.5 w-3.5' />
-      {localized(destination.name)}
+      <Icon className='h-3.5 w-3.5 shrink-0' />
+      <span className='max-w-20 truncate'>{localized(destination.name)}</span>
       {!isRoom && (
         <button
           type='button'
@@ -58,17 +58,19 @@ export function MobileTopBar() {
 
   return (
     <div className='mx-auto flex w-full max-w-lg items-center justify-between px-4 pt-3 md:hidden'>
-      <Link to='/' className='flex items-center gap-2'>
+      <Link to='/' className='flex min-w-0 items-center gap-2'>
         <img
           src='/images/cup.png'
           alt=''
-          className='size-7 object-contain dark:invert'
+          className='size-7 shrink-0 object-contain dark:invert'
         />
-        <span className='text-lg font-semibold tracking-tight'>
+        <span className='truncate text-lg font-semibold tracking-tight'>
           {t('appTitle')}
         </span>
       </Link>
-      <div className='flex items-center gap-2'>
+      {/* shrink-0 so the destination chip can never squeeze the branch
+          switcher out of reach on a narrow phone */}
+      <div className='flex shrink-0 items-center gap-2'>
         <DestinationChip />
         <BranchSwitcher />
       </div>
