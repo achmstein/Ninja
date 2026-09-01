@@ -37,8 +37,10 @@ jobs:
       - name: Build admin_web
         if: ${{ github.event.inputs.app != 'client' }}
         env:
-          # The SPAs reach Keycloak through the BFF's /auth route
-          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+          # Keycloak's dedicated production host, same as deploy.yml bakes in.
+          # api.chillax.site/auth is a compatibility path for installed mobile
+          # apps, not where a freshly built SPA should be sent.
+          VITE_KEYCLOAK_URL: https://auth.chillax.site
         run: |
           cd src/admin_web
           npm ci
@@ -49,7 +51,7 @@ jobs:
       - name: Build client_web
         if: ${{ github.event.inputs.app != 'admin' }}
         env:
-          VITE_KEYCLOAK_URL: https://api.chillax.site/auth
+          VITE_KEYCLOAK_URL: https://auth.chillax.site
         run: |
           cd src/client_web
           npm ci
