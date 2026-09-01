@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Armchair, Copy, Loader2, Pencil, Plus, QrCode, Trash2 } from 'lucide-react'
+import { Armchair, Loader2, MoreHorizontal, Plus, QrCode } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type TableViewModel } from '@/api/spaces'
 import {
@@ -13,7 +13,16 @@ import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.ge
 import { API_VERSION } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { useLocalized, useT } from '@/lib/i18n'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,8 +39,9 @@ import { Main } from '@/components/layout/main'
 import { TableDialog } from './components/table-dialog'
 import { tableQrUrl } from './qr'
 
-/** Tables are a flat managed list: no sessions or live status of their own, so
- *  the only live signal worth showing is whether an order is waiting on one. */
+/** Tables are a flat managed list with almost no content each, so they read as
+ *  a floor of small tiles rather than a sparse grid of large cards. The only
+ *  live signal they carry is whether an order is waiting on one. */
 export function TablesManagement() {
   const t = useT()
   const localized = useLocalized()
@@ -112,6 +122,8 @@ export function TablesManagement() {
     setDialogOpen(true)
   }
 
+  const busyCount = tablesWithOpenOrders.size
+
   return (
     <>
       <Header />
@@ -138,87 +150,110 @@ export function TablesManagement() {
         </div>
 
         {isLoading ? (
-          <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className='h-24 w-full' />
+          <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className='h-[88px] w-full rounded-xl' />
             ))}
           </div>
         ) : tables.length === 0 ? (
-          <p className='text-muted-foreground py-12 text-center'>
-            {t('noTablesYet')}
-          </p>
+          <Card className='border-dashed'>
+            <CardContent className='flex flex-col items-center gap-3 py-12 text-center'>
+              <Armchair className='text-muted-foreground/40 h-8 w-8' />
+              <p className='text-muted-foreground'>{t('noTablesYet')}</p>
+              <Button onClick={openAdd} variant='outline'>
+                <Plus className='me-2 h-4 w-4' />
+                {t('addTable')}
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
-            {tables.map((table) => {
-              const hasOpenOrder = tablesWithOpenOrders.has(Number(table.id))
-              return (
-                <div
-                  key={table.id}
-                  className={cn(
-                    'bg-card flex items-start justify-between gap-3 rounded-lg border p-4',
-                    !table.isActive && 'opacity-60'
-                  )}
-                >
-                  <div className='min-w-0'>
-                    <div className='flex items-center gap-2'>
-                      <Armchair className='text-muted-foreground h-4 w-4 shrink-0' />
-                      <span className='truncate font-medium'>
+          <>
+            {busyCount > 0 && (
+              <p className='text-muted-foreground mb-3 text-sm'>
+                {t('tablesWithOpenOrders', { count: busyCount })}
+              </p>
+            )}
+
+            <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
+              {tables.map((table) => {
+                const hasOpenOrder = tablesWithOpenOrders.has(Number(table.id))
+                return (
+                  <Card
+                    key={table.id}
+                    className={cn(
+                      'relative transition-colors',
+                      hasOpenOrder && 'border-amber-500/60 bg-amber-500/5',
+                      !table.isActive && 'border-dashed opacity-70'
+                    )}
+                  >
+                    <CardContent className='flex flex-col gap-2 p-4'>
+                      <div className='flex items-start justify-between gap-1'>
+                        <Armchair
+                          className={cn(
+                            'h-5 w-5 shrink-0',
+                            hasOpenOrder
+                              ? 'text-amber-600 dark:text-amber-500'
+                              : 'text-muted-foreground'
+                          )}
+                        />
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              className='-me-2 -mt-2 size-8'
+                              aria-label={t('actions')}
+                            >
+                              <MoreHorizontal className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='end'>
+                            <DropdownMenuItem onClick={() => openEdit(table)}>
+                              {t('edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => copyQrLink(table)}>
+                              {t('copyTableLink')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => toggleActive(table)}
+                            >
+                              {t(
+                                table.isActive
+                                  ? 'deactivateTable'
+                                  : 'activateTable'
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              variant='destructive'
+                              onClick={() => setPendingDelete(table)}
+                            >
+                              {t('delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      <div className='truncate font-medium'>
                         {localized(table.name)}
-                      </span>
-                    </div>
+                      </div>
 
-                    <div className='mt-2 flex flex-wrap items-center gap-2'>
-                      {hasOpenOrder && (
-                        <span className='inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400'>
-                          <span className='h-1.5 w-1.5 rounded-full bg-amber-500' />
+                      {hasOpenOrder ? (
+                        <Badge className='w-fit border-transparent bg-amber-500/15 text-amber-700 hover:bg-amber-500/15 dark:text-amber-400'>
                           {t('openOrder')}
-                        </span>
-                      )}
-                      {!table.isActive && (
-                        <span className='text-muted-foreground bg-muted rounded-full px-2 py-0.5 text-xs'>
+                        </Badge>
+                      ) : !table.isActive ? (
+                        <Badge variant='secondary' className='w-fit'>
                           {t('tableInactive')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className='flex shrink-0 items-center gap-1'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => copyQrLink(table)}
-                      title={t('copyTableLink')}
-                    >
-                      <Copy className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => openEdit(table)}
-                      title={t('edit')}
-                    >
-                      <Pencil className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => toggleActive(table)}
-                    >
-                      {t(table.isActive ? 'deactivateTable' : 'activateTable')}
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      onClick={() => setPendingDelete(table)}
-                      title={t('delete')}
-                    >
-                      <Trash2 className='text-destructive h-4 w-4' />
-                    </Button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                        </Badge>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </>
         )}
       </Main>
 
@@ -246,7 +281,10 @@ export function TablesManagement() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} disabled={remove.isPending}>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={remove.isPending}
+            >
               {remove.isPending && (
                 <Loader2 className='me-2 h-4 w-4 animate-spin' />
               )}

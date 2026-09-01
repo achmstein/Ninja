@@ -87,6 +87,16 @@ const webExtras = {
   },
   scanToOrder: { en: 'Scan to order', ar: 'امسح الكود عشان تطلب' },
   openOrder: { en: 'Open order', ar: 'أوردر شغال' },
+  tablesWithOpenOrders: {
+    plural: 'count',
+    en: { one: '1 table has an open order', other: '{count} tables have open orders' },
+    ar: {
+      one: 'ترابيزة واحدة عليها أوردر شغال',
+      two: 'ترابيزتين عليهم أوردرات شغالة',
+      few: '{count} ترابيزات عليهم أوردرات شغالة',
+      other: '{count} ترابيزة عليهم أوردرات شغالة',
+    },
+  },
   tableInactive: { en: 'Inactive', ar: 'موقوفة' },
   activateTable: { en: 'Activate', ar: 'تفعيل' },
   deactivateTable: { en: 'Deactivate', ar: 'إيقاف' },
