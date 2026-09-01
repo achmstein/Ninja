@@ -32,6 +32,7 @@ import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
 import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenticated/tables/print'
+import { Route as AuthenticatedRoomsPrintRouteImport } from './routes/_authenticated/rooms/print'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedMenuCategoriesRouteImport } from './routes/_authenticated/menu/categories'
@@ -162,6 +163,11 @@ const AuthenticatedTablesPrintRoute =
     path: '/tables/print',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRoomsPrintRoute = AuthenticatedRoomsPrintRouteImport.update({
+  id: '/rooms/print',
+  path: '/rooms/print',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRoomsHistoryRoute =
   AuthenticatedRoomsHistoryRouteImport.update({
     id: '/rooms/history',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
+  '/_authenticated/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/_authenticated/tables/print': typeof AuthenticatedTablesPrintRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
+    | '/rooms/print'
     | '/tables/print'
     | '/accounts'
     | '/branches'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
+    | '/rooms/print'
     | '/tables/print'
     | '/accounts'
     | '/branches'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/_authenticated/menu/categories'
     | '/_authenticated/orders/history'
     | '/_authenticated/rooms/history'
+    | '/_authenticated/rooms/print'
     | '/_authenticated/tables/print'
     | '/_authenticated/accounts/'
     | '/_authenticated/branches/'
@@ -548,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTablesPrintRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rooms/print': {
+      id: '/_authenticated/rooms/print'
+      path: '/rooms/print'
+      fullPath: '/rooms/print'
+      preLoaderRoute: typeof AuthenticatedRoomsPrintRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rooms/history': {
       id: '/_authenticated/rooms/history'
       path: '/rooms/history'
@@ -593,6 +612,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMenuCategoriesRoute: typeof AuthenticatedMenuCategoriesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
+  AuthenticatedRoomsPrintRoute: typeof AuthenticatedRoomsPrintRoute
   AuthenticatedTablesPrintRoute: typeof AuthenticatedTablesPrintRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
@@ -615,6 +635,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMenuCategoriesRoute: AuthenticatedMenuCategoriesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
+  AuthenticatedRoomsPrintRoute: AuthenticatedRoomsPrintRoute,
   AuthenticatedTablesPrintRoute: AuthenticatedTablesPrintRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,

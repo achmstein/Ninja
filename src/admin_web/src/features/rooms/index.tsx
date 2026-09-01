@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { Gamepad2, History, Plus, Wrench } from 'lucide-react'
+import { Gamepad2, History, Plus, QrCode, Wrench } from 'lucide-react'
 import {
   type ReservationViewModel,
   type RoomViewModel,
@@ -153,6 +153,11 @@ export function RoomsManagement() {
                   aria-label={t('addRoom')}
                 >
                   <Plus size={20} className='stroke-muted-foreground' />
+                </Button>
+                <Button size='icon' variant='ghost' asChild>
+                  <Link to='/rooms/print' aria-label={t('printQrSheet')}>
+                    <QrCode size={20} className='stroke-muted-foreground' />
+                  </Link>
                 </Button>
                 <Button size='icon' variant='ghost' asChild>
                   <Link to='/rooms/history' aria-label={t('allSessionHistory')}>

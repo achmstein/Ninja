@@ -60,6 +60,7 @@ import { Separator } from '@/components/ui/separator'
 import { CustomerSearchDialog } from '@/features/accounts/components/customer-search-dialog'
 import type { KeycloakUser } from '@/features/accounts/types'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { roomQrUrl } from '@/lib/qr'
 import {
   formatBillingHours,
   formatDuration,
@@ -274,7 +275,7 @@ export function RoomDetailPanel({
       : null
 
   const copyQrLink = () => {
-    navigator.clipboard.writeText(`https://chillax.site/room/${roomId}`)
+    navigator.clipboard.writeText(roomQrUrl(roomId))
     toast.success(t('roomLinkCopied'))
   }
 

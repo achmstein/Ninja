@@ -13,6 +13,7 @@ import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.ge
 import { API_VERSION } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
 import { useLocalized, useT } from '@/lib/i18n'
+import { tableQrUrl } from '@/lib/qr'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,7 +38,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { TableDialog } from './components/table-dialog'
-import { tableQrUrl } from './qr'
 
 /** Tables are a flat managed list with almost no content each, so they read as
  *  a floor of small tiles rather than a sparse grid of large cards. The only

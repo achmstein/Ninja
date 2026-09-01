@@ -86,6 +86,18 @@ const webExtras = {
     ar: 'قص الكروت وحط واحد على كل ترابيزة.',
   },
   scanToOrder: { en: 'Scan to order', ar: 'امسح الكود عشان تطلب' },
+  roomQrSheetSubtitle: {
+    en: 'Cut along the cards and put one in each room.',
+    ar: 'قص الكروت وحط واحد في كل اوضة.',
+  },
+  scanToJoinRoom: {
+    en: 'Scan to join or reserve',
+    ar: 'امسح الكود عشان تنضم أو تحجز',
+  },
+  noRoomsYet: {
+    en: 'No rooms yet. Add your first room.',
+    ar: 'مفيش أوض لسه. ضيف أول اوضة.',
+  },
   openOrder: { en: 'Open order', ar: 'أوردر شغال' },
   tablesWithOpenOrders: {
     plural: 'count',
@@ -952,6 +964,15 @@ export function translate(
   params?: TranslateParams
 ): string {
   return format(dictionary[key], useLanguage.getState().language, params)
+}
+
+// Both sides of a key at once. Printed cards are read by customers in either
+// language, whatever the admin's own UI happens to be set to.
+export function bilingual(key: TranslationKey): { en: string; ar: string } {
+  return {
+    en: format(dictionary[key], 'en'),
+    ar: format(dictionary[key], 'ar'),
+  }
 }
 
 // Picks the right side of a LocalizedText for the active language
