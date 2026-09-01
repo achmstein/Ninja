@@ -21,6 +21,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRoomsApi();
+app.MapTablesApi();
 
 app.UseDefaultOpenApi();
 app.Run();

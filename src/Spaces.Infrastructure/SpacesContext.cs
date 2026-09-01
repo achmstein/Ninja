@@ -11,6 +11,7 @@ namespace Chillax.Spaces.Infrastructure;
 public class SpacesContext : DbContext, IUnitOfWork
 {
     public DbSet<Room> Rooms { get; set; }
+    public DbSet<Table> Tables { get; set; }
     public DbSet<Reservation> Reservations { get; set; }
     public DbSet<SessionMember> SessionMembers { get; set; }
     public DbSet<SessionSegment> SessionSegments { get; set; }
@@ -33,6 +34,7 @@ public class SpacesContext : DbContext, IUnitOfWork
         modelBuilder.HasDefaultSchema("spaces");
         modelBuilder.ApplyConfiguration(new ClientRequestEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RoomEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TableEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ReservationEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SessionMemberEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SessionSegmentEntityTypeConfiguration());

@@ -7,6 +7,7 @@ global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.Extensions.Logging;
 global using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
 global using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
+global using Chillax.Spaces.Domain.AggregatesModel.TableAggregate;
 global using Chillax.Spaces.Domain.Exceptions;
 global using Chillax.Spaces.Domain.SeedWork;
 global using Chillax.Spaces.Infrastructure.EntityConfigurations;

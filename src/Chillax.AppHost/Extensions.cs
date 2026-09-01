@@ -224,6 +224,10 @@ internal static class Extensions
             yarp.AddRoute("/api/sessions/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
+            // Tables routes
+            yarp.AddRoute("/api/tables/{*any}", spacesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
             // Identity routes (for user registration)
             var identityCluster = yarp.AddCluster(identityApi);
             yarp.AddRoute("/api/identity/{*any}", identityCluster);

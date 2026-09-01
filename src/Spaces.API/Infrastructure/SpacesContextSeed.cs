@@ -1,4 +1,5 @@
 using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.TableAggregate;
 using Chillax.Spaces.Infrastructure;
 using Microsoft.Extensions.Logging;
 
@@ -30,6 +31,29 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<Sp
             context.Rooms.AddRange(rooms);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded {NumRooms} rooms", rooms.Count);
+        }
+
+        // Guarded separately from rooms: existing databases already have rooms, so the
+        // check above never fires there and tables would otherwise never be seeded.
+        if (!context.Tables.Any())
+        {
+            var tables = new List<Table>();
+
+            // El-Manshia (Branch 1)
+            for (var i = 1; i <= 8; i++)
+            {
+                tables.Add(new Table($"Table {i}", 1, $"ترابيزة {i}"));
+            }
+
+            // El-Benzina (Branch 2)
+            for (var i = 1; i <= 6; i++)
+            {
+                tables.Add(new Table($"Table {i}", 2, $"ترابيزة {i}"));
+            }
+
+            context.Tables.AddRange(tables);
+            await context.SaveChangesAsync();
+            logger.LogInformation("Seeded {NumTables} tables", tables.Count);
         }
     }
 }
