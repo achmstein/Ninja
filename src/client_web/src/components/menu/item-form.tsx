@@ -11,6 +11,7 @@ import { getUserPreferenceOptions } from '@/api/catalog/@tanstack/react-query.ge
 import { type CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 
 export type Selections = Record<string, number[]>
@@ -116,7 +117,13 @@ export function ItemCustomizeForm({
   const localized = useLocalized()
   const price = usePrice()
 
-  const { data: preference } = useSavedPreference(Number(item.id))
+  // Saved choices arrive after the sheet opens, so rendering defaults in the
+  // meantime makes the chips visibly jump when they land. Hold the options
+  // until we know. isLoading rather than isPending is what tells a request in
+  // flight apart from a query disabled for a signed-out customer, who has no
+  // saved choices to wait for and should see the defaults straight away.
+  const { data: preference, isLoading: loadingPreference } =
+    useSavedPreference(Number(item.id))
 
   const [quantity, setQuantity] = useState(1)
   const [instructions, setInstructions] = useState('')
@@ -178,7 +185,17 @@ export function ItemCustomizeForm({
                 )}
               </div>
               <div className='flex flex-wrap gap-2'>
-                {(customization.options ?? [])
+                {loadingPreference &&
+                  // Same shape as the chips they stand in for, so the sheet
+                  // does not resize when the real ones arrive
+                  (customization.options ?? []).map((option) => (
+                    <Skeleton
+                      key={String(option.id)}
+                      className='h-8 w-20 rounded-full'
+                    />
+                  ))}
+                {!loadingPreference &&
+                  (customization.options ?? [])
                   .slice()
                   .sort(
                     (a, b) =>
@@ -256,7 +273,7 @@ export function ItemCustomizeForm({
     <Button
       size='lg'
       className='w-full justify-between rounded-full'
-      disabled={!item.isAvailable || missingRequired}
+      disabled={!item.isAvailable || missingRequired || loadingPreference}
       onClick={() => onAdd(chosen, quantity, instructions.trim(), unitPrice)}
     >
       {item.isAvailable ? (
