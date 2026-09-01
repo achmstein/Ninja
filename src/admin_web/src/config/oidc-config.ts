@@ -29,7 +29,7 @@ export const oidcConfig: AuthProviderProps = {
   redirect_uri: `${adminUrl}/auth/callback`,
   post_logout_redirect_uri: `${adminUrl}/signed-out`,
   response_type: 'code',
-  scope: 'openid profile email roles orders rooms catalog',
+  scope: 'openid profile email roles orders spaces catalog',
   automaticSilentRenew: true,
   loadUserInfo: true,
   // localStorage (not the sessionStorage default) so sign-in survives new

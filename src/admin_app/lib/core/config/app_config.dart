@@ -40,7 +40,7 @@ class AppConfig {
     'roles',
     'offline_access',
     'orders',
-    'rooms',
+    'spaces',
     'catalog',
   ];
 
