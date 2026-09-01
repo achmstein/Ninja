@@ -76,7 +76,7 @@ export const messages = {
   placeOrder: { en: "Place Order", ar: "أكد الطلب" },
   clearCart: { en: "Clear Cart", ar: "فضي السلة" },
   removeAllItemsFromCart: { en: "Remove all items from your cart?", ar: "تمسح كل الحاجات من السلة؟" },
-  orderPlacedSuccessfully: { en: "Order placed successfully!", ar: "الطلب اتأكد!" },
+  orderPlacedSuccessfully: { en: "Order placed successfully!", ar: "استلمنا طلبك!" },
   failedToPlaceOrder: { en: "Failed to place order", ar: "الطلب مش بيتأكد" },
   noteWithText: { en: "Note: {notes}", ar: "ملاحظة: {notes}" },
   todaysOrders: { en: "Today's Orders", ar: "طلبات النهاردة" },

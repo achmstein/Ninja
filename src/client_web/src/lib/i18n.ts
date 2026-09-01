@@ -23,6 +23,17 @@ const webExtras = {
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
   continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },
   leaveTable: { en: 'Leave table', ar: 'سيب الترابيزة' },
+  // Order status arriving over SignalR. Wording matches the push notifications
+  // the mobile app receives for the same events (NotificationMessages.cs), so
+  // a customer with both does not read two different sentences.
+  orderConfirmedToast: {
+    en: 'Your order #{orderId} has been confirmed',
+    ar: 'الأوردر بتاعك #{orderId} اتأكد',
+  },
+  orderCancelledToast: {
+    en: 'Your order #{orderId} has been cancelled',
+    ar: 'الأوردر بتاعك #{orderId} اتلغى',
+  },
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
   toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },

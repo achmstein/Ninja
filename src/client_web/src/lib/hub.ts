@@ -6,10 +6,17 @@ import {
 } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from './oidc'
+import { translate } from './i18n'
+import { toast } from './toast'
 
 // One SignalR connection for the whole app (mobile parity: single hub with
 // OrderStatusChanged / RoomStatusChanged / BranchSettingsChanged events).
 let connection: HubConnection | null = null
+
+type OrderStatusChangedEvent = {
+  type?: string
+  orderId?: number
+}
 
 function getConnection(): HubConnection {
   if (!connection) {
@@ -37,9 +44,19 @@ export function useHub() {
   useEffect(() => {
     const conn = getConnection()
 
-    const onOrder = () => {
+    // The mobile app hears about these as push notifications; on the web the
+    // hub event was only refreshing lists, so a customer watching the screen
+    // saw their order change state with nothing said about it.
+    const onOrder = (event?: OrderStatusChangedEvent) => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
+
+      const orderId = event?.orderId ?? 0
+      if (event?.type === 'order_confirmed') {
+        toast.success(translate('orderConfirmedToast', { orderId }))
+      } else if (event?.type === 'order_cancelled') {
+        toast.error(translate('orderCancelledToast', { orderId }))
+      }
     }
     const onRoom = () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })

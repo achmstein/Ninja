@@ -81,7 +81,7 @@
   "placeOrder": "أكد الطلب",
   "clearCart": "فضي السلة",
   "removeAllItemsFromCart": "تمسح كل الحاجات من السلة؟",
-  "orderPlacedSuccessfully": "الطلب اتأكد!",
+  "orderPlacedSuccessfully": "استلمنا طلبك!",
   "failedToPlaceOrder": "الطلب مش بيتأكد",
   "noteWithText": "ملاحظة: {notes}",
 

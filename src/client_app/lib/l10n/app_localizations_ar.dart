@@ -218,7 +218,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get removeAllItemsFromCart => 'تمسح كل الحاجات من السلة؟';
 
   @override
-  String get orderPlacedSuccessfully => 'الطلب اتأكد!';
+  String get orderPlacedSuccessfully => 'استلمنا طلبك!';
 
   @override
   String get failedToPlaceOrder => 'الطلب مش بيتأكد';
