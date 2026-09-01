@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { getTableOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { cartHasItems } from '@/lib/cart'
 import { useBranchStore } from '@/stores/branch-store'
 import { useTableStore } from '@/stores/table-store'
 import { useT, useLocalized } from '@/lib/i18n'
@@ -15,10 +16,12 @@ export const Route = createFileRoute('/table/$tableId')({
 /**
  * The printed table QR encodes https://chillax.site/table/{id}.
  *
- * Someone who scans a table code wants the menu, so this route is a pass
- * through rather than a landing page: it remembers where they are sitting and
- * drops them straight on the menu with a toast. Nothing here is gated on
- * sign-in, and the table shows on the cart before they check out.
+ * Scanning is a detour, not a destination, so this route is a pass through
+ * rather than a landing page: it remembers where they are sitting and puts
+ * them back where they were, with a toast. A full cart means they were partway
+ * through checkout — often having been sent here by the cart itself, since a
+ * guest cannot order without a table — so that is where they return; everyone
+ * else came for the menu. Nothing here is gated on sign-in.
  */
 function TableLinkPage() {
   const { tableId } = Route.useParams()
@@ -42,12 +45,16 @@ function TableLinkPage() {
     if (handled.current || tableQuery.isLoading) return
 
     const table = tableQuery.data
-    const toMenu = () => navigate({ to: '/', replace: true })
+
+    // Read once rather than subscribing: this route acts on its first settled
+    // outcome, and cart edits should not re-run it
+    const resume = () =>
+      navigate({ to: cartHasItems() ? '/cart' : '/', replace: true })
 
     if (tableQuery.isError || !table) {
       handled.current = true
       toast.error(t('invalidQrCode'))
-      toMenu()
+      resume()
       return
     }
 
@@ -55,7 +62,7 @@ function TableLinkPage() {
       handled.current = true
       clearTable()
       toast.error(t('tableUnavailable'))
-      toMenu()
+      resume()
       return
     }
 
@@ -78,7 +85,7 @@ function TableLinkPage() {
     toast.info(t('youAreAtTable', { tableName: localized(table.name) }), {
       description: t('orderDeliveredToTable'),
     })
-    toMenu()
+    resume()
   }, [
     tableQuery.isLoading,
     tableQuery.isError,

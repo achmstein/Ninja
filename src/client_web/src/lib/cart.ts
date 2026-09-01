@@ -116,6 +116,12 @@ export const useCart = create<CartState>()(
   )
 )
 
+/** For one-shot reads outside the React tree, or where subscribing to every
+ *  cart change would only cause needless re-runs. */
+export function cartHasItems(): boolean {
+  return useCart.getState().lines.length > 0
+}
+
 export { lineKey }
 
 export function cartTotal(lines: CartLine[]): number {
