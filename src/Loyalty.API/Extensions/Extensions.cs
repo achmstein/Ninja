@@ -28,13 +28,12 @@ public static class Extensions
                .ConfigureJsonOptions(options => options.TypeInfoResolverChain.Add(LoyaltyIntegrationEventContext.Default))
                .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
                .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
-               .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
+               .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
-[JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 partial class LoyaltyIntegrationEventContext : JsonSerializerContext
 {
 }

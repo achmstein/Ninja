@@ -29,7 +29,9 @@ export function useCurrentShift(options?: { refetchInterval?: number }) {
     query.error.response?.status === 404
 
   return {
-    shift: (query.data ?? null) as ShiftView | null,
+    // The error wins over retained data: a refetch that comes back 404 keeps
+    // the last shift in the cache, and that is not the shift that is open
+    shift: query.isError ? null : ((query.data ?? null) as ShiftView | null),
     /** True once the server has said "no shift open" (vs. still loading). */
     noShift,
     isLoading: query.isLoading,

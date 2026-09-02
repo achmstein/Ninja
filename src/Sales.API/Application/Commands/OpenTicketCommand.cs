@@ -11,7 +11,7 @@ public record OpenTicketCommand(
     int BranchId,
     int? TableId,
     LocalizedText? TableName,
-    string? CustomerName) : IRequest<int>;
+    string? Label) : IRequest<int>;
 
 public class OpenTicketCommandHandler(
     ITicketRepository ticketRepository,
@@ -24,7 +24,7 @@ public class OpenTicketCommandHandler(
         switch (command.Type)
         {
             case TicketType.Counter:
-                ticket = Ticket.OpenForCounter(command.BranchId, customerName: command.CustomerName);
+                ticket = Ticket.OpenForCounter(command.BranchId, command.Label);
                 break;
 
             case TicketType.Table when command.TableId is int tableId:

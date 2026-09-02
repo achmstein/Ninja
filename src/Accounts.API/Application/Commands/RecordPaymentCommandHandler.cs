@@ -25,7 +25,15 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         if (account == null)
             throw new AccountsDomainException($"Account not found for customer {request.CustomerId}");
 
-        account.RecordPayment(request.Amount, request.Description, request.RecordedBy);
+        // A referenced payment posts at most once — the bus redelivers, and a
+        // credit note must never credit a tab twice
+        if (request.Reference != null && account.Transactions.Any(t => t.Reference == request.Reference))
+        {
+            _logger.LogInformation("Payment with reference {Reference} already posted - skipping", request.Reference);
+            return true;
+        }
+
+        account.RecordPayment(request.Amount, request.Description, request.RecordedBy, request.Reference);
 
         _logger.LogInformation("Recording payment of {Amount} for customer {CustomerId} by {RecordedBy}",
             request.Amount, request.CustomerId, request.RecordedBy);

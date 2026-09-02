@@ -94,6 +94,32 @@ public class LoyaltyAccount
     }
 
     /// <summary>
+    /// Take back points a refunded purchase had earned. Never below zero:
+    /// points already spent are not a debt, so the deduction is capped at
+    /// the balance and the amount actually taken is returned.
+    /// </summary>
+    public int DeductPoints(int points, string? referenceId = null, string? description = null)
+    {
+        var deducted = Math.Max(0, Math.Min(points, PointsBalance));
+
+        if (deducted == 0) return 0;
+
+        PointsBalance -= deducted;
+        UpdatedAt = DateTime.UtcNow;
+
+        Transactions.Add(new PointsTransaction
+        {
+            AccountId = Id,
+            Points = -deducted,
+            Type = TransactionType.Adjustment,
+            ReferenceId = referenceId,
+            Description = description
+        });
+
+        return deducted;
+    }
+
+    /// <summary>
     /// Update tier based on lifetime points
     /// </summary>
     private void UpdateTier()

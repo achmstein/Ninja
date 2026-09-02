@@ -18,7 +18,7 @@ public class VoidTicketCommandHandler(
 
         logger.LogWarning(
             "Ticket {TicketId} ({Total}) VOIDED by {VoidedBy}: {Reason}",
-            ticket.Id, ticket.GetTotal(), command.VoidedBy, command.Reason);
+            ticket.Id, ticket.GetSubtotal(), command.VoidedBy, command.Reason);
 
         return true;
     }

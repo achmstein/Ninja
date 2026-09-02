@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, closeShift, getClosedShifts, getCurrentShift, getOpenTickets, getRangeReport, getShift, getTicket, getTicketByOrder, moveTicketLines, openShift, openTicket, type Options, settleTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, CloseShiftData, CloseShiftError, CloseShiftResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetShiftData, GetShiftResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, SettleTicketData, SettleTicketError, SettleTicketResponse } from '../types.gen';
+import { addCashMovement, addTicketLine, closeShift, discardTicket, getBranchPricing, getClosedShifts, getCurrentShift, getOpenTickets, getRangeReport, getShift, getTicket, getTicketByOrder, moveTicketLines, openShift, openTicket, type Options, refundTicket, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetShiftData, GetShiftResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RefundTicketData, RefundTicketError, RefundTicketResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -57,6 +57,25 @@ export const getOpenTicketsOptions = (options: Options<GetOpenTicketsData>) => q
     },
     queryKey: getOpenTicketsQueryKey(options)
 });
+
+/**
+ * Discard an empty open ticket
+ *
+ * Opened by mistake and never used. Counter and table tickets with no lines only — nothing happened on them, so there is nothing to audit and the row is deleted. A ticket with lines is voided (owner) instead.
+ */
+export const discardTicketMutation = (options?: Partial<Options<DiscardTicketData>>): UseMutationOptions<DiscardTicketResponse, AxiosError<DiscardTicketError>, Options<DiscardTicketData>> => {
+    const mutationOptions: UseMutationOptions<DiscardTicketResponse, AxiosError<DiscardTicketError>, Options<DiscardTicketData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await discardTicket({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getTicketQueryKey = (options: Options<GetTicketData>) => createQueryKey('getTicket', options);
 
@@ -172,14 +191,89 @@ export const settleTicketMutation = (options?: Partial<Options<SettleTicketData>
 };
 
 /**
- * Move lines to a fresh ticket for the same place
+ * Move lines to another ticket
  *
- * The table-turnover guard: an order that landed on the previous group's bill gets its own ticket.
+ * No target: the table-turnover split, a fresh ticket for the same place. A target ticket: onto that open bill — the customer who ordered at a table and then took a room. A new ticket: a fresh counter tab, or a table's bill (opened if the table has none) — the customer who moved tables or went to pay at the counter. Session time never moves; a table or counter ticket left empty is discarded. Returns the ticket the lines ended up on.
  */
 export const moveTicketLinesMutation = (options?: Partial<Options<MoveTicketLinesData>>): UseMutationOptions<MoveTicketLinesResponse, AxiosError<MoveTicketLinesError>, Options<MoveTicketLinesData>> => {
     const mutationOptions: UseMutationOptions<MoveTicketLinesResponse, AxiosError<MoveTicketLinesError>, Options<MoveTicketLinesData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await moveTicketLines({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Void an open ticket with nothing owed (owner only)
+ *
+ * A mistake, a comp, a walked group. The reason is the audit trail. Settled tickets cannot be voided.
+ */
+export const voidTicketMutation = (options?: Partial<Options<VoidTicketData>>): UseMutationOptions<unknown, AxiosError<VoidTicketError>, Options<VoidTicketData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<VoidTicketError>, Options<VoidTicketData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await voidTicket({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Refund lines of a settled ticket as a numbered credit note (owner only)
+ *
+ * Full or partial, by line and quantity. Each line gives back what the customer paid for it, service charge and VAT included. Cash comes out of the drawer; Account credits the named tab. Loyalty points the refunded orders earned are clawed back in proportion. The settled ticket itself never changes.
+ */
+export const refundTicketMutation = (options?: Partial<Options<RefundTicketData>>): UseMutationOptions<RefundTicketResponse, AxiosError<RefundTicketError>, Options<RefundTicketData>> => {
+    const mutationOptions: UseMutationOptions<RefundTicketResponse, AxiosError<RefundTicketError>, Options<RefundTicketData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await refundTicket({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getBranchPricingQueryKey = (options: Options<GetBranchPricingData>) => createQueryKey('getBranchPricing', options);
+
+/**
+ * How a branch's menu prices become the bill: VAT, whether it sits inside the price, service charge
+ */
+export const getBranchPricingOptions = (options: Options<GetBranchPricingData>) => queryOptions<GetBranchPricingResponse, AxiosError<DefaultError>, GetBranchPricingResponse, ReturnType<typeof getBranchPricingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getBranchPricing({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getBranchPricingQueryKey(options)
+});
+
+/**
+ * Set a branch's VAT and service charge (owner only)
+ *
+ * Rates are fractions: 0.14 is 14%. Service applies to what is ordered at tables and rooms, never to counter sales or room time. Applies to tickets settled from now on; printed receipts keep their figures.
+ */
+export const setBranchPricingMutation = (options?: Partial<Options<SetBranchPricingData>>): UseMutationOptions<unknown, AxiosError<SetBranchPricingError>, Options<SetBranchPricingData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<SetBranchPricingError>, Options<SetBranchPricingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setBranchPricing({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

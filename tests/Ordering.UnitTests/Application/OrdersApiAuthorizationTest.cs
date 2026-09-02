@@ -63,8 +63,23 @@ public class OrdersApiAuthorizationTest
     [TestMethod]
     [DataRow("ConfirmOrder")]
     [DataRow("CancelOrder")]
-    [DataRow("DeleteOrder")]
     [DataRow("GetPendingOrders")]
+    public void Accepting_orders_is_open_to_the_till(string endpointName)
+    {
+        // The cashier confirms app orders from the POS, so these take the
+        // "Pos" policy (Admin, Owner or Cashier) rather than Admin alone
+        var endpoint = FindEndpoint(endpointName);
+
+        Assert.IsNull(
+            endpoint.Metadata.GetMetadata<IAllowAnonymous>(),
+            $"{endpointName} is a staff endpoint and must never allow anonymous callers.");
+        Assert.IsTrue(
+            endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Any(a => a.Policy == "Pos"),
+            $"{endpointName} must carry the Pos policy — the till confirms orders too.");
+    }
+
+    [TestMethod]
+    [DataRow("DeleteOrder")]
     [DataRow("GetAllOrders")]
     [DataRow("GetOrderStats")]
     [DataRow("GetOrdersByUserId")]
@@ -75,7 +90,9 @@ public class OrdersApiAuthorizationTest
         Assert.IsNull(
             endpoint.Metadata.GetMetadata<IAllowAnonymous>(),
             $"{endpointName} is an admin endpoint and must never allow anonymous callers.");
-        Assert.IsNotNull(endpoint.Metadata.GetMetadata<IAuthorizeData>());
+        Assert.IsTrue(
+            endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Any(a => a.Policy == "Admin"),
+            $"{endpointName} is back-office only and must keep the Admin policy.");
     }
 
     [TestMethod]

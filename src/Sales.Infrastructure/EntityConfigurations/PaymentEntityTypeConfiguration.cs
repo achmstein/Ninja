@@ -20,6 +20,10 @@ class PaymentEntityTypeConfiguration : IEntityTypeConfiguration<Payment>
 
         builder.Property(p => p.Amount).HasPrecision(18, 2);
 
+        // Whose tab an account payment charges
+        builder.Property(p => p.CustomerId).HasMaxLength(64);
+        builder.Property(p => p.CustomerName).HasMaxLength(128);
+
         builder.Property(p => p.RecordedBy)
             .HasMaxLength(64)
             .IsRequired();

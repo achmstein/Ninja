@@ -56,6 +56,14 @@ public class Order
     public LocalizedText? TableName { get; private set; }
 
     /// <summary>
+    /// The Sales ticket this order must land on, when the cashier rang it up
+    /// against an already-open bill. Ordering never reads it — it only carries
+    /// it to Sales, which otherwise has to infer the bill from the session or
+    /// table and cannot name a counter tab at all.
+    /// </summary>
+    public int? TicketId { get; private set; }
+
+    /// <summary>
     /// Whether the order says where it is going. A running room session wins
     /// over a scanned table on the way in, so at most one of the two is set.
     /// </summary>
@@ -146,7 +154,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null) : this()
     {
         BuyerId = buyerId;
         OrderStatus = OrderStatus.AwaitingValidation;
@@ -156,6 +164,7 @@ public class Order
         RoomId = roomId;
         TableId = tableId;
         TableName = tableName;
+        TicketId = ticketId;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         LoyaltyDiscount = loyaltyDiscount;
@@ -170,6 +179,14 @@ public class Order
         // phone they left at checkout are then the only way staff can reach
         // them, so the aggregate refuses to exist without both. A counter sale
         // (Source = Pos) is exempt: the cashier standing there is the contact.
+        // The till is often given a name for someone with no account — the
+        // waiters know the regulars. It identifies nobody and unlocks nothing;
+        // it just has to travel, onto the kitchen card and onto the bill line.
+        if (Source == OrderSource.Pos)
+        {
+            GuestName = string.IsNullOrWhiteSpace(guestName) ? null : guestName.Trim();
+        }
+
         if (Source == OrderSource.Guest)
         {
             GuestId = !string.IsNullOrWhiteSpace(guestId)

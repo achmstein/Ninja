@@ -62,6 +62,10 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             buyerIdentityGuid = buyer.IdentityGuid;
         }
 
+        // Null unless somebody was actually named, so downstream can tell a
+        // named walk-in from an anonymous one
+        var customerName = order.BuyerId is null ? order.GuestName : buyerName;
+
         var integrationEvent = new OrderStatusChangedToConfirmedIntegrationEvent(
             order.Id,
             order.OrderStatus,
@@ -76,6 +80,8 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             order.RoomId,
             order.TableId,
             order.TableName,
+            order.TicketId,
+            customerName,
             order.Source.ToString(),
             order.GuestPhone,
             order.LoyaltyDiscount,

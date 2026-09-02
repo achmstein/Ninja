@@ -1,4 +1,3 @@
-using Chillax.EventBus.Abstractions;
 using Chillax.Sales.API.Application.IntegrationEvents.Events;
 using Chillax.Sales.Domain.Events;
 
@@ -10,14 +9,14 @@ namespace Chillax.Sales.API.Application.DomainEventHandlers;
 /// command handler once the receipt exists.
 /// </summary>
 public class TicketSettledDomainEventHandler(
-    IEventBus eventBus,
+    ISalesIntegrationEventService integrationEvents,
     ILogger<TicketSettledDomainEventHandler> logger) : INotificationHandler<TicketSettledDomainEvent>
 {
     public async Task Handle(TicketSettledDomainEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Ticket {TicketId} settled - publishing update", notification.Ticket.Id);
+        logger.LogInformation("Ticket {TicketId} settled - queueing the floor nudge", notification.Ticket.Id);
 
-        await eventBus.PublishAsync(new TicketUpdatedIntegrationEvent(
+        await integrationEvents.AddAndSaveEventAsync(new TicketUpdatedIntegrationEvent(
             notification.Ticket.Id,
             notification.Ticket.BranchId));
     }

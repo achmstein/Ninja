@@ -1,182 +1,292 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Banknote, Clock, Plus, ShoppingCart, User } from 'lucide-react'
-import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  Armchair,
+  ChevronRight,
+  Clock,
+  DoorOpen,
+  ReceiptText,
+  ShoppingBag,
+  ShoppingCart,
+  type LucideIcon,
+} from 'lucide-react'
+import {
+  getOpenTicketsOptions,
+  openTicketMutation,
+} from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketSummary } from '@/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
+import { listTablesOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { OpenShiftDialog } from '@/features/shift/open-shift-dialog'
-import { useCurrentShift } from '@/features/shift/use-current-shift'
-import { useNow } from '@/hooks/use-now'
+import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { RoomPanel } from '@/features/rooms/room-panel'
+import {
+  elapsedSeconds,
+  formatClock,
+  isActive,
+  isReserved,
+} from '@/features/rooms/status'
+import { useRooms, useSecondsClock } from '@/features/rooms/use-rooms'
+import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
+import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import { NewTicketDialog } from './new-ticket-dialog'
+import { PlaceList } from './place-list'
 
-const IDLE_ALERT_MINUTES = 30
-
-// Type shown by color accent: rooms / tables / counter
-const typeAccent: Record<string, string> = {
-  Room: 'border-s-violet-500',
-  Table: 'border-s-sky-500',
-  Counter: 'border-s-amber-500',
+const typeIcon: Record<string, LucideIcon> = {
+  Room: DoorOpen,
+  Table: Armchair,
+  Counter: ShoppingBag,
 }
 
-function idleMinutes(lastActivityAt: string | undefined, now: Date): number {
-  if (!lastActivityAt) return 0
-  const last = new Date(lastActivityAt).getTime()
-  return Math.max(0, Math.floor((now.getTime() - last) / 60_000))
+function Heading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className='text-muted-foreground text-xs font-semibold tracking-wide uppercase'>
+      {children}
+    </h2>
+  )
 }
 
-function TicketTile({ ticket, now }: { ticket: TicketSummary; now: Date }) {
+/** One line per open bill: where it is, what is on it, what it comes to — and the clock if a room is running. */
+function BillRow({
+  ticket,
+  session,
+  nowMs,
+  onClick,
+}: {
+  ticket: TicketSummary
+  session: ReservationViewModel | undefined
+  nowMs: number
+  onClick: () => void
+}) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
-  const navigate = useNavigate()
 
-  const idle = idleMinutes(ticket.lastActivityAt, now)
-  const idleLabel =
-    idle >= 60
-      ? t('idleHours', { hours: Math.floor(idle / 60), minutes: idle % 60 })
-      : t('idleMinutes', { minutes: idle })
-  const isStale = idle >= IDLE_ALERT_MINUTES
-
+  const Icon = typeIcon[ticket.type ?? ''] ?? ShoppingBag
   const typeLabel =
-    ticket.type === 'Room'
-      ? t('room')
-      : ticket.type === 'Table'
-        ? t('table')
-        : t('counter')
-  const location = localized(ticket.locationName) || typeLabel
+    ticket.type === 'Room' ? t('room') : ticket.type === 'Table' ? t('table') : t('counter')
+  const title = localized(ticket.locationName) || ticket.label || typeLabel
 
   return (
     <button
       type='button'
-      onClick={() =>
-        navigate({
-          to: '/ticket/$ticketId',
-          params: { ticketId: String(ticket.id) },
-        })
-      }
-      className={cn(
-        'bg-card text-card-foreground flex min-h-[120px] flex-col rounded-xl border border-s-4 p-4 text-start shadow-xs transition-colors active:scale-[0.99]',
-        typeAccent[ticket.type ?? ''] ?? 'border-s-border',
-        isStale && 'ring-destructive/50 ring-2'
-      )}
+      onClick={onClick}
+      className='hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start'
     >
-      <div className='flex items-start justify-between gap-2'>
-        <div className='min-w-0'>
-          <div className='truncate text-lg font-semibold'>{location}</div>
-          <div className='text-muted-foreground truncate text-sm'>
-            {typeLabel} · #{ticket.id}
-          </div>
-        </div>
-        <span
-          className={cn(
-            'flex shrink-0 items-center gap-1 text-sm tabular-nums',
-            isStale ? 'text-destructive font-semibold' : 'text-muted-foreground'
-          )}
-        >
-          <Clock className='size-4' />
-          {idleLabel}
-        </span>
-      </div>
-      {ticket.customerName && (
-        <div className='text-muted-foreground mt-1 flex items-center gap-1 truncate text-sm'>
-          <User className='size-4 shrink-0' />
-          <span className='truncate'>{ticket.customerName}</span>
-        </div>
-      )}
-      <div className='mt-auto flex items-end justify-between gap-2 pt-3'>
-        <span className='text-muted-foreground text-sm'>
+      <Icon className='text-muted-foreground size-5 shrink-0' />
+      <span className='min-w-0 flex-1'>
+        <span className='block truncate text-base font-medium'>{title}</span>
+        <span className='text-muted-foreground block truncate text-sm'>
           {t('linesCount', { count: toNumber(ticket.lineCount) })}
         </span>
-        <span className='text-xl font-bold tabular-nums'>
-          {money(ticket.total)}
+      </span>
+      {isActive(session) && (
+        <span className='text-muted-foreground font-mono text-sm tabular-nums'>
+          {formatClock(elapsedSeconds(session, nowMs))}
         </span>
-      </div>
+      )}
+      <span className='shrink-0 text-lg font-semibold tabular-nums'>
+        {money(ticket.total)}
+      </span>
+      <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' />
     </button>
   )
 }
 
+/**
+ * Two columns. The narrow one is the searchable list of places with no bill
+ * yet, always in reach so opening one is a single tap. The wide one is what
+ * is happening: app orders waiting for a tap, reservations about to arrive,
+ * and the open bills by last activity. Neither grows with the size of the
+ * building — the list scrolls and searches, the bills are only the open ones.
+ */
 export function Floor() {
   const t = useT()
+  const localized = useLocalized()
   const navigate = useNavigate()
-  const [newTicketOpen, setNewTicketOpen] = useState(false)
-  const [openShiftOpen, setOpenShiftOpen] = useState(false)
-  const now = useNow()
+  const queryClient = useQueryClient()
+  const [newTabOpen, setNewTabOpen] = useState(false)
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
 
-  // Only to route the drawer button: X report when a shift is open, the
-  // open-shift dialog when the server says none is
-  const { noShift } = useCurrentShift()
-
-  const { data: tickets, isLoading } = useQuery({
+  const { data: tickets = [], isLoading } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     // Poll fallback in case the SignalR connection is silently dead
     refetchInterval: 20_000,
   })
+  const { rooms, sessions, sessionForRoom } = useRooms()
+  const { data: tables = [] } = useQuery(listTablesOptions())
+
+  const openTable = useMutation({
+    ...openTicketMutation(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+      navigate({
+        to: '/ticket/$ticketId',
+        params: { ticketId: String(result.ticketId) },
+      })
+    },
+  })
+
+  const toTicket = (ticket: TicketSummary) =>
+    navigate({
+      to: '/ticket/$ticketId',
+      params: { ticketId: String(toNumber(ticket.id)) },
+    })
+
+  const sessionForTicket = (ticket: TicketSummary) =>
+    ticket.sessionId == null
+      ? undefined
+      : sessions.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
+
+  // Reservations are the one thing not yet a bill that the cashier must not
+  // miss: somebody is on their way
+  const reserved = sessions.filter((session) => isReserved(session))
+  const running = tickets.some((ticket) => isActive(sessionForTicket(ticket)))
+  const nowMs = useSecondsClock(running || reserved.length > 0)
+
+  // Bills by last activity: what just happened is what the cashier is
+  // about to be asked about
+  const bills = [...tickets].sort(
+    (a, b) =>
+      new Date(b.lastActivityAt ?? 0).getTime() -
+      new Date(a.lastActivityAt ?? 0).getTime()
+  )
+
+  const selectedRoom =
+    rooms.find((room) => toNumber(room.id) === selectedRoomId) ?? null
+
+  const pickTable = (table: TableViewModel) =>
+    openTable.mutate({
+      query: { 'api-version': API_VERSION },
+      body: {
+        type: TICKET_TYPE_TABLE,
+        tableId: toNumber(table.id),
+        tableName: table.name,
+      },
+    })
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
-      <div className='flex items-center justify-between gap-4'>
-        <h1 className='text-xl font-bold'>{t('openTickets')}</h1>
-        <div className='flex gap-2'>
-          {/* Counter sales are the till's bread and butter — the sale pad
-              gets the primary button, opening a bare ticket the secondary */}
-          <Button
-            size='lg'
-            className='h-12 px-5 text-base'
-            onClick={() => navigate({ to: '/sale' })}
-          >
-            <ShoppingCart className='size-5' />
-            {t('newSale')}
-          </Button>
-          <Button
-            size='lg'
-            variant='outline'
-            className='h-12 px-5 text-base'
-            onClick={() => setNewTicketOpen(true)}
-          >
-            <Plus className='size-5' />
-            {t('newTicket')}
-          </Button>
-          <Button
-            size='lg'
-            variant='outline'
-            className='size-12'
-            aria-label={t('shiftTitle')}
-            onClick={() =>
-              noShift ? setOpenShiftOpen(true) : navigate({ to: '/shift' })
-            }
-          >
-            <Banknote className='size-5' />
-          </Button>
-        </div>
-      </div>
+    <div className='grid gap-6 p-4 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'>
+      {/* Places with no bill yet — sticky, scrolling on its own, last on a
+          phone where the bills matter more. The scroll box clips anything
+          outside its edges, so a hair of inner padding keeps the search
+          box's focus ring whole. */}
+      <aside className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'>
+        <Heading>{t('openPlace')}</Heading>
+        <PlaceList
+          rooms={rooms}
+          sessionForRoom={sessionForRoom}
+          tables={tables}
+          tickets={tickets}
+          busy={openTable.isPending}
+          onNewTab={() => setNewTabOpen(true)}
+          onPickRoom={(room: RoomViewModel) => setSelectedRoomId(toNumber(room.id))}
+          onPickTable={pickTable}
+        />
+      </aside>
 
-      {isLoading ? (
-        <div className='grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3'>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className='min-h-[120px] rounded-xl' />
-          ))}
+      <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2'>
+        <div className='flex items-center justify-between gap-3'>
+          <h1 className='text-xl font-bold'>{t('openBills')}</h1>
+          <div className='flex gap-2'>
+            <Button
+              size='lg'
+              className='h-12 gap-2 px-5 text-base'
+              onClick={() => navigate({ to: '/sale' })}
+            >
+              <ShoppingCart className='size-5' />
+              {t('newSale')}
+            </Button>
+            <Button
+              size='lg'
+              variant='outline'
+              className='size-12'
+              aria-label={t('receipts')}
+              onClick={() => navigate({ to: '/receipts' })}
+            >
+              <ReceiptText className='size-5' />
+            </Button>
+          </div>
         </div>
-      ) : !tickets?.length ? (
-        <div className='text-muted-foreground flex flex-col items-center gap-1 py-24 text-center'>
-          <p className='text-lg font-medium'>{t('noOpenTickets')}</p>
-          <p className='text-sm'>{t('noOpenTicketsHint')}</p>
-        </div>
-      ) : (
-        <div className='grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3'>
-          {tickets.map((ticket) => (
-            <TicketTile key={String(ticket.id)} ticket={ticket} now={now} />
-          ))}
-        </div>
-      )}
 
-      <NewTicketDialog open={newTicketOpen} onOpenChange={setNewTicketOpen} />
-      <OpenShiftDialog open={openShiftOpen} onOpenChange={setOpenShiftOpen} />
+        {/* App orders waiting for a tap come first: someone is waiting on
+            each of them, and the strip is gone when nobody is */}
+        <PendingOrdersStrip />
+
+        {reserved.length > 0 && (
+          <div className='flex flex-col gap-2'>
+            <Heading>{t('statusReserved')}</Heading>
+            <div className='bg-card divide-y overflow-hidden rounded-xl border'>
+              {reserved.map((session) => {
+                const room = rooms.find((r) => toNumber(r.id) === toNumber(session.roomId))
+                const expiresIn = session.expiresAt
+                  ? Math.max(0, (new Date(session.expiresAt).getTime() - nowMs) / 1000)
+                  : null
+                return (
+                  <button
+                    key={String(session.id)}
+                    type='button'
+                    onClick={() => setSelectedRoomId(toNumber(session.roomId))}
+                    className='hover:bg-accent/50 flex h-14 w-full items-center gap-3 px-3 text-start'
+                  >
+                    <Clock className='size-5 shrink-0 text-amber-600 dark:text-amber-500' />
+                    <span className='min-w-0 flex-1'>
+                      <span className='block truncate font-medium'>
+                        {localized(room?.name ?? session.roomName)}
+                      </span>
+                      {session.customerName && (
+                        <span className='text-muted-foreground block truncate text-sm'>
+                          {session.customerName}
+                        </span>
+                      )}
+                    </span>
+                    {expiresIn != null && (
+                      <span className='font-mono text-sm text-amber-600 tabular-nums dark:text-amber-500'>
+                        {formatClock(expiresIn).slice(3)}
+                      </span>
+                    )}
+                    <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <Skeleton className='h-48 rounded-xl' />
+        ) : bills.length === 0 ? (
+          <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
+            <p className='text-lg font-medium'>{t('noOpenBills')}</p>
+            <p className='text-sm'>{t('noOpenBillsHint')}</p>
+          </div>
+        ) : (
+          <div className='bg-card divide-y overflow-hidden rounded-xl border'>
+            {bills.map((ticket) => (
+              <BillRow
+                key={String(ticket.id)}
+                ticket={ticket}
+                session={sessionForTicket(ticket)}
+                nowMs={nowMs}
+                onClick={() => toTicket(ticket)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <NewTicketDialog open={newTabOpen} onOpenChange={setNewTabOpen} />
+      <RoomPanel
+        room={selectedRoom}
+        session={selectedRoom ? sessionForRoom(selectedRoom.id) : undefined}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRoomId(null)
+        }}
+      />
     </div>
   )
 }

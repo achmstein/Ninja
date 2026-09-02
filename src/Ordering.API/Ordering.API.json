@@ -231,7 +231,7 @@
         "tags": [
           "Orders"
         ],
-        "summary": "Confirm order (admin) - sends to POS",
+        "summary": "Confirm a submitted order (staff) - lands it on the ticket",
         "operationId": "ConfirmOrder",
         "parameters": [
           {
@@ -295,7 +295,7 @@
         "tags": [
           "Orders"
         ],
-        "summary": "Cancel a submitted order",
+        "summary": "Cancel a submitted order (staff)",
         "operationId": "CancelOrder",
         "parameters": [
           {
@@ -533,7 +533,7 @@
         "tags": [
           "Orders"
         ],
-        "summary": "Get all pending orders (admin)",
+        "summary": "Pending orders for the branch (staff)",
         "operationId": "GetPendingOrders",
         "parameters": [
           {
@@ -1747,6 +1747,21 @@
             ],
             "format": "int32",
             "default": 0
+          },
+          "ticketId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

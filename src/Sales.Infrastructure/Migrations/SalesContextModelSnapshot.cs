@@ -32,6 +32,12 @@ namespace Sales.Infrastructure.Migrations
             modelBuilder.HasSequence("receiptseq", "sales")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("refundlineseq", "sales")
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence("refundseq", "sales")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("shiftseq", "sales")
                 .IncrementsBy(10);
 
@@ -159,6 +165,12 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId")
@@ -168,6 +180,35 @@ namespace Sales.Infrastructure.Migrations
                     b.HasIndex("BranchId", "OpenedAt");
 
                     b.ToTable("shifts", "sales");
+                });
+
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.BranchPricing", b =>
+                {
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PricesIncludeVat")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("ServiceChargeRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.HasKey("BranchId");
+
+                    b.ToTable("branch_pricing", "sales");
                 });
 
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Payment", b =>
@@ -181,6 +222,14 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTime>("RecordedAt")
                         .HasColumnType("timestamp with time zone");
@@ -236,6 +285,107 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("receipts", "sales");
                 });
 
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Refund", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "refundseq", "sales");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("ReceiptNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefundedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("BranchId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("refunds", "sales");
+                });
+
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.RefundLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "refundlineseq", "sales");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("MenuAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("RefundId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TicketLineId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RefundId");
+
+                    b.ToTable("refund_lines", "sales");
+                });
+
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Ticket", b =>
                 {
                     b.Property<int>("Id")
@@ -251,17 +401,13 @@ namespace Sales.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("CustomerId")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("CustomerName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
                     b.Property<string>("GuestPhone")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("LastActivityAt")
                         .HasColumnType("timestamp with time zone");
@@ -271,6 +417,14 @@ namespace Sales.Infrastructure.Migrations
 
                     b.Property<int?>("RoomId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("ServiceCharge")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("ServiceChargeRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
 
                     b.Property<int?>("SessionId")
                         .HasColumnType("integer");
@@ -290,13 +444,32 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<int?>("TableId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("Vat")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("VatIncluded")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("VatRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
 
                     b.Property<string>("VoidReason")
                         .HasMaxLength(300)
@@ -308,6 +481,12 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<string>("VoidedBy")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -332,9 +511,21 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<decimal>("Discount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("GuestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<int?>("OrderId")
                         .HasColumnType("integer");
@@ -396,6 +587,36 @@ namespace Sales.Infrastructure.Migrations
                         .WithMany("Payments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.RefundLine", b =>
+                {
+                    b.HasOne("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Refund", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("RefundId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.OwnsOne("Chillax.Sales.Domain.SeedWork.LocalizedText", "Description", b1 =>
+                        {
+                            b1.Property<int>("RefundLineId");
+
+                            b1.Property<string>("Ar");
+
+                            b1.Property<string>("En")
+                                .IsRequired();
+
+                            b1.HasKey("RefundLineId");
+
+                            b1.ToTable("refund_lines", "sales");
+
+                            b1.ToJson("Description");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RefundLineId");
+                        });
+
+                    b.Navigation("Description")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Ticket", b =>
@@ -476,6 +697,11 @@ namespace Sales.Infrastructure.Migrations
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.Shift", b =>
                 {
                     b.Navigation("Movements");
+                });
+
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Refund", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.Ticket", b =>

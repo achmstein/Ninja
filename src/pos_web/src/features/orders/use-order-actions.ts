@@ -1,0 +1,69 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  cancelOrderMutation,
+  confirmOrderMutation,
+} from '@/api/ordering/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+
+/**
+ * Confirm / cancel a pending order, the same two calls the admin board
+ * makes. Each carries a fresh idempotency key: a double tap on a slow
+ * connection must not turn into two commands.
+ *
+ * Confirming lands the lines on a ticket through the order-confirmed event,
+ * so the ticket queries refetch on the TicketUpdated signal that follows —
+ * only the order queries are invalidated here.
+ */
+export function useOrderActions() {
+  const t = useT()
+  const queryClient = useQueryClient()
+
+  const invalidateOrders = () => {
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getPendingOrders' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
+  }
+
+  const confirmOrder = useMutation({
+    ...confirmOrderMutation(),
+    onSuccess: () => {
+      invalidateOrders()
+      toast.success(t('orderConfirmed'))
+    },
+    onError: () => toast.error(t('failedToConfirmOrder')),
+  })
+
+  const cancelOrder = useMutation({
+    ...cancelOrderMutation(),
+    onSuccess: () => {
+      invalidateOrders()
+      toast.success(t('orderCancelled'))
+    },
+    onError: () => toast.error(t('failedToCancelOrder')),
+  })
+
+  const confirm = (orderNumber: number) =>
+    confirmOrder.mutate({
+      body: { orderNumber },
+      headers: { 'x-requestid': crypto.randomUUID() },
+      query: { 'api-version': API_VERSION },
+    })
+
+  const cancel = (orderNumber: number) =>
+    cancelOrder.mutate({
+      body: { orderNumber },
+      headers: { 'x-requestid': crypto.randomUUID() },
+      query: { 'api-version': API_VERSION },
+    })
+
+  // Only the card being acted on shows busy
+  const actingOrderNumber = confirmOrder.isPending
+    ? toNumber(confirmOrder.variables?.body?.orderNumber)
+    : cancelOrder.isPending
+      ? toNumber(cancelOrder.variables?.body?.orderNumber)
+      : null
+
+  return { confirm, cancel, actingOrderNumber }
+}

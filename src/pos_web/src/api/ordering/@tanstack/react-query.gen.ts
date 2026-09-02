@@ -99,7 +99,7 @@ export const createPosOrderMutation = (options?: Partial<Options<CreatePosOrderD
 };
 
 /**
- * Confirm order (admin) - sends to POS
+ * Confirm a submitted order (staff) - lands it on the ticket
  */
 export const confirmOrderMutation = (options?: Partial<Options<ConfirmOrderData>>): UseMutationOptions<unknown, AxiosError<ConfirmOrderError>, Options<ConfirmOrderData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<ConfirmOrderError>, Options<ConfirmOrderData>> = {
@@ -116,7 +116,7 @@ export const confirmOrderMutation = (options?: Partial<Options<ConfirmOrderData>
 };
 
 /**
- * Cancel a submitted order
+ * Cancel a submitted order (staff)
  */
 export const cancelOrderMutation = (options?: Partial<Options<CancelOrderData>>): UseMutationOptions<unknown, AxiosError<CancelOrderError>, Options<CancelOrderData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelOrderError>, Options<CancelOrderData>> = {
@@ -191,7 +191,7 @@ export const rateOrderMutation = (options?: Partial<Options<RateOrderData>>): Us
 export const getPendingOrdersQueryKey = (options: Options<GetPendingOrdersData>) => createQueryKey('getPendingOrders', options);
 
 /**
- * Get all pending orders (admin)
+ * Pending orders for the branch (staff)
  */
 export const getPendingOrdersOptions = (options: Options<GetPendingOrdersData>) => queryOptions<GetPendingOrdersResponse, AxiosError<DefaultError>, GetPendingOrdersResponse, ReturnType<typeof getPendingOrdersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

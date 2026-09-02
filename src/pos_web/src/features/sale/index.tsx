@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
-  Coffee,
   Loader2,
   Minus,
   Plus,
@@ -28,6 +27,7 @@ import { lineKey, saleCount, saleTotal, useSale, type SaleLine } from './cart'
 import { CustomerDialog } from './customer-dialog'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
+import { ItemImage } from './item-image'
 
 // The counter ticket materializes off the order-confirmed event, so the
 // order → ticket lookup 404s for a moment. Poll fast (a cashier is standing
@@ -53,16 +53,10 @@ function ItemTile({
       className='bg-card text-card-foreground flex flex-col overflow-hidden rounded-xl border text-start shadow-xs transition-colors active:scale-[0.98] disabled:opacity-40'
     >
       <div className='bg-muted flex aspect-square w-full items-center justify-center overflow-hidden'>
-        {item.pictureUri ? (
-          <img
-            src={itemPictureUrl(item.id)}
-            alt=''
-            loading='lazy'
-            className='h-full w-full object-cover'
-          />
-        ) : (
-          <Coffee className='text-muted-foreground/40 size-8' />
-        )}
+        <ItemImage
+          src={item.pictureUri ? itemPictureUrl(item.id) : null}
+          className='h-full w-full'
+        />
       </div>
       <div className='flex flex-col gap-0.5 p-2'>
         <span className='line-clamp-2 text-sm font-medium'>
@@ -148,8 +142,14 @@ function CartLineRow({
  * sale on the end side. Charging posts a POS order (the kitchen sees it like
  * any other order), waits for the counter ticket it lands on, then jumps
  * straight into the settle dialog — the walk-in pays on the spot.
+ *
+ * Given a `ticketId` it is the same pad against a bill that is already on
+ * the floor: the order names that ticket, so Sales appends to it instead of
+ * opening a counter one, and the cashier lands back on the ticket with
+ * nothing to pay yet.
  */
-export function SalePad() {
+export function SalePad({ ticketId }: { ticketId?: number }) {
+  const addingToTicket = ticketId !== undefined
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -157,8 +157,22 @@ export function SalePad() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { lines, note, customer, add, setQuantity, setNote, setCustomer, clear } =
-    useSale()
+  const {
+    lines,
+    note,
+    customer,
+    add,
+    setQuantity,
+    setNote,
+    setCustomer,
+    setTarget,
+    clear,
+  } = useSale()
+
+  // Before paint, so the cashier never sees the previous destination's cart
+  useLayoutEffect(() => {
+    setTarget(ticketId ?? null)
+  }, [ticketId, setTarget])
 
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(null)
@@ -219,6 +233,24 @@ export function SalePad() {
       // The order landed — the next charge is a new logical request
       requestIdRef.current = null
       const orderId = toNumber(data.orderId)
+
+      // Adding to a bill already on the floor: the order names the ticket,
+      // so there is no lookup to wait on and nothing to pay yet. The lines
+      // land over SignalR (the ticket screen's poll is the fallback).
+      if (addingToTicket) {
+        clear()
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+        toast.success(
+          t(orderId === 0 ? 'orderAlreadyPlaced' : 'itemsAddedToTicket')
+        )
+        navigate({
+          to: '/ticket/$ticketId',
+          params: { ticketId: String(ticketId) },
+        })
+        return
+      }
+
       if (orderId === 0) {
         // Deduplicated retry: the first attempt went through and its ticket
         // is (or will be) on the floor — don't wait on a lookup for an order
@@ -242,8 +274,10 @@ export function SalePad() {
       ]),
       note: note.trim(),
       // Attaching (or removing) a customer makes it a different sale, not a
-      // retry of the previous one
-      customer: customer?.id ?? null,
+      // retry of the previous one — a bare name counts too
+      customer: customer?.id ?? customer?.name ?? null,
+      // The same items against a different bill are a different sale too
+      ticket: ticketId ?? null,
     })
     if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
@@ -272,9 +306,17 @@ export function SalePad() {
           })),
         })),
         customerNote: note.trim() || null,
-        // No tableId/roomName: a counter sale settles at the till
+        // No tableId/roomName: a counter sale settles at the till. When the
+        // cashier is adding to an open bill, the ticket is named outright —
+        // Sales appends to it instead of inferring a destination.
+        ticketId: ticketId ?? null,
+        // The account, only when there is one: it is what loyalty accrues to
+        // and what an on-account settle charges
         customerUserId: customer?.id ?? null,
-        customerUserName: customer?.name ?? null,
+        customerUserName: customer?.id ? customer.name : null,
+        // The name always travels, account or not — the kitchen card and the
+        // bill line both carry it
+        customerName: customer?.name ?? null,
         // Redemption at the counter is a later phase; accrual happens
         // server-side off the attached customer
         pointsToRedeem: 0,
@@ -341,11 +383,23 @@ export function SalePad() {
       <div className='flex min-w-0 flex-1 flex-col'>
         <div className='flex items-center gap-2 border-b p-2'>
           <Button asChild variant='ghost' size='icon' className='size-12 shrink-0'>
-            <Link to='/' aria-label={t('backToFloor')}>
-              <BackIcon className='size-6' />
-            </Link>
+            {addingToTicket ? (
+              <Link
+                to='/ticket/$ticketId'
+                params={{ ticketId: String(ticketId) }}
+                aria-label={t('backToTicket')}
+              >
+                <BackIcon className='size-6' />
+              </Link>
+            ) : (
+              <Link to='/' aria-label={t('backToFloor')}>
+                <BackIcon className='size-6' />
+              </Link>
+            )}
           </Button>
-          <div className='flex gap-2 overflow-x-auto'>
+          {/* Every category in view: the chips wrap into rows rather than
+              scrolling sideways behind a scrollbar */}
+          <div className='flex min-w-0 flex-1 flex-wrap gap-2'>
             {sortedCategories.map((category) => {
               const id = toNumber(category.id)
               return (
@@ -472,7 +526,7 @@ export function SalePad() {
             }
             onClick={charge}
           >
-            <span>{t('chargeAction')}</span>
+            <span>{addingToTicket ? t('addToTicket') : t('chargeAction')}</span>
             <span className='tabular-nums'>{money(total)}</span>
           </Button>
         </div>

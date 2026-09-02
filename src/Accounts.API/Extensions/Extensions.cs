@@ -42,7 +42,8 @@ public static class Extensions
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(AccountsIntegrationEventContext.Default))
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
-            .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
+            .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
+            .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
     }
 }
 

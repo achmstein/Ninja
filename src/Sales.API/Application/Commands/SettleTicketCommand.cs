@@ -1,10 +1,9 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
 using Chillax.Sales.API.Application.IntegrationEvents.Events;
 
 namespace Chillax.Sales.API.Application.Commands;
 
-public record PaymentDto(PaymentTender Tender, decimal Amount);
+public record PaymentDto(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
 
 public record SettleResult(int ReceiptNumber, decimal Change);
 
@@ -14,7 +13,7 @@ public record SettleTicketCommand(int TicketId, IReadOnlyCollection<PaymentDto> 
 public class SettleTicketCommandHandler(
     ITicketRepository ticketRepository,
     Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
-    IEventBus eventBus,
+    ISalesIntegrationEventService integrationEvents,
     ILogger<SettleTicketCommandHandler> logger) : IRequestHandler<SettleTicketCommand, SettleResult>
 {
     /// <summary>
@@ -29,14 +28,18 @@ public class SettleTicketCommandHandler(
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
         var payments = command.Payments
-            .Select(p => new Payment(p.Tender, p.Amount, command.SettledBy))
+            .Select(p => new Payment(p.Tender, p.Amount, command.SettledBy, p.CustomerId, p.CustomerName))
             .ToList();
 
         // Attribute the settle to the branch's open drawer, if one is open —
         // a missing shift never blocks a sale, it just goes unattributed
         var shift = await shiftRepository.FindOpenByBranchAsync(ticket.BranchId);
 
-        var change = ticket.Settle(payments, command.SettledBy, shift?.Id);
+        // The branch's rules as they stand now, frozen onto the ticket by the
+        // settle: this is the last moment they can change the bill
+        var rules = await ticketRepository.GetPricingRulesAsync(ticket.BranchId);
+
+        var change = ticket.Settle(payments, command.SettledBy, shift?.Id, rules);
 
         for (var attempt = 1; ; attempt++)
         {
@@ -48,28 +51,47 @@ public class SettleTicketCommandHandler(
                 await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 
                 logger.LogInformation(
-                    "Ticket {TicketId} settled by {SettledBy} - receipt {Branch}/{Number}, change {Change}",
-                    ticket.Id, command.SettledBy, ticket.BranchId, number, change);
+                    "Ticket {TicketId} settled by {SettledBy} - receipt {Branch}/{Number}, total {Total} (service {Service}, VAT {Vat}), change {Change}",
+                    ticket.Id, command.SettledBy, ticket.BranchId, number, ticket.Total, ticket.ServiceCharge, ticket.Vat, change);
 
-                await eventBus.PublishAsync(new TicketSettledIntegrationEvent(
+                // Queued on the same transaction the behavior commits: the
+                // charge Accounts posts from this can never outrun, or miss,
+                // the settled rows
+                await integrationEvents.AddAndSaveEventAsync(new TicketSettledIntegrationEvent(
                     ticket.Id,
                     ticket.BranchId,
                     number,
-                    ticket.GetTotal(),
-                    ticket.CustomerId,
-                    ticket.CustomerName,
-                    payments.Where(p => p.Tender == PaymentTender.Account).Sum(p => p.Amount),
+                    ticket.Total,
                     command.SettledBy,
-                    ticket.Lines.Where(l => l.Source == TicketLineSource.SessionTime).Sum(l => l.Total)));
+                    ticket.Lines.Where(l => l.Source == TicketLineSource.SessionTime).Sum(l => l.Total),
+                    // Grouped: two account payments for the same person are one
+                    // charge on their tab, not two lines to reconcile
+                    payments
+                        .Where(p => p.Tender == PaymentTender.Account && p.CustomerId is not null)
+                        .GroupBy(p => p.CustomerId!)
+                        .Select(g => new TicketAccountCharge(
+                            g.Key,
+                            g.First().CustomerName,
+                            g.Sum(p => p.Amount)))
+                        .ToList(),
+                    ticket.Subtotal,
+                    ticket.ServiceCharge,
+                    ticket.Vat));
 
                 return new SettleResult(number, change);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Not a numbering race: somebody else settled or discarded
+                // this ticket first. SalesTransaction turns it into the
+                // "reload and try again" answer.
+                throw;
             }
             catch (DbUpdateException) when (attempt < ReceiptNumberAttempts)
             {
                 // The losing receipt must leave the change tracker or the
                 // retry would try to insert it again alongside the new one
                 ticketRepository.RemoveReceipt(receipt);
-                logger.LogWarning("Receipt number {Number} for branch {Branch} was taken - retrying", number, ticket.BranchId);
             }
         }
     }

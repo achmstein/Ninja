@@ -30,8 +30,12 @@ export function BranchSwitcher() {
   const handleSelect = (id: number) => {
     if (id === branchId) return
     setBranchId(id)
-    // Everything on screen is scoped to the branch — refetch it all
-    queryClient.invalidateQueries()
+    // Everything on screen is scoped to the branch. Reset rather than
+    // invalidate: a plain refetch keeps the old branch's data on screen until
+    // the new answer lands — and keeps it for good when that answer is a
+    // 404, which is how "no shift open" is reported, so the header chip went
+    // on showing the previous branch's shift.
+    queryClient.resetQueries()
   }
 
   return (

@@ -1,0 +1,194 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  addMemberToSessionMutation,
+  assignCustomerToSessionMutation,
+  cancelSessionMutation,
+  changePlayerModeMutation,
+  endSessionMutation,
+  getActiveSessionsOptions,
+  listRoomsOptions,
+  removeMemberFromSessionMutation,
+  startSessionMutation,
+  startWalkInSessionMutation,
+} from '@/api/spaces/@tanstack/react-query.gen'
+import type { ReservationViewModel } from '@/api/spaces/types.gen'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+import { type PlayerMode, SESSION_ACTIVE, SESSION_RESERVED } from './status'
+
+/**
+ * The branch's rooms and whatever is reserved or running in them, the two
+ * reads behind every room screen. SignalR's RoomStatusChanged is the
+ * primary update path (see use-pos-notifications); the polls are fallbacks.
+ */
+export function useRooms({ enabled = true }: { enabled?: boolean } = {}) {
+  const roomsQuery = useQuery({
+    ...listRoomsOptions(),
+    enabled,
+    refetchInterval: 60_000,
+  })
+  const sessionsQuery = useQuery({
+    ...getActiveSessionsOptions(),
+    enabled,
+    refetchInterval: 30_000,
+  })
+
+  const rooms = useMemo(
+    () =>
+      [...(roomsQuery.data ?? [])].sort((a, b) =>
+        (a.name?.en ?? '').localeCompare(b.name?.en ?? '')
+      ),
+    [roomsQuery.data]
+  )
+  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
+
+  const sessionForRoom = (
+    roomId: number | string | undefined
+  ): ReservationViewModel | undefined =>
+    sessions.find(
+      (s) =>
+        toNumber(s.roomId) === toNumber(roomId) &&
+        (Number(s.status) === SESSION_ACTIVE ||
+          Number(s.status) === SESSION_RESERVED)
+    )
+
+  const activeSessionById = (
+    sessionId: number | string
+  ): ReservationViewModel | undefined =>
+    sessions.find(
+      (s) =>
+        toNumber(s.id) === toNumber(sessionId) &&
+        Number(s.status) === SESSION_ACTIVE
+    )
+
+  return {
+    rooms,
+    sessions,
+    sessionForRoom,
+    activeSessionById,
+    isLoading: roomsQuery.isLoading,
+  }
+}
+
+type Done = { onSuccess?: () => void }
+
+/**
+ * Every session control the till has, each the same call admin_web makes.
+ * Success refetches rooms, sessions and tickets (ending a session lands its
+ * time on the ticket through the completed event) and toasts; failure
+ * toasts. Callers pass `onSuccess` for what only they know, like closing
+ * their own dialog.
+ */
+export function useSessionActions() {
+  const t = useT()
+  const queryClient = useQueryClient()
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getActiveSessions' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+  }
+
+  const feedback = (success: TranslationKey | null, failure: TranslationKey) => ({
+    onSuccess: () => {
+      invalidate()
+      if (success) toast.success(t(success))
+    },
+    onError: () => toast.error(t(failure)),
+  })
+
+  const startWalkIn = useMutation({
+    ...startWalkInSessionMutation(),
+    ...feedback('sessionStarted', 'failedToStartSession'),
+  })
+  const startReserved = useMutation({
+    ...startSessionMutation(),
+    ...feedback('sessionStarted', 'failedToStartSession'),
+  })
+  const endSession = useMutation({
+    ...endSessionMutation(),
+    ...feedback('sessionEnded', 'failedToEndSession'),
+  })
+  // Cancel toasts per call: a reservation and a running session read differently
+  const cancelSession = useMutation({
+    ...cancelSessionMutation(),
+    ...feedback(null, 'failedToCancelSession'),
+  })
+  const changeMode = useMutation({
+    ...changePlayerModeMutation(),
+    ...feedback('playerModeUpdated', 'failedToChangePlayerMode'),
+  })
+  const assignCustomer = useMutation({
+    ...assignCustomerToSessionMutation(),
+    ...feedback('customerAssigned', 'failedToAssignCustomer'),
+  })
+  const addMember = useMutation({
+    ...addMemberToSessionMutation(),
+    ...feedback('customerAdded', 'failedToAddCustomer'),
+  })
+  const removeMember = useMutation({
+    ...removeMemberFromSessionMutation(),
+    ...feedback('memberRemoved', 'failedToRemoveMember'),
+  })
+
+  const isBusy =
+    startWalkIn.isPending ||
+    startReserved.isPending ||
+    endSession.isPending ||
+    cancelSession.isPending ||
+    changeMode.isPending ||
+    assignCustomer.isPending ||
+    addMember.isPending ||
+    removeMember.isPending
+
+  return {
+    isBusy,
+    startWalkIn: (roomId: number, playerMode: PlayerMode | null, done?: Done) =>
+      startWalkIn.mutate(
+        { path: { roomId }, body: { notes: null, playerMode } },
+        done
+      ),
+    startReserved: (sessionId: number, playerMode: PlayerMode | null, done?: Done) =>
+      startReserved.mutate({ path: { sessionId }, body: { playerMode } }, done),
+    endSession: (sessionId: number, done?: Done) =>
+      endSession.mutate({ path: { sessionId } }, done),
+    cancelSession: (sessionId: number, wasActive: boolean, done?: Done) =>
+      cancelSession.mutate(
+        { path: { sessionId } },
+        {
+          onSuccess: () => {
+            toast.success(t(wasActive ? 'sessionCancelled' : 'reservationCancelled'))
+            done?.onSuccess?.()
+          },
+        }
+      ),
+    changeMode: (sessionId: number, playerMode: PlayerMode) =>
+      changeMode.mutate({ path: { sessionId }, body: { playerMode } }),
+    assignCustomer: (sessionId: number, customerId: string, customerName: string) =>
+      assignCustomer.mutate({
+        path: { sessionId },
+        body: { customerId, customerName },
+      }),
+    addMember: (sessionId: number, customerId: string, customerName: string) =>
+      addMember.mutate({ path: { sessionId }, body: { customerId, customerName } }),
+    removeMember: (sessionId: number, customerId: string) =>
+      removeMember.mutate({ path: { sessionId, customerId } }),
+  }
+}
+
+/** A one-second clock for live timers and countdowns, off while nothing shows one. */
+export function useSecondsClock(enabled = true): number {
+  const [nowMs, setNowMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!enabled) return
+    setNowMs(Date.now())
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [enabled])
+
+  return nowMs
+}

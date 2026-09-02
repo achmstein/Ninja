@@ -96,9 +96,23 @@ public abstract class IdentifiedCommandHandler<T, R> : IRequestHandler<Identifie
 
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
-                return default;
+                // Swallowing here returned default(R) — 0 for a created order
+                // id, which is also the "duplicate request" answer. Every
+                // failure therefore reached the caller as a plausible success
+                // with no order behind it and nothing logged anywhere. Let it
+                // out: OrdersApi turns a domain exception into a 400 the till
+                // can show, anything else is a 500, and rolling the
+                // transaction back drops the idempotency row so the same
+                // request id can be retried.
+                _logger.LogError(
+                    ex,
+                    "Command {CommandName} failed for request {RequestId}",
+                    typeof(T).Name,
+                    message.Id);
+
+                throw;
             }
         }
     }

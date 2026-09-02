@@ -277,6 +277,26 @@ const webExtras = {
     ar: 'معرفناش نغير وضع اللعب',
   },
   guest: { en: 'Guest', ar: 'ضيف' },
+
+  // Receipt pricing (Sales-owned: VAT and service charge per branch)
+  receiptPricing: { en: 'Receipt pricing', ar: 'تسعير الإيصال' },
+  receiptPricingDescription: {
+    en: "How {name}'s menu prices become the bill. Applies to tickets settled from now on; printed receipts keep their figures.",
+    ar: 'إزاي أسعار منيو {name} بتتحول لحساب. بيتطبق على الحسابات اللي هتتقفل من دلوقتي؛ الإيصالات المطبوعة بتفضل زي ما هي.',
+  },
+  vatRatePercent: { en: 'VAT %', ar: 'الضريبة %' },
+  serviceChargePercent: { en: 'Service charge %', ar: 'الخدمة %' },
+  pricesIncludeVat: { en: 'Prices include VAT', ar: 'الأسعار شاملة الضريبة' },
+  pricesIncludeVatHint: {
+    en: 'On: VAT is shown out of the menu price. Off: VAT is added on top.',
+    ar: 'شغال: الضريبة بتتعرض من ضمن سعر المنيو. مقفول: الضريبة بتتضاف فوق السعر.',
+  },
+  serviceChargeHint: {
+    en: 'Service applies to what is ordered at tables and rooms — never to counter sales or room time.',
+    ar: 'الخدمة بتتحسب على اللي بيتطلب على الترابيزات والاوض — مش على بيع الكاونتر ولا وقت الاوضة.',
+  },
+  pricingSaved: { en: 'Receipt pricing saved', ar: 'اتحفظ تسعير الإيصال' },
+  failedToSavePricing: { en: 'Failed to save receipt pricing', ar: 'معرفناش نحفظ تسعير الإيصال' },
   loading: { en: 'Loading…', ar: 'ثواني…' },
   noCompletedSessions: {
     en: 'No completed sessions match.',

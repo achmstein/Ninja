@@ -78,42 +78,46 @@ public static class RoomsApi
             .RequireAuthorization();
 
         // Session endpoints (Admin commands)
+        // Session control belongs to whoever is at the counter, so these take
+        // the "Pos" policy (Admin, Owner or Cashier): the till runs the rooms
+        // the way admin_web does. Room set-up (create, edit, delete,
+        // maintenance) and history stay Admin.
         api.MapPost("/sessions/{sessionId:int}/start", StartSession)
             .WithName("StartSession")
             .WithSummary("Start a session")
-            .WithDescription("Start the timer for a reserved session (Admin only)")
+            .WithDescription("Start the timer for a reserved session (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPost("/sessions/{sessionId:int}/end", EndSession)
             .WithName("EndSession")
             .WithSummary("End a session")
-            .WithDescription("End the session and calculate cost (Admin only)")
+            .WithDescription("End the session and calculate cost (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPost("/sessions/{sessionId:int}/cancel", CancelSession)
             .WithName("CancelSession")
             .WithSummary("Cancel a session")
-            .WithDescription("Cancel a reservation or active session (Admin only)")
+            .WithDescription("Cancel a reservation or active session (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         // Walk-in session endpoints (Admin)
         api.MapPost("/sessions/walk-in/{roomId:int}", StartWalkInSession)
             .WithName("StartWalkInSession")
             .WithSummary("Start a walk-in session")
-            .WithDescription("Start a walk-in session without an assigned customer (Admin only)")
+            .WithDescription("Start a walk-in session without an assigned customer (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         // Player mode change (Admin)
         api.MapPut("/sessions/{sessionId:int}/player-mode", ChangePlayerMode)
             .WithName("ChangePlayerMode")
             .WithSummary("Change player mode")
-            .WithDescription("Change the player mode (Single/Multi) for an active session (Admin only)")
+            .WithDescription("Change the player mode (Single/Multi) for an active session (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         // Session membership endpoints (Customer)
         api.MapPost("/sessions/{sessionId:int}/leave", LeaveSession)
@@ -141,30 +145,30 @@ public static class RoomsApi
         api.MapGet("/sessions/active", GetActiveSessions)
             .WithName("GetActiveSessions")
             .WithSummary("Get active sessions")
-            .WithDescription("Get all currently active sessions (Admin only)")
+            .WithDescription("Get all currently active sessions (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPost("/sessions/{sessionId:int}/assign-customer", AssignCustomerToSession)
             .WithName("AssignCustomerToSession")
             .WithSummary("Assign a customer to a walk-in session")
-            .WithDescription("Assign a customer to an active walk-in session that has no owner (Admin only)")
+            .WithDescription("Assign a customer to an active walk-in session that has no owner (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPost("/sessions/{sessionId:int}/members", AddMemberToSession)
             .WithName("AddMemberToSession")
             .WithSummary("Add a member to a session")
-            .WithDescription("Add a customer as a member to an active session (Admin only)")
+            .WithDescription("Add a customer as a member to an active session (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapDelete("/sessions/{sessionId:int}/members/{customerId}", RemoveMemberFromSession)
             .WithName("RemoveMemberFromSession")
             .WithSummary("Remove a member from a session")
-            .WithDescription("Remove a non-owner member from an active session (Admin only)")
+            .WithDescription("Remove a non-owner member from an active session (staff)")
             .WithTags("Sessions")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapGet("/sessions/{sessionId:int}", GetSessionById)
             .WithName("GetSession")

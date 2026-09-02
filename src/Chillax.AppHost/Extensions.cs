@@ -234,6 +234,10 @@ internal static class Extensions
             yarp.AddRoute("/api/tickets/{*any}", salesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
+            // Drawer shifts, the till's other Sales.API group
+            yarp.AddRoute("/api/shifts/{*any}", salesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
             // Identity routes (for user registration)
             var identityCluster = yarp.AddCluster(identityApi);
             yarp.AddRoute("/api/identity/{*any}", identityCluster);

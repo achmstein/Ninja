@@ -1,8 +1,9 @@
+import { useEffect, useRef } from 'react'
 import {
   createFileRoute,
-  Navigate,
   Outlet,
-  useLocation,
+  useNavigate,
+  useRouter,
 } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
@@ -37,19 +38,34 @@ function AuthenticatedLayout() {
 function AuthenticatedRoute() {
   const t = useT()
   const auth = useAuth()
-  const location = useLocation()
+  const router = useRouter()
+  const navigate = useNavigate()
+  const sentToSignIn = useRef(false)
 
-  if (auth.isLoading) {
+  const needsSignIn = !auth.isLoading && !auth.isAuthenticated
+
+  // Hand off to Keycloak exactly once. Rendering <Navigate> here instead
+  // re-fires on every render (it compares its props by identity, and JSX
+  // hands it a fresh object each time), and this gate stays mounted while
+  // the /sign-in transition is still in flight — so every pass folded the
+  // half-applied URL back into `redirect`, growing it each round until the
+  // tab locked up. Reading the location inside the effect keeps the
+  // come-back-to URL current without ever feeding it back.
+  useEffect(() => {
+    if (!needsSignIn || sentToSignIn.current) return
+    sentToSignIn.current = true
+    navigate({
+      to: '/sign-in',
+      search: { redirect: router.state.location.href },
+      replace: true,
+    })
+  }, [needsSignIn, navigate, router])
+
+  if (auth.isLoading || needsSignIn) {
     return (
       <div className='flex h-svh items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin' />
       </div>
-    )
-  }
-
-  if (!auth.isAuthenticated) {
-    return (
-      <Navigate to='/sign-in' search={{ redirect: location.href }} replace />
     )
   }
 

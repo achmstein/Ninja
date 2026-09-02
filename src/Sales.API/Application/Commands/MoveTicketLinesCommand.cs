@@ -1,11 +1,22 @@
 #nullable enable
 namespace Chillax.Sales.API.Application.Commands;
 
+/// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
+public record NewTicketTarget(TicketType Type, int? TableId, LocalizedText? TableName, string? Label);
+
 /// <summary>
-/// The turnover guard: lines that landed on the previous group's bill move to
-/// a fresh open ticket for the same place.
+/// Move lines off a ticket. Three destinations: none given is the turnover
+/// guard — a fresh ticket for the same place; an existing open ticket takes
+/// the lines onto its bill; a new ticket target opens a counter tab, or a
+/// table's bill (its open one if it has one), and moves the lines in one
+/// step — the customer who ordered at a table and then went to the counter,
+/// or to another table.
 /// </summary>
-public record MoveTicketLinesCommand(int TicketId, IReadOnlyCollection<int> LineIds) : IRequest<int>;
+public record MoveTicketLinesCommand(
+    int TicketId,
+    IReadOnlyCollection<int> LineIds,
+    int? TargetTicketId = null,
+    NewTicketTarget? NewTicket = null) : IRequest<int>;
 
 public class MoveTicketLinesCommandHandler(
     ITicketRepository ticketRepository,
@@ -16,15 +27,72 @@ public class MoveTicketLinesCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
-        var target = ticket.MoveLines(command.LineIds);
-        ticketRepository.Add(target);
+        if (command.TargetTicketId is null && command.NewTicket is null)
+        {
+            var fresh = ticket.MoveLines(command.LineIds);
+            ticketRepository.Add(fresh);
+
+            await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+            logger.LogInformation(
+                "Moved {Count} lines from ticket {From} to new ticket {To} for the same place",
+                command.LineIds.Count, ticket.Id, fresh.Id);
+
+            return fresh.Id;
+        }
+
+        var target = command.TargetTicketId is int targetId
+            ? await ExistingAsync(ticket, targetId)
+            : await OpenAsync(ticket, command.NewTicket!);
+
+        ticket.MoveLinesTo(target, command.LineIds);
+
+        // Emptied, a table or counter bill has nothing left to be: its lines
+        // live on with their order ids on the target, so it goes the way an
+        // untouched empty ticket does. A room ticket stays for its session.
+        var emptied = ticket.Lines.Count == 0 && ticket.Type != TicketType.Room;
+        if (emptied)
+        {
+            ticket.Discard();
+            ticketRepository.Remove(ticket);
+        }
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 
         logger.LogInformation(
-            "Moved {Count} lines from ticket {From} to new ticket {To}",
-            command.LineIds.Count, ticket.Id, target.Id);
+            "Moved {Count} lines from ticket {From} to {Type} ticket {To}{Discarded}",
+            command.LineIds.Count, ticket.Id, target.Type, target.Id, emptied ? " (source discarded)" : "");
 
         return target.Id;
+    }
+
+    private async Task<Ticket> ExistingAsync(Ticket source, int targetId)
+    {
+        if (targetId == source.Id)
+            throw new SalesDomainException("A ticket cannot receive its own lines.");
+
+        return await ticketRepository.GetAsync(targetId)
+            ?? throw new SalesDomainException($"Ticket {targetId} does not exist.");
+    }
+
+    private async Task<Ticket> OpenAsync(Ticket source, NewTicketTarget wanted)
+    {
+        switch (wanted.Type)
+        {
+            case TicketType.Counter:
+                return ticketRepository.Add(Ticket.OpenForCounter(source.BranchId, wanted.Label));
+
+            case TicketType.Table when wanted.TableId is int tableId:
+                // Q7: one open ticket per table — a table that already has a
+                // bill takes the lines onto it rather than growing a second
+                var open = await ticketRepository.FindOpenByTableAsync(tableId, source.BranchId);
+                return open ?? ticketRepository.Add(Ticket.OpenForTable(tableId, wanted.TableName, source.BranchId));
+
+            case TicketType.Table:
+                throw new SalesDomainException("Moving to a table takes the table.");
+
+            default:
+                throw new SalesDomainException("Room tickets follow their sessions — move onto the room's open bill instead.");
+        }
     }
 }

@@ -165,6 +165,8 @@ export type PosOrderRequest = {
     customerUserId?: null | string;
     customerUserName?: null | string;
     pointsToRedeem?: number | string;
+    ticketId?: null | number | string;
+    customerName?: null | string;
 };
 
 export type PosOrderResponse = {

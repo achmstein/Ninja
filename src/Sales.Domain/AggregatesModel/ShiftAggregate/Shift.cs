@@ -75,7 +75,7 @@ public class Shift : Entity, IAggregateRoot
     /// figures come from the tickets stamped with this shift — the caller
     /// aggregates them; the shift owns the arithmetic and the verdict.
     /// </summary>
-    public void Close(decimal closingCount, decimal cashPayments, decimal changeGiven, string closedBy)
+    public void Close(decimal closingCount, decimal cashPayments, decimal changeGiven, string closedBy, decimal cashRefunds = 0)
     {
         EnsureOpen();
 
@@ -85,7 +85,8 @@ public class Shift : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(closedBy))
             throw new SalesDomainException("A shift needs the cashier closing it");
 
-        ExpectedCash = OpeningFloat + cashPayments - changeGiven + GetPayInsTotal() - GetPayOutsTotal();
+        // Cash refunds left the drawer the way change did
+        ExpectedCash = OpeningFloat + cashPayments - changeGiven - cashRefunds + GetPayInsTotal() - GetPayOutsTotal();
         ClosingCount = closingCount;
         OverShort = closingCount - ExpectedCash;
         ClosedBy = closedBy;

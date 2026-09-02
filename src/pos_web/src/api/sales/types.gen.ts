@@ -9,6 +9,7 @@ export type AddLineRequest = {
     qty: number | string;
     unitPrice: number | string;
     discount?: number | string;
+    customerName?: null | string;
 };
 
 export type CashMovementRequest = {
@@ -38,6 +39,15 @@ export type LocalizedText = {
 
 export type MoveLinesRequest = {
     lineIds: Array<number | string>;
+    targetTicketId?: null | number | string;
+    newTicket?: null | NewTicketRequest;
+};
+
+export type NewTicketRequest = {
+    type: TicketType;
+    tableId?: null | number | string;
+    tableName?: null | LocalizedText;
+    label?: null | string;
 };
 
 export type OpenShiftRequest = {
@@ -52,7 +62,7 @@ export type OpenTicketRequest = {
     type: TicketType;
     tableId?: null | number | string;
     tableName?: null | LocalizedText;
-    customerName?: null | string;
+    label?: null | string;
 };
 
 export type OpenTicketResponse = {
@@ -64,8 +74,23 @@ export type PaymentTender = number;
 export type PaymentView = {
     tender?: string;
     amount?: number | string;
+    customerName?: null | string;
+    customerId?: null | string;
     recordedBy?: string;
     recordedAt?: string;
+};
+
+export type PricingRequest = {
+    vatRate: number | string;
+    pricesIncludeVat: boolean;
+    serviceChargeRate: number | string;
+};
+
+export type PricingView = {
+    branchId: number | string;
+    vatRate: number | string;
+    pricesIncludeVat: boolean;
+    serviceChargeRate: number | string;
 };
 
 export type RangeReport = {
@@ -77,11 +102,66 @@ export type RangeReport = {
     changeGiven?: number | string;
     tenderTotals?: Array<TenderTotal>;
     byType?: Array<TypeTotal>;
+    subtotal?: number | string;
+    serviceCharge?: number | string;
+    vat?: number | string;
+    refunds?: number | string;
+    refundCount?: number | string;
+};
+
+export type RefundLineRequest = {
+    lineId: number | string;
+    qty: number | string;
+};
+
+export type RefundLineView = {
+    ticketLineId: number | string;
+    description: LocalizedText;
+    qty: number | string;
+    amount: number | string;
+};
+
+export type RefundRequest = {
+    lines: Array<RefundLineRequest>;
+    reason: string;
+    tender: PaymentTender;
+    customerId?: null | string;
+    customerName?: null | string;
+};
+
+export type RefundResult = {
+    number: number | string;
+    amount: number | string;
+};
+
+export type RefundView = {
+    id: number | string;
+    number: number | string;
+    amount: number | string;
+    reason: string;
+    tender: string;
+    customerName: null | string;
+    refundedBy: string;
+    refundedAt: string;
+    lines: Array<RefundLineView>;
+};
+
+export type SettledTicketSummary = {
+    id: number | string;
+    receiptNumber: number | string;
+    type: string;
+    locationName: null | LocalizedText;
+    label: null | string;
+    settledAt: string;
+    total: number | string;
+    refundedTotal: number | string;
 };
 
 export type SettlePayment = {
     tender: PaymentTender;
     amount: number | string;
+    customerId?: null | string;
+    customerName?: null | string;
 };
 
 export type SettleRequest = {
@@ -110,6 +190,8 @@ export type ShiftView = {
     salesTotal?: number | string;
     tenderTotals?: Array<TenderTotal>;
     changeGiven?: number | string;
+    refundsTotal?: number | string;
+    cashRefunds?: number | string;
     payInsTotal?: number | string;
     payOutsTotal?: number | string;
     expectedInDrawer?: number | string;
@@ -130,8 +212,7 @@ export type TicketDetail = {
     sessionId?: null | number | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
-    customerId?: null | string;
-    customerName?: null | string;
+    label?: null | string;
     guestPhone?: null | string;
     openedAt?: string;
     lastActivityAt?: string;
@@ -146,6 +227,14 @@ export type TicketDetail = {
     payments?: Array<PaymentView>;
     total?: number | string;
     receiptNumber?: null | number | string;
+    subtotal?: number | string;
+    serviceCharge?: number | string;
+    vat?: number | string;
+    vatIncluded?: boolean;
+    vatRate?: number | string;
+    serviceChargeRate?: number | string;
+    refunds?: Array<RefundView>;
+    refundedTotal?: number | string;
 };
 
 export type TicketLineView = {
@@ -159,6 +248,9 @@ export type TicketLineView = {
     discount?: number | string;
     total?: number | string;
     addedBy?: null | string;
+    customerName?: null | string;
+    customerId?: null | string;
+    guestId?: null | string;
 };
 
 export type TicketSummary = {
@@ -169,7 +261,7 @@ export type TicketSummary = {
     sessionId?: null | number | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
-    customerName?: null | string;
+    label?: null | string;
     openedAt?: string;
     lastActivityAt?: string;
     lineCount?: number | string;
@@ -219,6 +311,81 @@ export type GetOpenTicketsResponses = {
 };
 
 export type GetOpenTicketsResponse = GetOpenTicketsResponses[keyof GetOpenTicketsResponses];
+
+export type GetSettledTicketsData = {
+    body?: never;
+    path?: never;
+    query: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        receiptNumber?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/settled';
+};
+
+export type GetSettledTicketsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetSettledTicketsResponses = {
+    /**
+     * OK
+     */
+    200: Array<SettledTicketSummary>;
+};
+
+export type GetSettledTicketsResponse = GetSettledTicketsResponses[keyof GetSettledTicketsResponses];
+
+export type DiscardTicketData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}';
+};
+
+export type DiscardTicketErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DiscardTicketError = DiscardTicketErrors[keyof DiscardTicketErrors];
+
+export type DiscardTicketResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DiscardTicketResponse = DiscardTicketResponses[keyof DiscardTicketResponses];
 
 export type GetTicketData = {
     body?: never;
@@ -524,6 +691,118 @@ export type VoidTicketErrors = {
 export type VoidTicketError = VoidTicketErrors[keyof VoidTicketErrors];
 
 export type VoidTicketResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type RefundTicketData = {
+    body: RefundRequest;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/refunds';
+};
+
+export type RefundTicketErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RefundTicketError = RefundTicketErrors[keyof RefundTicketErrors];
+
+export type RefundTicketResponses = {
+    /**
+     * OK
+     */
+    200: RefundResult;
+};
+
+export type RefundTicketResponse = RefundTicketResponses[keyof RefundTicketResponses];
+
+export type GetBranchPricingData = {
+    body?: never;
+    path: {
+        branchId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/pricing/{branchId}';
+};
+
+export type GetBranchPricingErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetBranchPricingResponses = {
+    /**
+     * OK
+     */
+    200: PricingView;
+};
+
+export type GetBranchPricingResponse = GetBranchPricingResponses[keyof GetBranchPricingResponses];
+
+export type SetBranchPricingData = {
+    body: PricingRequest;
+    path: {
+        branchId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/pricing/{branchId}';
+};
+
+export type SetBranchPricingErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetBranchPricingError = SetBranchPricingErrors[keyof SetBranchPricingErrors];
+
+export type SetBranchPricingResponses = {
     /**
      * OK
      */

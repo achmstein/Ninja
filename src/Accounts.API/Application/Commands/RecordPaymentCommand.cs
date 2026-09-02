@@ -18,15 +18,24 @@ public class RecordPaymentCommand : IRequest<bool>
     [DataMember]
     public string RecordedBy { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// What outside the ledger this payment settles (e.g. "sales-refund:42").
+    /// Unique when set; null for payments staff key in by hand.
+    /// </summary>
+    [DataMember]
+    public string? Reference { get; private set; }
+
     public RecordPaymentCommand(
         string customerId,
         decimal amount,
         string? description,
-        string recordedBy)
+        string recordedBy,
+        string? reference = null)
     {
         CustomerId = customerId;
         Amount = amount;
         Description = description;
         RecordedBy = recordedBy;
+        Reference = reference;
     }
 }

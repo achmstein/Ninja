@@ -13,8 +13,12 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
     public CreateOrderCommandValidator(ILogger<CreateOrderCommandValidator> logger)
     {
         // A signed-in order is identified by its user; a guest order stands on
-        // the contact details left at checkout instead. Exactly one applies.
-        When(command => !command.IsGuestOrder, () =>
+        // the contact details left at checkout instead. A counter sale is
+        // neither: staff keyed it in, the cashier's identity rides the request,
+        // and a walk-in may have no customer at all — attaching one is
+        // optional, for loyalty and tabs. Requiring an identity here rejected
+        // every anonymous POS order.
+        When(command => !command.IsGuestOrder && command.Source != OrderSource.Pos, () =>
         {
             RuleFor(command => command.UserId).NotEmpty();
             RuleFor(command => command.UserName).NotEmpty();

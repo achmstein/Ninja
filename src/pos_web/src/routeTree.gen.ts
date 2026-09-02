@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedReceiptsRouteImport } from './routes/_authenticated/receipts'
 import { Route as AuthenticatedSaleRouteImport } from './routes/_authenticated/sale'
 import { Route as AuthenticatedShiftRouteImport } from './routes/_authenticated/shift'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -37,6 +38,11 @@ const authSignedOutRoute = authSignedOutRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReceiptsRoute = AuthenticatedReceiptsRouteImport.update({
+  id: '/receipts',
+  path: '/receipts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSaleRoute = AuthenticatedSaleRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
+  '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
+  '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/signed-out': typeof authSignedOutRoute
+  '/_authenticated/receipts': typeof AuthenticatedReceiptsRoute
   '/_authenticated/sale': typeof AuthenticatedSaleRoute
   '/_authenticated/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/signed-out'
+    | '/receipts'
     | '/sale'
     | '/shift'
     | '/auth/callback'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
   to:
     | '/sign-in'
     | '/signed-out'
+    | '/receipts'
     | '/sale'
     | '/shift'
     | '/auth/callback'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/(auth)/sign-in'
     | '/(auth)/signed-out'
+    | '/_authenticated/receipts'
     | '/_authenticated/sale'
     | '/_authenticated/shift'
     | '/auth/callback'
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/receipts': {
+      id: '/_authenticated/receipts'
+      path: '/receipts'
+      fullPath: '/receipts'
+      preLoaderRoute: typeof AuthenticatedReceiptsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sale': {
@@ -228,6 +247,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedReceiptsRoute: typeof AuthenticatedReceiptsRoute
   AuthenticatedSaleRoute: typeof AuthenticatedSaleRoute
   AuthenticatedShiftRoute: typeof AuthenticatedShiftRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -237,6 +257,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedReceiptsRoute: AuthenticatedReceiptsRoute,
   AuthenticatedSaleRoute: AuthenticatedSaleRoute,
   AuthenticatedShiftRoute: AuthenticatedShiftRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

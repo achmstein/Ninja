@@ -1,6 +1,7 @@
 namespace Chillax.Sales.UnitTests.Domain;
 
 using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+using Chillax.Sales.Domain.Events;
 using Chillax.Sales.Domain.Exceptions;
 using Chillax.Sales.Domain.SeedWork;
 
@@ -16,7 +17,7 @@ public class TicketAggregateTest
         ticket.AppendOrder(41, [Line("Latte", 2, 50)], loyaltyDiscount: 0);
 
         Assert.AreEqual(1, ticket.Lines.Count);
-        Assert.AreEqual(100m, ticket.GetTotal());
+        Assert.AreEqual(100m, ticket.GetSubtotal());
     }
 
     [TestMethod]
@@ -27,20 +28,131 @@ public class TicketAggregateTest
         ticket.AppendOrder(41, [Line("Latte", 2, 50)], loyaltyDiscount: 25);
 
         Assert.AreEqual(2, ticket.Lines.Count);
-        Assert.AreEqual(75m, ticket.GetTotal());
+        Assert.AreEqual(75m, ticket.GetSubtotal());
     }
 
     [TestMethod]
     public void Session_time_lands_exactly_once_and_skips_empty_modes()
     {
-        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, customerId: "u1", customerName: "Nadia");
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
 
         ticket.AppendSessionTime(singleHours: 2.5m, singleCost: 125, multiHours: 0, multiCost: 0);
         ticket.AppendSessionTime(singleHours: 2.5m, singleCost: 125, multiHours: 0, multiCost: 0);
 
         Assert.AreEqual(1, ticket.Lines.Count);
-        Assert.AreEqual(125m, ticket.GetTotal());
+        Assert.AreEqual(125m, ticket.GetSubtotal());
         Assert.AreEqual(2.5m, ticket.Lines.First().Qty);
+    }
+
+    [TestMethod]
+    public void Session_time_is_the_owner_s_line()
+    {
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+
+        ticket.AppendSessionTime(singleHours: 2m, singleCost: 100, multiHours: 0, multiCost: 0, customerId: "u1", customerName: "Nadia");
+
+        // The room's time can go on its owner's tab at settle like any of her items
+        var time = ticket.Lines.Single();
+        Assert.AreEqual("u1", time.CustomerId);
+        Assert.AreEqual("Nadia", time.CustomerName);
+    }
+
+    [TestMethod]
+    public void A_counter_tab_is_named_not_owned()
+    {
+        var ticket = Ticket.OpenForCounter(branchId: 1, label: "  Sara ");
+
+        Assert.AreEqual("Sara", ticket.Label);
+        Assert.IsNull(Ticket.OpenForCounter(branchId: 1, label: " ").Label);
+    }
+
+    [TestMethod]
+    public void Service_and_vat_price_the_bill_and_freeze_at_settle()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 2, 50)], 0);
+        var rules = new PricingRules(vatRate: 0.14m, pricesIncludeVat: false, serviceChargeRate: 0.12m);
+
+        var bill = ticket.GetBill(rules);
+
+        // 100 + 12% service = 112, + 14% VAT on that = 127.68
+        Assert.AreEqual(100m, bill.Subtotal);
+        Assert.AreEqual(12m, bill.ServiceCharge);
+        Assert.AreEqual(15.68m, bill.Vat);
+        Assert.AreEqual(127.68m, bill.Total);
+
+        ticket.Settle([new Payment(PaymentTender.Cash, 130, "cashier")], "cashier", rules: rules);
+
+        Assert.AreEqual(127.68m, ticket.Total);
+        Assert.AreEqual(2.32m, ticket.ChangeGiven);
+        // The rules moving later never move the receipt
+        Assert.AreEqual(127.68m, ticket.GetBill(PricingRules.None).Total);
+    }
+
+    [TestMethod]
+    public void Vat_inside_the_price_is_shown_not_added_and_a_counter_sale_is_not_served()
+    {
+        var ticket = TicketWith(total: 114);
+
+        var bill = ticket.GetBill(new PricingRules(0.14m, pricesIncludeVat: true, serviceChargeRate: 0.12m));
+
+        Assert.AreEqual(114m, bill.Total);
+        Assert.AreEqual(14m, bill.Vat);
+        Assert.AreEqual(0m, bill.ServiceCharge);
+    }
+
+    [TestMethod]
+    public void Room_time_carries_no_service_charge()
+    {
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+        ticket.AppendSessionTime(singleHours: 2m, singleCost: 100, multiHours: 0, multiCost: 0);
+        ticket.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+
+        var bill = ticket.GetBill(new PricingRules(0m, true, 0.10m));
+
+        Assert.AreEqual(5m, bill.ServiceCharge);
+        Assert.AreEqual(155m, bill.Total);
+    }
+
+    [TestMethod]
+    public void A_refund_gives_back_what_was_paid_for_the_line_and_never_more_than_the_receipt()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 2, 50)], 0);
+        ticket.Settle([new Payment(PaymentTender.Cash, 200, "cashier")], "cashier", rules: new PricingRules(0.14m, false, 0.12m));
+        var lineId = ticket.Lines.Single().Id;
+
+        // One of the two lattes: half the line's paid value, service and VAT included
+        var first = Refund.Issue(1, ticket, 9, [], [new RefundRequestLine(lineId, 1)], "Cold", PaymentTender.Cash, null, null, "owner", null);
+        Assert.AreEqual(63.84m, first.Amount);
+
+        // The other: exactly what is left of the receipt — and then nothing more
+        var second = Refund.Issue(2, ticket, 9, [first], [new RefundRequestLine(lineId, 1)], "Cold too", PaymentTender.Cash, null, null, "owner", null);
+        Assert.AreEqual(63.84m, second.Amount);
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(3, ticket, 9, [first, second], [new RefundRequestLine(lineId, 1)], "Again", PaymentTender.Cash, null, null, "owner", null));
+    }
+
+    [TestMethod]
+    public void A_refund_needs_a_settled_ticket_a_reason_and_a_tab_for_account_credit()
+    {
+        var open = TicketWith(total: 100);
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(1, open, 1, [], [new RefundRequestLine(0, 1)], "Wrong item", PaymentTender.Cash, null, null, "owner", null));
+
+        var settled = TicketWith(total: 100);
+        settled.Settle([new Payment(PaymentTender.Cash, 100, "cashier")], "cashier");
+        var lineId = settled.Lines.Single().Id;
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(1, settled, 1, [], [new RefundRequestLine(lineId, 1)], " ", PaymentTender.Cash, null, null, "owner", null));
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(1, settled, 1, [], [new RefundRequestLine(lineId, 1)], "Wrong item", PaymentTender.Account, null, null, "owner", null));
+
+        // Points come back per order in proportion to what came back
+        var refund = Refund.Issue(1, settled, 1, [], [new RefundRequestLine(lineId, 1)], "Wrong item", PaymentTender.Cash, null, null, "owner", null);
+        var (orderId, refunded) = refund.RefundedByOrder().Single();
+        Assert.AreEqual(1, orderId);
+        Assert.AreEqual(100m, refunded);
     }
 
     [TestMethod]
@@ -109,10 +221,51 @@ public class TicketAggregateTest
     [TestMethod]
     public void Room_tickets_cannot_be_split_by_moving_lines()
     {
-        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, customerId: "u1", customerName: null);
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         ticket.AppendOrder(41, [Line("Latte", 1, 50), Line("Mocha", 1, 60)], 0);
 
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.MoveLines([1]));
+    }
+
+    [TestMethod]
+    public void Lines_move_onto_another_open_ticket_and_may_empty_the_source()
+    {
+        var table = Ticket.OpenForTable(1, new LocalizedText("Table 1"), branchId: 1);
+        table.AppendOrder(41, [Line("Latte", 1, 50), Line("Mocha", 1, 60)], 0);
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+
+        // The customer ordered at the table, then took the room
+        table.MoveLinesTo(room, table.Lines.Select(l => l.Id).ToList());
+
+        Assert.AreEqual(0, table.Lines.Count);
+        Assert.AreEqual(2, room.Lines.Count);
+        Assert.AreEqual(110m, room.GetSubtotal());
+    }
+
+    [TestMethod]
+    public void Session_time_never_leaves_its_ticket()
+    {
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+        room.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
+        var counter = Ticket.OpenForCounter(branchId: 1);
+
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            room.MoveLinesTo(counter, room.Lines.Select(l => l.Id).ToList()));
+    }
+
+    [TestMethod]
+    public void Lines_only_move_within_a_branch_and_onto_open_tickets()
+    {
+        var source = TicketWith(total: 100);
+        var otherBranch = Ticket.OpenForCounter(branchId: 2);
+        var settled = TicketWith(total: 50);
+        settled.Settle([new Payment(PaymentTender.Cash, 50, "cashier")], "cashier");
+        var ids = source.Lines.Select(l => l.Id).ToList();
+
+        Assert.ThrowsExactly<SalesDomainException>(() => source.MoveLinesTo(otherBranch, ids));
+        Assert.ThrowsExactly<SalesDomainException>(() => source.MoveLinesTo(settled, ids));
+        Assert.ThrowsExactly<SalesDomainException>(() => source.MoveLinesTo(source, ids));
+        Assert.AreEqual(1, source.Lines.Count);
     }
 
     [TestMethod]
@@ -141,6 +294,68 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
+    public void An_empty_ticket_can_be_discarded_and_still_nudges_the_floor()
+    {
+        var ticket = Ticket.OpenForCounter(branchId: 1);
+        ticket.ClearDomainEvents();
+
+        ticket.Discard();
+
+        // No tombstone: the row goes, and the only trace is the floor refetch
+        Assert.AreEqual(TicketStatus.Open, ticket.Status);
+        Assert.AreEqual(1, ticket.DomainEvents!.OfType<TicketChangedDomainEvent>().Count());
+    }
+
+    [TestMethod]
+    public void A_ticket_with_lines_cannot_be_discarded()
+    {
+        var ticket = TicketWith(total: 100);
+
+        // Something happened on it — that is what a void's reason is for
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.Discard());
+    }
+
+    [TestMethod]
+    public void Room_tickets_cannot_be_discarded()
+    {
+        // Empty only because the session is still running: its time lands at the end
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.Discard());
+    }
+
+    [TestMethod]
+    public void A_cancelled_session_drops_its_empty_room_ticket()
+    {
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+        ticket.ClearDomainEvents();
+
+        ticket.DiscardForCancelledSession();
+
+        Assert.AreEqual(1, ticket.DomainEvents!.OfType<TicketChangedDomainEvent>().Count());
+    }
+
+    [TestMethod]
+    public void A_cancelled_session_keeps_a_room_ticket_that_already_has_lines()
+    {
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+
+        // Orders were served: somebody settles or voids this, nobody loses it
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.DiscardForCancelledSession());
+    }
+
+    [TestMethod]
+    public void A_voided_ticket_cannot_be_discarded()
+    {
+        var ticket = Ticket.OpenForCounter(branchId: 1);
+        ticket.Void("opened twice", "owner");
+
+        // The void is on record now; deleting it would erase that record
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.Discard());
+    }
+
+    [TestMethod]
     public void Settle_records_the_shift_and_the_change_given()
     {
         var ticket = TicketWith(total: 100);
@@ -162,22 +377,25 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Account_tender_requires_an_attached_customer()
+    public void Account_tender_must_name_the_tab_it_charges()
     {
-        var anonymous = TicketWith(total: 100);
-
+        // The ticket it sits on is irrelevant: a charge lands on one account
+        // holder, and a payment that names nobody has no tab to charge
         Assert.ThrowsExactly<SalesDomainException>(() =>
-            anonymous.Settle([new Payment(PaymentTender.Account, 100, "cashier")], "cashier"));
+            new Payment(PaymentTender.Account, 100, "cashier"));
     }
 
     [TestMethod]
-    public void Account_tender_settles_a_customer_ticket()
+    public void Account_tender_settles_against_the_payment_s_own_customer()
     {
-        var ticket = Ticket.OpenForCounter(branchId: 1, customerId: "u1", customerName: "Nadia");
+        var ticket = Ticket.OpenForCounter(branchId: 1, label: "Nadia");
         ticket.AppendOrder(1, [Line("Item", 1, 100)], 0);
 
         var change = ticket.Settle(
-            [new Payment(PaymentTender.Account, 60, "cashier"), new Payment(PaymentTender.Cash, 40, "cashier")],
+            [
+                new Payment(PaymentTender.Account, 60, "cashier", "u1", "Nadia"),
+                new Payment(PaymentTender.Cash, 40, "cashier"),
+            ],
             "cashier");
 
         Assert.AreEqual(0m, change);
@@ -185,16 +403,41 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
+    public void A_shared_bill_can_charge_several_tabs()
+    {
+        // Ahmed's share on his tab, Sara's on hers, the rest in cash — one
+        // ticket, one receipt, two accounts
+        var ticket = TicketWith(total: 160);
+
+        var change = ticket.Settle(
+            [
+                new Payment(PaymentTender.Account, 60, "cashier", "u-ahmed", "Ahmed"),
+                new Payment(PaymentTender.Account, 35, "cashier", "u-sara", "Sara"),
+                new Payment(PaymentTender.Cash, 65, "cashier"),
+            ],
+            "cashier");
+
+        Assert.AreEqual(0m, change);
+        Assert.AreEqual(TicketStatus.Settled, ticket.Status);
+        CollectionAssert.AreEquivalent(
+            new[] { "u-ahmed", "u-sara" },
+            ticket.Payments
+                .Where(p => p.Tender == PaymentTender.Account)
+                .Select(p => p.CustomerId)
+                .ToArray());
+    }
+
+    [TestMethod]
     public void Non_cash_tenders_can_never_exceed_the_total()
     {
         // Account 150 + cash 10 on a 100 ticket would hand back 60 "change"
         // paid for out of the customer's own tab
-        var ticket = Ticket.OpenForCounter(branchId: 1, customerId: "u1", customerName: "Nadia");
+        var ticket = Ticket.OpenForCounter(branchId: 1, label: "Nadia");
         ticket.AppendOrder(1, [Line("Item", 1, 100)], 0);
 
         Assert.ThrowsExactly<SalesDomainException>(() =>
             ticket.Settle(
-                [new Payment(PaymentTender.Account, 150, "cashier"), new Payment(PaymentTender.Cash, 10, "cashier")],
+                [new Payment(PaymentTender.Account, 150, "cashier", "u1", "Nadia"), new Payment(PaymentTender.Cash, 10, "cashier")],
                 "cashier"));
     }
 

@@ -7,7 +7,8 @@ public record AddManualLineCommand(
     decimal Qty,
     decimal UnitPrice,
     decimal Discount,
-    string AddedBy) : IRequest<bool>;
+    string AddedBy,
+    string? CustomerName = null) : IRequest<bool>;
 
 public class AddManualLineCommandHandler(
     ITicketRepository ticketRepository,
@@ -18,7 +19,7 @@ public class AddManualLineCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
-        ticket.AddManualLine(command.Description, command.Qty, command.UnitPrice, command.Discount, command.AddedBy);
+        ticket.AddManualLine(command.Description, command.Qty, command.UnitPrice, command.Discount, command.AddedBy, command.CustomerName);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

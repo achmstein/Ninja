@@ -30,7 +30,7 @@ export function StartReservedDialog({
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
-  const [playerMode, setPlayerMode] = useState<PlayerMode | null>(null)
+  const [playerMode, setPlayerMode] = useState<PlayerMode>('Single')
 
   const startSession = useMutation({
     ...startSessionMutation(),
@@ -40,7 +40,7 @@ export function StartReservedDialog({
         queryKey: [{ _id: 'getActiveSessions' }],
       })
       toast.success(t('sessionStarted'))
-      setPlayerMode(null)
+      setPlayerMode('Single')
       onOpenChange(false)
     },
     onError: () => toast.error(t('failedToStartSession')),
@@ -63,11 +63,10 @@ export function StartReservedDialog({
         </DialogHeader>
 
         <div className='space-y-2 py-2'>
-          <Label>{t('playerModeOptional')}</Label>
+          <Label>{t('playerMode')}</Label>
           <PlayerModeToggle
             value={playerMode}
-            onChange={setPlayerMode}
-            allowNone
+            onChange={(mode) => mode && setPlayerMode(mode)}
           />
         </div>
 

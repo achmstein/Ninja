@@ -59,7 +59,7 @@ export const createPosOrder = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Confirm order (admin) - sends to POS
+ * Confirm a submitted order (staff) - lands it on the ticket
  */
 export const confirmOrder = <ThrowOnError extends boolean = false>(options: Options<ConfirmOrderData, ThrowOnError>): RequestResult<ConfirmOrderResponses, ConfirmOrderErrors, ThrowOnError> => (options.client ?? client).put<ConfirmOrderResponses, ConfirmOrderErrors, ThrowOnError>({
     url: '/api/orders/confirm',
@@ -71,7 +71,7 @@ export const confirmOrder = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Cancel a submitted order
+ * Cancel a submitted order (staff)
  */
 export const cancelOrder = <ThrowOnError extends boolean = false>(options: Options<CancelOrderData, ThrowOnError>): RequestResult<CancelOrderResponses, CancelOrderErrors, ThrowOnError> => (options.client ?? client).put<CancelOrderResponses, CancelOrderErrors, ThrowOnError>({
     url: '/api/orders/cancel',
@@ -113,7 +113,7 @@ export const rateOrder = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * Get all pending orders (admin)
+ * Pending orders for the branch (staff)
  */
 export const getPendingOrders = <ThrowOnError extends boolean = false>(options: Options<GetPendingOrdersData, ThrowOnError>): RequestResult<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError>({
     responseType: 'json',

@@ -7,6 +7,12 @@ public interface ITicketQueries
 {
     Task<IEnumerable<TicketSummary>> GetOpenTicketsAsync(int branchId);
 
+    /// <summary>
+    /// Settled bills for the branch, newest receipt first — the way back to
+    /// a bill after it left the floor. A receipt number narrows to that one.
+    /// </summary>
+    Task<IEnumerable<SettledTicketSummary>> GetSettledTicketsAsync(int branchId, int pageIndex, int pageSize, int? receiptNumber);
+
     Task<TicketDetail?> GetTicketAsync(int ticketId);
 
     /// <summary>
@@ -22,6 +28,9 @@ public interface ITicketQueries
     /// The caller picks the window (the branch business day, a shift, a week).
     /// </summary>
     Task<RangeReport> GetRangeReportAsync(int branchId, DateTime from, DateTime to);
+
+    /// <summary>The branch's pricing rules, defaults when it never set any.</summary>
+    Task<PricingView> GetPricingAsync(int branchId);
 }
 
 public class TicketQueries(SalesContext context) : ITicketQueries
@@ -34,6 +43,8 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .OrderBy(t => t.OpenedAt)
             .ToListAsync();
 
+        var rules = await RulesForAsync(branchId);
+
         // Lines auto-include; totals come from the aggregate so the floor
         // and the settle dialog can never disagree on the math
         return tickets.Select(t => new TicketSummary
@@ -45,12 +56,55 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             SessionId = t.SessionId,
             RoomId = t.RoomId,
             TableId = t.TableId,
-            CustomerName = t.CustomerName,
+            Label = t.Label,
             OpenedAt = t.OpenedAt,
             LastActivityAt = t.LastActivityAt,
             LineCount = t.Lines.Count,
-            Total = t.GetTotal(),
+            Total = t.GetBill(rules).Total,
         });
+    }
+
+    public async Task<IEnumerable<SettledTicketSummary>> GetSettledTicketsAsync(int branchId, int pageIndex, int pageSize, int? receiptNumber)
+    {
+        // Receipts are the index: one per settled ticket, numbered in order
+        var receipts = context.Receipts.AsNoTracking().Where(r => r.BranchId == branchId);
+
+        if (receiptNumber is int number)
+            receipts = receipts.Where(r => r.Number == number);
+
+        var page = await receipts
+            .OrderByDescending(r => r.Number)
+            .Skip(Math.Max(0, pageIndex) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var ticketIds = page.Select(r => r.TicketId).ToList();
+
+        var tickets = await context.Tickets
+            .AsNoTracking()
+            .Where(t => ticketIds.Contains(t.Id))
+            .ToListAsync();
+
+        var refunded = await context.Refunds
+            .AsNoTracking()
+            .Where(r => ticketIds.Contains(r.TicketId))
+            .GroupBy(r => r.TicketId)
+            .Select(g => new { TicketId = g.Key, Amount = g.Sum(r => r.Amount) })
+            .ToDictionaryAsync(x => x.TicketId, x => x.Amount);
+
+        return page
+            .Select(r => (Receipt: r, Ticket: tickets.FirstOrDefault(t => t.Id == r.TicketId)))
+            .Where(x => x.Ticket is not null)
+            .Select(x => new SettledTicketSummary(
+                x.Ticket!.Id,
+                x.Receipt.Number,
+                x.Ticket.Type.ToString(),
+                x.Ticket.LocationName,
+                x.Ticket.Label,
+                x.Ticket.SettledAt ?? x.Receipt.IssuedAt,
+                x.Ticket.Total,
+                refunded.GetValueOrDefault(x.Ticket.Id)))
+            .ToList();
     }
 
     public async Task<int?> FindTicketIdByOrderAsync(int orderId)
@@ -78,12 +132,22 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                         && t.SettledAt >= from && t.SettledAt < to)
             .ToListAsync();
 
+        var refunds = await context.Refunds
+            .AsNoTracking()
+            .Where(r => r.BranchId == branchId && r.RefundedAt >= from && r.RefundedAt < to)
+            .ToListAsync();
+
         return new RangeReport
         {
             From = from,
             To = to,
             TicketsSettled = tickets.Count,
-            Net = tickets.Sum(t => t.GetTotal()),
+            Net = tickets.Sum(t => t.Total),
+            Subtotal = tickets.Sum(t => t.Subtotal),
+            ServiceCharge = tickets.Sum(t => t.ServiceCharge),
+            Vat = tickets.Sum(t => t.Vat),
+            Refunds = refunds.Sum(r => r.Amount),
+            RefundCount = refunds.Count,
             // Line discounts plus loyalty (negative) lines, reported positive
             Discounts = tickets
                 .SelectMany(t => t.Lines)
@@ -97,7 +161,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 .ToList(),
             ByType = tickets
                 .GroupBy(t => t.Type)
-                .Select(g => new TypeTotal(g.Key.ToString(), g.Count(), g.Sum(t => t.GetTotal())))
+                .Select(g => new TypeTotal(g.Key.ToString(), g.Count(), g.Sum(t => t.Total)))
                 .OrderBy(t => t.Type)
                 .ToList(),
         };
@@ -116,6 +180,14 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.TicketId == ticketId);
 
+        var bill = ticket.GetBill(await RulesForAsync(ticket.BranchId));
+
+        var refunds = await context.Refunds
+            .AsNoTracking()
+            .Where(r => r.TicketId == ticketId)
+            .OrderBy(r => r.Number)
+            .ToListAsync();
+
         return new TicketDetail
         {
             Id = ticket.Id,
@@ -126,8 +198,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             SessionId = ticket.SessionId,
             RoomId = ticket.RoomId,
             TableId = ticket.TableId,
-            CustomerId = ticket.CustomerId,
-            CustomerName = ticket.CustomerName,
+            Label = ticket.Label,
             GuestPhone = ticket.GuestPhone,
             OpenedAt = ticket.OpenedAt,
             LastActivityAt = ticket.LastActivityAt,
@@ -150,16 +221,52 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 Discount = l.Discount,
                 Total = l.Total,
                 AddedBy = l.AddedBy,
+                CustomerName = l.CustomerName,
+                CustomerId = l.CustomerId,
+                GuestId = l.GuestId,
             }).ToList(),
             Payments = ticket.Payments.Select(p => new PaymentView
             {
                 Tender = p.Tender.ToString(),
                 Amount = p.Amount,
+                CustomerName = p.CustomerName,
+                CustomerId = p.CustomerId,
                 RecordedBy = p.RecordedBy,
                 RecordedAt = p.RecordedAt,
             }).ToList(),
-            Total = ticket.GetTotal(),
+            Total = bill.Total,
+            Subtotal = bill.Subtotal,
+            ServiceCharge = bill.ServiceCharge,
+            Vat = bill.Vat,
+            VatIncluded = bill.VatIncluded,
+            VatRate = bill.VatRate,
+            ServiceChargeRate = bill.ServiceChargeRate,
+            Refunds = refunds.Select(ToView).ToList(),
+            RefundedTotal = refunds.Sum(r => r.Amount),
             ReceiptNumber = receipt?.Number,
         };
     }
+
+    public async Task<PricingView> GetPricingAsync(int branchId)
+    {
+        var rules = await RulesForAsync(branchId);
+        return new PricingView(branchId, rules.VatRate, rules.PricesIncludeVat, rules.ServiceChargeRate);
+    }
+
+    private async Task<PricingRules> RulesForAsync(int branchId)
+    {
+        var pricing = await context.BranchPricings.AsNoTracking().FirstOrDefaultAsync(p => p.BranchId == branchId);
+        return pricing?.Rules ?? PricingRules.None;
+    }
+
+    private static RefundView ToView(Refund refund) => new(
+        refund.Id,
+        refund.Number,
+        refund.Amount,
+        refund.Reason,
+        refund.Tender.ToString(),
+        refund.CustomerName,
+        refund.RefundedBy,
+        refund.RefundedAt,
+        refund.Lines.Select(l => new RefundLineView(l.TicketLineId, l.Description, l.Qty, l.Amount)).ToList());
 }

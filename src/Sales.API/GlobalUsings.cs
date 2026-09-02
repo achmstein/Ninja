@@ -1,5 +1,8 @@
 global using Asp.Versioning;
 global using Asp.Versioning.Conventions;
+global using Chillax.IntegrationEventLogEF.Services;
+global using Chillax.Sales.API.Application.Behaviors;
+global using Chillax.Sales.API.Application.IntegrationEvents;
 global using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
 global using Chillax.Sales.Domain.Exceptions;
 global using Chillax.Sales.Domain.SeedWork;

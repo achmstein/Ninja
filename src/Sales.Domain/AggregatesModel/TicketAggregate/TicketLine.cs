@@ -31,6 +31,28 @@ public class TicketLine : Entity
     /// <summary>Who keyed a manual line in; null for event-sourced lines.</summary>
     public string? AddedBy { get; private set; }
 
+    /// <summary>
+    /// Whose items these are, when a table's bill is shared. One "add items"
+    /// run is one order for one person, so a line inherits the customer the
+    /// cashier attached to it. Null means nobody was named — the line belongs
+    /// to the table at large.
+    /// </summary>
+    public string? CustomerName { get; private set; }
+
+    /// <summary>
+    /// The account behind <see cref="CustomerName"/>, when the name came from
+    /// an attached customer rather than one the till was simply told. It is
+    /// what lets settle offer "put Ahmed's share on Ahmed's tab".
+    /// </summary>
+    public string? CustomerId { get; private set; }
+
+    /// <summary>
+    /// The guest id Ordering minted for a customer with no account, so one
+    /// guest's lines group together the way an account holder's do. A key
+    /// for reading and splitting the bill — never a tab to charge.
+    /// </summary>
+    public string? GuestId { get; private set; }
+
     public decimal Total => Qty * UnitPrice - Discount;
 
     protected TicketLine() { }
@@ -43,7 +65,10 @@ public class TicketLine : Entity
         decimal discount = 0,
         int? orderId = null,
         LocalizedText? details = null,
-        string? addedBy = null)
+        string? addedBy = null,
+        string? customerName = null,
+        string? customerId = null,
+        string? guestId = null)
     {
         if (string.IsNullOrWhiteSpace(description.En))
             throw new SalesDomainException("A ticket line needs a description");
@@ -55,6 +80,9 @@ public class TicketLine : Entity
             throw new SalesDomainException("A line discount cannot be negative");
 
         Source = source;
+        CustomerName = string.IsNullOrWhiteSpace(customerName) ? null : customerName.Trim();
+        CustomerId = string.IsNullOrWhiteSpace(customerId) ? null : customerId;
+        GuestId = string.IsNullOrWhiteSpace(guestId) ? null : guestId;
         Description = description;
         Details = details;
         Qty = qty;

@@ -112,7 +112,7 @@ export const reserveRoom = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Start a session
  *
- * Start the timer for a reserved session (Admin only)
+ * Start the timer for a reserved session (staff)
  */
 export const startSession = <ThrowOnError extends boolean = false>(options: Options<StartSessionData, ThrowOnError>): RequestResult<StartSessionResponses, StartSessionErrors, ThrowOnError> => (options.client ?? client).post<StartSessionResponses, StartSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/start',
@@ -126,21 +126,21 @@ export const startSession = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * End a session
  *
- * End the session and calculate cost (Admin only)
+ * End the session and calculate cost (staff)
  */
 export const endSession = <ThrowOnError extends boolean = false>(options: Options<EndSessionData, ThrowOnError>): RequestResult<EndSessionResponses, EndSessionErrors, ThrowOnError> => (options.client ?? client).post<EndSessionResponses, EndSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/end', ...options });
 
 /**
  * Cancel a session
  *
- * Cancel a reservation or active session (Admin only)
+ * Cancel a reservation or active session (staff)
  */
 export const cancelSession = <ThrowOnError extends boolean = false>(options: Options<CancelSessionData, ThrowOnError>): RequestResult<CancelSessionResponses, CancelSessionErrors, ThrowOnError> => (options.client ?? client).post<CancelSessionResponses, CancelSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/cancel', ...options });
 
 /**
  * Start a walk-in session
  *
- * Start a walk-in session without an assigned customer (Admin only)
+ * Start a walk-in session without an assigned customer (staff)
  */
 export const startWalkInSession = <ThrowOnError extends boolean = false>(options: Options<StartWalkInSessionData, ThrowOnError>): RequestResult<StartWalkInSessionResponses, StartWalkInSessionErrors, ThrowOnError> => (options.client ?? client).post<StartWalkInSessionResponses, StartWalkInSessionErrors, ThrowOnError>({
     responseType: 'json',
@@ -155,7 +155,7 @@ export const startWalkInSession = <ThrowOnError extends boolean = false>(options
 /**
  * Change player mode
  *
- * Change the player mode (Single/Multi) for an active session (Admin only)
+ * Change the player mode (Single/Multi) for an active session (staff)
  */
 export const changePlayerMode = <ThrowOnError extends boolean = false>(options: Options<ChangePlayerModeData, ThrowOnError>): RequestResult<ChangePlayerModeResponses, ChangePlayerModeErrors, ThrowOnError> => (options.client ?? client).put<ChangePlayerModeResponses, ChangePlayerModeErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/player-mode',
@@ -194,7 +194,7 @@ export const getMySessions = <ThrowOnError extends boolean = false>(options?: Op
 /**
  * Get active sessions
  *
- * Get all currently active sessions (Admin only)
+ * Get all currently active sessions (staff)
  */
 export const getActiveSessions = <ThrowOnError extends boolean = false>(options?: Options<GetActiveSessionsData, ThrowOnError>): RequestResult<GetActiveSessionsResponses, GetActiveSessionsErrors, ThrowOnError> => (options?.client ?? client).get<GetActiveSessionsResponses, GetActiveSessionsErrors, ThrowOnError>({
     responseType: 'json',
@@ -205,7 +205,7 @@ export const getActiveSessions = <ThrowOnError extends boolean = false>(options?
 /**
  * Assign a customer to a walk-in session
  *
- * Assign a customer to an active walk-in session that has no owner (Admin only)
+ * Assign a customer to an active walk-in session that has no owner (staff)
  */
 export const assignCustomerToSession = <ThrowOnError extends boolean = false>(options: Options<AssignCustomerToSessionData, ThrowOnError>): RequestResult<AssignCustomerToSessionResponses, AssignCustomerToSessionErrors, ThrowOnError> => (options.client ?? client).post<AssignCustomerToSessionResponses, AssignCustomerToSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/assign-customer',
@@ -219,7 +219,7 @@ export const assignCustomerToSession = <ThrowOnError extends boolean = false>(op
 /**
  * Add a member to a session
  *
- * Add a customer as a member to an active session (Admin only)
+ * Add a customer as a member to an active session (staff)
  */
 export const addMemberToSession = <ThrowOnError extends boolean = false>(options: Options<AddMemberToSessionData, ThrowOnError>): RequestResult<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError> => (options.client ?? client).post<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/members',
@@ -233,7 +233,7 @@ export const addMemberToSession = <ThrowOnError extends boolean = false>(options
 /**
  * Remove a member from a session
  *
- * Remove a non-owner member from an active session (Admin only)
+ * Remove a non-owner member from an active session (staff)
  */
 export const removeMemberFromSession = <ThrowOnError extends boolean = false>(options: Options<RemoveMemberFromSessionData, ThrowOnError>): RequestResult<RemoveMemberFromSessionResponses, RemoveMemberFromSessionErrors, ThrowOnError> => (options.client ?? client).delete<RemoveMemberFromSessionResponses, RemoveMemberFromSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/members/{customerId}', ...options });
 

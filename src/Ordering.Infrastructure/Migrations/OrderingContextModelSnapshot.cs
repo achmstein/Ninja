@@ -165,6 +165,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<int?>("TableId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId");

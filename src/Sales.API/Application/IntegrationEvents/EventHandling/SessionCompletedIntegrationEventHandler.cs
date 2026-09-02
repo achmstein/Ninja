@@ -11,10 +11,15 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class SessionCompletedIntegrationEventHandler(
     ITicketRepository ticketRepository,
+    SalesTransaction transaction,
     ILogger<SessionCompletedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<SessionCompletedIntegrationEvent>
 {
-    public async Task Handle(SessionCompletedIntegrationEvent @event)
+    // One transaction per event, its floor nudge published after the commit
+    public Task Handle(SessionCompletedIntegrationEvent @event)
+        => transaction.RunAsync(nameof(SessionCompletedIntegrationEvent), () => Assemble(@event));
+
+    private async Task Assemble(SessionCompletedIntegrationEvent @event)
     {
         var ticket = await ticketRepository.FindOpenBySessionAsync(@event.ReservationId);
 
@@ -26,14 +31,19 @@ public class SessionCompletedIntegrationEventHandler(
                 @event.ReservationId,
                 @event.RoomId,
                 @event.RoomName,
-                @event.BranchId,
-                @event.CustomerId,
-                customerName: null));
+                @event.BranchId));
 
             logger.LogWarning("No open ticket for completed session {SessionId} - opened one late", @event.ReservationId);
         }
 
-        ticket.AppendSessionTime(@event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
+        // The time is the owner's: it lands with their account, so a room
+        // that only bought time can still go on their tab at settle. Their
+        // name is the label the ticket opened with — the one snapshot of it
+        // Sales holds.
+        ticket.AppendSessionTime(
+            @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost,
+            customerId: @event.CustomerId,
+            customerName: ticket.Label);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
 

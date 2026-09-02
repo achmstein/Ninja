@@ -5,18 +5,26 @@ using Chillax.Sales.API.Application.IntegrationEvents.Events;
 namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// A confirmed order lands on the right ticket:
+/// A confirmed order lands on the right ticket: the one it names (a cashier
+/// adding items to a bill already on the floor),
 /// its session's (opened lazily if Sales missed the start), its table's
 /// (opened lazily by the first order — Q7: one open ticket per table), or a
 /// fresh counter ticket for a POS sale or an order-ahead paid at the counter.
-/// Idempotent per order via <see cref="Ticket.AppendOrder"/>.
+/// Idempotent per order: a redelivery is dropped when any ticket already
+/// carries the order — its lines may have moved since they landed — and
+/// <see cref="Ticket.AppendOrder"/> guards the ticket itself besides.
 /// </summary>
 public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     ITicketRepository ticketRepository,
+    SalesTransaction transaction,
     ILogger<OrderStatusChangedToConfirmedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStatusChangedToConfirmedIntegrationEvent>
 {
-    public async Task Handle(OrderStatusChangedToConfirmedIntegrationEvent @event)
+    // One transaction per event, its floor nudge published after the commit
+    public Task Handle(OrderStatusChangedToConfirmedIntegrationEvent @event)
+        => transaction.RunAsync(nameof(OrderStatusChangedToConfirmedIntegrationEvent), () => Assemble(@event));
+
+    private async Task Assemble(OrderStatusChangedToConfirmedIntegrationEvent @event)
     {
         // Events published before Ordering carried the breakdown have no
         // items; there is nothing to bill from them
@@ -26,7 +34,30 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             return;
         }
 
+        // At-least-once delivery, checked across every ticket rather than the
+        // one this order would land on: once its lines were moved to another
+        // bill, a redelivered confirmation would otherwise re-append them
+        // where they first landed
+        if (await ticketRepository.HasOrderAsync(@event.OrderId))
+        {
+            logger.LogInformation("Order {OrderId} is already on a ticket - redelivery ignored", @event.OrderId);
+            return;
+        }
+
         var ticket = await ResolveTicketAsync(@event);
+
+        // Whose items these are, so a shared table bill can be read (and
+        // split) per person. Ordering sends null when nobody was named, so an
+        // anonymous counter add stays untagged instead of being labelled
+        // "Walk-in", which reads like a person and is not one.
+        var lineCustomer = @event.CustomerName;
+
+        // The account behind the name, when there is one. A name the till was
+        // simply told has none — it can be grouped and read, but no tab can be
+        // charged for it.
+        var lineCustomerId = string.IsNullOrEmpty(@event.BuyerIdentityGuid)
+            ? null
+            : @event.BuyerIdentityGuid;
 
         // AppendOrder stamps the order id on every line itself
         var lines = @event.Items.Select(i => new TicketLine(
@@ -35,13 +66,15 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             qty: i.Units,
             unitPrice: i.UnitPrice,
             discount: i.Discount,
-            details: i.CustomizationsDescription)).ToList();
+            details: i.CustomizationsDescription,
+            customerName: lineCustomer,
+            customerId: lineCustomerId,
+            guestId: @event.GuestId)).ToList();
 
         ticket.AppendOrder(
             @event.OrderId,
             lines,
             @event.LoyaltyDiscount,
-            customerName: string.IsNullOrWhiteSpace(@event.BuyerName) ? null : @event.BuyerName,
             guestPhone: @event.GuestPhone);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
@@ -53,19 +86,35 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
     private async Task<Ticket> ResolveTicketAsync(OrderStatusChangedToConfirmedIntegrationEvent @event)
     {
+        // The cashier rang this up against a bill that is already on the
+        // floor, so there is nothing to infer. Only an open ticket in the same
+        // branch counts: a settled or voided one (or a stale id) falls through
+        // to the routing below rather than losing the order.
+        if (@event.TicketId is int ticketId)
+        {
+            var named = await ticketRepository.GetAsync(ticketId);
+
+            if (named is not null && named.Status == TicketStatus.Open && named.BranchId == @event.BranchId)
+                return named;
+
+            logger.LogWarning(
+                "Order {OrderId} named ticket {TicketId}, which is not open in branch {BranchId} — falling back to destination routing",
+                @event.OrderId, ticketId, @event.BranchId);
+        }
+
         if (@event.SessionId is int sessionId)
         {
             var sessionTicket = await ticketRepository.FindOpenBySessionAsync(sessionId);
 
             // The session may predate Sales (or its start event was lost) —
             // the order still has to land somewhere, so open the ticket now
+            // Unlabelled: whoever ordered is not necessarily who the session
+            // was opened for
             return sessionTicket ?? ticketRepository.Add(Ticket.OpenForSession(
                 sessionId,
                 @event.RoomId ?? 0,
                 @event.RoomName ?? new LocalizedText("Room"),
-                @event.BranchId,
-                string.IsNullOrEmpty(@event.BuyerIdentityGuid) ? null : @event.BuyerIdentityGuid,
-                @event.BuyerName));
+                @event.BranchId));
         }
 
         if (@event.TableId is int tableId)
@@ -76,10 +125,9 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         }
 
         // No destination: a counter sale keyed at the POS, or an order-ahead
-        // that gets paid at the counter — either way its own one-shot ticket
-        return ticketRepository.Add(Ticket.OpenForCounter(
-            @event.BranchId,
-            string.IsNullOrEmpty(@event.BuyerIdentityGuid) ? null : @event.BuyerIdentityGuid,
-            string.IsNullOrWhiteSpace(@event.BuyerName) ? null : @event.BuyerName));
+        // that gets paid at the counter — either way its own one-shot ticket,
+        // named after whoever it is for when somebody was named. The account
+        // behind that name is on the lines, where settle looks for it.
+        return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, @event.CustomerName));
     }
 }

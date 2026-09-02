@@ -24,6 +24,10 @@ public record ShiftView
     public decimal SalesTotal { get; init; }
     public List<TenderTotal> TenderTotals { get; init; } = [];
     public decimal ChangeGiven { get; init; }
+    /// <summary>Credit notes issued during the shift, all tenders.</summary>
+    public decimal RefundsTotal { get; init; }
+    /// <summary>The part of those that left the drawer as cash.</summary>
+    public decimal CashRefunds { get; init; }
     public decimal PayInsTotal { get; init; }
     public decimal PayOutsTotal { get; init; }
     /// <summary>Live drawer expectation; equals ExpectedCash once closed.</summary>
@@ -51,6 +55,13 @@ public record RangeReport
     public decimal ChangeGiven { get; init; }
     public List<TenderTotal> TenderTotals { get; init; } = [];
     public List<TypeTotal> ByType { get; init; } = [];
+    /// <summary>Menu money of the settled tickets, before service charge and VAT.</summary>
+    public decimal Subtotal { get; init; }
+    public decimal ServiceCharge { get; init; }
+    public decimal Vat { get; init; }
+    /// <summary>Credit notes issued in the window, all tenders — not netted out of <see cref="Net"/>.</summary>
+    public decimal Refunds { get; init; }
+    public int RefundCount { get; init; }
 }
 
 public record TypeTotal(string Type, int Count, decimal Net);

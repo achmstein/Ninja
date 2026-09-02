@@ -15,6 +15,9 @@ public class TicketRepository : ITicketRepository
     public Ticket Add(Ticket ticket)
         => _context.Tickets.Add(ticket).Entity;
 
+    public void Remove(Ticket ticket)
+        => _context.Tickets.Remove(ticket);
+
     public async Task<Ticket?> GetAsync(int ticketId)
         => await _context.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);
 
@@ -25,6 +28,9 @@ public class TicketRepository : ITicketRepository
     public async Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId)
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.TableId == tableId && t.BranchId == branchId && t.Status == TicketStatus.Open);
+
+    public async Task<bool> HasOrderAsync(int orderId)
+        => await _context.Tickets.AnyAsync(t => t.Lines.Any(l => l.OrderId == orderId));
 
     public Receipt AddReceipt(Receipt receipt)
         => _context.Receipts.Add(receipt).Entity;
@@ -39,4 +45,37 @@ public class TicketRepository : ITicketRepository
 
     public async Task<Receipt?> FindReceiptByTicketAsync(int ticketId)
         => await _context.Receipts.FirstOrDefaultAsync(r => r.TicketId == ticketId);
+
+    public async Task<PricingRules> GetPricingRulesAsync(int branchId)
+        => (await _context.BranchPricings.AsNoTracking().FirstOrDefaultAsync(p => p.BranchId == branchId))?.Rules
+           ?? PricingRules.None;
+
+    public async Task<BranchPricing?> FindPricingAsync(int branchId)
+        => await _context.BranchPricings.FirstOrDefaultAsync(p => p.BranchId == branchId);
+
+    public BranchPricing AddPricing(BranchPricing pricing)
+        => _context.BranchPricings.Add(pricing).Entity;
+
+    public Refund AddRefund(Refund refund)
+        => _context.Refunds.Add(refund).Entity;
+
+    public void RemoveRefund(Refund refund)
+    {
+        foreach (var line in refund.Lines)
+            _context.Entry(line).State = EntityState.Detached;
+
+        _context.Entry(refund).State = EntityState.Detached;
+    }
+
+    public async Task<int> GetLastRefundNumberAsync(int branchId)
+        => await _context.Refunds
+            .Where(r => r.BranchId == branchId)
+            .MaxAsync(r => (int?)r.Number) ?? 0;
+
+    public async Task<IReadOnlyCollection<Refund>> GetRefundsForTicketAsync(int ticketId)
+        => await _context.Refunds
+            .AsNoTracking()
+            .Where(r => r.TicketId == ticketId)
+            .OrderBy(r => r.Number)
+            .ToListAsync();
 }

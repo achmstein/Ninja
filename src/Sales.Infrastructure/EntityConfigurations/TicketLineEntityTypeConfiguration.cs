@@ -27,6 +27,11 @@ class TicketLineEntityTypeConfiguration : IEntityTypeConfiguration<TicketLine>
 
         builder.Property(l => l.AddedBy).HasMaxLength(64);
 
+        // Whose items these are on a shared table bill
+        builder.Property(l => l.CustomerName).HasMaxLength(128);
+        builder.Property(l => l.CustomerId).HasMaxLength(64);
+        builder.Property(l => l.GuestId).HasMaxLength(64);
+
         // AppendOrder's idempotency check walks a ticket's lines by order id
         builder.HasIndex(l => l.OrderId);
     }

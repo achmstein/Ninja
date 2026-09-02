@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MapPin, Pencil, Phone, Plus } from 'lucide-react'
+import { MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { useLocalized, useT } from '@/lib/i18n'
 import { type BranchResponse } from '@/api/branch'
@@ -17,12 +17,14 @@ import { Switch } from '@/components/ui/switch'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { BranchDialog } from './components/branch-dialog'
+import { PricingDialog } from './components/pricing-dialog'
 
 export function BranchesManagement() {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(null)
   const [editingBranch, setEditingBranch] = useState<BranchResponse | null>(
     null
   )
@@ -94,17 +96,27 @@ export function BranchesManagement() {
                         </Badge>
                       </div>
                     </div>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('editBranch')}
-                      onClick={() => {
-                        setEditingBranch(branch)
-                        setDialogOpen(true)
-                      }}
-                    >
-                      <Pencil className='h-4 w-4' />
-                    </Button>
+                    <div className='flex items-center'>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        aria-label={t('receiptPricing')}
+                        onClick={() => setPricingBranch(branch)}
+                      >
+                        <Receipt className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        aria-label={t('editBranch')}
+                        onClick={() => {
+                          setEditingBranch(branch)
+                          setDialogOpen(true)
+                        }}
+                      >
+                        <Pencil className='h-4 w-4' />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className='text-muted-foreground space-y-1 text-sm'>
@@ -156,6 +168,13 @@ export function BranchesManagement() {
           </div>
         )}
       </Main>
+
+      <PricingDialog
+        branch={pricingBranch}
+        onOpenChange={(open) => {
+          if (!open) setPricingBranch(null)
+        }}
+      />
 
       <BranchDialog
         open={dialogOpen}

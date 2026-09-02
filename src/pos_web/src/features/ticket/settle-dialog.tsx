@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
@@ -29,7 +28,13 @@ type PendingPayment = {
   tenderValue: number
   tenderName: TenderName
   amount: number
+  /** Whose tab an account payment charges. */
+  customerId?: string
+  customerName?: string
 }
+
+/** Someone on this bill with an account, and what their share comes to. */
+type AccountHolder = { id: string; name: string; subtotal: number }
 
 export type SettleOutcome = {
   receiptNumber: number
@@ -69,13 +74,33 @@ export function SettleDialog({
 
   const total = toNumber(ticket.total)
 
-  // Settling on account needs a tab to charge — anonymous tickets only get
-  // the cash/card/wallet tenders (the server enforces the same rule)
-  const tenders = ticket.customerId
-    ? [...BASE_TENDERS, ACCOUNT_TENDER]
-    : BASE_TENDERS
+  // Everyone on this bill who has an account, with their share. A shared
+  // table can put Ahmed's items on his tab and Sara's on hers, so the tab is
+  // chosen per payment rather than fixed to the ticket. A room's time is its
+  // owner's line, so a room that only bought time offers its owner's tab
+  // too. A name the till was simply told carries no account and cannot be
+  // charged.
+  const holders = new Map<string, AccountHolder>()
+  for (const line of ticket.lines ?? []) {
+    if (!line.customerId) continue
+    const id = String(line.customerId)
+    const holder = holders.get(id)
+    if (holder) holder.subtotal += toNumber(line.total)
+    else
+      holders.set(id, {
+        id,
+        name: line.customerName ?? '',
+        subtotal: toNumber(line.total),
+      })
+  }
+  const accountHolders = [...holders.values()]
+
+  // Settling on account needs a tab to charge (the server enforces it too)
+  const tenders =
+    accountHolders.length > 0 ? [...BASE_TENDERS, ACCOUNT_TENDER] : BASE_TENDERS
 
   const [payments, setPayments] = useState<PendingPayment[]>([])
+  const [accountHolder, setAccountHolder] = useState<AccountHolder | null>(null)
   const [tender, setTender] = useState(BASE_TENDERS[0])
   const [amountStr, setAmountStr] = useState('')
   const [result, setResult] = useState<SettledView | null>(null)
@@ -99,6 +124,7 @@ export function SettleDialog({
   useEffect(() => {
     if (!open) {
       setPayments([])
+      setAccountHolder(null)
       setTender(BASE_TENDERS[0])
       setAmountStr('')
       setResult(null)
@@ -114,6 +140,7 @@ export function SettleDialog({
         payments: (variables.body?.payments ?? []).map((p, i) => ({
           tender: payments[i]?.tenderName ?? 'Cash',
           amount: toNumber(p.amount),
+          customerName: payments[i]?.customerName,
         })),
       }
       setResult({
@@ -129,8 +156,22 @@ export function SettleDialog({
     },
   })
 
+  // One account holder needs no choosing
+  const chosenHolder =
+    accountHolder ?? (accountHolders.length === 1 ? accountHolders[0] : null)
+
+  // Tapping a person prefills their share, capped at what is still owed —
+  // the common case is "Ahmed's items go on Ahmed's tab"
+  const chooseHolder = (holder: AccountHolder) => {
+    setAccountHolder(holder)
+    const share = holder.subtotal > 0 ? Math.min(holder.subtotal, remaining) : remaining
+    setAmountStr(share > 0 ? String(+share.toFixed(2)) : '')
+  }
+
   const addPayment = () => {
     if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) return
+    // An account payment has to name the tab it charges
+    if (tender.name === 'Account' && !chosenHolder) return
     // Cash may exceed the remainder (change is given back); card, InstaPay
     // and account cannot — clamp them to what is actually owed (nobody gets
     // cash back out of their account tab).
@@ -141,9 +182,16 @@ export function SettleDialog({
     if (amount <= 0) return
     setPayments((prev) => [
       ...prev,
-      { tenderValue: tender.value, tenderName: tender.name, amount },
+      {
+        tenderValue: tender.value,
+        tenderName: tender.name,
+        amount,
+        customerId: tender.name === 'Account' ? chosenHolder?.id : undefined,
+        customerName: tender.name === 'Account' ? chosenHolder?.name : undefined,
+      },
     ])
     setAmountStr('')
+    setAccountHolder(null)
   }
 
   const removePayment = (index: number) =>
@@ -159,6 +207,8 @@ export function SettleDialog({
         payments: payments.map((p) => ({
           tender: p.tenderValue,
           amount: p.amount,
+          customerId: p.customerId ?? null,
+          customerName: p.customerName ?? null,
         })),
       },
     })
@@ -194,11 +244,6 @@ export function SettleDialog({
                 <div className='text-3xl font-bold tabular-nums'>
                   {money(result.accountAmount)}
                 </div>
-                {ticket.customerName && (
-                  <div className='text-muted-foreground mt-1 truncate text-sm'>
-                    {ticket.customerName}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -226,112 +271,154 @@ export function SettleDialog({
   }
 
   // ----- payment entry view -----
+  // Two columns from the sm breakpoint: how much and how on the start side
+  // (tender, amount, keypad), what has been taken and what is left on the
+  // end side — so the whole modal fits a tablet in landscape without a
+  // scrollbar. On a phone it stacks in the same order it always did.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle className='flex items-baseline justify-between gap-4 text-xl'>
+      <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
+        {/* Padded at the end so the total stops short of the close icon */}
+        <DialogHeader className='border-b px-5 py-3 pe-14'>
+          <DialogTitle className='flex items-baseline justify-between gap-4 text-lg'>
             <span>{t('settleTitle')}</span>
-            <span className='text-2xl font-bold tabular-nums'>
-              {money(total)}
-            </span>
+            <span className='text-xl font-bold tabular-nums'>{money(total)}</span>
           </DialogTitle>
         </DialogHeader>
 
-        {payments.length > 0 && (
-          <div className='grid gap-2'>
-            {payments.map((payment, index) => (
-              <div
-                key={index}
-                className='bg-accent/50 flex items-center justify-between rounded-lg px-3 py-2'
-              >
-                <Badge variant='secondary'>{tenderLabel(payment.tenderName)}</Badge>
-                <div className='flex items-center gap-1'>
-                  <span className='font-semibold tabular-nums'>
-                    {money(payment.amount)}
-                  </span>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='size-10'
-                    onClick={() => removePayment(index)}
-                  >
-                    <X className='size-4' />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Separator />
-          </div>
-        )}
-
-        <div
-          className={cn(
-            'grid gap-2',
-            tenders.length === 4 ? 'grid-cols-2' : 'grid-cols-3'
-          )}
-        >
-          {tenders.map((option) => (
-            <Button
-              key={option.value}
-              variant={tender.value === option.value ? 'default' : 'outline'}
-              className='h-12 text-base'
-              onClick={() => setTender(option)}
-            >
-              {t(option.labelKey)}
-            </Button>
-          ))}
-        </div>
-
-        <div
-          dir='ltr'
-          className='bg-muted flex h-16 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
-        >
-          {amountStr || '0'}
-        </div>
-
-        <NumericKeypad value={amountStr} onChange={setAmountStr} />
-
-        <Button
-          variant='secondary'
-          size='lg'
-          className='h-12 text-base'
-          disabled={!Number.isFinite(enteredAmount) || enteredAmount <= 0}
-          onClick={addPayment}
-        >
-          {t('addPayment')}
-        </Button>
-
-        <div className='grid gap-1 text-lg'>
-          <div className='flex items-center justify-between'>
-            <span className='text-muted-foreground'>{t('remaining')}</span>
-            <span
+        <div className='grid gap-4 p-4 sm:grid-cols-2'>
+          <div className='flex flex-col gap-3'>
+            <div
               className={cn(
-                'font-bold tabular-nums',
-                remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+                'grid gap-2',
+                tenders.length === 4 ? 'grid-cols-2' : 'grid-cols-3'
               )}
             >
-              {money(remaining)}
-            </span>
-          </div>
-          {changeDue > 0 && (
-            <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>{t('changeDue')}</span>
-              <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
-                {money(changeDue)}
-              </span>
+              {tenders.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={tender.value === option.value ? 'default' : 'outline'}
+                  className='h-11 text-base'
+                  onClick={() => setTender(option)}
+                >
+                  {t(option.labelKey)}
+                </Button>
+              ))}
             </div>
-          )}
-        </div>
 
-        <Button
-          size='lg'
-          className='h-14 w-full text-lg'
-          disabled={!canSettle}
-          onClick={doSettle}
-        >
-          {t('confirmSettle')}
-        </Button>
+            {/* Whose tab. Skipped when only one person on the bill has an
+                account — there is nothing to choose. */}
+            {tender.name === 'Account' && accountHolders.length > 1 && (
+              <div className='grid gap-2'>
+                <p className='text-muted-foreground text-sm'>{t('whoseAccount')}</p>
+                <div className='grid gap-2'>
+                  {accountHolders.map((holder) => (
+                    <Button
+                      key={holder.id}
+                      variant={
+                        chosenHolder?.id === holder.id ? 'default' : 'outline'
+                      }
+                      className='h-11 justify-between px-3 text-base'
+                      onClick={() => chooseHolder(holder)}
+                    >
+                      <span className='truncate'>{holder.name}</span>
+                      {holder.subtotal > 0 && (
+                        <span className='tabular-nums'>
+                          {money(holder.subtotal)}
+                        </span>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div
+              dir='ltr'
+              className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
+            >
+              {amountStr || '0'}
+            </div>
+
+            <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+            <Button
+              variant='secondary'
+              size='lg'
+              className='h-12 text-base'
+              disabled={!Number.isFinite(enteredAmount) || enteredAmount <= 0}
+              onClick={addPayment}
+            >
+              {t('addPayment')}
+            </Button>
+          </div>
+
+          <div className='flex flex-col gap-3'>
+            {payments.length > 0 ? (
+              <div className='grid gap-2'>
+                {payments.map((payment, index) => (
+                  <div
+                    key={index}
+                    className='bg-accent/50 flex items-center justify-between rounded-lg px-3 py-2'
+                  >
+                    <Badge variant='secondary'>
+                      {tenderLabel(payment.tenderName)}
+                      {payment.customerName && ` · ${payment.customerName}`}
+                    </Badge>
+                    <div className='flex items-center gap-1'>
+                      <span className='font-semibold tabular-nums'>
+                        {money(payment.amount)}
+                      </span>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='size-10'
+                        onClick={() => removePayment(index)}
+                      >
+                        <X className='size-4' />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className='text-muted-foreground hidden py-6 text-center text-sm sm:block'>
+                {t('noPaymentsYet')}
+              </p>
+            )}
+
+            <div className='mt-auto grid gap-1 text-lg'>
+              <div className='flex items-center justify-between'>
+                <span className='text-muted-foreground'>{t('remaining')}</span>
+                <span
+                  className={cn(
+                    'font-bold tabular-nums',
+                    remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+                  )}
+                >
+                  {money(remaining)}
+                </span>
+              </div>
+              {changeDue > 0 && (
+                <div className='flex items-center justify-between'>
+                  <span className='text-muted-foreground'>{t('changeDue')}</span>
+                  <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
+                    {money(changeDue)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Button
+              size='lg'
+              className='h-14 w-full text-lg'
+              disabled={!canSettle}
+              onClick={doSettle}
+            >
+              {t('confirmSettle')}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

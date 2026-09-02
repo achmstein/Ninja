@@ -15,6 +15,8 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Receipt> Receipts { get; set; }
     public DbSet<Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.Shift> Shifts { get; set; }
+    public DbSet<BranchPricing> BranchPricings { get; set; }
+    public DbSet<Refund> Refunds { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -38,6 +40,9 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new ReceiptEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ShiftEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CashMovementEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new BranchPricingEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new RefundEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new RefundLineEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

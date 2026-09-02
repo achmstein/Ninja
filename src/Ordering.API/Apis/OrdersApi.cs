@@ -36,15 +36,20 @@ public static partial class OrdersApi
             .WithDescription("A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.")
             .RequireAuthorization("Pos");
 
+        // Accepting a customer's order is the cashier's job as much as the
+        // admin's: the till shows the same pending queue the admin board does.
+        // "Pos" = Admin, Owner or Cashier. Stock was validated before the
+        // order ever became pending — this is the human "we are making it",
+        // and the last point at which a cancel is still possible.
         api.MapPut("/confirm", ConfirmOrderAsync)
             .WithName("ConfirmOrder")
-            .WithSummary("Confirm order (admin) - sends to POS")
-            .RequireAuthorization("Admin");
+            .WithSummary("Confirm a submitted order (staff) - lands it on the ticket")
+            .RequireAuthorization("Pos");
 
         api.MapPut("/cancel", CancelOrderAsync)
             .WithName("CancelOrder")
-            .WithSummary("Cancel a submitted order")
-            .RequireAuthorization("Admin");
+            .WithSummary("Cancel a submitted order (staff)")
+            .RequireAuthorization("Pos");
 
         api.MapDelete("/{orderId:int}", DeleteOrderAsync)
             .WithName("DeleteOrder")
@@ -70,8 +75,8 @@ public static partial class OrdersApi
 
         api.MapGet("/pending", GetPendingOrdersAsync)
             .WithName("GetPendingOrders")
-            .WithSummary("Get all pending orders (admin)")
-            .RequireAuthorization("Admin");
+            .WithSummary("Pending orders for the branch (staff)")
+            .RequireAuthorization("Pos");
 
         api.MapGet("/all", GetAllOrdersAsync)
             .WithName("GetAllOrders")
@@ -257,7 +262,9 @@ public static partial class OrdersApi
                 request.PointsToRedeem,
                 request.TableId,
                 request.TableName,
-                source: OrderSource.Pos);
+                guestName: request.CustomerName,
+                source: OrderSource.Pos,
+                ticketId: request.TicketId);
 
             try
             {
@@ -568,7 +575,9 @@ public record PosOrderRequest(
     LocalizedText? RoomName = null,
     string? CustomerUserId = null,
     string? CustomerUserName = null,
-    int PointsToRedeem = 0);
+    int PointsToRedeem = 0,
+    int? TicketId = null,
+    string? CustomerName = null);
 
 /// <summary>
 /// The created order's id — what the POS uses to find the ticket the order

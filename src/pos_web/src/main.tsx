@@ -55,6 +55,11 @@ const router = createRouter({
   context: { queryClient },
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
+  // Screen changes cross-fade instead of snapping. Deliberately brief (see
+  // styles/index.css): a cashier crosses these screens hundreds of times a
+  // shift, so the transition has to read as polish, never as waiting. The
+  // browser skips it entirely where the API is unsupported.
+  defaultViewTransition: true,
 })
 
 // Register the router instance for type safety

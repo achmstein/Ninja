@@ -55,6 +55,13 @@ public class CreateOrderCommand : IRequest<int>
     public LocalizedText? TableName { get; private set; }
 
     /// <summary>
+    /// The already-open Sales ticket this order belongs on, when a cashier
+    /// added items to a bill instead of ringing up a fresh walk-in sale
+    /// </summary>
+    [DataMember]
+    public int? TicketId { get; private set; }
+
+    /// <summary>
     /// Special instructions from customer (optional)
     /// </summary>
     [DataMember]
@@ -135,7 +142,8 @@ public class CreateOrderCommand : IRequest<int>
         string? guestPhone = null,
         OrderSource? source = null,
         int? sessionId = null,
-        int? roomId = null)
+        int? roomId = null,
+        int? ticketId = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         UserId = userId;
@@ -146,6 +154,7 @@ public class CreateOrderCommand : IRequest<int>
         RoomId = roomId;
         TableId = tableId;
         TableName = tableName;
+        TicketId = ticketId;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         GuestId = guestId;

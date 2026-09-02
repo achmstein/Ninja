@@ -37,6 +37,20 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     public LocalizedText? TableName { get; }
 
+    /// <summary>
+    /// The exact ticket this order must land on, set when a cashier added
+    /// items to an already-open bill. Takes precedence over the session/table
+    /// routing below, which cannot name a counter tab.
+    /// </summary>
+    public int? TicketId { get; }
+
+    /// <summary>
+    /// The person this order is for: the account holder's name, or the one the
+    /// till was given for a walk-in. Null when nobody was named — unlike
+    /// <see cref="BuyerName"/>, which falls back to a generic label.
+    /// </summary>
+    public string? CustomerName { get; }
+
     /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
     public string Source { get; }
 
@@ -62,6 +76,8 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         int? roomId = null,
         int? tableId = null,
         LocalizedText? tableName = null,
+        int? ticketId = null,
+        string? customerName = null,
         string source = "Customer",
         string? guestPhone = null,
         double loyaltyDiscount = 0,
@@ -80,6 +96,8 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         RoomId = roomId;
         TableId = tableId;
         TableName = tableName;
+        TicketId = ticketId;
+        CustomerName = customerName;
         Source = source;
         GuestPhone = guestPhone;
         LoyaltyDiscount = loyaltyDiscount;

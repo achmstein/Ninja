@@ -34,7 +34,18 @@ public static class Extensions
         {
             cfg.RegisterServicesFromAssemblyContaining(typeof(Program));
             cfg.LicenseKey = builder.Configuration["MediatR:LicenseKey"];
+            // Every command is one transaction; what it queues for the bus
+            // goes out only after the commit
+            cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
         });
+
+        // The outbox: events are written with the rows that produced them and
+        // published after the commit — a crash in between loses nothing. The
+        // bus handlers that assemble tickets run through the same
+        // SalesTransaction the command behavior uses.
+        services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<SalesContext>>();
+        services.AddTransient<ISalesIntegrationEventService, SalesIntegrationEventService>();
+        services.AddScoped<SalesTransaction>();
 
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
@@ -46,6 +57,7 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
             .AddSubscription<SessionStartedIntegrationEvent, SessionStartedIntegrationEventHandler>()
             .AddSubscription<SessionCompletedIntegrationEvent, SessionCompletedIntegrationEventHandler>()
+            .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));

@@ -29,9 +29,14 @@ export type SaleLine = {
   customizations: SaleCustomization[]
 }
 
-/** The customer an on-account settle charges / loyalty accrues to (optional). */
+/**
+ * Who the sale is for. `id` is an identity account — needed to accrue loyalty
+ * or settle on a tab. A walk-in the waiters know by name has none: the name
+ * still rides along to the kitchen card and the bill line, it just unlocks
+ * nothing.
+ */
 export type SaleCustomer = {
-  id: string
+  id: string | null
   name: string
 }
 
@@ -49,6 +54,14 @@ type SaleState = {
   lines: SaleLine[]
   note: string
   customer: SaleCustomer | null
+  /** The bill these lines are for: a ticket id, or null for a walk-in sale. */
+  target: number | null
+  /**
+   * Point the cart at a destination. Changing it empties the cart: a
+   * half-built walk-in must never follow the cashier onto someone's open
+   * ticket (or the other way round) — those are different people's money.
+   */
+  setTarget: (target: number | null) => void
   add: (line: SaleLine) => void
   setQuantity: (key: string, quantity: number) => void
   setNote: (note: string) => void
@@ -62,6 +75,13 @@ export const useSale = create<SaleState>()(
       lines: [],
       note: '',
       customer: null,
+      target: null,
+      setTarget: (target) =>
+        set((state) =>
+          state.target === target
+            ? {}
+            : { target, lines: [], note: '', customer: null }
+        ),
       add: (line) =>
         set((state) => {
           const key = lineKey(line)

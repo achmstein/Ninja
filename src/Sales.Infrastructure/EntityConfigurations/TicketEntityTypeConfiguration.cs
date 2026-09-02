@@ -13,6 +13,11 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Ignore(t => t.DomainEvents);
 
+        // Postgres's own row version as the concurrency token: two tills
+        // settling one ticket, or a settle racing a discard, make the second
+        // writer fail instead of silently winning
+        builder.Property<uint>("xmin").IsRowVersion();
+
         builder.Property(t => t.Type)
             .HasConversion<string>()
             .HasMaxLength(20)
@@ -27,13 +32,20 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.OwnsOne(t => t.LocationName, b => b.ToJson());
 
-        builder.Property(t => t.CustomerId).HasMaxLength(64);
-        builder.Property(t => t.CustomerName).HasMaxLength(200);
+        builder.Property(t => t.Label).HasMaxLength(200);
         builder.Property(t => t.GuestPhone).HasMaxLength(30);
         builder.Property(t => t.SettledBy).HasMaxLength(64);
         builder.Property(t => t.VoidedBy).HasMaxLength(64);
         builder.Property(t => t.VoidReason).HasMaxLength(300);
         builder.Property(t => t.ChangeGiven).HasPrecision(18, 2);
+
+        // The bill as settled — frozen figures and the rates behind them
+        builder.Property(t => t.Subtotal).HasPrecision(18, 2);
+        builder.Property(t => t.ServiceCharge).HasPrecision(18, 2);
+        builder.Property(t => t.Vat).HasPrecision(18, 2);
+        builder.Property(t => t.Total).HasPrecision(18, 2);
+        builder.Property(t => t.VatRate).HasPrecision(5, 4);
+        builder.Property(t => t.ServiceChargeRate).HasPrecision(5, 4);
 
         builder.HasMany(t => t.Lines)
             .WithOne()

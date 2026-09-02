@@ -20,6 +20,11 @@ public static class TicketsApi
             .WithName("GetOpenTickets")
             .WithSummary("Open tickets for the branch (the POS floor)");
 
+        api.MapGet("/settled", GetSettledTickets)
+            .WithName("GetSettledTickets")
+            .WithSummary("Settled bills for the branch, newest receipt first")
+            .WithDescription("The receipts screen: the way back to a bill after it closed, to reprint it or refund it. Pass receiptNumber to find one.");
+
         api.MapGet("/{id:int}", GetTicket)
             .WithName("GetTicket")
             .WithSummary("Ticket detail with lines, payments and receipt number");
@@ -50,14 +55,35 @@ public static class TicketsApi
 
         api.MapPost("/{id:int}/move-lines", MoveLines)
             .WithName("MoveTicketLines")
-            .WithSummary("Move lines to a fresh ticket for the same place")
-            .WithDescription("The table-turnover guard: an order that landed on the previous group's bill gets its own ticket.");
+            .WithSummary("Move lines to another ticket")
+            .WithDescription("No target: the table-turnover split, a fresh ticket for the same place. A target ticket: onto that open bill — the customer who ordered at a table and then took a room. A new ticket: a fresh counter tab, or a table's bill (opened if the table has none) — the customer who moved tables or went to pay at the counter. Session time never moves; a table or counter ticket left empty is discarded. Returns the ticket the lines ended up on.");
 
         api.MapPost("/{id:int}/void", VoidTicket)
             .WithName("VoidTicket")
             .WithSummary("Void an open ticket with nothing owed (owner only)")
             .WithDescription("A mistake, a comp, a walked group. The reason is the audit trail. Settled tickets cannot be voided.")
             .RequireAuthorization("Owner");
+
+        api.MapPost("/{id:int}/refunds", RefundTicket)
+            .WithName("RefundTicket")
+            .WithSummary("Refund lines of a settled ticket as a numbered credit note (owner only)")
+            .WithDescription("Full or partial, by line and quantity. Each line gives back what the customer paid for it, service charge and VAT included. Cash comes out of the drawer; Account credits the named tab. Loyalty points the refunded orders earned are clawed back in proportion. The settled ticket itself never changes.")
+            .RequireAuthorization("Owner");
+
+        api.MapGet("/pricing/{branchId:int}", GetPricing)
+            .WithName("GetBranchPricing")
+            .WithSummary("How a branch's menu prices become the bill: VAT, whether it sits inside the price, service charge");
+
+        api.MapPut("/pricing/{branchId:int}", SetPricing)
+            .WithName("SetBranchPricing")
+            .WithSummary("Set a branch's VAT and service charge (owner only)")
+            .WithDescription("Rates are fractions: 0.14 is 14%. Service applies to what is ordered at tables and rooms, never to counter sales or room time. Applies to tickets settled from now on; printed receipts keep their figures.")
+            .RequireAuthorization("Owner");
+
+        api.MapDelete("/{id:int}", DiscardTicket)
+            .WithName("DiscardTicket")
+            .WithSummary("Discard an empty open ticket")
+            .WithDescription("Opened by mistake and never used. Counter and table tickets with no lines only — nothing happened on them, so there is nothing to audit and the row is deleted. A ticket with lines is voided (owner) instead.");
 
         return api;
     }
@@ -68,6 +94,17 @@ public static class TicketsApi
     {
         var branchId = httpContext.GetRequiredBranchId();
         return TypedResults.Ok(await queries.GetOpenTicketsAsync(branchId));
+    }
+
+    public static async Task<Ok<IEnumerable<SettledTicketSummary>>> GetSettledTickets(
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        int pageIndex = 0,
+        int pageSize = 30,
+        int? receiptNumber = null)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetSettledTicketsAsync(branchId, pageIndex, Math.Clamp(pageSize, 1, 100), receiptNumber));
     }
 
     public static async Task<Results<Ok<TicketDetail>, NotFound>> GetTicket(
@@ -111,7 +148,7 @@ public static class TicketsApi
         try
         {
             var ticketId = await mediator.Send(new OpenTicketCommand(
-                request.Type, branchId, request.TableId, request.TableName, request.CustomerName));
+                request.Type, branchId, request.TableId, request.TableName, request.Label));
 
             return TypedResults.Ok(new OpenTicketResponse(ticketId));
         }
@@ -135,7 +172,8 @@ public static class TicketsApi
                 request.Qty,
                 request.UnitPrice,
                 request.Discount,
-                httpContext.User.GetUserId() ?? "unknown"));
+                httpContext.User.GetUserId() ?? "unknown",
+                request.CustomerName));
 
             return TypedResults.Ok();
         }
@@ -155,7 +193,7 @@ public static class TicketsApi
         {
             var result = await mediator.Send(new SettleTicketCommand(
                 id,
-                request.Payments.Select(p => new PaymentDto(p.Tender, p.Amount)).ToList(),
+                request.Payments.Select(p => new PaymentDto(p.Tender, p.Amount, p.CustomerId, p.CustomerName)).ToList(),
                 httpContext.User.GetUserId() ?? "unknown"));
 
             return TypedResults.Ok(result);
@@ -183,6 +221,75 @@ public static class TicketsApi
         }
     }
 
+    public static async Task<Results<Ok<RefundResult>, BadRequest<string>>> RefundTicket(
+        int id,
+        RefundRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            var result = await mediator.Send(new RefundTicketCommand(
+                id,
+                request.Lines.Select(l => new RefundLineDto(l.LineId, l.Qty)).ToList(),
+                request.Reason,
+                request.Tender,
+                request.CustomerId,
+                request.CustomerName,
+                httpContext.User.GetUserId() ?? "unknown"));
+
+            return TypedResults.Ok(result);
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Ok<PricingView>> GetPricing(
+        int branchId,
+        [FromServices] ITicketQueries queries)
+        => TypedResults.Ok(await queries.GetPricingAsync(branchId));
+
+    public static async Task<Results<Ok, BadRequest<string>>> SetPricing(
+        int branchId,
+        PricingRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            await mediator.Send(new SetBranchPricingCommand(
+                branchId,
+                request.VatRate,
+                request.PricesIncludeVat,
+                request.ServiceChargeRate,
+                httpContext.User.GetUserId() ?? "unknown"));
+
+            return TypedResults.Ok();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Results<NoContent, BadRequest<string>>> DiscardTicket(
+        int id,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            await mediator.Send(new DiscardTicketCommand(id, httpContext.User.GetUserId() ?? "unknown"));
+            return TypedResults.NoContent();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Results<Ok<OpenTicketResponse>, BadRequest<string>>> MoveLines(
         int id,
         MoveLinesRequest request,
@@ -190,8 +297,14 @@ public static class TicketsApi
     {
         try
         {
-            var newTicketId = await mediator.Send(new MoveTicketLinesCommand(id, request.LineIds));
-            return TypedResults.Ok(new OpenTicketResponse(newTicketId));
+            var targetTicketId = await mediator.Send(new MoveTicketLinesCommand(
+                id,
+                request.LineIds,
+                request.TargetTicketId,
+                request.NewTicket is null
+                    ? null
+                    : new NewTicketTarget(request.NewTicket.Type, request.NewTicket.TableId, request.NewTicket.TableName, request.NewTicket.Label)));
+            return TypedResults.Ok(new OpenTicketResponse(targetTicketId));
         }
         catch (SalesDomainException ex)
         {
@@ -200,16 +313,27 @@ public static class TicketsApi
     }
 }
 
-public record OpenTicketRequest(TicketType Type, int? TableId = null, LocalizedText? TableName = null, string? CustomerName = null);
+/// <param name="Label">What to call a counter tab — a name for humans, not a customer.</param>
+public record OpenTicketRequest(TicketType Type, int? TableId = null, LocalizedText? TableName = null, string? Label = null);
 
 public record OpenTicketResponse(int TicketId);
 
-public record AddLineRequest(LocalizedText Description, decimal Qty, decimal UnitPrice, decimal Discount = 0);
+public record AddLineRequest(LocalizedText Description, decimal Qty, decimal UnitPrice, decimal Discount = 0, string? CustomerName = null);
 
 public record SettleRequest(List<SettlePayment> Payments);
 
-public record SettlePayment(PaymentTender Tender, decimal Amount);
+public record SettlePayment(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
 
-public record MoveLinesRequest(List<int> LineIds);
+public record MoveLinesRequest(List<int> LineIds, int? TargetTicketId = null, NewTicketRequest? NewTicket = null);
+
+/// <summary>A ticket to open for moved lines: a counter tab (with an optional name), or a table's bill.</summary>
+public record NewTicketRequest(TicketType Type, int? TableId = null, LocalizedText? TableName = null, string? Label = null);
 
 public record VoidTicketRequest(string Reason);
+
+public record RefundRequest(List<RefundLineRequest> Lines, string Reason, PaymentTender Tender, string? CustomerId = null, string? CustomerName = null);
+
+public record RefundLineRequest(int LineId, decimal Qty);
+
+/// <summary>Rates are fractions: 0.14 is 14%.</summary>
+public record PricingRequest(decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate);

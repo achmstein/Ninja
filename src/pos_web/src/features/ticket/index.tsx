@@ -7,10 +7,14 @@ import {
   ArrowRight,
   Ban,
   Check,
+  Clock,
   ListChecks,
   Loader2,
-  Plus,
   Printer,
+  ShoppingCart,
+  Trash2,
+  Undo2,
+  User,
 } from 'lucide-react'
 import {
   getTicketOptions,
@@ -21,16 +25,71 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PendingOrders } from '@/features/orders/pending-orders'
+import {
+  pendingForTicket,
+  usePendingOrders,
+} from '@/features/orders/use-pending-orders'
 import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
+import { SessionBar } from '@/features/rooms/session-bar'
+import { useRooms, useSessionActions } from '@/features/rooms/use-rooms'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { getRealmRoles } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { AddLineDialog } from './add-line-dialog'
+import { DiscardTicketDialog } from './discard-dialog'
+import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
+import { RefundDialog } from './refund-dialog'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { VoidTicketDialog } from './void-dialog'
+
+const percent = (rate: number | string | undefined) =>
+  Math.round(toNumber(rate) * 10000) / 100
+
+/**
+ * A bill reads by item, not by round. Ordering the same thing twice in an
+ * evening writes two lines — two orders, two kitchen tickets, two audit rows,
+ * all of which stay exactly as they are underneath — but on screen they add
+ * up to "Cappuccino 2 ×". Only identical lines merge: same item, same options,
+ * same price, same discount, same origin.
+ */
+function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
+  const merged: TicketLineView[] = []
+  const seen = new Map<string, number>()
+
+  for (const line of lines) {
+    // JSON rather than a delimiter: no separator can collide with an item
+    // name, however it is punctuated
+    const key = JSON.stringify([
+      line.source,
+      line.description?.en ?? '',
+      line.description?.ar ?? '',
+      line.details?.en ?? '',
+      line.unitPrice,
+      line.discount,
+    ])
+
+    const at = seen.get(key)
+
+    if (at === undefined) {
+      seen.set(key, merged.length)
+      merged.push({ ...line })
+      continue
+    }
+
+    merged[at] = {
+      ...merged[at],
+      qty: toNumber(merged[at].qty) + toNumber(line.qty),
+      total: toNumber(merged[at].total) + toNumber(line.total),
+    }
+  }
+
+  return merged
+}
 
 function LineRow({
   line,
@@ -49,10 +108,12 @@ function LineRow({
 
   const isNegative = toNumber(line.total) < 0
   const discount = toNumber(line.discount)
+  // Session time belongs to the session: it is never offered for a move
+  const selectable = selecting && line.source !== 'SessionTime'
 
   const content = (
     <>
-      {selecting && (
+      {selectable && (
         <span
           aria-hidden
           className={cn(
@@ -95,7 +156,7 @@ function LineRow({
     </>
   )
 
-  if (selecting) {
+  if (selectable) {
     return (
       <button
         type='button'
@@ -131,8 +192,12 @@ export function TicketScreen({
   const queryClient = useQueryClient()
   const auth = useAuth()
 
-  const [addLineOpen, setAddLineOpen] = useState(false)
+  const [discardOpen, setDiscardOpen] = useState(false)
+  const [moveTargetOpen, setMoveTargetOpen] = useState(false)
+  const [refundOpen, setRefundOpen] = useState(false)
   const [settleOpen, setSettleOpen] = useState(false)
+  const [settleGuardOpen, setSettleGuardOpen] = useState(false)
+  const [sessionGuardOpen, setSessionGuardOpen] = useState(false)
   const [voidOpen, setVoidOpen] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -149,6 +214,17 @@ export function TicketScreen({
     // Poll fallback in case the SignalR connection is silently dead
     refetchInterval: 20_000,
   })
+
+  // App orders for this table or session that have not been accepted yet —
+  // they are not on the bill until someone taps Confirm
+  const { pending } = usePendingOrders()
+
+  // A room ticket's time only lands when its session ends, so the screen
+  // shows the running clock and guards the settle until then
+  const { rooms, activeSessionById } = useRooms({
+    enabled: ticket?.type === 'Room',
+  })
+  const sessionActions = useSessionActions()
 
   // Arriving from the sale pad (?settle): the walk-in is standing at the
   // till, so jump straight into taking payment. Once only, and only after
@@ -168,6 +244,7 @@ export function TicketScreen({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       toast.success(t('linesMoved'))
+      setMoveTargetOpen(false)
       setSelecting(false)
       setSelectedIds(new Set())
       navigate({
@@ -202,8 +279,64 @@ export function TicketScreen({
   // renders its tombstone even if the status enum ever gains states
   const isVoided = ticket.voidedAt != null
   const lines = ticket.lines ?? []
+  const waiting = isSettled || isVoided ? [] : pendingForTicket(pending, ticket)
+  const activeSession =
+    isSettled || isVoided || ticket.sessionId == null
+      ? undefined
+      : activeSessionById(ticket.sessionId)
+  const room = rooms.find((r) => toNumber(r.id) === toNumber(ticket.roomId))
+
+  // Lines in arrival order, grouped by whoever they were rung up for. Insertion
+  // order keeps the first person named at the top instead of reshuffling the
+  // bill every time someone orders again.
+  const groups = lines.reduce<
+    { key: string | null; name: string | null; lines: typeof lines; total: number }[]
+  >((acc, line) => {
+    // One person is one group however they were named: an account holder by
+    // their account, a guest by the id Ordering gave them, and a name the
+    // till was only told by the name itself
+    const key = line.customerId
+      ? `account:${line.customerId}`
+      : line.guestId
+        ? `guest:${line.guestId}`
+        : line.customerName
+          ? `name:${line.customerName}`
+          : null
+    const group = acc.find((g) => g.key === key)
+    if (group) {
+      group.lines.push(line)
+      group.total += toNumber(line.total)
+      group.name ??= line.customerName || null
+    } else {
+      acc.push({
+        key,
+        name: line.customerName || null,
+        lines: [line],
+        total: toNumber(line.total),
+      })
+    }
+    return acc
+  }, [])
+
+
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
-  const location = localized(ticket.locationName)
+
+  // The place is the headline: a cashier arrives here from a tile that said
+  // "Table 1" and is standing in front of that table. The kind of place is
+  // only spelled out when the name does not already say it — the fallback for
+  // a counter ticket, which has no name of its own.
+  const typeLabel =
+    ticket.type === 'Room'
+      ? t('room')
+      : ticket.type === 'Table'
+        ? t('table')
+        : t('counter')
+  // What identifies this bill: the place it belongs to, or — for a counter
+  // tab, which has no place — the name the cashier gave it. Who ordered is a
+  // different question, and the line groups below are the honest answer.
+  const placeName = localized(ticket.locationName)
+  const location = placeName || typeLabel
+  const title = placeName || ticket.label || typeLabel
 
   const toggleLine = (id: number) =>
     setSelectedIds((prev) => {
@@ -218,12 +351,28 @@ export function TicketScreen({
     setSelectedIds(new Set())
   }
 
-  const doMoveLines = () =>
+  // Where the lines go: an open bill, a new tab or table, or a fresh ticket
+  // for the same place (the split) when nothing else is named
+  const doMoveLines = (target: MoveTarget) =>
     moveLines.mutate({
       path: { id: ticketId },
       query: { 'api-version': API_VERSION },
-      body: { lineIds: Array.from(selectedIds) },
+      body: {
+        lineIds: Array.from(selectedIds),
+        targetTicketId: target.kind === 'ticket' ? target.ticketId : null,
+        newTicket:
+          target.kind === 'counter'
+            ? { type: TICKET_TYPE_COUNTER, label: target.label }
+            : target.kind === 'table'
+              ? {
+                  type: TICKET_TYPE_TABLE,
+                  tableId: target.tableId,
+                  tableName: target.tableName,
+                }
+              : null,
+      },
     })
+  const movableCount = lines.filter((l) => l.source !== 'SessionTime').length
 
   // What the printed receipt shows right after settling, before the
   // refetched (settled) ticket lands
@@ -240,18 +389,11 @@ export function TicketScreen({
         </Button>
         <div className='min-w-0 flex-1'>
           <h1 className='truncate text-xl font-bold'>
-            {t('ticketNumber', { id: toNumber(ticket.id) })}
-            {location && (
-              <span className='text-muted-foreground font-medium'>
-                {' '}· {location}
-              </span>
-            )}
+            {title}
+            <span className='text-muted-foreground ms-2 text-base font-medium tabular-nums'>
+              #{toNumber(ticket.id)}
+            </span>
           </h1>
-          {ticket.customerName && (
-            <p className='text-muted-foreground truncate text-sm'>
-              {ticket.customerName}
-            </p>
-          )}
         </div>
         {isSettled ? (
           <Badge className='h-8 px-3 text-sm' variant='secondary'>
@@ -265,13 +407,17 @@ export function TicketScreen({
           </Badge>
         ) : (
           <div className='flex gap-1'>
+            {/* The pad, pointed at this bill — same flow as a new sale, the
+                money just comes later. Everything sold here is on the menu,
+                so there is no typed-in line beside it. */}
             <Button
-              variant='outline'
               className='h-12 gap-2 px-3'
-              onClick={() => setAddLineOpen(true)}
+              onClick={() =>
+                navigate({ to: '/sale', search: { ticket: ticketId } })
+              }
             >
-              <Plus className='size-5' />
-              <span className='hidden sm:inline'>{t('addLine')}</span>
+              <ShoppingCart className='size-5' />
+              <span className='hidden sm:inline'>{t('addItems')}</span>
             </Button>
             <Button
               variant={selecting ? 'secondary' : 'outline'}
@@ -282,17 +428,32 @@ export function TicketScreen({
               <ListChecks className='size-5' />
               <span className='hidden sm:inline'>{t('selectLines')}</span>
             </Button>
-            {/* Owner-only, and deliberately up here — far from the Settle
-                button in the bottom bar, so it can't be fat-fingered */}
-            {isOwner && (
+            {/* Both ways out live up here, deliberately far from the Settle
+                button in the bottom bar, so neither can be fat-fingered.
+                Nothing on the ticket yet means nothing to audit, so any
+                cashier can discard it; once a line lands, only an owner's
+                void (with its reason) takes it off the floor. A room ticket
+                is empty only while its session runs, so it gets neither. */}
+            {ticket.type !== 'Room' && lines.length === 0 ? (
               <Button
                 variant='outline'
                 className='text-destructive hover:text-destructive h-12 gap-2 px-3'
-                onClick={() => setVoidOpen(true)}
+                onClick={() => setDiscardOpen(true)}
               >
-                <Ban className='size-5' />
-                <span className='hidden sm:inline'>{t('voidTicket')}</span>
+                <Trash2 className='size-5' />
+                <span className='hidden sm:inline'>{t('discardTicket')}</span>
               </Button>
+            ) : (
+              isOwner && (
+                <Button
+                  variant='outline'
+                  className='text-destructive hover:text-destructive h-12 gap-2 px-3'
+                  onClick={() => setVoidOpen(true)}
+                >
+                  <Ban className='size-5' />
+                  <span className='hidden sm:inline'>{t('voidTicket')}</span>
+                </Button>
+              )
             )}
           </div>
         )}
@@ -300,13 +461,33 @@ export function TicketScreen({
 
       <Separator className='my-3' />
 
+      {activeSession && (
+        <div className='mb-4'>
+          <SessionBar session={activeSession} room={room} />
+        </div>
+      )}
+
+      {/* Confirmed here, they land on this bill — which is why the guard
+          below stops a settle while any are still waiting */}
+      {waiting.length > 0 && (
+        <div className='border-amber-500/50 bg-amber-500/10 mb-4 flex flex-col gap-2 rounded-xl border p-3'>
+          <div className='flex items-center gap-2 font-semibold'>
+            <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+            {t('ticketPendingOrders', { count: waiting.length })}
+          </div>
+          <PendingOrders orders={waiting} />
+        </div>
+      )}
+
       {lines.length === 0 ? (
         <p className='text-muted-foreground py-16 text-center'>
           {t('emptyTicket')}
         </p>
-      ) : (
+      ) : groups.length === 1 && groups[0].key === null ? (
         <div className='flex flex-col divide-y'>
-          {lines.map((line) => (
+          {/* Selecting moves individual lines to another ticket, so the rounds
+              come back apart the moment the cashier is choosing between them */}
+          {(selecting ? lines : mergeIdenticalLines(lines)).map((line) => (
             <LineRow
               key={String(line.id)}
               line={line}
@@ -314,6 +495,41 @@ export function TicketScreen({
               selected={selectedIds.has(toNumber(line.id))}
               onToggle={() => toggleLine(toNumber(line.id))}
             />
+          ))}
+        </div>
+      ) : (
+        /* Shared bill: one heading per person, each with its own subtotal, so
+           the cashier can read (and split) who owes what. Lines nobody was
+           named for stay together under the table's own heading. */
+        <div className='flex flex-col gap-4'>
+          {groups.map((group) => (
+            <div key={group.key ?? '__unattributed__'}>
+              <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'>
+                <span className='flex min-w-0 items-center gap-2 font-semibold'>
+                  <User className='size-4 shrink-0' />
+                  <span className='truncate'>
+                    {group.name ?? (group.key ? t('guest') : location)}
+                  </span>
+                </span>
+                <span className='shrink-0 tabular-nums'>
+                  {money(group.total)}
+                </span>
+              </div>
+              <div className='flex flex-col divide-y'>
+                {(selecting
+                  ? group.lines
+                  : mergeIdenticalLines(group.lines)
+                ).map((line) => (
+                  <LineRow
+                    key={String(line.id)}
+                    line={line}
+                    selecting={selecting && !isSettled}
+                    selected={selectedIds.has(toNumber(line.id))}
+                    onToggle={() => toggleLine(toNumber(line.id))}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -344,33 +560,105 @@ export function TicketScreen({
         </div>
       )}
 
+      {/* Credit notes: money that went back, each with its reason */}
+      {(ticket.refunds?.length ?? 0) > 0 && (
+        <div className='mt-4 flex flex-col gap-2'>
+          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+            {t('refundsTitle')}
+          </h2>
+          {ticket.refunds!.map((refund) => (
+            <div
+              key={String(refund.id)}
+              className='border-destructive/30 bg-destructive/5 rounded-xl border p-3'
+            >
+              <div className='flex items-baseline justify-between gap-2'>
+                <span className='font-semibold'>
+                  {t('creditNote', { number: toNumber(refund.number) })}
+                </span>
+                <span className='text-destructive font-semibold tabular-nums'>
+                  −{money(refund.amount)}
+                </span>
+              </div>
+              <p className='mt-1'>{refund.reason}</p>
+              <p className='text-muted-foreground mt-1 text-sm'>
+                {refund.tender === 'Account' ? t('account') : t('cash')}
+                {refund.customerName && ` · ${refund.customerName}`}
+                {' · '}
+                {refund.refundedBy}
+                {refund.refundedAt &&
+                  ` · ${new Intl.DateTimeFormat(locale, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  }).format(new Date(refund.refundedAt))}`}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Sticky action bar: the running total is always in reach, and so is
           the primary action (Settle, or Move while selecting) */}
       {!isVoided && (
       <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur'>
         <div className='mx-auto flex max-w-3xl items-center gap-4'>
-          <div>
+          <div className='min-w-0'>
             <div className='text-muted-foreground text-sm'>{t('total')}</div>
             <div className='text-2xl font-bold tabular-nums'>
               {money(ticket.total)}
             </div>
+            {/* The bill's parts, when the branch adds any: menu money,
+                service, VAT — shown out of the price or added on top */}
+            {(toNumber(ticket.serviceCharge) > 0 || toNumber(ticket.vat) > 0) && (
+              <div className='text-muted-foreground truncate text-xs tabular-nums'>
+                {t('subtotal')} {money(ticket.subtotal)}
+                {toNumber(ticket.serviceCharge) > 0 &&
+                  ` · ${t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} ${money(ticket.serviceCharge)}`}
+                {toNumber(ticket.vat) > 0 &&
+                  ` · ${
+                    ticket.vatIncluded
+                      ? t('vatIncluded', { rate: percent(ticket.vatRate) })
+                      : t('vat', { rate: percent(ticket.vatRate) })
+                  } ${money(ticket.vat)}`}
+              </div>
+            )}
+            {toNumber(ticket.refundedTotal) > 0 && (
+              <div className='text-destructive text-xs tabular-nums'>
+                {t('refundedSoFar')}: −{money(ticket.refundedTotal)}
+              </div>
+            )}
           </div>
           <div className='ms-auto'>
             {isSettled ? (
-              <Button
-                size='lg'
-                className='h-14 px-6 text-lg'
-                onClick={() => window.print()}
-              >
-                <Printer className='size-5' />
-                {t('print')}
-              </Button>
+              <div className='flex gap-2'>
+                {/* Owner-only, like void: money goes back, so an owner says
+                    so. Gone once the whole receipt has been credited. */}
+                {isOwner &&
+                  toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
+                    <Button
+                      size='lg'
+                      variant='outline'
+                      className='text-destructive hover:text-destructive h-14 px-5 text-lg'
+                      onClick={() => setRefundOpen(true)}
+                    >
+                      <Undo2 className='size-5' />
+                      {t('refundTicket')}
+                    </Button>
+                  )}
+                <Button
+                  size='lg'
+                  className='h-14 px-6 text-lg'
+                  onClick={() => window.print()}
+                >
+                  <Printer className='size-5' />
+                  {t('print')}
+                </Button>
+              </div>
             ) : selecting ? (
               <Button
                 size='lg'
                 className='h-14 px-6 text-lg'
                 disabled={selectedIds.size === 0 || moveLines.isPending}
-                onClick={doMoveLines}
+                onClick={() => setMoveTargetOpen(true)}
               >
                 {moveLines.isPending && (
                   <Loader2 className='size-5 animate-spin' />
@@ -382,7 +670,13 @@ export function TicketScreen({
                 size='lg'
                 className='h-14 px-8 text-lg'
                 disabled={lines.length === 0}
-                onClick={() => setSettleOpen(true)}
+                onClick={() =>
+                  activeSession
+                    ? setSessionGuardOpen(true)
+                    : waiting.length > 0
+                      ? setSettleGuardOpen(true)
+                      : setSettleOpen(true)
+                }
               >
                 {t('settleAction')}
               </Button>
@@ -392,10 +686,49 @@ export function TicketScreen({
       </div>
       )}
 
-      <AddLineDialog
+      <DiscardTicketDialog
         ticketId={ticketId}
-        open={addLineOpen}
-        onOpenChange={setAddLineOpen}
+        open={discardOpen}
+        onOpenChange={setDiscardOpen}
+      />
+      <MoveTargetDialog
+        open={moveTargetOpen}
+        onOpenChange={setMoveTargetOpen}
+        ticket={ticket}
+        count={selectedIds.size}
+        allSelected={selectedIds.size >= movableCount}
+        isPending={moveLines.isPending}
+        onPick={doMoveLines}
+      />
+      <RefundDialog
+        ticket={ticket}
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
+      />
+      {/* Two guards before Settle. An order still waiting can be settled
+          past (it may be stale); a running session cannot — its time is not
+          on the bill yet, so the only way forward is to end it. */}
+      <ConfirmDialog
+        open={settleGuardOpen}
+        onOpenChange={setSettleGuardOpen}
+        title={t('settleWithPendingTitle')}
+        description={t('settleWithPendingHint')}
+        cancelLabel={t('goBack')}
+        actionLabel={t('settleAnyway')}
+        destructive
+        onAction={() => setSettleOpen(true)}
+      />
+      <ConfirmDialog
+        open={sessionGuardOpen}
+        onOpenChange={setSessionGuardOpen}
+        title={t('settleWithSessionTitle')}
+        description={t('settleWithSessionHint')}
+        cancelLabel={t('goBack')}
+        actionLabel={t('endSessionButton')}
+        destructive
+        onAction={() => {
+          if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
+        }}
       />
       <SettleDialog
         ticket={ticket}

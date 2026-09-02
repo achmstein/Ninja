@@ -50,7 +50,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             guestPhone: message.GuestPhone,
             source: message.Source,
             sessionId: message.SessionId,
-            roomId: message.RoomId);
+            roomId: message.RoomId,
+            ticketId: message.TicketId);
 
         foreach (var item in message.OrderItems)
         {

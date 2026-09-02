@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -26,6 +26,13 @@ export const getOpenTickets = <ThrowOnError extends boolean = false>(options: Op
     url: '/api/tickets/open',
     ...options
 });
+
+/**
+ * Discard an empty open ticket
+ *
+ * Opened by mistake and never used. Counter and table tickets with no lines only — nothing happened on them, so there is nothing to audit and the row is deleted. A ticket with lines is voided (owner) instead.
+ */
+export const discardTicket = <ThrowOnError extends boolean = false>(options: Options<DiscardTicketData, ThrowOnError>): RequestResult<DiscardTicketResponses, DiscardTicketErrors, ThrowOnError> => (options.client ?? client).delete<DiscardTicketResponses, DiscardTicketErrors, ThrowOnError>({ url: '/api/tickets/{id}', ...options });
 
 /**
  * Ticket detail with lines, payments and receipt number
@@ -101,13 +108,65 @@ export const settleTicket = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Move lines to a fresh ticket for the same place
+ * Move lines to another ticket
  *
- * The table-turnover guard: an order that landed on the previous group's bill gets its own ticket.
+ * No target: the table-turnover split, a fresh ticket for the same place. A target ticket: onto that open bill — the customer who ordered at a table and then took a room. A new ticket: a fresh counter tab, or a table's bill (opened if the table has none) — the customer who moved tables or went to pay at the counter. Session time never moves; a table or counter ticket left empty is discarded. Returns the ticket the lines ended up on.
  */
 export const moveTicketLines = <ThrowOnError extends boolean = false>(options: Options<MoveTicketLinesData, ThrowOnError>): RequestResult<MoveTicketLinesResponses, MoveTicketLinesErrors, ThrowOnError> => (options.client ?? client).post<MoveTicketLinesResponses, MoveTicketLinesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/{id}/move-lines',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Void an open ticket with nothing owed (owner only)
+ *
+ * A mistake, a comp, a walked group. The reason is the audit trail. Settled tickets cannot be voided.
+ */
+export const voidTicket = <ThrowOnError extends boolean = false>(options: Options<VoidTicketData, ThrowOnError>): RequestResult<VoidTicketResponses, VoidTicketErrors, ThrowOnError> => (options.client ?? client).post<VoidTicketResponses, VoidTicketErrors, ThrowOnError>({
+    url: '/api/tickets/{id}/void',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Refund lines of a settled ticket as a numbered credit note (owner only)
+ *
+ * Full or partial, by line and quantity. Each line gives back what the customer paid for it, service charge and VAT included. Cash comes out of the drawer; Account credits the named tab. Loyalty points the refunded orders earned are clawed back in proportion. The settled ticket itself never changes.
+ */
+export const refundTicket = <ThrowOnError extends boolean = false>(options: Options<RefundTicketData, ThrowOnError>): RequestResult<RefundTicketResponses, RefundTicketErrors, ThrowOnError> => (options.client ?? client).post<RefundTicketResponses, RefundTicketErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/{id}/refunds',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * How a branch's menu prices become the bill: VAT, whether it sits inside the price, service charge
+ */
+export const getBranchPricing = <ThrowOnError extends boolean = false>(options: Options<GetBranchPricingData, ThrowOnError>): RequestResult<GetBranchPricingResponses, GetBranchPricingErrors, ThrowOnError> => (options.client ?? client).get<GetBranchPricingResponses, GetBranchPricingErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/pricing/{branchId}',
+    ...options
+});
+
+/**
+ * Set a branch's VAT and service charge (owner only)
+ *
+ * Rates are fractions: 0.14 is 14%. Service applies to what is ordered at tables and rooms, never to counter sales or room time. Applies to tickets settled from now on; printed receipts keep their figures.
+ */
+export const setBranchPricing = <ThrowOnError extends boolean = false>(options: Options<SetBranchPricingData, ThrowOnError>): RequestResult<SetBranchPricingResponses, SetBranchPricingErrors, ThrowOnError> => (options.client ?? client).put<SetBranchPricingResponses, SetBranchPricingErrors, ThrowOnError>({
+    url: '/api/tickets/pricing/{branchId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

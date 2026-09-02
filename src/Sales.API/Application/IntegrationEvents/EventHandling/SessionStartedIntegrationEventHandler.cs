@@ -10,10 +10,15 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class SessionStartedIntegrationEventHandler(
     ITicketRepository ticketRepository,
+    SalesTransaction transaction,
     ILogger<SessionStartedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<SessionStartedIntegrationEvent>
 {
-    public async Task Handle(SessionStartedIntegrationEvent @event)
+    // One transaction per event, its floor nudge published after the commit
+    public Task Handle(SessionStartedIntegrationEvent @event)
+        => transaction.RunAsync(nameof(SessionStartedIntegrationEvent), () => Assemble(@event));
+
+    private async Task Assemble(SessionStartedIntegrationEvent @event)
     {
         var existing = await ticketRepository.FindOpenBySessionAsync(@event.ReservationId);
 
@@ -28,7 +33,6 @@ public class SessionStartedIntegrationEventHandler(
             @event.RoomId,
             @event.RoomName,
             @event.BranchId,
-            @event.CustomerId,
             @event.CustomerName);
 
         ticketRepository.Add(ticket);

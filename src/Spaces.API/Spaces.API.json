@@ -374,7 +374,7 @@
           "Sessions"
         ],
         "summary": "Start a session",
-        "description": "Start the timer for a reserved session (Admin only)",
+        "description": "Start the timer for a reserved session (staff)",
         "operationId": "StartSession",
         "parameters": [
           {
@@ -440,7 +440,7 @@
           "Sessions"
         ],
         "summary": "End a session",
-        "description": "End the session and calculate cost (Admin only)",
+        "description": "End the session and calculate cost (staff)",
         "operationId": "EndSession",
         "parameters": [
           {
@@ -490,7 +490,7 @@
           "Sessions"
         ],
         "summary": "Cancel a session",
-        "description": "Cancel a reservation or active session (Admin only)",
+        "description": "Cancel a reservation or active session (staff)",
         "operationId": "CancelSession",
         "parameters": [
           {
@@ -540,7 +540,7 @@
           "Sessions"
         ],
         "summary": "Start a walk-in session",
-        "description": "Start a walk-in session without an assigned customer (Admin only)",
+        "description": "Start a walk-in session without an assigned customer (staff)",
         "operationId": "StartWalkInSession",
         "parameters": [
           {
@@ -610,7 +610,7 @@
           "Sessions"
         ],
         "summary": "Change player mode",
-        "description": "Change the player mode (Single/Multi) for an active session (Admin only)",
+        "description": "Change the player mode (Single/Multi) for an active session (staff)",
         "operationId": "ChangePlayerMode",
         "parameters": [
           {
@@ -832,7 +832,7 @@
           "Sessions"
         ],
         "summary": "Get active sessions",
-        "description": "Get all currently active sessions (Admin only)",
+        "description": "Get all currently active sessions (staff)",
         "operationId": "GetActiveSessions",
         "responses": {
           "200": {
@@ -866,7 +866,7 @@
           "Sessions"
         ],
         "summary": "Assign a customer to a walk-in session",
-        "description": "Assign a customer to an active walk-in session that has no owner (Admin only)",
+        "description": "Assign a customer to an active walk-in session that has no owner (staff)",
         "operationId": "AssignCustomerToSession",
         "parameters": [
           {
@@ -926,7 +926,7 @@
           "Sessions"
         ],
         "summary": "Add a member to a session",
-        "description": "Add a customer as a member to an active session (Admin only)",
+        "description": "Add a customer as a member to an active session (staff)",
         "operationId": "AddMemberToSession",
         "parameters": [
           {
@@ -986,7 +986,7 @@
           "Sessions"
         ],
         "summary": "Remove a member from a session",
-        "description": "Remove a non-owner member from an active session (Admin only)",
+        "description": "Remove a non-owner member from an active session (staff)",
         "operationId": "RemoveMemberFromSession",
         "parameters": [
           {

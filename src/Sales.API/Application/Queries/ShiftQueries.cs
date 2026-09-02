@@ -7,7 +7,7 @@ namespace Chillax.Sales.API.Application.Queries;
 /// <summary>
 /// The cash figures a shift's tickets contributed to the drawer.
 /// </summary>
-public record ShiftCashTotals(decimal CashPayments, decimal ChangeGiven);
+public record ShiftCashTotals(decimal CashPayments, decimal ChangeGiven, decimal CashRefunds);
 
 public interface IShiftQueries
 {
@@ -66,9 +66,15 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
     {
         var tickets = await ShiftTickets(shiftId).ToListAsync();
 
+        var cashRefunds = await context.Refunds
+            .AsNoTracking()
+            .Where(r => r.ShiftId == shiftId && r.Tender == PaymentTender.Cash)
+            .SumAsync(r => r.Amount);
+
         return new ShiftCashTotals(
             tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount),
-            tickets.Sum(t => t.ChangeGiven));
+            tickets.Sum(t => t.ChangeGiven),
+            cashRefunds);
     }
 
     private async Task<ShiftView> BuildViewAsync(Shift shift)
@@ -86,6 +92,11 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
 
         var cashPayments = tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
         var changeGiven = tickets.Sum(t => t.ChangeGiven);
+
+        // Credit notes issued during the shift: cash ones left the drawer
+        var refunds = await context.Refunds.AsNoTracking().Where(r => r.ShiftId == shift.Id).ToListAsync();
+        var refundsTotal = refunds.Sum(r => r.Amount);
+        var cashRefunds = refunds.Where(r => r.Tender == PaymentTender.Cash).Sum(r => r.Amount);
         var payIns = shift.GetPayInsTotal();
         var payOuts = shift.GetPayOutsTotal();
 
@@ -105,14 +116,16 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             Movements = shift.Movements.Select(m => new CashMovementView(
                 m.Type.ToString(), m.Amount, m.Reason, m.RecordedBy, m.RecordedAt)).ToList(),
             TicketsSettled = tickets.Count,
-            SalesTotal = tickets.Sum(t => t.GetTotal()),
+            SalesTotal = tickets.Sum(t => t.Total),
+            RefundsTotal = refundsTotal,
+            CashRefunds = cashRefunds,
             TenderTotals = tenders,
             ChangeGiven = changeGiven,
             PayInsTotal = payIns,
             PayOutsTotal = payOuts,
             // Live for an open shift; for a closed one the frozen ExpectedCash
             // is the authoritative number and these two should agree
-            ExpectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven + payIns - payOuts,
+            ExpectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + payIns - payOuts,
         };
     }
 

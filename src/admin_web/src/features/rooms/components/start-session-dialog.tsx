@@ -31,7 +31,7 @@ export function StartSessionDialog({
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const [notes, setNotes] = useState('')
-  const [playerMode, setPlayerMode] = useState<PlayerMode | null>(null)
+  const [playerMode, setPlayerMode] = useState<PlayerMode>('Single')
 
   const startWalkIn = useMutation({
     ...startWalkInSessionMutation(),
@@ -42,7 +42,7 @@ export function StartSessionDialog({
       })
       toast.success(t('sessionStartedFor', { name: localized(room?.name) }))
       setNotes('')
-      setPlayerMode(null)
+      setPlayerMode('Single')
       onOpenChange(false)
     },
     onError: () => toast.error(t('failedToStartSession')),
@@ -75,11 +75,10 @@ export function StartSessionDialog({
           </div>
 
           <div className='space-y-2'>
-            <Label>{t('playerModeOptional')}</Label>
+            <Label>{t('playerMode')}</Label>
             <PlayerModeToggle
               value={playerMode}
-              onChange={setPlayerMode}
-              allowNone
+              onChange={(mode) => mode && setPlayerMode(mode)}
             />
           </div>
 

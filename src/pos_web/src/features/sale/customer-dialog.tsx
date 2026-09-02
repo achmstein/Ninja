@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Loader2, User } from 'lucide-react'
+import { Loader2, User, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -87,6 +87,15 @@ export function CustomerDialog({
     onOpenChange(false)
   }
 
+  // Most people at a table have no account, and the waiters know them by
+  // name anyway. Taking the typed text as the name costs one tap and is the
+  // common case — so it sits above the results, not buried under them.
+  const typedName = term.trim()
+  const useTypedName = () => {
+    onSelect({ id: null, name: typedName })
+    onOpenChange(false)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='flex max-h-[85svh] flex-col gap-4 sm:max-w-md'>
@@ -102,6 +111,24 @@ export function CustomerDialog({
           autoComplete='off'
           autoFocus
         />
+
+        {typedName.length > 0 && (
+          <Button
+            variant='outline'
+            className='h-14 w-full justify-start gap-3 text-base'
+            onClick={useTypedName}
+          >
+            <UserPlus className='text-muted-foreground size-5 shrink-0' />
+            <span className='min-w-0 text-start'>
+              <span className='block truncate font-medium'>
+                {t('useNameAction', { name: typedName })}
+              </span>
+              <span className='text-muted-foreground block text-sm font-normal'>
+                {t('noAccountNeeded')}
+              </span>
+            </span>
+          </Button>
+        )}
 
         <div className='-mx-2 flex-1 overflow-y-auto'>
           {search.length === 0 ? (

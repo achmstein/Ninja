@@ -8,6 +8,10 @@ class ShiftEntityTypeConfiguration : IEntityTypeConfiguration<Shift>
     {
         builder.ToTable("shifts");
 
+        // A shift closed from two tills at once: the second close fails
+        // rather than freezing a second Z report over the first
+        builder.Property<uint>("xmin").IsRowVersion();
+
         builder.HasKey(s => s.Id);
 
         builder.Property(s => s.Id)
