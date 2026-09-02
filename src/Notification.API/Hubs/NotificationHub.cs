@@ -68,9 +68,11 @@ public class NotificationHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, "rooms");
 
     /// <summary>
-    /// Client calls this to receive admin-level updates (orders, reservations, service requests)
+    /// Client calls this to receive staff-level updates (orders, reservations,
+    /// service requests, tickets). "Pos" = Admin, Owner or Cashier — the till
+    /// runs its floor on these updates too.
     /// </summary>
-    [Authorize(Policy = "Admin")]
+    [Authorize(Policy = "Pos")]
     public async Task JoinAdminGroup() =>
         await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
 
