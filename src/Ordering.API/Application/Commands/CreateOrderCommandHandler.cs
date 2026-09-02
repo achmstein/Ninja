@@ -5,7 +5,7 @@ using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
 /// <summary>
 /// Handler for creating cafe orders.
 /// </summary>
-public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, bool>
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IOrderingIntegrationEventService _orderingIntegrationEventService;
@@ -21,11 +21,18 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, boo
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<bool> Handle(CreateOrderCommand message, CancellationToken cancellationToken)
+    public async Task<int> Handle(CreateOrderCommand message, CancellationToken cancellationToken)
     {
         // Add Integration event to clean the basket
         var orderStartedIntegrationEvent = new OrderStartedIntegrationEvent(message.UserId);
         await _orderingIntegrationEventService.AddAndSaveEventAsync(orderStartedIntegrationEvent);
+
+        // The discount is what the redeemed points are worth at the fixed
+        // rate, against what the items actually cost — the request's opinion
+        // of it is never consulted (the client used to send it; see D5b/D7 in
+        // docs/pos-plan.md).
+        var itemsTotal = message.OrderItems.Sum(i => i.UnitPrice * i.Units - i.Discount);
+        var loyaltyDiscount = Order.GetLoyaltyDiscountFor(message.PointsToRedeem, itemsTotal);
 
         // Create the order (starts in AwaitingValidation status)
         var order = new Order(
@@ -35,12 +42,15 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, boo
             message.RoomName,
             message.CustomerNote,
             pointsToRedeem: message.PointsToRedeem,
-            loyaltyDiscount: message.LoyaltyDiscount,
+            loyaltyDiscount: loyaltyDiscount,
             tableId: message.TableId,
             tableName: message.TableName,
             guestId: message.GuestId,
             guestName: message.GuestName,
-            guestPhone: message.GuestPhone);
+            guestPhone: message.GuestPhone,
+            source: message.Source,
+            sessionId: message.SessionId,
+            roomId: message.RoomId);
 
         foreach (var item in message.OrderItems)
         {
@@ -60,25 +70,31 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, boo
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(awaitingValidationEvent);
 
-        return await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // HiLo assigned the id at Add — the POS uses it to find the ticket
+        // the confirmed order lands on
+        return order.Id;
     }
 }
 
 /// <summary>
 /// Idempotent command handler for CreateOrderCommand
 /// </summary>
-public class CreateOrderIdentifiedCommandHandler : IdentifiedCommandHandler<CreateOrderCommand, bool>
+public class CreateOrderIdentifiedCommandHandler : IdentifiedCommandHandler<CreateOrderCommand, int>
 {
     public CreateOrderIdentifiedCommandHandler(
         IMediator mediator,
         IRequestManager requestManager,
-        ILogger<IdentifiedCommandHandler<CreateOrderCommand, bool>> logger)
+        ILogger<IdentifiedCommandHandler<CreateOrderCommand, int>> logger)
         : base(mediator, requestManager, logger)
     {
     }
 
-    protected override bool CreateResultForDuplicateRequest()
+    protected override int CreateResultForDuplicateRequest()
     {
-        return true; // Ignore duplicate requests for creating order.
+        // The retry of an already-created order: the id wasn't recorded
+        // against the request id, so 0 stands for "placed, look it up"
+        return 0;
     }
 }

@@ -28,6 +28,14 @@ public static partial class OrdersApi
             .AllowAnonymous()
             .RequireRateLimiting(OrderRateLimiting.GuestCreatePolicy);
 
+        // Counter sales: staff key the sale in, so it needs no separate
+        // approval — it confirms itself once stock validation passes.
+        api.MapPost("/pos", CreatePosOrderAsync)
+            .WithName("CreatePosOrder")
+            .WithSummary("Create a counter (POS) order (staff)")
+            .WithDescription("A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.")
+            .RequireAuthorization("Pos");
+
         api.MapPut("/confirm", ConfirmOrderAsync)
             .WithName("ConfirmOrder")
             .WithSummary("Confirm order (admin) - sends to POS")
@@ -132,7 +140,7 @@ public static partial class OrdersApi
                 return TypedResults.BadRequest("A valid phone number is required to order as a guest.");
             }
 
-            if (request.PointsToRedeem > 0 || request.LoyaltyDiscount > 0)
+            if (request.PointsToRedeem > 0)
             {
                 return TypedResults.BadRequest("Loyalty points require an account.");
             }
@@ -172,29 +180,27 @@ public static partial class OrdersApi
                 request.RoomName,
                 request.CustomerNote,
                 // Loyalty is account-only; the validator rejects a guest that
-                // tries to redeem, rather than silently discounting the order
+                // tries to redeem, rather than silently discounting the order.
+                // The discount itself is computed server-side from the points.
                 request.PointsToRedeem,
-                request.LoyaltyDiscount,
                 request.TableId,
                 request.TableName,
                 guestId,
                 isGuest ? request.GuestName : null,
-                isGuest ? request.GuestPhone : null);
+                isGuest ? request.GuestPhone : null,
+                sessionId: request.SessionId,
+                roomId: request.RoomId);
 
-            var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, bool>(createOrderCommand, requestId);
+            var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
             try
             {
-                var result = await services.Mediator.Send(requestCreateOrder);
+                var orderId = await services.Mediator.Send(requestCreateOrder);
 
-                if (result)
-                {
-                    services.Logger.LogInformation("CreateOrderCommand succeeded - RequestId: {RequestId}", requestId);
-                }
-                else
-                {
-                    services.Logger.LogWarning("CreateOrderCommand failed - RequestId: {RequestId}", requestId);
-                }
+                services.Logger.LogInformation(
+                    "CreateOrderCommand succeeded - RequestId: {RequestId}, OrderId: {OrderId}",
+                    requestId,
+                    orderId == 0 ? "duplicate request" : orderId);
 
                 return TypedResults.Ok();
             }
@@ -203,6 +209,68 @@ public static partial class OrdersApi
                 // Missing or malformed guest details are the caller's mistake,
                 // not a server fault — say so instead of returning a 500
                 services.Logger.LogWarning(ex, "Create order rejected - RequestId: {RequestId}", requestId);
+                return TypedResults.BadRequest(ex.Message);
+            }
+        }
+    }
+
+    public static async Task<Results<Ok<PosOrderResponse>, BadRequest<string>>> CreatePosOrderAsync(
+        [FromHeader(Name = "x-requestid")] Guid requestId,
+        PosOrderRequest request,
+        HttpContext httpContext,
+        [AsParameters] OrderServices services)
+    {
+        if (requestId == Guid.Empty)
+        {
+            return TypedResults.BadRequest("RequestId is missing.");
+        }
+
+        // Redeeming points spends a customer's balance, so it takes a customer
+        if (request.PointsToRedeem > 0 && string.IsNullOrWhiteSpace(request.CustomerUserId))
+        {
+            return TypedResults.BadRequest("Loyalty points can only be redeemed for an attached customer.");
+        }
+
+        var attachCustomer = !string.IsNullOrWhiteSpace(request.CustomerUserId);
+
+        if (attachCustomer && string.IsNullOrWhiteSpace(request.CustomerUserName))
+        {
+            return TypedResults.BadRequest("An attached customer needs a display name.");
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+
+        services.Logger.LogInformation(
+            "Creating POS order by cashier {Cashier}, customer: {Customer}",
+            services.IdentityService.GetUserIdentity(),
+            attachCustomer ? request.CustomerUserId : "walk-in");
+
+        using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
+        {
+            var command = new CreateOrderCommand(
+                request.Items,
+                attachCustomer ? request.CustomerUserId! : string.Empty,
+                attachCustomer ? request.CustomerUserName! : string.Empty,
+                branchId,
+                request.RoomName,
+                request.CustomerNote,
+                request.PointsToRedeem,
+                request.TableId,
+                request.TableName,
+                source: OrderSource.Pos);
+
+            try
+            {
+                // The id routes the cashier to the ticket this order lands on;
+                // 0 means a deduplicated retry — the POS falls back to the
+                // open-tickets list
+                var orderId = await services.Mediator.Send(new IdentifiedCommand<CreateOrderCommand, int>(command, requestId));
+
+                return TypedResults.Ok(new PosOrderResponse(orderId));
+            }
+            catch (OrderingDomainException ex)
+            {
+                services.Logger.LogWarning(ex, "POS order rejected - RequestId: {RequestId}", requestId);
                 return TypedResults.BadRequest(ex.Message);
             }
         }
@@ -418,6 +486,7 @@ public static partial class OrdersApi
         string? buyerId = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
+        int? sessionId = null,
         [AsParameters] OrderServices services = default!)
     {
         var branchId = httpContext.GetRequiredBranchId();
@@ -428,7 +497,7 @@ public static partial class OrdersApi
             : status.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var orders = await services.Queries.GetAllOrdersAsync(
-            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate);
+            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId);
         return TypedResults.Ok(orders);
     }
 
@@ -461,8 +530,14 @@ public static partial class OrdersApi
 /// Ignored. The customer is identified by their access token, or as a guest by
 /// the X-Guest-Id header. Kept so existing clients keep compiling.
 /// </param>
+/// <param name="LoyaltyDiscount">
+/// Ignored. The discount is computed server-side from <paramref name="PointsToRedeem"/>
+/// at the fixed redemption rate. Kept so existing clients keep compiling.
+/// </param>
 /// <param name="GuestName">Required when ordering without an account.</param>
 /// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
+/// <param name="SessionId">The active room session the order belongs to, when ordering from a room.</param>
+/// <param name="RoomId">The room behind <paramref name="SessionId"/>.</param>
 public record CreateOrderRequest(
     string UserId,
     string UserName,
@@ -474,7 +549,32 @@ public record CreateOrderRequest(
     int? TableId = null,
     LocalizedText? TableName = null,
     string? GuestName = null,
-    string? GuestPhone = null);
+    string? GuestPhone = null,
+    int? SessionId = null,
+    int? RoomId = null);
+
+/// <summary>
+/// Request model for a counter sale keyed in at the POS. The cashier is the
+/// authenticated caller; the customer is optional and only named so the sale
+/// can accrue loyalty and appear in their history.
+/// </summary>
+/// <param name="CustomerUserId">Attach the sale to a customer account (optional).</param>
+/// <param name="CustomerUserName">Display name for <paramref name="CustomerUserId"/>.</param>
+public record PosOrderRequest(
+    List<BasketItem> Items,
+    string? CustomerNote = null,
+    int? TableId = null,
+    LocalizedText? TableName = null,
+    LocalizedText? RoomName = null,
+    string? CustomerUserId = null,
+    string? CustomerUserName = null,
+    int PointsToRedeem = 0);
+
+/// <summary>
+/// The created order's id — what the POS uses to find the ticket the order
+/// lands on. 0 when the request was a deduplicated retry.
+/// </summary>
+public record PosOrderResponse(int OrderId);
 
 /// <summary>
 /// Request model for rating an order

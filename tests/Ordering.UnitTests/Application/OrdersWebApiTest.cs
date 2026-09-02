@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.UnitTests.Application;
+﻿namespace Chillax.Ordering.UnitTests.Application;
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -146,7 +146,7 @@ public class OrdersWebApiTest
     [TestMethod]
     public async Task Get_orders_signed_out_without_a_guest_id_returns_nothing()
     {
-        // Arrange — no token and no guest id identifies nobody, so the list has
+        // Arrange â€” no token and no guest id identifies nobody, so the list has
         // to come back empty rather than falling through to everyone's orders
         _identityServiceMock.GetUserIdentity().Returns((string)null);
 
@@ -210,7 +210,7 @@ public class OrdersWebApiTest
     [TestMethod]
     public async Task Get_order_belonging_to_someone_else_is_not_found()
     {
-        // Arrange — order numbers are sequential, so a signed-in customer must
+        // Arrange â€” order numbers are sequential, so a signed-in customer must
         // not be able to read another customer's order by guessing one
         var fakeOrderId = 123;
 
@@ -309,7 +309,7 @@ public class OrdersWebApiTest
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
-        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
     [TestMethod]
@@ -320,7 +320,7 @@ public class OrdersWebApiTest
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
-        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
     [TestMethod]
@@ -330,13 +330,13 @@ public class OrdersWebApiTest
     [DataRow("02012345678")]
     public async Task Create_guest_order_with_an_unusable_phone_is_rejected(string phone)
     {
-        // Act — the phone is the only way staff can reach a guest, so a bad one
+        // Act â€” the phone is the only way staff can reach a guest, so a bad one
         // has to fail loudly here rather than inside the swallowed command pipeline
         var result = await CreateGuestOrderAsync(GuestRequest(guestPhone: phone));
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
-        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
     [TestMethod]
@@ -347,29 +347,29 @@ public class OrdersWebApiTest
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
-        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
     [TestMethod]
     public async Task Create_guest_order_without_a_destination_is_rejected()
     {
-        // Act — nothing anchors this to someone in the building, and ordering
+        // Act â€” nothing anchors this to someone in the building, and ordering
         // ahead to collect is reserved for account holders
         var result = await CreateGuestOrderAsync(GuestRequest(tableId: null));
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
-        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default);
+        await _mediatorMock.DidNotReceive().Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default);
     }
 
     [TestMethod]
     public async Task Create_signed_in_order_without_a_destination_is_allowed()
     {
-        // Arrange — the gate is on guests only; an account holder stays
+        // Arrange â€” the gate is on guests only; an account holder stays
         // accountable wherever they order from
         _identityServiceMock.GetUserIdentity().Returns(Guid.NewGuid().ToString());
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
@@ -388,8 +388,8 @@ public class OrdersWebApiTest
     public async Task Create_guest_order_success()
     {
         // Arrange
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
 
         // Act
         var result = await CreateGuestOrderAsync(GuestRequest());
@@ -397,7 +397,7 @@ public class OrdersWebApiTest
         // Assert
         Assert.IsInstanceOfType<Ok>(result.Result);
         await _mediatorMock.Received().Send(
-            Arg.Is<IdentifiedCommand<CreateOrderCommand, bool>>(c =>
+            Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.IsGuestOrder
                 && c.Command.GuestName == "Nadia"
                 && c.Command.GuestPhone == "01012345678"),
@@ -407,12 +407,12 @@ public class OrdersWebApiTest
     [TestMethod]
     public async Task Create_order_takes_the_user_from_the_token_not_the_body()
     {
-        // Arrange — a signed-in customer must not be able to order in someone
+        // Arrange â€” a signed-in customer must not be able to order in someone
         // else's name by putting their id in the payload
         var signedInUserId = Guid.NewGuid().ToString();
         _identityServiceMock.GetUserIdentity().Returns(signedInUserId);
-        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, bool>>(), default)
-            .Returns(Task.FromResult(true));
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
@@ -426,14 +426,14 @@ public class OrdersWebApiTest
         // Assert
         Assert.IsInstanceOfType<Ok>(result.Result);
         await _mediatorMock.Received().Send(
-            Arg.Is<IdentifiedCommand<CreateOrderCommand, bool>>(c =>
+            Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.UserId == signedInUserId && !c.Command.IsGuestOrder),
             default);
     }
 
     /// <summary>
     /// A guest orders from the table they scanned, so the default request has
-    /// one — the destinationless case is its own test.
+    /// one â€” the destinationless case is its own test.
     /// </summary>
     private static CreateOrderRequest GuestRequest(
         string? guestName = "Nadia",

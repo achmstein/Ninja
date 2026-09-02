@@ -18,8 +18,20 @@ public class OrderStockConfirmedIntegrationEventHandler(
         }
 
         order.SetStockConfirmedStatus();
+
+        // A counter sale was keyed in by the cashier — the person who would
+        // otherwise press Confirm — so it confirms itself the moment the
+        // items check out. Customer and guest orders keep waiting for staff.
+        if (order.Source == OrderSource.Pos)
+        {
+            order.SetConfirmedStatus();
+        }
+
         await orderRepository.UnitOfWork.SaveEntitiesAsync();
 
-        logger.LogInformation("Order {OrderId} stock confirmed - status changed to Submitted", @event.OrderId);
+        logger.LogInformation(
+            "Order {OrderId} stock confirmed - status changed to {Status}",
+            @event.OrderId,
+            order.OrderStatus);
     }
 }

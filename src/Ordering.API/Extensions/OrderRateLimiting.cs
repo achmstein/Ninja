@@ -20,6 +20,15 @@ public static class OrderRateLimiting
     /// <summary>Orders one anonymous caller may place per <see cref="Window"/>.</summary>
     private const int GuestOrdersPerWindow = 10;
 
+    /// <summary>
+    /// Ceiling on anonymous order creation per address per <see cref="Window"/>,
+    /// regardless of guest id. The per-guest limit partitions on a value the
+    /// client chooses, so rotating ids would dodge it; every rotation still
+    /// shares this bucket. Sized for a full café behind one NAT'd wifi IP —
+    /// generous for real service, far too small to flood a kitchen.
+    /// </summary>
+    private const int AnonymousOrdersPerWindowPerAddress = 60;
+
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(5);
 
     public static IServiceCollection AddOrderRateLimiting(this IServiceCollection services)
@@ -27,6 +36,29 @@ public static class OrderRateLimiting
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            // Outer per-IP ceiling over the same requests the per-guest policy
+            // governs; signed-in traffic and everything else passes untouched
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                if (context.User.Identity?.IsAuthenticated == true
+                    || !HttpMethods.IsPost(context.Request.Method)
+                    || !context.Request.Path.StartsWithSegments("/api/orders"))
+                {
+                    return RateLimitPartition.GetNoLimiter("unlimited");
+                }
+
+                var address = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    $"ip:{address}",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = AnonymousOrdersPerWindowPerAddress,
+                        Window = Window,
+                        QueueLimit = 0,
+                    });
+            });
 
             options.AddPolicy(GuestCreatePolicy, context =>
             {

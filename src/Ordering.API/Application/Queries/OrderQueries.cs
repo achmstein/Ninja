@@ -25,6 +25,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             Date = order.OrderDate,
             Description = order.Description,
             RoomName = order.RoomName,
+            SessionId = order.SessionId,
+            RoomId = order.RoomId,
+            Source = order.Source.ToString(),
             TableId = order.TableId,
             TableName = order.TableName,
             CustomerNote = order.CustomerNote,
@@ -102,7 +105,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units),
+                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
@@ -136,10 +139,12 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units),
+                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
+                SessionId = o.SessionId,
+                Source = o.Source.ToString(),
                 TableId = o.TableId,
                 TableName = o.TableName,
                 // A guest has no Buyer row, so the name they left at checkout
@@ -160,10 +165,14 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         IReadOnlyCollection<string>? statuses = null,
         string? buyerId = null,
         DateTime? fromDate = null,
-        DateTime? toDate = null)
+        DateTime? toDate = null,
+        int? sessionId = null)
     {
         var query = context.Orders.AsNoTracking().Include(o => o.Buyer)
             .Where(o => o.BranchId == branchId);
+
+        if (sessionId.HasValue)
+            query = query.Where(o => o.SessionId == sessionId.Value);
 
         if (statuses is { Count: > 0 })
         {
@@ -199,10 +208,12 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 Status = o.OrderStatus.ToString(),
-                Total = (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units),
+                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
                 PointsToRedeem = o.PointsToRedeem,
                 LoyaltyDiscount = o.LoyaltyDiscount,
                 RoomName = o.RoomName,
+                SessionId = o.SessionId,
+                Source = o.Source.ToString(),
                 TableId = o.TableId,
                 TableName = o.TableName,
                 // A guest has no Buyer row, so the name they left at checkout
@@ -239,7 +250,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .Select(o => new
             {
                 o.OrderDate,
-                Total = o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units),
+                // Net of line discounts and the loyalty discount — revenue is
+                // what customers actually paid, not the sticker sum
+                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
             })
             .ToListAsync();
 

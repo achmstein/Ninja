@@ -26,6 +26,25 @@ public class Order
     public LocalizedText? RoomName { get; private set; }
 
     /// <summary>
+    /// The Spaces session (reservation) this order was placed into, when the
+    /// customer ordered from an active room session. The name snapshot above
+    /// is for display; this id is what lets a bill be assembled per session.
+    /// </summary>
+    public int? SessionId { get; private set; }
+
+    /// <summary>
+    /// The room behind <see cref="SessionId"/>, captured so per-room queries
+    /// don't need to resolve the session.
+    /// </summary>
+    public int? RoomId { get; private set; }
+
+    /// <summary>
+    /// Who put this order into the system — a signed-in customer, a guest at
+    /// a table, or staff at the counter POS.
+    /// </summary>
+    public OrderSource Source { get; private set; }
+
+    /// <summary>
     /// The café table the order is delivered to, when the customer is not in a room.
     /// Kept as an id as well as a name so open orders can be counted per table.
     /// </summary>
@@ -127,12 +146,14 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null) : this()
     {
         BuyerId = buyerId;
         OrderStatus = OrderStatus.AwaitingValidation;
         OrderDate = DateTime.UtcNow;
         RoomName = roomName;
+        SessionId = sessionId;
+        RoomId = roomId;
         TableId = tableId;
         TableName = tableName;
         CustomerNote = customerNote;
@@ -141,10 +162,15 @@ public class Order
         BranchId = branchId;
         Description = "Order awaiting item availability validation.";
 
+        // Callers that know better (the POS path) say so; otherwise the
+        // identity decides: a signed-in user is a customer, nobody is a guest.
+        Source = source ?? (string.IsNullOrWhiteSpace(userId) ? OrderSource.Guest : OrderSource.Customer);
+
         // No identity behind the order means a guest placed it. The name and
         // phone they left at checkout are then the only way staff can reach
-        // them, so the aggregate refuses to exist without both.
-        if (string.IsNullOrWhiteSpace(userId))
+        // them, so the aggregate refuses to exist without both. A counter sale
+        // (Source = Pos) is exempt: the cashier standing there is the contact.
+        if (Source == OrderSource.Guest)
         {
             GuestId = !string.IsNullOrWhiteSpace(guestId)
                 ? guestId
@@ -282,7 +308,30 @@ public class Order
         LastReminderSentAt = DateTime.UtcNow;
     }
 
-    public decimal GetTotal() => _orderItems.Sum(o => o.Units * o.UnitPrice);
+    /// <summary>
+    /// How many loyalty points buy one unit of currency (100 points = 1 EGP).
+    /// Mirrors Loyalty.API's RedemptionPointsPerUnit — services share no code,
+    /// so the business constant is deliberately duplicated, not referenced.
+    /// </summary>
+    public const int LoyaltyPointsPerCurrencyUnit = 100;
+
+    /// <summary>
+    /// What the redeemed points are worth against this subtotal: rate-derived,
+    /// never trusted from a client, and never more than the order itself.
+    /// </summary>
+    public static double GetLoyaltyDiscountFor(int pointsToRedeem, decimal itemsTotal)
+        => Math.Min((double)Math.Max(0, pointsToRedeem) / LoyaltyPointsPerCurrencyUnit, (double)Math.Max(0, itemsTotal));
+
+    /// <summary>
+    /// Item lines net of their own discounts, before the loyalty discount.
+    /// </summary>
+    public decimal GetItemsTotal() => _orderItems.Sum(o => o.Units * o.UnitPrice - o.Discount);
+
+    /// <summary>
+    /// What the customer actually pays: items net of line discounts, minus the
+    /// loyalty discount. Never negative.
+    /// </summary>
+    public decimal GetTotal() => Math.Max(0, GetItemsTotal() - (decimal)LoyaltyDiscount);
 
     /// <summary>
     /// Check if the order can be rated (must be confirmed)

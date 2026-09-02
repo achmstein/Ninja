@@ -32,14 +32,15 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
             // Loyalty is account-only: there is nothing to redeem against
             RuleFor(command => command.PointsToRedeem).Equal(0)
                 .WithMessage("Loyalty points cannot be redeemed on a guest order.");
-            RuleFor(command => command.LoyaltyDiscount).Equal(0)
-                .WithMessage("Loyalty discounts cannot be applied to a guest order.");
 
             // A guest order has to be going somewhere in the building. Ordering
             // ahead to collect is for account holders, who can be held to it.
             RuleFor(command => command.HasDestination).Equal(true)
                 .WithMessage("A table or room is required to order as a guest.");
         });
+
+        // Negative points would become a negative discount — a surcharge
+        RuleFor(command => command.PointsToRedeem).GreaterThanOrEqualTo(0);
 
         RuleFor(command => command.OrderItems).Must(ContainOrderItems).WithMessage("No order items found");
 

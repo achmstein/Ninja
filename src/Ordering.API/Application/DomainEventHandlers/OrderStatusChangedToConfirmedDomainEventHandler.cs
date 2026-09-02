@@ -37,24 +37,19 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             return;
         }
 
-        // A guest order is confirmed like any other; it just has no identity to
-        // credit, so loyalty skips it downstream on the empty guid.
+        // A guest order or walk-in counter sale is confirmed like any other;
+        // it just has no identity to credit, so loyalty skips it downstream
+        // on the empty guid.
         string buyerName;
         string buyerIdentityGuid;
 
-        if (order.IsGuestOrder)
+        if (order.BuyerId == null)
         {
-            buyerName = order.GuestName!;
+            buyerName = order.GuestName ?? "Walk-in";
             buyerIdentityGuid = string.Empty;
         }
         else
         {
-            if (order.BuyerId == null)
-            {
-                _logger.LogWarning("Order {OrderId} has no buyer", domainEvent.OrderId);
-                return;
-            }
-
             var buyer = await _buyerRepository.FindByIdAsync(order.BuyerId.Value);
 
             if (buyer == null)
@@ -75,7 +70,22 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
             order.RoomName,
             order.GetTotal(),
             order.PointsToRedeem,
-            order.GuestId);
+            order.GuestId,
+            order.BranchId,
+            order.SessionId,
+            order.RoomId,
+            order.TableId,
+            order.TableName,
+            order.Source.ToString(),
+            order.GuestPhone,
+            order.LoyaltyDiscount,
+            order.OrderItems.Select(oi => new OrderConfirmedItem(
+                oi.ProductId,
+                oi.ProductName,
+                oi.Units,
+                oi.UnitPrice,
+                oi.Discount,
+                oi.CustomizationsDescription)).ToList());
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);
     }

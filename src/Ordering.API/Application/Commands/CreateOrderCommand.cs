@@ -8,9 +8,12 @@ using Chillax.Ordering.Domain.Seedwork;
 /// <summary>
 /// Command to create a new cafe order.
 /// Simplified for cafe - no address or payment details.
+/// Returns the new order's id, or 0 for a deduplicated retry (the original
+/// id isn't recorded against the request id — callers treat 0 as "already
+/// placed" and fall back to looking the order up).
 /// </summary>
 [DataContract]
-public class CreateOrderCommand : IRequest<bool>
+public class CreateOrderCommand : IRequest<int>
 {
     [DataMember]
     private readonly List<OrderItemDTO> _orderItems;
@@ -26,6 +29,18 @@ public class CreateOrderCommand : IRequest<bool>
     /// </summary>
     [DataMember]
     public LocalizedText? RoomName { get; private set; }
+
+    /// <summary>
+    /// The Spaces session this order belongs to, when ordered from a room
+    /// </summary>
+    [DataMember]
+    public int? SessionId { get; private set; }
+
+    /// <summary>
+    /// The room behind <see cref="SessionId"/>
+    /// </summary>
+    [DataMember]
+    public int? RoomId { get; private set; }
 
     /// <summary>
     /// Café table the order is delivered to, when the customer is not in a room
@@ -46,16 +61,12 @@ public class CreateOrderCommand : IRequest<bool>
     public string? CustomerNote { get; private set; }
 
     /// <summary>
-    /// Loyalty points to redeem for this order
+    /// Loyalty points to redeem for this order. The discount they buy is
+    /// computed server-side from the fixed redemption rate — never taken
+    /// from the request.
     /// </summary>
     [DataMember]
     public int PointsToRedeem { get; private set; }
-
-    /// <summary>
-    /// Loyalty discount in currency, computed by the Loyalty API
-    /// </summary>
-    [DataMember]
-    public double LoyaltyDiscount { get; private set; }
 
     /// <summary>
     /// The branch this order is placed at
@@ -86,9 +97,17 @@ public class CreateOrderCommand : IRequest<bool>
     public IEnumerable<OrderItemDTO> OrderItems => _orderItems;
 
     /// <summary>
-    /// True when nobody signed in to place this order.
+    /// Who is placing the order. Derived from the identity unless the caller
+    /// (the POS path) says otherwise; never bound from a request body.
     /// </summary>
-    public bool IsGuestOrder => string.IsNullOrWhiteSpace(UserId);
+    [DataMember]
+    public OrderSource Source { get; private set; }
+
+    /// <summary>
+    /// True when nobody signed in to place this order and it isn't a counter
+    /// sale keyed in by staff.
+    /// </summary>
+    public bool IsGuestOrder => Source == OrderSource.Guest;
 
     /// <summary>
     /// Whether the order says where it goes. Mirrors Order.HasDestination —
@@ -109,25 +128,29 @@ public class CreateOrderCommand : IRequest<bool>
         LocalizedText? roomName = null,
         string? customerNote = null,
         int pointsToRedeem = 0,
-        double loyaltyDiscount = 0,
         int? tableId = null,
         LocalizedText? tableName = null,
         string? guestId = null,
         string? guestName = null,
-        string? guestPhone = null)
+        string? guestPhone = null,
+        OrderSource? source = null,
+        int? sessionId = null,
+        int? roomId = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
         UserId = userId;
         UserName = userName;
         BranchId = branchId;
         RoomName = roomName;
+        SessionId = sessionId;
+        RoomId = roomId;
         TableId = tableId;
         TableName = tableName;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
-        LoyaltyDiscount = loyaltyDiscount;
         GuestId = guestId;
         GuestName = guestName;
         GuestPhone = guestPhone;
+        Source = source ?? (string.IsNullOrWhiteSpace(userId) ? OrderSource.Guest : OrderSource.Customer);
     }
 }

@@ -31,6 +31,11 @@ public record Order
     public string Status { get; init; } = string.Empty;
     public string? Description { get; init; }
     public LocalizedText? RoomName { get; init; }
+    /// <summary>The room session the order was placed into, when ordered from a room.</summary>
+    public int? SessionId { get; init; }
+    public int? RoomId { get; init; }
+    /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
+    public string Source { get; init; } = string.Empty;
     public int? TableId { get; init; }
     public LocalizedText? TableName { get; init; }
     public string? CustomerNote { get; init; }
@@ -78,6 +83,10 @@ public record OrderSummary
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
     public LocalizedText? RoomName { get; init; }
+    /// <summary>The room session the order was placed into, when ordered from a room.</summary>
+    public int? SessionId { get; init; }
+    /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
+    public string Source { get; init; } = string.Empty;
     public int? TableId { get; init; }
     public LocalizedText? TableName { get; init; }
     /// <summary>Buyer's name, or the name a guest left at checkout.</summary>

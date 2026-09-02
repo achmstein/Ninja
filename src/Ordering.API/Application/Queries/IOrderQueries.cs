@@ -25,7 +25,7 @@ public interface IOrderQueries
 
     /// <summary>
     /// Get all orders paginated (admin), filtered by branch and optionally by
-    /// status, buyer, and date range
+    /// status, buyer, date range, and the room session they were ordered into
     /// </summary>
     Task<PaginatedResult<OrderSummary>> GetAllOrdersAsync(
         int pageIndex,
@@ -34,7 +34,8 @@ public interface IOrderQueries
         IReadOnlyCollection<string>? statuses = null,
         string? buyerId = null,
         DateTime? fromDate = null,
-        DateTime? toDate = null);
+        DateTime? toDate = null,
+        int? sessionId = null);
 
     /// <summary>
     /// Aggregated per-day and per-item order statistics (admin dashboard),

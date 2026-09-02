@@ -313,4 +313,75 @@ public class OrderAggregateTest
             guestId: guestId,
             guestName: guestName,
             guestPhone: guestPhone);
+
+    [TestMethod]
+    public void Total_is_net_of_line_discounts_and_loyalty_discount()
+    {
+        // 2 × 50 − 10 line discount = 90, minus 25 EGP loyalty = 65
+        var order = new Order("user-1", "Nadia", branchId: 1, pointsToRedeem: 2500, loyaltyDiscount: 25);
+        order.AddOrderItem(1, new LocalizedText("Latte"), unitPrice: 50, discount: 10, pictureUrl: null, units: 2);
+
+        Assert.AreEqual(90m, order.GetItemsTotal());
+        Assert.AreEqual(65m, order.GetTotal());
+    }
+
+    [TestMethod]
+    public void Total_never_goes_negative()
+    {
+        var order = new Order("user-1", "Nadia", branchId: 1, loyaltyDiscount: 500);
+        order.AddOrderItem(1, new LocalizedText("Latte"), unitPrice: 50, discount: 0, pictureUrl: null, units: 1);
+
+        Assert.AreEqual(0m, order.GetTotal());
+    }
+
+    [TestMethod]
+    public void Loyalty_discount_derives_from_points_at_the_fixed_rate()
+    {
+        // 100 points = 1 EGP
+        Assert.AreEqual(25d, Order.GetLoyaltyDiscountFor(pointsToRedeem: 2500, itemsTotal: 90m));
+    }
+
+    [TestMethod]
+    public void Loyalty_discount_is_capped_at_the_items_total()
+    {
+        Assert.AreEqual(90d, Order.GetLoyaltyDiscountFor(pointsToRedeem: 100_000, itemsTotal: 90m));
+    }
+
+    [TestMethod]
+    public void Loyalty_discount_ignores_negative_points()
+    {
+        Assert.AreEqual(0d, Order.GetLoyaltyDiscountFor(pointsToRedeem: -500, itemsTotal: 90m));
+    }
+
+    [TestMethod]
+    public void Source_derives_from_identity_when_not_stated()
+    {
+        var customerOrder = new Order("user-1", "Nadia", branchId: 1);
+        var guestOrder = NewGuestOrder(tableId: 3);
+
+        Assert.AreEqual(OrderSource.Customer, customerOrder.Source);
+        Assert.AreEqual(OrderSource.Guest, guestOrder.Source);
+    }
+
+    [TestMethod]
+    public void Pos_order_needs_no_identity_contact_or_destination()
+    {
+        // A walk-in counter sale: nobody signed in, nothing to deliver to —
+        // the cashier keying it in is the contact
+        var order = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+
+        Assert.AreEqual(OrderSource.Pos, order.Source);
+        Assert.IsFalse(order.IsGuestOrder);
+        Assert.IsNull(order.GuestId);
+    }
+
+    [TestMethod]
+    public void Order_carries_its_session_and_room_ids()
+    {
+        var order = new Order("user-1", "Nadia", branchId: 1,
+            roomName: new LocalizedText("VIP"), sessionId: 42, roomId: 7);
+
+        Assert.AreEqual(42, order.SessionId);
+        Assert.AreEqual(7, order.RoomId);
+    }
 }

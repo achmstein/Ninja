@@ -17,6 +17,12 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .HasMaxLength(30);
 
         orderConfiguration
+            .Property(o => o.Source)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(OrderSource.Customer);
+
+        orderConfiguration
             .Property(o => o.Description)
             .HasMaxLength(500);
 
@@ -62,5 +68,8 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         // A guest's own order list is looked up by this and nothing else
         orderConfiguration.HasIndex(o => o.GuestId);
+
+        // Sales assembles a session's bill by this
+        orderConfiguration.HasIndex(o => o.SessionId);
     }
 }

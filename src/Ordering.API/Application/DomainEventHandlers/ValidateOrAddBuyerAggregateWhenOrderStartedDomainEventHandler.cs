@@ -24,15 +24,16 @@ public class ValidateOrAddBuyerAggregateWhenOrderStartedDomainEventHandler
 
     public async Task Handle(OrderStartedDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        // A guest order has no identity to hang a Buyer off, so it stays
-        // buyer-less and announces itself under the name left at checkout.
-        if (domainEvent.Order.IsGuestOrder)
+        // An order with no identity behind it has no Buyer to hang off — a
+        // guest announces itself under the name left at checkout, a walk-in
+        // counter sale under a generic label.
+        if (string.IsNullOrWhiteSpace(domainEvent.UserId))
         {
             await _orderingIntegrationEventService.AddAndSaveEventAsync(
                 new OrderStatusChangedToSubmittedIntegrationEvent(
                     domainEvent.Order.Id,
                     domainEvent.Order.OrderStatus,
-                    domainEvent.Order.GuestName!,
+                    domainEvent.Order.GuestName ?? "Walk-in",
                     string.Empty,
                     domainEvent.Order.BranchId,
                     domainEvent.Order.GuestId));

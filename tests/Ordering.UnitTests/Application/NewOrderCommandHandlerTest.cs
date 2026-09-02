@@ -1,4 +1,4 @@
-using Chillax.Ordering.API.Application.IntegrationEvents;
+﻿using Chillax.Ordering.API.Application.IntegrationEvents;
 using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 namespace Chillax.Ordering.UnitTests.Application;
@@ -49,8 +49,8 @@ public class NewOrderRequestHandlerTest
         var cltToken = new CancellationToken();
         var result = await handler.Handle(fakeOrderCmd, cltToken);
 
-        // Assert
-        Assert.IsFalse(result);
+        // Assert — the mocked repository never assigns an id
+        Assert.AreEqual(0, result);
     }
 
     [TestMethod]

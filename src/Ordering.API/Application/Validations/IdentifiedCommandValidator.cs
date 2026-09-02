@@ -1,6 +1,6 @@
 ﻿namespace Chillax.Ordering.API.Application.Validations;
 
-public class IdentifiedCommandValidator : AbstractValidator<IdentifiedCommand<CreateOrderCommand, bool>>
+public class IdentifiedCommandValidator : AbstractValidator<IdentifiedCommand<CreateOrderCommand, int>>
 {
     public IdentifiedCommandValidator(ILogger<IdentifiedCommandValidator> logger)
     {
