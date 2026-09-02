@@ -18,9 +18,9 @@ public interface IRoomQueries
     Task<RoomViewModel?> GetRoomByIdAsync(int roomId);
 
     /// <summary>
-    /// Get customer's reservations
+    /// Get customer's reservations, newest first, paged
     /// </summary>
-    Task<IEnumerable<ReservationViewModel>> GetCustomerReservationsAsync(string customerId);
+    Task<IEnumerable<ReservationViewModel>> GetCustomerReservationsAsync(string customerId, int pageIndex = 0, int pageSize = 20);
 
     /// <summary>
     /// Get all active sessions (admin view) for a branch

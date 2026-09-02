@@ -14,4 +14,5 @@ public record SessionStartedIntegrationEvent(
     string? CustomerId,
     string? CustomerName,
     DateTime? ActualStartTime,
-    string? PlayerMode) : IntegrationEvent;
+    string? PlayerMode,
+    int BranchId = 0) : IntegrationEvent;

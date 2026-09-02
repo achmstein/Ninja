@@ -298,7 +298,7 @@
           "Reservations"
         ],
         "summary": "Reserve a room",
-        "description": "Create an immediate reservation for a room. Customer has 15 minutes to arrive before auto-cancellation.",
+        "description": "Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.",
         "operationId": "ReserveRoom",
         "parameters": [
           {
@@ -771,6 +771,34 @@
         "summary": "Get my sessions",
         "description": "Get all sessions for the current authenticated user",
         "operationId": "GetMySessions",
+        "parameters": [
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -2454,20 +2482,6 @@
               "null",
               "string"
             ]
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "implicit": {
-            "authorizationUrl": "http://localhost:8080/realms/chillax/protocol/openid-connect/auth",
-            "tokenUrl": "http://localhost:8080/realms/chillax/protocol/openid-connect/token",
-            "scopes": {
-              "rooms": "Spaces API"
-            }
           }
         }
       }

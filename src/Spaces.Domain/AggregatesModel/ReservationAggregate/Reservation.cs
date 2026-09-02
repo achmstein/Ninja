@@ -84,7 +84,7 @@ public class Reservation : Entity, IAggregateRoot
     }
 
     /// <summary>
-    /// Create a new immediate reservation (customer has 15 minutes to arrive)
+    /// Create a new immediate reservation (customer has <see cref="ReservationExpirationMinutes"/> minutes to arrive)
     /// </summary>
     public Reservation(
         int roomId,

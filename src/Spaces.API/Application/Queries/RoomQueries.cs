@@ -54,9 +54,11 @@ public class RoomQueries : IRoomQueries
         return MapToViewModel(room, roomReservations);
     }
 
-    public async Task<IEnumerable<ReservationViewModel>> GetCustomerReservationsAsync(string customerId)
+    public async Task<IEnumerable<ReservationViewModel>> GetCustomerReservationsAsync(string customerId, int pageIndex = 0, int pageSize = 20)
     {
-        // Include sessions where customer is owner OR a session member
+        // Include sessions where customer is owner OR a session member.
+        // Paged: the Flutter app polls this on a 15s timer, and a regular's
+        // full history is unbounded — recent sessions are all it needs.
         var reservations = await _context.Reservations
             .Include(r => r.Room)
             .Include(r => r.SessionMembers)
@@ -64,6 +66,8 @@ public class RoomQueries : IRoomQueries
             .Where(r => r.CustomerId == customerId ||
                         r.SessionMembers.Any(m => m.CustomerId == customerId))
             .OrderByDescending(r => r.CreatedAt)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         return reservations.Select(MapToViewModel);

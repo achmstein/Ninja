@@ -52,9 +52,10 @@ public class SessionEndedDomainEventHandler : INotificationHandler<SessionEndedD
 
         await _eventBus.PublishAsync(roomAvailableEvent);
 
-        // Publish session completed event (for billing/loyalty)
-        // Only publish if we have a customer ID (walk-ins without assigned customers don't get billing events)
-        if (reservation.ActualStartTime.HasValue && reservation.EndTime.HasValue && reservation.CustomerId != null)
+        // Publish session completed event (for billing). Every real session
+        // gets one — a cashier-started walk-in with no customer attached is
+        // still a bill Sales has to settle; CustomerId simply travels null.
+        if (reservation.ActualStartTime.HasValue && reservation.EndTime.HasValue)
         {
             var duration = reservation.EndTime.Value - reservation.ActualStartTime.Value;
             var sessionCompletedEvent = new SessionCompletedIntegrationEvent(
@@ -69,7 +70,8 @@ public class SessionEndedDomainEventHandler : INotificationHandler<SessionEndedD
                 reservation.GetMultiRoundedHours(),
                 reservation.ActualStartTime.Value,
                 reservation.EndTime.Value,
-                duration);
+                duration,
+                reservation.Room?.BranchId ?? 1);
 
             await _eventBus.PublishAsync(sessionCompletedEvent);
         }

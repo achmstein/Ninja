@@ -73,7 +73,7 @@ public static class RoomsApi
         api.MapPost("/{roomId:int}/reserve", CreateReservation)
             .WithName("ReserveRoom")
             .WithSummary("Reserve a room")
-            .WithDescription("Create an immediate reservation for a room. Customer has 15 minutes to arrive before auto-cancellation.")
+            .WithDescription("Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.")
             .WithTags("Reservations")
             .RequireAuthorization();
 
@@ -467,10 +467,15 @@ public static class RoomsApi
 
     public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetMySessions(
         [FromServices] IRoomQueries queries,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        int pageIndex = 0,
+        int pageSize = 20)
     {
+        // The page size is capped so a polling client can't ask for the world;
+        // the response stays a plain array for compatibility with shipped apps
+        pageSize = Math.Clamp(pageSize, 1, 50);
         var customerId = httpContext.User.GetUserId();
-        var sessions = await queries.GetCustomerReservationsAsync(customerId ?? string.Empty);
+        var sessions = await queries.GetCustomerReservationsAsync(customerId ?? string.Empty, Math.Max(0, pageIndex), pageSize);
         return TypedResults.Ok(sessions);
     }
 
