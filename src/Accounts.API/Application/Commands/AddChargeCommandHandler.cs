@@ -37,7 +37,15 @@ public class AddChargeCommandHandler : IRequestHandler<AddChargeCommand, bool>
             account.UpdateCustomerName(request.CustomerName);
         }
 
-        account.AddCharge(request.Amount, request.Description, request.AddedBy);
+        // A referenced charge posts at most once — the bus redelivers, and a
+        // customer must never pay the same ticket twice
+        if (request.Reference != null && account.Transactions.Any(t => t.Reference == request.Reference))
+        {
+            _logger.LogInformation("Charge with reference {Reference} already posted - skipping", request.Reference);
+            return true;
+        }
+
+        account.AddCharge(request.Amount, request.Description, request.AddedBy, request.Reference);
 
         _logger.LogInformation("Adding charge of {Amount} to customer {CustomerId} by {AddedBy}",
             request.Amount, request.CustomerId, request.AddedBy);

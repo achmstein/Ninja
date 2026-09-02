@@ -31,7 +31,7 @@ public class CustomerAccount : Entity, IAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddCharge(decimal amount, string? description, string addedBy)
+    public void AddCharge(decimal amount, string? description, string addedBy, string? reference = null)
     {
         if (amount <= 0)
             throw new AccountsDomainException("Charge amount must be greater than zero");
@@ -44,7 +44,8 @@ public class CustomerAccount : Entity, IAggregateRoot
             TransactionType.Charge,
             amount,
             description,
-            addedBy);
+            addedBy,
+            reference);
 
         _transactions.Add(transaction);
         Balance += amount;

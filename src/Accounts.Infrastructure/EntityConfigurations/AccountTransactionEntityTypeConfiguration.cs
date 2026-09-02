@@ -34,7 +34,15 @@ class AccountTransactionEntityTypeConfiguration : IEntityTypeConfiguration<Accou
         builder.Property(t => t.CreatedAt)
             .IsRequired();
 
+        builder.Property(t => t.Reference)
+            .HasMaxLength(100);
+
         builder.HasIndex(t => t.CustomerAccountId);
         builder.HasIndex(t => t.CreatedAt);
+
+        // What makes event-driven charges idempotent: one posting per source
+        builder.HasIndex(t => t.Reference)
+            .IsUnique()
+            .HasFilter("\"Reference\" IS NOT NULL");
     }
 }

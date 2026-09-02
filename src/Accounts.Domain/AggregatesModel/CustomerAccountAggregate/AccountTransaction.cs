@@ -12,6 +12,14 @@ public class AccountTransaction : Entity
     public string RecordedBy { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    /// <summary>
+    /// What outside the ledger this transaction settles (e.g. "sales-ticket:42").
+    /// Unique when set — it's what makes an event-driven charge idempotent:
+    /// a redelivered settle event finds its reference already posted.
+    /// Null for charges and payments staff key in by hand.
+    /// </summary>
+    public string? Reference { get; private set; }
+
     protected AccountTransaction()
     {
         RecordedBy = string.Empty;
@@ -22,7 +30,8 @@ public class AccountTransaction : Entity
         TransactionType type,
         decimal amount,
         string? description,
-        string recordedBy) : this()
+        string recordedBy,
+        string? reference = null) : this()
     {
         if (amount <= 0)
             throw new AccountsDomainException("Transaction amount must be greater than zero");
@@ -35,6 +44,7 @@ public class AccountTransaction : Entity
         Amount = amount;
         Description = description;
         RecordedBy = recordedBy;
+        Reference = reference;
         CreatedAt = DateTime.UtcNow;
     }
 }

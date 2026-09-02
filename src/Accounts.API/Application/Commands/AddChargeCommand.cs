@@ -21,17 +21,26 @@ public class AddChargeCommand : IRequest<bool>
     [DataMember]
     public string AddedBy { get; private set; } = string.Empty;
 
+    /// <summary>
+    /// What outside the ledger this charge settles (e.g. "sales-ticket:42").
+    /// Unique when set; null for charges staff key in by hand.
+    /// </summary>
+    [DataMember]
+    public string? Reference { get; private set; }
+
     public AddChargeCommand(
         string customerId,
         string? customerName,
         decimal amount,
         string? description,
-        string addedBy)
+        string addedBy,
+        string? reference = null)
     {
         CustomerId = customerId;
         CustomerName = customerName;
         Amount = amount;
         Description = description;
         AddedBy = addedBy;
+        Reference = reference;
     }
 }

@@ -41,11 +41,13 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(AccountsIntegrationEventContext.Default))
-            .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>();
+            .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
+            .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 partial class AccountsIntegrationEventContext : JsonSerializerContext
 {
 }
