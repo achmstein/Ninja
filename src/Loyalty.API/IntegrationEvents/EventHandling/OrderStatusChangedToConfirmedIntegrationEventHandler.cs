@@ -52,6 +52,21 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             account.UserDisplayName = @event.BuyerName;
         }
 
+        // The bus promises at-least-once: a redelivered confirmation must not
+        // redeem or award a second time. The order id is the reference every
+        // transaction for this order carries.
+        var alreadyProcessed = await context.Transactions
+            .AnyAsync(t => t.ReferenceId == @event.OrderId.ToString() && t.AccountId == account.Id);
+
+        if (alreadyProcessed)
+        {
+            logger.LogInformation(
+                "Order {OrderId} already has loyalty transactions for account {AccountId} - skipping redelivery",
+                @event.OrderId, account.Id);
+            await context.SaveChangesAsync();
+            return;
+        }
+
         // Redeem points if any (do this first, before awarding new points)
         if (@event.PointsToRedeem > 0)
         {
