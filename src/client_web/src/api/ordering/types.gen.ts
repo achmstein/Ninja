@@ -50,6 +50,8 @@ export type CreateOrderRequest = {
     tableName?: null | LocalizedText;
     guestName?: null | string;
     guestPhone?: null | string;
+    sessionId?: null | number | string;
+    roomId?: null | number | string;
 };
 
 export type LocalizedText = {
@@ -63,6 +65,9 @@ export type Order = {
     status?: string;
     description?: null | string;
     roomName?: null | LocalizedText;
+    sessionId?: null | number | string;
+    roomId?: null | number | string;
+    source?: string;
     tableId?: null | number | string;
     tableName?: null | LocalizedText;
     customerNote?: null | string;
@@ -131,6 +136,8 @@ export type OrderSummary = {
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
     roomName?: null | LocalizedText;
+    sessionId?: null | number | string;
+    source?: string;
     tableId?: null | number | string;
     tableName?: null | LocalizedText;
     userName?: null | string;
@@ -147,6 +154,17 @@ export type PaginatedResultOfOrderSummary = {
     totalPages?: number | string;
     hasNextPage?: boolean;
     hasPreviousPage?: boolean;
+};
+
+export type PosOrderRequest = {
+    items: Array<BasketItem>;
+    customerNote?: null | string;
+    tableId?: null | number | string;
+    tableName?: null | LocalizedText;
+    roomName?: null | LocalizedText;
+    customerUserId?: null | string;
+    customerUserName?: null | string;
+    pointsToRedeem?: number | string;
 };
 
 export type RateOrderRequest = {
@@ -223,6 +241,45 @@ export type CreateOrderErrors = {
 export type CreateOrderError = CreateOrderErrors[keyof CreateOrderErrors];
 
 export type CreateOrderResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CreatePosOrderData = {
+    body: PosOrderRequest;
+    headers: {
+        'x-requestid': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/pos';
+};
+
+export type CreatePosOrderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreatePosOrderError = CreatePosOrderErrors[keyof CreatePosOrderErrors];
+
+export type CreatePosOrderResponses = {
     /**
      * OK
      */
@@ -462,6 +519,7 @@ export type GetAllOrdersData = {
         buyerId?: string;
         fromDate?: string;
         toDate?: string;
+        sessionId?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */

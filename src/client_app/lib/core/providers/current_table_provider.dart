@@ -119,13 +119,20 @@ class OrderDestination {
   final OrderDestinationKind kind;
   final LocalizedText name;
 
-  /// Only set for a table; a room travels as a name snapshot alone.
+  /// Only set for a table.
   final int? tableId;
+
+  /// Only set for a room: the session and room ids ride along so the server
+  /// can group the session's orders into one bill. The name is for display.
+  final int? sessionId;
+  final int? roomId;
 
   const OrderDestination({
     required this.kind,
     required this.name,
     this.tableId,
+    this.sessionId,
+    this.roomId,
   });
 
   bool get isRoom => kind == OrderDestinationKind.room;
@@ -149,6 +156,8 @@ final orderDestinationProvider = Provider<OrderDestination?>((ref) {
     return OrderDestination(
       kind: OrderDestinationKind.room,
       name: activeSession.roomName,
+      sessionId: activeSession.id,
+      roomId: activeSession.roomId,
     );
   }
 

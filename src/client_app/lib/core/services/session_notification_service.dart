@@ -306,6 +306,8 @@ class SessionNotificationService {
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
         roomName: _activeSession!.roomName.toJson(),
+        sessionId: _activeSession!.id,
+        roomId: _activeSession!.roomId,
         preference: preference,
       );
 

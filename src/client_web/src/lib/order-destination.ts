@@ -4,7 +4,7 @@ import { useActiveSession } from '@/lib/session'
 import { useActiveTable, useTableStore } from '@/stores/table-store'
 
 export type OrderDestination =
-  | { kind: 'room'; name: LocalizedText }
+  | { kind: 'room'; name: LocalizedText; sessionId: number; roomId: number }
   | { kind: 'table'; id: number; name: LocalizedText }
   | null
 
@@ -35,7 +35,14 @@ export function useOrderDestination(): OrderDestination {
   }, [inRoom, activeTable, clearTable])
 
   if (activeSession?.roomName) {
-    return { kind: 'room', name: activeSession.roomName }
+    // The ids ride along so the order can be joined to the session's bill
+    // server-side; the name stays what staff and receipts display
+    return {
+      kind: 'room',
+      name: activeSession.roomName,
+      sessionId: activeSession.id,
+      roomId: activeSession.roomId,
+    }
   }
   if (activeTable) {
     return { kind: 'table', id: activeTable.id, name: activeTable.name }

@@ -227,7 +227,8 @@ function CartPage() {
         userName: profile?.name || profile?.preferred_username || '',
         guestName: guestContact?.name ?? null,
         guestPhone: guestContact?.phone ?? null,
-        // Deliver to the customer's running room session, if any
+        // Deliver to the customer's running room session, if any. The ids
+        // let the server group the session's orders into one bill.
         roomName:
           destination?.kind === 'room'
             ? {
@@ -235,6 +236,8 @@ function CartPage() {
                 ar: destination.name.ar ?? null,
               }
             : null,
+        sessionId: destination?.kind === 'room' ? destination.sessionId : null,
+        roomId: destination?.kind === 'room' ? destination.roomId : null,
         tableId: destination?.kind === 'table' ? destination.id : null,
         tableName:
           destination?.kind === 'table'

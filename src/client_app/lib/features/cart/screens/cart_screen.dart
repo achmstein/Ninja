@@ -625,6 +625,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           roomName: destination != null && destination.isRoom
               ? destination.name.toJson()
               : null,
+          sessionId: destination?.sessionId,
+          roomId: destination?.roomId,
           tableId: destination?.tableId,
           tableName: destination != null && !destination.isRoom
               ? destination.name.toJson()

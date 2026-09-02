@@ -319,6 +319,40 @@ const webExtras = {
     en: 'No data for this range yet',
     ar: 'مفيش بيانات للفترة دي لسه',
   },
+
+  // Dashboard POS sales (current business day, from Sales.API)
+  posSalesTitle: { en: 'POS Sales', ar: 'مبيعات الكاشير' },
+  posSalesDescription: {
+    en: 'Settled tickets this business day',
+    ar: 'الحسابات اللي اتقفلت في يوم الشغل ده',
+  },
+  posTicketsSettled: { en: 'Tickets settled', ar: 'حسابات اتقفلت' },
+  netSales: { en: 'Net sales', ar: 'صافي المبيعات' },
+  discountsTotal: { en: 'Discounts', ar: 'الخصومات' },
+  tenderSplit: { en: 'Tender split', ar: 'طرق الدفع' },
+  tenderCash: { en: 'Cash', ar: 'كاش' },
+  tenderCard: { en: 'Card', ar: 'كارت' },
+  tenderInstaPay: { en: 'InstaPay', ar: 'إنستاباي' },
+  tenderOnAccount: { en: 'On account', ar: 'على الحساب' },
+  posTicketsCount: {
+    plural: 'count',
+    en: { '=1': '1 ticket', other: '{count} tickets' },
+    ar: {
+      zero: '{count} حسابات',
+      one: 'حساب واحد',
+      two: 'حسابين',
+      few: '{count} حسابات',
+      other: '{count} حساب',
+    },
+  },
+  changeGivenNote: {
+    en: 'Change given back: {amount}',
+    ar: 'الباقي اللي اترد للعملاء: {amount}',
+  },
+  byTicketType: { en: 'By ticket type', ar: 'حسب نوع الحساب' },
+  ticketTypeRoom: { en: 'Rooms', ar: 'الاوض' },
+  ticketTypeTable: { en: 'Tables', ar: 'الترابيزات' },
+  ticketTypeCounter: { en: 'Counter', ar: 'الكاونتر' },
   reserveRoomTitle: { en: 'Reserve {name}', ar: 'حجز {name}' },
   reserveRoomDescription: {
     en: 'Hold the room for a customer. The session starts when they arrive.',

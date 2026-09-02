@@ -97,7 +97,7 @@ export const updateRoomStatus = <ThrowOnError extends boolean = false>(options: 
 /**
  * Reserve a room
  *
- * Create an immediate reservation for a room. Customer has 15 minutes to arrive before auto-cancellation.
+ * Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.
  */
 export const reserveRoom = <ThrowOnError extends boolean = false>(options: Options<ReserveRoomData, ThrowOnError>): RequestResult<ReserveRoomResponses, ReserveRoomErrors, ThrowOnError> => (options.client ?? client).post<ReserveRoomResponses, ReserveRoomErrors, ThrowOnError>({
     responseType: 'json',

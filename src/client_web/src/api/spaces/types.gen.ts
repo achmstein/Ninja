@@ -718,7 +718,10 @@ export type CancelMyReservationResponses = {
 export type GetMySessionsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+    };
     url: '/api/rooms/sessions/my';
 };
 

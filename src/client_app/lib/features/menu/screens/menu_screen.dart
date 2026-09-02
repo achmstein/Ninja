@@ -748,9 +748,12 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
     final currentAuthState = ref.read(authServiceProvider);
     final orderService = ref.read(orderRepositoryProvider);
 
-    // Try to get active session's room name (optional)
+    // Try to get active session's room name (optional); the ids ride along
+    // so the order lands on the session's bill
     await ref.read(mySessionsProvider.notifier).refresh();
     Map<String, dynamic>? roomName;
+    int? sessionId;
+    int? roomId;
     final sessionsState = ref.read(mySessionsProvider);
     if (sessionsState.hasValue) {
       final activeSession = sessionsState.value!
@@ -758,6 +761,8 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
           .firstOrNull;
       if (activeSession != null) {
         roomName = activeSession.roomName.toJson();
+        sessionId = activeSession.id;
+        roomId = activeSession.roomId;
       }
     }
 
@@ -767,6 +772,8 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
         userId: currentAuthState.userId ?? '',
         userName: currentAuthState.name ?? 'Guest',
         roomName: roomName,
+        sessionId: sessionId,
+        roomId: roomId,
         preference: preference,
       );
       if (!mounted) return;

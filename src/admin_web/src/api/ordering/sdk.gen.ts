@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
+import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -36,6 +36,21 @@ export const getOrdersByUser = <ThrowOnError extends boolean = false>(options: O
  */
 export const createOrder = <ThrowOnError extends boolean = false>(options: Options<CreateOrderData, ThrowOnError>): RequestResult<CreateOrderResponses, CreateOrderErrors, ThrowOnError> => (options.client ?? client).post<CreateOrderResponses, CreateOrderErrors, ThrowOnError>({
     url: '/api/orders',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create a counter (POS) order (admin)
+ *
+ * A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.
+ */
+export const createPosOrder = <ThrowOnError extends boolean = false>(options: Options<CreatePosOrderData, ThrowOnError>): RequestResult<CreatePosOrderResponses, CreatePosOrderErrors, ThrowOnError> => (options.client ?? client).post<CreatePosOrderResponses, CreatePosOrderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/pos',
     ...options,
     headers: {
         'Content-Type': 'application/json',

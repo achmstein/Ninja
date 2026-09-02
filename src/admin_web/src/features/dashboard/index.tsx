@@ -38,6 +38,7 @@ import {
   urgencyTextClass,
 } from '@/features/orders/status'
 import { AnalyticsSection } from './components/analytics'
+import { PosSalesCard } from './components/pos-sales'
 import {
   ROOM_AVAILABLE,
   SESSION_ACTIVE,
@@ -374,6 +375,8 @@ export function Dashboard() {
               )}
             </CardContent>
           </Card>
+          {/* POS sales for the branch's current business day */}
+          <PosSalesCard />
         </div>
 
         <div className='mt-6'>

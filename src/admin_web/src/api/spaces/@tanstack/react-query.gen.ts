@@ -179,7 +179,7 @@ export const updateRoomStatusMutation = (options?: Partial<Options<UpdateRoomSta
 /**
  * Reserve a room
  *
- * Create an immediate reservation for a room. Customer has 15 minutes to arrive before auto-cancellation.
+ * Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.
  */
 export const reserveRoomMutation = (options?: Partial<Options<ReserveRoomData>>): UseMutationOptions<ReserveRoomResponse, AxiosError<ReserveRoomError>, Options<ReserveRoomData>> => {
     const mutationOptions: UseMutationOptions<ReserveRoomResponse, AxiosError<ReserveRoomError>, Options<ReserveRoomData>> = {

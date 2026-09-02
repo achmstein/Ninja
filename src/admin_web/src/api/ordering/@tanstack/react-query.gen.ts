@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { cancelOrder, confirmOrder, createOrder, createOrderDraft, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
-import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
+import { cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
+import type { CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -69,6 +69,25 @@ export const createOrderMutation = (options?: Partial<Options<CreateOrderData>>)
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CreateOrderError>, Options<CreateOrderData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createOrder({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Create a counter (POS) order (admin)
+ *
+ * A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.
+ */
+export const createPosOrderMutation = (options?: Partial<Options<CreatePosOrderData>>): UseMutationOptions<CreatePosOrderResponse, AxiosError<CreatePosOrderError>, Options<CreatePosOrderData>> => {
+    const mutationOptions: UseMutationOptions<CreatePosOrderResponse, AxiosError<CreatePosOrderError>, Options<CreatePosOrderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createPosOrder({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
