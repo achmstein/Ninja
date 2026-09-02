@@ -1,0 +1,12 @@
+global using System.Data;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.Extensions.Logging;
+global using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+global using Chillax.Sales.Domain.Exceptions;
+global using Chillax.Sales.Domain.SeedWork;
+global using Chillax.Sales.Infrastructure.EntityConfigurations;
+global using Chillax.Sales.Infrastructure.Idempotency;
