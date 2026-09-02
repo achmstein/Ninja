@@ -21,6 +21,7 @@ var accountsDb = postgres.AddDatabase("accountsdb");
 var catalogDb = postgres.AddDatabase("catalogdb");
 var orderDb = postgres.AddDatabase("orderingdb");
 var spacesDb = postgres.AddDatabase("spacesdb");
+var salesDb = postgres.AddDatabase("salesdb");
 var loyaltyDb = postgres.AddDatabase("loyaltydb");
 var branchDb = postgres.AddDatabase("branchdb");
 var notificationDb = postgres.AddDatabase("notificationdb");
@@ -85,6 +86,13 @@ var spacesApi = builder.AddProject<Projects.Spaces_API>("spaces-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
+var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
+    .WithReference(salesDb).WaitFor(salesDb)
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(keycloak)
+    .WithEnvironment("Identity__Url", keycloakRealmUrl)
+    .WithEnvironment("Keycloak__Realm", "chillax");
+
 var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
@@ -135,6 +143,7 @@ void ConfigureApiService(IResourceBuilder<ProjectResource> api, string imageSuff
 ConfigureApiService(catalogApi, "catalog");
 ConfigureApiService(orderingApi, "ordering");
 ConfigureApiService(spacesApi, "spaces");
+ConfigureApiService(salesApi, "sales");
 ConfigureApiService(identityApi, "identity");
 ConfigureApiService(loyaltyApi, "loyalty");
 notificationApi.PublishAsDockerComposeService((resource, service) =>
@@ -169,7 +178,7 @@ var mobileBff = builder.AddYarp("mobile-bff")
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
-    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
 
 // Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
 // the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
@@ -188,6 +197,21 @@ builder.AddViteApp("admin-web", "../admin_web")
     .WaitFor(mobileBff)
     // Not part of the Docker Compose publish yet; deployment gets its own
     // static build + Caddy route once the app is ready to ship.
+    .ExcludeFromManifest();
+
+// POS web app (React + Vite), same wiring as admin-web.
+builder.AddViteApp("pos-web", "../pos_web")
+    .WithNpm()
+    .WithEndpoint("http", endpoint =>
+    {
+        // Fixed port: the Keycloak pos-web realm client whitelists
+        // http://localhost:5175 redirect URIs.
+        endpoint.Port = 5175;
+        endpoint.IsProxied = false;
+    })
+    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+    .WaitFor(mobileBff)
     .ExcludeFromManifest();
 
 // Customer web app (React + Vite), same wiring as admin-web.

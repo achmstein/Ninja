@@ -343,7 +343,9 @@ app.MapGet("/api/identity/users", async (IHttpClientFactory httpClientFactory, I
         .ToList();
 
     return Results.Ok(result);
-}).RequireAuthorization("Admin");
+    // "Pos" (Admin/Owner/Cashier): the till searches customers to attach a
+    // sale for loyalty — the one identity read a cashier needs
+}).RequireAuthorization("Pos");
 
 // Get user by ID endpoint (admin only)
 app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFactory httpClientFactory, IConfiguration config) =>

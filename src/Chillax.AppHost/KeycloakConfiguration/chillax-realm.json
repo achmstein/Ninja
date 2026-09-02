@@ -73,6 +73,10 @@
       {
         "name": "Owner",
         "description": "Owner role - can manage branches and create admins"
+      },
+      {
+        "name": "Cashier",
+        "description": "Cashier role - runs the POS (sales, tickets, shifts) without back-office access"
       }
     ]
   },
@@ -439,6 +443,56 @@
           "consentRequired": false,
           "config": {
             "included.client.audience": "client-web",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "pos-web",
+      "name": "Chillax POS",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "rootUrl": "http://localhost:5175",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:5175/*",
+        "https://pos.chillax.site/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5175",
+        "https://pos.chillax.site",
+        "+"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "orders",
+        "catalog",
+        "rooms",
+        "spaces"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "pos-web",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }

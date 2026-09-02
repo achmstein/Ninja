@@ -24,6 +24,13 @@
     <Project Path="src/Ordering.API/Ordering.API.csproj" />
     <Project Path="src/Ordering.Domain/Ordering.Domain.csproj" />
     <Project Path="src/Ordering.Infrastructure/Ordering.Infrastructure.csproj" />
+    <Project Path="src/pos_web/pos_web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="src/Sales.API/Sales.API.csproj" />
+    <Project Path="src/Sales.Domain/Sales.Domain.csproj" />
+    <Project Path="src/Sales.Infrastructure/Sales.Infrastructure.csproj" />
     <Project Path="src/Spaces.API/Spaces.API.csproj" />
     <Project Path="src/Spaces.Domain/Spaces.Domain.csproj" />
     <Project Path="src/Spaces.Infrastructure/Spaces.Infrastructure.csproj" />
@@ -32,6 +39,7 @@
     <Project Path="tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" />
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Ordering.UnitTests/Ordering.UnitTests.csproj" />
+    <Project Path="tests/Sales.UnitTests/Sales.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />

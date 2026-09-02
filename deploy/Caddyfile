@@ -5,6 +5,7 @@
 # auth.chillax.site   — Keycloak (identity provider)
 # admin.chillax.site  — admin web app (SPA) + BFF proxy
 # app.chillax.site    — customer web app (SPA) + BFF proxy
+# pos.chillax.site    — POS web app (SPA) + BFF proxy
 #
 # Caddy handles TLS termination (auto Let's Encrypt).
 
@@ -70,6 +71,25 @@ app.chillax.site {
 	}
 	handle {
 		root * /srv/client-web
+		try_files {path} /index.html
+		file_server
+
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@nonassets not path /assets/*
+		header @nonassets Cache-Control "no-cache"
+	}
+}
+
+pos.chillax.site {
+	handle /api/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle /hub/* {
+		reverse_proxy mobile-bff:5000
+	}
+	handle {
+		root * /srv/pos-web
 		try_files {path} /index.html
 		file_server
 

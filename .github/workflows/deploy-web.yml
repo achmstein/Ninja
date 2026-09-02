@@ -19,6 +19,7 @@ on:
           - both
           - admin
           - client
+          - pos
 
 jobs:
   deploy:
@@ -35,7 +36,7 @@ jobs:
           node-version: '22'
 
       - name: Build admin_web
-        if: ${{ github.event.inputs.app != 'client' }}
+        if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'admin' }}
         env:
           # Keycloak's dedicated production host, same as deploy.yml bakes in.
           # api.chillax.site/auth is a compatibility path for installed mobile
@@ -49,7 +50,7 @@ jobs:
           cp -r dist ../../web-artifacts/admin-web
 
       - name: Build client_web
-        if: ${{ github.event.inputs.app != 'admin' }}
+        if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'client' }}
         env:
           VITE_KEYCLOAK_URL: https://auth.chillax.site
         run: |
@@ -58,6 +59,17 @@ jobs:
           npm run build
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/client-web
+
+      - name: Build pos_web
+        if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'pos' }}
+        env:
+          VITE_KEYCLOAK_URL: https://auth.chillax.site
+        run: |
+          cd src/pos_web
+          npm ci
+          npm run build
+          mkdir -p ../../web-artifacts
+          cp -r dist ../../web-artifacts/pos-web
 
       - name: Copy bundles to server
         uses: appleboy/scp-action@v0.1.7
@@ -91,4 +103,5 @@ jobs:
             }
             swap admin-web
             swap client-web
+            swap pos-web
             rm -rf web-incoming

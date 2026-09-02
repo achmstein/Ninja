@@ -20,7 +20,7 @@ if [ -f .env ]; then
 fi
 
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-DBS_TO_RESET="catalogdb orderingdb spacesdb accountsdb loyaltydb notificationdb"
+DBS_TO_RESET="catalogdb orderingdb spacesdb salesdb accountsdb loyaltydb notificationdb"
 
 echo "=== Chillax Data Reset ==="
 echo "Databases to reset: $DBS_TO_RESET"

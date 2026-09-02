@@ -187,6 +187,7 @@ internal static class Extensions
         IResourceBuilder<ProjectResource> catalogApi,
         IResourceBuilder<ProjectResource> orderingApi,
         IResourceBuilder<ProjectResource> spacesApi,
+        IResourceBuilder<ProjectResource> salesApi,
         IResourceBuilder<ProjectResource> identityApi,
         IResourceBuilder<ProjectResource> loyaltyApi,
         IResourceBuilder<ProjectResource> notificationApi,
@@ -226,6 +227,11 @@ internal static class Extensions
 
             // Tables routes
             yarp.AddRoute("/api/tables/{*any}", spacesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
+            // Sales (POS tickets) routes
+            var salesCluster = yarp.AddCluster(salesApi);
+            yarp.AddRoute("/api/tickets/{*any}", salesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
             // Identity routes (for user registration)

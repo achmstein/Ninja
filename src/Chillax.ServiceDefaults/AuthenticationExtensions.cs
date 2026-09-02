@@ -94,6 +94,9 @@ public static class AuthenticationExtensions
             options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
             // Owner policy requires the "Owner" role (branch management, admin creation)
             options.AddPolicy("Owner", policy => policy.RequireRole("Owner"));
+            // Pos policy: what the till needs. Cashiers run sales, tickets and
+            // shifts without carrying the full back-office Admin role.
+            options.AddPolicy("Pos", policy => policy.RequireRole("Admin", "Owner", "Cashier"));
         });
 
         return services;

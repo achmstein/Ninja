@@ -50,6 +50,9 @@ jobs:
           cd ../client_web
           npm ci
           npm run build
+          cd ../pos_web
+          npm ci
+          npm run build
 
       - name: Generate Docker Compose artifacts
         env:
@@ -86,6 +89,7 @@ jobs:
           # Static web app bundles served by Caddy
           cp -r src/admin_web/dist deploy-artifacts/admin-web
           cp -r src/client_web/dist deploy-artifacts/client-web
+          cp -r src/pos_web/dist deploy-artifacts/pos-web
 
           # Fill empty .env values (aspire publish generates empty placeholders)
           sed -i 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=postgres/' deploy-artifacts/.env
@@ -299,6 +303,15 @@ jobs:
             done
 
             echo ""
+            echo "=== Ensure realm roles exist ==="
+            # Realm import only runs on a fresh volume; roles added to
+            # chillax-realm.json later must be upserted here (idempotent)
+            docker exec "$CONTAINER" $KC create roles -r $REALM \
+              -s name=Cashier \
+              -s description="Cashier role - runs the POS (sales, tickets, shifts) without back-office access" 2>/dev/null && \
+              echo "  Created Cashier role" || echo "  Cashier role already exists"
+
+            echo ""
             echo "=== Ensure web app clients exist with production URIs ==="
             # Realm import only runs on a fresh volume, so clients added to
             # chillax-realm.json after the first deploy must be upserted here.
@@ -327,6 +340,7 @@ jobs:
             }
             ensure_web_client admin-panel https://admin.chillax.site
             ensure_web_client client-web https://app.chillax.site
+            ensure_web_client pos-web https://pos.chillax.site
 
             echo ""
             echo "=== Keycloak token exchange setup complete ==="
