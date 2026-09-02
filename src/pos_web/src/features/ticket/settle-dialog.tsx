@@ -1,0 +1,338 @@
+import { useEffect, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2, Printer, X } from 'lucide-react'
+import { settleTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
+import type { TicketDetail } from '@/api/sales/types.gen'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { NumericKeypad } from '@/components/numeric-keypad'
+import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
+import { API_VERSION } from '@/lib/api-client'
+import { useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
+import {
+  ACCOUNT_TENDER,
+  BASE_TENDERS,
+  tenderLabelKey,
+  type TenderName,
+} from './tenders'
+
+type PendingPayment = {
+  tenderValue: number
+  tenderName: TenderName
+  amount: number
+}
+
+export type SettleOutcome = {
+  receiptNumber: number
+  change: number
+  payments: ReceiptPayment[]
+}
+
+type SettledView = {
+  receiptNumber: number
+  change: number
+  /** The part that went on the customer's tab (0 when none). */
+  accountAmount: number
+}
+
+type SettleDialogProps = {
+  ticket: TicketDetail
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSettled: (outcome: SettleOutcome) => void
+}
+
+/**
+ * Take one or more payments against the ticket total, then settle. The
+ * keypad is the only way to type amounts (no OS keyboard on the till).
+ * When cash exceeds the remainder, the change due is shown live; the
+ * server recomputes it authoritatively on settle.
+ */
+export function SettleDialog({
+  ticket,
+  open,
+  onOpenChange,
+  onSettled,
+}: SettleDialogProps) {
+  const t = useT()
+  const money = useMoney()
+  const queryClient = useQueryClient()
+
+  const total = toNumber(ticket.total)
+
+  // Settling on account needs a tab to charge — anonymous tickets only get
+  // the cash/card/wallet tenders (the server enforces the same rule)
+  const tenders = ticket.customerId
+    ? [...BASE_TENDERS, ACCOUNT_TENDER]
+    : BASE_TENDERS
+
+  const [payments, setPayments] = useState<PendingPayment[]>([])
+  const [tender, setTender] = useState(BASE_TENDERS[0])
+  const [amountStr, setAmountStr] = useState('')
+  const [result, setResult] = useState<SettledView | null>(null)
+
+  const paid = payments.reduce((sum, p) => sum + p.amount, 0)
+  const remaining = Math.max(0, +(total - paid).toFixed(2))
+  const enteredAmount = Number(amountStr || '0')
+  // Live preview: committed payments plus whatever is typed right now
+  const projectedPaid = paid + (Number.isFinite(enteredAmount) ? enteredAmount : 0)
+  const changeDue = Math.max(0, +(projectedPaid - total).toFixed(2))
+
+  // Prefill the exact remainder whenever the dialog opens or a payment
+  // lands — the one-cash-payment happy path is: open, add payment, settle.
+  useEffect(() => {
+    if (open && !result) {
+      setAmountStr(remaining > 0 ? String(remaining) : '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, paid])
+
+  useEffect(() => {
+    if (!open) {
+      setPayments([])
+      setTender(BASE_TENDERS[0])
+      setAmountStr('')
+      setResult(null)
+    }
+  }, [open])
+
+  const settle = useMutation({
+    ...settleTicketMutation(),
+    onSuccess: (data, variables) => {
+      const outcome: SettleOutcome = {
+        receiptNumber: toNumber(data.receiptNumber),
+        change: toNumber(data.change),
+        payments: (variables.body?.payments ?? []).map((p, i) => ({
+          tender: payments[i]?.tenderName ?? 'Cash',
+          amount: toNumber(p.amount),
+        })),
+      }
+      setResult({
+        receiptNumber: outcome.receiptNumber,
+        change: outcome.change,
+        accountAmount: outcome.payments
+          .filter((p) => p.tender === 'Account')
+          .reduce((sum, p) => sum + p.amount, 0),
+      })
+      onSettled(outcome)
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+    },
+  })
+
+  const addPayment = () => {
+    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) return
+    // Cash may exceed the remainder (change is given back); card, InstaPay
+    // and account cannot — clamp them to what is actually owed (nobody gets
+    // cash back out of their account tab).
+    const amount =
+      tender.name === 'Cash'
+        ? enteredAmount
+        : Math.min(enteredAmount, remaining)
+    if (amount <= 0) return
+    setPayments((prev) => [
+      ...prev,
+      { tenderValue: tender.value, tenderName: tender.name, amount },
+    ])
+    setAmountStr('')
+  }
+
+  const removePayment = (index: number) =>
+    setPayments((prev) => prev.filter((_, i) => i !== index))
+
+  const canSettle = payments.length > 0 && remaining <= 0 && !settle.isPending
+
+  const doSettle = () =>
+    settle.mutate({
+      path: { id: toNumber(ticket.id) },
+      query: { 'api-version': API_VERSION },
+      body: {
+        payments: payments.map((p) => ({
+          tender: p.tenderValue,
+          amount: p.amount,
+        })),
+      },
+    })
+
+  const tenderLabel = (name: TenderName) => t(tenderLabelKey[name] ?? 'cash')
+
+  // ----- settled view -----
+  if (result) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className='gap-5 sm:max-w-md'>
+          <div className='flex flex-col items-center gap-3 py-4 text-center'>
+            <CheckCircle2 className='size-14 text-emerald-500' />
+            <DialogTitle className='text-2xl'>{t('ticketSettled')}</DialogTitle>
+            <div className='text-3xl font-bold tabular-nums'>
+              {t('receiptNumber', { number: result.receiptNumber })}
+            </div>
+            {result.change > 0 && (
+              <div className='bg-accent w-full rounded-xl p-4'>
+                <div className='text-muted-foreground text-sm'>
+                  {t('changeDue')}
+                </div>
+                <div className='text-4xl font-bold tabular-nums'>
+                  {money(result.change)}
+                </div>
+              </div>
+            )}
+            {result.accountAmount > 0 && (
+              <div className='bg-accent w-full rounded-xl p-4'>
+                <div className='text-muted-foreground text-sm'>
+                  {t('onCustomerTab')}
+                </div>
+                <div className='text-3xl font-bold tabular-nums'>
+                  {money(result.accountAmount)}
+                </div>
+                {ticket.customerName && (
+                  <div className='text-muted-foreground mt-1 truncate text-sm'>
+                    {ticket.customerName}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className='grid grid-cols-2 gap-2'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-14 text-base'
+              onClick={() => onOpenChange(false)}
+            >
+              {t('done')}
+            </Button>
+            <Button
+              size='lg'
+              className='h-14 text-base'
+              onClick={() => window.print()}
+            >
+              <Printer className='size-5' />
+              {t('print')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // ----- payment entry view -----
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle className='flex items-baseline justify-between gap-4 text-xl'>
+            <span>{t('settleTitle')}</span>
+            <span className='text-2xl font-bold tabular-nums'>
+              {money(total)}
+            </span>
+          </DialogTitle>
+        </DialogHeader>
+
+        {payments.length > 0 && (
+          <div className='grid gap-2'>
+            {payments.map((payment, index) => (
+              <div
+                key={index}
+                className='bg-accent/50 flex items-center justify-between rounded-lg px-3 py-2'
+              >
+                <Badge variant='secondary'>{tenderLabel(payment.tenderName)}</Badge>
+                <div className='flex items-center gap-1'>
+                  <span className='font-semibold tabular-nums'>
+                    {money(payment.amount)}
+                  </span>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='size-10'
+                    onClick={() => removePayment(index)}
+                  >
+                    <X className='size-4' />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            <Separator />
+          </div>
+        )}
+
+        <div
+          className={cn(
+            'grid gap-2',
+            tenders.length === 4 ? 'grid-cols-2' : 'grid-cols-3'
+          )}
+        >
+          {tenders.map((option) => (
+            <Button
+              key={option.value}
+              variant={tender.value === option.value ? 'default' : 'outline'}
+              className='h-12 text-base'
+              onClick={() => setTender(option)}
+            >
+              {t(option.labelKey)}
+            </Button>
+          ))}
+        </div>
+
+        <div
+          dir='ltr'
+          className='bg-muted flex h-16 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
+        >
+          {amountStr || '0'}
+        </div>
+
+        <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+        <Button
+          variant='secondary'
+          size='lg'
+          className='h-12 text-base'
+          disabled={!Number.isFinite(enteredAmount) || enteredAmount <= 0}
+          onClick={addPayment}
+        >
+          {t('addPayment')}
+        </Button>
+
+        <div className='grid gap-1 text-lg'>
+          <div className='flex items-center justify-between'>
+            <span className='text-muted-foreground'>{t('remaining')}</span>
+            <span
+              className={cn(
+                'font-bold tabular-nums',
+                remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+              )}
+            >
+              {money(remaining)}
+            </span>
+          </div>
+          {changeDue > 0 && (
+            <div className='flex items-center justify-between'>
+              <span className='text-muted-foreground'>{t('changeDue')}</span>
+              <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
+                {money(changeDue)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <Button
+          size='lg'
+          className='h-14 w-full text-lg'
+          disabled={!canSettle}
+          onClick={doSettle}
+        >
+          {t('confirmSettle')}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  )
+}
