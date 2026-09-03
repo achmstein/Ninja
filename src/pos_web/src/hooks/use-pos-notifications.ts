@@ -123,6 +123,15 @@ export function usePosNotifications() {
       invalidateItems()
     })
 
+    // A customer in a room asked for something — call a waiter, the bill,
+    // a controller. Same alert a new order gets: chime + toast, and refetch
+    // the floor's requests strip.
+    connection.on('ServiceRequestCreated', () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'serviceRequestsPending' }] })
+      playAlertSound()
+      toast.info(translate('newServiceRequestToast'))
+    })
+
     const invalidateBranches = () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
     }
@@ -173,6 +182,7 @@ export function usePosNotifications() {
       invalidateRooms()
       invalidateItems()
       invalidateBranches()
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'serviceRequestsPending' }] })
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

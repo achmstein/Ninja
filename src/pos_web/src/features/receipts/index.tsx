@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Armchair,
@@ -7,11 +7,12 @@ import {
   ArrowRight,
   ChevronRight,
   DoorOpen,
+  Loader2,
   Search,
   ShoppingBag,
   type LucideIcon,
 } from 'lucide-react'
-import { getSettledTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { getSettledTickets } from '@/api/sales/sdk.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,6 +25,8 @@ const typeIcon: Record<string, LucideIcon> = {
   Table: Armchair,
   Counter: ShoppingBag,
 }
+
+const PAGE_SIZE = 50
 
 /**
  * The bills that have closed, newest receipt first — the way back to one
@@ -42,17 +45,46 @@ export function Receipts() {
   const digits = term.trim()
   const receiptNumber = /^\d+$/.test(digits) ? Number(digits) : undefined
 
-  const { data: bills = [], isLoading } = useQuery({
-    ...getSettledTicketsOptions({
-      query: {
-        'api-version': API_VERSION,
-        pageIndex: 0,
-        pageSize: 50,
-        receiptNumber,
-      },
-    }),
+  // The list grows a page at a time as the cashier scrolls; a receipt-number
+  // search collapses it to that one bill. /settled has no total count, so a
+  // full page means "maybe more" and a short page is the end.
+  const query = useInfiniteQuery({
+    queryKey: [{ _id: 'getSettledTicketsInfinite', receiptNumber }],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const { data } = await getSettledTickets({
+        query: {
+          'api-version': API_VERSION,
+          pageIndex: pageParam,
+          pageSize: PAGE_SIZE,
+          receiptNumber,
+        },
+      })
+      return data ?? []
+    },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
     placeholderData: keepPreviousData,
   })
+
+  const bills = query.data?.pages.flat() ?? []
+  const isLoading = query.isLoading
+
+  // Load the next page when the sentinel at the end of the list scrolls in
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
+  useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node || !hasNextPage) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) fetchNextPage()
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
 
@@ -132,6 +164,19 @@ export function Receipts() {
               </button>
             )
           })}
+        </div>
+      )}
+
+      {/* Sentinel: reaching it pulls the next page. The spinner shows only
+          while a page is on its way. */}
+      {query.hasNextPage && (
+        <div
+          ref={loadMoreRef}
+          className='text-muted-foreground flex justify-center py-4'
+        >
+          {query.isFetchingNextPage && (
+            <Loader2 className='size-6 animate-spin' />
+          )}
         </div>
       )}
     </div>

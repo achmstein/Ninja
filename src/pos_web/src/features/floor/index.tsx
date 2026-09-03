@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Armchair,
-  ChevronRight,
   Clock,
   DoorOpen,
   PackageCheck,
@@ -25,6 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { RoomPanel } from '@/features/rooms/room-panel'
 import {
   elapsedSeconds,
@@ -305,14 +305,18 @@ export function Floor() {
           </div>
         </div>
 
-        {/* App orders waiting for a tap come first: someone is waiting on
+        {/* A customer in a room is waiting on each of these, so they lead the
+            floor; the strip is gone when nothing is pending */}
+        <ServiceRequestsStrip />
+
+        {/* App orders waiting for a tap come next: someone is waiting on
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
         {reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
-            <div className='bg-card divide-y overflow-hidden rounded-xl border'>
+            <div className='flex gap-3 overflow-x-auto pb-1'>
               {reserved.map((session) => {
                 const room = rooms.find((r) => toNumber(r.id) === toNumber(session.roomId))
                 const expiresIn = session.expiresAt
@@ -323,25 +327,24 @@ export function Floor() {
                     key={String(session.id)}
                     type='button'
                     onClick={() => setSelectedRoomId(toNumber(session.roomId))}
-                    className='hover:bg-accent/50 flex h-14 w-full items-center gap-3 px-3 text-start'
+                    className='bg-card hover:bg-accent/50 flex w-[240px] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
                   >
-                    <Clock className='size-5 shrink-0 text-amber-600 dark:text-amber-500' />
+                    <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
+                      <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+                    </div>
                     <span className='min-w-0 flex-1'>
-                      <span className='block truncate font-medium'>
+                      <span className='block truncate text-base font-semibold'>
                         {localized(room?.name ?? session.roomName)}
                       </span>
-                      {session.customerName && (
-                        <span className='text-muted-foreground block truncate text-sm'>
-                          {session.customerName}
-                        </span>
-                      )}
+                      <span className='text-muted-foreground block truncate text-sm'>
+                        {session.customerName || t('statusReserved')}
+                      </span>
                     </span>
                     {expiresIn != null && (
-                      <span className='font-mono text-sm text-amber-600 tabular-nums dark:text-amber-500'>
+                      <span className='font-mono text-sm text-amber-600 tabular-nums shrink-0 dark:text-amber-500'>
                         {formatClock(expiresIn).slice(3)}
                       </span>
                     )}
-                    <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' />
                   </button>
                 )
               })}

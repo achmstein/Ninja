@@ -153,6 +153,17 @@ const dictionary = {
   reserve: { en: 'Reserve', ar: 'احجز' },
   roomReserved: { en: 'Room reserved', ar: 'الأوضة اتحجزت' },
   failedToReserveRoom: { en: 'Could not reserve the room', ar: 'معرفناش نحجز الأوضة' },
+
+  // Service requests (from a customer in a room)
+  serviceRequests: { en: 'Requests', ar: 'الطلبات' },
+  requestCallWaiter: { en: 'Call waiter', ar: 'نداء الجرسون' },
+  requestControllerChange: { en: 'Change controller', ar: 'تغيير الدراع' },
+  requestReceiptToPay: { en: 'Bring the bill', ar: 'هات الحساب' },
+  requestSwitchToMulti: { en: 'Switch to multiplayer', ar: 'تحويل لمالتي' },
+  requestSwitchToSingle: { en: 'Switch to single player', ar: 'تحويل لسنجل' },
+  acknowledgeRequest: { en: 'Acknowledge', ar: 'استلمنا' },
+  failedToUpdateRequest: { en: 'Could not update the request', ar: 'معرفناش نحدث الطلب' },
+  newServiceRequestToast: { en: 'New room request', ar: 'طلب جديد من أوضة' },
   startWalkInSession: { en: 'Start walk-in session', ar: 'بدء جلسة فورية' },
   startWalkInDescription: {
     en: 'Start the timer for {name} right now. Customers can join by scanning the room QR code.',

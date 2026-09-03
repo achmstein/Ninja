@@ -116,23 +116,23 @@ public static class NotificationApi
         api.MapGet("/service-requests/pending", GetPendingServiceRequests)
             .WithName("GetPendingServiceRequests")
             .WithSummary("Get pending service requests")
-            .WithDescription("Get all pending service requests for staff dashboard (Admin only)")
+            .WithDescription("Get all pending service requests for the branch (staff)")
             .WithTags("Service Requests")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPut("/service-requests/{id}/acknowledge", AcknowledgeServiceRequest)
             .WithName("AcknowledgeServiceRequest")
             .WithSummary("Acknowledge a service request")
-            .WithDescription("Mark request as acknowledged by staff (Admin only)")
+            .WithDescription("Mark request as acknowledged by staff")
             .WithTags("Service Requests")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPut("/service-requests/{id}/complete", CompleteServiceRequest)
             .WithName("CompleteServiceRequest")
             .WithSummary("Complete a service request")
-            .WithDescription("Mark request as completed (Admin only)")
+            .WithDescription("Mark request as completed")
             .WithTags("Service Requests")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         // Notification preferences endpoints
         api.MapGet("/preferences", GetNotificationPreferences)
