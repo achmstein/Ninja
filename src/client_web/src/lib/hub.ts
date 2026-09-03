@@ -11,7 +11,8 @@ import { translate } from './i18n'
 import { toast } from './toast'
 
 // One SignalR connection for the whole app (mobile parity: single hub with
-// OrderStatusChanged / RoomStatusChanged / BranchSettingsChanged events).
+// OrderStatusChanged / RoomStatusChanged / BranchSettingsChanged /
+// CatalogChanged events).
 let connection: HubConnection | null = null
 
 type OrderStatusChangedEvent = {
@@ -89,10 +90,21 @@ export function useHub() {
     const onBranchSettings = () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
     }
+    // An item went sold out (or came back) at the till: every menu query
+    // refetches, each carrying the branch header, so the customer sees it
+    // grey out without reloading
+    const onCatalog = () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getItemsByType' }] })
+      queryClient.invalidateQueries({
+        queryKey: [{ _id: 'getAvailableItems' }],
+      })
+    }
 
     conn.on('OrderStatusChanged', onOrder)
     conn.on('RoomStatusChanged', onRoom)
     conn.on('BranchSettingsChanged', onBranchSettings)
+    conn.on('CatalogChanged', onCatalog)
     ensureStarted(conn)
 
     // Guests are only in their group by asking, and only once connected —
@@ -117,6 +129,7 @@ export function useHub() {
       conn.off('OrderStatusChanged', onOrder)
       conn.off('RoomStatusChanged', onRoom)
       conn.off('BranchSettingsChanged', onBranchSettings)
+      conn.off('CatalogChanged', onCatalog)
     }
   }, [queryClient])
 }

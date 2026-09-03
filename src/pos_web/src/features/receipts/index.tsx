@@ -105,6 +105,7 @@ export function Receipts() {
                   navigate({
                     to: '/ticket/$ticketId',
                     params: { ticketId: String(toNumber(bill.id)) },
+                    search: { from: 'receipts' },
                   })
                 }
                 className='hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start'

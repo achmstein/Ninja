@@ -56,7 +56,7 @@ public static class ShiftsApi
         try
         {
             var shiftId = await mediator.Send(new OpenShiftCommand(
-                branchId, request.OpeningFloat, httpContext.User.GetUserId() ?? "unknown"));
+                branchId, request.OpeningFloat, httpContext.GetActor()));
 
             return TypedResults.Ok(new OpenShiftResponse(shiftId));
         }
@@ -103,7 +103,7 @@ public static class ShiftsApi
         try
         {
             await mediator.Send(new AddCashMovementCommand(
-                id, request.Type, request.Amount, request.Reason, httpContext.User.GetUserId() ?? "unknown"));
+                id, request.Type, request.Amount, request.Reason, httpContext.GetActor()));
 
             return TypedResults.Ok();
         }
@@ -122,7 +122,7 @@ public static class ShiftsApi
         try
         {
             var zReport = await mediator.Send(new CloseShiftCommand(
-                id, request.ClosingCount, httpContext.User.GetUserId() ?? "unknown"));
+                id, request.ClosingCount, httpContext.GetActor()));
 
             return TypedResults.Ok(zReport);
         }

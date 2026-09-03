@@ -20,6 +20,7 @@ import 'core/services/signalr_service.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/menu/providers/favorites_provider.dart';
+import 'features/menu/services/menu_service.dart';
 import 'features/notifications/services/notification_service.dart';
 import 'features/orders/services/order_service.dart';
 import 'features/rooms/services/room_service.dart';
@@ -197,6 +198,15 @@ class _ChillaxAppState extends ConsumerState<ChillaxApp>
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) async {
         await ref.read(branchProvider.notifier).refreshSilently();
+        WidgetsBinding.instance.ensureVisualUpdate();
+      }),
+    );
+    _signalRSubscriptions.add(
+      signalR.onCatalogChanged.listen((_) {
+        // An item went sold out (or came back) at the till: drop every
+        // cached menu (all locales and branches) so the open screen refetches
+        ref.invalidate(groupedMenuItemsProvider);
+        ref.invalidate(menuItemsProvider);
         WidgetsBinding.instance.ensureVisualUpdate();
       }),
     );

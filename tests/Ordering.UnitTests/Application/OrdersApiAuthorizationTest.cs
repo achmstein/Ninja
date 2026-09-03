@@ -32,6 +32,7 @@ public class OrdersApiAuthorizationTest
         builder.Services.AddSingleton(Substitute.For<IMediator>());
         builder.Services.AddSingleton(Substitute.For<IOrderQueries>());
         builder.Services.AddSingleton(Substitute.For<IIdentityService>());
+        builder.Services.AddSingleton(Substitute.For<IBranchSettingsQueries>());
 
         var app = builder.Build();
 
@@ -64,6 +65,7 @@ public class OrdersApiAuthorizationTest
     [DataRow("ConfirmOrder")]
     [DataRow("CancelOrder")]
     [DataRow("GetPendingOrders")]
+    [DataRow("AssignOrderCustomer")]
     public void Accepting_orders_is_open_to_the_till(string endpointName)
     {
         // The cashier confirms app orders from the POS, so these take the

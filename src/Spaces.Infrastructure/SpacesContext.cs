@@ -1,5 +1,6 @@
 #nullable enable
 using Chillax.IntegrationEventLogEF;
+using Chillax.Spaces.Infrastructure.Projections;
 
 namespace Chillax.Spaces.Infrastructure;
 
@@ -15,6 +16,7 @@ public class SpacesContext : DbContext, IUnitOfWork
     public DbSet<Reservation> Reservations { get; set; }
     public DbSet<SessionMember> SessionMembers { get; set; }
     public DbSet<SessionSegment> SessionSegments { get; set; }
+    public DbSet<BranchSettings> BranchSettings { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -38,6 +40,7 @@ public class SpacesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new ReservationEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SessionMemberEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SessionSegmentEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

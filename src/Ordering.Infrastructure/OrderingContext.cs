@@ -1,5 +1,6 @@
 #nullable enable
 using Chillax.IntegrationEventLogEF;
+using Chillax.Ordering.Infrastructure.Projections;
 
 namespace Chillax.Ordering.Infrastructure;
 
@@ -14,6 +15,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Buyer> Buyers { get; set; }
     public DbSet<OrderRating> OrderRatings { get; set; }
+    public DbSet<BranchSettings> BranchSettings { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -39,6 +41,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new OrderItemEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new OrderRatingEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BuyerEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { AxiosError } from 'axios'
 import { useAuth } from 'react-oidc-context'
 import {
   ArrowLeft,
@@ -15,8 +16,11 @@ import {
   Trash2,
   Undo2,
   User,
+  UserPlus,
 } from 'lucide-react'
+import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import {
+  assignTicketLinesCustomerMutation,
   getTicketOptions,
   moveTicketLinesMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
@@ -33,6 +37,8 @@ import {
 import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { SessionBar } from '@/features/rooms/session-bar'
 import { useRooms, useSessionActions } from '@/features/rooms/use-rooms'
+import type { SaleCustomer } from '@/features/sale/cart'
+import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { getRealmRoles } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
@@ -179,9 +185,12 @@ function LineRow({
 export function TicketScreen({
   ticketId,
   autoSettle = false,
+  backTo = '/',
 }: {
   ticketId: number
   autoSettle?: boolean
+  /** Where Back goes: the floor, or the receipts list that opened this bill. */
+  backTo?: '/' | '/receipts'
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -199,9 +208,18 @@ export function TicketScreen({
   const [settleGuardOpen, setSettleGuardOpen] = useState(false)
   const [sessionGuardOpen, setSessionGuardOpen] = useState(false)
   const [voidOpen, setVoidOpen] = useState(false)
+  const [voidGuardOpen, setVoidGuardOpen] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [settleOutcome, setSettleOutcome] = useState<SettleOutcome | null>(null)
+  // The orders behind the unattributed lines, while the cashier is choosing
+  // who they were for; null when the picker is closed
+  const [assignOrderIds, setAssignOrderIds] = useState<number[] | null>(null)
+  const [assignLineIds, setAssignLineIds] = useState<number[] | null>(null)
+  const closeAssign = () => {
+    setAssignOrderIds(null)
+    setAssignLineIds(null)
+  }
 
   // Voiding is Owner-only (the server enforces the same rule)
   const isOwner = getRealmRoles(auth.user).includes('Owner')
@@ -254,6 +272,57 @@ export function TicketScreen({
     },
   })
 
+  // "Forgot the customer": Ordering owns who an order is for, so the name (or
+  // account) goes there — one call per order behind the unattributed lines.
+  // Sales re-tags the lines off the event Ordering publishes and nudges the
+  // hub; the invalidation below just does not wait for it.
+  const assignCustomer = useMutation({ ...assignOrderCustomerMutation() })
+  const assignLines = useMutation({ ...assignTicketLinesCustomerMutation() })
+
+  const doAssignCustomer = async (customer: SaleCustomer) => {
+    const orderIds = assignOrderIds ?? []
+    const lineIds = assignLineIds ?? []
+    try {
+      await Promise.all(
+        orderIds.map((orderId) =>
+          assignCustomer.mutateAsync({
+            path: { orderId },
+            query: { 'api-version': API_VERSION },
+            // A fresh id per call: the server deduplicates a retried request,
+            // and a later assignment is a new one
+            headers: { 'x-requestid': crypto.randomUUID() },
+            body: { customerUserId: customer.id, customerName: customer.name },
+          })
+        )
+      )
+      // Part of an order (or several): the snapshot on just those lines
+      if (lineIds.length > 0) {
+        await assignLines.mutateAsync({
+          path: { id: ticketId },
+          query: { 'api-version': API_VERSION },
+          body: { lineIds, customerId: customer.id ?? null, customerName: customer.name },
+        })
+      }
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+      setSelecting(false)
+      setSelectedIds(new Set())
+      toast.success(
+        t('customerAssigned'),
+        lineIds.length > 0 ? { description: t('pointsFollowWholeOrder') } : undefined
+      )
+    } catch (error) {
+      // A 400 carries the domain's own words (cancelled, already somebody's)
+      const detail =
+        error instanceof AxiosError && typeof error.response?.data === 'string'
+          ? error.response.data
+          : undefined
+      toast.error(
+        t('failedToAssignCustomer'),
+        detail ? { description: detail } : undefined
+      )
+    }
+  }
+
   if (isLoading) {
     return (
       <div className='mx-auto flex max-w-3xl flex-col gap-3 p-4'>
@@ -268,7 +337,9 @@ export function TicketScreen({
       <div className='flex flex-col items-center gap-4 py-24'>
         <p className='text-muted-foreground text-lg'>{t('ticketNotFound')}</p>
         <Button asChild size='lg'>
-          <Link to='/'>{t('backToFloor')}</Link>
+          <Link to={backTo}>
+            {backTo === '/' ? t('backToFloor') : t('goBack')}
+          </Link>
         </Button>
       </div>
     )
@@ -374,6 +445,34 @@ export function TicketScreen({
     })
   const movableCount = lines.filter((l) => l.source !== 'SessionTime').length
 
+  // Order lines nobody was named for can still be told whose they are —
+  // through Ordering, which owns the order. Manual and session-time lines
+  // have no order behind them, so a group of only those offers nothing.
+  // Selected lines → who gets them. A whole order goes through Ordering: the
+  // customer owns the order and its points, so naming (or re-naming) it moves
+  // the points with it. Anything less is a Sales-side snapshot on just those
+  // lines — the bill grouping, the receipt, an Account tender — and the
+  // points stay where they are.
+  const assignSelected = () => {
+    const byOrder = new Map<number, TicketLineView[]>()
+    for (const line of lines) {
+      if (line.orderId == null) continue
+      const key = toNumber(line.orderId)
+      byOrder.set(key, [...(byOrder.get(key) ?? []), line])
+    }
+    const orderIds: number[] = []
+    const lineIds: number[] = []
+    for (const [orderId, orderLines] of byOrder) {
+      const chosen = orderLines.filter((l) => selectedIds.has(toNumber(l.id)))
+      if (chosen.length === 0) continue
+      const whole = chosen.length === orderLines.length
+      if (whole) orderIds.push(orderId)
+      else lineIds.push(...chosen.map((l) => toNumber(l.id)))
+    }
+    setAssignOrderIds(orderIds)
+    setAssignLineIds(lineIds)
+  }
+
   // What the printed receipt shows right after settling, before the
   // refetched (settled) ticket lands
   const paymentsOverride: ReceiptPayment[] | undefined =
@@ -383,7 +482,10 @@ export function TicketScreen({
     <div className='mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28'>
       <div className='flex items-center gap-2'>
         <Button asChild variant='ghost' size='icon' className='size-12'>
-          <Link to='/' aria-label={t('backToFloor')}>
+          <Link
+            to={backTo}
+            aria-label={backTo === '/' ? t('backToFloor') : t('goBack')}
+          >
             <BackIcon className='size-6' />
           </Link>
         </Button>
@@ -448,7 +550,9 @@ export function TicketScreen({
                 <Button
                   variant='outline'
                   className='text-destructive hover:text-destructive h-12 gap-2 px-3'
-                  onClick={() => setVoidOpen(true)}
+                  onClick={() =>
+                    activeSession ? setVoidGuardOpen(true) : setVoidOpen(true)
+                  }
                 >
                   <Ban className='size-5' />
                   <span className='hidden sm:inline'>{t('voidTicket')}</span>
@@ -484,18 +588,22 @@ export function TicketScreen({
           {t('emptyTicket')}
         </p>
       ) : groups.length === 1 && groups[0].key === null ? (
-        <div className='flex flex-col divide-y'>
-          {/* Selecting moves individual lines to another ticket, so the rounds
-              come back apart the moment the cashier is choosing between them */}
-          {(selecting ? lines : mergeIdenticalLines(lines)).map((line) => (
-            <LineRow
-              key={String(line.id)}
-              line={line}
-              selecting={selecting && !isSettled}
-              selected={selectedIds.has(toNumber(line.id))}
-              onToggle={() => toggleLine(toNumber(line.id))}
-            />
-          ))}
+        <div className='flex flex-col'>
+          <div className='flex flex-col divide-y'>
+            {/* Selecting moves individual lines to another ticket, so the rounds
+                come back apart the moment the cashier is choosing between them */}
+            {(selecting ? lines : mergeIdenticalLines(lines)).map((line) => (
+              <LineRow
+                key={String(line.id)}
+                line={line}
+                selecting={selecting && !isSettled}
+                selected={selectedIds.has(toNumber(line.id))}
+                onToggle={() => toggleLine(toNumber(line.id))}
+              />
+            ))}
+          </div>
+          {/* Nobody was named: the till forgot, and the whole bill is one
+              "whose was this?" away from grouping under them */}
         </div>
       ) : (
         /* Shared bill: one heading per person, each with its own subtotal, so
@@ -654,6 +762,21 @@ export function TicketScreen({
                 </Button>
               </div>
             ) : selecting ? (
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-14 gap-2 px-5 text-lg'
+                  disabled={
+                    selectedIds.size === 0 ||
+                    assignCustomer.isPending ||
+                    assignLines.isPending
+                  }
+                  onClick={assignSelected}
+                >
+                  <UserPlus className='size-5' />
+                  {t('assignCustomer')}
+                </Button>
               <Button
                 size='lg'
                 className='h-14 px-6 text-lg'
@@ -665,6 +788,7 @@ export function TicketScreen({
                 )}
                 {t('moveLinesAction', { count: selectedIds.size })}
               </Button>
+              </div>
             ) : (
               <Button
                 size='lg'
@@ -730,6 +854,20 @@ export function TicketScreen({
           if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
         }}
       />
+      {/* Same rule for Void, server-enforced too: time that has not landed
+          yet is money, and a void would write it off unseen */}
+      <ConfirmDialog
+        open={voidGuardOpen}
+        onOpenChange={setVoidGuardOpen}
+        title={t('voidWithSessionTitle')}
+        description={t('voidWithSessionHint')}
+        cancelLabel={t('goBack')}
+        actionLabel={t('endSessionButton')}
+        destructive
+        onAction={() => {
+          if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
+        }}
+      />
       <SettleDialog
         ticket={ticket}
         open={settleOpen}
@@ -740,6 +878,14 @@ export function TicketScreen({
         ticketId={ticketId}
         open={voidOpen}
         onOpenChange={setVoidOpen}
+      />
+      {/* The sale pad's own picker, reused: an account, or just a name */}
+      <CustomerDialog
+        open={assignOrderIds !== null || assignLineIds !== null}
+        onOpenChange={(open) => {
+          if (!open) closeAssign()
+        }}
+        onSelect={doAssignCustomer}
       />
       {(isSettled || settleOutcome) && (
         <ReceiptSheet

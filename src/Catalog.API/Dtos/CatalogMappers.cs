@@ -55,7 +55,8 @@ public static class CatalogMappers
                 : $"{baseUrl}/api/catalog/items/{item.Id}/pic?v={Uri.EscapeDataString(item.PictureFileName)}",
             CatalogTypeId = item.CatalogTypeId,
             CatalogTypeName = item.CatalogType?.Name ?? new LocalizedText(),
-            IsAvailable = branchOverride.IsAvailable,
+            // A branch can only restrict: a global sold-out always wins
+            IsAvailable = item.IsAvailable && branchOverride.IsAvailable,
             IsOnOffer = isOnOffer,
             OfferPrice = offerPrice,
             EffectivePrice = effectivePrice,

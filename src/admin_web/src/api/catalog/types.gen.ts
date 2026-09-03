@@ -928,6 +928,10 @@ export type ToggleItemAvailabilityData = {
 
 export type ToggleItemAvailabilityErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -940,6 +944,8 @@ export type ToggleItemAvailabilityErrors = {
      */
     404: unknown;
 };
+
+export type ToggleItemAvailabilityError = ToggleItemAvailabilityErrors[keyof ToggleItemAvailabilityErrors];
 
 export type ToggleItemAvailabilityResponses = {
     /**

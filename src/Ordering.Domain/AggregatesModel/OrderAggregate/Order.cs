@@ -252,6 +252,57 @@ public class Order
     }
 
     /// <summary>
+    /// Name the customer after the fact — the cashier rang the sale up and
+    /// only then remembered whose it was, or named the wrong regular.
+    /// Allowed until the order is cancelled. A bare name identifies nobody,
+    /// so an account (or a better name) may replace it. An account may be
+    /// replaced by another: the points it earned at confirmation follow the
+    /// order, which is why the event names the account losing them as well
+    /// as the one gaining them. It cannot be swapped for itself, nor dropped
+    /// back to a bare name. The name travels the way the POS constructor's
+    /// does — onto the kitchen card and the bill line; the account, when
+    /// there is one, becomes the <see cref="Buyer"/>.
+    /// </summary>
+    /// <param name="previousBuyerIdentityGuid">
+    /// The identity behind the current <see cref="BuyerId"/>, looked up by
+    /// the caller: the aggregate holds only the row id, and the event goes
+    /// out before anything is saved.
+    /// </param>
+    public void AssignCustomer(string customerName, Buyer? buyer = null, string? previousBuyerIdentityGuid = null)
+    {
+        if (OrderStatus == OrderStatus.Cancelled)
+        {
+            throw new OrderingDomainException("A cancelled order cannot be assigned a customer.");
+        }
+
+        if (BuyerId is not null)
+        {
+            if (buyer is null)
+            {
+                throw new OrderingDomainException("This order belongs to a customer account — it can move to another account, not to a bare name.");
+            }
+
+            if (buyer.Id == BuyerId || buyer.IdentityGuid == previousBuyerIdentityGuid)
+            {
+                throw new OrderingDomainException("This order already belongs to this customer.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(customerName))
+        {
+            throw new OrderingDomainException("A customer needs a name.");
+        }
+
+        // Whose it was only matters if it was anyone's
+        var previous = BuyerId is null ? null : previousBuyerIdentityGuid;
+
+        GuestName = customerName.Trim();
+        BuyerId = buyer?.Id;
+
+        AddDomainEvent(new OrderCustomerAssignedDomainEvent(this, buyer?.IdentityGuid, previous));
+    }
+
+    /// <summary>
     /// Set order to submitted after stock validation passes
     /// </summary>
     public void SetStockConfirmedStatus()

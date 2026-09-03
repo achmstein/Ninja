@@ -76,12 +76,14 @@ public class RefundTicketCommandHandler(
 
                 // Money the ticket's orders earned points on goes back in
                 // proportion; the order's full menu value on this ticket is
-                // the denominator Loyalty divides by
+                // the denominator Loyalty divides by — the figure a void
+                // reverses outright
+                var amountByOrder = ticket.GetAmountByOrder();
                 var reversals = refund.RefundedByOrder()
                     .Select(r => new RefundOrderReversal(
                         r.OrderId,
                         r.RefundedAmount,
-                        ticket.Lines.Where(l => l.OrderId == r.OrderId).Sum(l => l.Total)))
+                        amountByOrder.GetValueOrDefault(r.OrderId)))
                     .ToList();
 
                 await integrationEvents.AddAndSaveEventAsync(new TicketRefundedIntegrationEvent(

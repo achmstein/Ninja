@@ -109,6 +109,15 @@ export function PlaceList({
           {freeRooms.map((room) => {
             const session = sessionForRoom(room.id)
             const maintenance = Number(room.displayStatus) === ROOM_MAINTENANCE
+            // The dot already says free (tables show nothing either); text only
+            // when there is something to add
+            const detail = isActive(session)
+              ? formatClock(elapsedSeconds(session, nowMs))
+              : isReserved(session)
+                ? session.customerName || t('statusReserved')
+                : maintenance
+                  ? t('underMaintenance')
+                  : null
             return (
               <button
                 key={String(room.id)}
@@ -126,15 +135,11 @@ export function PlaceList({
                 <span className='min-w-0 flex-1 truncate font-medium'>
                   {localized(room.name)}
                 </span>
-                <span className='text-muted-foreground truncate text-sm'>
-                  {isActive(session)
-                    ? formatClock(elapsedSeconds(session, nowMs))
-                    : isReserved(session)
-                      ? session.customerName || t('statusReserved')
-                      : maintenance
-                        ? t('underMaintenance')
-                        : t('free')}
-                </span>
+                {detail && (
+                  <span className='text-muted-foreground truncate text-sm'>
+                    {detail}
+                  </span>
+                )}
                 <DoorOpen className='text-muted-foreground size-4 shrink-0' />
               </button>
             )

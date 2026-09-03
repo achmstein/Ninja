@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Chillax.Spaces.API.Application.BackgroundServices;
 using Chillax.Spaces.API.Application.IntegrationEvents.Events;
+using Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
 using Chillax.Spaces.API.Application.Queries;
 using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
@@ -48,12 +49,16 @@ public static class Extensions
 
         // Register queries
         builder.Services.AddScoped<IRoomQueries, RoomQueries>();
+        builder.Services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
 
         // Register background services
         builder.Services.AddHostedService<ReservationExpirationService>();
 
         // Add RabbitMQ event bus for publishing room availability events
         builder.AddRabbitMqEventBus("eventbus")
+            // Branch.API's flags, projected locally: a branch with reservations
+            // paused refuses customer bookings without a call across services
+            .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SpacesIntegrationEventContext.Default));
     }
@@ -64,6 +69,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(SessionEndedIntegrationEvent))]
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
+[JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext
 {
 }

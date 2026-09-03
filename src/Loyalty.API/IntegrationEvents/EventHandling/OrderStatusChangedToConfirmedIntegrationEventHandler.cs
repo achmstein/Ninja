@@ -81,8 +81,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         // Calculate points to award with tier multiplier
         var tierMultiplier = GetTierMultiplier(account.CurrentTier);
-        var basePoints = @event.OrderTotal * BasePointsPerPound;
-        var pointsToAward = (int)Math.Floor(basePoints * (decimal)tierMultiplier);
+        var pointsToAward = PointsToAward(@event.OrderTotal, account.CurrentTier);
 
         if (pointsToAward > 0)
         {
@@ -99,6 +98,13 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
         await context.SaveChangesAsync();
     }
+
+    /// <summary>
+    /// What an order earns: the base rate on its total, scaled by the tier.
+    /// Shared with the after-the-fact assignment so both paths award alike.
+    /// </summary>
+    internal static int PointsToAward(decimal orderTotal, LoyaltyTier tier)
+        => (int)Math.Floor(orderTotal * BasePointsPerPound * (decimal)GetTierMultiplier(tier));
 
     private static double GetTierMultiplier(LoyaltyTier tier) => tier switch
     {

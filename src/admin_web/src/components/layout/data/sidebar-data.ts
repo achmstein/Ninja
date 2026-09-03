@@ -1,15 +1,20 @@
 import {
   LayoutDashboard,
   Armchair,
+  Banknote,
   Coffee,
   ClipboardList,
+  Clock,
   ConciergeBell,
   Gamepad2,
   Building2,
   Megaphone,
   Package,
+  ReceiptText,
   ShieldCheck,
   Tag,
+  Ticket,
+  Undo2,
   Users,
   Award,
   Wallet,
@@ -47,6 +52,37 @@ export const sidebarData: SidebarData = {
           title: 'requests',
           url: '/requests',
           icon: ConciergeBell,
+        },
+      ],
+    },
+    {
+      // The till's books, read-only: what was sold, paid, refunded, counted
+      title: 'navTill',
+      items: [
+        {
+          title: 'tillSales',
+          url: '/till',
+          icon: ReceiptText,
+        },
+        {
+          title: 'tillTickets',
+          url: '/till/tickets',
+          icon: Ticket,
+        },
+        {
+          title: 'tillPayments',
+          url: '/till/payments',
+          icon: Banknote,
+        },
+        {
+          title: 'tillRefunds',
+          url: '/till/refunds',
+          icon: Undo2,
+        },
+        {
+          title: 'tillShifts',
+          url: '/till/shifts',
+          icon: Clock,
         },
       ],
     },

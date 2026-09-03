@@ -12,6 +12,12 @@ export type AddLineRequest = {
     customerName?: null | string;
 };
 
+export type AssignLinesCustomerRequest = {
+    lineIds: Array<number | string>;
+    customerId: null | string;
+    customerName: string;
+};
+
 export type CashMovementRequest = {
     type: CashMovementType;
     amount: number | string;
@@ -67,6 +73,42 @@ export type OpenTicketRequest = {
 
 export type OpenTicketResponse = {
     ticketId: number | string;
+};
+
+export type PagedResultOfPaymentRow = {
+    items: Array<PaymentRow>;
+    totalCount: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
+export type PagedResultOfRefundSummary = {
+    items: Array<RefundSummary>;
+    totalCount: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
+export type PagedResultOfTicketHistoryRow = {
+    items: Array<TicketHistoryRow>;
+    totalCount: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
+export type PaymentRow = {
+    ticketId: number | string;
+    receiptNumber: null | number | string;
+    type: string;
+    locationName: null | LocalizedText;
+    label: null | string;
+    tender: string;
+    amount: number | string;
+    customerId: null | string;
+    customerName: null | string;
+    recordedBy: string;
+    recordedAt: string;
+    settledAt: string;
 };
 
 export type PaymentTender = number;
@@ -132,6 +174,21 @@ export type RefundRequest = {
 export type RefundResult = {
     number: number | string;
     amount: number | string;
+};
+
+export type RefundSummary = {
+    id: number | string;
+    number: number | string;
+    ticketId: number | string;
+    receiptNumber: number | string;
+    amount: number | string;
+    tender: string;
+    reason: string;
+    customerName: null | string;
+    refundedBy: string;
+    refundedAt: string;
+    shiftId: null | number | string;
+    lineCount: number | string;
 };
 
 export type RefundView = {
@@ -237,6 +294,19 @@ export type TicketDetail = {
     refundedTotal?: number | string;
 };
 
+export type TicketHistoryRow = {
+    id: number | string;
+    receiptNumber: null | number | string;
+    status: string;
+    type: string;
+    locationName: null | LocalizedText;
+    label: null | string;
+    closedAt: string;
+    closedBy: null | string;
+    total: number | string;
+    refundedTotal: number | string;
+};
+
 export type TicketLineView = {
     id?: number | string;
     source?: string;
@@ -252,6 +322,8 @@ export type TicketLineView = {
     customerId?: null | string;
     guestId?: null | string;
 };
+
+export type TicketStatus = number;
 
 export type TicketSummary = {
     id?: number | string;
@@ -346,6 +418,135 @@ export type GetSettledTicketsResponses = {
 };
 
 export type GetSettledTicketsResponse = GetSettledTicketsResponses[keyof GetSettledTicketsResponses];
+
+export type GetTicketHistoryData = {
+    body?: never;
+    path?: never;
+    query: {
+        status?: TicketStatus;
+        from?: string;
+        to?: string;
+        receiptNumber?: number | string;
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/history';
+};
+
+export type GetTicketHistoryErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetTicketHistoryError = GetTicketHistoryErrors[keyof GetTicketHistoryErrors];
+
+export type GetTicketHistoryResponses = {
+    /**
+     * OK
+     */
+    200: PagedResultOfTicketHistoryRow;
+};
+
+export type GetTicketHistoryResponse = GetTicketHistoryResponses[keyof GetTicketHistoryResponses];
+
+export type GetPaymentsData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        tender?: PaymentTender;
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/payments';
+};
+
+export type GetPaymentsErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPaymentsError = GetPaymentsErrors[keyof GetPaymentsErrors];
+
+export type GetPaymentsResponses = {
+    /**
+     * OK
+     */
+    200: PagedResultOfPaymentRow;
+};
+
+export type GetPaymentsResponse = GetPaymentsResponses[keyof GetPaymentsResponses];
+
+export type GetRefundsData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/refunds';
+};
+
+export type GetRefundsErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRefundsError = GetRefundsErrors[keyof GetRefundsErrors];
+
+export type GetRefundsResponses = {
+    /**
+     * OK
+     */
+    200: PagedResultOfRefundSummary;
+};
+
+export type GetRefundsResponse = GetRefundsResponses[keyof GetRefundsResponses];
 
 export type DiscardTicketData = {
     body?: never;
@@ -658,6 +859,46 @@ export type MoveTicketLinesResponses = {
 };
 
 export type MoveTicketLinesResponse = MoveTicketLinesResponses[keyof MoveTicketLinesResponses];
+
+export type AssignTicketLinesCustomerData = {
+    body: AssignLinesCustomerRequest;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/lines/customer';
+};
+
+export type AssignTicketLinesCustomerErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AssignTicketLinesCustomerError = AssignTicketLinesCustomerErrors[keyof AssignTicketLinesCustomerErrors];
+
+export type AssignTicketLinesCustomerResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type AssignTicketLinesCustomerResponse = AssignTicketLinesCustomerResponses[keyof AssignTicketLinesCustomerResponses];
 
 export type VoidTicketData = {
     body: VoidTicketRequest;

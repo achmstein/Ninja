@@ -23,6 +23,13 @@ public class Ticket : Entity, IAggregateRoot
     /// <summary>The Spaces session a Room ticket bills.</summary>
     public int? SessionId { get; private set; }
 
+    /// <summary>
+    /// When the Room ticket's session stopped running: its time landed, or it
+    /// was cancelled. Null while it runs — and while it runs the ticket can be
+    /// neither settled nor voided, because the time is not on the bill yet.
+    /// </summary>
+    public DateTime? SessionEndedAt { get; private set; }
+
     public int? RoomId { get; private set; }
 
     /// <summary>The café table a Table ticket accumulates for.</summary>
@@ -101,6 +108,19 @@ public class Ticket : Entity, IAggregateRoot
 
     /// <summary>Menu money: the lines, before service charge and VAT.</summary>
     public decimal GetSubtotal() => _lines.Sum(l => l.Total);
+
+    /// <summary>
+    /// Menu money per order on this ticket: every line that came from the
+    /// order, its loyalty discount line included. A share of the order when
+    /// some of its lines were moved to another bill. The base Loyalty
+    /// reverses against when money goes back or the ticket is voided, so a
+    /// refund and a void report the same figure.
+    /// </summary>
+    public IReadOnlyDictionary<int, decimal> GetAmountByOrder()
+        => _lines
+            .Where(l => l.OrderId is not null)
+            .GroupBy(l => l.OrderId!.Value)
+            .ToDictionary(g => g.Key, g => g.Sum(l => l.Total));
 
     /// <summary>
     /// What the customer pays. Settled, it is the frozen receipt whatever the
@@ -245,6 +265,8 @@ public class Ticket : Entity, IAggregateRoot
     {
         EnsureOpen();
 
+        SessionEndedAt ??= DateTime.UtcNow;
+
         if (_lines.Any(l => l.Source == TicketLineSource.SessionTime))
             return;
 
@@ -283,6 +305,59 @@ public class Ticket : Entity, IAggregateRoot
     }
 
     /// <summary>
+    /// Ordering put a customer on an order after it landed here — the till
+    /// forgot at the sale. Every line of that order takes the new snapshot,
+    /// so the bill groups and settles under the right person. Only while
+    /// open: a settled ticket is a printed receipt and a voided one a record,
+    /// and neither is rewritten.
+    /// </summary>
+    public void AssignOrderCustomer(int orderId, string? customerId, string? customerName)
+    {
+        EnsureOpen();
+
+        var lines = _lines.Where(l => l.OrderId == orderId).ToList();
+
+        if (lines.Count == 0)
+            throw new SalesDomainException($"Order {orderId} is not on ticket {Id}.");
+
+        foreach (var line in lines)
+            line.SetCustomer(customerId, customerName);
+
+        // Not a Touch: nothing landed, so the floor's idle clock stays put —
+        // but the open ticket screen and the floor tile still refetch
+        AddDomainEvent(new TicketChangedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// Name who some of the lines were for — the split-bill fix when several
+    /// people were rung up as one sale. Only the snapshot moves: the order,
+    /// and the loyalty points it earned, stay with whoever placed it; a whole
+    /// order changing hands goes through Ordering (<see cref="AssignOrderCustomer"/>).
+    /// Session time is the session owner's and cannot be reassigned.
+    /// </summary>
+    public void AssignLinesCustomer(IReadOnlyCollection<int> lineIds, string? customerId, string? customerName)
+    {
+        EnsureOpen();
+
+        if (lineIds.Count == 0)
+            throw new SalesDomainException("Pick at least one line.");
+
+        var wanted = lineIds.Distinct().ToHashSet();
+        var lines = _lines.Where(l => wanted.Contains(l.Id)).ToList();
+
+        if (lines.Count != wanted.Count)
+            throw new SalesDomainException("Some of those lines are not on this ticket.");
+
+        if (lines.Any(l => l.Source == TicketLineSource.SessionTime))
+            throw new SalesDomainException("Session time belongs to the session's owner and cannot be reassigned.");
+
+        foreach (var line in lines)
+            line.SetCustomer(customerId, customerName);
+
+        AddDomainEvent(new TicketChangedDomainEvent(this));
+    }
+
+    /// <summary>
     /// Settle the ticket: payments must cover the total (anything above it on
     /// cash is change), the ticket freezes, and a receipt can be issued.
     /// </summary>
@@ -290,6 +365,7 @@ public class Ticket : Entity, IAggregateRoot
     public decimal Settle(IReadOnlyCollection<Payment> payments, string settledBy, int? shiftId = null, PricingRules? rules = null)
     {
         EnsureOpen();
+        EnsureSessionEnded();
 
         if (_lines.Count == 0)
             throw new SalesDomainException("An empty ticket has nothing to settle — discard it instead.");
@@ -343,11 +419,13 @@ public class Ticket : Entity, IAggregateRoot
     /// that walked. Owner-gated at the API: the reason is the audit trail,
     /// and the lines stay exactly as they were for anyone reviewing it.
     /// A settled ticket can never be voided; taking money back is a refund,
-    /// which is a different, deliberate thing.
+    /// which is a different, deliberate thing. Loyalty hears of it: the
+    /// points the ticket's orders earned at confirmation go back with the sale.
     /// </summary>
     public void Void(string reason, string voidedBy)
     {
         EnsureOpen();
+        EnsureSessionEnded();
 
         if (string.IsNullOrWhiteSpace(reason))
             throw new SalesDomainException("Voiding a ticket needs a reason — that is the whole audit trail.");
@@ -358,6 +436,7 @@ public class Ticket : Entity, IAggregateRoot
         VoidedAt = DateTime.UtcNow;
 
         AddDomainEvent(new TicketChangedDomainEvent(this));
+        AddDomainEvent(new TicketVoidedDomainEvent(this));
     }
 
     /// <summary>
@@ -376,6 +455,38 @@ public class Ticket : Entity, IAggregateRoot
             throw new SalesDomainException("Room tickets follow their session and cannot be discarded.");
 
         DiscardEmpty();
+    }
+
+    /// <summary>
+    /// The session was cancelled while the ticket already carried lines, so no
+    /// time will ever land on it. Recorded so the ticket can be settled or
+    /// voided; the empty case is <see cref="DiscardForCancelledSession"/>.
+    /// </summary>
+    public void MarkSessionCancelled()
+    {
+        if (Type != TicketType.Room)
+            throw new SalesDomainException("Only a room ticket follows a session.");
+
+        EnsureOpen();
+        SessionEndedAt ??= DateTime.UtcNow;
+
+        AddDomainEvent(new TicketChangedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// A Room ticket whose session is still running has its time yet to come:
+    /// settling or voiding it now would lose that time (or strand it on a new
+    /// ticket after the group has paid). End the session first.
+    /// </summary>
+    private void EnsureSessionEnded()
+    {
+        var running = Type == TicketType.Room
+            && SessionId != null
+            && SessionEndedAt == null
+            && !_lines.Any(l => l.Source == TicketLineSource.SessionTime);
+
+        if (running)
+            throw new SalesDomainException("The room's session is still running — end it first so its time lands on the bill.");
     }
 
     /// <summary>

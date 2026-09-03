@@ -51,6 +51,14 @@ public static partial class OrdersApi
             .WithSummary("Cancel a submitted order (staff)")
             .RequireAuthorization("Pos");
 
+        // The cashier rang the sale up and only then remembered whose it was:
+        // the customer goes on after the fact, and Sales and Loyalty follow.
+        api.MapPut("/{orderId:int}/customer", AssignOrderCustomerAsync)
+            .WithName("AssignOrderCustomer")
+            .WithSummary("Assign a customer to an order after the fact (staff)")
+            .WithDescription("Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.")
+            .RequireAuthorization("Pos");
+
         api.MapDelete("/{orderId:int}", DeleteOrderAsync)
             .WithName("DeleteOrder")
             .WithSummary("Delete a cancelled order (admin)")
@@ -174,6 +182,16 @@ public static partial class OrdersApi
             request.RoomName);
 
         var branchId = httpContext.GetRequiredBranchId();
+
+        // The branch's pause switch (Branch.API's IsOrderingEnabled, projected
+        // here): off between shifts and whenever the till pauses orders.
+        // Customer and guest orders stop; POS orders come through
+        // CreatePosOrderAsync and are never gated.
+        if (!await services.BranchSettings.IsOrderingEnabledAsync(branchId))
+        {
+            services.Logger.LogWarning("Order rejected - branch {BranchId} is not taking orders", branchId);
+            return TypedResults.BadRequest("This branch is not taking orders right now.");
+        }
 
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
@@ -352,6 +370,54 @@ public static partial class OrdersApi
         }
 
         return TypedResults.Ok();
+    }
+
+    public static async Task<Results<NoContent, BadRequest<string>, NotFound>> AssignOrderCustomerAsync(
+        int orderId,
+        [FromHeader(Name = "x-requestid")] Guid requestId,
+        AssignOrderCustomerRequest request,
+        [AsParameters] OrderServices services)
+    {
+        if (requestId == Guid.Empty)
+        {
+            return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+        }
+
+        // The name is what the bill line will read, account or not
+        if (string.IsNullOrWhiteSpace(request.CustomerName))
+        {
+            return TypedResults.BadRequest("A customer needs a name.");
+        }
+
+        var command = new AssignOrderCustomerCommand(
+            orderId,
+            string.IsNullOrWhiteSpace(request.CustomerUserId) ? null : request.CustomerUserId,
+            request.CustomerName.Trim());
+        var requestAssignCustomer = new IdentifiedCommand<AssignOrderCustomerCommand, bool>(command, requestId);
+
+        services.Logger.LogInformation(
+            "Sending command: {CommandName} - OrderId: {OrderId}, Customer: {Customer}",
+            requestAssignCustomer.GetGenericTypeName(),
+            orderId,
+            command.CustomerUserId ?? "name only");
+
+        try
+        {
+            var found = await services.Mediator.Send(requestAssignCustomer);
+
+            if (!found)
+            {
+                return TypedResults.NotFound();
+            }
+
+            return TypedResults.NoContent();
+        }
+        catch (OrderingDomainException ex)
+        {
+            // Cancelled, or already somebody else's: the till is told plainly
+            services.Logger.LogWarning(ex, "Assigning a customer to order {OrderId} was refused", orderId);
+            return TypedResults.BadRequest(ex.Message);
+        }
     }
 
     public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> RateOrderAsync(
@@ -584,6 +650,15 @@ public record PosOrderRequest(
 /// lands on. 0 when the request was a deduplicated retry.
 /// </summary>
 public record PosOrderResponse(int OrderId);
+
+/// <summary>
+/// Request model for putting a customer on an order after the fact.
+/// </summary>
+/// <param name="CustomerUserId">The customer's account, when they have one; null for a bare name.</param>
+/// <param name="CustomerName">Who the order is for — shown on the bill line either way.</param>
+public record AssignOrderCustomerRequest(
+    string? CustomerUserId,
+    string CustomerName);
 
 /// <summary>
 /// Request model for rating an order

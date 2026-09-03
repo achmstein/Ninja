@@ -135,3 +135,53 @@ public record PaymentView
     public string RecordedBy { get; init; } = string.Empty;
     public DateTime RecordedAt { get; init; }
 }
+
+/// <summary>One page of a back-office listing, with the count behind it.</summary>
+public record PagedResult<T>(List<T> Items, int TotalCount, int PageIndex, int PageSize);
+
+/// <summary>
+/// A closed ticket — settled or voided — as the back office lists it.
+/// <see cref="ClosedAt"/> and <see cref="ClosedBy"/> are the settle or the
+/// void, whichever ended it.
+/// </summary>
+public record TicketHistoryRow(
+    int Id,
+    int? ReceiptNumber,
+    string Status,
+    string Type,
+    LocalizedText? LocationName,
+    string? Label,
+    DateTime ClosedAt,
+    string? ClosedBy,
+    decimal Total,
+    decimal RefundedTotal);
+
+/// <summary>One payment taken on a settled ticket, with the bill it paid.</summary>
+public record PaymentRow(
+    int TicketId,
+    int? ReceiptNumber,
+    string Type,
+    LocalizedText? LocationName,
+    string? Label,
+    string Tender,
+    decimal Amount,
+    string? CustomerId,
+    string? CustomerName,
+    string RecordedBy,
+    DateTime RecordedAt,
+    DateTime SettledAt);
+
+/// <summary>A credit note as the back office lists it — the ticket screen has the lines.</summary>
+public record RefundSummary(
+    int Id,
+    int Number,
+    int TicketId,
+    int ReceiptNumber,
+    decimal Amount,
+    string Tender,
+    string Reason,
+    string? CustomerName,
+    string RefundedBy,
+    DateTime RefundedAt,
+    int? ShiftId,
+    int LineCount);

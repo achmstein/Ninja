@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Security.Claims;
-using Chillax.Branch.API.IntegrationEvents;
 using Chillax.Branch.API.Model;
-using Chillax.EventBus.Abstractions;
+using Chillax.Branch.API.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Chillax.Branch.API.Apis;
@@ -42,7 +41,9 @@ public static class BranchApi
             .WithName("UpdateBranchSettings")
             .WithSummary("Update branch operational settings (ordering, reservations)")
             .WithTags("Branches")
-            .RequireAuthorization("Admin");
+            // The till pauses and resumes taking orders mid-day, so the cashier
+            // needs this as much as the admin: "Pos" = Admin, Owner or Cashier
+            .RequireAuthorization("Pos");
 
         // Admin branch assignment
         api.MapGet("/admin/{adminUserId}", GetBranchesByAdmin)
@@ -115,7 +116,7 @@ public static class BranchApi
 
     public static async Task<Results<Ok<BranchResponse>, NotFound>> UpdateBranch(
         BranchContext context,
-        IEventBus eventBus,
+        BranchSettingsService settings,
         [Description("The branch ID")] int id,
         UpdateBranchRequest request)
     {
@@ -130,13 +131,9 @@ public static class BranchApi
         branch.DisplayOrder = request.DisplayOrder;
         if (request.DayStartTime != null) branch.DayStartTime = TimeOnly.Parse(request.DayStartTime);
         if (request.DayEndTime != null) branch.DayEndTime = TimeOnly.Parse(request.DayEndTime);
-        if (request.IsOrderingEnabled != null) branch.IsOrderingEnabled = request.IsOrderingEnabled.Value;
-        if (request.IsReservationsEnabled != null) branch.IsReservationsEnabled = request.IsReservationsEnabled.Value;
 
-        await context.SaveChangesAsync();
-
-        await eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled));
+        // The flags ride the same save; the service announces the change
+        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled);
 
         var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
         return TypedResults.Ok(response);
@@ -173,22 +170,13 @@ public static class BranchApi
     }
 
     public static async Task<Results<Ok<BranchResponse>, NotFound>> UpdateBranchSettings(
-        BranchContext context,
-        IEventBus eventBus,
+        BranchSettingsService settings,
         [Description("The branch ID")] int id,
         UpdateBranchSettingsRequest request)
     {
-        var branch = await context.Branches.FindAsync(id);
+        var branch = await settings.ApplyAsync(id, request.IsOrderingEnabled, request.IsReservationsEnabled);
         if (branch == null)
             return TypedResults.NotFound();
-
-        if (request.IsOrderingEnabled != null) branch.IsOrderingEnabled = request.IsOrderingEnabled.Value;
-        if (request.IsReservationsEnabled != null) branch.IsReservationsEnabled = request.IsReservationsEnabled.Value;
-
-        await context.SaveChangesAsync();
-
-        await eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled));
 
         var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
         return TypedResults.Ok(response);

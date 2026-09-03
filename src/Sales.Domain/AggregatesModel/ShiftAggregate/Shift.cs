@@ -1,4 +1,6 @@
 #nullable enable
+using Chillax.Sales.Domain.Events;
+
 namespace Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 /// <summary>
@@ -61,6 +63,10 @@ public class Shift : Entity, IAggregateRoot
         OpeningFloat = openingFloat;
         OpenedAt = DateTime.UtcNow;
         OpenedBy = openedBy;
+
+        // The branch opens for business with the drawer: Branch.API turns
+        // the ordering and reservation flags on off this event
+        AddDomainEvent(new ShiftOpenedDomainEvent(this));
     }
 
     public void AddMovement(CashMovementType type, decimal amount, string reason, string recordedBy)
@@ -92,6 +98,9 @@ public class Shift : Entity, IAggregateRoot
         ClosedBy = closedBy;
         ClosedAt = DateTime.UtcNow;
         Status = ShiftStatus.Closed;
+
+        // ...and closes with it: both flags go off again
+        AddDomainEvent(new ShiftClosedDomainEvent(this));
     }
 
     private void EnsureOpen()

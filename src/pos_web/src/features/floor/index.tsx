@@ -6,6 +6,9 @@ import {
   ChevronRight,
   Clock,
   DoorOpen,
+  PackageCheck,
+  PanelLeftClose,
+  PanelLeftOpen,
   ReceiptText,
   ShoppingBag,
   ShoppingCart,
@@ -18,6 +21,7 @@ import {
 import type { TicketSummary } from '@/api/sales/types.gen'
 import { listTablesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
@@ -30,6 +34,10 @@ import {
 } from '@/features/rooms/status'
 import { useRooms, useSecondsClock } from '@/features/rooms/use-rooms'
 import { API_VERSION } from '@/lib/api-client'
+import {
+  pendingForTicket,
+  usePendingOrders,
+} from '@/features/orders/use-pending-orders'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
@@ -50,15 +58,18 @@ function Heading({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** One line per open bill: where it is, what is on it, what it comes to — and the clock if a room is running. */
-function BillRow({
+/** One card per open bill: the place, its total, the running clock for a
+ *  room, and a dot when an order is still waiting to be confirmed onto it. */
+function BillCard({
   ticket,
   session,
+  waiting,
   nowMs,
   onClick,
 }: {
   ticket: TicketSummary
   session: ReservationViewModel | undefined
+  waiting: boolean
   nowMs: number
   onClick: () => void
 }) {
@@ -66,33 +77,42 @@ function BillRow({
   const localized = useLocalized()
   const money = useMoney()
 
-  const Icon = typeIcon[ticket.type ?? ''] ?? ShoppingBag
+  const type = ticket.type ?? ''
+  const Icon = typeIcon[type] ?? ShoppingBag
   const typeLabel =
-    ticket.type === 'Room' ? t('room') : ticket.type === 'Table' ? t('table') : t('counter')
+    type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
   const title = localized(ticket.locationName) || ticket.label || typeLabel
+
+  const active = isActive(session)
 
   return (
     <button
       type='button'
       onClick={onClick}
-      className='hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start'
+      className='bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 border-b border-e p-3 text-start'
     >
-      <Icon className='text-muted-foreground size-5 shrink-0' />
-      <span className='min-w-0 flex-1'>
-        <span className='block truncate text-base font-medium'>{title}</span>
-        <span className='text-muted-foreground block truncate text-sm'>
-          {t('linesCount', { count: toNumber(ticket.lineCount) })}
+      <div className='flex items-start gap-2'>
+        <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
+        <span className='min-w-0 flex-1 truncate text-base font-semibold'>
+          {title}
         </span>
-      </span>
-      {isActive(session) && (
+        {waiting && (
+          <span
+            className='mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-500'
+            aria-label={t('waitingToConfirm')}
+          />
+        )}
+      </div>
+
+      {active && (
         <span className='text-muted-foreground font-mono text-sm tabular-nums'>
           {formatClock(elapsedSeconds(session, nowMs))}
         </span>
       )}
-      <span className='shrink-0 text-lg font-semibold tabular-nums'>
+
+      <span className='mt-auto text-lg font-semibold tabular-nums'>
         {money(ticket.total)}
       </span>
-      <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' />
     </button>
   )
 }
@@ -111,6 +131,29 @@ export function Floor() {
   const queryClient = useQueryClient()
   const [newTabOpen, setNewTabOpen] = useState(false)
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
+  // The places column collapses so a busy floor gets the whole width; the
+  // choice is remembered on this till (localStorage may be blocked — default open)
+  const [placesOpen, setPlacesOpen] = useState(() => {
+    try {
+      return localStorage.getItem('pos.floor.places') !== 'closed'
+    } catch {
+      return true
+    }
+  })
+  const togglePlaces = () => {
+    setPlacesOpen((open) => {
+      const next = !open
+      try {
+        localStorage.setItem('pos.floor.places', next ? 'open' : 'closed')
+      } catch {
+        // A private window or blocked storage — the toggle still works this session
+      }
+      return next
+    })
+  }
+  const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
+    'all'
+  )
 
   const { data: tickets = [], isLoading } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
@@ -118,6 +161,7 @@ export function Floor() {
     refetchInterval: 20_000,
   })
   const { rooms, sessions, sessionForRoom } = useRooms()
+  const { pending } = usePendingOrders()
   const { data: tables = [] } = useQuery(listTablesOptions())
 
   const openTable = useMutation({
@@ -156,6 +200,19 @@ export function Floor() {
       new Date(a.lastActivityAt ?? 0).getTime()
   )
 
+  const counts = {
+    all: bills.length,
+    Room: bills.filter((b) => b.type === 'Room').length,
+    Table: bills.filter((b) => b.type === 'Table').length,
+    Counter: bills.filter((b) => b.type === 'Counter').length,
+  }
+  const shownBills = filter === 'all' ? bills : bills.filter((b) => b.type === filter)
+  const waitingIds = new Set(
+    bills
+      .filter((b) => pendingForTicket(pending, b).length > 0)
+      .map((b) => toNumber(b.id))
+  )
+
   const selectedRoom =
     rooms.find((room) => toNumber(room.id) === selectedRoomId) ?? null
 
@@ -170,12 +227,22 @@ export function Floor() {
     })
 
   return (
-    <div className='grid gap-6 p-4 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'>
+    <div
+      className={
+        placesOpen
+          ? 'grid gap-6 p-4 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'
+          : 'grid gap-6 p-4'
+      }
+    >
       {/* Places with no bill yet — sticky, scrolling on its own, last on a
-          phone where the bills matter more. The scroll box clips anything
-          outside its edges, so a hair of inner padding keeps the search
-          box's focus ring whole. */}
-      <aside className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'>
+          phone where the bills matter more. Collapsed away when the cashier
+          wants the full width; the header toggle brings it back. The scroll
+          box clips anything outside its edges, so a hair of inner padding
+          keeps the search box's focus ring whole. */}
+      <aside
+        hidden={!placesOpen}
+        className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'
+      >
         <Heading>{t('openPlace')}</Heading>
         <PlaceList
           rooms={rooms}
@@ -191,7 +258,23 @@ export function Floor() {
 
       <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2'>
         <div className='flex items-center justify-between gap-3'>
-          <h1 className='text-xl font-bold'>{t('openBills')}</h1>
+          <div className='flex items-center gap-2'>
+            <Button
+              size='icon'
+              variant='ghost'
+              className='text-muted-foreground size-10'
+              aria-label={placesOpen ? t('hidePlaces') : t('showPlaces')}
+              aria-pressed={placesOpen}
+              onClick={togglePlaces}
+            >
+              {placesOpen ? (
+                <PanelLeftClose className='size-5 rtl:-scale-x-100' />
+              ) : (
+                <PanelLeftOpen className='size-5 rtl:-scale-x-100' />
+              )}
+            </Button>
+            <h1 className='text-xl font-bold'>{t('openBills')}</h1>
+          </div>
           <div className='flex gap-2'>
             <Button
               size='lg'
@@ -209,6 +292,15 @@ export function Floor() {
               onClick={() => navigate({ to: '/receipts' })}
             >
               <ReceiptText className='size-5' />
+            </Button>
+            <Button
+              size='lg'
+              variant='outline'
+              className='size-12'
+              aria-label={t('availability')}
+              onClick={() => navigate({ to: '/availability' })}
+            >
+              <PackageCheck className='size-5' />
             </Button>
           </div>
         </div>
@@ -265,16 +357,48 @@ export function Floor() {
             <p className='text-sm'>{t('noOpenBillsHint')}</p>
           </div>
         ) : (
-          <div className='bg-card divide-y overflow-hidden rounded-xl border'>
-            {bills.map((ticket) => (
-              <BillRow
-                key={String(ticket.id)}
-                ticket={ticket}
-                session={sessionForTicket(ticket)}
-                nowMs={nowMs}
-                onClick={() => toTicket(ticket)}
-              />
-            ))}
+          <div className='flex flex-col gap-3'>
+            <div className='flex flex-wrap gap-2'>
+              {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
+                if (key !== 'all' && counts[key] === 0) return null
+                const label =
+                  key === 'all'
+                    ? t('allBills')
+                    : key === 'Room'
+                      ? t('rooms')
+                      : key === 'Table'
+                        ? t('tables')
+                        : t('counter')
+                return (
+                  <Button
+                    key={key}
+                    type='button'
+                    size='lg'
+                    variant={filter === key ? 'default' : 'outline'}
+                    onClick={() => setFilter(key)}
+                    className='gap-2 rounded-full'
+                  >
+                    {label}
+                    <Badge variant='secondary' className='tabular-nums'>
+                      {counts[key]}
+                    </Badge>
+                  </Button>
+                )
+              })}
+            </div>
+
+            <div className='grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] overflow-hidden rounded-xl border-s border-t'>
+              {shownBills.map((ticket) => (
+                <BillCard
+                  key={String(ticket.id)}
+                  ticket={ticket}
+                  session={sessionForTicket(ticket)}
+                  waiting={waitingIds.has(toNumber(ticket.id))}
+                  nowMs={nowMs}
+                  onClick={() => toTicket(ticket)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </section>

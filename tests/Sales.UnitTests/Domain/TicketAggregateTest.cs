@@ -284,6 +284,29 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
+    public void Voiding_raises_the_voided_event_and_prices_each_order_by_its_lines_here()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 2, 50)], loyaltyDiscount: 25);
+        ticket.AppendOrder(42, [Line("Tea", 1, 30)], loyaltyDiscount: 0);
+        ticket.AddManualLine(new LocalizedText("Extra"), 1, 10, 0, "cashier");
+        ticket.ClearDomainEvents();
+
+        ticket.Void("Rang up the wrong table", "owner");
+
+        // Loyalty hears of it once, alongside the floor nudge
+        var raised = ticket.DomainEvents!.OfType<TicketVoidedDomainEvent>().Single();
+        Assert.AreSame(ticket, raised.Ticket);
+        Assert.AreEqual(1, ticket.DomainEvents!.OfType<TicketChangedDomainEvent>().Count());
+
+        // Menu money per order, the discount line included; the manual line earned nothing
+        var byOrder = ticket.GetAmountByOrder();
+        Assert.AreEqual(2, byOrder.Count);
+        Assert.AreEqual(75m, byOrder[41]);
+        Assert.AreEqual(30m, byOrder[42]);
+    }
+
+    [TestMethod]
     public void A_settled_ticket_cannot_be_voided()
     {
         var ticket = TicketWith(total: 100);
@@ -439,6 +462,77 @@ public class TicketAggregateTest
             ticket.Settle(
                 [new Payment(PaymentTender.Account, 150, "cashier", "u1", "Nadia"), new Payment(PaymentTender.Cash, 10, "cashier")],
                 "cashier"));
+    }
+
+    [TestMethod]
+    public void Assigning_a_customer_after_the_fact_retags_only_that_order_s_lines()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1);
+        ticket.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+        ticket.AppendOrder(42, [Line("Tea", 1, 20)], 0);
+        ticket.ClearDomainEvents();
+
+        ticket.AssignOrderCustomer(41, "u1", " Nadia ");
+
+        var latte = ticket.Lines.Single(l => l.OrderId == 41);
+        Assert.AreEqual("u1", latte.CustomerId);
+        Assert.AreEqual("Nadia", latte.CustomerName);
+        Assert.IsNull(ticket.Lines.Single(l => l.OrderId == 42).CustomerName);
+        // The open ticket screen and the floor refetch, though nothing landed
+        Assert.AreEqual(1, ticket.DomainEvents!.OfType<TicketChangedDomainEvent>().Count());
+    }
+
+    [TestMethod]
+    public void A_customer_is_not_assigned_on_a_frozen_ticket_or_to_an_order_that_is_not_there()
+    {
+        var open = TicketWith(total: 100);
+        Assert.ThrowsExactly<SalesDomainException>(() => open.AssignOrderCustomer(99, null, "Nadia"));
+
+        // The receipt is printed; who it was for stays as it was settled
+        var settled = TicketWith(total: 100);
+        settled.Settle([new Payment(PaymentTender.Cash, 100, "cashier")], "cashier");
+        Assert.ThrowsExactly<SalesDomainException>(() => settled.AssignOrderCustomer(1, null, "Nadia"));
+        Assert.IsNull(settled.Lines.Single().CustomerName);
+    }
+
+    [TestMethod]
+    public void Room_ticket_cannot_be_voided_or_settled_while_its_session_runs()
+    {
+        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+
+        Assert.ThrowsExactly<SalesDomainException>(() => running.Void("wrong room", "owner"));
+
+        // Cancelled with lines: no time will ever land, so the owner may void it
+        running.MarkSessionCancelled();
+        running.Void("wrong room", "owner");
+        Assert.AreEqual(TicketStatus.Voided, running.Status);
+
+        // Ended normally: the time landed, so the bill can go
+        var ended = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        ended.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
+        ended.Void("comp", "owner");
+        Assert.AreEqual(TicketStatus.Voided, ended.Status);
+    }
+
+    [TestMethod]
+    public void Naming_a_customer_on_chosen_lines_sets_only_their_snapshot()
+    {
+        var ticket = Ticket.OpenForCounter(branchId: 1);
+        ticket.AppendOrder(1, [Line("Latte", 1, 60)], 0);
+        var lineId = ticket.Lines.Single().Id;
+
+        ticket.AssignLinesCustomer([lineId], "u1", "Nadia");
+
+        Assert.AreEqual("Nadia", ticket.Lines.Single().CustomerName);
+        Assert.AreEqual("u1", ticket.Lines.Single().CustomerId);
+
+        // A line that is not on the ticket, and session time, are both refused
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.AssignLinesCustomer([lineId, 99], "u1", "Nadia"));
+
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        room.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            room.AssignLinesCustomer([room.Lines.Single().Id], "u2", "Omar"));
     }
 
     private static TicketLine Line(string name, int qty, decimal unitPrice)

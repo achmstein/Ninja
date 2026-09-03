@@ -42,6 +42,9 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
     ...openShiftMutation(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
+      // Opening the shift turned the branch's taking-orders / reservations
+      // flags on (through Branch.API)
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
       toast.success(t('shiftOpened'))
       onOpenChange(false)
       navigate({ to: '/shift' })

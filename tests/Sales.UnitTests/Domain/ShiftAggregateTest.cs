@@ -1,6 +1,7 @@
 namespace Chillax.Sales.UnitTests.Domain;
 
 using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Chillax.Sales.Domain.Events;
 using Chillax.Sales.Domain.Exceptions;
 
 [TestClass]
@@ -20,6 +21,22 @@ public class ShiftAggregateTest
         Assert.AreEqual(700m, shift.ExpectedCash);
         Assert.AreEqual(-10m, shift.OverShort);
         Assert.AreEqual(ShiftStatus.Closed, shift.Status);
+    }
+
+    [TestMethod]
+    public void Opening_and_closing_announce_themselves()
+    {
+        // Branch.API turns the branch flags on and off from these two events
+        var shift = new Shift(branchId: 1, openingFloat: 0, openedBy: "cashier");
+
+        var opened = shift.DomainEvents!.OfType<ShiftOpenedDomainEvent>().Single();
+        Assert.AreSame(shift, opened.Shift);
+        Assert.IsFalse(shift.DomainEvents!.OfType<ShiftClosedDomainEvent>().Any());
+
+        shift.Close(0, 0, 0, "cashier");
+
+        var closed = shift.DomainEvents!.OfType<ShiftClosedDomainEvent>().Single();
+        Assert.AreSame(shift, closed.Shift);
     }
 
     [TestMethod]

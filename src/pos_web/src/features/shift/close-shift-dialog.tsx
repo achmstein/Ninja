@@ -57,6 +57,8 @@ export function CloseShiftDialog({
       setResult(data)
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getClosedShifts' }] })
+      // Closing the shift turned the branch's flags off (through Branch.API)
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
       toast.success(t('shiftClosed'))
     },
   })

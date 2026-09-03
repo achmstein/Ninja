@@ -131,9 +131,9 @@ public static class CatalogApi
         api.MapPatch("/items/{id:int}/availability", ToggleItemAvailability)
             .WithName("ToggleItemAvailability")
             .WithSummary("Toggle item availability")
-            .WithDescription("Toggle the availability of a menu item (Admin only)")
+            .WithDescription("Toggle the availability of a menu item for the branch in X-Branch-Id (Pos). Without the header, Admins toggle the global flag")
             .WithTags("Items")
-            .RequireAuthorization("Admin");
+            .RequireAuthorization("Pos");
 
         api.MapPatch("/items/{id:int}/offer", SetItemOffer)
             .WithName("SetItemOffer")
@@ -724,12 +724,25 @@ public static class CatalogApi
         return TypedResults.NoContent();
     }
 
-    public static async Task<Results<Ok<CatalogItemDto>, NotFound>> ToggleItemAvailability(
+    public static async Task<Results<Ok<CatalogItemDto>, NotFound, BadRequest<ProblemDetails>>> ToggleItemAvailability(
         [AsParameters] CatalogServices services,
         HttpContext httpContext,
         [Description("The id of the menu item")] int id,
         [FromBody] SetAvailabilityRequest? request = null)
     {
+        var branchId = httpContext.GetBranchId();
+
+        // The till only ever marks an item sold out at its own branch; the
+        // global flag stays a back-office decision.
+        if (!branchId.HasValue &&
+            !httpContext.User.GetRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase))
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new()
+            {
+                Detail = $"{BranchHeaderExtensions.HeaderName} required"
+            });
+        }
+
         var item = await services.Context.CatalogItems
             .Include(c => c.CatalogType)
             .Include(c => c.Customizations)
@@ -742,7 +755,6 @@ public static class CatalogApi
         }
 
         var baseUrl = GetBaseUrl(httpContext);
-        var branchId = httpContext.GetBranchId();
 
         if (branchId.HasValue)
         {
@@ -767,13 +779,21 @@ public static class CatalogApi
                 services.Context.BranchItemOverrides.Add(existing);
             }
 
-            await services.Context.SaveChangesAsync();
+            // A branch can only restrict, so the event carries the effective
+            // state the branch's menus now show
+            var branchChangedEvent = new CatalogItemAvailabilityChangedIntegrationEvent(
+                id, branchId.Value, item.IsAvailable && newAvailability);
+            await services.EventService.SaveEventAndCatalogContextChangesAsync(branchChangedEvent);
+            await services.EventService.PublishThroughEventBusAsync(branchChangedEvent);
             return TypedResults.Ok(item.ToDto(existing, baseUrl));
         }
 
         // No branch header: modify global availability
         item.IsAvailable = request?.IsAvailable ?? !item.IsAvailable;
-        await services.Context.SaveChangesAsync();
+
+        var globalChangedEvent = new CatalogItemAvailabilityChangedIntegrationEvent(id, null, item.IsAvailable);
+        await services.EventService.SaveEventAndCatalogContextChangesAsync(globalChangedEvent);
+        await services.EventService.PublishThroughEventBusAsync(globalChangedEvent);
 
         return TypedResults.Ok(item.ToDto(baseUrl));
     }

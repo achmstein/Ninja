@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAvailabilityRouteImport } from './routes/_authenticated/availability'
 import { Route as AuthenticatedReceiptsRouteImport } from './routes/_authenticated/receipts'
 import { Route as AuthenticatedSaleRouteImport } from './routes/_authenticated/sale'
 import { Route as AuthenticatedShiftRouteImport } from './routes/_authenticated/shift'
@@ -40,6 +41,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAvailabilityRoute =
+  AuthenticatedAvailabilityRouteImport.update({
+    id: '/availability',
+    path: '/availability',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReceiptsRoute = AuthenticatedReceiptsRouteImport.update({
   id: '/receipts',
   path: '/receipts',
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
+  '/availability': typeof AuthenticatedAvailabilityRoute
   '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
   '/signed-out': typeof authSignedOutRoute
+  '/availability': typeof AuthenticatedAvailabilityRoute
   '/receipts': typeof AuthenticatedReceiptsRoute
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/signed-out': typeof authSignedOutRoute
+  '/_authenticated/availability': typeof AuthenticatedAvailabilityRoute
   '/_authenticated/receipts': typeof AuthenticatedReceiptsRoute
   '/_authenticated/sale': typeof AuthenticatedSaleRoute
   '/_authenticated/shift': typeof AuthenticatedShiftRoute
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/signed-out'
+    | '/availability'
     | '/receipts'
     | '/sale'
     | '/shift'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/sign-in'
     | '/signed-out'
+    | '/availability'
     | '/receipts'
     | '/sale'
     | '/shift'
@@ -147,6 +159,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/(auth)/sign-in'
     | '/(auth)/signed-out'
+    | '/_authenticated/availability'
     | '/_authenticated/receipts'
     | '/_authenticated/sale'
     | '/_authenticated/shift'
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/availability': {
+      id: '/_authenticated/availability'
+      path: '/availability'
+      fullPath: '/availability'
+      preLoaderRoute: typeof AuthenticatedAvailabilityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/receipts': {
@@ -247,6 +267,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAvailabilityRoute: typeof AuthenticatedAvailabilityRoute
   AuthenticatedReceiptsRoute: typeof AuthenticatedReceiptsRoute
   AuthenticatedSaleRoute: typeof AuthenticatedSaleRoute
   AuthenticatedShiftRoute: typeof AuthenticatedShiftRoute
@@ -257,6 +278,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAvailabilityRoute: AuthenticatedAvailabilityRoute,
   AuthenticatedReceiptsRoute: AuthenticatedReceiptsRoute,
   AuthenticatedSaleRoute: AuthenticatedSaleRoute,
   AuthenticatedShiftRoute: AuthenticatedShiftRoute,

@@ -358,6 +358,11 @@ public static class RoomsApi
         var customerName = httpContext.User.GetUserName() ?? request?.CustomerName;
         var roles = httpContext.User.GetRoles().ToList();
         var isAdmin = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
+        // Staff of any kind book walk-ins past the reservations pause; only
+        // Admin changes whose reservation it is
+        var isStaff = isAdmin
+            || roles.Contains("Owner", StringComparer.OrdinalIgnoreCase)
+            || roles.Contains("Cashier", StringComparer.OrdinalIgnoreCase);
 
         logger.LogInformation("CreateReservation API: CustomerId={CustomerId}, Roles=[{Roles}], IsAdmin={IsAdmin}",
             customerId, string.Join(", ", roles), isAdmin);
@@ -369,7 +374,8 @@ public static class RoomsApi
                 isAdmin ? null : customerId,
                 isAdmin ? null : customerName,
                 request?.Notes,
-                isAdmin);
+                isAdmin,
+                isStaff);
 
             var reservationId = await mediator.Send(command);
             return TypedResults.Created($"/api/rooms/sessions/{reservationId}", reservationId);

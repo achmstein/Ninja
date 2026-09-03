@@ -244,7 +244,7 @@ export const reorderItems = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Toggle item availability
  *
- * Toggle the availability of a menu item (Admin only)
+ * Toggle the availability of a menu item for the branch in X-Branch-Id (Pos). Without the header, Admins toggle the global flag
  */
 export const toggleItemAvailability = <ThrowOnError extends boolean = false>(options: Options<ToggleItemAvailabilityData, ThrowOnError>): RequestResult<ToggleItemAvailabilityResponses, ToggleItemAvailabilityErrors, ThrowOnError> => (options.client ?? client).patch<ToggleItemAvailabilityResponses, ToggleItemAvailabilityErrors, ThrowOnError>({
     responseType: 'json',

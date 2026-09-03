@@ -5,7 +5,8 @@ import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBranchStore } from '@/stores/branch-store'
-import { useLocale, useT, type TranslationKey } from '@/lib/i18n'
+import { businessDayWindow } from '@/lib/business-day'
+import { useLocale, useT } from '@/lib/i18n'
 import {
   Card,
   CardContent,
@@ -15,56 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatEgp } from '@/features/orders/status'
-
-// PaymentTender names as the report serializes them (Sales.Domain enum)
-const TENDERS: { name: string; labelKey: TranslationKey }[] = [
-  { name: 'Cash', labelKey: 'tenderCash' },
-  { name: 'Card', labelKey: 'tenderCard' },
-  { name: 'InstaPay', labelKey: 'tenderInstaPay' },
-  { name: 'Account', labelKey: 'tenderOnAccount' },
-]
-
-// TicketType names as the report serializes them
-const TICKET_TYPES: { name: string; labelKey: TranslationKey }[] = [
-  { name: 'Room', labelKey: 'ticketTypeRoom' },
-  { name: 'Table', labelKey: 'ticketTypeTable' },
-  { name: 'Counter', labelKey: 'ticketTypeCounter' },
-]
-
-// "HH:mm" or "HH:mm:ss" → minutes since local midnight
-function timeToMinutes(value: string | null | undefined): number | null {
-  const match = /^(\d{1,2}):(\d{2})/.exec(value ?? '')
-  if (!match) return null
-  return Number(match[1]) * 60 + Number(match[2])
-}
-
-function atMinutes(day: Date, dayOffset: number, minutes: number): Date {
-  const result = new Date(day)
-  result.setDate(result.getDate() + dayOffset)
-  result.setHours(0, minutes, 0, 0)
-  return result
-}
-
-// The branch business day: DayStart → DayEnd, spilling into the next
-// calendar day when the window crosses midnight (17:00 → 05:00). Before
-// today's DayStart (say 02:00) we are still inside the window that opened
-// YESTERDAY at DayStart. Missing times degrade to the calendar day.
-function businessDayWindow(
-  dayStart: string | null | undefined,
-  dayEnd: string | null | undefined,
-  now: Date
-): { from: Date; to: Date } {
-  const startMinutes = timeToMinutes(dayStart) ?? 0
-  const endMinutes = timeToMinutes(dayEnd) ?? startMinutes
-  const crossesMidnight = endMinutes <= startMinutes
-
-  let from = atMinutes(now, 0, startMinutes)
-  if (crossesMidnight && now < from) {
-    from = atMinutes(now, -1, startMinutes)
-  }
-  const to = atMinutes(from, crossesMidnight ? 1 : 0, endMinutes)
-  return { from, to }
-}
+import { TENDERS, TICKET_TYPES } from '@/features/till/components/tender'
 
 /**
  * Settled POS sales for the current business day of the active branch:

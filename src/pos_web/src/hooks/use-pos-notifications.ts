@@ -27,9 +27,10 @@ function isForActiveBranch(event: OrderStatusChangedEvent): boolean {
 /**
  * One SignalR connection for the whole POS session (mounted in the
  * authenticated layout). Joins the admin and rooms groups and maps
- * TicketUpdated, OrderStatusChanged and RoomStatusChanged to query
- * invalidations — plus the chime and toast for a new order — so the floor,
- * the pending queue, the rooms and the open ticket screens stay live.
+ * TicketUpdated, OrderStatusChanged, RoomStatusChanged and CatalogChanged
+ * to query invalidations — plus the chime and toast for a new order — so
+ * the floor, the pending queue, the rooms, the open ticket screens and the
+ * item pad stay live.
  *
  * Trimmed copy of admin_web's use-admin-notifications with the same
  * reconnect hardening (backoff start, rejoin on reconnect, restart when the
@@ -112,6 +113,27 @@ export function usePosNotifications() {
       invalidateRooms()
     })
 
+    const invalidateItems = () =>
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+
+    // An item marked sold out (or back) on another till or in the back
+    // office; the refetch carries X-Branch-Id, so the pad shows this
+    // branch's menu
+    connection.on('CatalogChanged', () => {
+      invalidateItems()
+    })
+
+    const invalidateBranches = () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
+    }
+
+    // Opening or closing the shift (and the header pause toggles) flip the
+    // branch's taking-orders / taking-reservations flags in Branch.API; the
+    // header toggles read them off the branch list
+    connection.on('BranchSettingsChanged', () => {
+      invalidateBranches()
+    })
+
     const joinGroup = () =>
       Promise.all([
         connection.invoke('JoinAdminGroup'),
@@ -149,6 +171,8 @@ export function usePosNotifications() {
       invalidateTickets()
       invalidateOrders()
       invalidateRooms()
+      invalidateItems()
+      invalidateBranches()
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

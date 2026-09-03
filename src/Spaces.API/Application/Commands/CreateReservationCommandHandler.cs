@@ -1,3 +1,4 @@
+using Chillax.Spaces.API.Application.Queries;
 using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
 using Chillax.Spaces.Domain.Exceptions;
@@ -10,15 +11,18 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 {
     private readonly IRoomRepository _roomRepository;
     private readonly IReservationRepository _reservationRepository;
+    private readonly IBranchSettingsQueries _branchSettings;
     private readonly ILogger<CreateReservationCommandHandler> _logger;
 
     public CreateReservationCommandHandler(
         IRoomRepository roomRepository,
         IReservationRepository reservationRepository,
+        IBranchSettingsQueries branchSettings,
         ILogger<CreateReservationCommandHandler> logger)
     {
         _roomRepository = roomRepository;
         _reservationRepository = reservationRepository;
+        _branchSettings = branchSettings;
         _logger = logger;
     }
 
@@ -49,6 +53,15 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         var room = await _roomRepository.GetAsync(request.RoomId);
         if (room == null)
             throw new SpacesDomainException($"Room {request.RoomId} not found");
+
+        // Rule 2b: The branch must be taking reservations - off between shifts
+        // and whenever the till pauses them (Branch.API's flag, projected
+        // here). Staff walk a customer in regardless.
+        if (!request.IsStaff && !await _branchSettings.IsReservationsEnabledAsync(room.BranchId))
+        {
+            _logger.LogWarning("Blocked: branch {BranchId} is not taking reservations", room.BranchId);
+            throw new SpacesDomainException("Reservations are paused at this branch right now.");
+        }
 
         // Rule 3: Room must be physically available
         if (!room.IsPhysicallyAvailable())

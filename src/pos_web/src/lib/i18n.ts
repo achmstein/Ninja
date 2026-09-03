@@ -201,6 +201,10 @@ const dictionary = {
   customerAssigned: { en: 'Customer assigned', ar: 'تم تعيين العميل' },
   failedToAddCustomer: { en: 'Failed to add customer', ar: 'معرفناش نضيف العميل' },
   failedToAssignCustomer: { en: 'Failed to assign customer', ar: 'معرفناش نعين العميل' },
+  pointsFollowWholeOrder: {
+    en: "Points stay with the order's customer; only the bill grouping changed.",
+    ar: 'النقط بتفضل لصاحب الأوردر؛ اللي اتغير بس توزيع الحساب.',
+  },
   memberRemove: { en: 'Remove member', ar: 'شيل العضو' },
   memberRemoved: { en: 'Member removed', ar: 'العضو اتشال' },
   failedToRemoveMember: { en: 'Failed to remove member', ar: 'معرفناش نشيل العضو' },
@@ -208,6 +212,11 @@ const dictionary = {
   settleWithSessionHint: {
     en: 'End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.',
     ar: 'أنهيه الأول عشان الوقت ينزل على الحساب ده. لو قفلت دلوقتي الوقت هينزل على حساب جديد بعد ما الناس تدفع.',
+  },
+  voidWithSessionTitle: { en: 'The session is still running', ar: 'الوقت لسه شغال' },
+  voidWithSessionHint: {
+    en: 'End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.',
+    ar: 'أنهيه الأول عشان الوقت ينزل على الحساب ده، وبعدين اشطب أو اقفل. لو شطبت دلوقتي الوقت هيضيع من غير ما يتحسب.',
   },
 
   // Money on the bill, and credit notes
@@ -241,13 +250,20 @@ const dictionary = {
     ar: 'ابدأ بيع، أو اختار اوضة أو ترابيزة من الجنب.',
   },
   openPlace: { en: 'Open', ar: 'افتح' },
+  hidePlaces: { en: 'Hide places', ar: 'إخفاء الأماكن' },
+  showPlaces: { en: 'Show places', ar: 'إظهار الأماكن' },
   searchPlaces: { en: 'Search rooms and tables', ar: 'دوّر على اوضة أو ترابيزة' },
   noPlaceMatches: { en: 'Nothing matches', ar: 'مفيش حاجة بالاسم ده' },
   everyPlaceHasABill: { en: 'Every room and table already has a bill', ar: 'كل الاوض والترابيزات عليها حسابات' },
   tables: { en: 'Tables', ar: 'الترابيزات' },
-  free: { en: 'Free', ar: 'فاضية' },
   freeTables: { en: 'Free tables', ar: 'ترابيزات فاضية' },
   openBills: { en: 'Open bills', ar: 'الحسابات المفتوحة' },
+  allBills: { en: 'All', ar: 'الكل' },
+  waitingToConfirm: { en: 'Waiting to confirm', ar: 'مستني تأكيد' },
+  idleForMinutes: {
+    en: 'idle {count}m',
+    ar: 'ساكن {count}د',
+  },
   newTab: { en: 'New tab', ar: 'حساب جديد' },
   newTabHint: {
     en: 'A counter bill with no table, for someone who will order in a moment.',
@@ -377,6 +393,16 @@ const dictionary = {
   confirmDiscard: { en: 'Discard', ar: 'امسح' },
   ticketDiscarded: { en: 'Ticket discarded', ar: 'الحساب اتمسح' },
 
+  // Store switches (shift panel)
+  takingOrders: { en: 'Taking orders', ar: 'بنستلم أوردرات' },
+  takingReservations: { en: 'Taking reservations', ar: 'بنستلم حجوزات' },
+  paused: { en: 'Paused', ar: 'متوقف' },
+  takingAutoHint: {
+    en: 'Opening the shift turns both on; closing it turns both off.',
+    ar: 'فتح الوردية بيشغّل الاتنين، وقفلها بيوقفهم.',
+  },
+  shiftDetails: { en: 'Shift details', ar: 'تفاصيل الوردية' },
+
   // Shift / cash drawer (وردية = shift, الدرج = the till drawer)
   shiftTitle: { en: 'Shift', ar: 'الوردية' },
   shiftNumber: { en: 'Shift #{id}', ar: 'وردية #{id}' },
@@ -438,6 +464,17 @@ const dictionary = {
   receipts: { en: 'Receipts', ar: 'الإيصالات' },
   searchReceiptNumber: { en: 'Receipt number', ar: 'رقم الإيصال' },
   noReceipts: { en: 'No receipts yet', ar: 'مفيش إيصالات لسه' },
+
+  // Availability screen (خلص = sold out, the word said across the counter)
+  availability: { en: 'Availability', ar: 'التوفر' },
+  soldOut: { en: 'Sold out', ar: 'خلص' },
+  available: { en: 'Available', ar: 'متاح' },
+  searchItems: { en: 'Search items', ar: 'دوّر على الأصناف' },
+  noItemsMatch: { en: 'No items match', ar: 'مفيش أصناف بالاسم ده' },
+  failedToUpdateAvailability: {
+    en: 'Failed to update availability',
+    ar: 'معرفناش نحدث التوفر',
+  },
 
   // Receipt
   receiptDate: { en: 'Date', ar: 'التاريخ' },

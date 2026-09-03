@@ -31,6 +31,24 @@ public interface ITicketQueries
 
     /// <summary>The branch's pricing rules, defaults when it never set any.</summary>
     Task<PricingView> GetPricingAsync(int branchId);
+
+    /// <summary>
+    /// Closed tickets — settled or voided — newest first, for the back office.
+    /// The window is on the moment the ticket closed (SettledAt or VoidedAt);
+    /// a receipt number names one bill and ignores the window.
+    /// </summary>
+    Task<PagedResult<TicketHistoryRow>> GetTicketHistoryAsync(
+        int branchId, TicketStatus status, DateTime? from, DateTime? to, int? receiptNumber, int pageIndex, int pageSize);
+
+    /// <summary>
+    /// Payments taken on tickets settled in [from, to), newest first. Windowed
+    /// on the settle so the page reconciles with <see cref="RangeReport.TenderTotals"/>.
+    /// </summary>
+    Task<PagedResult<PaymentRow>> GetPaymentsAsync(
+        int branchId, DateTime from, DateTime to, PaymentTender? tender, int pageIndex, int pageSize);
+
+    /// <summary>Credit notes issued in [from, to), newest first.</summary>
+    Task<PagedResult<RefundSummary>> GetRefundsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize);
 }
 
 public class TicketQueries(SalesContext context) : ITicketQueries
@@ -251,6 +269,204 @@ public class TicketQueries(SalesContext context) : ITicketQueries
     {
         var rules = await RulesForAsync(branchId);
         return new PricingView(branchId, rules.VatRate, rules.PricesIncludeVat, rules.ServiceChargeRate);
+    }
+
+    public async Task<PagedResult<TicketHistoryRow>> GetTicketHistoryAsync(
+        int branchId, TicketStatus status, DateTime? from, DateTime? to, int? receiptNumber, int pageIndex, int pageSize)
+    {
+        var voided = status == TicketStatus.Voided;
+
+        var tickets = context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId && t.Status == status);
+
+        if (receiptNumber is int number)
+        {
+            // A receipt number names one bill; the window is beside the point
+            var ticketId = await context.Receipts
+                .AsNoTracking()
+                .Where(r => r.BranchId == branchId && r.Number == number)
+                .Select(r => (int?)r.TicketId)
+                .FirstOrDefaultAsync();
+
+            if (ticketId is null)
+                return new PagedResult<TicketHistoryRow>([], 0, pageIndex, pageSize);
+
+            var id = ticketId.Value;
+            tickets = tickets.Where(t => t.Id == id);
+        }
+        else if (voided)
+        {
+            if (from is not null) tickets = tickets.Where(t => t.VoidedAt >= from);
+            if (to is not null) tickets = tickets.Where(t => t.VoidedAt < to);
+        }
+        else
+        {
+            if (from is not null) tickets = tickets.Where(t => t.SettledAt >= from);
+            if (to is not null) tickets = tickets.Where(t => t.SettledAt < to);
+        }
+
+        var totalCount = await tickets.CountAsync();
+
+        var page = await (voided
+                ? tickets.OrderByDescending(t => t.VoidedAt)
+                : tickets.OrderByDescending(t => t.SettledAt))
+            .ThenByDescending(t => t.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var ticketIds = page.Select(t => t.Id).ToList();
+
+        var receipts = await context.Receipts
+            .AsNoTracking()
+            .Where(r => ticketIds.Contains(r.TicketId))
+            .ToDictionaryAsync(r => r.TicketId, r => r.Number);
+
+        var refunded = await context.Refunds
+            .AsNoTracking()
+            .Where(r => ticketIds.Contains(r.TicketId))
+            .GroupBy(r => r.TicketId)
+            .Select(g => new { TicketId = g.Key, Amount = g.Sum(r => r.Amount) })
+            .ToDictionaryAsync(x => x.TicketId, x => x.Amount);
+
+        // A void never froze the bill, so its worth is whatever the aggregate
+        // says it was — the same math the floor showed while it was open
+        var rules = await RulesForAsync(branchId);
+
+        var rows = page
+            .Select(t => new TicketHistoryRow(
+                t.Id,
+                receipts.TryGetValue(t.Id, out var receipt) ? receipt : (int?)null,
+                t.Status.ToString(),
+                t.Type.ToString(),
+                t.LocationName,
+                t.Label,
+                (voided ? t.VoidedAt : t.SettledAt) ?? t.LastActivityAt,
+                voided ? t.VoidedBy : t.SettledBy,
+                t.GetBill(rules).Total,
+                refunded.GetValueOrDefault(t.Id)))
+            .ToList();
+
+        return new PagedResult<TicketHistoryRow>(rows, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResult<PaymentRow>> GetPaymentsAsync(
+        int branchId, DateTime from, DateTime to, PaymentTender? tender, int pageIndex, int pageSize)
+    {
+        // Windowed on the settle, not the payment, so the page adds up to the
+        // range report's tender split for the same window
+        var payments = context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId
+                        && t.Status == TicketStatus.Settled
+                        && t.SettledAt >= from && t.SettledAt < to)
+            .SelectMany(t => t.Payments, (t, p) => new { Ticket = t, Payment = p });
+
+        if (tender is PaymentTender wanted)
+            payments = payments.Where(x => x.Payment.Tender == wanted);
+
+        var totalCount = await payments.CountAsync();
+
+        var page = await payments
+            .OrderByDescending(x => x.Payment.RecordedAt)
+            .ThenByDescending(x => x.Payment.Id)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(x => new
+            {
+                TicketId = x.Ticket.Id,
+                x.Payment.Tender,
+                x.Payment.Amount,
+                x.Payment.CustomerId,
+                x.Payment.CustomerName,
+                x.Payment.RecordedBy,
+                x.Payment.RecordedAt,
+            })
+            .ToListAsync();
+
+        var ticketIds = page.Select(x => x.TicketId).Distinct().ToList();
+
+        // The bills behind the page, loaded whole like the receipts screen does
+        var tickets = await context.Tickets
+            .AsNoTracking()
+            .Where(t => ticketIds.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id);
+
+        var receipts = await context.Receipts
+            .AsNoTracking()
+            .Where(r => ticketIds.Contains(r.TicketId))
+            .ToDictionaryAsync(r => r.TicketId, r => r.Number);
+
+        var rows = page
+            .Select(x => (Payment: x, Ticket: tickets.GetValueOrDefault(x.TicketId)))
+            .Where(x => x.Ticket is not null)
+            .Select(x => new PaymentRow(
+                x.Ticket!.Id,
+                receipts.TryGetValue(x.Ticket.Id, out var receipt) ? receipt : (int?)null,
+                x.Ticket.Type.ToString(),
+                x.Ticket.LocationName,
+                x.Ticket.Label,
+                x.Payment.Tender.ToString(),
+                x.Payment.Amount,
+                x.Payment.CustomerId,
+                x.Payment.CustomerName,
+                x.Payment.RecordedBy,
+                x.Payment.RecordedAt,
+                x.Ticket.SettledAt ?? x.Payment.RecordedAt))
+            .ToList();
+
+        return new PagedResult<PaymentRow>(rows, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResult<RefundSummary>> GetRefundsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize)
+    {
+        var refunds = context.Refunds
+            .AsNoTracking()
+            .Where(r => r.BranchId == branchId && r.RefundedAt >= from && r.RefundedAt < to);
+
+        var totalCount = await refunds.CountAsync();
+
+        // Projected rather than loaded: the lines auto-include, and the list
+        // only needs to know how many there were
+        var page = await refunds
+            .OrderByDescending(r => r.Number)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .Select(r => new
+            {
+                r.Id,
+                r.Number,
+                r.TicketId,
+                r.ReceiptNumber,
+                r.Amount,
+                r.Tender,
+                r.Reason,
+                r.CustomerName,
+                r.RefundedBy,
+                r.RefundedAt,
+                r.ShiftId,
+                LineCount = r.Lines.Count(),
+            })
+            .ToListAsync();
+
+        var rows = page
+            .Select(r => new RefundSummary(
+                r.Id,
+                r.Number,
+                r.TicketId,
+                r.ReceiptNumber,
+                r.Amount,
+                r.Tender.ToString(),
+                r.Reason,
+                r.CustomerName,
+                r.RefundedBy,
+                r.RefundedAt,
+                r.ShiftId,
+                r.LineCount))
+            .ToList();
+
+        return new PagedResult<RefundSummary>(rows, totalCount, pageIndex, pageSize);
     }
 
     private async Task<PricingRules> RulesForAsync(int branchId)

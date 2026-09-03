@@ -100,4 +100,15 @@ public class TicketLine : Entity
     {
         OrderId = orderId;
     }
+
+    /// <summary>
+    /// Re-tag the line with whoever it turned out to be for — Ordering said so
+    /// after the fact (<see cref="Ticket.AssignOrderCustomer"/>). Cleaned the
+    /// way the constructor cleans, so a blank stays null.
+    /// </summary>
+    internal void SetCustomer(string? customerId, string? customerName)
+    {
+        CustomerName = string.IsNullOrWhiteSpace(customerName) ? null : customerName.Trim();
+        CustomerId = string.IsNullOrWhiteSpace(customerId) ? null : customerId;
+    }
 }

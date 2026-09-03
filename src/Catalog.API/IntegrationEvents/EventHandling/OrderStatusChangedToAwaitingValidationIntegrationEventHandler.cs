@@ -23,10 +23,9 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
             var catalogItem = await catalogContext.CatalogItems.FindAsync(orderStockItem.ProductId);
             if (catalogItem is not null)
             {
-                // Check branch override first, then fall back to global availability
-                var isAvailable = branchOverrides.TryGetValue(catalogItem.Id, out var branchOverride)
-                    ? branchOverride.IsAvailable
-                    : catalogItem.IsAvailable;
+                // A branch override can only restrict: the global flag always wins
+                var isAvailable = catalogItem.IsAvailable &&
+                    (!branchOverrides.TryGetValue(catalogItem.Id, out var branchOverride) || branchOverride.IsAvailable);
                 var confirmedOrderStockItem = new ConfirmedOrderStockItem(catalogItem.Id, isAvailable);
 
                 confirmedOrderStockItems.Add(confirmedOrderStockItem);

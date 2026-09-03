@@ -273,6 +273,25 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("requests", "ordering");
                 });
 
+            modelBuilder.Entity("Chillax.Ordering.Infrastructure.Projections.BranchSettings", b =>
+                {
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsOrderingEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReservationsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("BranchId");
+
+                    b.ToTable("branchsettings", "ordering");
+                });
+
             modelBuilder.Entity("Chillax.Ordering.Domain.AggregatesModel.OrderAggregate.Order", b =>
                 {
                     b.HasOne("Chillax.Ordering.Domain.AggregatesModel.BuyerAggregate.Buyer", "Buyer")

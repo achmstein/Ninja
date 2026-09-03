@@ -32,6 +32,11 @@ public class TicketRepository : ITicketRepository
     public async Task<bool> HasOrderAsync(int orderId)
         => await _context.Tickets.AnyAsync(t => t.Lines.Any(l => l.OrderId == orderId));
 
+    public async Task<IReadOnlyCollection<Ticket>> FindByOrderAsync(int orderId)
+        => await _context.Tickets
+            .Where(t => t.Lines.Any(l => l.OrderId == orderId))
+            .ToListAsync();
+
     public Receipt AddReceipt(Receipt receipt)
         => _context.Receipts.Add(receipt).Entity;
 

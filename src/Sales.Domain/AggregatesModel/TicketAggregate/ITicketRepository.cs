@@ -23,6 +23,12 @@ public interface ITicketRepository : IRepository<Ticket>
     /// </summary>
     Task<bool> HasOrderAsync(int orderId);
 
+    /// <summary>
+    /// Every ticket carrying a confirmed order's lines — normally one, more
+    /// when some of them were moved onto another bill since they landed.
+    /// </summary>
+    Task<IReadOnlyCollection<Ticket>> FindByOrderAsync(int orderId);
+
     Receipt AddReceipt(Receipt receipt);
 
     /// <summary>Detach a receipt that lost the numbering race, before retrying.</summary>

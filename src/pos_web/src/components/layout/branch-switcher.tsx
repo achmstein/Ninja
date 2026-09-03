@@ -50,7 +50,7 @@ export function BranchSwitcher() {
           />
           <div className='grid flex-1 text-start text-sm leading-tight'>
             <span className='truncate font-semibold'>
-              {t('brandName')} {t('posName')}
+              {t('brandName')}
             </span>
             <span className='text-muted-foreground truncate text-xs'>
               {localized(activeBranch?.name) || `#${branchId}`}

@@ -25,7 +25,13 @@ public static class Extensions
             return;
         }
 
-        builder.AddNpgsqlDbContext<SalesContext>("salesdb");
+        // Not pooled: Aspire's AddNpgsqlDbContext registers a pooled context, and a pooled
+        // context gets its IMediator from the root provider. The domain-event handlers
+        // need the scoped SalesContext (outbox), so dispatching from a root mediator
+        // throws. Same registration as Ordering.
+        services.AddDbContext<SalesContext>(options =>
+            options.UseNpgsql(builder.Configuration.GetConnectionString("salesdb")));
+        builder.EnrichNpgsqlDbContext<SalesContext>();
 
         // REVIEW: This is done for development ease but shouldn't be here in production
         services.AddMigration<SalesContext>();
@@ -59,6 +65,7 @@ public static class Extensions
             .AddSubscription<SessionCompletedIntegrationEvent, SessionCompletedIntegrationEventHandler>()
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
+            .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));
     }
@@ -67,8 +74,12 @@ public static class Extensions
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
+[JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
+[JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
+[JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
+[JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 public partial class SalesIntegrationEventContext : JsonSerializerContext
 {
 }

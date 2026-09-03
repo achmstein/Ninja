@@ -27,13 +27,17 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
                .ConfigureJsonOptions(options => options.TypeInfoResolverChain.Add(LoyaltyIntegrationEventContext.Default))
                .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
+               .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
                .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
-               .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
+               .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
+               .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
+[JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
+[JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
 partial class LoyaltyIntegrationEventContext : JsonSerializerContext
 {
 }

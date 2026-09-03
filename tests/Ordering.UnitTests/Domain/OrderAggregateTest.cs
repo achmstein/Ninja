@@ -384,4 +384,72 @@ public class OrderAggregateTest
         Assert.AreEqual(42, order.SessionId);
         Assert.AreEqual(7, order.RoomId);
     }
+
+    [TestMethod]
+    public void Assigning_a_customer_after_the_fact_names_the_order_and_raises_the_event()
+    {
+        // Arrange - a walk-in the till forgot to attach anyone to
+        var order = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+        order.ClearDomainEvents();
+        var buyer = new Buyer("u1", "Nadia");
+
+        // Act
+        order.AssignCustomer(" Nadia ", buyer);
+
+        // Assert - the name travels like the POS constructor's, the account becomes the buyer
+        Assert.AreEqual("Nadia", order.GuestName);
+        Assert.AreEqual(buyer.Id, order.BuyerId);
+        var raised = order.DomainEvents.OfType<OrderCustomerAssignedDomainEvent>().Single();
+        Assert.AreEqual("u1", raised.BuyerIdentityGuid);
+    }
+
+    [TestMethod]
+    public void Moving_an_order_to_another_account_names_the_account_it_left()
+    {
+        // Arrange - a regular's order rung up on the wrong regular
+        var order = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+        order.SetBuyerId(7);
+        order.ClearDomainEvents();
+        var sara = new Buyer("u2", "Sara");
+
+        // Act - the caller resolves the identity behind the row id
+        order.AssignCustomer("Sara", sara, previousBuyerIdentityGuid: "u1");
+
+        // Assert - Loyalty hears who lost the points as well as who gained them
+        Assert.AreEqual("Sara", order.GuestName);
+        Assert.AreEqual(sara.Id, order.BuyerId);
+        var raised = order.DomainEvents.OfType<OrderCustomerAssignedDomainEvent>().Single();
+        Assert.AreEqual("u2", raised.BuyerIdentityGuid);
+        Assert.AreEqual("u1", raised.PreviousBuyerIdentityGuid);
+    }
+
+    [TestMethod]
+    public void An_order_is_not_moved_to_the_account_it_already_has_or_stripped_to_a_bare_name()
+    {
+        var owned = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+        owned.SetBuyerId(7);
+        owned.ClearDomainEvents();
+
+        // The same account again is a no-op dressed up as a change
+        Assert.ThrowsExactly<OrderingDomainException>(() =>
+            owned.AssignCustomer("Nadia", new Buyer("u1", "Nadia"), previousBuyerIdentityGuid: "u1"));
+
+        // An account moves to another account, never off: the points would have nowhere to go
+        Assert.ThrowsExactly<OrderingDomainException>(() => owned.AssignCustomer("Nadia"));
+
+        Assert.AreEqual(7, owned.BuyerId);
+        Assert.IsFalse(owned.DomainEvents.OfType<OrderCustomerAssignedDomainEvent>().Any());
+    }
+
+    [TestMethod]
+    public void A_customer_cannot_be_assigned_to_a_cancelled_order_or_without_a_name()
+    {
+        var cancelled = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+        cancelled.SetCancelledStatus();
+        Assert.ThrowsExactly<OrderingDomainException>(() => cancelled.AssignCustomer("Nadia"));
+
+        var nameless = new Order(string.Empty, string.Empty, branchId: 1, source: OrderSource.Pos);
+        Assert.ThrowsExactly<OrderingDomainException>(() => nameless.AssignCustomer(" "));
+        Assert.IsNull(nameless.GuestName);
+    }
 }

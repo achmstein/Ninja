@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { Button } from '@/components/ui/button'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
 // Sileo only paints the pill background when it knows the theme (otherwise
@@ -14,11 +14,13 @@ import { useTheme } from '@/context/theme-provider'
 // is the demo's expand/collapse physics for title + description toasts.
 function AppToaster() {
   const { resolvedTheme } = useTheme()
-  const language = useLanguage((s) => s.language)
   return (
     <Toaster
-      // Mirrored corner in RTL, like the rest of the layout
-      position={language === 'ar' ? 'bottom-left' : 'bottom-right'}
+      // Top centre, not a bottom corner: the bottom corners sit exactly over
+      // the sale pad's action bar (Add to ticket / Charge) and the settle
+      // buttons, and a toast there steals the tap. The header's middle is
+      // empty, so a toast over it covers nothing. Centred, so no RTL mirror.
+      position='top-center'
       theme={resolvedTheme}
       options={{ autopilot: true }}
     />

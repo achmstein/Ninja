@@ -426,6 +426,9 @@ namespace Sales.Infrastructure.Migrations
                         .HasPrecision(5, 4)
                         .HasColumnType("numeric(5,4)");
 
+                    b.Property<DateTime?>("SessionEndedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("SessionId")
                         .HasColumnType("integer");
 

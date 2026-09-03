@@ -50,6 +50,7 @@ internal static class Extensions
         services.AddValidatorsFromAssemblyContaining<CancelOrderCommandValidator>();
 
         services.AddScoped<IOrderQueries, OrderQueries>();
+        services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
         services.AddScoped<IBuyerRepository, BuyerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
@@ -63,5 +64,9 @@ internal static class Extensions
         // Subscribe to stock validation events from Catalog API
         eventBus.AddSubscription<OrderStockConfirmedIntegrationEvent, OrderStockConfirmedIntegrationEventHandler>();
         eventBus.AddSubscription<OrderStockRejectedIntegrationEvent, OrderStockRejectedIntegrationEventHandler>();
+
+        // Branch.API's flags, projected locally so a paused branch refuses
+        // customer orders without a call across services
+        eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
     }
 }

@@ -36,6 +36,11 @@ public class ReservationCancelledIntegrationEventHandler(
             logger.LogWarning(
                 "Session {SessionId} cancelled but ticket {TicketId} already has {Lines} line(s) - left open to settle or void",
                 @event.ReservationId, ticket.Id, ticket.Lines.Count);
+
+            // No time will ever land on it now; recording that is what lets the
+            // owner settle or void it (a running session blocks both)
+            ticket.MarkSessionCancelled();
+            await ticketRepository.UnitOfWork.SaveEntitiesAsync();
             return;
         }
 

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,6 +24,50 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const getOpenTickets = <ThrowOnError extends boolean = false>(options: Options<GetOpenTicketsData, ThrowOnError>): RequestResult<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError> => (options.client ?? client).get<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/open',
+    ...options
+});
+
+/**
+ * Settled bills for the branch, newest receipt first
+ *
+ * The receipts screen: the way back to a bill after it closed, to reprint it or refund it. Pass receiptNumber to find one.
+ */
+export const getSettledTickets = <ThrowOnError extends boolean = false>(options: Options<GetSettledTicketsData, ThrowOnError>): RequestResult<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError> => (options.client ?? client).get<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/settled',
+    ...options
+});
+
+/**
+ * Closed tickets — settled or voided — newest first, with the count (the back office)
+ *
+ * The window is on the moment the ticket closed: settledAt for Settled, voidedAt for Voided. Pass receiptNumber to find one bill regardless of the window. Read-only; the till's own list is /settled.
+ */
+export const getTicketHistory = <ThrowOnError extends boolean = false>(options: Options<GetTicketHistoryData, ThrowOnError>): RequestResult<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/history',
+    ...options
+});
+
+/**
+ * Payments taken on tickets settled in a window, newest first
+ *
+ * Windowed on the ticket's settle, not the payment, so the page adds up to the range report's tender split for the same window. Pass tender to see one kind.
+ */
+export const getPayments = <ThrowOnError extends boolean = false>(options: Options<GetPaymentsData, ThrowOnError>): RequestResult<GetPaymentsResponses, GetPaymentsErrors, ThrowOnError> => (options.client ?? client).get<GetPaymentsResponses, GetPaymentsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/payments',
+    ...options
+});
+
+/**
+ * Credit notes issued in a window, newest first
+ *
+ * Every refund across the branch's tickets; open the ticket for the lines behind one.
+ */
+export const getRefunds = <ThrowOnError extends boolean = false>(options: Options<GetRefundsData, ThrowOnError>): RequestResult<GetRefundsResponses, GetRefundsErrors, ThrowOnError> => (options.client ?? client).get<GetRefundsResponses, GetRefundsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/refunds',
     ...options
 });
 
@@ -115,6 +159,20 @@ export const settleTicket = <ThrowOnError extends boolean = false>(options: Opti
 export const moveTicketLines = <ThrowOnError extends boolean = false>(options: Options<MoveTicketLinesData, ThrowOnError>): RequestResult<MoveTicketLinesResponses, MoveTicketLinesErrors, ThrowOnError> => (options.client ?? client).post<MoveTicketLinesResponses, MoveTicketLinesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/{id}/move-lines',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Name the customer on chosen lines
+ *
+ * The split-bill fix: several people rang up as one sale, and some lines were theirs. Sets the customer snapshot on just those lines — bill grouping, receipt, Account tender. Points do not move: they follow the whole order (assign the order's customer in Ordering for that). Session time cannot be reassigned.
+ */
+export const assignTicketLinesCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignTicketLinesCustomerData, ThrowOnError>): RequestResult<AssignTicketLinesCustomerResponses, AssignTicketLinesCustomerErrors, ThrowOnError> => (options.client ?? client).post<AssignTicketLinesCustomerResponses, AssignTicketLinesCustomerErrors, ThrowOnError>({
+    url: '/api/tickets/{id}/lines/customer',
     ...options,
     headers: {
         'Content-Type': 'application/json',

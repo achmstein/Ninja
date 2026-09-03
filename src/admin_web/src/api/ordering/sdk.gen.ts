@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -75,6 +75,20 @@ export const confirmOrder = <ThrowOnError extends boolean = false>(options: Opti
  */
 export const cancelOrder = <ThrowOnError extends boolean = false>(options: Options<CancelOrderData, ThrowOnError>): RequestResult<CancelOrderResponses, CancelOrderErrors, ThrowOnError> => (options.client ?? client).put<CancelOrderResponses, CancelOrderErrors, ThrowOnError>({
     url: '/api/orders/cancel',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Assign a customer to an order after the fact (staff)
+ *
+ * Puts an account holder or a bare name on an order placed without one. Refused once the order is cancelled or already has an account.
+ */
+export const assignOrderCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignOrderCustomerData, ThrowOnError>): RequestResult<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError> => (options.client ?? client).put<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/customer',
     ...options,
     headers: {
         'Content-Type': 'application/json',

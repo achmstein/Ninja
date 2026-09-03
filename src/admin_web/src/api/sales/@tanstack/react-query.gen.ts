@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, closeShift, discardTicket, getBranchPricing, getClosedShifts, getCurrentShift, getOpenTickets, getRangeReport, getShift, getTicket, getTicketByOrder, moveTicketLines, openShift, openTicket, type Options, refundTicket, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetShiftData, GetShiftResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RefundTicketData, RefundTicketError, RefundTicketResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addTicketLine, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTicket, getTicketByOrder, getTicketHistory, moveTicketLines, openShift, openTicket, type Options, refundTicket, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RefundTicketData, RefundTicketError, RefundTicketResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -56,6 +56,86 @@ export const getOpenTicketsOptions = (options: Options<GetOpenTicketsData>) => q
         return data;
     },
     queryKey: getOpenTicketsQueryKey(options)
+});
+
+export const getSettledTicketsQueryKey = (options: Options<GetSettledTicketsData>) => createQueryKey('getSettledTickets', options);
+
+/**
+ * Settled bills for the branch, newest receipt first
+ *
+ * The receipts screen: the way back to a bill after it closed, to reprint it or refund it. Pass receiptNumber to find one.
+ */
+export const getSettledTicketsOptions = (options: Options<GetSettledTicketsData>) => queryOptions<GetSettledTicketsResponse, AxiosError<DefaultError>, GetSettledTicketsResponse, ReturnType<typeof getSettledTicketsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSettledTickets({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSettledTicketsQueryKey(options)
+});
+
+export const getTicketHistoryQueryKey = (options: Options<GetTicketHistoryData>) => createQueryKey('getTicketHistory', options);
+
+/**
+ * Closed tickets — settled or voided — newest first, with the count (the back office)
+ *
+ * The window is on the moment the ticket closed: settledAt for Settled, voidedAt for Voided. Pass receiptNumber to find one bill regardless of the window. Read-only; the till's own list is /settled.
+ */
+export const getTicketHistoryOptions = (options: Options<GetTicketHistoryData>) => queryOptions<GetTicketHistoryResponse, AxiosError<GetTicketHistoryError>, GetTicketHistoryResponse, ReturnType<typeof getTicketHistoryQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTicketHistory({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTicketHistoryQueryKey(options)
+});
+
+export const getPaymentsQueryKey = (options: Options<GetPaymentsData>) => createQueryKey('getPayments', options);
+
+/**
+ * Payments taken on tickets settled in a window, newest first
+ *
+ * Windowed on the ticket's settle, not the payment, so the page adds up to the range report's tender split for the same window. Pass tender to see one kind.
+ */
+export const getPaymentsOptions = (options: Options<GetPaymentsData>) => queryOptions<GetPaymentsResponse, AxiosError<GetPaymentsError>, GetPaymentsResponse, ReturnType<typeof getPaymentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPayments({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPaymentsQueryKey(options)
+});
+
+export const getRefundsQueryKey = (options: Options<GetRefundsData>) => createQueryKey('getRefunds', options);
+
+/**
+ * Credit notes issued in a window, newest first
+ *
+ * Every refund across the branch's tickets; open the ticket for the lines behind one.
+ */
+export const getRefundsOptions = (options: Options<GetRefundsData>) => queryOptions<GetRefundsResponse, AxiosError<GetRefundsError>, GetRefundsResponse, ReturnType<typeof getRefundsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getRefunds({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getRefundsQueryKey(options)
 });
 
 /**
@@ -199,6 +279,25 @@ export const moveTicketLinesMutation = (options?: Partial<Options<MoveTicketLine
     const mutationOptions: UseMutationOptions<MoveTicketLinesResponse, AxiosError<MoveTicketLinesError>, Options<MoveTicketLinesData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await moveTicketLines({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Name the customer on chosen lines
+ *
+ * The split-bill fix: several people rang up as one sale, and some lines were theirs. Sets the customer snapshot on just those lines — bill grouping, receipt, Account tender. Points do not move: they follow the whole order (assign the order's customer in Ordering for that). Session time cannot be reassigned.
+ */
+export const assignTicketLinesCustomerMutation = (options?: Partial<Options<AssignTicketLinesCustomerData>>): UseMutationOptions<AssignTicketLinesCustomerResponse, AxiosError<AssignTicketLinesCustomerError>, Options<AssignTicketLinesCustomerData>> => {
+    const mutationOptions: UseMutationOptions<AssignTicketLinesCustomerResponse, AxiosError<AssignTicketLinesCustomerError>, Options<AssignTicketLinesCustomerData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await assignTicketLinesCustomer({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
