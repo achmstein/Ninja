@@ -4,6 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   Award,
+  ChevronRight,
   Gamepad2,
   Info,
   LogOut,
@@ -135,8 +136,9 @@ function ProfilePage() {
         </Link>
       )}
 
-      {/* Loyalty card, like the app's — tap for details */}
-      {auth.isAuthenticated && (
+      {/* Loyalty card, like the app's — only once the member has joined, so a
+          non-member never sees a zeroed-out card; tap for details */}
+      {auth.isAuthenticated && loyalty && (
         <Link to='/loyalty'>
           <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
             <div className='flex items-center gap-2 border-b px-4 py-3'>
@@ -144,24 +146,42 @@ function ProfilePage() {
               <span className='flex-1 text-[15px] font-medium'>
                 {t('loyaltyRewards')}
               </span>
-              {loyalty && (
-                <Badge variant='secondary'>
-                  {tierKeys[tier] ? t(tierKeys[tier]) : loyalty.currentTier}
-                </Badge>
-              )}
+              <Badge variant='secondary'>
+                {tierKeys[tier] ? t(tierKeys[tier]) : loyalty.currentTier}
+              </Badge>
             </div>
             <div className='flex items-end justify-between p-4'>
               <div className='text-2xl font-bold'>
-                {Number(loyalty?.pointsBalance ?? 0)}{' '}
+                {Number(loyalty.pointsBalance ?? 0)}{' '}
                 <span className='text-muted-foreground text-sm font-normal'>
                   {t('pts')}
                 </span>
               </div>
               <div className='text-muted-foreground text-xs'>
                 {t('lifetimePoints', {
-                  points: Number(loyalty?.lifetimePoints ?? 0),
+                  points: Number(loyalty.lifetimePoints ?? 0),
                 })}
               </div>
+            </div>
+          </Card>
+        </Link>
+      )}
+
+      {/* Not a member yet — a join prompt instead of an empty card */}
+      {auth.isAuthenticated && loyaltyQuery.isError && (
+        <Link to='/loyalty'>
+          <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
+            <div className='flex items-center gap-3 px-4 py-3'>
+              <Award className='h-5 w-5 text-amber-500' />
+              <div className='min-w-0 flex-1'>
+                <div className='text-[15px] font-medium'>
+                  {t('joinOurLoyaltyProgram')}
+                </div>
+                <div className='text-muted-foreground truncate text-xs'>
+                  {t('earnPointsDescription')}
+                </div>
+              </div>
+              <ChevronRight className='text-muted-foreground h-5 w-5 shrink-0 rtl:rotate-180' />
             </div>
           </Card>
         </Link>

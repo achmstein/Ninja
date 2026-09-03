@@ -224,14 +224,33 @@ export function TicketScreen({
   // Voiding is Owner-only (the server enforces the same rule)
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
-  const { data: ticket, isLoading } = useQuery({
+  const ticketQuery = useQuery({
     ...getTicketOptions({
       path: { id: ticketId },
       query: { 'api-version': API_VERSION },
     }),
+    // A discarded or deleted ticket 404s — don't retry that, so the screen
+    // learns at once that the bill is gone instead of retrying a dead one
+    retry: (count, error) =>
+      !(error instanceof AxiosError && error.response?.status === 404) &&
+      count < 3,
     // Poll fallback in case the SignalR connection is silently dead
     refetchInterval: 20_000,
   })
+  const ticket = ticketQuery.data
+  const isLoading = ticketQuery.isLoading
+  // Gone: an empty room ticket auto-discarded when its session ended, or any
+  // ticket deleted out from under the screen. react-query keeps the last data
+  // on error, so a 404 is the only honest signal that the bill no longer exists.
+  const ticketGone =
+    ticketQuery.isError &&
+    ticketQuery.error instanceof AxiosError &&
+    ticketQuery.error.response?.status === 404
+
+  // Nothing to do here once the bill is gone — hand the cashier back to the floor
+  useEffect(() => {
+    if (ticketGone) navigate({ to: backTo })
+  }, [ticketGone, navigate, backTo])
 
   // App orders for this table or session that have not been accepted yet —
   // they are not on the bill until someone taps Confirm
@@ -321,6 +340,11 @@ export function TicketScreen({
         detail ? { description: detail } : undefined
       )
     }
+  }
+
+  // Redirecting to the floor — don't flash the stale bill on the way out
+  if (ticketGone) {
+    return null
   }
 
   if (isLoading) {
@@ -535,8 +559,10 @@ export function TicketScreen({
                 Nothing on the ticket yet means nothing to audit, so any
                 cashier can discard it; once a line lands, only an owner's
                 void (with its reason) takes it off the floor. A room ticket
-                is empty only while its session runs, so it gets neither. */}
-            {ticket.type !== 'Room' && lines.length === 0 ? (
+                is discardable too, but only once its session has ended with
+                nothing on it — while it runs, there is time still to come. */}
+            {lines.length === 0 &&
+            (ticket.type !== 'Room' || ticket.sessionEndedAt != null) ? (
               <Button
                 variant='outline'
                 className='text-destructive hover:text-destructive h-12 gap-2 px-3'

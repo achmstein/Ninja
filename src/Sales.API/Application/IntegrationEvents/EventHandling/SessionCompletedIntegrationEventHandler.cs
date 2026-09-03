@@ -45,6 +45,22 @@ public class SessionCompletedIntegrationEventHandler(
             customerId: @event.CustomerId,
             customerName: ticket.Label);
 
+        // Nothing ever landed — no time billed, no orders. An empty room ticket
+        // left open would keep the room busy on the floor and block the next
+        // session, so it goes the way an emptied table ticket does: discarded
+        // in the same transaction (the floor still gets the nudge).
+        if (ticket.Lines.Count == 0)
+        {
+            ticket.Discard();
+            ticketRepository.Remove(ticket);
+            await ticketRepository.UnitOfWork.SaveEntitiesAsync();
+
+            logger.LogInformation(
+                "Session {SessionId} ended with nothing on it - empty ticket {TicketId} discarded",
+                @event.ReservationId, ticket.Id);
+            return;
+        }
+
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
 
         logger.LogInformation(

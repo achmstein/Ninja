@@ -214,6 +214,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             BranchId = ticket.BranchId,
             LocationName = ticket.LocationName,
             SessionId = ticket.SessionId,
+            SessionEndedAt = ticket.SessionEndedAt,
             RoomId = ticket.RoomId,
             TableId = ticket.TableId,
             Label = ticket.Label,

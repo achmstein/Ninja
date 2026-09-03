@@ -135,7 +135,7 @@ export const cancelOrderMutation = (options?: Partial<Options<CancelOrderData>>)
 /**
  * Assign a customer to an order after the fact (staff)
  *
- * Puts an account holder or a bare name on an order placed without one. Refused once the order is cancelled or already has an account.
+ * Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.
  */
 export const assignOrderCustomerMutation = (options?: Partial<Options<AssignOrderCustomerData>>): UseMutationOptions<AssignOrderCustomerResponse, AxiosError<AssignOrderCustomerError>, Options<AssignOrderCustomerData>> => {
     const mutationOptions: UseMutationOptions<AssignOrderCustomerResponse, AxiosError<AssignOrderCustomerError>, Options<AssignOrderCustomerData>> = {

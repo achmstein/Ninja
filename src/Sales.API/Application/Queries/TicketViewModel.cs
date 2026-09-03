@@ -43,6 +43,8 @@ public record TicketDetail
     public int BranchId { get; init; }
     public LocalizedText? LocationName { get; init; }
     public int? SessionId { get; init; }
+    /// <summary>When the room session ended (time landed or was cancelled). Null while it runs or for non-room tickets — an empty room ticket is discardable only once this is set.</summary>
+    public DateTime? SessionEndedAt { get; init; }
     public int? RoomId { get; init; }
     public int? TableId { get; init; }
     /// <summary>What the bill is called: a counter tab's name, a room's session owner. Not a customer.</summary>

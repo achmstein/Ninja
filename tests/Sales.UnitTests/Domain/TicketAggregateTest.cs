@@ -535,6 +535,24 @@ public class TicketAggregateTest
             room.AssignLinesCustomer([room.Lines.Single().Id], "u2", "Omar"));
     }
 
+    [TestMethod]
+    public void Room_ticket_is_discardable_only_after_its_session_ends_empty()
+    {
+        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+
+        // While the session runs, no: its time is still to come
+        Assert.ThrowsExactly<SalesDomainException>(() => running.Discard());
+
+        // Ended with zero time and no orders — nothing landed, so it goes
+        running.AppendSessionTime(singleHours: 0, singleCost: 0, multiHours: 0, multiCost: 0);
+        running.Discard();
+
+        // But an ended room ticket that carried time cannot be discarded
+        var withTime = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1, label: "Omar");
+        withTime.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
+        Assert.ThrowsExactly<SalesDomainException>(() => withTime.Discard());
+    }
+
     private static TicketLine Line(string name, int qty, decimal unitPrice)
         => new(TicketLineSource.Order, new LocalizedText(name), qty, unitPrice, orderId: null);
 

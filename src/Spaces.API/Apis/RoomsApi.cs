@@ -369,10 +369,14 @@ public static class RoomsApi
 
         try
         {
+            // A staff reservation is a hold for a walk-in: the typed name is
+            // the customer, and it is not tied to the cashier's own account
+            // (so it never counts against them or auto-cancels). A customer
+            // reserving for themselves keeps their id and name.
             var command = new CreateReservationCommand(
                 roomId,
-                isAdmin ? null : customerId,
-                isAdmin ? null : customerName,
+                isStaff ? null : customerId,
+                isStaff ? request?.CustomerName : customerName,
                 request?.Notes,
                 isAdmin,
                 isStaff);

@@ -451,8 +451,11 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public void Discard()
     {
-        if (Type == TicketType.Room)
-            throw new SalesDomainException("Room tickets follow their session and cannot be discarded.");
+        // A room ticket follows its session while it runs. Once the session has
+        // ended and nothing ever landed — no time billed, no orders — there is
+        // nothing to bill and it is thrown away like any other empty ticket.
+        if (Type == TicketType.Room && SessionEndedAt == null)
+            throw new SalesDomainException("A room ticket cannot be discarded while its session is running.");
 
         DiscardEmpty();
     }

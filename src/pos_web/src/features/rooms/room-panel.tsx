@@ -343,15 +343,27 @@ export function RoomPanel({ room, session, onOpenChange }: RoomPanelProps) {
                   {localized(room?.description)}
                 </p>
               )}
-              <Button
-                size='lg'
-                className='mt-2 h-12 w-full'
-                disabled={actions.isBusy}
-                onClick={() => setStartOpen(true)}
-              >
-                <Play className='size-5 rtl:rotate-180' />
-                {t('startWalkInSession')}
-              </Button>
+              <div className='mt-2 grid w-full grid-cols-2 gap-2'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-12'
+                  disabled={actions.isBusy}
+                  onClick={() => actions.reserve(toNumber(room?.id), null)}
+                >
+                  <Clock className='size-5' />
+                  {t('reserve')}
+                </Button>
+                <Button
+                  size='lg'
+                  className='h-12'
+                  disabled={actions.isBusy}
+                  onClick={() => setStartOpen(true)}
+                >
+                  <Play className='size-5 rtl:rotate-180' />
+                  {t('startSession')}
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

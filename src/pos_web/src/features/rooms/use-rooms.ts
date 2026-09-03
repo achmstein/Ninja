@@ -9,6 +9,7 @@ import {
   getActiveSessionsOptions,
   listRoomsOptions,
   removeMemberFromSessionMutation,
+  reserveRoomMutation,
   startSessionMutation,
   startWalkInSessionMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
@@ -133,6 +134,10 @@ export function useSessionActions() {
     ...removeMemberFromSessionMutation(),
     ...feedback('memberRemoved', 'failedToRemoveMember'),
   })
+  const reserve = useMutation({
+    ...reserveRoomMutation(),
+    ...feedback('roomReserved', 'failedToReserveRoom'),
+  })
 
   const isBusy =
     startWalkIn.isPending ||
@@ -142,7 +147,8 @@ export function useSessionActions() {
     changeMode.isPending ||
     assignCustomer.isPending ||
     addMember.isPending ||
-    removeMember.isPending
+    removeMember.isPending ||
+    reserve.isPending
 
   return {
     isBusy,
@@ -176,6 +182,11 @@ export function useSessionActions() {
       addMember.mutate({ path: { sessionId }, body: { customerId, customerName } }),
     removeMember: (sessionId: number, customerId: string) =>
       removeMember.mutate({ path: { sessionId, customerId } }),
+    reserve: (roomId: number, customerName: string | null, done?: Done) =>
+      reserve.mutate(
+        { path: { roomId }, body: { customerName, notes: null } },
+        done
+      ),
   }
 }
 

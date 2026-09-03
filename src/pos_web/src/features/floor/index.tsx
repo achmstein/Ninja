@@ -89,7 +89,7 @@ function BillCard({
     <button
       type='button'
       onClick={onClick}
-      className='bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 border-b border-e p-3 text-start'
+      className='bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 rounded-xl border p-3 text-start'
     >
       <div className='flex items-start gap-2'>
         <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
@@ -387,7 +387,9 @@ export function Floor() {
               })}
             </div>
 
-            <div className='grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] overflow-hidden rounded-xl border-s border-t'>
+            {/* Rounded cards cap at ~220px so a lone bill stays a normal card,
+                not a full-width banner, and the row fills left to right */}
+            <div className='grid grid-cols-[repeat(auto-fill,minmax(180px,220px))] gap-3'>
               {shownBills.map((ticket) => (
                 <BillCard
                   key={String(ticket.id)}

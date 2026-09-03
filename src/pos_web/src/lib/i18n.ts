@@ -150,6 +150,9 @@ const dictionary = {
   playerModeMulti: { en: 'Multi', ar: 'مالتي' },
   playerMode: { en: 'Player mode', ar: 'وضع اللعب' },
   startSession: { en: 'Start session', ar: 'إبدا الوقت' },
+  reserve: { en: 'Reserve', ar: 'احجز' },
+  roomReserved: { en: 'Room reserved', ar: 'الأوضة اتحجزت' },
+  failedToReserveRoom: { en: 'Could not reserve the room', ar: 'معرفناش نحجز الأوضة' },
   startWalkInSession: { en: 'Start walk-in session', ar: 'بدء جلسة فورية' },
   startWalkInDescription: {
     en: 'Start the timer for {name} right now. Customers can join by scanning the room QR code.',

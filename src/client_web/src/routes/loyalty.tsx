@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -14,7 +15,10 @@ import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { useT, type TranslationKey } from '@/lib/i18n'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
+
+const pointsFormat = new Intl.NumberFormat('en-US')
 
 export const Route = createFileRoute('/loyalty')({
   component: () => (
@@ -44,7 +48,22 @@ function LoyaltyPage() {
   const t = useT()
   const auth = useAuth()
   const queryClient = useQueryClient()
+  const language = useLanguage((s) => s.language)
   const userId = auth.user?.profile?.sub ?? ''
+
+  // App parity (_formatDate): relative for the first week, then "MMM d"
+  const [nowMs] = useState(() => Date.now())
+  const relativeDate = (iso: string) => {
+    const date = new Date(iso)
+    const days = Math.floor((nowMs - date.getTime()) / 86_400_000)
+    if (days <= 0) return t('today')
+    if (days === 1) return t('yesterday')
+    if (days < 7) return t('daysAgo', { days })
+    return date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+  }
 
   const accountQuery = useQuery({
     ...getAccountOptions({
@@ -78,6 +97,17 @@ function LoyaltyPage() {
     },
     onError: () => toast.error(t('anErrorOccurred')),
   })
+
+  // Still resolving whether this user has an account — hold a skeleton so the
+  // membership card never flashes at 0 points before the join CTA appears
+  if (accountQuery.isLoading) {
+    return (
+      <div className='flex flex-col gap-4 p-4'>
+        <BackHeader title={t('loyaltyRewards')} />
+        <Skeleton className='h-40 rounded-xl' />
+      </div>
+    )
+  }
 
   // Join CTA when no loyalty account exists yet
   if (accountQuery.isError) {
@@ -165,38 +195,49 @@ function LoyaltyPage() {
         </Card>
       )}
 
-      <h2 className='text-muted-foreground text-sm font-semibold'>
-        {t('recentActivity')}
-      </h2>
+      <h2 className='text-base font-semibold'>{t('recentActivity')}</h2>
       {transactions.length === 0 ? (
         <p className='text-muted-foreground py-8 text-center text-sm'>
           {t('noTransactionsYet')}
         </p>
       ) : (
-        <div className='flex flex-col gap-2'>
+        /* App parity: plain rows with dividers; a tinted points pill leads
+           each row — +green for points earned, −red for points spent */
+        <div className='divide-y'>
           {transactions.map((tx) => {
             const points = Number(tx.points ?? 0)
+            const earned = points >= 0
             const typeKey = transactionTypeKeys[(tx.type ?? '').toLowerCase()]
             return (
-              <Card
-                key={String(tx.id)}
-                className='flex-row items-center justify-between gap-2 p-3 text-sm'
-              >
-                <div className='min-w-0'>
-                  <div className='truncate font-medium'>
-                    {tx.description || (typeKey ? t(typeKey) : tx.type)}
-                  </div>
-                  <div className='text-muted-foreground text-xs'>
-                    {tx.createdAt && new Date(tx.createdAt).toLocaleString()}
-                  </div>
-                </div>
+              <div key={String(tx.id)} className='flex items-start gap-3 py-3'>
                 <span
-                  className={`shrink-0 font-bold tabular-nums ${points >= 0 ? 'text-green-600 dark:text-green-500' : 'text-destructive'}`}
+                  className={`w-24 shrink-0 rounded-md px-2 py-1 text-center text-sm font-semibold tabular-nums ${
+                    earned
+                      ? 'bg-green-600/10 text-green-600 dark:text-green-500'
+                      : 'bg-destructive/10 text-destructive'
+                  }`}
                 >
-                  {points >= 0 ? '+' : ''}
-                  {points} {t('pts')}
+                  {earned ? '+' : '−'}
+                  {pointsFormat.format(Math.abs(points))}
                 </span>
-              </Card>
+                <div className='min-w-0 flex-1'>
+                  <div className='flex items-baseline justify-between gap-2'>
+                    <span className='text-[15px] font-medium'>
+                      {typeKey ? t(typeKey) : tx.type}
+                    </span>
+                    {tx.createdAt && (
+                      <span className='text-muted-foreground shrink-0 text-xs'>
+                        {relativeDate(tx.createdAt)}
+                      </span>
+                    )}
+                  </div>
+                  {tx.description && (
+                    <div className='text-muted-foreground line-clamp-2 text-[13px]'>
+                      {tx.description}
+                    </div>
+                  )}
+                </div>
+              </div>
             )
           })}
         </div>

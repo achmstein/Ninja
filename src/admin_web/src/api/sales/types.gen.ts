@@ -267,6 +267,7 @@ export type TicketDetail = {
     branchId?: number | string;
     locationName?: null | LocalizedText;
     sessionId?: null | number | string;
+    sessionEndedAt?: null | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
     label?: null | string;

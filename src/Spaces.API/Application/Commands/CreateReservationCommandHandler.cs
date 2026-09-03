@@ -31,8 +31,10 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         _logger.LogInformation("CreateReservation: RoomId={RoomId}, CustomerId={CustomerId}, IsAdmin={IsAdmin}",
             request.RoomId, request.CustomerId, request.IsAdmin);
 
-        // Rule 1: One reservation per customer at a time (skip for admins)
-        if (!request.IsAdmin)
+        // Rule 1: One reservation per customer at a time. Staff (any of them)
+        // hold rooms for walk-ins, so the limit is only for a customer
+        // reserving for themselves.
+        if (!request.IsStaff)
         {
             var existingReservation = await _reservationRepository
                 .GetActiveReservationForCustomerAsync(request.CustomerId!);
@@ -80,7 +82,9 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             room.SingleRate,
             room.MultiRate,
             request.Notes,
-            isAdminCreated: request.IsAdmin);
+            // Staff holds do not auto-expire; a customer self-reservation keeps
+            // the arrival window
+            isAdminCreated: request.IsStaff);
 
         _reservationRepository.Add(reservation);
 

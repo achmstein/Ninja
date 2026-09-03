@@ -40,12 +40,12 @@ export function useOrderDestination(): OrderDestination {
     return {
       kind: 'room',
       name: activeSession.roomName,
-      sessionId: activeSession.id,
-      roomId: activeSession.roomId,
+      sessionId: Number(activeSession.id),
+      roomId: Number(activeSession.roomId),
     }
   }
   if (activeTable) {
-    return { kind: 'table', id: activeTable.id, name: activeTable.name }
+    return { kind: 'table', id: Number(activeTable.id), name: activeTable.name }
   }
   return null
 }
