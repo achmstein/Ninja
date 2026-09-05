@@ -41,11 +41,13 @@ public static class Extensions
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             .AddSubscription<OrderReminderIntegrationEvent, OrderReminderIntegrationEventHandler>()
             .AddSubscription<TicketUpdatedIntegrationEvent, TicketUpdatedIntegrationEventHandler>()
-            .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>();
+            .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
+            .AddSubscription<OrderPreparationChangedIntegrationEvent, OrderPreparationChangedIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(OrderPreparationChangedIntegrationEvent))]
 [JsonSerializable(typeof(RoomBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToSubmittedIntegrationEvent))]
 [JsonSerializable(typeof(ServiceRequestCreatedIntegrationEvent))]

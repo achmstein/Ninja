@@ -68,6 +68,29 @@ const webExtras = {
   toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },
   toastInfo: { en: 'Heads up', ar: 'خد بالك' },
   toastWarning: { en: 'Warning', ar: 'تنبيه' },
+  // Installing the PWA — web only by definition
+  installApp: { en: 'Install app', ar: 'نزّل التطبيق' },
+  installAppTitle: { en: 'Install the Chillax app', ar: 'نزّل تطبيق تشيلاكس' },
+  installAppDescription: {
+    en: 'Full screen, right from your home screen',
+    ar: 'بشاشة كاملة، من على الهوم سكرين على طول',
+  },
+  install: { en: 'Install', ar: 'تنزيل' },
+  howTo: { en: 'How?', ar: 'إزاي؟' },
+  notNow: { en: 'Not now', ar: 'مش دلوقتي' },
+  installChillax: { en: 'Install Chillax', ar: 'نزّل تشيلاكس' },
+  installIosStepShare: {
+    en: 'Tap the Share button in Safari',
+    ar: 'دوس على زرار المشاركة (Share) في سفاري',
+  },
+  installIosStepAdd: {
+    en: 'Choose “Add to Home Screen”',
+    ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)',
+  },
+  installIosOutcome: {
+    en: 'Chillax then opens full screen from your home screen, like any other app.',
+    ar: 'بعدها تشيلاكس هيفتح من الهوم سكرين بشاشة كاملة زي أي تطبيق.',
+  },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

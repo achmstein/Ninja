@@ -124,6 +124,47 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         };
     }
 
+    public async Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId)
+    {
+        var now = DateTime.UtcNow;
+        // A card left on the board overnight is stale, not work
+        var confirmedSince = now.AddHours(-24);
+        // Ready cards linger long enough to be recalled, then clear themselves
+        var readySince = now.AddMinutes(-30);
+
+        return await context.Orders
+            .AsNoTracking()
+            .Where(o => o.BranchId == branchId)
+            .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
+            // Confirmed before the kitchen display existed: not its business
+            .Where(o => o.ConfirmedAt != null && o.ConfirmedAt >= confirmedSince)
+            .Where(o => o.Preparation != Ordering.Domain.AggregatesModel.OrderAggregate.PreparationStatus.Ready
+                        || o.ReadyAt >= readySince)
+            .OrderBy(o => o.ConfirmedAt)
+            .Select(o => new KitchenOrder
+            {
+                OrderNumber = o.Id,
+                Date = o.OrderDate,
+                ConfirmedAt = o.ConfirmedAt,
+                Preparation = o.Preparation.ToString(),
+                PreparingAt = o.PreparingAt,
+                ReadyAt = o.ReadyAt,
+                Source = o.Source.ToString(),
+                RoomName = o.RoomName,
+                TableName = o.TableName,
+                CustomerName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
+                CustomerNote = o.CustomerNote,
+                Items = o.OrderItems.Select(oi => new KitchenOrderItem
+                {
+                    ProductName = oi.ProductName,
+                    Units = oi.Units,
+                    CustomizationsDescription = oi.CustomizationsDescription,
+                    SpecialInstructions = oi.SpecialInstructions
+                }).ToList()
+            })
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<OrderSummary>> GetPendingOrdersAsync(int branchId)
     {
         var query = context.Orders

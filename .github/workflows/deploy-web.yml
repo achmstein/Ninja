@@ -20,6 +20,7 @@ on:
           - admin
           - client
           - pos
+          - kds
 
 jobs:
   deploy:
@@ -71,6 +72,17 @@ jobs:
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/pos-web
 
+      - name: Build kds_web
+        if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'kds' }}
+        env:
+          VITE_KEYCLOAK_URL: https://auth.chillax.site
+        run: |
+          cd src/kds_web
+          npm ci
+          npm run build
+          mkdir -p ../../web-artifacts
+          cp -r dist ../../web-artifacts/kds-web
+
       - name: Copy bundles to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -104,4 +116,5 @@ jobs:
             swap admin-web
             swap client-web
             swap pos-web
+            swap kds-web
             rm -rf web-incoming

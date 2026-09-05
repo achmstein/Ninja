@@ -214,6 +214,21 @@ builder.AddViteApp("pos-web", "../pos_web")
     .WaitFor(mobileBff)
     .ExcludeFromManifest();
 
+// Kitchen display (React + Vite), same wiring as admin-web.
+builder.AddViteApp("kds-web", "../kds_web")
+    .WithNpm()
+    .WithEndpoint("http", endpoint =>
+    {
+        // Fixed port: the Keycloak kds-web realm client whitelists
+        // http://localhost:5176 redirect URIs.
+        endpoint.Port = 5176;
+        endpoint.IsProxied = false;
+    })
+    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+    .WaitFor(mobileBff)
+    .ExcludeFromManifest();
+
 // Customer web app (React + Vite), same wiring as admin-web.
 builder.AddViteApp("client-web", "../client_web")
     .WithNpm()

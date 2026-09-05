@@ -1,0 +1,183 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import './theme.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  html {
+    @apply overflow-x-hidden;
+    /* Reserve the scrollbar gutter so scroll-locking dialogs don't widen
+       the page */
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-background text-foreground min-h-svh w-full;
+    font-family: 'Inter', system-ui, sans-serif;
+    /* Touch-first: no double-tap zoom lag, no tap flash on tiles */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Override Radix scroll locking for sticky headers, and neutralize its
+     scrollbar-width compensation (the gutter above already reserves it) */
+  body[data-scroll-locked][data-scroll-locked] {
+    overflow: unset !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Cursor pointer for buttons */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Arabic UI renders in Cairo (same as the customer apps) */
+  :root[dir='rtl'] body {
+    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+  }
+
+  /* Prevent focus zoom on mobile devices */
+  @media screen and (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Sileo overrides — OUTSIDE @layer base (with :root for specificity) so
+   they beat sileo's own runtime-injected, unlayered stylesheet. Same
+   verified block as admin_web/client_web. */
+
+/* Toasts above dialogs/sheets (both are z-50 by default) */
+:root [data-sileo-viewport] {
+  z-index: 100;
+}
+
+/* Sileo ships no RTL support and measures its pill geometry in LTR
+   coordinates: keep the toast box LTR so the autopilot expansion stays
+   correct, and flip the content instead. */
+:root[dir='rtl'] [data-sileo-toast] {
+  direction: ltr;
+}
+/* The drawn pill is --_pw wide but the header only fit-contents narrower,
+   leaving sileo's designed spare space on the physical right. Spanning the
+   full pill width lets flex-end pack the content to the mirrored (right)
+   side — verified pixel-for-pixel against LTR in a headless screenshot. */
+:root[dir='rtl'] [data-sileo-header] {
+  width: var(--_pw, auto);
+  justify-content: flex-end;
+}
+/* Icon after the text (RTL reading start) via `order`, NOT row-reverse:
+   row-reverse flips the flex packing side and breaks sileo's left-anchored
+   clip/measure geometry */
+:root[dir='rtl'] [data-sileo-header-inner] [data-sileo-badge] {
+  order: 2;
+}
+/* Title-change animation: the outgoing layer is left-anchored; mirror it */
+:root[dir='rtl'] [data-sileo-header-inner][data-layer='prev'] {
+  left: auto;
+  right: 0;
+}
+:root[dir='rtl'] [data-sileo-title],
+:root[dir='rtl'] [data-sileo-description] {
+  direction: rtl;
+}
+:root[dir='rtl'] [data-sileo-description] {
+  text-align: right;
+}
+
+/* ----- screen transitions -----
+   Router navigations run through the View Transitions API. 140ms, opacity
+   only: long enough to read as one screen becoming another, short enough
+   that a cashier crossing floor → ticket → settle a hundred times a shift
+   never waits on it. No movement — sliding a full till screen at this speed
+   reads as a glitch, and the header stays put across every screen anyway.
+
+   The header and the sticky action bars are held out of the animation so
+   the chrome appears fixed while the content beneath it changes. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: 100ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
+  }
+  ::view-transition-new(root) {
+    animation: 140ms cubic-bezier(0, 0, 0.2, 1) both vt-fade-in;
+  }
+}
+
+/* Motion-sensitive staff get the instant swap the app had before */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@utility no-scrollbar {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* 80mm thermal receipt. On screen the receipt markup stays hidden
+   (`.receipt-sheet` is display:none); when printing, the app chrome is
+   hidden instead and only the receipt paints, black on white, sized for
+   the roll. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    min-height: 0;
+  }
+
+  /* The receipt is portaled to <body>, so one rule hides the app root and
+     every other portal (dialogs, toasts) in one go */
+  body > *:not(.receipt-sheet) {
+    display: none !important;
+  }
+
+  .receipt-sheet {
+    display: block !important;
+    width: 72mm;
+    margin: 0 auto;
+    padding: 4mm 0 8mm;
+    color: #000;
+    background: #fff;
+    font-family: 'Inter', 'Cairo', system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+.receipt-sheet {
+  display: none;
+}

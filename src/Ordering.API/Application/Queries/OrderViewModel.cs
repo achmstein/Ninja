@@ -51,6 +51,38 @@ public record Order
 }
 
 /// <summary>
+/// What the kitchen needs to make an order: the lines, the notes and where it
+/// goes. Money, ratings and contact details stay off the card.
+/// </summary>
+public record KitchenOrder
+{
+    public int OrderNumber { get; init; }
+    public DateTime Date { get; init; }
+    /// <summary>When staff confirmed it — the kitchen's clock starts here.</summary>
+    public DateTime? ConfirmedAt { get; init; }
+    /// <summary>NotStarted, Preparing or Ready.</summary>
+    public string Preparation { get; init; } = string.Empty;
+    public DateTime? PreparingAt { get; init; }
+    public DateTime? ReadyAt { get; init; }
+    /// <summary>Who placed it: Customer, Guest, or Pos.</summary>
+    public string Source { get; init; } = string.Empty;
+    public LocalizedText? RoomName { get; init; }
+    public LocalizedText? TableName { get; init; }
+    /// <summary>The buyer's name, or the name a guest or the cashier left.</summary>
+    public string? CustomerName { get; init; }
+    public string? CustomerNote { get; init; }
+    public List<KitchenOrderItem> Items { get; init; } = new();
+}
+
+public record KitchenOrderItem
+{
+    public LocalizedText ProductName { get; init; } = new();
+    public int Units { get; init; }
+    public LocalizedText? CustomizationsDescription { get; init; }
+    public string? SpecialInstructions { get; init; }
+}
+
+/// <summary>
 /// Aggregated order statistics for the admin dashboard.
 /// </summary>
 public record OrderStats

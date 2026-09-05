@@ -224,7 +224,7 @@ Built:
 Deliberately deferred, each for a stated reason:
 - **Refunds of settled tickets** — real money back plus loyalty/account reversal; needs an owner policy decision first.
 - **QZ Tray** (drawer kick / ESC-POS) — blocked on open question 2 (what printer hardware exists).
-- **Kitchen prep statuses** — changes what customers see in their apps; a product decision, not a hardening item.
+- **Kitchen prep statuses** — **decided 2026-09-05: kitchen-only, customers never see it.** Ordering owns a preparation state beside the order status (`Order.Preparation`: NotStarted / Preparing / Ready, with `ConfirmedAt` / `PreparingAt` / `ReadyAt`); `GET /api/orders/kitchen` and `PUT /api/orders/{id}/preparation` sit behind the Pos policy. `OrderPreparationChanged` fans out to the admin hub group as `OrderStatusChanged{type:"order_preparation"}`. Shown on its own `kds_web` SPA at `kds.chillax.site` (same wiring as pos_web, `kds-web` realm client): one board, Start → Ready, with Recall.
 - **Offline queue** — deliberately out per D6.
 
 *UI done 2026-09-02: pos_web's role gate accepts Cashier; Owner-only Void action on the ticket screen with reason dialog and a voided tombstone view. A Discard action replaces Void while a ticket is still empty. The typed-in "Add item" line is gone from the till — the owner's call, the café sells from the menu only; the manual-line endpoint stays in the API.*

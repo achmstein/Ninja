@@ -651,6 +651,130 @@
         ]
       }
     },
+    "/api/orders/kitchen": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Confirmed orders in the kitchen, for the kitchen display (staff)",
+        "description": "Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.",
+        "operationId": "GetKitchenOrders",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KitchenOrder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/preparation": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Move a confirmed order along in the kitchen (staff)",
+        "description": "Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.",
+        "operationId": "SetOrderPreparation",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrderPreparationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/all": {
       "get": {
         "tags": [
@@ -1248,6 +1372,120 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "KitchenOrder": {
+        "type": "object",
+        "properties": {
+          "orderNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "preparation": {
+            "type": "string"
+          },
+          "preparingAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "readyAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "roomName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "tableName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KitchenOrderItem"
+            }
+          }
+        }
+      },
+      "KitchenOrderItem": {
+        "type": "object",
+        "properties": {
+          "productName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "units": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "customizationsDescription": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "specialInstructions": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1877,6 +2115,13 @@
           }
         }
       },
+      "PreparationStatus": {
+        "enum": [
+          "NotStarted",
+          "Preparing",
+          "Ready"
+        ]
+      },
       "RateOrderRequest": {
         "required": [
           "ratingValue",
@@ -1897,6 +2142,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SetOrderPreparationRequest": {
+        "required": [
+          "preparation"
+        ],
+        "type": "object",
+        "properties": {
+          "preparation": {
+            "$ref": "#/components/schemas/PreparationStatus"
           }
         }
       }

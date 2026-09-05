@@ -86,6 +86,21 @@ public static partial class OrdersApi
             .WithSummary("Pending orders for the branch (staff)")
             .RequireAuthorization("Pos");
 
+        // The kitchen's queue: every confirmed order, whatever put it there —
+        // an app order staff accepted, a table QR, a counter sale. Kitchen
+        // screens sign in like a till, so they share the Pos policy.
+        api.MapGet("/kitchen", GetKitchenOrdersAsync)
+            .WithName("GetKitchenOrders")
+            .WithSummary("Confirmed orders in the kitchen, for the kitchen display (staff)")
+            .WithDescription("Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.")
+            .RequireAuthorization("Pos");
+
+        api.MapPut("/{orderId:int}/preparation", SetOrderPreparationAsync)
+            .WithName("SetOrderPreparation")
+            .WithSummary("Move a confirmed order along in the kitchen (staff)")
+            .WithDescription("Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.")
+            .RequireAuthorization("Pos");
+
         api.MapGet("/all", GetAllOrdersAsync)
             .WithName("GetAllOrders")
             .WithSummary("Get all orders paginated (admin)")
@@ -541,6 +556,52 @@ public static partial class OrdersApi
         return TypedResults.Ok(orders);
     }
 
+    public static async Task<Ok<IEnumerable<KitchenOrder>>> GetKitchenOrdersAsync(
+        HttpContext httpContext,
+        [AsParameters] OrderServices services)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        var orders = await services.Queries.GetKitchenOrdersAsync(branchId);
+        return TypedResults.Ok(orders);
+    }
+
+    public static async Task<Results<NoContent, BadRequest<string>, NotFound>> SetOrderPreparationAsync(
+        int orderId,
+        [FromHeader(Name = "x-requestid")] Guid requestId,
+        SetOrderPreparationRequest request,
+        [AsParameters] OrderServices services)
+    {
+        if (requestId == Guid.Empty)
+        {
+            return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+        }
+
+        var command = new SetOrderPreparationCommand(orderId, request.Preparation);
+        var requestSetPreparation = new IdentifiedCommand<SetOrderPreparationCommand, bool>(command, requestId);
+
+        services.Logger.LogInformation(
+            "Sending command: {CommandName} - OrderId: {OrderId}, Preparation: {Preparation}",
+            requestSetPreparation.GetGenericTypeName(),
+            orderId,
+            request.Preparation);
+
+        try
+        {
+            var found = await services.Mediator.Send(requestSetPreparation);
+
+            if (!found)
+            {
+                return TypedResults.NotFound();
+            }
+
+            return TypedResults.NoContent();
+        }
+        catch (OrderingDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Ok<PaginatedResult<OrderSummary>>> GetOrdersByUserIdAsync(
         string userId,
         int pageIndex = 0,
@@ -666,3 +727,9 @@ public record AssignOrderCustomerRequest(
 public record RateOrderRequest(
     int RatingValue,
     string? Comment);
+
+/// <summary>
+/// Request model for moving an order along in the kitchen.
+/// </summary>
+/// <param name="Preparation">Preparing to start it (or recall a ready one), Ready when it is done.</param>
+public record SetOrderPreparationRequest(PreparationStatus Preparation);

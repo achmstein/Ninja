@@ -10,6 +10,7 @@ import {
 import { useSelectedBranch } from '@/lib/branch'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Input } from '@/components/ui/input'
+import { InstallBanner } from '@/components/install-banner'
 import { CategoryRail, type MenuSection } from '@/components/menu/category-rail'
 import { CustomizeDialog } from '@/components/menu/customize-dialog'
 import { DealsSection } from '@/components/menu/deals-section'
@@ -172,6 +173,8 @@ function MenuPage() {
           {t('orderingUnavailable')}
         </div>
       )}
+
+      <InstallBanner />
 
       <div className='relative'>
         <Search className='text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2' />

@@ -139,6 +139,25 @@ public class Order
     /// </summary>
     public DateTime? LastReminderSentAt { get; private set; }
 
+    /// <summary>
+    /// When staff confirmed the order — the moment it reached the kitchen.
+    /// Null on orders confirmed before the kitchen display existed, which is
+    /// how the kitchen query leaves history alone.
+    /// </summary>
+    public DateTime? ConfirmedAt { get; private set; }
+
+    /// <summary>
+    /// Where a confirmed order stands in the kitchen. Kitchen-only: never
+    /// shown to the customer, never changes what the order costs.
+    /// </summary>
+    public PreparationStatus Preparation { get; private set; }
+
+    /// <summary>When the kitchen started on it (null until Preparing).</summary>
+    public DateTime? PreparingAt { get; private set; }
+
+    /// <summary>When the kitchen finished it (cleared again by a recall).</summary>
+    public DateTime? ReadyAt { get; private set; }
+
     public static Order NewDraft()
     {
         var order = new Order
@@ -343,7 +362,49 @@ public class Order
 
         AddDomainEvent(new OrderStatusChangedToConfirmedDomainEvent(Id, _orderItems));
         OrderStatus = OrderStatus.Confirmed;
+        ConfirmedAt = DateTime.UtcNow;
         Description = "Order confirmed and sent to POS.";
+    }
+
+    /// <summary>
+    /// Move the order along in the kitchen. Allowed: NotStarted -> Preparing,
+    /// NotStarted -> Ready (one tap for a quick order), Preparing -> Ready,
+    /// and Ready -> Preparing as the recall for a card bumped too early. The
+    /// same state twice is a no-op, so two screens tapping the same card do
+    /// not race each other into an error. Nothing goes back to NotStarted,
+    /// and only a confirmed order is in the kitchen at all.
+    /// </summary>
+    public void SetPreparation(PreparationStatus target)
+    {
+        if (OrderStatus != OrderStatus.Confirmed)
+        {
+            throw new OrderingDomainException($"Cannot change preparation from status {OrderStatus}. Only a confirmed order is in the kitchen.");
+        }
+
+        if (target == Preparation)
+        {
+            return;
+        }
+
+        switch (target)
+        {
+            case PreparationStatus.Preparing:
+                // Starting it, or recalling it from Ready; the first start time stays
+                Preparation = PreparationStatus.Preparing;
+                PreparingAt ??= DateTime.UtcNow;
+                ReadyAt = null;
+                break;
+
+            case PreparationStatus.Ready:
+                Preparation = PreparationStatus.Ready;
+                ReadyAt = DateTime.UtcNow;
+                break;
+
+            default:
+                throw new OrderingDomainException("An order in the kitchen cannot go back to not started.");
+        }
+
+        AddDomainEvent(new OrderPreparationChangedDomainEvent(Id, BranchId, Preparation));
     }
 
     /// <summary>

@@ -24,6 +24,13 @@ public interface IOrderQueries
     Task<IEnumerable<OrderSummary>> GetPendingOrdersAsync(int branchId);
 
     /// <summary>
+    /// The kitchen's queue for a branch: confirmed orders not yet ready, plus
+    /// those marked ready in the last half hour so a card can be recalled.
+    /// Orders confirmed before the kitchen display existed are left out.
+    /// </summary>
+    Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId);
+
+    /// <summary>
     /// Get all orders paginated (admin), filtered by branch and optionally by
     /// status, buyer, date range, and the room session they were ordered into
     /// </summary>

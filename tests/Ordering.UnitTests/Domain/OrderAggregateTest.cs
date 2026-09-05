@@ -203,6 +203,126 @@ public class OrderAggregateTest
         Assert.ThrowsExactly<OrderingDomainException>(() => order.SetCancelledStatus());
     }
 
+    private static Order ConfirmedOrder()
+    {
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        order.SetStockConfirmedStatus();
+        order.SetConfirmedStatus();
+        return order;
+    }
+
+    [TestMethod]
+    public void Confirming_an_order_starts_the_kitchen_clock()
+    {
+        // Arrange
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        order.SetStockConfirmedStatus();
+        Assert.IsNull(order.ConfirmedAt);
+
+        // Act
+        order.SetConfirmedStatus();
+
+        // Assert
+        Assert.IsNotNull(order.ConfirmedAt);
+        Assert.AreEqual(PreparationStatus.NotStarted, order.Preparation);
+        Assert.IsNull(order.PreparingAt);
+        Assert.IsNull(order.ReadyAt);
+    }
+
+    [TestMethod]
+    public void Kitchen_starts_then_finishes_a_confirmed_order()
+    {
+        // Arrange
+        var order = ConfirmedOrder();
+
+        // Act - start
+        order.SetPreparation(PreparationStatus.Preparing);
+
+        // Assert
+        Assert.AreEqual(PreparationStatus.Preparing, order.Preparation);
+        Assert.IsNotNull(order.PreparingAt);
+        Assert.IsNull(order.ReadyAt);
+
+        // Act - finish
+        order.SetPreparation(PreparationStatus.Ready);
+
+        // Assert
+        Assert.AreEqual(PreparationStatus.Ready, order.Preparation);
+        Assert.IsNotNull(order.ReadyAt);
+        Assert.AreEqual(2, order.DomainEvents.OfType<OrderPreparationChangedDomainEvent>().Count());
+    }
+
+    [TestMethod]
+    public void Kitchen_can_mark_an_order_ready_without_starting_it()
+    {
+        // Arrange
+        var order = ConfirmedOrder();
+
+        // Act
+        order.SetPreparation(PreparationStatus.Ready);
+
+        // Assert
+        Assert.AreEqual(PreparationStatus.Ready, order.Preparation);
+        Assert.IsNull(order.PreparingAt);
+        Assert.IsNotNull(order.ReadyAt);
+    }
+
+    [TestMethod]
+    public void Kitchen_recalls_a_ready_order_back_to_preparing()
+    {
+        // Arrange
+        var order = ConfirmedOrder();
+        order.SetPreparation(PreparationStatus.Preparing);
+        var startedAt = order.PreparingAt;
+        order.SetPreparation(PreparationStatus.Ready);
+
+        // Act
+        order.SetPreparation(PreparationStatus.Preparing);
+
+        // Assert
+        Assert.AreEqual(PreparationStatus.Preparing, order.Preparation);
+        Assert.AreEqual(startedAt, order.PreparingAt);
+        Assert.IsNull(order.ReadyAt);
+    }
+
+    [TestMethod]
+    public void Kitchen_repeating_the_current_state_is_a_no_op()
+    {
+        // Arrange
+        var order = ConfirmedOrder();
+        order.SetPreparation(PreparationStatus.Preparing);
+        var startedAt = order.PreparingAt;
+
+        // Act
+        order.SetPreparation(PreparationStatus.Preparing);
+
+        // Assert
+        Assert.AreEqual(startedAt, order.PreparingAt);
+        Assert.AreEqual(1, order.DomainEvents.OfType<OrderPreparationChangedDomainEvent>().Count());
+    }
+
+    [TestMethod]
+    public void Kitchen_cannot_send_an_order_back_to_not_started()
+    {
+        // Arrange
+        var order = ConfirmedOrder();
+        order.SetPreparation(PreparationStatus.Preparing);
+
+        // Act - Assert
+        Assert.ThrowsExactly<OrderingDomainException>(() => order.SetPreparation(PreparationStatus.NotStarted));
+    }
+
+    [TestMethod]
+    public void Kitchen_cannot_touch_an_order_that_is_not_confirmed()
+    {
+        // Arrange
+        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        order.SetStockConfirmedStatus();
+
+        // Act - Assert
+        Assert.ThrowsExactly<OrderingDomainException>(() => order.SetPreparation(PreparationStatus.Preparing));
+    }
+
     [TestMethod]
     public void Order_cannot_be_confirmed_when_cancelled()
     {

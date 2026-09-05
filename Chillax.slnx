@@ -19,6 +19,10 @@
     <Project Path="src/EventBusRabbitMQ/EventBusRabbitMQ.csproj" />
     <Project Path="src/Identity.API/Identity.API.csproj" />
     <Project Path="src/IntegrationEventLogEF/IntegrationEventLogEF.csproj" />
+    <Project Path="src/kds_web/kds_web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
     <Project Path="src/Loyalty.API/Loyalty.API.csproj" />
     <Project Path="src/Notification.API/Notification.API.csproj" />
     <Project Path="src/Ordering.API/Ordering.API.csproj" />

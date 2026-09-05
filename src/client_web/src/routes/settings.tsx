@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Download, KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import {
   getNotificationPreferences,
@@ -17,6 +17,7 @@ import {
   PHONE_PATTERN,
 } from '@/lib/services/identity'
 import { useT } from '@/lib/i18n'
+import { useInstallPrompt } from '@/lib/use-install-prompt'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { BackHeader } from '@/components/back-header'
+import { InstallDialog } from '@/components/install-dialog'
 import { LanguageSwitch } from '@/components/language-switch'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { TileButton } from '@/components/tile-row'
@@ -56,6 +58,9 @@ function SettingsPage() {
 
   const [editOpen, setEditOpen] = useState(false)
   const [passwordOpen, setPasswordOpen] = useState(false)
+  const [installOpen, setInstallOpen] = useState(false)
+
+  const { canInstall, install, isStandalone, isIos } = useInstallPrompt()
 
   const profile = auth.user?.profile
   const name = profile?.name || profile?.preferred_username
@@ -166,6 +171,19 @@ function SettingsPage() {
             <span className='text-[15px] font-medium'>{t('language')}</span>
             <LanguageSwitch />
           </div>
+          {/* Android: the native prompt. iOS: the share-sheet walkthrough.
+              Nothing once installed, or where neither route exists */}
+          {(canInstall || (isIos && !isStandalone)) && (
+            <TileButton
+              icon={Download}
+              label={t('installApp')}
+              sublabel={t('installAppDescription')}
+              onClick={() => {
+                if (canInstall) void install()
+                else setInstallOpen(true)
+              }}
+            />
+          )}
         </Card>
       </section>
 
@@ -230,6 +248,7 @@ function SettingsPage() {
         open={passwordOpen}
         onOpenChange={setPasswordOpen}
       />
+      <InstallDialog open={installOpen} onOpenChange={setInstallOpen} />
     </div>
   )
 }

@@ -53,6 +53,9 @@ jobs:
           cd ../pos_web
           npm ci
           npm run build
+          cd ../kds_web
+          npm ci
+          npm run build
 
       - name: Generate Docker Compose artifacts
         env:
@@ -90,6 +93,7 @@ jobs:
           cp -r src/admin_web/dist deploy-artifacts/admin-web
           cp -r src/client_web/dist deploy-artifacts/client-web
           cp -r src/pos_web/dist deploy-artifacts/pos-web
+          cp -r src/kds_web/dist deploy-artifacts/kds-web
 
           # Fill empty .env values (aspire publish generates empty placeholders)
           sed -i 's/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=postgres/' deploy-artifacts/.env
@@ -341,6 +345,7 @@ jobs:
             ensure_web_client admin-panel https://admin.chillax.site
             ensure_web_client client-web https://app.chillax.site
             ensure_web_client pos-web https://pos.chillax.site
+            ensure_web_client kds-web https://kds.chillax.site
 
             echo ""
             echo "=== Keycloak token exchange setup complete ==="

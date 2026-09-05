@@ -107,6 +107,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<int?>("BuyerId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("CustomerNote")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -143,6 +146,19 @@ namespace Ordering.Infrastructure.Migrations
 
                     b.Property<int>("PointsToRedeem")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Preparation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("NotStarted");
+
+                    b.Property<DateTime?>("PreparingAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReadyAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ReminderCount")
                         .ValueGeneratedOnAdd()
