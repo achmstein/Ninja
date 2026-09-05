@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>
@@ -29,4 +30,16 @@ public class DiscardTicketCommandHandler(
 
         return true;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="DiscardTicketCommand"/> keyed on the client's request id.</summary>
+public class DiscardTicketIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<DiscardTicketCommand, bool>> logger)
+    : IdentifiedCommandHandler<DiscardTicketCommand, bool>(mediator, requestManager, logger)
+{
+    protected override Task<bool> CreateResultForDuplicateRequestAsync(DiscardTicketCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(true);
 }

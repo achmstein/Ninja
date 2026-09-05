@@ -317,6 +317,8 @@ export function TicketScreen({
       // Part of an order (or several): the snapshot on just those lines
       if (lineIds.length > 0) {
         await assignLines.mutateAsync({
+          // A retry on café Wi-Fi must not become a second command
+          headers: { 'x-requestid': crypto.randomUUID() },
           path: { id: ticketId },
           query: { 'api-version': API_VERSION },
           body: { lineIds, customerId: customer.id ?? null, customerName: customer.name },
@@ -450,6 +452,8 @@ export function TicketScreen({
   // for the same place (the split) when nothing else is named
   const doMoveLines = (target: MoveTarget) =>
     moveLines.mutate({
+      // A retry on café Wi-Fi must not become a second command
+      headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
       query: { 'api-version': API_VERSION },
       body: {

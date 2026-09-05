@@ -173,11 +173,12 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null) : this()
     {
         BuyerId = buyerId;
         OrderStatus = OrderStatus.AwaitingValidation;
-        OrderDate = DateTime.UtcNow;
+        // A replayed offline sale is dated when it was rung up, not when it reached us
+        OrderDate = placedAt ?? DateTime.UtcNow;
         RoomName = roomName;
         SessionId = sessionId;
         RoomId = roomId;

@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 namespace Chillax.Sales.API.Application.Commands;
@@ -29,4 +30,16 @@ public class AddCashMovementCommandHandler(
 
         return true;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="AddCashMovementCommand"/> keyed on the client's request id.</summary>
+public class AddCashMovementIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<AddCashMovementCommand, bool>> logger)
+    : IdentifiedCommandHandler<AddCashMovementCommand, bool>(mediator, requestManager, logger)
+{
+    protected override Task<bool> CreateResultForDuplicateRequestAsync(AddCashMovementCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(true);
 }

@@ -347,6 +347,37 @@ jobs:
             ensure_web_client pos-web https://pos.chillax.site
             ensure_web_client kds-web https://kds.chillax.site
 
+            # Native apps sign in with the password grant (no browser redirect),
+            # so unlike the web clients they need direct access grants on and
+            # an app-scheme redirect for the OIDC logout.
+            ensure_native_client() {
+              NAME="$1"; SCHEME="$2"
+              CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
+                python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
+              if [ -z "$CID" ]; then
+                echo "  Creating $NAME..."
+                docker exec "$CONTAINER" $KC create clients -r $REALM \
+                  -s clientId="$NAME" -s enabled=true -s publicClient=true \
+                  -s standardFlowEnabled=true -s directAccessGrantsEnabled=true \
+                  -s protocol=openid-connect \
+                  -s "redirectUris=[\"$SCHEME://callback\",\"$SCHEME://*\"]" \
+                  -s 'attributes={"pkce.code.challenge.method":"S256"}' \
+                  -s 'defaultClientScopes=["openid","profile","email","roles","orders","catalog","rooms","spaces"]' \
+                  -s 'optionalClientScopes=["offline_access"]' && \
+                  echo "  Created $NAME" || echo "  WARNING: failed to create $NAME"
+                CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
+                  python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
+                [ -n "$CID" ] && docker exec "$CONTAINER" $KC create "clients/$CID/protocol-mappers/models" -r $REALM \
+                  -s name=audience-mapper -s protocol=openid-connect -s protocolMapper=oidc-audience-mapper \
+                  -s "config.\"included.client.audience\"=$NAME" -s 'config."id.token.claim"=false' \
+                  -s 'config."access.token.claim"=true' >/dev/null 2>&1 || true
+              else
+                echo "  $NAME exists"
+              fi
+            }
+            ensure_native_client pos-app com.chillax.pos
+            ensure_native_client kds-app com.chillax.kds
+
             echo ""
             echo "=== Keycloak token exchange setup complete ==="
 

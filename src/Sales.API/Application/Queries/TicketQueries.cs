@@ -121,7 +121,8 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 x.Ticket.Label,
                 x.Ticket.SettledAt ?? x.Receipt.IssuedAt,
                 x.Ticket.Total,
-                refunded.GetValueOrDefault(x.Ticket.Id)))
+                refunded.GetValueOrDefault(x.Ticket.Id),
+                x.Ticket.ProvisionalReceiptNumber))
             .ToList();
     }
 
@@ -263,6 +264,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             Refunds = refunds.Select(ToView).ToList(),
             RefundedTotal = refunds.Sum(r => r.Amount),
             ReceiptNumber = receipt?.Number,
+            ProvisionalReceiptNumber = ticket.ProvisionalReceiptNumber,
         };
     }
 

@@ -11,6 +11,8 @@ on:
           - all
           - client_app
           - admin_app
+          - pos_app
+          - kds_app
       platform:
         description: 'Platform to build'
         required: true
@@ -160,6 +162,132 @@ jobs:
         with:
           name: admin-app-android-aab
           path: src/admin_app/build/app/outputs/bundle/release/app-release.aab
+
+  build-android-pos:
+    if: |
+      (github.event.inputs.app == 'all' || github.event.inputs.app == 'pos_app') &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/pos_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # No codegen step: the POS app has no freezed/riverpod_generator parts
+
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: src/pos_app/android
+
+      - name: Create Play Store service account key
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > /tmp/play-store-key.json
+          echo "PLAY_STORE_JSON_KEY_PATH=/tmp/play-store-key.json" >> $GITHUB_ENV
+
+      - name: Build and deploy with Fastlane
+        working-directory: src/pos_app/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_POS_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_POS_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_POS_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_POS_STORE_PASSWORD }}
+        run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pos-app-android-aab
+          path: src/pos_app/build/app/outputs/bundle/release/app-release.aab
+
+  build-android-kds:
+    if: |
+      (github.event.inputs.app == 'all' || github.event.inputs.app == 'kds_app') &&
+      (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/kds_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # No codegen step: the kitchen app has no freezed/riverpod_generator parts
+
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: src/kds_app/android
+
+      - name: Create Play Store service account key
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > /tmp/play-store-key.json
+          echo "PLAY_STORE_JSON_KEY_PATH=/tmp/play-store-key.json" >> $GITHUB_ENV
+
+      - name: Build and deploy with Fastlane
+        working-directory: src/kds_app/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KDS_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KDS_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KDS_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_KDS_STORE_PASSWORD }}
+        run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kds-app-android-aab
+          path: src/kds_app/build/app/outputs/bundle/release/app-release.aab
 
   # ==========================================
   # iOS Builds (Fastlane + Match)

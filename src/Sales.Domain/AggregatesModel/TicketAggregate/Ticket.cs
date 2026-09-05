@@ -56,6 +56,12 @@ public class Ticket : Entity, IAggregateRoot
     public string? SettledBy { get; private set; }
 
     /// <summary>
+    /// The number a till printed on the receipt while it was offline, kept
+    /// beside the real receipt number so the two copies can be matched.
+    /// </summary>
+    public string? ProvisionalReceiptNumber { get; private set; }
+
+    /// <summary>
     /// The drawer shift this settle was attributed to — the branch's open
     /// shift at settle time, or null when none was open (a shift never blocks
     /// selling). X/Z reports aggregate tickets by this.
@@ -362,10 +368,27 @@ public class Ticket : Entity, IAggregateRoot
     /// cash is change), the ticket freezes, and a receipt can be issued.
     /// </summary>
     /// <returns>Change due back to the customer.</returns>
-    public decimal Settle(IReadOnlyCollection<Payment> payments, string settledBy, int? shiftId = null, PricingRules? rules = null)
+    public decimal Settle(
+        IReadOnlyCollection<Payment> payments,
+        string settledBy,
+        int? shiftId = null,
+        PricingRules? rules = null,
+        DateTime? settledAt = null,
+        string? provisionalReceiptNumber = null)
     {
         EnsureOpen();
         EnsureSessionEnded();
+
+        // A till replaying an offline sale says when the money was taken. It
+        // cannot be in the future, and it cannot be older than a month; the
+        // ticket itself was only opened by the replay, so it opens then too.
+        if (settledAt is { } at)
+        {
+            if (at > DateTime.UtcNow.AddMinutes(5) || at < DateTime.UtcNow.AddDays(-31))
+                throw new SalesDomainException("The settle time is not plausible.");
+            if (at < OpenedAt)
+                OpenedAt = at;
+        }
 
         if (_lines.Count == 0)
             throw new SalesDomainException("An empty ticket has nothing to settle — discard it instead.");
@@ -396,8 +419,9 @@ public class Ticket : Entity, IAggregateRoot
 
         _payments.AddRange(payments);
         Status = TicketStatus.Settled;
-        SettledAt = DateTime.UtcNow;
+        SettledAt = settledAt ?? DateTime.UtcNow;
         SettledBy = settledBy;
+        ProvisionalReceiptNumber = string.IsNullOrWhiteSpace(provisionalReceiptNumber) ? null : provisionalReceiptNumber.Trim();
         ShiftId = shiftId;
         ChangeGiven = overpaid;
 

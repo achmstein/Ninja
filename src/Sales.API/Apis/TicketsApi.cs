@@ -223,13 +223,14 @@ public static class TicketsApi
     public static async Task<Results<Ok<OpenTicketResponse>, BadRequest<string>>> OpenTicket(
         OpenTicketRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         var branchId = httpContext.GetRequiredBranchId();
 
         try
         {
-            var ticketId = await mediator.Send(new OpenTicketCommand(
+            var ticketId = await mediator.SendIdentified<OpenTicketCommand, int>(requestId, new OpenTicketCommand(
                 request.Type, branchId, request.TableId, request.TableName, request.Label));
 
             return TypedResults.Ok(new OpenTicketResponse(ticketId));
@@ -244,11 +245,12 @@ public static class TicketsApi
         int id,
         AddLineRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            await mediator.Send(new AddManualLineCommand(
+            await mediator.SendIdentified<AddManualLineCommand, bool>(requestId, new AddManualLineCommand(
                 id,
                 request.Description,
                 request.Qty,
@@ -269,14 +271,17 @@ public static class TicketsApi
         int id,
         SettleRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            var result = await mediator.Send(new SettleTicketCommand(
+            var result = await mediator.SendIdentified<SettleTicketCommand, SettleResult>(requestId, new SettleTicketCommand(
                 id,
                 request.Payments.Select(p => new PaymentDto(p.Tender, p.Amount, p.CustomerId, p.CustomerName)).ToList(),
-                httpContext.GetActor()));
+                httpContext.GetActor(),
+                request.SettledAt,
+                request.ProvisionalReceiptNumber));
 
             return TypedResults.Ok(result);
         }
@@ -290,11 +295,12 @@ public static class TicketsApi
         int id,
         VoidTicketRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            await mediator.Send(new VoidTicketCommand(id, request.Reason, httpContext.GetActor()));
+            await mediator.SendIdentified<VoidTicketCommand, bool>(requestId, new VoidTicketCommand(id, request.Reason, httpContext.GetActor()));
             return TypedResults.Ok();
         }
         catch (SalesDomainException ex)
@@ -307,11 +313,12 @@ public static class TicketsApi
         int id,
         RefundRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            var result = await mediator.Send(new RefundTicketCommand(
+            var result = await mediator.SendIdentified<RefundTicketCommand, RefundResult>(requestId, new RefundTicketCommand(
                 id,
                 request.Lines.Select(l => new RefundLineDto(l.LineId, l.Qty)).ToList(),
                 request.Reason,
@@ -359,11 +366,12 @@ public static class TicketsApi
     public static async Task<Results<NoContent, BadRequest<string>>> DiscardTicket(
         int id,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            await mediator.Send(new DiscardTicketCommand(id, httpContext.GetActor()));
+            await mediator.SendIdentified<DiscardTicketCommand, bool>(requestId, new DiscardTicketCommand(id, httpContext.GetActor()));
             return TypedResults.NoContent();
         }
         catch (SalesDomainException ex)
@@ -375,11 +383,12 @@ public static class TicketsApi
     public static async Task<Results<NoContent, BadRequest<string>>> AssignLinesCustomer(
         int id,
         AssignLinesCustomerRequest request,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            await mediator.Send(new AssignTicketLinesCustomerCommand(id, request.LineIds, request.CustomerId, request.CustomerName));
+            await mediator.SendIdentified<AssignTicketLinesCustomerCommand, bool>(requestId, new AssignTicketLinesCustomerCommand(id, request.LineIds, request.CustomerId, request.CustomerName));
             return TypedResults.NoContent();
         }
         catch (SalesDomainException ex)
@@ -391,11 +400,12 @@ public static class TicketsApi
     public static async Task<Results<Ok<OpenTicketResponse>, BadRequest<string>>> MoveLines(
         int id,
         MoveLinesRequest request,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            var targetTicketId = await mediator.Send(new MoveTicketLinesCommand(
+            var targetTicketId = await mediator.SendIdentified<MoveTicketLinesCommand, int>(requestId, new MoveTicketLinesCommand(
                 id,
                 request.LineIds,
                 request.TargetTicketId,
@@ -418,7 +428,9 @@ public record OpenTicketResponse(int TicketId);
 
 public record AddLineRequest(LocalizedText Description, decimal Qty, decimal UnitPrice, decimal Discount = 0, string? CustomerName = null);
 
-public record SettleRequest(List<SettlePayment> Payments);
+/// <param name="SettledAt">When the money was actually taken, for a till replaying a sale it rang up while offline; null settles now.</param>
+/// <param name="ProvisionalReceiptNumber">The number the till printed on the offline receipt, kept beside the real one.</param>
+public record SettleRequest(List<SettlePayment> Payments, DateTime? SettledAt = null, string? ProvisionalReceiptNumber = null);
 
 public record SettlePayment(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
 

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignOrderCustomer, cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder } from '../sdk.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError } from '../types.gen';
+import { assignOrderCustomer, cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, setOrderPreparation } from '../sdk.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, SetOrderPreparationData, SetOrderPreparationError, SetOrderPreparationResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -224,6 +224,45 @@ export const getPendingOrdersOptions = (options: Options<GetPendingOrdersData>) 
     },
     queryKey: getPendingOrdersQueryKey(options)
 });
+
+export const getKitchenOrdersQueryKey = (options: Options<GetKitchenOrdersData>) => createQueryKey('getKitchenOrders', options);
+
+/**
+ * Confirmed orders in the kitchen, for the kitchen display (staff)
+ *
+ * Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.
+ */
+export const getKitchenOrdersOptions = (options: Options<GetKitchenOrdersData>) => queryOptions<GetKitchenOrdersResponse, AxiosError<DefaultError>, GetKitchenOrdersResponse, ReturnType<typeof getKitchenOrdersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getKitchenOrders({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getKitchenOrdersQueryKey(options)
+});
+
+/**
+ * Move a confirmed order along in the kitchen (staff)
+ *
+ * Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.
+ */
+export const setOrderPreparationMutation = (options?: Partial<Options<SetOrderPreparationData>>): UseMutationOptions<SetOrderPreparationResponse, AxiosError<SetOrderPreparationError>, Options<SetOrderPreparationData>> => {
+    const mutationOptions: UseMutationOptions<SetOrderPreparationResponse, AxiosError<SetOrderPreparationError>, Options<SetOrderPreparationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setOrderPreparation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getAllOrdersQueryKey = (options: Options<GetAllOrdersData>) => createQueryKey('getAllOrders', options);
 

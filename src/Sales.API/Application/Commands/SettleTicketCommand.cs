@@ -1,4 +1,6 @@
 #nullable enable
+using Chillax.Sales.API.Application.Queries;
+using Chillax.Sales.Infrastructure.Idempotency;
 using Chillax.Sales.API.Application.IntegrationEvents.Events;
 
 namespace Chillax.Sales.API.Application.Commands;
@@ -7,7 +9,12 @@ public record PaymentDto(PaymentTender Tender, decimal Amount, string? CustomerI
 
 public record SettleResult(int ReceiptNumber, decimal Change);
 
-public record SettleTicketCommand(int TicketId, IReadOnlyCollection<PaymentDto> Payments, string SettledBy)
+public record SettleTicketCommand(
+    int TicketId,
+    IReadOnlyCollection<PaymentDto> Payments,
+    string SettledBy,
+    DateTime? SettledAt = null,
+    string? ProvisionalReceiptNumber = null)
     : IRequest<SettleResult>;
 
 public class SettleTicketCommandHandler(
@@ -39,7 +46,7 @@ public class SettleTicketCommandHandler(
         // settle: this is the last moment they can change the bill
         var rules = await ticketRepository.GetPricingRulesAsync(ticket.BranchId);
 
-        var change = ticket.Settle(payments, command.SettledBy, shift?.Id, rules);
+        var change = ticket.Settle(payments, command.SettledBy, shift?.Id, rules, command.SettledAt, command.ProvisionalReceiptNumber);
 
         for (var attempt = 1; ; attempt++)
         {
@@ -94,5 +101,21 @@ public class SettleTicketCommandHandler(
                 ticketRepository.RemoveReceipt(receipt);
             }
         }
+    }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="SettleTicketCommand"/> keyed on the client's request id.</summary>
+public class SettleTicketIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ITicketQueries queries, ILogger<IdentifiedCommandHandler<SettleTicketCommand, SettleResult>> logger)
+    : IdentifiedCommandHandler<SettleTicketCommand, SettleResult>(mediator, requestManager, logger)
+{
+    // The receipt the first attempt issued is on the ticket
+    protected override async Task<SettleResult> CreateResultForDuplicateRequestAsync(SettleTicketCommand command, CancellationToken cancellationToken)
+    {
+        var ticket = await queries.GetTicketAsync(command.TicketId);
+        return new SettleResult(ticket?.ReceiptNumber ?? 0, ticket?.ChangeGiven ?? 0);
     }
 }

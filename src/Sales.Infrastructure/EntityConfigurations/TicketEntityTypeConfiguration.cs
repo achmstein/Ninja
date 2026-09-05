@@ -35,6 +35,7 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(t => t.Label).HasMaxLength(200);
         builder.Property(t => t.GuestPhone).HasMaxLength(30);
         builder.Property(t => t.SettledBy).HasMaxLength(64);
+        builder.Property(t => t.ProvisionalReceiptNumber).HasMaxLength(32);
         builder.Property(t => t.VoidedBy).HasMaxLength(64);
         builder.Property(t => t.VoidReason).HasMaxLength(300);
         builder.Property(t => t.ChangeGiven).HasPrecision(18, 2);

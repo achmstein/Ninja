@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>
@@ -35,4 +36,16 @@ public class AssignTicketLinesCustomerCommandHandler(
 
         return true;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="AssignTicketLinesCustomerCommand"/> keyed on the client's request id.</summary>
+public class AssignTicketLinesCustomerIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<AssignTicketLinesCustomerCommand, bool>> logger)
+    : IdentifiedCommandHandler<AssignTicketLinesCustomerCommand, bool>(mediator, requestManager, logger)
+{
+    protected override Task<bool> CreateResultForDuplicateRequestAsync(AssignTicketLinesCustomerCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(true);
 }

@@ -51,7 +51,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             source: message.Source,
             sessionId: message.SessionId,
             roomId: message.RoomId,
-            ticketId: message.TicketId);
+            ticketId: message.TicketId,
+            placedAt: message.PlacedAt);
 
         foreach (var item in message.OrderItems)
         {
@@ -62,14 +63,27 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
 
         _orderRepository.Add(order);
 
-        // Add event to validate item availability in Catalog (will be published by TransactionBehavior)
-        var orderStockItems = message.OrderItems
-            .Select(i => new OrderStockItem(i.ProductId, i.Units));
+        if (message.Replay)
+        {
+            // Rung up while the till was offline: the customer has already
+            // left with the items, so there is nothing for the stock check or
+            // the kitchen to decide. The order lands confirmed at once — the
+            // same transition a POS order takes after Catalog says yes — and
+            // the confirmed event opens its ticket in Sales like any other.
+            order.SetStockConfirmedStatus();
+            order.SetConfirmedStatus();
+        }
+        else
+        {
+            // Add event to validate item availability in Catalog (will be published by TransactionBehavior)
+            var orderStockItems = message.OrderItems
+                .Select(i => new OrderStockItem(i.ProductId, i.Units));
 
-        var awaitingValidationEvent = new OrderStatusChangedToAwaitingValidationIntegrationEvent(
-            order.Id, orderStockItems, message.BranchId);
+            var awaitingValidationEvent = new OrderStatusChangedToAwaitingValidationIntegrationEvent(
+                order.Id, orderStockItems, message.BranchId);
 
-        await _orderingIntegrationEventService.AddAndSaveEventAsync(awaitingValidationEvent);
+            await _orderingIntegrationEventService.AddAndSaveEventAsync(awaitingValidationEvent);
+        }
 
         await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

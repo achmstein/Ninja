@@ -49,13 +49,14 @@ public static class ShiftsApi
     public static async Task<Results<Ok<OpenShiftResponse>, BadRequest<string>>> OpenShift(
         OpenShiftRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         var branchId = httpContext.GetRequiredBranchId();
 
         try
         {
-            var shiftId = await mediator.Send(new OpenShiftCommand(
+            var shiftId = await mediator.SendIdentified<OpenShiftCommand, int>(requestId, new OpenShiftCommand(
                 branchId, request.OpeningFloat, httpContext.GetActor()));
 
             return TypedResults.Ok(new OpenShiftResponse(shiftId));
@@ -98,11 +99,12 @@ public static class ShiftsApi
         int id,
         CashMovementRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            await mediator.Send(new AddCashMovementCommand(
+            await mediator.SendIdentified<AddCashMovementCommand, bool>(requestId, new AddCashMovementCommand(
                 id, request.Type, request.Amount, request.Reason, httpContext.GetActor()));
 
             return TypedResults.Ok();
@@ -117,11 +119,12 @@ public static class ShiftsApi
         int id,
         CloseShiftRequest request,
         HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
         [FromServices] IMediator mediator)
     {
         try
         {
-            var zReport = await mediator.Send(new CloseShiftCommand(
+            var zReport = await mediator.SendIdentified<CloseShiftCommand, ShiftView>(requestId, new CloseShiftCommand(
                 id, request.ClosingCount, httpContext.GetActor()));
 
             return TypedResults.Ok(zReport);

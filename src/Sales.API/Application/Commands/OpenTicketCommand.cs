@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>
@@ -50,4 +51,17 @@ public class OpenTicketCommandHandler(
 
         return ticket.Id;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="OpenTicketCommand"/> keyed on the client's request id.</summary>
+public class OpenTicketIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<OpenTicketCommand, int>> logger)
+    : IdentifiedCommandHandler<OpenTicketCommand, int>(mediator, requestManager, logger)
+{
+    // The first attempt opened it; the till refetches the floor to find it
+    protected override Task<int> CreateResultForDuplicateRequestAsync(OpenTicketCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(0);
 }

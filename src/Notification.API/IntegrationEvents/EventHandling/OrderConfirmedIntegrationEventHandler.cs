@@ -81,12 +81,15 @@ public class OrderConfirmedIntegrationEventHandler(
             });
         }
 
-        // Also notify admin group
+        // Also notify admin group — with the branch, so a kitchen display
+        // only chimes for its own orders (missing from older producers,
+        // which every screen reads as "for everyone")
         await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
         {
             type = "order_confirmed",
             orderId = @event.OrderId,
-            buyerName = @event.BuyerName
+            buyerName = @event.BuyerName,
+            branchId = @event.BranchId
         });
     }
 }

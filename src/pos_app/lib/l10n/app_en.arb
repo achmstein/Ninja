@@ -1,0 +1,623 @@
+{
+  "@@locale": "en",
+  "brandName": "Chillax",
+  "posName": "POS",
+  "branches": "Branches",
+  "signOut": "Sign out",
+  "settings": "Settings",
+  "language": "Language",
+  "theme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "signInFailed": "Sign-in failed",
+  "redirectingToSignIn": "Redirecting to sign in...",
+  "signedOutTitle": "Signed out",
+  "signedOutDescription": "You have been signed out of the POS.",
+  "signInAgain": "Sign in again",
+  "backToPos": "Back to the POS",
+  "accessDeniedTitle": "Access denied",
+  "accessDeniedDescription": "Your account does not have access to the POS.",
+  "openTickets": "Open tickets",
+  "noOpenTickets": "No open tickets",
+  "noOpenTicketsHint": "Open a new ticket to get started.",
+  "newTicket": "New ticket",
+  "newSale": "New sale",
+  "addItems": "Add items",
+  "addToTicket": "Add to ticket",
+  "itemsAddedToTicket": "Added to the ticket",
+  "backToTicket": "Back to the ticket",
+  "counter": "Counter",
+  "table": "Table",
+  "room": "Room",
+  "counterTicket": "Counter ticket",
+  "tableTicket": "Table ticket",
+  "chooseTable": "Choose a table",
+  "noTablesConfigured": "No tables configured for this branch",
+  "customerName": "Customer name",
+  "tabName": "Name on the tab",
+  "optional": "Optional",
+  "openTicketAction": "Open ticket",
+  "linesCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@linesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingOrders": "Waiting for confirmation",
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "guest": "Guest",
+  "confirmOrder": "Confirm",
+  "cancelOrder": "Cancel order",
+  "cancelOrderConfirm": "Cancel this order? The customer will be told, and it cannot be undone.",
+  "keepOrder": "Keep it",
+  "orderConfirmed": "Order confirmed",
+  "orderCancelled": "Order cancelled",
+  "failedToConfirmOrder": "Could not confirm the order",
+  "failedToCancelOrder": "Could not cancel the order",
+  "newOrderToast": "New order #{orderId}",
+  "@newOrderToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "newOrderToastFrom": "New order #{orderId} from {name}",
+  "@newOrderToastFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "orderWaitingToast": "Order #{orderId} has been waiting {minutes} min",
+  "@orderWaitingToast": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "just now",
+  "minutesAgo": "{minutes} min ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "loyaltyDiscount": "Loyalty discount",
+  "ticketPendingOrders": "{count, plural, =1{1 order for this bill is waiting for confirmation} other{{count} orders for this bill are waiting for confirmation}}",
+  "@ticketPendingOrders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settleWithPendingTitle": "An order is still waiting",
+  "settleWithPendingHint": "Confirm it first so it lands on this bill. Settled now, it would open a new ticket after the group has paid.",
+  "settleAnyway": "Settle anyway",
+  "goBack": "Back",
+  "rooms": "Rooms",
+  "noRooms": "No rooms configured for this branch",
+  "statusAvailable": "Available",
+  "statusReserved": "Reserved",
+  "underMaintenance": "Under maintenance",
+  "perHour": "/hr",
+  "walkIn": "Walk-in",
+  "reservedFor": "Reserved for {name}",
+  "@reservedFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expiresIn": "Expires in {countdown}",
+  "@expiresIn": {
+    "placeholders": {
+      "countdown": {
+        "type": "String"
+      }
+    }
+  },
+  "readyToStart": "Ready to start",
+  "playerModeSingle": "Single",
+  "playerModeMulti": "Multi",
+  "playerMode": "Player mode",
+  "startSession": "Start session",
+  "reserve": "Reserve",
+  "roomReserved": "Room reserved",
+  "failedToReserveRoom": "Could not reserve the room",
+  "serviceRequests": "Requests",
+  "requestCallWaiter": "Call waiter",
+  "requestControllerChange": "Change controller",
+  "requestReceiptToPay": "Bring the bill",
+  "requestSwitchToMulti": "Switch to multiplayer",
+  "requestSwitchToSingle": "Switch to single player",
+  "acknowledgeRequest": "Acknowledge",
+  "failedToUpdateRequest": "Could not update the request",
+  "newServiceRequestToast": "New room request",
+  "startWalkInSession": "Start walk-in session",
+  "startWalkInDescription": "Start the timer for {name} right now. Customers can join by scanning the room QR code.",
+  "@startWalkInDescription": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionStarted": "Session started",
+  "failedToStartSession": "Failed to start session",
+  "sessionRunning": "Session running",
+  "billedHours": "Billed hours",
+  "billedHoursFormat": "{hours}h",
+  "@billedHoursFormat": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "billedSoFar": "Billed so far",
+  "endSessionButton": "End session",
+  "endThisSession": "End this session?",
+  "endSessionBilledAt": "The timer stops and {hours} land on the bill as time lines.",
+  "@endSessionBilledAt": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "keepPlaying": "Keep playing",
+  "sessionEnded": "Session ended",
+  "failedToEndSession": "Failed to end session",
+  "cancelSessionButton": "Cancel, no charge",
+  "cancelThisSession": "Cancel this session?",
+  "cancelSessionHint": "No time is charged and the room frees up. To bill the time, end the session instead.",
+  "sessionCancelled": "Session cancelled",
+  "cancelReservation": "Cancel reservation",
+  "cancelThisReservation": "Cancel this reservation?",
+  "roomBecomesAvailable": "The room becomes available for other customers.",
+  "reservationCancelled": "Reservation cancelled",
+  "failedToCancelSession": "Failed to cancel",
+  "keepIt": "Keep it",
+  "switchToModeQuestion": "Switch to {mode}?",
+  "@switchToModeQuestion": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "switchModeDescription": "The {current} segment closes now and billing continues at the {next} rate.",
+  "@switchModeDescription": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "switchMode": "Switch mode",
+  "keepCurrent": "Keep {mode}",
+  "@keepCurrent": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "playerModeUpdated": "Player mode updated",
+  "failedToChangePlayerMode": "Failed to change player mode",
+  "addCustomer": "Add customer",
+  "assignCustomer": "Assign customer",
+  "customerAdded": "Customer added",
+  "customerAssigned": "Customer assigned",
+  "failedToAddCustomer": "Failed to add customer",
+  "failedToAssignCustomer": "Failed to assign customer",
+  "pointsFollowWholeOrder": "Points stay with the order's customer; only the bill grouping changed.",
+  "memberRemove": "Remove member",
+  "memberRemoved": "Member removed",
+  "failedToRemoveMember": "Failed to remove member",
+  "settleWithSessionTitle": "The session is still running",
+  "settleWithSessionHint": "End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.",
+  "voidWithSessionTitle": "The session is still running",
+  "voidWithSessionHint": "End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.",
+  "subtotal": "Subtotal",
+  "serviceCharge": "Service {rate}%",
+  "@serviceCharge": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vat": "VAT {rate}%",
+  "@vat": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vatIncluded": "Includes VAT {rate}%",
+  "@vatIncluded": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "refundTicket": "Refund",
+  "refundTitle": "Refund against receipt #{number}",
+  "@refundTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "refundHint": "Pick what goes back. Each item returns what was paid for it, service and VAT included. {amount} of this receipt is left.",
+  "@refundHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "leftToRefund": "{count, plural, =1{1 left} other{{count} left}}",
+  "@leftToRefund": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refundEverything": "Refund everything",
+  "nothingLeftToRefund": "Nothing is left to refund on this receipt",
+  "confirmRefund": "Issue credit note · {amount}",
+  "@confirmRefund": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketRefunded": "Credit note #{number} issued for {amount}",
+  "@ticketRefunded": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "refundsTitle": "Refunds",
+  "creditNote": "Credit note #{number}",
+  "@creditNote": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "refundedSoFar": "Refunded",
+  "noOpenBills": "Nothing open",
+  "noOpenBillsHint": "Start a sale, or pick a room or table beside.",
+  "openPlace": "Open",
+  "hidePlaces": "Hide places",
+  "showPlaces": "Show places",
+  "searchPlaces": "Search rooms and tables",
+  "noPlaceMatches": "Nothing matches",
+  "everyPlaceHasABill": "Every room and table already has a bill",
+  "tables": "Tables",
+  "freeTables": "Free tables",
+  "openBills": "Open bills",
+  "allBills": "All",
+  "waitingToConfirm": "Waiting to confirm",
+  "idleForMinutes": "idle {count}m",
+  "@idleForMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newTab": "New tab",
+  "newTabHint": "A counter bill with no table, for someone who will order in a moment.",
+  "ticketNumber": "Ticket #{id}",
+  "@ticketNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "ticketNotFound": "Ticket not found",
+  "backToFloor": "Floor",
+  "emptyTicket": "No items on this ticket yet",
+  "total": "Total",
+  "settleAction": "Settle",
+  "settledBadge": "Settled",
+  "discount": "Discount",
+  "cancel": "Cancel",
+  "close": "Close",
+  "selectLines": "Select",
+  "moveLinesAction": "{count, plural, =1{Move 1 line…} other{Move {count} lines…}}",
+  "@moveLinesAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linesMoved": "Lines moved",
+  "moveTo": "Move to",
+  "newTicketForPlace": "New ticket for this place",
+  "noOtherOpenTickets": "No other open tickets",
+  "currentSale": "Current sale",
+  "emptySale": "Tap items to add them to the sale",
+  "noItemsInCategory": "No items in this category",
+  "unavailable": "Unavailable",
+  "required": "Required",
+  "quantity": "Quantity",
+  "specialInstructionsOptional": "Special instructions (optional)",
+  "addToOrder": "Add to order",
+  "orderNoteOptional": "Order note (optional)",
+  "chargeAction": "Charge",
+  "clearSale": "Clear sale",
+  "sendingToKitchen": "Sending to kitchen…",
+  "orderAlreadyPlaced": "This order was already placed",
+  "ticketNotReadyYet": "Order sent — the ticket will show on the floor in a moment",
+  "chooseCustomer": "Choose customer",
+  "removeCustomer": "Remove customer",
+  "useNameAction": "Use \"{name}\"",
+  "@useNameAction": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noAccountNeeded": "Just a name — no account",
+  "searchCustomersPlaceholder": "Name, phone, or email",
+  "typeToSearch": "Type at least 2 characters to search",
+  "noCustomersFound": "No customers found",
+  "settleTitle": "Settle ticket",
+  "payments": "Payments",
+  "cash": "Cash",
+  "card": "Card",
+  "instapay": "InstaPay",
+  "account": "On account",
+  "whoseAccount": "Whose account?",
+  "onCustomerTab": "On the customer's tab",
+  "amount": "Amount",
+  "addPayment": "Add payment",
+  "remaining": "Remaining",
+  "changeDue": "Change",
+  "noPaymentsYet": "No payments taken yet",
+  "confirmSettle": "Confirm & settle",
+  "ticketSettled": "Ticket settled",
+  "receiptNumber": "Receipt #{number}",
+  "@receiptNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "print": "Print",
+  "done": "Done",
+  "voidTicket": "Void ticket",
+  "voidReasonHint": "A reason is required — this is the audit trail.",
+  "confirmVoid": "Void ticket",
+  "ticketVoided": "Ticket voided",
+  "voidedBadge": "Voided",
+  "voidedBy": "Voided by",
+  "discardTicket": "Discard",
+  "discardTicketTitle": "Discard this ticket?",
+  "discardTicketHint": "Nothing was added to it, so it leaves no trace. A ticket with items on it needs an owner to void it.",
+  "confirmDiscard": "Discard",
+  "ticketDiscarded": "Ticket discarded",
+  "takingOrders": "Taking orders",
+  "takingReservations": "Taking reservations",
+  "paused": "Paused",
+  "takingAutoHint": "Opening the shift turns both on; closing it turns both off.",
+  "shiftDetails": "Shift details",
+  "shiftTitle": "Shift",
+  "shiftNumber": "Shift #{id}",
+  "@shiftNumber": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "noShiftChip": "No shift",
+  "shiftOpenBadge": "Open",
+  "shiftClosedBadge": "Closed",
+  "openShiftTitle": "Open shift",
+  "openShiftAction": "Open shift",
+  "openingFloat": "Opening float",
+  "shiftOpened": "Shift opened",
+  "noShiftOpen": "No shift is open",
+  "noShiftOpenHint": "Count the float and open the drawer shift to start the day.",
+  "openedAt": "Opened",
+  "openedBy": "Opened by",
+  "closedAt": "Closed",
+  "closedBy": "Closed by",
+  "ticketsSettled": "Tickets settled",
+  "salesTotal": "Sales total",
+  "changeGiven": "Change given",
+  "tenderSplit": "By tender",
+  "countColumn": "Count",
+  "expectedInDrawer": "Expected in drawer",
+  "drawerMovements": "Pay-ins & pay-outs",
+  "noMovements": "No pay-ins or pay-outs",
+  "payIn": "Pay in",
+  "payOut": "Pay out",
+  "payInsTotal": "Pay-ins",
+  "payOutsTotal": "Pay-outs",
+  "reason": "Reason",
+  "movementRecorded": "Movement recorded",
+  "closeShiftTitle": "Close shift",
+  "closeShiftAction": "Close shift",
+  "countedAmount": "Counted drawer cash",
+  "confirmCloseShift": "Count & close",
+  "shiftClosed": "Shift closed",
+  "expected": "Expected",
+  "counted": "Counted",
+  "overShort": "Over / short",
+  "drawerOver": "Over",
+  "drawerShort": "Short",
+  "drawerBalanced": "Balanced",
+  "zReportTitle": "Z report — shift close",
+  "xReportTitle": "X report — open shift",
+  "shiftHistory": "Closed shifts",
+  "noClosedShifts": "No closed shifts yet",
+  "cashier": "Cashier",
+  "previousPage": "Previous",
+  "nextPage": "Next",
+  "shiftNotFound": "Shift not found",
+  "backToShift": "Shift",
+  "currency": "EGP",
+  "receipts": "Receipts",
+  "searchReceiptNumber": "Receipt number",
+  "noReceipts": "No receipts yet",
+  "availability": "Availability",
+  "soldOut": "Sold out",
+  "available": "Available",
+  "searchItems": "Search items",
+  "noItemsMatch": "No items match",
+  "failedToUpdateAvailability": "Failed to update availability",
+  "receiptDate": "Date",
+  "receiptThanks": "Thank you!",
+  "toastSuccess": "Success",
+  "toastError": "Something went wrong",
+  "toastInfo": "Heads up",
+  "toastWarning": "Warning",
+  "retry": "Retry",
+  "somethingWentWrong": "Something went wrong!",
+  "contentNotFound": "Content not found.",
+  "sessionExpired": "Session expired!",
+  "email": "Email",
+  "enterEmail": "Enter email address",
+  "password": "Password",
+  "enterPassword": "Enter your password",
+  "signIn": "Sign In",
+  "error": "Error",
+  "invalidCredentials": "Invalid username or password. Please try again.",
+  "enterBothFields": "Please enter both username and password.",
+  "cancelOrderConfirmation": "Are you sure you want to cancel this order?",
+  "cancelOrderQuestion": "Cancel Order?",
+  "customer": "Customer",
+  "date": "Date",
+  "each": "each",
+  "items": "Items",
+  "noKeep": "No, Keep",
+  "priceFormat": "£{price}",
+  "@priceFormat": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "yesCancel": "Yes, Cancel",
+  "comingSoon": "Coming in the next phase",
+  "failedToSettle": "Failed to settle the ticket",
+  "customerNote": "Customer Note",
+  "printer": "Receipt printer",
+  "printerHint": "An 80 mm network printer on the café Wi-Fi. Receipts print as an image, so any make works; the cash drawer kicks through the printer.",
+  "printerHost": "Printer address",
+  "printerPort": "Port",
+  "save": "Save",
+  "printerSaved": "Printer saved",
+  "testPrint": "Test print",
+  "kickDrawer": "Open drawer",
+  "printed": "Sent to the printer",
+  "printerNotConfigured": "No printer set up yet. Add one in Settings.",
+  "printerUnreachable": "Could not reach the printer",
+  "testPrintTitle": "Test print",
+  "testPrintBody": "If you can read this, the till can print.",
+  "kiosk": "Kiosk mode",
+  "kioskHint": "Pins the till so Home, Recents and notifications are out of reach. Silent and complete once the tablet is set up with this app as device owner; otherwise Android asks first and a swipe can leave.",
+  "kioskDeviceOwner": "Device owner: the till pins itself",
+  "kioskNotDeviceOwner": "Not device owner: Android screen pinning only",
+  "kioskPinned": "Pinned",
+  "kioskNotPinned": "Not pinned",
+  "startKiosk": "Start kiosk",
+  "stopKiosk": "Stop kiosk",
+  "offline": "Offline",
+  "offlineQueued": "{count, plural, =1{1 sale waiting} other{{count} sales waiting}}",
+  "@offlineQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncingSales": "{count, plural, =1{Sending 1 sale…} other{Sending {count} sales…}}",
+  "@syncingSales": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineSalesFailed": "{count, plural, =1{1 sale needs attention} other{{count} sales need attention}}",
+  "@offlineSalesFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineSales": "Offline sales",
+  "offlineSalesHint": "Counter sales rung up while the network was down. They are sent, in order, as soon as it is back; one the server refuses stays here with its reason.",
+  "nothingQueued": "Nothing waiting",
+  "retrySync": "Retry",
+  "discardSale": "Discard",
+  "savedOffline": "Saved on the till",
+  "savedOfflineHint": "The network is down. This sale is kept here and sent when it is back; the receipt carries a temporary number.",
+  "offlineNotAvailable": "Not available while offline",
+  "provisionalReceipt": "Till copy {number}",
+  "@provisionalReceipt": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  }
+}

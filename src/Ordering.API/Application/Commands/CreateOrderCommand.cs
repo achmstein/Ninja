@@ -104,6 +104,20 @@ public class CreateOrderCommand : IRequest<int>
     public IEnumerable<OrderItemDTO> OrderItems => _orderItems;
 
     /// <summary>
+    /// When the sale actually happened, for a till replaying what it rang up
+    /// while offline; null dates the order now
+    /// </summary>
+    [DataMember]
+    public DateTime? PlacedAt { get; private set; }
+
+    /// <summary>
+    /// The customer already left with the items: confirm on creation, with
+    /// no stock check and nothing for the kitchen to accept
+    /// </summary>
+    [DataMember]
+    public bool Replay { get; private set; }
+
+    /// <summary>
     /// Who is placing the order. Derived from the identity unless the caller
     /// (the POS path) says otherwise; never bound from a request body.
     /// </summary>
@@ -143,9 +157,13 @@ public class CreateOrderCommand : IRequest<int>
         OrderSource? source = null,
         int? sessionId = null,
         int? roomId = null,
-        int? ticketId = null)
+        int? ticketId = null,
+        DateTime? placedAt = null,
+        bool replay = false)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        PlacedAt = placedAt;
+        Replay = replay;
         UserId = userId;
         UserName = userName;
         BranchId = branchId;

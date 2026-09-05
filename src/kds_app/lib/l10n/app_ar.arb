@@ -1,0 +1,68 @@
+{
+  "@@locale": "ar",
+  "brandName": "تشيلاكس",
+  "appName": "المطبخ",
+  "branches": "الفروع",
+  "signOut": "تسجيل الخروج",
+  "settings": "الإعدادات",
+  "language": "اللغة",
+  "theme": "المظهر",
+  "themeLight": "فاتح",
+  "themeDark": "غامق",
+  "signInFailed": "تسجيل الدخول فشل",
+  "accessDeniedTitle": "مفيش صلاحية",
+  "accessDeniedDescription": "حسابك معندوش صلاحية يدخل شاشة المطبخ.",
+  "retry": "حاول تاني",
+  "laneNew": "جديد",
+  "laneInProgress": "شغالين عليه",
+  "laneReady": "جاهز",
+  "noOrders": "مفيش حاجة تتعمل",
+  "noOrdersHint": "الطلبات الجديدة هتظهر هنا أول ما تتأكد.",
+  "start": "ابدأ",
+  "ready": "جاهز",
+  "recall": "رجّعه",
+  "counter": "الكاشير",
+  "pickup": "استلام",
+  "walkIn": "زبون",
+  "newOrderToast": "طلب جديد #{orderId}",
+  "@newOrderToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "newOrderToastFrom": "طلب جديد #{orderId} من {name}",
+  "@newOrderToastFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToUpdate": "معرفناش نحدث الطلب",
+  "toastSuccess": "تم بنجاح",
+  "toastError": "في حاجة غلط",
+  "toastInfo": "خد بالك",
+  "toastWarning": "تنبيه",
+  "somethingWentWrong": "في حاجة غلط حصلت!",
+  "email": "الإيميل",
+  "enterEmail": "اكتب الإيميل",
+  "password": "الباسورد",
+  "enterPassword": "اكتب الباسورد",
+  "signIn": "تسجيل الدخول",
+  "error": "خطأ",
+  "invalidCredentials": "اليوزر أو الباسورد غلط. حاول تاني.",
+  "enterBothFields": "من فضلك اكتب اليوزر والباسورد.",
+  "kiosk": "وضع الكشك",
+  "kioskHint": "بيثبّت شاشة المطبخ على الشاشة فمفيش هوم ولا ريسنت ولا إشعارات. لو التابلت متظبط والتطبيق هو مالك الجهاز بيتقفل من غير سؤال؛ غير كده أندرويد بيسأل الأول وممكن يخرج بسحبة.",
+  "kioskDeviceOwner": "مالك الجهاز: شاشة المطبخ بتثبّت نفسها",
+  "kioskNotDeviceOwner": "مش مالك الجهاز: تثبيت شاشة أندرويد بس",
+  "kioskPinned": "مثبّت",
+  "kioskNotPinned": "مش مثبّت",
+  "startKiosk": "شغّل الكشك",
+  "stopKiosk": "اقفل الكشك"
+}

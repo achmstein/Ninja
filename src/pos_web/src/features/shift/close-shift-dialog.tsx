@@ -72,6 +72,8 @@ export function CloseShiftDialog({
 
   const doClose = () =>
     closeShift.mutate({
+      // A retry on café Wi-Fi must not become a second command
+      headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(shift.id) },
       query: { 'api-version': API_VERSION },
       body: { closingCount: amount },

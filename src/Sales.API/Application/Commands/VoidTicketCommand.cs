@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 public record VoidTicketCommand(int TicketId, string Reason, string VoidedBy) : IRequest<bool>;
@@ -22,4 +23,16 @@ public class VoidTicketCommandHandler(
 
         return true;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="VoidTicketCommand"/> keyed on the client's request id.</summary>
+public class VoidTicketIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<VoidTicketCommand, bool>> logger)
+    : IdentifiedCommandHandler<VoidTicketCommand, bool>(mediator, requestManager, logger)
+{
+    protected override Task<bool> CreateResultForDuplicateRequestAsync(VoidTicketCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(true);
 }

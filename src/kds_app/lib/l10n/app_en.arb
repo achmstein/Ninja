@@ -1,0 +1,68 @@
+{
+  "@@locale": "en",
+  "brandName": "Chillax",
+  "appName": "Kitchen",
+  "branches": "Branches",
+  "signOut": "Sign out",
+  "settings": "Settings",
+  "language": "Language",
+  "theme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "signInFailed": "Sign-in failed",
+  "accessDeniedTitle": "Access denied",
+  "accessDeniedDescription": "Your account does not have access to the kitchen display.",
+  "retry": "Retry",
+  "laneNew": "New",
+  "laneInProgress": "In progress",
+  "laneReady": "Ready",
+  "noOrders": "Nothing to prepare",
+  "noOrdersHint": "New orders show up here the moment they are confirmed.",
+  "start": "Start",
+  "ready": "Ready",
+  "recall": "Recall",
+  "counter": "Counter",
+  "pickup": "Pickup",
+  "walkIn": "Walk-in",
+  "newOrderToast": "New order #{orderId}",
+  "@newOrderToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "newOrderToastFrom": "New order #{orderId} from {name}",
+  "@newOrderToastFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "failedToUpdate": "Could not update the order",
+  "toastSuccess": "Success",
+  "toastError": "Something went wrong",
+  "toastInfo": "Heads up",
+  "toastWarning": "Warning",
+  "somethingWentWrong": "Something went wrong!",
+  "email": "Email",
+  "enterEmail": "Enter email address",
+  "password": "Password",
+  "enterPassword": "Enter your password",
+  "signIn": "Sign In",
+  "error": "Error",
+  "invalidCredentials": "Invalid username or password. Please try again.",
+  "enterBothFields": "Please enter both username and password.",
+  "kiosk": "Kiosk mode",
+  "kioskHint": "Pins the kitchen display so Home, Recents and notifications are out of reach. Silent and complete once the tablet is set up with this app as device owner; otherwise Android asks first and a swipe can leave.",
+  "kioskDeviceOwner": "Device owner: the display pins itself",
+  "kioskNotDeviceOwner": "Not device owner: Android screen pinning only",
+  "kioskPinned": "Pinned",
+  "kioskNotPinned": "Not pinned",
+  "startKiosk": "Start kiosk",
+  "stopKiosk": "Stop kiosk"
+}

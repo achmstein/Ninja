@@ -276,6 +276,20 @@ public static partial class OrdersApi
             return TypedResults.BadRequest("An attached customer needs a display name.");
         }
 
+        // A replay is a sale that already happened: it must say when, and
+        // "when" has to be in the past — within the month a till could
+        // plausibly have been cut off for
+        if (request.Replay && request.PlacedAt is null)
+        {
+            return TypedResults.BadRequest("A replayed sale must say when it was placed.");
+        }
+
+        if (request.PlacedAt is { } placedAt &&
+            (placedAt > DateTime.UtcNow.AddMinutes(5) || placedAt < DateTime.UtcNow.AddDays(-31)))
+        {
+            return TypedResults.BadRequest("The placed-at time is not plausible.");
+        }
+
         var branchId = httpContext.GetRequiredBranchId();
 
         services.Logger.LogInformation(
@@ -297,7 +311,9 @@ public static partial class OrdersApi
                 request.TableName,
                 guestName: request.CustomerName,
                 source: OrderSource.Pos,
-                ticketId: request.TicketId);
+                ticketId: request.TicketId,
+                placedAt: request.PlacedAt,
+                replay: request.Replay);
 
             try
             {
@@ -704,7 +720,18 @@ public record PosOrderRequest(
     string? CustomerUserName = null,
     int PointsToRedeem = 0,
     int? TicketId = null,
-    string? CustomerName = null);
+    string? CustomerName = null,
+    /// <summary>
+    /// When the sale actually happened, for a till replaying what it rang
+    /// up while offline. Dates the order then instead of now.
+    /// </summary>
+    DateTime? PlacedAt = null,
+    /// <summary>
+    /// The customer already left with the items: the order lands confirmed
+    /// straight away, with no stock check and nothing for the kitchen to
+    /// accept. Takes <see cref="PlacedAt"/>.
+    /// </summary>
+    bool Replay = false);
 
 /// <summary>
 /// The created order's id — what the POS uses to find the ticket the order

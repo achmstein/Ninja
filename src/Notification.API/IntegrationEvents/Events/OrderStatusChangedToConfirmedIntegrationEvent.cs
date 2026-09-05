@@ -16,8 +16,11 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// <summary>Set instead of BuyerIdentityGuid when a guest placed the order.</summary>
     public string? GuestId { get; }
 
+    /// <summary>The branch the order belongs to, so a kitchen or till screen can tell whose it is. Null from an older producer.</summary>
+    public int? BranchId { get; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
-        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, LocalizedText? roomName, decimal orderTotal, int pointsToRedeem = 0, string? guestId = null)
+        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, LocalizedText? roomName, decimal orderTotal, int pointsToRedeem = 0, string? guestId = null, int? branchId = null)
     {
         OrderId = orderId;
         OrderStatus = orderStatus;
@@ -27,5 +30,6 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         OrderTotal = orderTotal;
         PointsToRedeem = pointsToRedeem;
         GuestId = guestId;
+        BranchId = branchId;
     }
 }

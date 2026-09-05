@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
@@ -95,4 +96,17 @@ public class MoveTicketLinesCommandHandler(
                 throw new SalesDomainException("Room tickets follow their sessions — move onto the room's open bill instead.");
         }
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="MoveTicketLinesCommand"/> keyed on the client's request id.</summary>
+public class MoveTicketLinesIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<MoveTicketLinesCommand, int>> logger)
+    : IdentifiedCommandHandler<MoveTicketLinesCommand, int>(mediator, requestManager, logger)
+{
+    // The lines already moved; the till refetches the floor to find where
+    protected override Task<int> CreateResultForDuplicateRequestAsync(MoveTicketLinesCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(0);
 }

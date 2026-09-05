@@ -523,6 +523,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -696,6 +704,14 @@
         "operationId": "OpenTicket",
         "parameters": [
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -768,6 +784,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -831,6 +855,14 @@
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -907,6 +939,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -980,6 +1020,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -1046,6 +1094,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -1109,6 +1165,14 @@
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -1289,6 +1353,14 @@
         "summary": "Open the branch's drawer shift with a counted float",
         "operationId": "OpenShift",
         "parameters": [
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "api-version",
             "in": "query",
@@ -1533,6 +1605,14 @@
             }
           },
           {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The API version, in the format 'major.minor'.",
@@ -1596,6 +1676,14 @@
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -2740,6 +2828,12 @@
               "string"
             ],
             "format": "double"
+          },
+          "provisionalReceiptNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2786,6 +2880,19 @@
             "items": {
               "$ref": "#/components/schemas/SettlePayment"
             }
+          },
+          "settledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "provisionalReceiptNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3164,6 +3271,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "provisionalReceiptNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "subtotal": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",

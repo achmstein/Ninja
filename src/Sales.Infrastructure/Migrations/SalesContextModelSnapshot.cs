@@ -415,6 +415,10 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<DateTime>("OpenedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ProvisionalReceiptNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<int?>("RoomId")
                         .HasColumnType("integer");
 

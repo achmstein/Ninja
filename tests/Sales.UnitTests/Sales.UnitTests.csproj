@@ -9,7 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sales.API\Sales.API.csproj" />
     <ProjectReference Include="..\..\src\Sales.Domain\Sales.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Sales.Infrastructure\Sales.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

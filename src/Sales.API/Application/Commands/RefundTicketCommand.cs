@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 using Chillax.Sales.API.Application.IntegrationEvents.Events;
 
 namespace Chillax.Sales.API.Application.Commands;
@@ -112,4 +113,17 @@ public class RefundTicketCommandHandler(
             }
         }
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="RefundTicketCommand"/> keyed on the client's request id.</summary>
+public class RefundTicketIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<RefundTicketCommand, RefundResult>> logger)
+    : IdentifiedCommandHandler<RefundTicketCommand, RefundResult>(mediator, requestManager, logger)
+{
+    // The credit note was issued by the first attempt; it is on the ticket
+    protected override Task<RefundResult> CreateResultForDuplicateRequestAsync(RefundTicketCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(new RefundResult(0, 0));
 }

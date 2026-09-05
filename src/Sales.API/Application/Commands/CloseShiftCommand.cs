@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Infrastructure.Idempotency;
 using Chillax.Sales.API.Application.Queries;
 using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
 
@@ -31,4 +32,18 @@ public class CloseShiftCommandHandler(
         // The Z report, fresh off the close
         return (await shiftQueries.GetShiftAsync(shift.Id))!;
     }
+}
+
+
+/// <summary>Idempotent wrapper for <see cref="CloseShiftCommand"/> keyed on the client's request id.</summary>
+public class CloseShiftIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    IShiftQueries queries, ILogger<IdentifiedCommandHandler<CloseShiftCommand, ShiftView>> logger)
+    : IdentifiedCommandHandler<CloseShiftCommand, ShiftView>(mediator, requestManager, logger)
+{
+    // The Z report the first attempt froze
+    protected override async Task<ShiftView> CreateResultForDuplicateRequestAsync(CloseShiftCommand command, CancellationToken cancellationToken)
+        => await queries.GetShiftAsync(command.ShiftId)
+            ?? throw new SalesDomainException($"Shift {command.ShiftId} does not exist.");
 }

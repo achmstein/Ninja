@@ -218,6 +218,8 @@ export function Floor() {
 
   const pickTable = (table: TableViewModel) =>
     openTable.mutate({
+      // A retry on café Wi-Fi must not become a second command
+      headers: { 'x-requestid': crypto.randomUUID() },
       query: { 'api-version': API_VERSION },
       body: {
         type: TICKET_TYPE_TABLE,

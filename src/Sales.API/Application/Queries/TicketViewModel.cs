@@ -33,7 +33,8 @@ public record SettledTicketSummary(
     string? Label,
     DateTime SettledAt,
     decimal Total,
-    decimal RefundedTotal);
+    decimal RefundedTotal,
+    string? ProvisionalReceiptNumber = null);
 
 public record TicketDetail
 {
@@ -64,6 +65,9 @@ public record TicketDetail
     public decimal Total { get; init; }
     /// <summary>Set once settled.</summary>
     public int? ReceiptNumber { get; init; }
+
+    /// <summary>What the till printed while offline, when the sale was replayed.</summary>
+    public string? ProvisionalReceiptNumber { get; init; }
 
     /// <summary>Menu money — the lines before service charge and VAT.</summary>
     public decimal Subtotal { get; init; }

@@ -2096,6 +2096,17 @@
               "null",
               "string"
             ]
+          },
+          "placedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "replay": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
