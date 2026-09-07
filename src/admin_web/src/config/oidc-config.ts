@@ -64,3 +64,10 @@ export function getBranchClaim(user: User | null | undefined): number[] {
   const values = Array.isArray(raw) ? raw : raw == null ? [] : [raw]
   return values.map(Number).filter(Number.isInteger)
 }
+
+// The Keycloak page follows the app that sent the user there: language via
+// the standard ui_locales parameter, colour scheme via a `theme` parameter
+// the login theme reads before first paint.
+export function loginPageParams(theme: 'light' | 'dark', language: string) {
+  return { extraQueryParams: { ui_locales: language, theme } }
+}

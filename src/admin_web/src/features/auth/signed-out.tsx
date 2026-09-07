@@ -1,4 +1,7 @@
 import { useAuth } from 'react-oidc-context'
+import { useTheme } from '@/context/theme-provider'
+import { useLanguage } from '@/lib/i18n'
+import { loginPageParams } from '@/config/oidc-config'
 import { useNavigate } from '@tanstack/react-router'
 import { LogIn } from 'lucide-react'
 import { useT } from '@/lib/i18n'
@@ -20,6 +23,8 @@ import { AuthLayout } from './auth-layout'
 export function SignedOut() {
   const t = useT()
   const auth = useAuth()
+  const { resolvedTheme } = useTheme()
+  const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
 
   return (
@@ -44,7 +49,7 @@ export function SignedOut() {
             <Button
               size='lg'
               className='w-full'
-              onClick={() => auth.signinRedirect()}
+              onClick={() => auth.signinRedirect(loginPageParams(resolvedTheme, language))}
             >
               <LogIn className='me-2 h-4 w-4' />
               {t('signInAgain')}

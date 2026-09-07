@@ -45,3 +45,10 @@ export function getStoredUser(): User | null {
   const stored = localStorage.getItem(`oidc.user:${authority}:${clientId}`)
   return stored ? User.fromStorageString(stored) : null
 }
+
+// The Keycloak page follows the app that sent the user there: language via
+// the standard ui_locales parameter, colour scheme via a `theme` parameter
+// the login theme reads before first paint.
+export function loginPageParams(theme: "light" | "dark", language: string) {
+  return { extraQueryParams: { ui_locales: language, theme } }
+}

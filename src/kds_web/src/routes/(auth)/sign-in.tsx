@@ -2,6 +2,9 @@ import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
+import { useTheme } from '@/context/theme-provider'
+import { useLanguage } from '@/lib/i18n'
+import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import {
@@ -31,6 +34,8 @@ export const Route = createFileRoute('/(auth)/sign-in')({
 function SignIn() {
   const t = useT()
   const auth = useAuth()
+  const { resolvedTheme } = useTheme()
+  const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
   const { redirect } = useSearch({ from: '/(auth)/sign-in' })
   const redirectStarted = useRef(false)
@@ -45,7 +50,7 @@ function SignIn() {
     if (redirect) {
       sessionStorage.setItem('auth_redirect', redirect)
     }
-    auth.signinRedirect()
+    auth.signinRedirect(loginPageParams(resolvedTheme, language))
   }
 
   useEffect(() => {
@@ -62,7 +67,7 @@ function SignIn() {
     if (redirect) {
       sessionStorage.setItem('auth_redirect', redirect)
     }
-    auth.signinRedirect()
+    auth.signinRedirect(loginPageParams(resolvedTheme, language))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isLoading, auth.isAuthenticated, auth.error, auth.activeNavigator])
 

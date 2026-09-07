@@ -1,4 +1,7 @@
 import { useAuth } from "react-oidc-context";
+import { useTheme } from "@/context/theme-provider";
+import { useLanguage } from "@/lib/i18n";
+import { loginPageParams } from "@/lib/oidc";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,11 +56,19 @@ function AppleIcon() {
 export function SignInOptions() {
   const auth = useAuth();
   const t = useT();
+  const { resolvedTheme } = useTheme();
+  const language = useLanguage((state) => state.language);
 
-  const signIn = (idpHint?: string) =>
-    auth.signinRedirect(
-      idpHint ? { extraQueryParams: { kc_idp_hint: idpHint } } : undefined,
-    );
+  // The themed Keycloak page follows the app's language and colour scheme;
+  // Google and Apple skip it through kc_idp_hint
+  const signIn = (idpHint?: string) => {
+    const { extraQueryParams } = loginPageParams(resolvedTheme, language);
+    auth.signinRedirect({
+      extraQueryParams: idpHint
+        ? { ...extraQueryParams, kc_idp_hint: idpHint }
+        : extraQueryParams,
+    });
+  };
 
   // mx-auto so the narrower max-width centres itself: in a plain block
   // container (the profile page) it would otherwise sit at the writing

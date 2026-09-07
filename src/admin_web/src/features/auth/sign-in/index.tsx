@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { useAuth } from 'react-oidc-context'
+import { useTheme } from '@/context/theme-provider'
+import { useLanguage } from '@/lib/i18n'
+import { loginPageParams } from '@/config/oidc-config'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useT } from '@/lib/i18n'
@@ -22,6 +25,8 @@ import { AuthLayout } from '../auth-layout'
 export function SignIn() {
   const t = useT()
   const auth = useAuth()
+  const { resolvedTheme } = useTheme()
+  const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
   const { redirect } = useSearch({ from: '/(auth)/sign-in' })
   const redirectStarted = useRef(false)
@@ -36,7 +41,7 @@ export function SignIn() {
     if (redirect) {
       sessionStorage.setItem('auth_redirect', redirect)
     }
-    auth.signinRedirect()
+    auth.signinRedirect(loginPageParams(resolvedTheme, language))
   }
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export function SignIn() {
     if (redirect) {
       sessionStorage.setItem('auth_redirect', redirect)
     }
-    auth.signinRedirect()
+    auth.signinRedirect(loginPageParams(resolvedTheme, language))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isLoading, auth.isAuthenticated, auth.error, auth.activeNavigator])
 

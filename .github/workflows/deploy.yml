@@ -213,9 +213,14 @@ jobs:
             # (30d idle / 90d max) keep web users signed in.
             docker exec "$CONTAINER" $KC update "realms/$REALM" \
               -s loginTheme=chillax \
+              -s internationalizationEnabled=true \
+              -s 'supportedLocales=["en","ar"]' \
+              -s defaultLocale=en \
+              -s registrationEmailAsUsername=true \
+              -s 'passwordPolicy=length(6)' \
               -s ssoSessionIdleTimeout=2592000 \
               -s ssoSessionMaxLifespan=7776000 && \
-              echo "  Theme + session lifetimes applied"
+              echo "  Theme, locales, registration + session lifetimes applied"
 
             echo ""
             echo "=== Enable permissions on identity providers ==="
@@ -351,6 +356,37 @@ jobs:
                   "permissions":{"view":["admin"],"edit":["admin"]}})
             json.dump(p,sys.stdout)' | \
               docker exec -i "$CONTAINER" $KC update users/profile -r $REALM -f - && echo "  User profile updated"
+
+            echo ""
+            echo "=== Shape the user profile like the app's registration form ==="
+            # One Name field (firstName; lastName is admin-only), email and an
+            # Egyptian mobile number, required of users but not of admins
+            # creating staff. Idempotent.
+            docker exec "$CONTAINER" $KC get users/profile -r $REALM | python3 -c '
+            import sys,json
+            p=json.load(sys.stdin)
+            by={a["name"]:a for a in p["attributes"]}
+            first=by["firstName"]; first["displayName"]="${name}"; first["required"]={"roles":["user"]}
+            by["email"].setdefault("annotations",{})["inputType"]="html5-email"
+            last=by["lastName"]; last.pop("required",None); last["permissions"]={"view":["admin"],"edit":["admin"]}
+            phone=by.setdefault("phoneNumber",{"name":"phoneNumber","multivalued":False})
+            phone.update({"displayName":"${phoneNumber}","required":{"roles":["user"]},
+              "validations":{"pattern":{"pattern":"^01[0-9]{9}$","error-message":"invalidPhone"}},
+              "annotations":{"inputType":"html5-tel","inputTypePlaceholder":"01xxxxxxxxx"},
+              "permissions":{"view":["admin","user"],"edit":["admin","user"]}})
+            order=["username","firstName","email","phoneNumber","lastName"]
+            p["attributes"]=[by[n] for n in order]+[a for a in p["attributes"] if a["name"] not in order]
+            json.dump(p,sys.stdout)' | \
+              docker exec -i "$CONTAINER" $KC update users/profile -r $REALM -f - && echo "  User profile shaped"
+
+            echo ""
+            echo "=== Keep 'Verify Profile' off ==="
+            # Required attributes bite at registration and profile edits only.
+            # Enabled, this action would stop existing users who have no phone
+            # at login, and the mobile app's password grant would fail with
+            # "Account is not fully set up".
+            docker exec "$CONTAINER" $KC update authentication/required-actions/VERIFY_PROFILE -r $REALM -s enabled=false 2>/dev/null \
+              && echo "  Verify Profile disabled" || echo "  Verify Profile not registered (nothing to disable)"
 
             echo ""
             echo "=== Ensure web app clients exist with production URIs ==="
