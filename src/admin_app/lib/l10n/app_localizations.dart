@@ -2839,6 +2839,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow Now'**
   String get allowNow;
+
+  /// No description provided for @noBranchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No branch assigned'**
+  String get noBranchTitle;
+
+  /// No description provided for @noBranchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not assigned to any branch yet. Ask the owner to assign you one.'**
+  String get noBranchDescription;
+
+  /// No description provided for @cashierRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashier'**
+  String get cashierRole;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

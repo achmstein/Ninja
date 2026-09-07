@@ -1462,4 +1462,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allowNow => 'Allow Now';
+
+  @override
+  String get noBranchTitle => 'No branch assigned';
+
+  @override
+  String get noBranchDescription =>
+      'Your account is not assigned to any branch yet. Ask the owner to assign you one.';
+
+  @override
+  String get cashierRole => 'Cashier';
+
+  @override
+  String get retry => 'Retry';
 }

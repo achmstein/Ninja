@@ -1,6 +1,6 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,17 +15,19 @@ import { useLocalized, useT } from '@/lib/i18n'
 /**
  * Header branch switcher, same contract as admin_web's sidebar one: picking
  * a branch scopes every branch-aware API call via the X-Branch-Id header,
- * so everything on screen is refetched.
+ * so everything on screen is refetched. Only the branches the token allows
+ * are offered; with a single one there is nothing to switch and the block
+ * is plain text.
  */
 export function BranchSwitcher() {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
-
-  const { data: branches = [] } = useQuery(getBranchesOptions())
+  const { branches } = useAllowedBranches()
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
+  const label = localized(activeBranch?.name) || t('branches')
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
@@ -38,24 +40,30 @@ export function BranchSwitcher() {
     queryClient.resetQueries()
   }
 
+  const brand = (
+    <>
+      {/* Black-on-transparent mark; invert on dark backgrounds */}
+      <img
+        src='/images/cup.png'
+        alt=''
+        className='size-8 shrink-0 object-contain dark:invert'
+      />
+      <div className='grid flex-1 text-start text-sm leading-tight'>
+        <span className='truncate font-semibold'>{t('brandName')}</span>
+        <span className='text-muted-foreground truncate text-xs'>{label}</span>
+      </div>
+    </>
+  )
+
+  if (branches.length <= 1) {
+    return <div className='flex h-12 items-center gap-2 px-2'>{brand}</div>
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' className='h-12 gap-2 px-2'>
-          {/* Black-on-transparent mark; invert on dark backgrounds */}
-          <img
-            src='/images/cup.png'
-            alt=''
-            className='size-8 shrink-0 object-contain dark:invert'
-          />
-          <div className='grid flex-1 text-start text-sm leading-tight'>
-            <span className='truncate font-semibold'>
-              {t('brandName')}
-            </span>
-            <span className='text-muted-foreground truncate text-xs'>
-              {localized(activeBranch?.name) || `#${branchId}`}
-            </span>
-          </div>
+          {brand}
           <ChevronsUpDown className='text-muted-foreground size-4' />
         </Button>
       </DropdownMenuTrigger>

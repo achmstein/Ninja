@@ -32,6 +32,12 @@ export function useBranchFlags() {
   const takingOrders = branch?.isOrderingEnabled ?? true
   const takingReservations = branch?.isReservationsEnabled ?? true
 
+  // Nothing to flip until a branch is active
+  const flip = (body: { isOrderingEnabled?: boolean; isReservationsEnabled?: boolean }) => {
+    if (branchId === null) return
+    update.mutate({ path: { branchId }, body })
+  }
+
   return {
     /** Undefined until the branch list has loaded. */
     branch,
@@ -40,12 +46,7 @@ export function useBranchFlags() {
     /** Either switch is off — the store is not fully trading. */
     paused: !!branch && !(takingOrders && takingReservations),
     isPending: update.isPending,
-    setTakingOrders: (on: boolean) =>
-      update.mutate({ path: { id: branchId }, body: { isOrderingEnabled: on } }),
-    setTakingReservations: (on: boolean) =>
-      update.mutate({
-        path: { id: branchId },
-        body: { isReservationsEnabled: on },
-      }),
+    setTakingOrders: (on: boolean) => flip({ isOrderingEnabled: on }),
+    setTakingReservations: (on: boolean) => flip({ isReservationsEnabled: on }),
   }
 }

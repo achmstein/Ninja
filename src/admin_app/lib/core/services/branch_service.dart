@@ -3,13 +3,14 @@ import '../models/branch.dart';
 import '../network/api_client.dart';
 
 abstract class BranchRepository {
+  /// Every branch, inactive ones included (Owner)
   Future<List<Branch>> getBranches();
-  Future<List<Branch>> getAdminBranches(String adminUserId);
+
+  /// The active branches, the public list every app reads
+  Future<List<Branch>> getActiveBranches();
   Future<Branch> createBranch(Map<String, dynamic> data);
   Future<Branch> updateBranch(int id, Map<String, dynamic> data);
   Future<Branch> updateBranchSettings(int id, Map<String, dynamic> data);
-  Future<void> assignAdmin(int branchId, String adminUserId);
-  Future<void> removeAdmin(int branchId, String adminUserId);
 }
 
 class ApiBranchRepository implements BranchRepository {
@@ -26,8 +27,8 @@ class ApiBranchRepository implements BranchRepository {
   }
 
   @override
-  Future<List<Branch>> getAdminBranches(String adminUserId) async {
-    final response = await _apiClient.get<List<dynamic>>('admin/$adminUserId');
+  Future<List<Branch>> getActiveBranches() async {
+    final response = await _apiClient.get<List<dynamic>>('');
     return (response.data ?? [])
         .map((e) => Branch.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -49,16 +50,6 @@ class ApiBranchRepository implements BranchRepository {
   Future<Branch> updateBranchSettings(int id, Map<String, dynamic> data) async {
     final response = await _apiClient.patch<Map<String, dynamic>>('$id/settings', data: data);
     return Branch.fromJson(response.data!);
-  }
-
-  @override
-  Future<void> assignAdmin(int branchId, String adminUserId) async {
-    await _apiClient.post('$branchId/admins', data: {'adminUserId': adminUserId});
-  }
-
-  @override
-  Future<void> removeAdmin(int branchId, String adminUserId) async {
-    await _apiClient.delete('$branchId/admins/$adminUserId');
   }
 }
 

@@ -212,6 +212,7 @@ export type SettledTicketSummary = {
     settledAt: string;
     total: number | string;
     refundedTotal: number | string;
+    provisionalReceiptNumber?: null | string;
 };
 
 export type SettlePayment = {
@@ -223,6 +224,8 @@ export type SettlePayment = {
 
 export type SettleRequest = {
     payments: Array<SettlePayment>;
+    settledAt?: null | string;
+    provisionalReceiptNumber?: null | string;
 };
 
 export type SettleResult = {
@@ -285,6 +288,7 @@ export type TicketDetail = {
     payments?: Array<PaymentView>;
     total?: number | string;
     receiptNumber?: null | number | string;
+    provisionalReceiptNumber?: null | string;
     subtotal?: number | string;
     serviceCharge?: number | string;
     vat?: number | string;
@@ -551,6 +555,9 @@ export type GetRefundsResponse = GetRefundsResponses[keyof GetRefundsResponses];
 
 export type DiscardTicketData = {
     body?: never;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -707,6 +714,9 @@ export type GetTicketByOrderResponse = GetTicketByOrderResponses[keyof GetTicket
 
 export type OpenTicketData = {
     body: OpenTicketRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path?: never;
     query: {
         /**
@@ -745,6 +755,9 @@ export type OpenTicketResponse2 = OpenTicketResponses[keyof OpenTicketResponses]
 
 export type AddTicketLineData = {
     body: AddLineRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -783,6 +796,9 @@ export type AddTicketLineResponses = {
 
 export type SettleTicketData = {
     body: SettleRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -823,6 +839,9 @@ export type SettleTicketResponse = SettleTicketResponses[keyof SettleTicketRespo
 
 export type MoveTicketLinesData = {
     body: MoveLinesRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -863,6 +882,9 @@ export type MoveTicketLinesResponse = MoveTicketLinesResponses[keyof MoveTicketL
 
 export type AssignTicketLinesCustomerData = {
     body: AssignLinesCustomerRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -903,6 +925,9 @@ export type AssignTicketLinesCustomerResponse = AssignTicketLinesCustomerRespons
 
 export type VoidTicketData = {
     body: VoidTicketRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -941,6 +966,9 @@ export type VoidTicketResponses = {
 
 export type RefundTicketData = {
     body: RefundRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -1053,6 +1081,9 @@ export type SetBranchPricingResponses = {
 
 export type OpenShiftData = {
     body: OpenShiftRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path?: never;
     query: {
         /**
@@ -1199,6 +1230,9 @@ export type GetClosedShiftsResponse = GetClosedShiftsResponses[keyof GetClosedSh
 
 export type AddCashMovementData = {
     body: CashMovementRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };
@@ -1237,6 +1271,9 @@ export type AddCashMovementResponses = {
 
 export type CloseShiftData = {
     body: CloseShiftRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
     path: {
         id: number;
     };

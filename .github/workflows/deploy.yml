@@ -316,6 +316,43 @@ jobs:
               echo "  Created Cashier role" || echo "  Cashier role already exists"
 
             echo ""
+            echo "=== Ensure the 'branches' client scope exists ==="
+            # Staff clients carry the user's branch ids (user attribute 'branches')
+            SCOPE_ID=$(docker exec "$CONTAINER" $KC get client-scopes -r $REALM --fields id,name | \
+              python3 -c "import sys,json;s=json.load(sys.stdin);print(next((x['id'] for x in s if x['name']=='branches'),''))")
+            if [ -z "$SCOPE_ID" ]; then
+              docker exec "$CONTAINER" $KC create client-scopes -r $REALM \
+                -s name=branches -s protocol=openid-connect \
+                -s 'description=Branch ids a staff account may operate' \
+                -s 'attributes."include.in.token.scope"=true' \
+                -s 'attributes."display.on.consent.screen"=false' >/dev/null
+              SCOPE_ID=$(docker exec "$CONTAINER" $KC get client-scopes -r $REALM --fields id,name | \
+                python3 -c "import sys,json;s=json.load(sys.stdin);print(next(x['id'] for x in s if x['name']=='branches'))")
+              docker exec "$CONTAINER" $KC create "client-scopes/$SCOPE_ID/protocol-mappers/models" -r $REALM \
+                -s name=branches -s protocol=openid-connect -s protocolMapper=oidc-usermodel-attribute-mapper \
+                -s 'config."user.attribute"=branches' -s 'config."claim.name"=branches' \
+                -s 'config."jsonType.label"=String' -s 'config.multivalued=true' \
+                -s 'config."id.token.claim"=true' -s 'config."access.token.claim"=true' \
+                -s 'config."userinfo.token.claim"=true'
+              echo "  Created branches scope"
+            else
+              echo "  branches scope exists"
+            fi
+
+            echo ""
+            echo "=== Declare the 'branches' user attribute (admin-only) ==="
+            # Managed and admin-only, so a user can never assign themselves a branch
+            docker exec "$CONTAINER" $KC get users/profile -r $REALM | python3 -c '
+            import sys,json
+            p=json.load(sys.stdin); attrs=p.setdefault("attributes",[])
+            if not any(a["name"]=="branches" for a in attrs):
+                attrs.append({"name":"branches","displayName":"Branches","multivalued":True,
+                  "validations":{"length":{"max":10},"pattern":{"pattern":"^[0-9]+$","error-message":"invalid-branch-id"}},
+                  "permissions":{"view":["admin"],"edit":["admin"]}})
+            json.dump(p,sys.stdout)' | \
+              docker exec -i "$CONTAINER" $KC update users/profile -r $REALM -f - && echo "  User profile updated"
+
+            echo ""
             echo "=== Ensure web app clients exist with production URIs ==="
             # Realm import only runs on a fresh volume, so clients added to
             # chillax-realm.json after the first deploy must be upserted here.
@@ -362,7 +399,7 @@ jobs:
                   -s protocol=openid-connect \
                   -s "redirectUris=[\"$SCHEME://callback\",\"$SCHEME://*\"]" \
                   -s 'attributes={"pkce.code.challenge.method":"S256"}' \
-                  -s 'defaultClientScopes=["openid","profile","email","roles","orders","catalog","rooms","spaces"]' \
+                  -s 'defaultClientScopes=["openid","profile","email","roles","orders","catalog","rooms","spaces","branches"]' \
                   -s 'optionalClientScopes=["offline_access"]' && \
                   echo "  Created $NAME" || echo "  WARNING: failed to create $NAME"
                 CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
@@ -377,6 +414,17 @@ jobs:
             }
             ensure_native_client pos-app com.chillax.pos
             ensure_native_client kds-app com.chillax.kds
+
+            echo ""
+            echo "=== Attach the 'branches' scope to the staff clients ==="
+            # Customers never get it: mobile-app and client-web are not listed
+            for NAME in admin-panel pos-web kds-web admin-app pos-app kds-app; do
+              CID=$(docker exec "$CONTAINER" $KC get clients -r $REALM -q clientId="$NAME" --fields id | \
+                python3 -c "import sys,json;c=json.load(sys.stdin);print(c[0]['id'] if c else '')")
+              [ -z "$CID" ] && { echo "  $NAME: not found (skipped)"; continue; }
+              docker exec "$CONTAINER" $KC update "clients/$CID/default-client-scopes/$SCOPE_ID" -r $REALM >/dev/null 2>&1 \
+                && echo "  $NAME: attached" || echo "  $NAME: already attached"
+            done
 
             echo ""
             echo "=== Keycloak token exchange setup complete ==="

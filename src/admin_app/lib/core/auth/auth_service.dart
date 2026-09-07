@@ -24,6 +24,10 @@ class AuthState {
   final String? name;
   final List<String> roles;
 
+  /// The branches this account may work in, from the token's `branches`
+  /// claim. Owners hold every branch and carry no claim.
+  final List<int> branches;
+
   const AuthState({
     this.isInitializing = true,
     this.isAuthenticated = false,
@@ -36,6 +40,7 @@ class AuthState {
     this.email,
     this.name,
     this.roles = const [],
+    this.branches = const [],
   });
 
   AuthState copyWith({
@@ -50,6 +55,7 @@ class AuthState {
     String? email,
     String? name,
     List<String>? roles,
+    List<int>? branches,
   }) {
     return AuthState(
       isInitializing: isInitializing ?? this.isInitializing,
@@ -63,8 +69,12 @@ class AuthState {
       email: email ?? this.email,
       name: name ?? this.name,
       roles: roles ?? this.roles,
+      branches: branches ?? this.branches,
     );
   }
+
+  /// Owners hold every branch; anyone else needs at least one assigned
+  bool get hasBranchAccess => isOwner || branches.isNotEmpty;
 }
 
 /// Authentication service using native OIDC with Resource Owner Password Credentials
@@ -113,6 +123,7 @@ class AuthService extends Notifier<AuthState> {
           email: claims['email'] as String?,
           name: claims['name'] as String?,
           roles: roles,
+          branches: extractBranches(claims),
         );
 
         // Try to refresh tokens in background
@@ -333,6 +344,7 @@ class AuthService extends Notifier<AuthState> {
       email: claims['email'] as String?,
       name: claims['name'] as String?,
       roles: roles,
+      branches: extractBranches(claims),
     );
 
   }
@@ -583,6 +595,15 @@ class AuthService extends Notifier<AuthState> {
 
     // Set isInitializing to false so router redirects to login instead of staying on splash
     state = const AuthState(isInitializing: false);
+  }
+
+  /// Branch ids from the multivalued `branches` claim (strings, from the
+  /// Keycloak attribute mapper). An absent claim is no branch, never "all".
+  @visibleForTesting
+  static List<int> extractBranches(Map<String, dynamic> claims) {
+    final raw = claims['branches'];
+    final values = raw is List ? raw : raw == null ? const <Object>[] : <Object>[raw];
+    return values.map((v) => int.tryParse(v.toString())).whereType<int>().toSet().toList()..sort();
   }
 
   Map<String, dynamic> _parseJwt(String token) {

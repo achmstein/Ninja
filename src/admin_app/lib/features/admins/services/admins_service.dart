@@ -2,15 +2,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../models/admin_user.dart';
 
-/// Abstract repository for admin operations
+/// Abstract repository for staff account operations (Identity.API)
 abstract class AdminsRepository {
+  /// [role] takes one role or a comma-separated list ("Admin,Cashier")
   Future<List<AdminUser>> getAdmins(
       {int first = 0, int max = 50, String? search, String? role});
-  Future<void> createAdmin(
-      {required String name, required String email, required String password, bool isOwner = false});
+  Future<AdminUser> getAdmin(String adminId);
+  Future<void> createAdmin({
+    required String name,
+    required String email,
+    required String password,
+    String role = 'Admin',
+    bool isOwner = false,
+    List<int> branchIds = const [],
+  });
   Future<void> updateAdminName(String adminId, String newName);
   Future<void> resetAdminPassword(String adminId, String newPassword);
   Future<bool> toggleAdminEnabled(String adminId);
+
+  /// Replaces the branches the account may work in (Owner). The change
+  /// reaches the user's token on its next refresh.
+  Future<void> setBranches(String adminId, List<int> branchIds);
 }
 
 /// API implementation of AdminsRepository
@@ -44,22 +56,34 @@ class ApiAdminsRepository implements AdminsRepository {
   }
 
   @override
-  Future<void> createAdmin(
-      {required String name,
-      required String email,
-      required String password,
-      bool isOwner = false}) async {
+  Future<AdminUser> getAdmin(String adminId) async {
+    final response = await _api.get('/users/$adminId');
+    return AdminUser.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> createAdmin({
+    required String name,
+    required String email,
+    required String password,
+    String role = 'Admin',
+    bool isOwner = false,
+    List<int> branchIds = const [],
+  }) async {
     await _api.post('/register-admin', data: {
       'name': name,
       'email': email,
       'password': password,
+      'role': role,
       'isOwner': isOwner,
+      'branchIds': branchIds,
     });
   }
 
   @override
   Future<void> updateAdminName(String adminId, String newName) async {
-    await _api.put('/users/$adminId/name', data: {'newName': newName});
+    // The profile endpoint keeps the other fields; a name-only endpoint does not exist
+    await _api.put('/users/$adminId/profile', data: {'name': newName});
   }
 
   @override
@@ -72,6 +96,11 @@ class ApiAdminsRepository implements AdminsRepository {
   Future<bool> toggleAdminEnabled(String adminId) async {
     final response = await _api.put('/users/$adminId/toggle-enabled');
     return response.data['enabled'] as bool;
+  }
+
+  @override
+  Future<void> setBranches(String adminId, List<int> branchIds) async {
+    await _api.put('/users/$adminId/branches', data: {'branchIds': branchIds});
   }
 }
 

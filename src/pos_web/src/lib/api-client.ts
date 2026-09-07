@@ -24,7 +24,10 @@ apiClient.interceptors.request.use(
     }
     // Branch-scoped endpoints resolve the branch from this header; the
     // header branch switcher controls it.
-    config.headers['X-Branch-Id'] = String(getActiveBranchId())
+    const branchId = getActiveBranchId()
+    if (branchId !== null) {
+      config.headers['X-Branch-Id'] = String(branchId)
+    }
     return config
   },
   (error) => Promise.reject(error)

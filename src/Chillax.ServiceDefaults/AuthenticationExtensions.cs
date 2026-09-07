@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -88,15 +89,19 @@ public static class AuthenticationExtensions
                 };
             });
 
+        // Staff policies also check that a request naming a branch names one
+        // the caller is assigned to (the `branches` claim); owners hold all
+        services.AddSingleton<IAuthorizationHandler, BranchAccessHandler>();
         services.AddAuthorization(options =>
         {
+            var branchAccess = new BranchAccessRequirement();
             // Admin policy requires the "Admin" role
-            options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+            options.AddPolicy("Admin", policy => policy.RequireRole("Admin").AddRequirements(branchAccess));
             // Owner policy requires the "Owner" role (branch management, admin creation)
             options.AddPolicy("Owner", policy => policy.RequireRole("Owner"));
             // Pos policy: what the till needs. Cashiers run sales, tickets and
             // shifts without carrying the full back-office Admin role.
-            options.AddPolicy("Pos", policy => policy.RequireRole("Admin", "Owner", "Cashier"));
+            options.AddPolicy("Pos", policy => policy.RequireRole("Admin", "Owner", "Cashier").AddRequirements(branchAccess));
         });
 
         return services;

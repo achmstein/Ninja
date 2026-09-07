@@ -194,6 +194,8 @@ export type PosOrderRequest = {
     pointsToRedeem?: number | string;
     ticketId?: null | number | string;
     customerName?: null | string;
+    placedAt?: null | string;
+    replay?: boolean;
 };
 
 export type PosOrderResponse = {

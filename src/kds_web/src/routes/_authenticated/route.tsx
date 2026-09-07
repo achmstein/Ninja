@@ -8,6 +8,7 @@ import {
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
 import { KitchenHeader } from '@/components/layout/kitchen-header'
 import { useKitchenNotifications } from '@/hooks/use-kitchen-notifications'
@@ -31,7 +32,9 @@ function AuthenticatedLayout() {
     <div className='flex min-h-svh flex-col'>
       <KitchenHeader />
       <main className='flex-1'>
-        <Outlet />
+        <BranchGate>
+          <Outlet />
+        </BranchGate>
       </main>
     </div>
   )

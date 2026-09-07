@@ -653,5 +653,9 @@
 
   "fullScreenIntentTitle": "Allow Urgent Order Alerts",
   "fullScreenIntentBody": "To show urgent order reminders over the lock screen (like a phone call), please allow full-screen notifications for this app.",
-  "allowNow": "Allow Now"
+  "allowNow": "Allow Now",
+  "noBranchTitle": "No branch assigned",
+  "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one.",
+  "cashierRole": "Cashier",
+  "retry": "Retry"
 }

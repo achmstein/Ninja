@@ -38,6 +38,9 @@ class BranchState {
     }
   }
 
+  /// Loaded, and nothing to work in: the token names no branch this list holds
+  bool get noBranch => !isLoading && error == null && branches.isEmpty;
+
   BranchState copyWith({
     List<Branch>? branches,
     int? selectedBranchId,
@@ -56,21 +59,27 @@ class BranchState {
 class BranchNotifier extends Notifier<BranchState> {
   @override
   BranchState build() {
+    // A refreshed token may carry a changed assignment: re-filter then.
+    // The first load after sign-in is app.dart's; it is skipped while running.
+    ref.listen(authServiceProvider.select((s) => s.branches), (previous, next) {
+      if (previous != null && !listEquals(previous, next) && !state.isLoading) loadBranches();
+    });
     return BranchState(
       selectedBranchId: _initialBranchId,
       isLoading: true,
     );
   }
 
-  /// Load branches assigned to the current admin user
+  /// Load the branches this account may work in
   Future<void> loadBranches() async {
     try {
-      final authState = ref.read(authServiceProvider);
-      final userId = authState.userId;
-      if (userId == null) return;
-
+      // Owners hold every branch (inactive ones too, to manage them); an
+      // admin gets the public list narrowed to the token's branch claim
+      final auth = ref.read(authServiceProvider);
       final repo = ref.read(branchRepositoryProvider);
-      final branches = await repo.getAdminBranches(userId);
+      final branches = auth.isOwner
+          ? await repo.getBranches()
+          : (await repo.getActiveBranches()).where((b) => auth.branches.contains(b.id)).toList();
 
       var selectedId = state.selectedBranchId;
 

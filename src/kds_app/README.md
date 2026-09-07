@@ -20,6 +20,12 @@ password grant against the Keycloak client `kds-app` (added to
 `chillax-realm.json` and created on the server by `deploy.yml`); any
 account with the Admin, Owner or Cashier role may run it.
 
+Who may work where travels in the token: the owner assigns each Admin or
+Cashier its branches on admin_web's Staff page (a `branches` claim), and
+every service refuses a request naming another branch. Owners hold every
+branch. An account with no branch assigned sees a blocking screen until the
+owner assigns one; a changed assignment applies on the next token refresh.
+
 ## Run it
 
 Landscape tablet only. The `pos_tablet` AVD (Pixel Tablet, 1280×800 dp) is

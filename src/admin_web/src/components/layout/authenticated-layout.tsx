@@ -5,6 +5,7 @@ import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { BranchGate } from '@/components/branch-gate'
 import { SkipToMain } from '@/components/skip-to-main'
 import { useAdminNotifications } from '@/hooks/use-admin-notifications'
 import { usePageTitle } from '@/hooks/use-page-title'
@@ -41,7 +42,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
             )}
           >
-            {children ?? <Outlet />}
+            <BranchGate>{children ?? <Outlet />}</BranchGate>
           </SidebarInset>
         </SidebarProvider>
       </LayoutProvider>

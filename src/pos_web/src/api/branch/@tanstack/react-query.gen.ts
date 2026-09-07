@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignAdmin, createBranch, getAllBranches, getBranches, getBranchesByAdmin, type Options, removeAdmin, updateBranch, updateBranchSettings } from '../sdk.gen';
-import type { AssignAdminData, AssignAdminError, CreateBranchData, CreateBranchResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesByAdminData, GetBranchesByAdminResponse, GetBranchesData, GetBranchesResponse, RemoveAdminData, RemoveAdminResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse } from '../types.gen';
+import { createBranch, getAllBranches, getBranches, type Options, updateBranch, updateBranchSettings } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -117,58 +117,6 @@ export const updateBranchSettingsMutation = (options?: Partial<Options<UpdateBra
     const mutationOptions: UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<DefaultError>, Options<UpdateBranchSettingsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateBranchSettings({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-export const getBranchesByAdminQueryKey = (options: Options<GetBranchesByAdminData>) => createQueryKey('getBranchesByAdmin', options);
-
-/**
- * Get branches assigned to an admin
- */
-export const getBranchesByAdminOptions = (options: Options<GetBranchesByAdminData>) => queryOptions<GetBranchesByAdminResponse, AxiosError<DefaultError>, GetBranchesByAdminResponse, ReturnType<typeof getBranchesByAdminQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getBranchesByAdmin({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getBranchesByAdminQueryKey(options)
-});
-
-/**
- * Assign admin to branch
- */
-export const assignAdminMutation = (options?: Partial<Options<AssignAdminData>>): UseMutationOptions<unknown, AxiosError<AssignAdminError>, Options<AssignAdminData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<AssignAdminError>, Options<AssignAdminData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await assignAdmin({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Remove admin from branch
- */
-export const removeAdminMutation = (options?: Partial<Options<RemoveAdminData>>): UseMutationOptions<RemoveAdminResponse, AxiosError<DefaultError>, Options<RemoveAdminData>> => {
-    const mutationOptions: UseMutationOptions<RemoveAdminResponse, AxiosError<DefaultError>, Options<RemoveAdminData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await removeAdmin({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

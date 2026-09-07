@@ -26,7 +26,7 @@ export function Customers() {
     max: pageSize,
     search: search || undefined,
     // Staff accounts live on the Staff page
-    excludeRole: 'Admin',
+    excludeRole: 'Admin,Owner,Cashier',
   })
 
   const { data: totalCount = 0 } = useCustomerCount(search || undefined)

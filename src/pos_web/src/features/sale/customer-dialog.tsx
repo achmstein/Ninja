@@ -75,7 +75,7 @@ export function CustomerDialog({
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
         '/api/identity/users',
-        { params: { search, excludeRole: 'Admin', max: 20 } }
+        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } }
       )
       return response.data
     },

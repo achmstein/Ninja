@@ -22,11 +22,11 @@ public static class BranchHeaderExtensions
 
     /// <summary>
     /// Gets the branch ID from the X-Branch-Id header.
-    /// Throws if the header is missing or invalid.
+    /// A missing or invalid header is the caller's mistake: answers 400.
     /// </summary>
     public static int GetRequiredBranchId(this HttpContext ctx)
     {
         return ctx.GetBranchId()
-            ?? throw new InvalidOperationException($"Required header '{HeaderName}' is missing or invalid.");
+            ?? throw new BadHttpRequestException($"Required header '{HeaderName}' is missing or invalid.");
     }
 }

@@ -22,34 +22,6 @@ namespace Chillax.Branch.API.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Chillax.Branch.API.Model.AdminBranchAssignment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdminUserId")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<int>("BranchId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminUserId");
-
-                    b.HasIndex("BranchId");
-
-                    b.HasIndex("AdminUserId", "BranchId")
-                        .IsUnique();
-
-                    b.ToTable("AdminBranchAssignments");
-                });
-
             modelBuilder.Entity("Chillax.Branch.API.Model.Branch", b =>
                 {
                     b.Property<int>("Id")
@@ -87,17 +59,6 @@ namespace Chillax.Branch.API.Migrations
                     b.HasIndex("IsActive");
 
                     b.ToTable("Branches");
-                });
-
-            modelBuilder.Entity("Chillax.Branch.API.Model.AdminBranchAssignment", b =>
-                {
-                    b.HasOne("Chillax.Branch.API.Model.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("Chillax.Branch.API.Model.Branch", b =>

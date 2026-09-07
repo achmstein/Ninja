@@ -54,6 +54,11 @@ const dictionary = {
     en: 'Your account does not have access to the kitchen display.',
     ar: 'حسابك معندوش صلاحية يدخل شاشة المطبخ.',
   },
+  noBranchTitle: { en: 'No branch assigned', ar: 'مفيش فرع متعين ليك' },
+  noBranchDescription: {
+    en: 'Your account is not assigned to any branch yet. Ask the owner to assign you one.',
+    ar: 'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.',
+  },
   retry: { en: 'Retry', ar: 'حاول تاني' },
 
   // Board

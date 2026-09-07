@@ -64,5 +64,7 @@
   "kioskPinned": "Pinned",
   "kioskNotPinned": "Not pinned",
   "startKiosk": "Start kiosk",
-  "stopKiosk": "Stop kiosk"
+  "stopKiosk": "Stop kiosk",
+  "noBranchTitle": "No branch assigned",
+  "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one."
 }

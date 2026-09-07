@@ -47,7 +47,7 @@ class CustomerSearchService {
   Future<List<IdentityUser>> search(String term, {int max = 20}) async {
     final response = await _apiClient.get<List<dynamic>>(
       'users',
-      queryParameters: {'search': term, 'excludeRole': 'Admin', 'max': max},
+      queryParameters: {'search': term, 'excludeRole': 'Admin,Owner,Cashier', 'max': max},
     );
     return (response.data ?? []).map((e) => IdentityUser.fromJson(e as Map<String, dynamic>)).toList();
   }

@@ -79,27 +79,6 @@ class BranchesManagementNotifier extends Notifier<BranchesManagementState> {
     }
   }
 
-  Future<bool> assignAdmin(int branchId, String adminUserId) async {
-    try {
-      await _repository.assignAdmin(branchId, adminUserId);
-      return true;
-    } catch (e) {
-      debugPrint('Failed to assign admin: $e');
-      state = state.copyWith(error: e.toString());
-      return false;
-    }
-  }
-
-  Future<bool> removeAdmin(int branchId, String adminUserId) async {
-    try {
-      await _repository.removeAdmin(branchId, adminUserId);
-      return true;
-    } catch (e) {
-      debugPrint('Failed to remove admin: $e');
-      state = state.copyWith(error: e.toString());
-      return false;
-    }
-  }
 }
 
 final branchesManagementProvider =

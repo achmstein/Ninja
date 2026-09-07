@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/branch.dart';
-import '../../../core/services/branch_service.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../core/widgets/toast_helpers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../branches/providers/branches_provider.dart';
 import '../models/admin_user.dart';
 import '../providers/admins_provider.dart';
+import '../services/admins_service.dart';
 
 class AdminDetailScreen extends ConsumerStatefulWidget {
   final String adminId;
@@ -38,9 +38,12 @@ class _AdminDetailScreenState extends ConsumerState<AdminDetailScreen> {
   Future<void> _loadBranches() async {
     setState(() => _isLoadingBranches = true);
     try {
-      final branches = await ref
-          .read(branchRepositoryProvider)
-          .getAdminBranches(widget.adminId);
+      // The account carries its branch ids; the owner's full list names them
+      final admin = await ref.read(adminsRepositoryProvider).getAdmin(widget.adminId);
+      await ref.read(branchesManagementProvider.notifier).loadBranches();
+      if (!mounted) return;
+      final all = ref.read(branchesManagementProvider).branches;
+      final branches = all.where((b) => admin.branches.contains(b.id)).toList();
       setState(() {
         _branches = branches;
         _isLoadingBranches = false;
@@ -585,8 +588,8 @@ class _AdminDetailScreenState extends ConsumerState<AdminDetailScreen> {
                         onTap: () async {
                           Navigator.pop(context);
                           final success = await ref
-                              .read(branchesManagementProvider.notifier)
-                              .assignAdmin(branch.id, widget.adminId);
+                              .read(adminsProvider.notifier)
+                              .setBranches(widget.adminId, [..._branches.map((b) => b.id), branch.id]..sort());
                           if (success) {
                             await _loadBranches();
                           }
@@ -795,8 +798,8 @@ class _BranchesSection extends ConsumerWidget {
                           if (confirmed != true) return;
 
                           final success = await ref
-                              .read(branchesManagementProvider.notifier)
-                              .removeAdmin(branch.id, adminId);
+                              .read(adminsProvider.notifier)
+                              .setBranches(adminId, branches.where((b) => b.id != branch.id).map((b) => b.id).toList());
                           if (success) {
                             onBranchRemoved();
                           }

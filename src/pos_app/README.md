@@ -17,6 +17,12 @@ Sales and Ordering from this branch: Sales idempotency on every mutation
 path in Ordering. Deploying the till before those means offline sales
 cannot be replayed.
 
+Who may work where travels in the token: the owner assigns each Admin or
+Cashier its branches on admin_web's Staff page (a `branches` claim), and
+every service refuses a request naming another branch. Owners hold every
+branch. An account with no branch assigned sees a blocking screen until the
+owner assigns one; a changed assignment applies on the next token refresh.
+
 ## Run it
 
 Landscape tablets only. Create one once:

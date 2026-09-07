@@ -160,4 +160,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stopKiosk => 'Stop kiosk';
+
+  @override
+  String get noBranchTitle => 'No branch assigned';
+
+  @override
+  String get noBranchDescription =>
+      'Your account is not assigned to any branch yet. Ask the owner to assign you one.';
 }

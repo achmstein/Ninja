@@ -55,7 +55,7 @@ class CustomersNotifier extends Notifier<CustomersState> {
         first: first,
         max: max,
         search: state.searchQuery,
-        excludeRole: 'Admin', // Exclude admin users, show only customers
+        excludeRole: 'Admin,Owner,Cashier', // Staff accounts are not customers
       );
 
       state = state.copyWith(

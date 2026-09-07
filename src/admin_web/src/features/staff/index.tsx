@@ -28,36 +28,32 @@ import { ManageBranchesDialog } from './components/manage-branches-dialog'
 
 const columnHelper = createAppColumnHelper<Customer>()
 
+// Owners first, then admins, then cashiers
+const STAFF_ROLES = ['Owner', 'Admin', 'Cashier'] as const
+const rank = (user: Customer) =>
+  STAFF_ROLES.findIndex((role) => (user.realmRoles ?? []).includes(role))
+
 export function StaffManagement() {
   const t = useT()
   const locale = useLocale()
   const auth = useAuth()
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
-  const [branchesAdmin, setBranchesAdmin] = useState<Customer | null>(null)
+  const [branchesUser, setBranchesUser] = useState<Customer | null>(null)
 
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
-  // Staff = users holding the Admin or Owner realm role (merged, deduped)
-  const adminsQuery = useQuery({
-    queryKey: ['staff', 'admins'],
-    queryFn: () => customersService.getCustomers({ role: 'Admin', max: 200 }),
-  })
-  const ownersQuery = useQuery({
-    queryKey: ['staff', 'owners'],
-    queryFn: () => customersService.getCustomers({ role: 'Owner', max: 200 }),
+  // Staff = users holding the Owner, Admin or Cashier realm role
+  const staffQuery = useQuery({
+    queryKey: ['staff'],
+    queryFn: () =>
+      customersService.getCustomers({ role: 'Admin,Owner,Cashier', max: 200 }),
   })
 
-  const staff = useMemo(() => {
-    const byId = new Map<string, Customer>()
-    for (const user of [
-      ...(ownersQuery.data ?? []),
-      ...(adminsQuery.data ?? []),
-    ]) {
-      if (!byId.has(user.id)) byId.set(user.id, user)
-    }
-    return [...byId.values()]
-  }, [adminsQuery.data, ownersQuery.data])
+  const staff = useMemo(
+    () => [...(staffQuery.data ?? [])].sort((a, b) => rank(a) - rank(b)),
+    [staffQuery.data]
+  )
 
   const toggleEnabled = useMutation({
     mutationFn: (userId: string) => customersService.toggleEnabled(userId),
@@ -69,6 +65,9 @@ export function StaffManagement() {
   })
 
   const currentUserId = auth.user?.profile?.sub
+
+  const roleLabel = (role: string) =>
+    role === 'Owner' ? t('owner') : role === 'Admin' ? t('adminRole') : t('cashierRole')
 
   const columns = useMemo(
     () =>
@@ -104,16 +103,22 @@ export function StaffManagement() {
           header: t('roles'),
           cell: ({ row }) => (
             <div className='flex gap-1'>
-              {(row.original.realmRoles ?? [])
-                .filter((r) => r === 'Admin' || r === 'Owner')
-                .map((role) => (
-                  <Badge
-                    key={role}
-                    variant={role === 'Owner' ? 'default' : 'secondary'}
-                  >
-                    {role === 'Owner' ? t('owner') : t('adminRole')}
-                  </Badge>
-                ))}
+              {STAFF_ROLES.filter((role) =>
+                (row.original.realmRoles ?? []).includes(role)
+              ).map((role) => (
+                <Badge
+                  key={role}
+                  variant={
+                    role === 'Owner'
+                      ? 'default'
+                      : role === 'Admin'
+                        ? 'secondary'
+                        : 'outline'
+                  }
+                >
+                  {roleLabel(role)}
+                </Badge>
+              ))}
             </div>
           ),
         }),
@@ -149,14 +154,14 @@ export function StaffManagement() {
           id: 'branches',
           header: '',
           cell: ({ row }) =>
-            // Owners see every branch implicitly — only Admins get assigned
+            // Owners hold every branch implicitly — Admins and Cashiers are assigned
             isOwner && !(row.original.realmRoles ?? []).includes('Owner') ? (
               <Button
                 variant='ghost'
                 size='icon'
                 className='size-8'
                 aria-label={t('assignedBranches')}
-                onClick={() => setBranchesAdmin(row.original)}
+                onClick={() => setBranchesUser(row.original)}
               >
                 <Store className='h-4 w-4' />
               </Button>
@@ -189,14 +194,14 @@ export function StaffManagement() {
           {isOwner && (
             <Button onClick={() => setAddOpen(true)}>
               <UserPlus className='me-2 h-4 w-4' />
-              {t('addAdmin')}
+              {t('addStaff')}
             </Button>
           )}
         </div>
 
         <DataTable
           table={table}
-          isLoading={adminsQuery.isLoading || ownersQuery.isLoading}
+          isLoading={staffQuery.isLoading}
           emptyMessage={t('noAdminsFound')}
         />
       </Main>
@@ -204,9 +209,9 @@ export function StaffManagement() {
       <AddStaffDialog open={addOpen} onOpenChange={setAddOpen} />
 
       <ManageBranchesDialog
-        admin={branchesAdmin}
+        user={branchesUser}
         onOpenChange={(open) => {
-          if (!open) setBranchesAdmin(null)
+          if (!open) setBranchesUser(null)
         }}
       />
     </>

@@ -38,6 +38,7 @@ class AppConfig {
     'profile',
     'email',
     'roles',
+    'branches',
     'offline_access',
     'orders',
     'spaces',

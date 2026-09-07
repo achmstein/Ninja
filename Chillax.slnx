@@ -44,6 +44,7 @@
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Ordering.UnitTests/Ordering.UnitTests.csproj" />
     <Project Path="tests/Sales.UnitTests/Sales.UnitTests.csproj" />
+    <Project Path="tests/ServiceDefaults.UnitTests/ServiceDefaults.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />

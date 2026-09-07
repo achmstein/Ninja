@@ -2233,6 +2233,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Till copy {number}'**
   String provisionalReceipt(String number);
+
+  /// No description provided for @noBranchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No branch assigned'**
+  String get noBranchTitle;
+
+  /// No description provided for @noBranchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not assigned to any branch yet. Ask the owner to assign you one.'**
+  String get noBranchDescription;
 }
 
 class _AppLocalizationsDelegate

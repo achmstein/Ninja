@@ -6,7 +6,6 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/models/branch.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
-import '../../../core/services/branch_service.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../core/widgets/toast_helpers.dart';
 import '../../../l10n/app_localizations.dart';
@@ -37,23 +36,10 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
   Future<void> _loadAdmins() async {
     setState(() => _isLoadingAdmins = true);
     try {
+      // Membership is on the account: one list, no per-admin round trips
       final adminsRepo = ref.read(adminsRepositoryProvider);
-      final allAdmins = await adminsRepo.getAdmins(role: 'Admin', max: 100);
-
-      // Get branches for each admin to find who's assigned to this branch
-      final repo = ref.read(branchRepositoryProvider);
-      final assignedAdmins = <AdminUser>[];
-
-      for (final admin in allAdmins) {
-        try {
-          final adminBranches = await repo.getAdminBranches(admin.id);
-          if (adminBranches.any((b) => b.id == widget.branchId)) {
-            assignedAdmins.add(admin);
-          }
-        } catch (_) {
-          // Skip if can't fetch branches for this admin
-        }
-      }
+      final allAdmins = await adminsRepo.getAdmins(role: 'Admin,Cashier', max: 100);
+      final assignedAdmins = allAdmins.where((a) => a.branches.contains(widget.branchId)).toList();
 
       if (mounted) {
         setState(() {
@@ -148,8 +134,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
     if (selected != null) {
       bool success = false;
       try {
-        final repo = ref.read(branchRepositoryProvider);
-        await repo.assignAdmin(widget.branchId, selected.id);
+        await ref.read(adminsRepositoryProvider).setBranches(selected.id, {...selected.branches, widget.branchId}.toList()..sort());
         success = true;
       } catch (_) {}
       if (success && mounted) {
@@ -187,8 +172,7 @@ class _BranchDetailScreenState extends ConsumerState<BranchDetailScreen> {
     if (confirmed == true) {
       bool success = false;
       try {
-        final repo = ref.read(branchRepositoryProvider);
-        await repo.removeAdmin(widget.branchId, admin.id);
+        await ref.read(adminsRepositoryProvider).setBranches(admin.id, admin.branches.where((id) => id != widget.branchId).toList());
         success = true;
       } catch (_) {}
       if (success && mounted) {

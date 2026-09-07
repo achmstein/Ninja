@@ -59,6 +59,28 @@ export type CreateOrderRequest = {
     roomId?: null | number | string;
 };
 
+export type KitchenOrder = {
+    orderNumber?: number | string;
+    date?: string;
+    confirmedAt?: null | string;
+    preparation?: string;
+    preparingAt?: null | string;
+    readyAt?: null | string;
+    source?: string;
+    roomName?: null | LocalizedText;
+    tableName?: null | LocalizedText;
+    customerName?: null | string;
+    customerNote?: null | string;
+    items?: Array<KitchenOrderItem>;
+};
+
+export type KitchenOrderItem = {
+    productName?: LocalizedText;
+    units?: number | string;
+    customizationsDescription?: null | LocalizedText;
+    specialInstructions?: null | string;
+};
+
 export type LocalizedText = {
     en?: string;
     ar?: null | string;
@@ -172,15 +194,23 @@ export type PosOrderRequest = {
     pointsToRedeem?: number | string;
     ticketId?: null | number | string;
     customerName?: null | string;
+    placedAt?: null | string;
+    replay?: boolean;
 };
 
 export type PosOrderResponse = {
     orderId: number | string;
 };
 
+export type PreparationStatus = 'NotStarted' | 'Preparing' | 'Ready';
+
 export type RateOrderRequest = {
     ratingValue: number | string;
     comment: null | string;
+};
+
+export type SetOrderPreparationRequest = {
+    preparation: PreparationStatus;
 };
 
 export type GetOrdersByUserData = {
@@ -568,6 +598,85 @@ export type GetPendingOrdersResponses = {
 };
 
 export type GetPendingOrdersResponse = GetPendingOrdersResponses[keyof GetPendingOrdersResponses];
+
+export type GetKitchenOrdersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/kitchen';
+};
+
+export type GetKitchenOrdersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetKitchenOrdersResponses = {
+    /**
+     * OK
+     */
+    200: Array<KitchenOrder>;
+};
+
+export type GetKitchenOrdersResponse = GetKitchenOrdersResponses[keyof GetKitchenOrdersResponses];
+
+export type SetOrderPreparationData = {
+    body: SetOrderPreparationRequest;
+    headers: {
+        'x-requestid': string;
+    };
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/preparation';
+};
+
+export type SetOrderPreparationErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetOrderPreparationError = SetOrderPreparationErrors[keyof SetOrderPreparationErrors];
+
+export type SetOrderPreparationResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SetOrderPreparationResponse = SetOrderPreparationResponses[keyof SetOrderPreparationResponses];
 
 export type GetAllOrdersData = {
     body?: never;

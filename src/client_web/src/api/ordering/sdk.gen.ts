@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, SetOrderPreparationData, SetOrderPreparationErrors, SetOrderPreparationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -44,11 +44,12 @@ export const createOrder = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * Create a counter (POS) order (admin)
+ * Create a counter (POS) order (staff)
  *
  * A walk-in sale keyed in by staff. Optionally attached to a customer account for loyalty. Auto-confirms after stock validation.
  */
 export const createPosOrder = <ThrowOnError extends boolean = false>(options: Options<CreatePosOrderData, ThrowOnError>): RequestResult<CreatePosOrderResponses, CreatePosOrderErrors, ThrowOnError> => (options.client ?? client).post<CreatePosOrderResponses, CreatePosOrderErrors, ThrowOnError>({
+    responseType: 'json',
     url: '/api/orders/pos',
     ...options,
     headers: {
@@ -58,7 +59,7 @@ export const createPosOrder = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Confirm order (admin) - sends to POS
+ * Confirm a submitted order (staff) - lands it on the ticket
  */
 export const confirmOrder = <ThrowOnError extends boolean = false>(options: Options<ConfirmOrderData, ThrowOnError>): RequestResult<ConfirmOrderResponses, ConfirmOrderErrors, ThrowOnError> => (options.client ?? client).put<ConfirmOrderResponses, ConfirmOrderErrors, ThrowOnError>({
     url: '/api/orders/confirm',
@@ -70,10 +71,24 @@ export const confirmOrder = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Cancel a submitted order
+ * Cancel a submitted order (staff)
  */
 export const cancelOrder = <ThrowOnError extends boolean = false>(options: Options<CancelOrderData, ThrowOnError>): RequestResult<CancelOrderResponses, CancelOrderErrors, ThrowOnError> => (options.client ?? client).put<CancelOrderResponses, CancelOrderErrors, ThrowOnError>({
     url: '/api/orders/cancel',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Assign a customer to an order after the fact (staff)
+ *
+ * Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.
+ */
+export const assignOrderCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignOrderCustomerData, ThrowOnError>): RequestResult<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError> => (options.client ?? client).put<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/customer',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -112,12 +127,37 @@ export const rateOrder = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * Get all pending orders (admin)
+ * Pending orders for the branch (staff)
  */
 export const getPendingOrders = <ThrowOnError extends boolean = false>(options: Options<GetPendingOrdersData, ThrowOnError>): RequestResult<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/pending',
     ...options
+});
+
+/**
+ * Confirmed orders in the kitchen, for the kitchen display (staff)
+ *
+ * Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.
+ */
+export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: Options<GetKitchenOrdersData, ThrowOnError>): RequestResult<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/kitchen',
+    ...options
+});
+
+/**
+ * Move a confirmed order along in the kitchen (staff)
+ *
+ * Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.
+ */
+export const setOrderPreparation = <ThrowOnError extends boolean = false>(options: Options<SetOrderPreparationData, ThrowOnError>): RequestResult<SetOrderPreparationResponses, SetOrderPreparationErrors, ThrowOnError> => (options.client ?? client).put<SetOrderPreparationResponses, SetOrderPreparationErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/preparation',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

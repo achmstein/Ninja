@@ -69,6 +69,7 @@ class _DemoAuthService extends AuthService {
         userId: 'demo',
         name: 'Demo Cashier',
         roles: ['Cashier'],
+        branches: [1, 2],
       );
 
   @override

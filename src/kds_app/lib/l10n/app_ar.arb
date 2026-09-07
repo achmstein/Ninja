@@ -64,5 +64,7 @@
   "kioskPinned": "مثبّت",
   "kioskNotPinned": "مش مثبّت",
   "startKiosk": "شغّل الكشك",
-  "stopKiosk": "اقفل الكشك"
+  "stopKiosk": "اقفل الكشك",
+  "noBranchTitle": "مفيش فرع متعين ليك",
+  "noBranchDescription": "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع."
 }

@@ -156,4 +156,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get stopKiosk => 'اقفل الكشك';
+
+  @override
+  String get noBranchTitle => 'مفيش فرع متعين ليك';
+
+  @override
+  String get noBranchDescription =>
+      'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.';
 }

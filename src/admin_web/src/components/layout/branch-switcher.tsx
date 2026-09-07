@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useBranchStore } from '@/stores/branch-store'
 import {
   DropdownMenu,
@@ -23,7 +23,8 @@ import { useLocalized, useT } from '@/lib/i18n'
  * The sidebar header, in the shadcn-admin team-switcher shape: the cup mark
  * in the tile, the brand as the title, and the active branch as the
  * subtitle. Picking a branch scopes every branch-aware API call via the
- * X-Branch-Id header.
+ * X-Branch-Id header. Only the branches the token allows are offered; with
+ * a single one there is nothing to switch and the tile is plain.
  */
 export function BranchSwitcher() {
   const t = useT()
@@ -31,10 +32,11 @@ export function BranchSwitcher() {
   const { isMobile } = useSidebar()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
-
-  const { data: branches = [] } = useQuery(getBranchesOptions())
+  const { branches } = useAllowedBranches()
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
+  const label = localized(activeBranch?.name) || t('branches')
+  const switchable = branches.length > 1
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
@@ -45,6 +47,7 @@ export function BranchSwitcher() {
 
   // ⌘/Ctrl+1..9 switches branches, matching the shortcut hints below
   useEffect(() => {
+    if (!switchable) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey)) return
       const index = Number(event.key) - 1
@@ -57,7 +60,34 @@ export function BranchSwitcher() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branches, branchId])
+  }, [branches, branchId, switchable])
+
+  const tile = (
+    <>
+      {/* Black-on-transparent mark; invert on dark backgrounds */}
+      <img
+        src='/images/cup.png'
+        alt=''
+        className='size-8 shrink-0 object-contain dark:invert'
+      />
+      <div className='grid flex-1 text-start text-sm leading-tight'>
+        <span className='truncate font-semibold'>{t('brandName')}</span>
+        <span className='truncate text-xs'>{label}</span>
+      </div>
+    </>
+  )
+
+  if (!switchable) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size='lg' className='pointer-events-none'>
+            {tile}
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
 
   return (
     <SidebarMenu>
@@ -68,18 +98,7 @@ export function BranchSwitcher() {
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              {/* Black-on-transparent mark; invert on dark backgrounds */}
-              <img
-                src='/images/cup.png'
-                alt=''
-                className='size-8 shrink-0 object-contain dark:invert'
-              />
-              <div className='grid flex-1 text-start text-sm leading-tight'>
-                <span className='truncate font-semibold'>{t('brandName')}</span>
-                <span className='truncate text-xs'>
-                  {localized(activeBranch?.name) || `#${branchId}`}
-                </span>
-              </div>
+              {tile}
               <ChevronsUpDown className='ms-auto' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>

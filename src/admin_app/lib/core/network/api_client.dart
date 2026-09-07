@@ -12,7 +12,7 @@ class ApiClient {
   final Dio _dio;
   final AuthService _authService;
 
-  ApiClient(this._authService, {required String baseUrl, int Function()? branchIdGetter})
+  ApiClient(this._authService, {required String baseUrl, int? Function()? branchIdGetter})
       : _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 30),
@@ -31,8 +31,11 @@ class ApiClient {
           options.headers['x-requestid'] = _uuid.v4();
         }
         // Add branch header if getter is provided
-        if (branchIdGetter != null) {
-          options.headers['X-Branch-Id'] = branchIdGetter().toString();
+        // The branch header is sent only while a branch is selected: an
+        // account with none to work in must not fall back to some default
+        final branchId = branchIdGetter?.call();
+        if (branchId != null) {
+          options.headers['X-Branch-Id'] = '$branchId';
         }
         return handler.next(options);
       },
@@ -80,8 +83,8 @@ class ApiClient {
 }
 
 /// Helper to get the current branch ID from the provider container
-int Function() _branchIdGetter(Ref ref) {
-  return () => ref.read(branchProvider).selectedBranchId ?? 1;
+int? Function() _branchIdGetter(Ref ref) {
+  return () => ref.read(branchProvider).selectedBranchId;
 }
 
 /// Providers for API clients — branch-scoped services include X-Branch-Id header

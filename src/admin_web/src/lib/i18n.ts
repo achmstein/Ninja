@@ -12,6 +12,17 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // Staff: cashiers and branch membership
+  cashierRole: { en: 'Cashier', ar: 'كاشير' },
+  staffRole: { en: 'Role', ar: 'الدور' },
+  addStaff: { en: 'Add staff', ar: 'ضيف موظف' },
+  branchesUpdated: { en: 'Branches updated', ar: 'الفروع اتحدثت' },
+  cashierCreatedSuccess: { en: 'Cashier account created', ar: 'اتعمل حساب الكاشير' },
+  cashierDescription: {
+    en: 'Runs the till and the kitchen display, no back office',
+    ar: 'بيشغّل الكاشير وشاشة المطبخ، من غير الإدارة',
+  },
+  initialBranches: { en: 'Branches', ar: 'الفروع' },
   // Orders board (KDS-style aging)
   delayed: { en: 'Delayed', ar: 'متأخر' },
   // Override the generated single-form ARB strings with humanized plurals

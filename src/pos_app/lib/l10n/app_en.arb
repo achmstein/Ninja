@@ -619,5 +619,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "noBranchTitle": "No branch assigned",
+  "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one."
 }

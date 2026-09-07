@@ -1,3 +1,4 @@
+using Chillax.Identity.API;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,6 +17,7 @@ builder.Services.AddHttpClient("KeycloakAdmin", client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
+builder.Services.AddTransient<KeycloakAdmin>();
 
 // Add RabbitMQ event bus for publishing profile update events
 builder.AddRabbitMqEventBus("eventbus")
@@ -110,6 +112,19 @@ app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClien
 // Register admin endpoint (owner only - protected)
 app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request, IHttpClientFactory httpClientFactory, IConfiguration config) =>
 {
+    // A staff account is an Admin (back office) or a Cashier (till, kitchen);
+    // only an Admin can also be an Owner
+    var role = string.IsNullOrWhiteSpace(request.Role) ? "Admin" : request.Role.Trim();
+    if (role is not ("Admin" or "Cashier"))
+    {
+        return Results.BadRequest(new { message = "role must be Admin or Cashier" });
+    }
+    if (request.IsOwner && role != "Admin")
+    {
+        return Results.BadRequest(new { message = "only an Admin can be made Owner" });
+    }
+    var initialBranches = (request.BranchIds ?? []).Where(id => id > 0).Distinct().Order().Select(id => id.ToString()).ToArray();
+
     var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
     var realm = config["Keycloak:Realm"] ?? "chillax";
     var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
@@ -155,6 +170,8 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
         enabled = true,
         emailVerified = true,
         requiredActions = Array.Empty<string>(),
+        // Branch membership lives on the user (see PUT users/{id}/branches)
+        attributes = new Dictionary<string, string[]> { ["branches"] = initialBranches },
         credentials = new[]
         {
             new
@@ -200,13 +217,13 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
         return Results.Problem("User created but failed to retrieve user ID for role assignment", statusCode: 500);
     }
 
-    // Get the Admin role
-    var rolesEndpoint = $"{adminUrl}/admin/realms/{realm}/roles/Admin";
+    // Get the requested staff role
+    var rolesEndpoint = $"{adminUrl}/admin/realms/{realm}/roles/{role}";
     var roleResponse = await client.GetAsync(rolesEndpoint);
 
     if (!roleResponse.IsSuccessStatusCode)
     {
-        return Results.Problem("Admin role not found in realm. Please create an 'Admin' role in Keycloak.", statusCode: 500);
+        return Results.Problem($"{role} role not found in realm.", statusCode: 500);
     }
 
     var adminRole = await roleResponse.Content.ReadFromJsonAsync<KeycloakRole>();
@@ -238,7 +255,7 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
         return Results.Problem($"User created but role assignment failed: {errorContent}", statusCode: 500);
     }
 
-    return Results.Ok(new { message = "Admin registered successfully" });
+    return Results.Ok(new { message = "Staff account registered successfully" });
 }).RequireAuthorization("Owner");
 
 // List users endpoint (admin only)
@@ -317,23 +334,24 @@ app.MapGet("/api/identity/users", async (IHttpClientFactory httpClientFactory, I
             user.Enabled,
             user.CreatedTimestamp,
             realmRoles,
-            user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault()
+            user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault(),
+            BranchesOf(user.Attributes)
         ));
     }
 
     // Apply role filters
     IEnumerable<UserDto> filteredUsers = allUsers;
 
-    if (!string.IsNullOrEmpty(role))
+    // Either filter takes one role or a comma-separated list
+    var include = SplitRoles(role);
+    var exclude = SplitRoles(excludeRole);
+    if (include.Length > 0)
     {
-        // Include only users with this role
-        filteredUsers = filteredUsers.Where(u => u.RealmRoles.Contains(role));
+        filteredUsers = filteredUsers.Where(u => u.RealmRoles.Any(include.Contains));
     }
-
-    if (!string.IsNullOrEmpty(excludeRole))
+    if (exclude.Length > 0)
     {
-        // Exclude users with this role
-        filteredUsers = filteredUsers.Where(u => !u.RealmRoles.Contains(excludeRole));
+        filteredUsers = filteredUsers.Where(u => !u.RealmRoles.Any(exclude.Contains));
     }
 
     // Apply pagination after filtering
@@ -418,7 +436,8 @@ app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFact
         user.Enabled,
         user.CreatedTimestamp,
         realmRoles,
-        user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault()
+        user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault(),
+        BranchesOf(user.Attributes)
     ));
 }).RequireAuthorization("Admin");
 
@@ -968,20 +987,35 @@ app.MapDelete("/api/identity/delete-account", async (HttpContext httpContext, IH
     var tokenJson = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>();
     var accessToken = tokenJson.GetProperty("access_token").GetString();
 
-    // Disable user via Admin API (soft delete)
+    // Disable the user (soft delete). GET the full representation and PUT it
+    // back with enabled=false: Keycloak's declarative user profile removes any
+    // field missing from the payload, attributes included
     var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
     var userEndpoint = $"{adminUrl}/admin/realms/{realm}/users/{userId}";
 
-    var disablePayload = new
-    {
-        enabled = false
-    };
-
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    var updateResponse = await client.PutAsJsonAsync(userEndpoint, disablePayload);
+    var getResponse = await client.GetAsync(userEndpoint);
+    if (getResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        return Results.NotFound(new { message = "User not found" });
+    }
+    if (!getResponse.IsSuccessStatusCode)
+    {
+        return Results.Problem("Failed to fetch user", statusCode: (int)getResponse.StatusCode);
+    }
+    var userJson = await getResponse.Content.ReadFromJsonAsync<JsonObject>();
+    if (userJson == null)
+    {
+        return Results.NotFound(new { message = "User not found" });
+    }
+    userJson["enabled"] = false;
+
+    var updateResponse = await client.PutAsJsonAsync(userEndpoint, userJson);
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
+        // Revoke the sessions too, so existing tokens stop working now
+        await client.PostAsync($"{userEndpoint}/logout", null);
         return Results.Ok(new { message = "Account deleted successfully" });
     }
 
@@ -1068,6 +1102,54 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
 }).RequireAuthorization("Admin");
 
 // Get current user's profile (authenticated user)
+// Owner: replace a staff account's whole branch set. Stored on the Keycloak
+// user attribute `branches` and issued as the `branches` claim; it reaches
+// the user's token on its next refresh (the access token lives 2 h), so no
+// forced logout. Ids are not validated against Branch.API (services never
+// call each other): clients pick from the branch list, and an id that is no
+// branch never matches anything.
+app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBranchesRequest request, KeycloakAdmin keycloak) =>
+{
+    if (request.BranchIds is null || request.BranchIds.Any(id => id <= 0))
+    {
+        return Results.BadRequest(new { message = "branchIds must be positive integers" });
+    }
+
+    HttpClient client;
+    try
+    {
+        client = await keycloak.AuthorizedClientAsync();
+    }
+    catch (InvalidOperationException e)
+    {
+        return Results.Problem(e.Message, statusCode: 500);
+    }
+
+    var user = await keycloak.GetUserAsync(client, userId);
+    if (user is null)
+    {
+        return Results.NotFound(new { message = "User not found" });
+    }
+
+    if (user["attributes"] is not JsonObject attributes)
+    {
+        attributes = new JsonObject();
+        user["attributes"] = attributes;
+    }
+    // An empty set removes the attribute: no claim, no branch
+    var branchIds = request.BranchIds.Distinct().Order().ToList();
+    attributes["branches"] = new JsonArray(branchIds.Select(id => (JsonNode)id.ToString()).ToArray());
+
+    var response = await keycloak.PutUserAsync(client, userId, user);
+    if (!response.IsSuccessStatusCode)
+    {
+        var error = await response.Content.ReadAsStringAsync();
+        return Results.Problem($"Failed to update branches: {error}", statusCode: (int)response.StatusCode);
+    }
+
+    return Results.Ok(new { branches = branchIds });
+}).RequireAuthorization("Owner");
+
 app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config) =>
 {
     var userId = httpContext.User.GetUserId();
@@ -1127,14 +1209,28 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
         name = fullName,
         email = user.Email,
         phoneNumber = phoneNumber,
+        branches = BranchesOf(user.Attributes),
         isProfileComplete = isProfileComplete
     });
 }).RequireAuthorization();
 
+// Branch ids from the `branches` user attribute (strings on the wire)
+static List<int> BranchesOf(Dictionary<string, string[]>? attributes) =>
+    (attributes?.GetValueOrDefault("branches") ?? [])
+        .Select(v => int.TryParse(v, out var id) ? id : (int?)null)
+        .OfType<int>()
+        .Order()
+        .ToList();
+
+// "Admin" or "Admin,Owner,Cashier"
+static string[] SplitRoles(string? roles) =>
+    (roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 app.Run();
 
 record RegisterRequest(string? Name, string Email, string Password, string? PhoneNumber);
-record RegisterAdminRequest(string? Name, string Email, string Password, bool IsOwner = false);
+record RegisterAdminRequest(string? Name, string Email, string Password, bool IsOwner = false, string? Role = "Admin", List<int>? BranchIds = null);
+record SetBranchesRequest(List<int> BranchIds);
 record ChangePasswordRequest(string NewPassword);
 record UpdateEmailRequest(string NewEmail);
 record UpdateNameRequest(string NewName);
@@ -1149,7 +1245,8 @@ record UserDto(
     bool Enabled,
     long? CreatedTimestamp,
     List<string> RealmRoles,
-    string? PhoneNumber = null
+    string? PhoneNumber,
+    List<int> Branches
 );
 
 // Keycloak user model for deserialization

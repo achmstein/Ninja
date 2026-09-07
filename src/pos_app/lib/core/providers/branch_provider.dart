@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../auth/auth_service.dart';
 import '../models/branch.dart';
 import '../services/branch_service.dart';
 
@@ -37,6 +38,9 @@ class BranchState {
     }
   }
 
+  /// Loaded, and nothing to work in: the token names no branch this list holds
+  bool get noBranch => !isLoading && error == null && branches.isEmpty;
+
   BranchState copyWith({
     List<Branch>? branches,
     int? selectedBranchId,
@@ -58,6 +62,11 @@ class BranchState {
 class BranchNotifier extends Notifier<BranchState> {
   @override
   BranchState build() {
+    // A refreshed token may carry a changed assignment: re-filter then.
+    // The first load after sign-in is app.dart's; it is skipped while running.
+    ref.listen(authServiceProvider.select((s) => s.branches), (previous, next) {
+      if (previous != null && !listEquals(previous, next) && !state.isLoading) loadBranches();
+    });
     return BranchState(
       selectedBranchId: _initialBranchId,
       isLoading: true,
@@ -66,8 +75,10 @@ class BranchNotifier extends Notifier<BranchState> {
 
   Future<void> loadBranches() async {
     try {
-      final repo = ref.read(branchRepositoryProvider);
-      final branches = await repo.getBranches();
+      // The public list, narrowed to the token's branch claim; owners hold all
+      final auth = ref.read(authServiceProvider);
+      final all = await ref.read(branchRepositoryProvider).getBranches();
+      final branches = auth.isOwner ? all : all.where((b) => auth.branches.contains(b.id)).toList();
 
       var selectedId = state.selectedBranchId;
 

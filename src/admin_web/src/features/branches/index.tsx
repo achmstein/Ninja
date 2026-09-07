@@ -46,7 +46,7 @@ export function BranchesManagement() {
     value: boolean
   ) =>
     updateSettings.mutate({
-      path: { id: Number(branch.id) },
+      path: { branchId: Number(branch.id) },
       body: { [setting]: value },
     })
 

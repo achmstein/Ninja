@@ -10,6 +10,8 @@ export interface Customer {
   createdTimestamp?: number
   realmRoles?: string[]
   phoneNumber?: string
+  /** Branch ids a staff account may work in (Owners hold all) */
+  branches?: number[]
 }
 
 export interface CustomersResponse {

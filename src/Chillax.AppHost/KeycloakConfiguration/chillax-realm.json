@@ -257,6 +257,32 @@
       ]
     },
     {
+      "name": "branches",
+      "description": "Branch ids a staff account may operate (user attribute 'branches')",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "branches",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "branches",
+            "claim.name": "branches",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "name": "orders",
       "description": "Orders API access",
       "protocol": "openid-connect",
@@ -377,7 +403,8 @@
         "orders",
         "catalog",
         "rooms",
-        "spaces"
+        "spaces",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -477,7 +504,8 @@
         "orders",
         "catalog",
         "rooms",
-        "spaces"
+        "spaces",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -524,7 +552,8 @@
         "profile",
         "email",
         "roles",
-        "orders"
+        "orders",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -569,7 +598,8 @@
         "orders",
         "catalog",
         "rooms",
-        "spaces"
+        "spaces",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -614,7 +644,8 @@
         "orders",
         "catalog",
         "rooms",
-        "spaces"
+        "spaces",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -656,7 +687,8 @@
         "profile",
         "email",
         "roles",
-        "orders"
+        "orders",
+        "branches"
       ],
       "optionalClientScopes": [
         "offline_access"
@@ -821,6 +853,23 @@
       "realmRoles": [ "Customer", "offline_access" ]
     },
     {
+      "username": "cashier",
+      "email": "cashier@chillax.site",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Till",
+      "lastName": "Cashier",
+      "attributes": { "branches": [ "1" ] },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Cashier123$",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [ "Cashier", "Customer", "offline_access" ]
+    },
+    {
       "username": "service-account-identity-api-service",
       "enabled": true,
       "serviceAccountClientId": "identity-api-service",
@@ -906,7 +955,7 @@
       {
         "providerId": "declarative-user-profile",
         "config": {
-          "kc.user.profile.config": ["{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"phoneNumber\",\"displayName\":\"Phone Number\",\"validations\":{\"length\":{\"max\":20}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}],\"unmanagedAttributePolicy\":\"ENABLED\"}"]
+          "kc.user.profile.config": ["{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"phoneNumber\",\"displayName\":\"Phone Number\",\"validations\":{\"length\":{\"max\":20}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"branches\",\"displayName\":\"Branches\",\"multivalued\":true,\"validations\":{\"length\":{\"max\":10},\"pattern\":{\"pattern\":\"^[0-9]+$\",\"error-message\":\"invalid-branch-id\"}},\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]}}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}],\"unmanagedAttributePolicy\":\"ENABLED\"}"]
         }
       }
     ]

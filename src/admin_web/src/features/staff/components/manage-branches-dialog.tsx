@@ -1,106 +1,89 @@
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Store } from 'lucide-react'
+import { Loader2, Store } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import {
-  assignAdminMutation,
-  getAllBranchesOptions,
-  getBranchesByAdminOptions,
-  removeAdminMutation,
-} from '@/api/branch/@tanstack/react-query.gen'
+import { getAllBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
   getCustomerDisplayName,
 } from '@/features/customers/types'
 
 interface ManageBranchesDialogProps {
-  admin: Customer | null
+  user: Customer | null
   onOpenChange: (open: boolean) => void
 }
 
 /**
- * Assign an admin to branches (owner-only), mirroring the mobile admin
- * app's branch section: every branch listed, a switch per branch.
- * Owners aren't assignable — they see all branches implicitly.
+ * The branches an Admin or Cashier may work in (owner-only): every branch
+ * listed, a switch per branch, one save. Membership lives on the account
+ * (the `branches` claim in the token), so the whole set is written at once
+ * — per-switch writes would race each other. It reaches the user's token
+ * on their next refresh. Owners aren't assignable — they hold every branch.
  */
 export function ManageBranchesDialog({
-  admin,
+  user,
   onOpenChange,
 }: ManageBranchesDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
-  const adminUserId = admin?.id ?? ''
+  // Start from what the account holds today, each time a user is picked
+  useEffect(() => {
+    setSelected(new Set(user?.branches ?? []))
+  }, [user?.id, user?.branches])
 
   const branchesQuery = useQuery({
     ...getAllBranchesOptions(),
-    enabled: !!admin,
-  })
-  const assignedQuery = useQuery({
-    ...getBranchesByAdminOptions({ path: { adminUserId } }),
-    enabled: !!admin,
+    enabled: !!user,
   })
 
-  const invalidateAssigned = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranchesByAdmin' }] })
-
-  const assign = useMutation({
-    ...assignAdminMutation(),
+  const save = useMutation({
+    mutationFn: () =>
+      customersService.setBranches(user?.id ?? '', [...selected].sort((a, b) => a - b)),
     onSuccess: () => {
-      invalidateAssigned()
-      toast.success(t('adminAssigned'))
+      queryClient.invalidateQueries({ queryKey: ['staff'] })
+      toast.success(t('branchesUpdated'))
+      onOpenChange(false)
     },
     onError: () => toast.error(t('somethingWentWrong')),
   })
 
-  const remove = useMutation({
-    ...removeAdminMutation(),
-    onSuccess: () => {
-      invalidateAssigned()
-      toast.success(t('adminRemoved'))
-    },
-    onError: () => toast.error(t('somethingWentWrong')),
-  })
-
-  const assignedIds = new Set(
-    (assignedQuery.data ?? []).map((branch) => Number(branch.id))
-  )
   const branches = branchesQuery.data ?? []
-  const isLoading = branchesQuery.isLoading || assignedQuery.isLoading
-  const isActing = assign.isPending || remove.isPending
 
-  const toggle = (branchId: number, next: boolean) => {
-    if (next) {
-      assign.mutate({
-        path: { id: branchId },
-        body: { adminUserId },
-      })
-    } else {
-      remove.mutate({ path: { id: branchId, userId: adminUserId } })
-    }
-  }
+  const toggle = (branchId: number, on: boolean) =>
+    setSelected((current) => {
+      const next = new Set(current)
+      if (on) next.add(branchId)
+      else next.delete(branchId)
+      return next
+    })
 
   return (
-    <Dialog open={!!admin} onOpenChange={onOpenChange}>
+    <Dialog open={!!user} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('assignedBranches')}</DialogTitle>
           <DialogDescription>
-            {admin ? getCustomerDisplayName(admin) : ''}
+            {user ? getCustomerDisplayName(user) : ''}
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
+        {branchesQuery.isLoading ? (
           <div className='flex flex-col gap-2'>
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className='h-14 rounded-md' />
@@ -115,10 +98,7 @@ export function ManageBranchesDialog({
             {branches.map((branch) => {
               const branchId = Number(branch.id)
               return (
-                <div
-                  key={branchId}
-                  className='flex items-center gap-3 py-3'
-                >
+                <div key={branchId} className='flex items-center gap-3 py-3'>
                   <div className='bg-muted flex size-9 shrink-0 items-center justify-center rounded-md'>
                     <Store className='text-muted-foreground size-4' />
                   </div>
@@ -133,8 +113,8 @@ export function ManageBranchesDialog({
                     )}
                   </div>
                   <Switch
-                    checked={assignedIds.has(branchId)}
-                    disabled={isActing}
+                    checked={selected.has(branchId)}
+                    disabled={save.isPending}
                     onCheckedChange={(checked) => toggle(branchId, checked)}
                     aria-label={localized(branch.name)}
                   />
@@ -143,6 +123,24 @@ export function ManageBranchesDialog({
             })}
           </div>
         )}
+
+        <DialogFooter>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => onOpenChange(false)}
+          >
+            {t('cancel')}
+          </Button>
+          <Button
+            type='button'
+            disabled={save.isPending || branchesQuery.isLoading}
+            onClick={() => save.mutate()}
+          >
+            {save.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+            {t('save')}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

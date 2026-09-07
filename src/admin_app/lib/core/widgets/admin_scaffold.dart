@@ -9,7 +9,9 @@ import '../../features/rooms/models/room.dart';
 import '../../features/service_requests/providers/service_requests_provider.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
+import '../providers/branch_provider.dart';
 import 'branch_switcher.dart';
+import 'no_branch_screen.dart';
 
 /// Notifier to track current route for triggering refreshes when navigating
 class CurrentRouteNotifier extends Notifier<String> {
@@ -207,7 +209,12 @@ class _MobileLayout extends ConsumerWidget {
         child: Column(
           children: [
             const BranchSwitcher(),
-            Expanded(child: child),
+            // An admin assigned to no branch may operate nothing yet
+            Expanded(
+              child: ref.watch(branchProvider.select((s) => s.noBranch)) && !ref.watch(isOwnerProvider)
+                  ? const NoBranchScreen()
+                  : child,
+            ),
           ],
         ),
       ),

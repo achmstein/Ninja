@@ -4,10 +4,6 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
-export type AssignAdminRequest = {
-    adminUserId: string;
-};
-
 export type BranchResponse = {
     id: number | string;
     name: LocalizedText;
@@ -166,10 +162,10 @@ export type UpdateBranchSettingsData = {
         /**
          * The branch ID
          */
-        id: number;
+        branchId: number;
     };
     query?: never;
-    url: '/api/branches/{id}/settings';
+    url: '/api/branches/{branchId}/settings';
 };
 
 export type UpdateBranchSettingsErrors = {
@@ -195,115 +191,3 @@ export type UpdateBranchSettingsResponses = {
 };
 
 export type UpdateBranchSettingsResponse = UpdateBranchSettingsResponses[keyof UpdateBranchSettingsResponses];
-
-export type GetBranchesByAdminData = {
-    body?: never;
-    path: {
-        /**
-         * The admin user ID
-         */
-        adminUserId: string;
-    };
-    query?: never;
-    url: '/api/branches/admin/{adminUserId}';
-};
-
-export type GetBranchesByAdminErrors = {
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-};
-
-export type GetBranchesByAdminResponses = {
-    /**
-     * OK
-     */
-    200: Array<BranchResponse>;
-};
-
-export type GetBranchesByAdminResponse = GetBranchesByAdminResponses[keyof GetBranchesByAdminResponses];
-
-export type AssignAdminData = {
-    body: AssignAdminRequest;
-    path: {
-        /**
-         * The branch ID
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/api/branches/{id}/admins';
-};
-
-export type AssignAdminErrors = {
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-    /**
-     * Conflict
-     */
-    409: string;
-};
-
-export type AssignAdminError = AssignAdminErrors[keyof AssignAdminErrors];
-
-export type AssignAdminResponses = {
-    /**
-     * Created
-     */
-    201: unknown;
-};
-
-export type RemoveAdminData = {
-    body?: never;
-    path: {
-        /**
-         * The branch ID
-         */
-        id: number;
-        /**
-         * The admin user ID
-         */
-        userId: string;
-    };
-    query?: never;
-    url: '/api/branches/{id}/admins/{userId}';
-};
-
-export type RemoveAdminErrors = {
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type RemoveAdminResponses = {
-    /**
-     * No Content
-     */
-    204: void;
-};
-
-export type RemoveAdminResponse = RemoveAdminResponses[keyof RemoveAdminResponses];

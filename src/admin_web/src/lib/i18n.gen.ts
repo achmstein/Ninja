@@ -465,4 +465,8 @@ export const messages = {
   fullScreenIntentTitle: { en: "Allow Urgent Order Alerts", ar: "اسمح بتنبيهات الطلبات المستعجلة" },
   fullScreenIntentBody: { en: "To show urgent order reminders over the lock screen (like a phone call), please allow full-screen notifications for this app.", ar: "عشان تنبيهات الطلبات المستعجلة تظهر على شاشة القفل (زي المكالمة)، اسمح بالإشعارات على الشاشة الكاملة للتطبيق ده." },
   allowNow: { en: "Allow Now", ar: "اسمح دلوقتي" },
+  noBranchTitle: { en: "No branch assigned", ar: "مفيش فرع متعين ليك" },
+  noBranchDescription: { en: "Your account is not assigned to any branch yet. Ask the owner to assign you one.", ar: "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع." },
+  cashierRole: { en: "Cashier", ar: "كاشير" },
+  retry: { en: "Retry", ar: "حاول تاني" },
 } as const satisfies Record<string, Message>

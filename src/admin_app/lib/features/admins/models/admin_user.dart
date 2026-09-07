@@ -9,6 +9,9 @@ class AdminUser {
   final DateTime? createdAt;
   final List<String> realmRoles;
 
+  /// Branch ids the account may work in (owners hold all)
+  final List<int> branches;
+
   AdminUser({
     required this.id,
     this.username,
@@ -18,6 +21,7 @@ class AdminUser {
     this.enabled = true,
     this.createdAt,
     this.realmRoles = const [],
+    this.branches = const [],
   });
 
   String get displayName {
@@ -50,6 +54,7 @@ class AdminUser {
 
   bool get isAdmin => realmRoles.contains('Admin');
   bool get isOwner => realmRoles.contains('Owner');
+  bool get isCashier => realmRoles.contains('Cashier');
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
     return AdminUser(
@@ -66,6 +71,7 @@ class AdminUser {
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      branches: (json['branches'] as List<dynamic>?)?.map((e) => (e as num).toInt()).toList() ?? const [],
     );
   }
 }

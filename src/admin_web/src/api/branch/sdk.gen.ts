@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignAdminData, AssignAdminErrors, AssignAdminResponses, CreateBranchData, CreateBranchErrors, CreateBranchResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesByAdminData, GetBranchesByAdminErrors, GetBranchesByAdminResponses, GetBranchesData, GetBranchesResponses, RemoveAdminData, RemoveAdminErrors, RemoveAdminResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -67,36 +67,10 @@ export const updateBranch = <ThrowOnError extends boolean = false>(options: Opti
  */
 export const updateBranchSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateBranchSettingsData, ThrowOnError>): RequestResult<UpdateBranchSettingsResponses, UpdateBranchSettingsErrors, ThrowOnError> => (options.client ?? client).patch<UpdateBranchSettingsResponses, UpdateBranchSettingsErrors, ThrowOnError>({
     responseType: 'json',
-    url: '/api/branches/{id}/settings',
+    url: '/api/branches/{branchId}/settings',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
 });
-
-/**
- * Get branches assigned to an admin
- */
-export const getBranchesByAdmin = <ThrowOnError extends boolean = false>(options: Options<GetBranchesByAdminData, ThrowOnError>): RequestResult<GetBranchesByAdminResponses, GetBranchesByAdminErrors, ThrowOnError> => (options.client ?? client).get<GetBranchesByAdminResponses, GetBranchesByAdminErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/branches/admin/{adminUserId}',
-    ...options
-});
-
-/**
- * Assign admin to branch
- */
-export const assignAdmin = <ThrowOnError extends boolean = false>(options: Options<AssignAdminData, ThrowOnError>): RequestResult<AssignAdminResponses, AssignAdminErrors, ThrowOnError> => (options.client ?? client).post<AssignAdminResponses, AssignAdminErrors, ThrowOnError>({
-    url: '/api/branches/{id}/admins',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Remove admin from branch
- */
-export const removeAdmin = <ThrowOnError extends boolean = false>(options: Options<RemoveAdminData, ThrowOnError>): RequestResult<RemoveAdminResponses, RemoveAdminErrors, ThrowOnError> => (options.client ?? client).delete<RemoveAdminResponses, RemoveAdminErrors, ThrowOnError>({ url: '/api/branches/{id}/admins/{userId}', ...options });

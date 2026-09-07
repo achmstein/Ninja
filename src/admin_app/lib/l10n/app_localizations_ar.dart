@@ -1455,4 +1455,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allowNow => 'اسمح دلوقتي';
+
+  @override
+  String get noBranchTitle => 'مفيش فرع متعين ليك';
+
+  @override
+  String get noBranchDescription =>
+      'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.';
+
+  @override
+  String get cashierRole => 'كاشير';
+
+  @override
+  String get retry => 'حاول تاني';
 }

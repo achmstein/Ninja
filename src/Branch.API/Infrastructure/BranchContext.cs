@@ -5,7 +5,6 @@ namespace Chillax.Branch.API.Infrastructure;
 public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(options)
 {
     public DbSet<Model.Branch> Branches => Set<Model.Branch>();
-    public DbSet<AdminBranchAssignment> AdminBranchAssignments => Set<AdminBranchAssignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,20 +19,6 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
 
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.DisplayOrder);
-        });
-
-        modelBuilder.Entity<AdminBranchAssignment>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.AdminUserId).IsRequired().HasMaxLength(256);
-
-            entity.HasOne(e => e.Branch)
-                .WithMany()
-                .HasForeignKey(e => e.BranchId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => new { e.AdminUserId, e.BranchId }).IsUnique();
-            entity.HasIndex(e => e.AdminUserId);
         });
     }
 }

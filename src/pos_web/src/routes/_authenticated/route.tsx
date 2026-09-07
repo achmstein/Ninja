@@ -8,6 +8,7 @@ import {
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
 import { PosHeader } from '@/components/layout/pos-header'
 import { usePosNotifications } from '@/hooks/use-pos-notifications'
@@ -29,7 +30,9 @@ function AuthenticatedLayout() {
     <div className='flex min-h-svh flex-col'>
       <PosHeader />
       <main className='flex-1'>
-        <Outlet />
+        <BranchGate>
+          <Outlet />
+        </BranchGate>
       </main>
     </div>
   )

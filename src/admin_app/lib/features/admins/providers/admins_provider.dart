@@ -55,7 +55,7 @@ class AdminsNotifier extends Notifier<AdminsState> {
       final admins = await _repository.getAdmins(
         first: first,
         max: max,
-        role: 'Admin',
+        role: 'Admin,Cashier',
         search: state.searchQuery,
       );
 
@@ -121,6 +121,19 @@ class AdminsNotifier extends Notifier<AdminsState> {
       return true;
     } catch (e) {
       debugPrint('Failed to reset admin password: $e');
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
+  }
+
+  /// Replaces the branches a staff account may work in
+  Future<bool> setBranches(String adminId, List<int> branchIds) async {
+    try {
+      await _repository.setBranches(adminId, branchIds);
+      await loadAdmins();
+      return true;
+    } catch (e) {
+      debugPrint('Failed to set branches: $e');
       state = state.copyWith(error: e.toString());
       return false;
     }

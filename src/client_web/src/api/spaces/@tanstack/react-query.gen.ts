@@ -198,7 +198,7 @@ export const reserveRoomMutation = (options?: Partial<Options<ReserveRoomData>>)
 /**
  * Start a session
  *
- * Start the timer for a reserved session (Admin only)
+ * Start the timer for a reserved session (staff)
  */
 export const startSessionMutation = (options?: Partial<Options<StartSessionData>>): UseMutationOptions<unknown, AxiosError<StartSessionError>, Options<StartSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<StartSessionError>, Options<StartSessionData>> = {
@@ -217,7 +217,7 @@ export const startSessionMutation = (options?: Partial<Options<StartSessionData>
 /**
  * End a session
  *
- * End the session and calculate cost (Admin only)
+ * End the session and calculate cost (staff)
  */
 export const endSessionMutation = (options?: Partial<Options<EndSessionData>>): UseMutationOptions<unknown, AxiosError<EndSessionError>, Options<EndSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<EndSessionError>, Options<EndSessionData>> = {
@@ -236,7 +236,7 @@ export const endSessionMutation = (options?: Partial<Options<EndSessionData>>): 
 /**
  * Cancel a session
  *
- * Cancel a reservation or active session (Admin only)
+ * Cancel a reservation or active session (staff)
  */
 export const cancelSessionMutation = (options?: Partial<Options<CancelSessionData>>): UseMutationOptions<unknown, AxiosError<CancelSessionError>, Options<CancelSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelSessionError>, Options<CancelSessionData>> = {
@@ -255,7 +255,7 @@ export const cancelSessionMutation = (options?: Partial<Options<CancelSessionDat
 /**
  * Start a walk-in session
  *
- * Start a walk-in session without an assigned customer (Admin only)
+ * Start a walk-in session without an assigned customer (staff)
  */
 export const startWalkInSessionMutation = (options?: Partial<Options<StartWalkInSessionData>>): UseMutationOptions<StartWalkInSessionResponse, AxiosError<StartWalkInSessionError>, Options<StartWalkInSessionData>> => {
     const mutationOptions: UseMutationOptions<StartWalkInSessionResponse, AxiosError<StartWalkInSessionError>, Options<StartWalkInSessionData>> = {
@@ -274,7 +274,7 @@ export const startWalkInSessionMutation = (options?: Partial<Options<StartWalkIn
 /**
  * Change player mode
  *
- * Change the player mode (Single/Multi) for an active session (Admin only)
+ * Change the player mode (Single/Multi) for an active session (staff)
  */
 export const changePlayerModeMutation = (options?: Partial<Options<ChangePlayerModeData>>): UseMutationOptions<unknown, AxiosError<ChangePlayerModeError>, Options<ChangePlayerModeData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<ChangePlayerModeError>, Options<ChangePlayerModeData>> = {
@@ -353,7 +353,7 @@ export const getActiveSessionsQueryKey = (options?: Options<GetActiveSessionsDat
 /**
  * Get active sessions
  *
- * Get all currently active sessions (Admin only)
+ * Get all currently active sessions (staff)
  */
 export const getActiveSessionsOptions = (options?: Options<GetActiveSessionsData>) => queryOptions<GetActiveSessionsResponse, AxiosError<DefaultError>, GetActiveSessionsResponse, ReturnType<typeof getActiveSessionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -371,7 +371,7 @@ export const getActiveSessionsOptions = (options?: Options<GetActiveSessionsData
 /**
  * Assign a customer to a walk-in session
  *
- * Assign a customer to an active walk-in session that has no owner (Admin only)
+ * Assign a customer to an active walk-in session that has no owner (staff)
  */
 export const assignCustomerToSessionMutation = (options?: Partial<Options<AssignCustomerToSessionData>>): UseMutationOptions<unknown, AxiosError<AssignCustomerToSessionError>, Options<AssignCustomerToSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AssignCustomerToSessionError>, Options<AssignCustomerToSessionData>> = {
@@ -390,7 +390,7 @@ export const assignCustomerToSessionMutation = (options?: Partial<Options<Assign
 /**
  * Add a member to a session
  *
- * Add a customer as a member to an active session (Admin only)
+ * Add a customer as a member to an active session (staff)
  */
 export const addMemberToSessionMutation = (options?: Partial<Options<AddMemberToSessionData>>): UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> = {
@@ -409,7 +409,7 @@ export const addMemberToSessionMutation = (options?: Partial<Options<AddMemberTo
 /**
  * Remove a member from a session
  *
- * Remove a non-owner member from an active session (Admin only)
+ * Remove a non-owner member from an active session (staff)
  */
 export const removeMemberFromSessionMutation = (options?: Partial<Options<RemoveMemberFromSessionData>>): UseMutationOptions<unknown, AxiosError<RemoveMemberFromSessionError>, Options<RemoveMemberFromSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<RemoveMemberFromSessionError>, Options<RemoveMemberFromSessionData>> = {

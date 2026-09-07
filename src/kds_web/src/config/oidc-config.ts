@@ -31,7 +31,7 @@ export const oidcConfig: AuthProviderProps = {
   post_logout_redirect_uri: `${kdsUrl}/signed-out`,
   response_type: 'code',
   // The kitchen reads orders and nothing else
-  scope: 'openid profile email roles orders',
+  scope: 'openid profile email roles orders branches',
   automaticSilentRenew: true,
   loadUserInfo: true,
   // localStorage (not the sessionStorage default) so sign-in survives new
@@ -53,4 +53,16 @@ export function getStoredUser(): User | null {
 
 export function getRealmRoles(user: User | null | undefined): string[] {
   return (user?.profile?.realm_access as { roles?: string[] })?.roles ?? []
+}
+
+export function isOwner(user: User | null | undefined): boolean {
+  return getRealmRoles(user).includes('Owner')
+}
+
+// Branch ids from the `branches` claim (id_token + userinfo, merged into the
+// profile by loadUserInfo). A missing claim is no branch, never every branch.
+export function getBranchClaim(user: User | null | undefined): number[] {
+  const raw = (user?.profile as Record<string, unknown> | undefined)?.branches
+  const values = Array.isArray(raw) ? raw : raw == null ? [] : [raw]
+  return values.map(Number).filter(Number.isInteger)
 }
