@@ -69,8 +69,42 @@ export function modeSeconds(
     }, 0)
 }
 
+/**
+ * The server's rounding, in the open: minutes to the nearest quarter hour,
+ * halves away from zero. Below seven and a half minutes nothing is billed.
+ */
+export function roundedHours(seconds: number): number {
+  const minutes = seconds / 60
+  if (minutes <= 0) return 0
+  return Math.round(minutes / 15) / 4
+}
+
+/**
+ * What the session would cost if it ended this second: every segment,
+ * the running one included, rounded the way the server rounds when the
+ * segment closes, at the room's rate for its mode. The bill only gets the
+ * real figure when the session ends; this is the cashier's preview.
+ */
+export function estimateSessionCost(
+  session: ReservationViewModel,
+  room: { singleRate?: number | string; multiRate?: number | string },
+  nowMs: number
+): { singleHours: number; multiHours: number; hours: number; amount: number } {
+  const singleHours = roundedHours(modeSeconds(session, 'Single', nowMs))
+  const multiHours = roundedHours(modeSeconds(session, 'Multi', nowMs))
+  return {
+    singleHours,
+    multiHours,
+    hours: singleHours + multiHours,
+    amount:
+      singleHours * Number(room.singleRate ?? 0) +
+      multiHours * Number(room.multiRate ?? 0),
+  }
+}
+
 // The server bills in quarter-hour steps (1.25, 2.5, ...) and puts the
-// rounded figures on the session; these read them rather than estimating
+// rounded figures on the session once a segment closes; these read them
+// rather than estimating
 export function sessionBilledHours(session: ReservationViewModel): number {
   return (
     Number(session.singleRoundedHours ?? 0) +
@@ -85,12 +119,22 @@ export function formatBillingHours(
   return t('billedHoursFormat', { hours: Number(hours ?? 0) })
 }
 
-export function modeLabel(mode: string | null | undefined, t: Translate): string {
-  return mode === 'Multi' ? t('playerModeMulti') : t('playerModeSingle')
+/**
+ * The people in the room as the customer picker offers them: everyone on
+ * the roster who has an account. A member with no name still shows, as
+ * the picker labels the blank.
+ */
+export function sessionRoster(
+  session: ReservationViewModel | null | undefined
+): { id: string; name: string }[] {
+  return (session?.members ?? [])
+    .filter((member) => member.customerId)
+    .map((member) => ({
+      id: String(member.customerId),
+      name: member.customerName ?? '',
+    }))
 }
 
-/** Who the session is for, the way staff say it: the owner, or "walk-in". */
-export function sessionWho(session: ReservationViewModel, t: Translate): string {
-  const owner = session.members?.find((m) => m.role === 'Owner')
-  return owner?.customerName || session.customerName || t('walkIn')
+export function modeLabel(mode: string | null | undefined, t: Translate): string {
+  return mode === 'Multi' ? t('playerModeMulti') : t('playerModeSingle')
 }

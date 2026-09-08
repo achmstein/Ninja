@@ -23,6 +23,8 @@ type StartSessionDialogProps = {
   /** A reservation to start the timer on; without one, a walk-in starts. */
   session?: ReservationViewModel | null
   onOpenChange: (open: boolean) => void
+  /** The session started; the caller decides where the till goes next. */
+  onStarted?: () => void
 }
 
 /**
@@ -34,6 +36,7 @@ export function StartSessionDialog({
   room,
   session,
   onOpenChange,
+  onStarted,
 }: StartSessionDialogProps) {
   const t = useT()
   const localized = useLocalized()
@@ -48,7 +51,12 @@ export function StartSessionDialog({
 
   const start = () => {
     if (!room) return
-    const done = { onSuccess: () => onOpenChange(false) }
+    const done = {
+      onSuccess: () => {
+        onOpenChange(false)
+        onStarted?.()
+      },
+    }
     if (session) actions.startReserved(toNumber(session.id), playerMode, done)
     else actions.startWalkIn(toNumber(room.id), playerMode, done)
   }
@@ -70,10 +78,12 @@ export function StartSessionDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* The card prices the mode picked below; the toggle carries both
+            rates so the other one stays in view */}
         <div className='bg-muted rounded-xl p-4 text-center'>
           <div className='text-lg font-semibold'>{localized(room?.name)}</div>
           <div className='text-primary text-2xl font-bold tabular-nums'>
-            {money(room?.singleRate)} · {money(room?.multiRate)}
+            {money(playerMode === 'Multi' ? room?.multiRate : room?.singleRate)}
             <span className='text-muted-foreground ms-1 text-sm font-normal'>
               {t('perHour')}
             </span>
@@ -85,6 +95,10 @@ export function StartSessionDialog({
           <PlayerModeToggle
             value={playerMode}
             onChange={(mode) => mode && setPlayerMode(mode)}
+            rates={{
+              Single: money(room?.singleRate),
+              Multi: money(room?.multiRate),
+            }}
           />
         </div>
 

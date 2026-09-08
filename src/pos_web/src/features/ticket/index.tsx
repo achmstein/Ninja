@@ -13,10 +13,12 @@ import {
   Loader2,
   Printer,
   ShoppingCart,
+  Timer,
   Trash2,
   Undo2,
   User,
   UserPlus,
+  Users,
 } from 'lucide-react'
 import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import {
@@ -36,7 +38,10 @@ import {
 } from '@/features/orders/use-pending-orders'
 import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { SessionBar } from '@/features/rooms/session-bar'
-import { useRooms, useSessionActions } from '@/features/rooms/use-rooms'
+import { SessionMembers } from '@/features/rooms/session-members'
+import { isActive, isReserved, sessionRoster } from '@/features/rooms/status'
+import { TimeSoFar } from '@/features/rooms/time-so-far'
+import { useRooms, useSession, useSessionActions } from '@/features/rooms/use-rooms'
 import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -257,10 +262,14 @@ export function TicketScreen({
   const { pending } = usePendingOrders()
 
   // A room ticket's time only lands when its session ends, so the screen
-  // shows the running clock and guards the settle until then
-  const { rooms, activeSessionById } = useRooms({
-    enabled: ticket?.type === 'Room',
-  })
+  // shows the running clock and guards the settle until then. The session
+  // is read by id, not off the active list: once it has ended the bill is
+  // still open, and the people in the room are still its account holders
+  const { rooms } = useRooms({ enabled: ticket?.type === 'Room' })
+  const session = useSession(
+    ticket?.sessionId,
+    ticket?.type === 'Room' && ticket?.settledAt == null && ticket?.voidedAt == null
+  )
   const sessionActions = useSessionActions()
 
   // Arriving from the sale pad (?settle): the walk-in is standing at the
@@ -301,6 +310,15 @@ export function TicketScreen({
   const doAssignCustomer = async (customer: SaleCustomer) => {
     const orderIds = assignOrderIds ?? []
     const lineIds = assignLineIds ?? []
+    // Somebody with an account named on a room's lines is in the room:
+    // onto the roster, so their share of the time has a tab at settle
+    if (
+      session &&
+      customer.id &&
+      !sessionRoster(session).some((m) => m.id === customer.id)
+    ) {
+      sessionActions.addMember(toNumber(session.id), customer.id, customer.name)
+    }
     try {
       await Promise.all(
         orderIds.map((orderId) =>
@@ -377,10 +395,15 @@ export function TicketScreen({
   const isVoided = ticket.voidedAt != null
   const lines = ticket.lines ?? []
   const waiting = isSettled || isVoided ? [] : pendingForTicket(pending, ticket)
+  const liveSession = isSettled || isVoided ? undefined : session
   const activeSession =
-    isSettled || isVoided || ticket.sessionId == null
-      ? undefined
-      : activeSessionById(ticket.sessionId)
+    liveSession && isActive(liveSession) ? liveSession : undefined
+  // Ended, bill still open: the time has landed and the roster stays
+  // editable so every share can find its tab
+  const endedSession =
+    liveSession && !isActive(liveSession) && !isReserved(liveSession)
+      ? liveSession
+      : undefined
   const room = rooms.find((r) => toNumber(r.id) === toNumber(ticket.roomId))
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
@@ -518,9 +541,13 @@ export function TicketScreen({
           </Link>
         </Button>
         <div className='min-w-0 flex-1'>
-          <h1 className='truncate text-xl font-bold'>
-            {title}
-            <span className='text-muted-foreground ms-2 text-base font-medium tabular-nums'>
+          {/* Flex + gap rather than a margin on an inline span: with a Latin
+              place name in Arabic the bidi algorithm lays the whole line out
+              left-to-right and an inline start margin ends up on the outer
+              edge, not between the two */}
+          <h1 className='flex items-baseline gap-2 text-xl font-bold'>
+            <span className='truncate'>{title}</span>
+            <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
               #{toNumber(ticket.id)}
             </span>
           </h1>
@@ -601,6 +628,16 @@ export function TicketScreen({
         </div>
       )}
 
+      {endedSession && (
+        <div className='bg-card text-card-foreground mb-4 flex flex-col gap-3 rounded-xl border p-3 shadow-xs'>
+          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+            <Users className='size-4' />
+            {t('inTheRoom')}
+          </div>
+          <SessionMembers session={endedSession} />
+        </div>
+      )}
+
       {/* Confirmed here, they land on this bill — which is why the guard
           below stops a settle while any are still waiting */}
       {waiting.length > 0 && (
@@ -613,10 +650,25 @@ export function TicketScreen({
         </div>
       )}
 
+      {/* The time is not a line until the session ends; until then the
+          bill shows it as the row it will become, so the running cost is
+          read where the rest of the bill is */}
+      {activeSession && room && (
+        <div className='text-muted-foreground flex items-center gap-3 border-b border-dashed py-3'>
+          <Timer className='size-5 shrink-0' />
+          <span className='min-w-0 flex-1 truncate'>{t('roomTimeRunning')}</span>
+          <span className='shrink-0 tabular-nums'>
+            ≈ <TimeSoFar session={activeSession} room={room} />
+          </span>
+        </div>
+      )}
+
       {lines.length === 0 ? (
-        <p className='text-muted-foreground py-16 text-center'>
-          {t('emptyTicket')}
-        </p>
+        !activeSession && (
+          <p className='text-muted-foreground py-16 text-center'>
+            {t('emptyTicket')}
+          </p>
+        )
       ) : groups.length === 1 && groups[0].key === null ? (
         <div className='flex flex-col'>
           <div className='flex flex-col divide-y'>
@@ -764,6 +816,11 @@ export function TicketScreen({
                 {t('refundedSoFar')}: −{money(ticket.refundedTotal)}
               </div>
             )}
+            {activeSession && room && (
+              <div className='text-muted-foreground truncate text-xs tabular-nums'>
+                + {t('timeSoFar')} ≈ <TimeSoFar session={activeSession} room={room} />
+              </div>
+            )}
           </div>
           <div className='ms-auto'>
             {isSettled ? (
@@ -900,6 +957,7 @@ export function TicketScreen({
       />
       <SettleDialog
         ticket={ticket}
+        members={liveSession?.members}
         open={settleOpen}
         onOpenChange={setSettleOpen}
         onSettled={setSettleOutcome}
@@ -909,13 +967,15 @@ export function TicketScreen({
         open={voidOpen}
         onOpenChange={setVoidOpen}
       />
-      {/* The sale pad's own picker, reused: an account, or just a name */}
+      {/* The sale pad's own picker, reused: an account, or just a name —
+          with the room's people first when this is a room's bill */}
       <CustomerDialog
         open={assignOrderIds !== null || assignLineIds !== null}
         onOpenChange={(open) => {
           if (!open) closeAssign()
         }}
         onSelect={doAssignCustomer}
+        quickPicks={sessionRoster(session)}
       />
       {(isSettled || settleOutcome) && (
         <ReceiptSheet

@@ -322,6 +322,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionRunning => 'Session running';
 
   @override
+  String get timeSoFar => 'Time so far';
+
+  @override
+  String get roomTimeRunning => 'Room time · running';
+
+  @override
+  String get inTheRoom => 'In the room';
+
+  @override
   String get billedHours => 'Billed hours';
 
   @override

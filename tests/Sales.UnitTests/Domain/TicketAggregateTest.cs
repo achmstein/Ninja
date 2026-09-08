@@ -34,7 +34,7 @@ public class TicketAggregateTest
     [TestMethod]
     public void Session_time_lands_exactly_once_and_skips_empty_modes()
     {
-        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
         ticket.AppendSessionTime(singleHours: 2.5m, singleCost: 125, multiHours: 0, multiCost: 0);
         ticket.AppendSessionTime(singleHours: 2.5m, singleCost: 125, multiHours: 0, multiCost: 0);
@@ -45,16 +45,17 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Session_time_is_the_owner_s_line()
+    public void Session_time_is_the_room_s_not_anyone_s()
     {
-        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
-        ticket.AppendSessionTime(singleHours: 2m, singleCost: 100, multiHours: 0, multiCost: 0, customerId: "u1", customerName: "Nadia");
+        ticket.AppendSessionTime(singleHours: 2m, singleCost: 100, multiHours: 0, multiCost: 0);
 
-        // The room's time can go on its owner's tab at settle like any of her items
+        // Even a room opened for somebody: the time is nobody's share until
+        // the group splits it at settle
         var time = ticket.Lines.Single();
-        Assert.AreEqual("u1", time.CustomerId);
-        Assert.AreEqual("Nadia", time.CustomerName);
+        Assert.IsNull(time.CustomerId);
+        Assert.IsNull(time.CustomerName);
     }
 
     [TestMethod]
@@ -498,7 +499,7 @@ public class TicketAggregateTest
     [TestMethod]
     public void Room_ticket_cannot_be_voided_or_settled_while_its_session_runs()
     {
-        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
         Assert.ThrowsExactly<SalesDomainException>(() => running.Void("wrong room", "owner"));
 
@@ -508,7 +509,7 @@ public class TicketAggregateTest
         Assert.AreEqual(TicketStatus.Voided, running.Status);
 
         // Ended normally: the time landed, so the bill can go
-        var ended = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var ended = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1);
         ended.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
         ended.Void("comp", "owner");
         Assert.AreEqual(TicketStatus.Voided, ended.Status);
@@ -529,7 +530,7 @@ public class TicketAggregateTest
         // A line that is not on the ticket, and session time, are both refused
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.AssignLinesCustomer([lineId, 99], "u1", "Nadia"));
 
-        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         room.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
         Assert.ThrowsExactly<SalesDomainException>(() =>
             room.AssignLinesCustomer([room.Lines.Single().Id], "u2", "Omar"));
@@ -538,7 +539,7 @@ public class TicketAggregateTest
     [TestMethod]
     public void Room_ticket_is_discardable_only_after_its_session_ends_empty()
     {
-        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1, label: "Nadia");
+        var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
         // While the session runs, no: its time is still to come
         Assert.ThrowsExactly<SalesDomainException>(() => running.Discard());
@@ -548,7 +549,7 @@ public class TicketAggregateTest
         running.Discard();
 
         // But an ended room ticket that carried time cannot be discarded
-        var withTime = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1, label: "Omar");
+        var withTime = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1);
         withTime.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
         Assert.ThrowsExactly<SalesDomainException>(() => withTime.Discard());
     }

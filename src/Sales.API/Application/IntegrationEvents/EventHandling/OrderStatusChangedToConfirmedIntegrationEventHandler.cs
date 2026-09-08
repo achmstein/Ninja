@@ -108,8 +108,6 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
 
             // The session may predate Sales (or its start event was lost) —
             // the order still has to land somewhere, so open the ticket now
-            // Unlabelled: whoever ordered is not necessarily who the session
-            // was opened for
             return sessionTicket ?? ticketRepository.Add(Ticket.OpenForSession(
                 sessionId,
                 @event.RoomId ?? 0,

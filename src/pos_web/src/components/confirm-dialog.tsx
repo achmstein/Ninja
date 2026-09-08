@@ -19,6 +19,13 @@ type ConfirmDialogProps = {
   destructive?: boolean
   disabled?: boolean
   onAction: () => void
+  /**
+   * A third answer, quieter than the other two and kept apart from them on
+   * the start side: the rare outcome of the same decision (end the session,
+   * or cancel it without charging). Both must be given, or neither.
+   */
+  secondaryLabel?: string
+  onSecondary?: () => void
 }
 
 /**
@@ -36,6 +43,8 @@ export function ConfirmDialog({
   destructive = false,
   disabled = false,
   onAction,
+  secondaryLabel,
+  onSecondary,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,6 +57,20 @@ export function ConfirmDialog({
         </DialogHeader>
 
         <DialogFooter className='gap-2'>
+          {secondaryLabel && onSecondary && (
+            <Button
+              variant='ghost'
+              size='lg'
+              className='text-destructive hover:text-destructive h-12 sm:me-auto'
+              disabled={disabled}
+              onClick={() => {
+                onOpenChange(false)
+                onSecondary()
+              }}
+            >
+              {secondaryLabel}
+            </Button>
+          )}
           <Button
             variant='outline'
             size='lg'

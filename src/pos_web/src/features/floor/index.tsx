@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -131,6 +131,9 @@ export function Floor() {
   const queryClient = useQueryClient()
   const [newTabOpen, setNewTabOpen] = useState(false)
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
+  // A session just started in this room: its bill is being opened by Sales
+  // on the event, and the till goes there the moment it shows up
+  const [startedRoomId, setStartedRoomId] = useState<number | null>(null)
   // The places column collapses so a busy floor gets the whole width; the
   // choice is remembered on this till (localStorage may be blocked — default open)
   const [placesOpen, setPlacesOpen] = useState(() => {
@@ -157,8 +160,9 @@ export function Floor() {
 
   const { data: tickets = [], isLoading } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
-    // Poll fallback in case the SignalR connection is silently dead
-    refetchInterval: 20_000,
+    // Poll fallback in case the SignalR connection is silently dead; a
+    // quick poll while a just-started session's bill is on its way
+    refetchInterval: startedRoomId != null ? 600 : 20_000,
   })
   const { rooms, sessions, sessionForRoom } = useRooms()
   const { pending } = usePendingOrders()
@@ -180,6 +184,24 @@ export function Floor() {
       to: '/ticket/$ticketId',
       params: { ticketId: String(toNumber(ticket.id)) },
     })
+
+  useEffect(() => {
+    if (startedRoomId == null) return
+    const bill = tickets.find(
+      (ticket) =>
+        toNumber(ticket.roomId) === startedRoomId && ticket.sessionId != null
+    )
+    if (bill) {
+      setStartedRoomId(null)
+      toTicket(bill)
+      return
+    }
+    // The bill never came (Sales down, event lost): stop the quick poll and
+    // leave the cashier on the floor, where the room now shows as occupied
+    const giveUp = setTimeout(() => setStartedRoomId(null), 15_000)
+    return () => clearTimeout(giveUp)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startedRoomId, tickets])
 
   const sessionForTicket = (ticket: TicketSummary) =>
     ticket.sessionId == null
@@ -416,6 +438,10 @@ export function Floor() {
         session={selectedRoom ? sessionForRoom(selectedRoom.id) : undefined}
         onOpenChange={(open) => {
           if (!open) setSelectedRoomId(null)
+        }}
+        onStarted={(roomId) => {
+          setSelectedRoomId(null)
+          setStartedRoomId(roomId)
         }}
       />
     </div>

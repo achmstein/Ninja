@@ -175,6 +175,9 @@
   "sessionStarted": "Session started",
   "failedToStartSession": "Failed to start session",
   "sessionRunning": "Session running",
+  "timeSoFar": "Time so far",
+  "roomTimeRunning": "Room time · running",
+  "inTheRoom": "In the room",
   "billedHours": "Billed hours",
   "billedHoursFormat": "{hours}h",
   "@billedHoursFormat": {

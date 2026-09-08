@@ -32,8 +32,7 @@ public class SessionStartedIntegrationEventHandler(
             @event.ReservationId,
             @event.RoomId,
             @event.RoomName,
-            @event.BranchId,
-            @event.CustomerName);
+            @event.BranchId);
 
         ticketRepository.Add(ticket);
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();

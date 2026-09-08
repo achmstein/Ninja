@@ -53,6 +53,11 @@ type RoomPanelProps = {
   room: RoomViewModel | null
   session: ReservationViewModel | undefined
   onOpenChange: (open: boolean) => void
+  /**
+   * A session started from here. The panel closes; the floor takes the
+   * till to the bill, where the running session's card lives.
+   */
+  onStarted?: (roomId: number) => void
 }
 
 /**
@@ -60,7 +65,7 @@ type RoomPanelProps = {
  * admin room panel's "now" section, sized for a thumb. Hours here; the
  * money is the ticket's, one tap away while a session runs.
  */
-export function RoomPanel({ room, session, onOpenChange }: RoomPanelProps) {
+export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -375,9 +380,15 @@ export function RoomPanel({ room, session, onOpenChange }: RoomPanelProps) {
         onOpenChange={(isOpen) => {
           if (!isOpen) setStartOpen(false)
         }}
+        onStarted={() => {
+          if (!room) return
+          close()
+          onStarted?.(toNumber(room.id))
+        }}
       />
 
       <CustomerDialog
+        accountsOnly
         open={pickerFor != null}
         onOpenChange={(isOpen) => {
           if (!isOpen) setPickerFor(null)

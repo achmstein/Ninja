@@ -35,7 +35,6 @@ class ShiftDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final async = ref.watch(shiftProvider(shiftId));
     final shift = async.value;
 
@@ -94,7 +93,7 @@ class ShiftDetailScreen extends ConsumerWidget {
               child: FButton.icon(
                 variant: FButtonVariant.ghost,
                 onPress: () => context.go('/shifts'),
-                child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                child: Icon(FIcons.arrowLeft, size: 24),
               ),
             ),
             const SizedBox(width: 8),

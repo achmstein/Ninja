@@ -926,7 +926,7 @@
           "Sessions"
         ],
         "summary": "Add a member to a session",
-        "description": "Add a customer as a member to an active session (staff)",
+        "description": "Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.",
         "operationId": "AddMemberToSession",
         "parameters": [
           {

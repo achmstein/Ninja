@@ -92,7 +92,7 @@ const dictionary = {
   },
 
   // Pending orders (customer app orders waiting for a cashier to accept them)
-  pendingOrders: { en: 'Waiting for confirmation', ar: 'مستنية تأكيد' },
+  pendingOrders: { en: 'Waiting for confirmation', ar: 'في انتظار التأكيد' },
   orderNumber: { en: 'Order #{id}', ar: 'طلب #{id}' },
   guest: { en: 'Guest', ar: 'ضيف' },
   confirmOrder: { en: 'Confirm', ar: 'أكّد' },
@@ -177,6 +177,8 @@ const dictionary = {
   sessionStarted: { en: 'Session started', ar: 'الجلسة بدأت' },
   failedToStartSession: { en: 'Failed to start session', ar: 'معرفناش نبدأ الجلسة' },
   sessionRunning: { en: 'Session running', ar: 'الوقت شغال' },
+  timeSoFar: { en: 'Time so far', ar: 'الوقت لحد دلوقتي' },
+  roomTimeRunning: { en: 'Room time · running', ar: 'وقت الأوضة · شغال' },
   billedHours: { en: 'Billed hours', ar: 'الساعات المحسوبة' },
   billedHoursFormat: { en: '{hours}h', ar: '{hours} ساعة' },
   billedSoFar: { en: 'Billed so far', ar: 'اتحسب لحد دلوقتي' },
@@ -376,6 +378,7 @@ const dictionary = {
   instapay: { en: 'InstaPay', ar: 'إنستاباي' },
   account: { en: 'On account', ar: 'على الحساب' },
   whoseAccount: { en: 'Whose account?', ar: 'حساب مين؟' },
+  inTheRoom: { en: 'In the room', ar: 'اللي في الأوضة' },
   onCustomerTab: {
     en: "On the customer's tab",
     ar: 'اتحط على حساب العميل',

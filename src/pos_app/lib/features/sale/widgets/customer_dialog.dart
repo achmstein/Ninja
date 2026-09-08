@@ -13,7 +13,16 @@ const _minSearchLength = 2;
 /// Attach-a-customer search for loyalty accrual and on-account settling.
 /// Debounced Keycloak search; the typed name is offered first because most
 /// people at a table have no account and the waiters know them by name.
-Future<SaleCustomer?> showCustomerDialog(BuildContext context) {
+/// With [accountsOnly] there is no name shortcut: for the room roster, a
+/// member is a tab the bill can go on, and a bare name is nobody.
+/// [quickPicks] are offered before the search — the room's roster when the
+/// sale is for a room; most of the time the person is already there, so
+/// this is one tap instead of a search.
+Future<SaleCustomer?> showCustomerDialog(
+  BuildContext context, {
+  bool accountsOnly = false,
+  List<({String id, String name})> quickPicks = const [],
+}) {
   return showFDialog<SaleCustomer>(
     context: context,
     useRootNavigator: true,
@@ -21,13 +30,15 @@ Future<SaleCustomer?> showCustomerDialog(BuildContext context) {
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => const _CustomerDialog(),
+      builder: (context, _) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks),
     ),
   );
 }
 
 class _CustomerDialog extends ConsumerStatefulWidget {
-  const _CustomerDialog();
+  final bool accountsOnly;
+  final List<({String id, String name})> quickPicks;
+  const _CustomerDialog({this.accountsOnly = false, this.quickPicks = const []});
 
   @override
   ConsumerState<_CustomerDialog> createState() => _CustomerDialogState();
@@ -111,12 +122,35 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
           children: [
             Text(l10n.chooseCustomer, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
+            if (widget.quickPicks.isNotEmpty) ...[
+              Text(l10n.inTheRoom, style: muted),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final person in widget.quickPicks)
+                    SizedBox(
+                      height: 44,
+                      child: FButton(
+                        variant: FButtonVariant.outline,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () => _pick(SaleCustomer(id: person.id, name: person.name)),
+                        prefix: Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                        child: Text(person.name.isNotEmpty ? person.name : l10n.guest,
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
             FTextField(
               control: FTextFieldControl.managed(controller: _term),
               hint: l10n.searchCustomersPlaceholder,
               autofocus: true,
             ),
-            if (typedName.isNotEmpty) ...[
+            if (!widget.accountsOnly && typedName.isNotEmpty) ...[
               const SizedBox(height: 16),
               SizedBox(
                 height: 56,

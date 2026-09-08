@@ -10,31 +10,27 @@ public class OrderStockConfirmedIntegrationEventHandler(
     {
         logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
 
-        var order = await orderRepository.GetAsync(@event.OrderId);
+        // Through commands, not the aggregate: both transitions raise domain
+        // events whose handlers write integration events to the outbox, and
+        // that write needs the transaction TransactionBehavior opens around a
+        // command. An integration-event handler runs outside the pipeline and
+        // has none. Calling the aggregate here threw ArgumentNullException
+        // inside SaveEntitiesAsync, the bus swallowed it, and the whole status
+        // change rolled back.
+        var submitted = await mediator.Send(new SetOrderStockConfirmedCommand(@event.OrderId));
 
-        if (order is null)
+        if (!submitted)
         {
             logger.LogWarning("Order {OrderId} not found for stock confirmation", @event.OrderId);
             return;
         }
 
-        order.SetStockConfirmedStatus();
+        var order = await orderRepository.GetAsync(@event.OrderId);
 
-        await orderRepository.UnitOfWork.SaveEntitiesAsync();
-
-        // A counter sale was keyed in by the cashier — the person who would
-        // otherwise press Confirm — so it confirms itself the moment the items
+        // A counter sale was keyed in by the cashier, the person who would
+        // otherwise press Confirm, so it confirms itself the moment the items
         // check out. Customer and guest orders keep waiting for staff.
-        //
-        // Through the command, not the aggregate: confirming raises a domain
-        // event whose handler writes the integration event to the outbox, and
-        // that write needs the transaction TransactionBehavior opens around a
-        // command. An integration-event handler runs outside the pipeline and
-        // has none, so confirming here threw ArgumentNullException inside
-        // SaveEntitiesAsync, the bus swallowed it, and the whole status change
-        // rolled back — every POS order stalled in AwaitingValidation and no
-        // ticket ever assembled from it.
-        if (order.Source == OrderSource.Pos)
+        if (order?.Source == OrderSource.Pos)
         {
             await mediator.Send(new ConfirmOrderCommand(order.Id));
         }
@@ -42,6 +38,6 @@ public class OrderStockConfirmedIntegrationEventHandler(
         logger.LogInformation(
             "Order {OrderId} stock confirmed - status changed to {Status}",
             @event.OrderId,
-            order.OrderStatus);
+            order?.OrderStatus);
     }
 }

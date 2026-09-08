@@ -49,15 +49,29 @@ export function usePosNotifications() {
       .withAutomaticReconnect()
       .build()
 
-    const invalidateTickets = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+    // A live event has to refresh a list even when the cashier is not looking
+    // at it — most of a shift is spent on the sale pad or inside a ticket, not
+    // on the floor, so the pending-orders and rooms lists are usually
+    // off-screen when their event arrives. invalidateQueries only *refetches*
+    // queries that have a mounted observer (refetchType defaults to 'active');
+    // an off-screen list would be marked stale but not refreshed, and could
+    // stay a step behind until the screen was reopened. refetchType: 'all'
+    // refreshes the cached list too, so it is already current the moment the
+    // floor is shown. The refetch still carries X-Branch-Id, so it stays
+    // branch-scoped.
+    const refresh = (...ids: string[]) => {
+      for (const id of ids) {
+        queryClient.invalidateQueries({
+          queryKey: [{ _id: id }],
+          refetchType: 'all',
+        })
+      }
+    }
+
+    const invalidateTickets = () =>
       // The sale pad polls the order → ticket lookup while the confirmation
       // event is in flight; the signal short-circuits its 600ms wait
-      queryClient.invalidateQueries({
-        queryKey: [{ _id: 'getTicketByOrder' }],
-      })
-    }
+      refresh('getOpenTickets', 'getTicket', 'getTicketByOrder')
 
     // Broadcast to the whole admin group; the branch filter lives in the
     // query layer (the refetch carries X-Branch-Id), so a blanket
@@ -66,10 +80,7 @@ export function usePosNotifications() {
       invalidateTickets()
     })
 
-    const invalidateOrders = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getPendingOrders' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
-    }
+    const invalidateOrders = () => refresh('getPendingOrders', 'getOrder')
 
     // Customer app orders wait for a cashier's tap, so the till gets the
     // alerts the admin board gets: a chime and a toast when one arrives, and
@@ -102,10 +113,7 @@ export function usePosNotifications() {
       }
     })
 
-    const invalidateRooms = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getActiveSessions' }] })
-    }
+    const invalidateRooms = () => refresh('listRooms', 'getActiveSessions', 'getSession')
 
     // Sessions start, end and get cancelled from the till, the admin apps
     // and the customers' phones alike; the rooms group carries all of it
@@ -113,8 +121,7 @@ export function usePosNotifications() {
       invalidateRooms()
     })
 
-    const invalidateItems = () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+    const invalidateItems = () => refresh('listItems')
 
     // An item marked sold out (or back) on another till or in the back
     // office; the refetch carries X-Branch-Id, so the pad shows this
@@ -127,14 +134,12 @@ export function usePosNotifications() {
     // a controller. Same alert a new order gets: chime + toast, and refetch
     // the floor's requests strip.
     connection.on('ServiceRequestCreated', () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'serviceRequestsPending' }] })
+      refresh('serviceRequestsPending')
       playAlertSound()
       toast.info(translate('newServiceRequestToast'))
     })
 
-    const invalidateBranches = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
-    }
+    const invalidateBranches = () => refresh('getBranches')
 
     // Opening or closing the shift (and the header pause toggles) flip the
     // branch's taking-orders / taking-reservations flags in Branch.API; the
@@ -182,7 +187,7 @@ export function usePosNotifications() {
       invalidateRooms()
       invalidateItems()
       invalidateBranches()
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'serviceRequestsPending' }] })
+      refresh('serviceRequestsPending')
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

@@ -7,6 +7,7 @@ import {
   changePlayerModeMutation,
   endSessionMutation,
   getActiveSessionsOptions,
+  getSessionOptions,
   listRoomsOptions,
   removeMemberFromSessionMutation,
   reserveRoomMutation,
@@ -82,6 +83,24 @@ type Done = { onSuccess?: () => void }
  * toasts. Callers pass `onSuccess` for what only they know, like closing
  * their own dialog.
  */
+/**
+ * One session by id, whatever its state. The active list stops carrying a
+ * session the moment it ends, but the ticket keeps reading it until the
+ * bill is settled: the people in the room are still being named, and
+ * their shares still go on their tabs.
+ */
+export function useSession(
+  sessionId: number | string | null | undefined,
+  enabled = true
+): ReservationViewModel | undefined {
+  const query = useQuery({
+    ...getSessionOptions({ path: { sessionId: Number(sessionId) } }),
+    enabled: enabled && sessionId != null,
+    refetchInterval: 30_000,
+  })
+  return query.data
+}
+
 export function useSessionActions() {
   const t = useT()
   const queryClient = useQueryClient()
@@ -89,6 +108,7 @@ export function useSessionActions() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getActiveSessions' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getSession' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
   }

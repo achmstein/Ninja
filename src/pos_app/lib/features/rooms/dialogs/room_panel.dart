@@ -22,9 +22,11 @@ import 'start_session_dialog.dart';
 /// admin room panel's "now" section, sized for a thumb. Hours here; the
 /// money is the ticket's, one tap away while a session runs. The panel
 /// reads the room and its session live, so what another till does shows
-/// while it is open.
-Future<void> showRoomPanel(BuildContext context, int roomId) {
-  return showFDialog<void>(
+/// while it is open. Resolves to true when a session was started from it:
+/// the panel closes on that, and the floor takes the till to the bill,
+/// where the running session's card lives.
+Future<bool> showRoomPanel(BuildContext context, int roomId) async {
+  final started = await showFDialog<bool>(
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
@@ -34,6 +36,7 @@ Future<void> showRoomPanel(BuildContext context, int roomId) {
       builder: (context, _) => _RoomPanel(roomId: roomId),
     ),
   );
+  return started ?? false;
 }
 
 class _RoomPanel extends ConsumerStatefulWidget {
@@ -55,6 +58,11 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
   }
 
   void _close() => Navigator.of(context, rootNavigator: true).pop();
+
+  Future<void> _start(Room room, {RoomSession? session}) async {
+    final started = await showStartSessionDialog(context, room, session: session);
+    if (started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+  }
 
   Future<void> _guarded(Future<bool> Function(SessionActions actions) call) async {
     if (_busy) return;
@@ -106,7 +114,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
 
   // Customer picker: adds a member (running) or assigns the owner (reserved)
   Future<void> _pickCustomer(RoomSession session, {required bool assign}) async {
-    final picked = await showCustomerDialog(context);
+    final picked = await showCustomerDialog(context, accountsOnly: true);
     final id = picked?.id;
     if (picked == null || id == null || id.isEmpty || !mounted) return;
     await _guarded((a) => assign ? a.assignCustomer(session.id, id, picked.name) : a.addMember(session.id, id, picked.name));
@@ -344,13 +352,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: bigButton(l10n.startSession,
-                    icon: playIcon,
-                    onPress: _busy
-                        ? null
-                        : () async {
-                            await showStartSessionDialog(context, room, session: session);
-                          }),
+                child: bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room, session: session)),
               ),
             ],
           ),
@@ -387,13 +389,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: bigButton(l10n.startSession,
-                    icon: playIcon,
-                    onPress: _busy
-                        ? null
-                        : () async {
-                            await showStartSessionDialog(context, room);
-                          }),
+                child: bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room)),
               ),
             ],
           ),

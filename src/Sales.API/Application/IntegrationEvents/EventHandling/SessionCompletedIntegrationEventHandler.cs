@@ -36,14 +36,12 @@ public class SessionCompletedIntegrationEventHandler(
             logger.LogWarning("No open ticket for completed session {SessionId} - opened one late", @event.ReservationId);
         }
 
-        // The time is the owner's: it lands with their account, so a room
-        // that only bought time can still go on their tab at settle. Their
-        // name is the label the ticket opened with — the one snapshot of it
-        // Sales holds.
+        // The time is the room's, not anyone's: it sits under the room's own
+        // heading on the bill, and the group splits it at settle however they
+        // agree, each share typed onto its own tab. Stamping the owner on it
+        // used to put the whole room on one person with a single tap.
         ticket.AppendSessionTime(
-            @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost,
-            customerId: @event.CustomerId,
-            customerName: ticket.Label);
+            @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
 
         // Nothing ever landed — no time billed, no orders. An empty room ticket
         // left open would keep the room busy on the floor and block the next

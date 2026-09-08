@@ -16,9 +16,9 @@ export const BASE_TENDERS: readonly Tender[] = [
   { value: 2, name: 'InstaPay', labelKey: 'instapay' },
 ]
 
-// Charges the customer's tab (Accounts.API posts the charge off the
-// TicketSettled event). Only offered when the ticket has a customer
-// attached — the server rejects it otherwise.
+// Charges a customer's tab (Accounts.API posts the charge off the
+// TicketSettled event). Only offered when somebody on the bill or in the
+// room can be charged — the server rejects a payment that names no tab.
 export const ACCOUNT_TENDER: Tender = {
   value: 3,
   name: 'Account',

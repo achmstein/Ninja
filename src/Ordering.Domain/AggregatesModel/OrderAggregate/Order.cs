@@ -334,6 +334,7 @@ public class Order
 
         OrderStatus = OrderStatus.Submitted;
         Description = "Items validated. Order ready for confirmation.";
+        AddDomainEvent(new OrderStatusChangedToSubmittedDomainEvent(Id));
     }
 
     /// <summary>

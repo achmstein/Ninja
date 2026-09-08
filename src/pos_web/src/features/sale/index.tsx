@@ -15,15 +15,17 @@ import {
 import { listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { getTicketByOrderOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { getTicketByOrderOptions, getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { sessionRoster } from '@/features/rooms/status'
+import { useSession, useSessionActions } from '@/features/rooms/use-rooms'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
-import { lineKey, saleCount, saleTotal, useSale, type SaleLine } from './cart'
+import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
 import { CustomerDialog } from './customer-dialog'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
@@ -177,6 +179,31 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(null)
   const [customerOpen, setCustomerOpen] = useState(false)
+
+  // Adding to a room's bill: the people in the room are the first choice
+  // for whose round this is, and somebody picked from the search who is not
+  // in the room yet joins the roster right here — the cashier is telling us
+  // they are there, and their share of the time will need a tab at settle
+  const ticketQuery = useQuery({
+    ...getTicketOptions({
+      path: { id: ticketId ?? 0 },
+      query: { 'api-version': API_VERSION },
+    }),
+    enabled: addingToTicket,
+  })
+  const roomSession = useSession(
+    ticketQuery.data?.sessionId,
+    ticketQuery.data?.type === 'Room'
+  )
+  const roster = sessionRoster(roomSession)
+  const sessionActions = useSessionActions()
+  const pickCustomer = (picked: SaleCustomer) => {
+    setCustomer(picked)
+    if (roomSession && picked.id && !roster.some((m) => m.id === picked.id)) {
+      sessionActions.addMember(toNumber(roomSession.id), picked.id, picked.name)
+    }
+  }
+
   // Set once the order is accepted; drives the blocking "sending to
   // kitchen" state while the ticket lookup polls
   const [pending, setPending] = useState<{
@@ -543,7 +570,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       <CustomerDialog
         open={customerOpen}
         onOpenChange={setCustomerOpen}
-        onSelect={setCustomer}
+        onSelect={pickCustomer}
+        quickPicks={roster}
       />
 
       {/* Blocking wait: the sale is committed, nothing else may be touched

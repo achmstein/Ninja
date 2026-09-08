@@ -86,6 +86,8 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
             style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
           ),
           const SizedBox(height: 16),
+          // The card prices the mode picked below; the toggle carries both
+          // rates so the other one stays in view
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
@@ -94,7 +96,7 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
                 Text(name, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
                 Text.rich(
                   TextSpan(
-                    text: '${money(context, room.singleRate)} · ${money(context, room.multiRate)}',
+                    text: money(context, _playerMode == 'Multi' ? room.multiRate : room.singleRate),
                     style: theme.typography.xl2.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.colors.primary,
@@ -112,7 +114,11 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
           const SizedBox(height: 16),
           Text(l10n.playerMode, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-          PlayerModeToggle(value: _playerMode, onChange: (mode) => setState(() => _playerMode = mode ?? _playerMode)),
+          PlayerModeToggle(
+            value: _playerMode,
+            onChange: (mode) => setState(() => _playerMode = mode ?? _playerMode),
+            rates: {'Single': money(context, room.singleRate), 'Multi': money(context, room.multiRate)},
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

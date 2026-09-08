@@ -31,20 +31,50 @@ extension SessionState on RoomSession {
   }
 
   /// The server bills in quarter-hour steps and puts the rounded figures on
-  /// the session; read them rather than estimating
+  /// the session once a segment closes; read them rather than estimating
   double get billedHours => (singleRoundedHours ?? 0) + (multiRoundedHours ?? 0);
+
+  /// What the session would cost if it ended this second: every segment,
+  /// the running one included, rounded the way the server rounds when the
+  /// segment closes, at the room's rate for its mode. The bill only gets
+  /// the real figure when the session ends; this is the cashier's preview.
+  SessionEstimate estimate(DateTime now) {
+    final singleHours = roundedHours(modeSeconds('Single', now));
+    final multiHours = roundedHours(modeSeconds('Multi', now));
+    return SessionEstimate(
+      singleHours: singleHours,
+      multiHours: multiHours,
+      amount: singleHours * singleRate + multiHours * multiRate,
+    );
+  }
 
   /// Seconds until a reservation lapses, null when it never does
   double? secondsUntilExpiry(DateTime now) =>
       expiresAt == null ? null : (expiresAt!.difference(now).inMilliseconds / 1000).clamp(0, double.infinity);
 
-  /// Who the session is for, the way staff say it: the owner, or "walk-in"
-  String who(AppLocalizations l10n) {
-    for (final member in members) {
-      if (member.isOwner && (member.customerName ?? '').isNotEmpty) return member.customerName!;
-    }
-    return (userName ?? '').isNotEmpty ? userName! : l10n.walkIn;
-  }
+  /// The people in the room as the customer picker offers them: everyone
+  /// on the roster who has an account. A member with no name still shows;
+  /// the picker labels the blank.
+  List<({String id, String name})> get roster => [
+        for (final member in members)
+          if (member.customerId.isNotEmpty) (id: member.customerId, name: member.customerName ?? ''),
+      ];
+}
+
+class SessionEstimate {
+  final double singleHours;
+  final double multiHours;
+  final double amount;
+  const SessionEstimate({required this.singleHours, required this.multiHours, required this.amount});
+  double get hours => singleHours + multiHours;
+}
+
+/// The server's rounding, in the open: minutes to the nearest quarter hour,
+/// halves away from zero. Below seven and a half minutes nothing is billed.
+double roundedHours(double seconds) {
+  final minutes = seconds / 60;
+  if (minutes <= 0) return 0;
+  return (minutes / 15).round() / 4;
 }
 
 /// 1.25 → "1.25", 1.5 → "1.5", 2 → "2"

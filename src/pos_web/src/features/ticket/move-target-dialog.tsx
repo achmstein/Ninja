@@ -148,9 +148,9 @@ export function MoveTargetDialog({
                     }
                   >
                     <Icon className='text-muted-foreground size-5 shrink-0' />
-                    <span className='min-w-0 flex-1 truncate text-start'>
-                      {title}
-                      <span className='text-muted-foreground ms-2 text-sm'>
+                    <span className='flex min-w-0 flex-1 items-baseline gap-2 text-start'>
+                      <span className='truncate'>{title}</span>
+                      <span className='text-muted-foreground shrink-0 text-sm'>
                         {typeLabel(target)} · #{toNumber(target.id)}
                       </span>
                     </span>

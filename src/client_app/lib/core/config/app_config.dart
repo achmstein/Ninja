@@ -1,7 +1,7 @@
 /// Application configuration
 class AppConfig {
   // Mobile BFF base URL (all API calls go through here)
-  // Debug: localhost with adb reverse tcp:8080 tcp:80
+  // Debug: localhost with adb reverse tcp:8080 tcp:5000 (BFF port)
   // Release: Oracle Cloud server
   static const bool _isRelease = bool.fromEnvironment('dart.vm.product');
   static String get bffBaseUrl {

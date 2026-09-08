@@ -178,16 +178,16 @@ public class Ticket : Entity, IAggregateRoot
 
     /// <summary>
     /// Opened when a room session starts (or lazily, if Sales missed the
-    /// start). The label is whoever the session was opened for, as they were
-    /// named at the time; the room's name stays the headline.
+    /// start). A room ticket is named by its room, like a table's by its
+    /// table — never by a person: who is in the room is the session's
+    /// roster, and whose share is whose is decided at settle.
     /// </summary>
-    public static Ticket OpenForSession(int sessionId, int roomId, LocalizedText roomName, int branchId, string? label = null)
+    public static Ticket OpenForSession(int sessionId, int roomId, LocalizedText roomName, int branchId)
         => new(TicketType.Room, branchId)
         {
             SessionId = sessionId,
             RoomId = roomId,
             LocationName = roomName,
-            Label = CleanLabel(label),
         };
 
     /// <summary>Opened lazily by a table's first confirmed order (Q7: one open ticket per table).</summary>
@@ -257,17 +257,15 @@ public class Ticket : Entity, IAggregateRoot
     /// <summary>
     /// Append the authoritative time lines when the session completes.
     /// Idempotent — time lands exactly once, rounding stays owned by Spaces.
-    /// The time is the session owner's, so the lines carry their account the
-    /// way an order's lines carry the person who ordered: a room that only
-    /// bought time can still go on its owner's tab at settle.
+    /// The time is the room's, not anyone's: it carries no customer, sits
+    /// under the room's own heading, and is split at settle however the
+    /// group agrees, each share going onto its own tab.
     /// </summary>
     public void AppendSessionTime(
         decimal singleHours,
         decimal singleCost,
         decimal multiHours,
-        decimal multiCost,
-        string? customerId = null,
-        string? customerName = null)
+        decimal multiCost)
     {
         EnsureOpen();
 
@@ -280,11 +278,9 @@ public class Ticket : Entity, IAggregateRoot
         {
             _lines.Add(new TicketLine(
                 TicketLineSource.SessionTime,
-                new LocalizedText("Room time — Single", "وقت الأوضة — سينجل"),
+                new LocalizedText("Room time — Single", "وقت الأوضة — سنجل"),
                 qty: singleHours,
-                unitPrice: singleHours == 0 ? 0 : singleCost / singleHours,
-                customerName: customerName,
-                customerId: customerId));
+                unitPrice: singleHours == 0 ? 0 : singleCost / singleHours));
         }
 
         if (multiHours > 0)
@@ -293,9 +289,7 @@ public class Ticket : Entity, IAggregateRoot
                 TicketLineSource.SessionTime,
                 new LocalizedText("Room time — Multi", "وقت الأوضة — ملتي"),
                 qty: multiHours,
-                unitPrice: multiHours == 0 ? 0 : multiCost / multiHours,
-                customerName: customerName,
-                customerId: customerId));
+                unitPrice: multiHours == 0 ? 0 : multiCost / multiHours));
         }
 
         Touch();

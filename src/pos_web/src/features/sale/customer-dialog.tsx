@@ -49,6 +49,18 @@ type CustomerDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSelect: (customer: SaleCustomer) => void
+  /**
+   * Only people with an account can be picked: no "use this name" shortcut.
+   * For the room roster, where a member is a tab the bill can go on and a
+   * bare name is nobody.
+   */
+  accountsOnly?: boolean
+  /**
+   * People to offer before the search: the room's roster when the sale is
+   * for a room. Most of the time the person is already there, so this is
+   * one tap instead of a search.
+   */
+  quickPicks?: { id: string; name: string }[]
 }
 
 /**
@@ -60,6 +72,8 @@ export function CustomerDialog({
   open,
   onOpenChange,
   onSelect,
+  accountsOnly = false,
+  quickPicks = [],
 }: CustomerDialogProps) {
   const t = useT()
   const [term, setTerm] = useState('')
@@ -103,6 +117,28 @@ export function CustomerDialog({
           <DialogTitle className='text-xl'>{t('chooseCustomer')}</DialogTitle>
         </DialogHeader>
 
+        {quickPicks.length > 0 && (
+          <div className='flex flex-col gap-2'>
+            <p className='text-muted-foreground text-sm'>{t('inTheRoom')}</p>
+            <div className='flex flex-wrap gap-2'>
+              {quickPicks.map((person) => (
+                <Button
+                  key={person.id}
+                  variant='outline'
+                  className='h-11 max-w-full gap-2 px-3 text-base'
+                  onClick={() => {
+                    onSelect({ id: person.id, name: person.name })
+                    onOpenChange(false)
+                  }}
+                >
+                  <User className='text-muted-foreground size-4 shrink-0' />
+                  <span className='truncate'>{person.name || t('guest')}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
@@ -112,7 +148,7 @@ export function CustomerDialog({
           autoFocus
         />
 
-        {typedName.length > 0 && (
+        {!accountsOnly && typedName.length > 0 && (
           <Button
             variant='outline'
             className='h-14 w-full justify-start gap-3 text-base'

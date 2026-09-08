@@ -432,8 +432,11 @@ public class Reservation : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(customerId))
             throw new SpacesDomainException("Customer ID is required");
 
-        if (Status != ReservationStatus.Active)
-            throw new SpacesDomainException("Can only join active sessions");
+        // Until the bill is settled the till can still name who was in the
+        // room — someone who never scanned the QR, whose share of the time
+        // goes on their own tab. Sales owns the bill; the roster lives here.
+        if (Status != ReservationStatus.Active && Status != ReservationStatus.Completed)
+            throw new SpacesDomainException("Can only add members to an active or ended session");
 
         if (HasMember(customerId))
             throw new SpacesDomainException("Customer is already a member of this session");

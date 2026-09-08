@@ -15,6 +15,10 @@ var rabbitMq = builder.AddRabbitMQ("eventbus")
 var postgres = builder.AddPostgres("postgres")
     .WithImage("ankane/pgvector")
     .WithImageTag("latest")
+    // A named volume, like Keycloak's: without one the data lives in the
+    // container's own layer and a recreated container (Docker restart,
+    // changed resource config) comes back empty
+    .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
 var accountsDb = postgres.AddDatabase("accountsdb");

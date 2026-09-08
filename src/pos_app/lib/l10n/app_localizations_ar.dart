@@ -133,7 +133,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get pendingOrders => 'مستنية تأكيد';
+  String get pendingOrders => 'في انتظار التأكيد';
 
   @override
   String orderNumber(int id) {
@@ -323,6 +323,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sessionRunning => 'الوقت شغال';
+
+  @override
+  String get timeSoFar => 'الوقت لحد دلوقتي';
+
+  @override
+  String get roomTimeRunning => 'وقت الأوضة · شغال';
+
+  @override
+  String get inTheRoom => 'اللي في الأوضة';
 
   @override
   String get billedHours => 'الساعات المحسوبة';

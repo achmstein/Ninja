@@ -650,6 +650,24 @@ abstract class AppLocalizations {
   /// **'Session running'**
   String get sessionRunning;
 
+  /// No description provided for @timeSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Time so far'**
+  String get timeSoFar;
+
+  /// No description provided for @roomTimeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Room time · running'**
+  String get roomTimeRunning;
+
+  /// No description provided for @inTheRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'In the room'**
+  String get inTheRoom;
+
   /// No description provided for @billedHours.
   ///
   /// In en, this message translates to:

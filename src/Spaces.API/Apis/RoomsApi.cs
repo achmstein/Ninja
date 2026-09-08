@@ -159,7 +159,7 @@ public static class RoomsApi
         api.MapPost("/sessions/{sessionId:int}/members", AddMemberToSession)
             .WithName("AddMemberToSession")
             .WithSummary("Add a member to a session")
-            .WithDescription("Add a customer as a member to an active session (staff)")
+            .WithDescription("Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.")
             .WithTags("Sessions")
             .RequireAuthorization("Pos");
 

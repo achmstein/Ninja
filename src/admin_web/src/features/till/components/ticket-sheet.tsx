@@ -191,9 +191,9 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
       <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
         <SheetHeader>
           <div className='flex items-center gap-2'>
-            <SheetTitle className='truncate'>
-              {title}
-              <span className='text-muted-foreground ms-2 text-base font-medium tabular-nums'>
+            <SheetTitle className='flex min-w-0 items-baseline gap-2'>
+              <span className='truncate'>{title}</span>
+              <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
                 #{toNumber(ticket?.id ?? ticketId)}
               </span>
             </SheetTitle>

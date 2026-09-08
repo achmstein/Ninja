@@ -28,7 +28,6 @@ class ShiftScreen extends ConsumerWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(currentShiftProvider);
-    final rtl = Directionality.of(context) == TextDirection.rtl;
 
     if (!async.hasValue) return const _Skeleton();
     final shift = async.value;
@@ -88,7 +87,7 @@ class ShiftScreen extends ConsumerWidget {
                         child: FButton.icon(
                           variant: FButtonVariant.ghost,
                           onPress: () => context.go('/'),
-                          child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                          child: Icon(FIcons.arrowLeft, size: 24),
                         ),
                       ),
                       const SizedBox(width: 8),

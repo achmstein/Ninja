@@ -12,13 +12,16 @@ import '../../../core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
 import '../../../core/network/api_errors.dart';
-import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../orders/services/order_service.dart';
+import '../../rooms/models/room.dart';
+import '../../rooms/providers/rooms_provider.dart';
+import '../../rooms/session_actions.dart';
+import '../../rooms/status.dart';
 import '../../ticket/dialogs/settle_dialog.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/pricing.dart';
@@ -68,6 +71,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   String? _requestId;
 
   bool get _addingToTicket => widget.ticketId != null;
+
+  /// The room's session behind the bill being added to, watched so the
+  /// customer picker can offer the roster; null for a table or the counter
+  RoomSession? _watchRoomSession() {
+    final ticketId = widget.ticketId;
+    if (ticketId == null) return null;
+    final ticket = ref.watch(ticketProvider(ticketId)).value;
+    if (ticket == null || ticket.type != TicketType.room || ticket.sessionId == null) return null;
+    return ref.watch(sessionProvider(ticket.sessionId!)).value;
+  }
 
   @override
   void initState() {
@@ -281,9 +294,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final roomSession = _watchRoomSession();
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = ref.watch(localeProvider).languageCode == 'ar';
     final sale = ref.watch(saleProvider);
     // Until the cart points at this destination, show it empty
     final synced = sale.target == widget.ticketId;
@@ -318,7 +331,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
                             onPress: () => context.go(_addingToTicket ? '/ticket/${widget.ticketId}' : '/'),
-                            child: Icon(isArabic ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                            child: Icon(FIcons.arrowLeft, size: 24),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -462,8 +475,21 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             child: FButton(
                               variant: FButtonVariant.outline,
                               onPress: () async {
-                                final picked = await showCustomerDialog(context);
-                                if (picked != null) ref.read(saleProvider.notifier).setCustomer(picked);
+                                // Adding to a room's bill: the people in the
+                                // room are the first choice for whose round
+                                // this is, and somebody picked from the
+                                // search who is not in the room yet joins the
+                                // roster right here — the cashier is telling
+                                // us they are there, and their share of the
+                                // time will need a tab at settle
+                                final roster = roomSession?.roster ?? const <({String id, String name})>[];
+                                final picked = await showCustomerDialog(context, quickPicks: roster);
+                                if (picked == null || !context.mounted) return;
+                                ref.read(saleProvider.notifier).setCustomer(picked);
+                                final id = picked.id;
+                                if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
+                                  SessionActions(ref, context).addMember(roomSession.id, id, picked.name);
+                                }
                               },
                               prefix: const Icon(FIcons.userPlus, size: 20),
                               child: Text.rich(

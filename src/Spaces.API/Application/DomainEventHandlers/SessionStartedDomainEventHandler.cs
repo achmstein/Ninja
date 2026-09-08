@@ -33,7 +33,6 @@ public class SessionStartedDomainEventHandler : INotificationHandler<SessionStar
             reservation.RoomId,
             roomName,
             reservation.CustomerId,
-            reservation.CustomerName,
             reservation.ActualStartTime,
             reservation.CurrentPlayerMode?.ToString(),
             reservation.Room?.BranchId ?? 1);

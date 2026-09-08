@@ -51,6 +51,13 @@ type SettledView = {
 
 type SettleDialogProps = {
   ticket: TicketDetail
+  /**
+   * The people in the room, for a room ticket: each is a tab the bill can go
+   * on, whether or not they ordered anything themselves.
+   */
+  members?:
+    | { customerId?: string | null; customerName?: string | null }[]
+    | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onSettled: (outcome: SettleOutcome) => void
@@ -64,6 +71,7 @@ type SettleDialogProps = {
  */
 export function SettleDialog({
   ticket,
+  members,
   open,
   onOpenChange,
   onSettled,
@@ -74,24 +82,34 @@ export function SettleDialog({
 
   const total = toNumber(ticket.total)
 
-  // Everyone on this bill who has an account, with their share. A shared
-  // table can put Ahmed's items on his tab and Sara's on hers, so the tab is
-  // chosen per payment rather than fixed to the ticket. A room's time is its
-  // owner's line, so a room that only bought time offers its owner's tab
-  // too. A name the till was simply told carries no account and cannot be
-  // charged.
+  // Everyone this bill can go on, with their share. The people in the room
+  // come first: a group splits the time between them however they agree,
+  // and someone who ordered nothing still owes their part. Then whoever
+  // has lines, with what those come to. A shared table can put Ahmed's
+  // items on his tab and Sara's on hers, so the tab is chosen per payment
+  // rather than fixed to the ticket. A name the till was simply told
+  // carries no account and cannot be charged.
   const holders = new Map<string, AccountHolder>()
+  for (const member of members ?? []) {
+    if (!member.customerId) continue
+    const id = String(member.customerId)
+    holders.set(id, { id, name: member.customerName ?? '', subtotal: 0 })
+  }
   for (const line of ticket.lines ?? []) {
-    if (!line.customerId) continue
+    // The room's time is nobody's share: the group splits it as they say
+    if (!line.customerId || line.source === 'SessionTime') continue
     const id = String(line.customerId)
     const holder = holders.get(id)
-    if (holder) holder.subtotal += toNumber(line.total)
-    else
+    if (holder) {
+      holder.subtotal += toNumber(line.total)
+      if (!holder.name && line.customerName) holder.name = line.customerName
+    } else {
       holders.set(id, {
         id,
         name: line.customerName ?? '',
         subtotal: toNumber(line.total),
       })
+    }
   }
   const accountHolders = [...holders.values()]
 
@@ -114,9 +132,12 @@ export function SettleDialog({
 
   // Prefill the exact remainder whenever the dialog opens or a payment
   // lands — the one-cash-payment happy path is: open, add payment, settle.
+  // Never for a tab: what goes on account is typed, share by share.
   useEffect(() => {
     if (open && !result) {
-      setAmountStr(remaining > 0 ? String(remaining) : '')
+      setAmountStr(
+        tender.name !== 'Account' && remaining > 0 ? String(remaining) : ''
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, paid])
@@ -160,12 +181,34 @@ export function SettleDialog({
   const chosenHolder =
     accountHolder ?? (accountHolders.length === 1 ? accountHolders[0] : null)
 
-  // Tapping a person prefills their share, capped at what is still owed —
-  // the common case is "Ahmed's items go on Ahmed's tab"
+  // A person's own items, capped at what is still owed — the common case
+  // is "Ahmed's items go on Ahmed's tab". Never the remainder: someone who
+  // ordered nothing owes only the part of the time the group says, and
+  // that is typed.
+  const shareOf = (holder: AccountHolder | null) =>
+    holder && holder.subtotal > 0
+      ? String(+Math.min(holder.subtotal, remaining).toFixed(2))
+      : ''
+
   const chooseHolder = (holder: AccountHolder) => {
     setAccountHolder(holder)
-    const share = holder.subtotal > 0 ? Math.min(holder.subtotal, remaining) : remaining
-    setAmountStr(share > 0 ? String(+share.toFixed(2)) : '')
+    setAmountStr(shareOf(holder))
+  }
+
+  // Cash, card and InstaPay start from what is still owed; a tab starts
+  // from the chosen person's items
+  const pickTender = (option: (typeof tenders)[number]) => {
+    setTender(option)
+    if (option.name !== 'Account') {
+      setAmountStr(remaining > 0 ? String(remaining) : '')
+      return
+    }
+    setAmountStr(
+      shareOf(
+        accountHolder ??
+          (accountHolders.length === 1 ? accountHolders[0] : null)
+      )
+    )
   }
 
   const addPayment = () => {
@@ -301,16 +344,16 @@ export function SettleDialog({
                   key={option.value}
                   variant={tender.value === option.value ? 'default' : 'outline'}
                   className='h-11 text-base'
-                  onClick={() => setTender(option)}
+                  onClick={() => pickTender(option)}
                 >
                   {t(option.labelKey)}
                 </Button>
               ))}
             </div>
 
-            {/* Whose tab. Skipped when only one person on the bill has an
-                account — there is nothing to choose. */}
-            {tender.name === 'Account' && accountHolders.length > 1 && (
+            {/* Whose tab. Always in view, even when there is only one person
+                to choose: a charge must never land on a tab nobody saw. */}
+            {tender.name === 'Account' && (
               <div className='grid gap-2'>
                 <p className='text-muted-foreground text-sm'>{t('whoseAccount')}</p>
                 <div className='grid gap-2'>
@@ -323,7 +366,7 @@ export function SettleDialog({
                       className='h-11 justify-between px-3 text-base'
                       onClick={() => chooseHolder(holder)}
                     >
-                      <span className='truncate'>{holder.name}</span>
+                      <span className='truncate'>{holder.name || t('guest')}</span>
                       {holder.subtotal > 0 && (
                         <span className='tabular-nums'>
                           {money(holder.subtotal)}

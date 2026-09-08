@@ -121,11 +121,35 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     }
   }
 
-  void _pickRoom(Room room) => showRoomPanel(context, room.id);
+  Future<void> _pickRoom(int roomId) async {
+    final started = await showRoomPanel(context, roomId);
+    if (started && mounted) await _openStartedRoomTicket(roomId);
+  }
+
+  // A session just started in this room: Sales opens its bill on the event,
+  // so it is not there the instant the start returns. Poll quickly until it
+  // shows up and go there; give up after a while (Sales down, event lost)
+  // and leave the cashier on the floor, where the room now shows occupied.
+  Future<void> _openStartedRoomTicket(int roomId) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 15));
+    while (mounted && DateTime.now().isBefore(deadline)) {
+      await ref.read(openTicketsProvider.notifier).refresh();
+      if (!mounted) return;
+      final bill = (ref.read(openTicketsProvider).value ?? const [])
+          .where((t) => t.roomId == roomId && t.sessionId != null)
+          .firstOrNull;
+      if (bill != null) {
+        context.go('/ticket/${bill.id}');
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 600));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
     final l10n = AppLocalizations.of(context)!;
     final tickets = ref.watch(openTicketsProvider);
     final rooms = ref.watch(roomsProvider);
@@ -151,7 +175,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           reserved: reserved,
           rooms: rooms.rooms,
           now: now,
-          onPick: (session) => showRoomPanel(context, session.roomId),
+          onPick: (session) => _pickRoom(session.roomId),
         ),
     ];
 
@@ -179,7 +203,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                         tickets: tickets.value ?? const [],
                         busy: _openingTable,
                         onNewTab: _newTab,
-                        onPickRoom: _pickRoom,
+                        onPickRoom: (room) => _pickRoom(room.id),
                         onPickTable: _pickTable,
                       ),
                     ),
@@ -201,7 +225,13 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                         variant: FButtonVariant.ghost,
                         onPress: _togglePlaces,
                         child: Icon(
-                          _placesOpen ? FIcons.panelLeftClose : FIcons.panelLeftOpen,
+                          // Lucide's panel icons do not mirror with the text
+                          // direction (the arrows do), so pick the side by hand:
+                          // the places list sits at the start, which is the
+                          // right in Arabic
+                          _placesOpen
+                              ? (rtl ? FIcons.panelRightClose : FIcons.panelLeftClose)
+                              : (rtl ? FIcons.panelRightOpen : FIcons.panelLeftOpen),
                           size: 20,
                           color: theme.colors.mutedForeground,
                         ),

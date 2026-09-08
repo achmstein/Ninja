@@ -16,6 +16,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../receipt/receipt_sheet.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/settle.dart';
+import '../../rooms/models/room.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
@@ -24,7 +25,8 @@ import '../tenders.dart';
 /// Someone on this bill with an account, and what their share comes to.
 class _AccountHolder {
   final String id;
-  final String name;
+  // Filled in from a line when the roster only had the id
+  String name;
   double subtotal;
   _AccountHolder({required this.id, required this.name, required this.subtotal});
 }
@@ -49,7 +51,15 @@ class SettleOutcome {
 /// money goes into the offline queue instead of to Sales: cash, card and
 /// InstaPay only (an account needs the server), a provisional receipt
 /// number on the print, and the real settle when the network is back.
-Future<SettleOutcome?> showSettleDialog(BuildContext context, TicketDetail ticket, {OfflineSaleDraft? offline}) {
+///
+/// `members` are the people in the room, for a room ticket: each is a tab
+/// the bill can go on, whether or not they ordered anything themselves.
+Future<SettleOutcome?> showSettleDialog(
+  BuildContext context,
+  TicketDetail ticket, {
+  OfflineSaleDraft? offline,
+  List<SessionMember> members = const [],
+}) {
   return showFDialog<SettleOutcome>(
     context: context,
     useRootNavigator: true,
@@ -57,7 +67,7 @@ Future<SettleOutcome?> showSettleDialog(BuildContext context, TicketDetail ticke
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 672),
-      builder: (context, _) => _SettleDialog(ticket: ticket, offline: offline),
+      builder: (context, _) => _SettleDialog(ticket: ticket, offline: offline, members: members),
     ),
   );
 }
@@ -65,7 +75,8 @@ Future<SettleOutcome?> showSettleDialog(BuildContext context, TicketDetail ticke
 class _SettleDialog extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final OfflineSaleDraft? offline;
-  const _SettleDialog({required this.ticket, this.offline});
+  final List<SessionMember> members;
+  const _SettleDialog({required this.ticket, this.offline, this.members = const []});
 
   @override
   ConsumerState<_SettleDialog> createState() => _SettleDialogState();
@@ -98,16 +109,25 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   @override
   void initState() {
     super.initState();
-    // Everyone on this bill who has an account, with their share. A shared
-    // table can put Ahmed's items on his tab and Sara's on hers, so the tab
-    // is chosen per payment rather than fixed to the ticket.
+    // Everyone this bill can go on, with their share. The people in the
+    // room come first: a group splits the time between them however they
+    // agree, and someone who ordered nothing still owes their part. Then
+    // whoever has lines, with what those come to. A shared table can put
+    // Ahmed's items on his tab and Sara's on hers, so the tab is chosen per
+    // payment rather than fixed to the ticket.
     final holders = <String, _AccountHolder>{};
+    for (final member in widget.members) {
+      if (member.customerId.isEmpty) continue;
+      holders[member.customerId] = _AccountHolder(id: member.customerId, name: member.customerName ?? '', subtotal: 0);
+    }
     for (final line in widget.ticket.lines) {
       final id = line.customerId;
-      if (id == null || id.isEmpty) continue;
+      // The room's time is nobody's share: the group splits it as they say
+      if (id == null || id.isEmpty || line.source == 'SessionTime') continue;
       final holder = holders[id];
       if (holder != null) {
         holder.subtotal += line.total;
+        if (holder.name.isEmpty && (line.customerName ?? '').isNotEmpty) holder.name = line.customerName!;
       } else {
         holders[id] = _AccountHolder(id: id, name: line.customerName ?? '', subtotal: line.total);
       }
@@ -174,12 +194,25 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
   }
 
-  // Tapping a person prefills their share, capped at what is still owed
+  // A person's own items, capped at what is still owed. Never the
+  // remainder: someone who ordered nothing owes only the part of the time
+  // the group says, and that is typed.
+  String _shareOf(_AccountHolder? holder) =>
+      holder != null && holder.subtotal > 0 ? _fmt(holder.subtotal < _remaining ? holder.subtotal : _remaining) : '';
+
   void _chooseHolder(_AccountHolder holder) {
     setState(() {
       _accountHolder = holder;
-      final share = holder.subtotal > 0 ? (holder.subtotal < _remaining ? holder.subtotal : _remaining) : _remaining;
-      _amountStr = share > 0 ? _fmt(share) : '';
+      _amountStr = _shareOf(holder);
+    });
+  }
+
+  // Cash, card and InstaPay start from what is still owed; a tab starts
+  // from the chosen person's items
+  void _pickTender(PaymentTender tender) {
+    setState(() {
+      _tender = tender;
+      _amountStr = tender == PaymentTender.account ? _shareOf(_chosenHolder) : (_remaining > 0 ? _fmt(_remaining) : '');
     });
   }
 
@@ -201,8 +234,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
         customerName: holder?.name,
       ));
       _accountHolder = null;
-      // Prefill whatever is still owed for the next payment
-      _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+      // Prefill whatever is still owed for the next payment — never for a
+      // tab: what goes on account is typed, share by share
+      _amountStr = _tender == PaymentTender.account ? '' : (_remaining > 0 ? _fmt(_remaining) : '');
     });
   }
 
@@ -275,11 +309,12 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                     _TenderGrid(
                       tenders: _tenders,
                       selected: _tender,
-                      onSelect: (t) => setState(() => _tender = t),
+                      onSelect: _pickTender,
                     ),
-                    // Whose tab. Skipped when only one person on the bill
-                    // has an account — there is nothing to choose.
-                    if (_tender == PaymentTender.account && _holders.length > 1) ...[
+                    // Whose tab. Always in view, even when there is only one
+                    // person to choose: a charge must never land on a tab
+                    // nobody saw.
+                    if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Text(l10n.whoseAccount, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                       const SizedBox(height: 8),
@@ -293,7 +328,8 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                             suffix: holder.subtotal > 0
                                 ? Text(money(context, holder.subtotal), style: theme.typography.base.forButton.copyWith(fontFeatures: tabular))
                                 : null,
-                            child: Text(holder.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+                            child: Text(holder.name.isNotEmpty ? holder.name : l10n.guest,
+                                maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
                           ),
                         ),
                         const SizedBox(height: 8),

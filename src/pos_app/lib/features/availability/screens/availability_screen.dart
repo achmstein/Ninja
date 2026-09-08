@@ -52,7 +52,6 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final categories = ref.watch(catalogCategoriesProvider).value ?? const <CatalogCategory>[];
     final itemsAsync = ref.watch(catalogItemsProvider);
 
@@ -77,7 +76,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/'),
-                      child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: 24),
                     ),
                   ),
                   const SizedBox(width: 8),

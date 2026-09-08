@@ -11,6 +11,5 @@ public record SessionStartedIntegrationEvent(
     int RoomId,
     LocalizedText RoomName,
     string? CustomerId,
-    string? CustomerName,
     DateTime? ActualStartTime,
     string? PlayerMode) : IntegrationEvent;

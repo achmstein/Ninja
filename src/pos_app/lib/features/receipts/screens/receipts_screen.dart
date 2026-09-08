@@ -97,7 +97,6 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     // A branch switch starts the list over
     ref.listen(selectedBranchIdProvider, (_, _) => _load(reset: true));
     final bills = _bills;
@@ -124,7 +123,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                       child: FButton.icon(
                         variant: FButtonVariant.ghost,
                         onPress: () => context.go('/'),
-                        child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                        child: Icon(FIcons.arrowLeft, size: 24),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -205,7 +204,6 @@ class _ReceiptRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     const tabular = [FontFeature.tabularFigures()];
     final placeName = bill.locationName?.localized(context) ?? '';
     final title = placeName.isNotEmpty ? placeName : (bill.label ?? ticketTypeLabel(l10n, bill.type));
@@ -251,7 +249,7 @@ class _ReceiptRow extends StatelessWidget {
           Text(money(context, bill.total),
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
           const SizedBox(width: 8),
-          Icon(rtl ? FIcons.chevronLeft : FIcons.chevronRight, size: 20, color: theme.colors.mutedForeground),
+          Icon(FIcons.chevronRight, size: 20, color: theme.colors.mutedForeground),
         ],
       ),
     );

@@ -50,9 +50,17 @@ export function useKitchenNotifications() {
 
     // Broadcast to the whole staff group; the branch filter lives in the
     // query layer (the refetch carries X-Branch-Id), so a blanket
-    // invalidation is always safe.
-    const invalidateBoard = () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getKitchenOrders' }] })
+    // invalidation is always safe. refetchType: 'all' refreshes the board even
+    // when it is off-screen (the switcher or an idle tab), so a new order is
+    // never a step behind — invalidateQueries otherwise only refetches a query
+    // that has a mounted observer.
+    const refresh = (id: string) =>
+      queryClient.invalidateQueries({
+        queryKey: [{ _id: id }],
+        refetchType: 'all',
+      })
+
+    const invalidateBoard = () => refresh('getKitchenOrders')
 
     connection.on('OrderStatusChanged', (event: OrderStatusChangedEvent) => {
       invalidateBoard()
@@ -71,8 +79,7 @@ export function useKitchenNotifications() {
       }
     })
 
-    const invalidateBranches = () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
+    const invalidateBranches = () => refresh('getBranches')
 
     // The branch switcher reads names off the branch list
     connection.on('BranchSettingsChanged', () => {

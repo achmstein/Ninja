@@ -39,7 +39,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -57,7 +56,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/'),
-                      child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: 24),
                     ),
                   ),
                   const SizedBox(width: 8),

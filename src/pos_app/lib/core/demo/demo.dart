@@ -782,6 +782,9 @@ class _DemoRoomRepository implements RoomRepository {
   Future<void> deleteRoom(int roomId) async {}
 
   @override
+  Future<RoomSession?> getSession(int sessionId) async => _sessions.where((s) => s.id == sessionId).firstOrNull;
+
+  @override
   Future<List<RoomSession>> getSessionHistory(int roomId, {int limit = 20}) async => const [];
 }
 

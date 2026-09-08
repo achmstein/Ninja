@@ -43,21 +43,26 @@ export function useAdminNotifications() {
       .withAutomaticReconnect()
       .build()
 
-    const invalidateOrders = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getAllOrders' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getPendingOrders' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
+    // A live event has to refresh a list even when it is off-screen (the admin
+    // is on a different page when the order lands). invalidateQueries only
+    // refetches a query with a mounted observer (refetchType defaults to
+    // 'active'), so refetchType: 'all' refreshes the cached list too — it is
+    // then already current the moment that page is opened. The refetch carries
+    // X-Branch-Id, so it stays branch-scoped.
+    const refresh = (...ids: string[]) => {
+      for (const id of ids) {
+        queryClient.invalidateQueries({
+          queryKey: [{ _id: id }],
+          refetchType: 'all',
+        })
+      }
     }
 
-    const invalidateRooms = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
-      queryClient.invalidateQueries({
-        queryKey: [{ _id: 'getActiveSessions' }],
-      })
-      queryClient.invalidateQueries({
-        queryKey: [{ _id: 'getSessionHistory' }],
-      })
-    }
+    const invalidateOrders = () =>
+      refresh('getAllOrders', 'getPendingOrders', 'getOrder')
+
+    const invalidateRooms = () =>
+      refresh('listRooms', 'getActiveSessions', 'getSessionHistory')
 
     connection.on('OrderStatusChanged', (event: OrderStatusChangedEvent) => {
       invalidateOrders()
@@ -94,7 +99,10 @@ export function useAdminNotifications() {
     })
 
     connection.on('ServiceRequestCreated', () => {
-      queryClient.invalidateQueries({ queryKey: ['service-requests'] })
+      queryClient.invalidateQueries({
+        queryKey: ['service-requests'],
+        refetchType: 'all',
+      })
       toast.info(translate('newServiceRequest'))
     })
 

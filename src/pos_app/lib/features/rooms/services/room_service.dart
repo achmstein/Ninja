@@ -18,6 +18,7 @@ abstract class RoomRepository {
   Future<void> startWalkInSession(int roomId, {String? playerMode});
   Future<void> changePlayerMode(int sessionId, String playerMode);
   Future<List<RoomSession>> getSessionHistory(int roomId, {int limit = 20});
+  Future<RoomSession?> getSession(int sessionId);
 }
 
 /// Concrete implementation that calls the Rooms API
@@ -113,6 +114,12 @@ class ApiRoomRepository implements RoomRepository {
     await _api.put('sessions/$sessionId/player-mode', data: {
       'playerMode': playerMode,
     });
+  }
+
+  @override
+  Future<RoomSession?> getSession(int sessionId) async {
+    final response = await _api.get('sessions/$sessionId');
+    return RoomSession.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override

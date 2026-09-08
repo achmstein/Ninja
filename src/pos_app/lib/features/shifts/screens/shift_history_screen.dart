@@ -28,7 +28,6 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final async = ref.watch(closedShiftsProvider(_page));
     final shifts = async.value;
     final lastPage = (shifts?.length ?? 0) < closedShiftsPageSize;
@@ -49,7 +48,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/shift'),
-                      child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: 24),
                     ),
                   ),
                   const SizedBox(width: 8),

@@ -273,3 +273,14 @@ class RoomsNotifier extends Notifier<RoomsState> {
 
 /// Rooms provider
 final roomsProvider = NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);
+
+/// One session by id, whatever its state. The active list stops carrying a
+/// session the moment it ends, but the ticket keeps reading it until the
+/// bill is settled: the people in the room are still being named, and
+/// their shares still go on their tabs. Polled like the rooms; session
+/// actions invalidate it.
+final sessionProvider = FutureProvider.autoDispose.family<RoomSession?, int>((ref, id) async {
+  final timer = Timer(AppConfig.roomsPoll, () => ref.invalidateSelf());
+  ref.onDispose(timer.cancel);
+  return ref.read(roomRepositoryProvider).getSession(id);
+});

@@ -1,7 +1,7 @@
 namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 public class OrderStockRejectedIntegrationEventHandler(
-    IOrderRepository orderRepository,
+    IMediator mediator,
     ILogger<OrderStockRejectedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStockRejectedIntegrationEvent>
 {
@@ -9,20 +9,21 @@ public class OrderStockRejectedIntegrationEventHandler(
     {
         logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
 
-        var order = await orderRepository.GetAsync(@event.OrderId);
-
-        if (order is null)
-        {
-            logger.LogWarning("Order {OrderId} not found for stock rejection", @event.OrderId);
-            return;
-        }
-
         var unavailableProductIds = @event.OrderStockItems
             .Where(x => !x.HasStock)
-            .Select(x => x.ProductId);
+            .Select(x => x.ProductId)
+            .ToList();
 
-        order.SetStockRejectedStatus(unavailableProductIds);
-        await orderRepository.UnitOfWork.SaveEntitiesAsync();
+        // Through a command, not the aggregate: cancelling raises a domain
+        // event whose handler writes the cancelled integration event to the
+        // outbox, and that write needs the transaction TransactionBehavior
+        // opens around a command (see OrderStockConfirmedIntegrationEventHandler).
+        var cancelled = await mediator.Send(new SetOrderStockRejectedCommand(@event.OrderId, unavailableProductIds));
+
+        if (!cancelled)
+        {
+            return;
+        }
 
         logger.LogWarning("Order {OrderId} cancelled due to unavailable items: {UnavailableItems}",
             @event.OrderId, string.Join(", ", unavailableProductIds));

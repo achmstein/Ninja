@@ -22,6 +22,7 @@ class SessionActions {
     // The notifier reloaded rooms and sessions itself; the bills follow
     ref.read(openTicketsProvider.notifier).refresh();
     ref.invalidate(ticketProvider);
+    ref.invalidate(sessionProvider);
     if (!context.mounted) return ok;
     if (ok) {
       if (success != null) showPosToast(context, PosToastType.success, success);

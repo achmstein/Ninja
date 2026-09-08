@@ -13,6 +13,12 @@ Future<bool> showConfirmDialog(
   required String actionLabel,
   /// Paint the action red: something ends, or money-relevant state changes
   bool destructive = false,
+  /// A third answer, quieter than the other two and kept apart from them on
+  /// the start side: the rare outcome of the same decision (end the session,
+  /// or cancel it without charging). The dialog closes as "not the action"
+  /// and then calls it. Both must be given, or neither.
+  String? secondaryLabel,
+  VoidCallback? onSecondary,
 }) async {
   final picked = await showFDialog<bool>(
     context: context,
@@ -36,6 +42,22 @@ Future<bool> showConfirmDialog(
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  if (secondaryLabel != null && onSecondary != null) ...[
+                    SizedBox(
+                      height: 48,
+                      child: FButton(
+                        variant: FButtonVariant.ghost,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () {
+                          Navigator.of(context, rootNavigator: true).pop(false);
+                          onSecondary();
+                        },
+                        child: Text(secondaryLabel,
+                            style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
                   SizedBox(
                     height: 48,
                     child: FButton(

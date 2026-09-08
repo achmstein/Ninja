@@ -45,7 +45,7 @@
       }
     }
   },
-  "pendingOrders": "مستنية تأكيد",
+  "pendingOrders": "في انتظار التأكيد",
   "orderNumber": "طلب #{id}",
   "@orderNumber": {
     "placeholders": {
@@ -175,6 +175,9 @@
   "sessionStarted": "الجلسة بدأت",
   "failedToStartSession": "معرفناش نبدأ الجلسة",
   "sessionRunning": "الوقت شغال",
+  "timeSoFar": "الوقت لحد دلوقتي",
+  "roomTimeRunning": "وقت الأوضة · شغال",
+  "inTheRoom": "اللي في الأوضة",
   "billedHours": "الساعات المحسوبة",
   "billedHoursFormat": "{hours} ساعة",
   "@billedHoursFormat": {

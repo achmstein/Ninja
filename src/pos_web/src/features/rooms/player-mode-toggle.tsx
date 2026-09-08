@@ -6,7 +6,9 @@ import type { PlayerMode } from './status'
 /**
  * Segmented Single/Multi picker, the same one the admin apps use, sized for
  * a thumb. With `allowNone`, leaving both unselected means "not decided
- * yet" — the server bills at the single rate until a mode is set.
+ * yet" — the server bills at the single rate until a mode is set. `rates`
+ * prints each mode's hourly price after its label, so the cashier sees
+ * both while choosing.
  */
 export function PlayerModeToggle({
   value,
@@ -14,12 +16,14 @@ export function PlayerModeToggle({
   allowNone,
   disabled,
   className,
+  rates,
 }: {
   value: PlayerMode | null
   onChange: (mode: PlayerMode | null) => void
   allowNone?: boolean
   disabled?: boolean
   className?: string
+  rates?: Partial<Record<PlayerMode, string>>
 }) {
   const t = useT()
   const options: {
@@ -50,6 +54,18 @@ export function PlayerModeToggle({
           >
             <Icon className='size-5' />
             {t(label)}
+            {rates?.[mode] && (
+              <span
+                className={cn(
+                  'text-sm tabular-nums',
+                  selected
+                    ? 'text-primary-foreground/80'
+                    : 'text-muted-foreground'
+                )}
+              >
+                · {rates[mode]}
+              </span>
+            )}
           </button>
         )
       })}

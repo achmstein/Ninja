@@ -26,6 +26,8 @@ import '../../rooms/providers/rooms_provider.dart';
 import '../../rooms/session_actions.dart';
 import '../../rooms/status.dart';
 import '../../rooms/widgets/session_bar.dart';
+import '../../rooms/widgets/session_members.dart';
+import '../../rooms/widgets/time_so_far.dart';
 import '../../sale/models/sale_line.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/models/enums.dart';
@@ -106,7 +108,12 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     });
   }
 
-  Future<void> _settle(TicketDetail ticket, {List<Order> waiting = const [], RoomSession? activeSession}) async {
+  Future<void> _settle(
+    TicketDetail ticket, {
+    List<Order> waiting = const [],
+    RoomSession? activeSession,
+    List<SessionMember> members = const [],
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     // A running session cannot be settled past — its time is not on the
     // bill yet, so the only way forward is to end it
@@ -137,7 +144,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       if (!anyway || !mounted) return;
     }
     // The dialog refreshes the floor and this ticket itself on success
-    await showSettleDialog(context, ticket);
+    await showSettleDialog(context, ticket, members: members);
   }
 
   // Same rule for Void, server-enforced too: time that has not landed yet
@@ -252,8 +259,17 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // Manual and session-time lines have no order behind them
     if (orderIds.isEmpty && lineIds.isEmpty) return;
 
-    final SaleCustomer? customer = await showCustomerDialog(context);
+    // The room's people first when this is a room's bill; and somebody with
+    // an account named on its lines is in the room — onto the roster, so
+    // their share of the time has a tab at settle
+    final session = ticket.sessionId == null ? null : ref.read(sessionProvider(ticket.sessionId!)).value;
+    final roster = session?.roster ?? const <({String id, String name})>[];
+    final SaleCustomer? customer = await showCustomerDialog(context, quickPicks: roster);
     if (customer == null || !mounted) return;
+    final accountId = customer.id;
+    if (session != null && accountId != null && accountId.isNotEmpty && !roster.any((m) => m.id == accountId)) {
+      SessionActions(ref, context).addMember(session.id, accountId, customer.name);
+    }
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
     try {
@@ -318,10 +334,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         ? pendingForTicket(ref.watch(pendingOrdersProvider).value ?? const [], sessionId: ticket.sessionId, tableId: ticket.tableId)
         : const <Order>[];
     // A room ticket's time only lands when its session ends, so the screen
-    // shows the running clock and guards the settle until then
-    final activeSession = ticket.isOpen && ticket.sessionId != null
-        ? ref.watch(roomsProvider).activeSessions.where((s) => s.id == ticket.sessionId && s.isActive).firstOrNull
-        : null;
+    // shows the running clock and guards the settle until then. The session
+    // is read by id, not off the active list: once it has ended the bill is
+    // still open, and the people in the room are still its account holders
+    final session = ticket.isOpen && ticket.sessionId != null ? ref.watch(sessionProvider(ticket.sessionId!)).value : null;
+    final activeSession = session != null && session.isActive ? session : null;
+    // Ended, bill still open: the time has landed and the roster stays
+    // editable so every share can find its tab
+    final endedSession = session != null && !session.isActive && !session.isReserved ? session : null;
     final groups = groupLinesByCustomer(lines);
     final shared = !(groups.length == 1 && groups.single.unattributed);
     // Selecting moves individual lines to another ticket, so the rounds
@@ -374,6 +394,31 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     SessionBar(session: activeSession),
                     const SizedBox(height: 16),
                   ],
+                  if (endedSession != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colors.background,
+                        border: Border.all(color: theme.colors.border),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(FIcons.users, size: 16, color: theme.colors.mutedForeground),
+                              const SizedBox(width: 8),
+                              Text(l10n.inTheRoom, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SessionMembers(session: endedSession),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   // Confirmed here, they land on this bill — which is why the
                   // guard stops a settle while any are still waiting
                   if (waiting.isNotEmpty) ...[
@@ -404,13 +449,43 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
+                  // The time is not a line until the session ends; until
+                  // then the bill shows it as the row it will become, so the
+                  // running cost is read where the rest of the bill is
+                  if (activeSession != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
+                      child: Row(
+                        children: [
+                          Icon(FIcons.timer, size: 20, color: theme.colors.mutedForeground),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(l10n.roomTimeRunning,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                          ),
+                          Text('≈ ', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                          TimeSoFar(
+                            session: activeSession,
+                            style: theme.typography.base
+                                .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (lines.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 64),
-                      child: Text(l10n.emptyTicket,
-                          textAlign: TextAlign.center,
-                          style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                    )
+                    // Nothing to say while a session runs: the time row above is the bill so far
+                    if (activeSession == null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 64),
+                        child: Text(l10n.emptyTicket,
+                            textAlign: TextAlign.center,
+                            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                      )
+                    else
+                      const SizedBox.shrink()
                   else if (!shared)
                     _LineList(lines: shown(lines), selecting: selecting, selected: _selected, onToggle: _toggleLine)
                   else
@@ -462,11 +537,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
             bottom: 0,
             child: _ActionBar(
               ticket: ticket,
+              activeSession: activeSession,
               selecting: selecting,
               selectedCount: _selected.length,
               busy: _busy,
               canRefund: isOwner && ticket.refundedTotal < ticket.total,
-              onSettle: lines.isEmpty ? null : () => _settle(ticket, waiting: waiting, activeSession: activeSession),
+              onSettle: lines.isEmpty
+                  ? null
+                  : () => _settle(ticket, waiting: waiting, activeSession: activeSession, members: session?.members ?? const []),
               onPrint: () => _print(ticket),
               onRefund: () => _refund(ticket),
               onAssign: () => _assign(ticket),
@@ -507,7 +585,6 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     final destructiveLabel = theme.typography.base.forButton.copyWith(color: theme.colors.destructive);
 
     return Row(
@@ -517,7 +594,7 @@ class _Header extends StatelessWidget {
           child: FButton.icon(
             variant: FButtonVariant.ghost,
             onPress: () => context.go(backTo),
-            child: Icon(rtl ? FIcons.arrowRight : FIcons.arrowLeft, size: 24),
+            child: Icon(FIcons.arrowLeft, size: 24),
           ),
         ),
         const SizedBox(width: 8),
@@ -870,6 +947,8 @@ class _RefundCard extends StatelessWidget {
 /// paid, and an owner's Refund beside it
 class _ActionBar extends StatelessWidget {
   final TicketDetail ticket;
+  // The running session whose time will join the total when it ends
+  final RoomSession? activeSession;
   final bool selecting;
   final int selectedCount;
   final bool busy;
@@ -882,6 +961,7 @@ class _ActionBar extends StatelessWidget {
 
   const _ActionBar({
     required this.ticket,
+    required this.activeSession,
     required this.selecting,
     required this.selectedCount,
     required this.busy,
@@ -982,6 +1062,18 @@ class _ActionBar extends StatelessWidget {
                     if (ticket.refundedTotal > 0)
                       Text('${l10n.refundedSoFar}: −${money(context, ticket.refundedTotal)}',
                           style: theme.typography.xs.copyWith(color: theme.colors.destructive, fontFeatures: tabular)),
+                    if (activeSession != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('+ ${l10n.timeSoFar} ≈ ',
+                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                          TimeSoFar(
+                            session: activeSession!,
+                            style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
