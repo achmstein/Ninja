@@ -82,9 +82,9 @@ export function StartSessionDialog({
             rates so the other one stays in view */}
         <div className='bg-muted rounded-xl p-4 text-center'>
           <div className='text-lg font-semibold'>{localized(room?.name)}</div>
-          <div className='text-primary text-2xl font-bold tabular-nums'>
-            {money(playerMode === 'Multi' ? room?.multiRate : room?.singleRate)}
-            <span className='text-muted-foreground ms-1 text-sm font-normal'>
+          <div className='text-primary flex items-baseline justify-center gap-1 text-2xl font-bold tabular-nums'>
+            <span>{money(playerMode === 'Multi' ? room?.multiRate : room?.singleRate)}</span>
+            <span className='text-muted-foreground text-sm font-normal'>
               {t('perHour')}
             </span>
           </div>

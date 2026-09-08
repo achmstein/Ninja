@@ -467,10 +467,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       {/* ----- running sale ----- */}
       <aside className='flex w-[340px] shrink-0 flex-col border-s xl:w-[380px]'>
         <div className='flex items-center gap-2 border-b p-3'>
-          <h2 className='min-w-0 flex-1 truncate text-lg font-bold'>
-            {t('currentSale')}
+          <h2 className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
+            <span className='truncate'>{t('currentSale')}</span>
             {count > 0 && (
-              <span className='text-muted-foreground ms-2 text-sm font-medium'>
+              <span className='text-muted-foreground shrink-0 text-sm font-medium'>
                 {t('linesCount', { count })}
               </span>
             )}
