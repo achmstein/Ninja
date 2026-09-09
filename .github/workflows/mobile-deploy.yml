@@ -98,9 +98,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
 
+      # Kept even when the Play upload fails (a brand-new app refuses API
+      # uploads until its first bundle goes in by hand), so the signed bundle
+      # is always there to download
       - name: Upload AAB artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: ignore
           name: client-app-android-aab
           path: src/client_app/build/app/outputs/bundle/release/app-release.aab
 
@@ -157,9 +162,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_ADMIN_STORE_PASSWORD }}
         run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
 
+      # Kept even when the Play upload fails (a brand-new app refuses API
+      # uploads until its first bundle goes in by hand), so the signed bundle
+      # is always there to download
       - name: Upload AAB artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: ignore
           name: admin-app-android-aab
           path: src/admin_app/build/app/outputs/bundle/release/app-release.aab
 
@@ -220,9 +230,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_POS_STORE_PASSWORD }}
         run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
 
+      # Kept even when the Play upload fails (a brand-new app refuses API
+      # uploads until its first bundle goes in by hand), so the signed bundle
+      # is always there to download
       - name: Upload AAB artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: ignore
           name: pos-app-android-aab
           path: src/pos_app/build/app/outputs/bundle/release/app-release.aab
 
@@ -283,9 +298,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_KDS_STORE_PASSWORD }}
         run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
 
+      # Kept even when the Play upload fails (a brand-new app refuses API
+      # uploads until its first bundle goes in by hand), so the signed bundle
+      # is always there to download
       - name: Upload AAB artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: ignore
           name: kds-app-android-aab
           path: src/kds_app/build/app/outputs/bundle/release/app-release.aab
 
