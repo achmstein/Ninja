@@ -69,6 +69,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(SessionEndedIntegrationEvent))]
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
+[JsonSerializable(typeof(SessionCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext
 {

@@ -601,6 +601,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get charge => 'Charge';
 
   @override
+  String posReceipt(int number) {
+    return 'POS receipt #$number';
+  }
+
+  @override
+  String posCreditNote(int number) {
+    return 'POS credit note #$number';
+  }
+
+  @override
   String get payment => 'Payment';
 
   @override

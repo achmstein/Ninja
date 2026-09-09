@@ -596,6 +596,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get charge => 'رصيد';
 
   @override
+  String posReceipt(int number) {
+    return 'إيصال كاشير #$number';
+  }
+
+  @override
+  String posCreditNote(int number) {
+    return 'مرتجع كاشير #$number';
+  }
+
+  @override
   String get payment => 'دفع';
 
   @override

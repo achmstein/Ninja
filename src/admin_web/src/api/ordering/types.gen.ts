@@ -63,8 +63,6 @@ export type KitchenOrder = {
     orderNumber?: number | string;
     date?: string;
     confirmedAt?: null | string;
-    preparation?: string;
-    preparingAt?: null | string;
     readyAt?: null | string;
     source?: string;
     roomName?: null | LocalizedText;
@@ -202,15 +200,13 @@ export type PosOrderResponse = {
     orderId: number | string;
 };
 
-export type PreparationStatus = 'NotStarted' | 'Preparing' | 'Ready';
-
 export type RateOrderRequest = {
     ratingValue: number | string;
     comment: null | string;
 };
 
-export type SetOrderPreparationRequest = {
-    preparation: PreparationStatus;
+export type SetOrderReadyRequest = {
+    ready: boolean;
 };
 
 export type GetOrdersByUserData = {
@@ -631,8 +627,8 @@ export type GetKitchenOrdersResponses = {
 
 export type GetKitchenOrdersResponse = GetKitchenOrdersResponses[keyof GetKitchenOrdersResponses];
 
-export type SetOrderPreparationData = {
-    body: SetOrderPreparationRequest;
+export type SetOrderReadyData = {
+    body: SetOrderReadyRequest;
     headers: {
         'x-requestid': string;
     };
@@ -645,10 +641,10 @@ export type SetOrderPreparationData = {
          */
         'api-version': string;
     };
-    url: '/api/orders/{orderId}/preparation';
+    url: '/api/orders/{orderId}/ready';
 };
 
-export type SetOrderPreparationErrors = {
+export type SetOrderReadyErrors = {
     /**
      * Bad Request
      */
@@ -667,16 +663,16 @@ export type SetOrderPreparationErrors = {
     404: unknown;
 };
 
-export type SetOrderPreparationError = SetOrderPreparationErrors[keyof SetOrderPreparationErrors];
+export type SetOrderReadyError = SetOrderReadyErrors[keyof SetOrderReadyErrors];
 
-export type SetOrderPreparationResponses = {
+export type SetOrderReadyResponses = {
     /**
      * No Content
      */
     204: void;
 };
 
-export type SetOrderPreparationResponse = SetOrderPreparationResponses[keyof SetOrderPreparationResponses];
+export type SetOrderReadyResponse = SetOrderReadyResponses[keyof SetOrderReadyResponses];
 
 export type GetAllOrdersData = {
     body?: never;

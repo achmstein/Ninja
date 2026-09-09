@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, SetOrderPreparationData, SetOrderPreparationErrors, SetOrderPreparationResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -138,7 +138,7 @@ export const getPendingOrders = <ThrowOnError extends boolean = false>(options: 
 /**
  * Confirmed orders in the kitchen, for the kitchen display (staff)
  *
- * Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.
+ * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.
  */
 export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: Options<GetKitchenOrdersData, ThrowOnError>): RequestResult<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError>({
     responseType: 'json',
@@ -147,12 +147,12 @@ export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * Move a confirmed order along in the kitchen (staff)
+ * Mark a confirmed order ready in the kitchen, or bring it back (staff)
  *
- * Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.
+ * Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.
  */
-export const setOrderPreparation = <ThrowOnError extends boolean = false>(options: Options<SetOrderPreparationData, ThrowOnError>): RequestResult<SetOrderPreparationResponses, SetOrderPreparationErrors, ThrowOnError> => (options.client ?? client).put<SetOrderPreparationResponses, SetOrderPreparationErrors, ThrowOnError>({
-    url: '/api/orders/{orderId}/preparation',
+export const setOrderReady = <ThrowOnError extends boolean = false>(options: Options<SetOrderReadyData, ThrowOnError>): RequestResult<SetOrderReadyResponses, SetOrderReadyErrors, ThrowOnError> => (options.client ?? client).put<SetOrderReadyResponses, SetOrderReadyErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/ready',
     ...options,
     headers: {
         'Content-Type': 'application/json',

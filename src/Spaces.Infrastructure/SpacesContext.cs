@@ -46,15 +46,18 @@ public class SpacesContext : DbContext, IUnitOfWork
 
     public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
     {
-        // Dispatch Domain Events collection.
+        _ = await base.SaveChangesAsync(cancellationToken);
+
+        // Domain events go out after the commit, not before it. Every handler
+        // here publishes an integration event straight to the bus, and a
+        // screen that hears it refetches at once — dispatched before the
+        // commit, that refetch could read the old state and sit on it until
+        // its next poll (the "room started but shows no clock" bug). None of
+        // the handlers changes entities, so nothing is lost by saving first.
         if (_mediator != null)
         {
             await _mediator.DispatchDomainEventsAsync(this);
         }
-
-        // After executing this line all the changes (from the Command Handler and Domain Event Handlers)
-        // performed through the DbContext will be committed
-        _ = await base.SaveChangesAsync(cancellationToken);
 
         return true;
     }

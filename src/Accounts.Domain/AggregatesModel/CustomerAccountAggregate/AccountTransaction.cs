@@ -20,6 +20,14 @@ public class AccountTransaction : Entity
     /// </summary>
     public string? Reference { get; private set; }
 
+    /// <summary>
+    /// Where the line came from, and the till's number for it (receipt or
+    /// credit note) when it was not keyed in by hand. The apps render these
+    /// in the user's language; Description is only for what staff typed.
+    /// </summary>
+    public TransactionSource Source { get; private set; }
+    public int? SourceNumber { get; private set; }
+
     protected AccountTransaction()
     {
         RecordedBy = string.Empty;
@@ -31,7 +39,9 @@ public class AccountTransaction : Entity
         decimal amount,
         string? description,
         string recordedBy,
-        string? reference = null) : this()
+        string? reference = null,
+        TransactionSource source = TransactionSource.Manual,
+        int? sourceNumber = null) : this()
     {
         if (amount <= 0)
             throw new AccountsDomainException("Transaction amount must be greater than zero");
@@ -45,6 +55,8 @@ public class AccountTransaction : Entity
         Description = description;
         RecordedBy = recordedBy;
         Reference = reference;
+        Source = source;
+        SourceNumber = sourceNumber;
         CreatedAt = DateTime.UtcNow;
     }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 using MediatR;
 
 namespace Chillax.Accounts.API.Application.Commands;
@@ -25,17 +26,28 @@ public class RecordPaymentCommand : IRequest<bool>
     [DataMember]
     public string? Reference { get; private set; }
 
+    /// <summary>Where the line comes from, and the till's number for it; Manual with no number for staff entries.</summary>
+    [DataMember]
+    public TransactionSource Source { get; private set; }
+
+    [DataMember]
+    public int? SourceNumber { get; private set; }
+
     public RecordPaymentCommand(
         string customerId,
         decimal amount,
         string? description,
         string recordedBy,
-        string? reference = null)
+        string? reference = null,
+        TransactionSource source = TransactionSource.Manual,
+        int? sourceNumber = null)
     {
         CustomerId = customerId;
         Amount = amount;
         Description = description;
         RecordedBy = recordedBy;
         Reference = reference;
+        Source = source;
+        SourceNumber = sourceNumber;
     }
 }

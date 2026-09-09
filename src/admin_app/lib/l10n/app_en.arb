@@ -273,6 +273,18 @@
   "paymentRecorded": "Payment recorded",
   "failedToRecordPayment": "Failed to record payment",
   "charge": "Charge",
+  "posReceipt": "POS receipt #{number}",
+  "@posReceipt": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "posCreditNote": "POS credit note #{number}",
+  "@posCreditNote": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
   "payment": "Payment",
 
   "adjust": "Adjust",

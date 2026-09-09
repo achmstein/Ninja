@@ -197,6 +197,8 @@
   "paymentRecorded": "تم تسجيل الدفع",
   "failedToRecordPayment": "فشل تسجيل الدفع",
   "charge": "رصيد",
+  "posReceipt": "إيصال كاشير #{number}",
+  "posCreditNote": "مرتجع كاشير #{number}",
   "payment": "دفع",
 
   "adjust": "تعديل",

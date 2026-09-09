@@ -291,6 +291,18 @@
   "noTransactionsYet": "No transactions yet",
   "charge": "Charge",
   "payment": "Payment",
+  "posReceipt": "POS receipt #{number}",
+  "@posReceipt": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "posCreditNote": "POS credit note #{number}",
+  "@posCreditNote": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
   "byPerson": "by {name}",
   "@byPerson": {
     "placeholders": {

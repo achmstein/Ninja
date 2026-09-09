@@ -17,6 +17,10 @@ public class TransactionViewModel
     public string Type { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public string? Description { get; set; }
+    /// <summary>manual, posReceipt or posCreditNote.</summary>
+    public string Source { get; set; } = "manual";
+    /// <summary>The till's receipt or credit note number when the source is the till.</summary>
+    public int? SourceNumber { get; set; }
     public string RecordedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }

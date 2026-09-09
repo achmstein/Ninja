@@ -1,4 +1,5 @@
 using Chillax.Accounts.API.Application.Commands;
+using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 using Chillax.Accounts.API.IntegrationEvents.Events;
 using Chillax.EventBus.Abstractions;
 using MediatR;
@@ -36,9 +37,11 @@ public class TicketRefundedIntegrationEventHandler(
         await mediator.Send(new RecordPaymentCommand(
             @event.CustomerId,
             @event.Amount,
-            $"POS credit note #{@event.Number} (receipt #{@event.ReceiptNumber})",
+            description: null,
             @event.RefundedBy,
-            reference: $"sales-refund:{@event.RefundId}"));
+            reference: $"sales-refund:{@event.RefundId}",
+            source: TransactionSource.PosCreditNote,
+            sourceNumber: @event.Number));
 
         logger.LogInformation(
             "Credited {Amount} to {CustomerId}'s account for credit note #{Number} on ticket {TicketId}",

@@ -390,7 +390,7 @@ export const assignCustomerToSessionMutation = (options?: Partial<Options<Assign
 /**
  * Add a member to a session
  *
- * Add a customer as a member to an active session (staff)
+ * Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.
  */
 export const addMemberToSessionMutation = (options?: Partial<Options<AddMemberToSessionData>>): UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> = {

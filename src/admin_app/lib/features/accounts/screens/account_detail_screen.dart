@@ -313,9 +313,7 @@ class _TransactionHistorySection extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       AppText(
-                                        tx.description?.isNotEmpty == true
-                                            ? tx.description!
-                                            : (isCharge ? l10n.charge : l10n.payment),
+                                        _transactionLabel(tx, l10n, isCharge),
                                         style: theme.typography.sm.copyWith(
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -592,4 +590,13 @@ class _AmountSheetState extends ConsumerState<_AmountSheet> {
       }
     }
   }
+}
+
+/// What a ledger line is: the till's receipt or credit note by number, in
+/// the user's language; otherwise what staff typed, or just Charge / Payment
+String _transactionLabel(AccountTransaction tx, AppLocalizations l10n, bool isCharge) {
+  if (tx.source == 'posReceipt' && tx.sourceNumber != null) return l10n.posReceipt(tx.sourceNumber!);
+  if (tx.source == 'posCreditNote' && tx.sourceNumber != null) return l10n.posCreditNote(tx.sourceNumber!);
+  if (tx.description?.isNotEmpty == true) return tx.description!;
+  return isCharge ? l10n.charge : l10n.payment;
 }

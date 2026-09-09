@@ -1190,6 +1190,18 @@ abstract class AppLocalizations {
   /// **'Payment'**
   String get payment;
 
+  /// No description provided for @posReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'POS receipt #{number}'**
+  String posReceipt(int number);
+
+  /// No description provided for @posCreditNote.
+  ///
+  /// In en, this message translates to:
+  /// **'POS credit note #{number}'**
+  String posCreditNote(int number);
+
   /// No description provided for @byPerson.
   ///
   /// In en, this message translates to:

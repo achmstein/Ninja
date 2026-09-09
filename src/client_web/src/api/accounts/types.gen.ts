@@ -46,6 +46,8 @@ export type TransactionViewModel = {
     type?: string;
     amount?: number | string;
     description?: null | string;
+    source?: string;
+    sourceNumber?: null | number | string;
     recordedBy?: string;
     createdAt?: string;
 };

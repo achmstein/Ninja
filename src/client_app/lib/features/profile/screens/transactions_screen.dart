@@ -347,9 +347,9 @@ class _TransactionTile extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                if (transaction.description != null)
+                if (_transactionDetail(transaction, l10n) case final detail?)
                   AppText(
-                    transaction.description!,
+                    detail,
                     style: TextStyle(
                       fontSize: 13,
                       color: colors.mutedForeground,
@@ -387,4 +387,13 @@ class _TransactionTile extends StatelessWidget {
       return DateFormat('MMM d', locale.languageCode).format(date);
     }
   }
+}
+
+/// The second line of a ledger entry: the till's receipt or credit note by
+/// number, in the user's language, or what staff typed; null falls back to
+/// who recorded it
+String? _transactionDetail(AccountTransaction transaction, AppLocalizations l10n) {
+  if (transaction.source == 'posReceipt' && transaction.sourceNumber != null) return l10n.posReceipt(transaction.sourceNumber!);
+  if (transaction.source == 'posCreditNote' && transaction.sourceNumber != null) return l10n.posCreditNote(transaction.sourceNumber!);
+  return transaction.description;
 }

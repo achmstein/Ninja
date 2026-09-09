@@ -96,10 +96,15 @@ function AccountPage() {
                       )}
                     </div>
                     <div className='text-muted-foreground line-clamp-2 text-[13px]'>
-                      {tx.description ||
-                        (tx.recordedBy
-                          ? t('byPerson', { name: tx.recordedBy })
-                          : '')}
+                      {tx.source === 'posReceipt' && tx.sourceNumber != null
+                        ? t('posReceipt', { number: tx.sourceNumber })
+                        : tx.source === 'posCreditNote' &&
+                            tx.sourceNumber != null
+                          ? t('posCreditNote', { number: tx.sourceNumber })
+                          : tx.description ||
+                            (tx.recordedBy
+                              ? t('byPerson', { name: tx.recordedBy })
+                              : '')}
                     </div>
                   </div>
                 </div>

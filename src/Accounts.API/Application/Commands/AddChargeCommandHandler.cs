@@ -45,7 +45,7 @@ public class AddChargeCommandHandler : IRequestHandler<AddChargeCommand, bool>
             return true;
         }
 
-        account.AddCharge(request.Amount, request.Description, request.AddedBy, request.Reference);
+        account.AddCharge(request.Amount, request.Description, request.AddedBy, request.Reference, request.Source, request.SourceNumber);
 
         _logger.LogInformation("Adding charge of {Amount} to customer {CustomerId} by {AddedBy}",
             request.Amount, request.CustomerId, request.AddedBy);

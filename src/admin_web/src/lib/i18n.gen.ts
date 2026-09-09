@@ -192,6 +192,8 @@ export const messages = {
   paymentRecorded: { en: "Payment recorded", ar: "تم تسجيل الدفع" },
   failedToRecordPayment: { en: "Failed to record payment", ar: "فشل تسجيل الدفع" },
   charge: { en: "Charge", ar: "رصيد" },
+  posReceipt: { en: "POS receipt #{number}", ar: "إيصال كاشير #{number}" },
+  posCreditNote: { en: "POS credit note #{number}", ar: "مرتجع كاشير #{number}" },
   payment: { en: "Payment", ar: "دفع" },
   adjust: { en: "Adjust", ar: "تعديل" },
   addPoints: { en: "Add Points", ar: "إضافة نقاط" },

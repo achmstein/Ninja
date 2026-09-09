@@ -190,6 +190,8 @@ export const messages = {
   noTransactionsYet: { en: "No transactions yet", ar: "مفيش معاملات لسه" },
   charge: { en: "Charge", ar: "رسوم" },
   payment: { en: "Payment", ar: "دفع" },
+  posReceipt: { en: "POS receipt #{number}", ar: "إيصال كاشير #{number}" },
+  posCreditNote: { en: "POS credit note #{number}", ar: "مرتجع كاشير #{number}" },
   byPerson: { en: "by {name}", ar: "بواسطة {name}" },
   today: { en: "Today", ar: "النهاردة" },
   yesterday: { en: "Yesterday", ar: "إمبارح" },

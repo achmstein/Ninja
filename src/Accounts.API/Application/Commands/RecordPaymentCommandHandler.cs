@@ -33,7 +33,7 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
             return true;
         }
 
-        account.RecordPayment(request.Amount, request.Description, request.RecordedBy, request.Reference);
+        account.RecordPayment(request.Amount, request.Description, request.RecordedBy, request.Reference, request.Source, request.SourceNumber);
 
         _logger.LogInformation("Recording payment of {Amount} for customer {CustomerId} by {RecordedBy}",
             request.Amount, request.CustomerId, request.RecordedBy);

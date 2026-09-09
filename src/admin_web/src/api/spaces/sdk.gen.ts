@@ -219,7 +219,7 @@ export const assignCustomerToSession = <ThrowOnError extends boolean = false>(op
 /**
  * Add a member to a session
  *
- * Add a customer as a member to an active session (staff)
+ * Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.
  */
 export const addMemberToSession = <ThrowOnError extends boolean = false>(options: Options<AddMemberToSessionData, ThrowOnError>): RequestResult<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError> => (options.client ?? client).post<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/members',

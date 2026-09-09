@@ -1,4 +1,5 @@
 using Chillax.Accounts.API.Application.Commands;
+using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 using Chillax.Accounts.API.IntegrationEvents.Events;
 using Chillax.EventBus.Abstractions;
 using MediatR;
@@ -43,11 +44,15 @@ public class TicketSettledIntegrationEventHandler(
                 charge.CustomerId,
                 charge.CustomerName,
                 charge.Amount,
-                $"POS receipt #{@event.ReceiptNumber}",
+                // No prose: the receipt number travels as data, and each app
+                // says "receipt #7" in its own language
+                description: null,
                 @event.SettledBy ?? "pos",
                 // Per customer as well as per ticket: two people's shares of
                 // one bill are two charges, and each must dedupe on its own
-                reference: $"sales-ticket:{@event.TicketId}:{charge.CustomerId}"));
+                reference: $"sales-ticket:{@event.TicketId}:{charge.CustomerId}",
+                source: TransactionSource.PosReceipt,
+                sourceNumber: @event.ReceiptNumber));
 
             logger.LogInformation(
                 "Posted {Amount} to {CustomerId}'s account for ticket {TicketId} (receipt #{Receipt})",

@@ -17,6 +17,11 @@ class AccountTransaction {
   final TransactionType type;
   final double amount;
   final String? description;
+
+  /// manual, posReceipt or posCreditNote — and the till's number for the
+  /// last two, so the label is built in the user's language
+  final String source;
+  final int? sourceNumber;
   final String recordedBy;
   final DateTime createdAt;
 
@@ -25,6 +30,8 @@ class AccountTransaction {
     required this.type,
     required this.amount,
     this.description,
+    this.source = 'manual',
+    this.sourceNumber,
     required this.recordedBy,
     required this.createdAt,
   });
@@ -35,6 +42,8 @@ class AccountTransaction {
       type: TransactionType.fromString(json['type'] as String),
       amount: (json['amount'] as num).toDouble(),
       description: json['description'] as String?,
+      source: json['source'] as String? ?? 'manual',
+      sourceNumber: (json['sourceNumber'] as num?)?.toInt(),
       recordedBy: json['recordedBy'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );

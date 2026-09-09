@@ -205,6 +205,8 @@
   "noTransactionsYet": "مفيش معاملات لسه",
   "charge": "رسوم",
   "payment": "دفع",
+  "posReceipt": "إيصال كاشير #{number}",
+  "posCreditNote": "مرتجع كاشير #{number}",
   "byPerson": "بواسطة {name}",
   "today": "النهاردة",
   "yesterday": "إمبارح",

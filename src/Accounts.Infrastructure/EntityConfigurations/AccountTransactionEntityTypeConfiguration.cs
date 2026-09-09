@@ -37,6 +37,13 @@ class AccountTransactionEntityTypeConfiguration : IEntityTypeConfiguration<Accou
         builder.Property(t => t.Reference)
             .HasMaxLength(100);
 
+        builder.Property(t => t.Source)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .HasDefaultValue(TransactionSource.Manual);
+
+        builder.Property(t => t.SourceNumber);
+
         builder.HasIndex(t => t.CustomerAccountId);
         builder.HasIndex(t => t.CreatedAt);
 

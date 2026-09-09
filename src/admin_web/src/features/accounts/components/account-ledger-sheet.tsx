@@ -111,8 +111,16 @@ export function AccountLedgerSheet({
                     </div>
                     <div className='min-w-0 flex-1'>
                       <p className='truncate text-sm font-medium'>
-                        {transaction.description ||
-                          (isCharge ? t('charge') : t('payment'))}
+                        {transaction.source === 'posReceipt' &&
+                        transaction.sourceNumber != null
+                          ? t('posReceipt', { number: transaction.sourceNumber })
+                          : transaction.source === 'posCreditNote' &&
+                              transaction.sourceNumber != null
+                            ? t('posCreditNote', {
+                                number: transaction.sourceNumber,
+                              })
+                            : transaction.description ||
+                              (isCharge ? t('charge') : t('payment'))}
                       </p>
                       <p className='text-muted-foreground text-xs'>
                         {new Date(transaction.createdAt).toLocaleString(locale)}{' '}

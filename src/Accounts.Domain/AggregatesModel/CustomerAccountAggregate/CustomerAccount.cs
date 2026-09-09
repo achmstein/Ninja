@@ -31,7 +31,7 @@ public class CustomerAccount : Entity, IAggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddCharge(decimal amount, string? description, string addedBy, string? reference = null)
+    public void AddCharge(decimal amount, string? description, string addedBy, string? reference = null, TransactionSource source = TransactionSource.Manual, int? sourceNumber = null)
     {
         if (amount <= 0)
             throw new AccountsDomainException("Charge amount must be greater than zero");
@@ -45,14 +45,16 @@ public class CustomerAccount : Entity, IAggregateRoot
             amount,
             description,
             addedBy,
-            reference);
+            reference,
+            source,
+            sourceNumber);
 
         _transactions.Add(transaction);
         Balance += amount;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RecordPayment(decimal amount, string? description, string recordedBy, string? reference = null)
+    public void RecordPayment(decimal amount, string? description, string recordedBy, string? reference = null, TransactionSource source = TransactionSource.Manual, int? sourceNumber = null)
     {
         if (amount <= 0)
             throw new AccountsDomainException("Payment amount must be greater than zero");
@@ -66,7 +68,9 @@ public class CustomerAccount : Entity, IAggregateRoot
             amount,
             description,
             recordedBy,
-            reference);
+            reference,
+            source,
+            sourceNumber);
 
         _transactions.Add(transaction);
         Balance -= amount;

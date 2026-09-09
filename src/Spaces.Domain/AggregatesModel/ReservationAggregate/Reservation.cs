@@ -525,10 +525,16 @@ public class Reservation : Entity, IAggregateRoot
         CustomerId = customerId;
         CustomerName = customerName;
 
-        // If session is already active (walk-in), add as Owner session member immediately
+        // If session is already active (walk-in), add as Owner session member
+        // immediately — and tell them, the way a member who scanned in is told,
+        // so their phone shows the running session
         if (Status == ReservationStatus.Active && !_sessionMembers.Any(m => m.CustomerId == customerId))
         {
             _sessionMembers.Add(new SessionMember(Id, customerId, customerName, SessionMemberRole.Owner));
+            AddDomainEvent(new SessionMemberJoinedDomainEvent(this, customerId));
         }
+
+        // Every screen showing this room has a name to put on it now
+        AddDomainEvent(new SessionCustomerAssignedDomainEvent(this, customerId));
     }
 }

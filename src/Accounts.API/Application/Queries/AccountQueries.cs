@@ -113,6 +113,13 @@ public class AccountQueries : IAccountQueries
             Type = transaction.Type == TransactionType.Charge ? "charge" : "payment",
             Amount = transaction.Amount,
             Description = transaction.Description,
+            Source = transaction.Source switch
+            {
+                TransactionSource.PosReceipt => "posReceipt",
+                TransactionSource.PosCreditNote => "posCreditNote",
+                _ => "manual"
+            },
+            SourceNumber = transaction.SourceNumber,
             RecordedBy = transaction.RecordedBy,
             CreatedAt = transaction.CreatedAt
         };
