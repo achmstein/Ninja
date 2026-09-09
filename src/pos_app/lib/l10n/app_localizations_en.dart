@@ -579,6 +579,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTab => 'New tab';
 
   @override
+  String get findCustomer => 'Find customer';
+
+  @override
   String get newTabHint =>
       'A counter bill with no table, for someone who will order in a moment.';
 
@@ -761,6 +764,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get done => 'Done';
+
+  @override
+  String get customerDetails => 'Customer details';
+
+  @override
+  String get loyaltyPoints => 'Loyalty points';
+
+  @override
+  String pointsBalance(int points) {
+    return '$points pts';
+  }
+
+  @override
+  String pointsWorth(String amount) {
+    return '≈ $amount';
+  }
+
+  @override
+  String get tierBronze => 'Bronze';
+
+  @override
+  String get tierSilver => 'Silver';
+
+  @override
+  String get tierGold => 'Gold';
+
+  @override
+  String get tierPlatinum => 'Platinum';
+
+  @override
+  String get notEnrolled => 'Not in the loyalty program';
+
+  @override
+  String get joinsFromApp =>
+      'Customers join and use their points from the app.';
+
+  @override
+  String get tabBalance => 'Tab';
+
+  @override
+  String owesAmount(String amount) {
+    return 'Owes $amount';
+  }
+
+  @override
+  String creditAmount(String amount) {
+    return '$amount in credit';
+  }
+
+  @override
+  String get settledUp => 'Settled up';
+
+  @override
+  String get noTab => 'No tab';
+
+  @override
+  String thisBill(String amount) {
+    return 'this bill $amount';
+  }
+
+  @override
+  String get payTab => 'Pay tab';
+
+  @override
+  String get confirmTabPayment => 'Take payment';
+
+  @override
+  String cappedAtBalance(String amount) {
+    return 'Capped at what is owed: $amount';
+  }
+
+  @override
+  String get tabPaymentRecorded => 'Tab payment recorded';
+
+  @override
+  String get tabPaymentSlip => 'Tab payment';
+
+  @override
+  String tabPaymentNumber(int number) {
+    return 'Tab payment #$number';
+  }
+
+  @override
+  String get tabBalanceBefore => 'Balance before';
+
+  @override
+  String get newBalance => 'New balance';
+
+  @override
+  String get failedToPayTab => 'Could not record the payment';
+
+  @override
+  String get tabPayments => 'Tab payments';
 
   @override
   String get voidTicket => 'Void ticket';

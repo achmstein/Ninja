@@ -285,6 +285,12 @@
       "number": {"type": "int"}
     }
   },
+  "posTabPayment": "Tab payment #{number}",
+  "@posTabPayment": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
   "payment": "Payment",
 
   "adjust": "Adjust",

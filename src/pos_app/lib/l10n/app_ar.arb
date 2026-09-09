@@ -358,6 +358,7 @@
     }
   },
   "newTab": "حساب جديد",
+  "findCustomer": "دور على عميل",
   "newTabHint": "حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.",
   "ticketNumber": "حساب #{id}",
   "@ticketNumber": {
@@ -442,6 +443,81 @@
   },
   "print": "اطبع",
   "done": "تم",
+  "customerDetails": "تفاصيل العميل",
+  "loyaltyPoints": "نقط الولاء",
+  "pointsBalance": "{points} نقطة",
+  "@pointsBalance": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "pointsWorth": "≈ {amount}",
+  "@pointsWorth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tierBronze": "برونزي",
+  "tierSilver": "فضي",
+  "tierGold": "دهبي",
+  "tierPlatinum": "بلاتيني",
+  "notEnrolled": "مش مشترك في برنامج الولاء",
+  "joinsFromApp": "العميل بيشترك ويستخدم نقطه من الأبلكيشن.",
+  "tabBalance": "الحساب الآجل",
+  "owesAmount": "عليه {amount}",
+  "@owesAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "creditAmount": "ليه {amount}",
+  "@creditAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "settledUp": "مفيش عليه حاجة",
+  "noTab": "مفيش حساب آجل",
+  "thisBill": "الحساب ده {amount}",
+  "@thisBill": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payTab": "سداد الحساب",
+  "confirmTabPayment": "استلم",
+  "cappedAtBalance": "أقصى مبلغ هو المستحق: {amount}",
+  "@cappedAtBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tabPaymentRecorded": "اتسجل سداد الحساب",
+  "tabPaymentSlip": "سداد حساب آجل",
+  "tabPaymentNumber": "سداد #{number}",
+  "@tabPaymentNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "tabBalanceBefore": "الرصيد قبل",
+  "newBalance": "الرصيد الجديد",
+  "failedToPayTab": "معرفناش نسجل السداد",
+  "tabPayments": "سداد حسابات آجلة",
   "voidTicket": "إلغاء الحساب",
   "voidReasonHint": "سبب الإلغاء مطلوب — ده سجل المراجعة.",
   "confirmVoid": "ألغي الحساب",

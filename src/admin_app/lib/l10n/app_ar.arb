@@ -199,6 +199,7 @@
   "charge": "رصيد",
   "posReceipt": "إيصال كاشير #{number}",
   "posCreditNote": "مرتجع كاشير #{number}",
+  "posTabPayment": "سداد حساب #{number}",
   "payment": "دفع",
 
   "adjust": "تعديل",

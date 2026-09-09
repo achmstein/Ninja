@@ -25,6 +25,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
   const tenders = shift.tenderTotals ?? []
+  const tabPayments = shift.tabPaymentTenderTotals ?? []
   const movements = shift.movements ?? []
 
   const row = (
@@ -81,6 +82,23 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
           {dashed}
           <div style={{ fontWeight: 600 }}>{t('tenderSplit')}</div>
           {tenders.map((total) =>
+            row(
+              `${
+                tenderLabelKey[total.tender]
+                  ? t(tenderLabelKey[total.tender])
+                  : total.tender
+              } × ${toNumber(total.count)}`,
+              money(total.amount)
+            )
+          )}
+        </>
+      )}
+
+      {tabPayments.length > 0 && (
+        <>
+          {dashed}
+          <div style={{ fontWeight: 600 }}>{t('tabPayments')}</div>
+          {tabPayments.map((total) =>
             row(
               `${
                 tenderLabelKey[total.tender]

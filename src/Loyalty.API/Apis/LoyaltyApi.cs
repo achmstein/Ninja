@@ -30,21 +30,21 @@ public static class LoyaltyApi
         api.MapGet("/accounts/{userId}", GetAccountByUserId)
             .WithName("GetAccount")
             .WithSummary("Get loyalty account")
-            .WithDescription("Get a loyalty account by user ID")
+            .WithDescription("Get a loyalty account by user ID — the user themself, or till staff")
             .WithTags("Accounts")
             .RequireAuthorization();
 
         api.MapPost("/accounts", CreateAccount)
             .WithName("CreateAccount")
             .WithSummary("Create loyalty account")
-            .WithDescription("Create a new loyalty account for a user")
+            .WithDescription("Enroll a user in the program — themself, or the back office on their behalf")
             .WithTags("Accounts")
             .RequireAuthorization();
 
         api.MapGet("/accounts/{userId}/balance", GetBalance)
             .WithName("GetBalance")
             .WithSummary("Get points balance")
-            .WithDescription("Get the current points balance for a user")
+            .WithDescription("Get the current points balance for a user — the user themself, or till staff")
             .WithTags("Accounts")
             .RequireAuthorization();
 
@@ -52,16 +52,16 @@ public static class LoyaltyApi
         api.MapGet("/transactions/{userId}", GetTransactions)
             .WithName("GetTransactions")
             .WithSummary("Get transaction history")
-            .WithDescription("Get all transactions for a user")
+            .WithDescription("Get all transactions for a user — the user themself, or till staff")
             .WithTags("Transactions")
             .RequireAuthorization();
 
         api.MapPost("/transactions/earn", EarnPoints)
             .WithName("EarnPoints")
             .WithSummary("Earn points")
-            .WithDescription("Add points to a user's account")
+            .WithDescription("Add points to a user's account (Admin only)")
             .WithTags("Transactions")
-            .RequireAuthorization();
+            .RequireAuthorization("Admin");
 
         api.MapPost("/transactions/adjust", AdjustPoints)
             .WithName("AdjustPoints")
@@ -114,10 +114,17 @@ public static class LoyaltyApi
         return TypedResults.Ok(accounts.Select(a => new AccountDto(a)).ToList());
     }
 
-    public static async Task<Results<Ok<AccountDto>, NotFound>> GetAccountByUserId(
+    public static async Task<Results<Ok<AccountDto>, NotFound, ForbidHttpResult>> GetAccountByUserId(
         LoyaltyContext context,
+        ClaimsPrincipal user,
         [Description("The user ID")] string userId)
     {
+        // A member reads their own card; the till reads the customer's in front of it
+        if (!user.CanActFor(userId))
+        {
+            return TypedResults.Forbid();
+        }
+
         var account = await context.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
         if (account == null)
@@ -128,11 +135,21 @@ public static class LoyaltyApi
         return TypedResults.Ok(new AccountDto(account));
     }
 
-    public static async Task<Results<Created<AccountDto>, Conflict<ProblemDetails>>> CreateAccount(
+    public static async Task<Results<Created<AccountDto>, Conflict<ProblemDetails>, ForbidHttpResult>> CreateAccount(
         LoyaltyContext context,
         CreateAccountRequest request,
         ClaimsPrincipal user)
     {
+        // Joining is the customer's own act in their app, or the back
+        // office's on their behalf — never the till's: points are earned and
+        // spent in the app, the till only shows them
+        var isSelf = string.Equals(user.GetUserId(), request.UserId, StringComparison.Ordinal);
+        var isAdmin = user.GetRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
+        if (!isSelf && !isAdmin)
+        {
+            return TypedResults.Forbid();
+        }
+
         // Check if account already exists
         var existing = await context.Accounts.FirstOrDefaultAsync(a => a.UserId == request.UserId);
         if (existing != null)
@@ -143,8 +160,10 @@ public static class LoyaltyApi
             });
         }
 
-        // Get display name from JWT claims (identity service)
-        var displayName = user.GetUserName();
+        // Joining oneself: the name is on the token. Enrolled by the back
+        // office: it sends the customer's name — never the admin's own; a
+        // missing one is backfilled by the profile and order events.
+        var displayName = isSelf ? user.GetUserName() : request.UserDisplayName;
 
         var account = new LoyaltyAccount
         {
@@ -158,10 +177,16 @@ public static class LoyaltyApi
         return TypedResults.Created($"/api/loyalty/accounts/{account.UserId}", new AccountDto(account));
     }
 
-    public static async Task<Results<Ok<BalanceDto>, NotFound>> GetBalance(
+    public static async Task<Results<Ok<BalanceDto>, NotFound, ForbidHttpResult>> GetBalance(
         LoyaltyContext context,
+        ClaimsPrincipal user,
         [Description("The user ID")] string userId)
     {
+        if (!user.CanActFor(userId))
+        {
+            return TypedResults.Forbid();
+        }
+
         var account = await context.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
         if (account == null)
@@ -177,12 +202,18 @@ public static class LoyaltyApi
     }
 
     // Transaction endpoints
-    public static async Task<Results<Ok<List<TransactionDto>>, NotFound>> GetTransactions(
+    public static async Task<Results<Ok<List<TransactionDto>>, NotFound, ForbidHttpResult>> GetTransactions(
         LoyaltyContext context,
+        ClaimsPrincipal user,
         [Description("The user ID")] string userId,
         [FromQuery] int? first,
         [FromQuery] int? max)
     {
+        if (!user.CanActFor(userId))
+        {
+            return TypedResults.Forbid();
+        }
+
         var account = await context.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
         if (account == null)
@@ -335,7 +366,7 @@ public static class LoyaltyApi
 }
 
 // DTOs
-public record CreateAccountRequest(string UserId);
+public record CreateAccountRequest(string UserId, string? UserDisplayName = null);
 public record EarnPointsRequest(string UserId, int Points, string Type, string? ReferenceId = null, string? Description = null, string? UserDisplayName = null);
 public record AdjustPointsRequest(string UserId, int Points, string Reason);
 

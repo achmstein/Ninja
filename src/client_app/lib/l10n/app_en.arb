@@ -303,6 +303,12 @@
       "number": {"type": "int"}
     }
   },
+  "posTabPayment": "Tab payment #{number}",
+  "@posTabPayment": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
   "byPerson": "by {name}",
   "@byPerson": {
     "placeholders": {

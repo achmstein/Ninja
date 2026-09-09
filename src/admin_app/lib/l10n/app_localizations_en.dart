@@ -611,6 +611,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String posTabPayment(int number) {
+    return 'Tab payment #$number';
+  }
+
+  @override
   String get payment => 'Payment';
 
   @override

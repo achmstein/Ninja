@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
@@ -61,7 +62,10 @@ class _SessionMembersState extends ConsumerState<SessionMembers> {
               children: [
                 Icon(member.isOwner ? FIcons.star : FIcons.user, size: 14, color: member.isOwner ? AppColors.amber500 : null),
                 const SizedBox(width: 6),
-                Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                FTappable(
+                  onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
+                  child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                ),
                 if (!member.isOwner) ...[
                   const SizedBox(width: 4),
                   SizedBox.square(

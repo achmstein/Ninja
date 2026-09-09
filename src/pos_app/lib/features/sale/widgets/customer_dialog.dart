@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../models/sale_line.dart';
 
@@ -19,10 +20,12 @@ const _minSearchLength = 2;
 /// [quickPicks] are offered before the search — the room's roster when the
 /// sale is for a room; most of the time the person is already there, so
 /// this is one tap instead of a search.
+/// [title] replaces "Choose customer" for a plain lookup.
 Future<SaleCustomer?> showCustomerDialog(
   BuildContext context, {
   bool accountsOnly = false,
   List<({String id, String name})> quickPicks = const [],
+  String? title,
 }) {
   return showFDialog<SaleCustomer>(
     context: context,
@@ -31,7 +34,7 @@ Future<SaleCustomer?> showCustomerDialog(
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks),
+      builder: (context, _) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title),
     ),
   );
 }
@@ -39,7 +42,8 @@ Future<SaleCustomer?> showCustomerDialog(
 class _CustomerDialog extends ConsumerStatefulWidget {
   final bool accountsOnly;
   final List<({String id, String name})> quickPicks;
-  const _CustomerDialog({this.accountsOnly = false, this.quickPicks = const []});
+  final String? title;
+  const _CustomerDialog({this.accountsOnly = false, this.quickPicks = const [], this.title});
 
   @override
   ConsumerState<_CustomerDialog> createState() => _CustomerDialogState();
@@ -127,7 +131,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.chooseCustomer, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(widget.title ?? l10n.chooseCustomer, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             if (widget.quickPicks.isNotEmpty) ...[
               Text(l10n.inTheRoom, style: muted),
@@ -196,8 +200,11 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                   itemCount: _users.length,
                                   itemBuilder: (context, index) {
                                     final user = _users[index];
-                                    return FTappable(
-                                      onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName)),
+                                    return Row(
+                                      children: [
+                                        Expanded(
+                                          child: FTappable(
+                                      onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber)),
                                       builder: (context, states, child) => Container(
                                         constraints: const BoxConstraints(minHeight: 56),
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -239,6 +246,18 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                           ),
                                         ],
                                       ),
+                                          ),
+                                        ),
+                                        // A look before the pick: points and tab, without attaching
+                                        SizedBox.square(
+                                          dimension: 44,
+                                          child: FButton.icon(
+                                            variant: FButtonVariant.ghost,
+                                            onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber),
+                                            child: Icon(FIcons.info, size: 20, color: theme.colors.mutedForeground),
+                                          ),
+                                        ),
+                                      ],
                                     );
                                   },
                                 ),

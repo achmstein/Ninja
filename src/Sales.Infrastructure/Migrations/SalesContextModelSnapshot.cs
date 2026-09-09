@@ -41,6 +41,9 @@ namespace Sales.Infrastructure.Migrations
             modelBuilder.HasSequence("shiftseq", "sales")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("tabpaymentseq", "sales")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("ticketlineseq", "sales")
                 .IncrementsBy(10);
 
@@ -180,6 +183,63 @@ namespace Sales.Infrastructure.Migrations
                     b.HasIndex("BranchId", "OpenedAt");
 
                     b.ToTable("shifts", "sales");
+                });
+
+            modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "tabpaymentseq", "sales");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecordedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("BranchId", "Number")
+                        .IsUnique();
+
+                    b.HasIndex("BranchId", "RecordedAt");
+
+                    b.ToTable("tab_payments", "sales");
                 });
 
             modelBuilder.Entity("Chillax.Sales.Domain.AggregatesModel.TicketAggregate.BranchPricing", b =>

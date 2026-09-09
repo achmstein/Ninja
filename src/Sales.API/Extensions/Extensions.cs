@@ -55,6 +55,7 @@ public static class Extensions
 
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
+        services.AddScoped<Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();
@@ -78,6 +79,8 @@ public static class Extensions
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
+[JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
+[JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 public partial class SalesIntegrationEventContext : JsonSerializerContext

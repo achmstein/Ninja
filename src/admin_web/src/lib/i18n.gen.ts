@@ -194,6 +194,7 @@ export const messages = {
   charge: { en: "Charge", ar: "رصيد" },
   posReceipt: { en: "POS receipt #{number}", ar: "إيصال كاشير #{number}" },
   posCreditNote: { en: "POS credit note #{number}", ar: "مرتجع كاشير #{number}" },
+  posTabPayment: { en: "Tab payment #{number}", ar: "سداد حساب #{number}" },
   payment: { en: "Payment", ar: "دفع" },
   adjust: { en: "Adjust", ar: "تعديل" },
   addPoints: { en: "Add Points", ar: "إضافة نقاط" },

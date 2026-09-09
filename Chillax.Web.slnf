@@ -22,6 +22,7 @@
       "src\\Spaces.API\\Spaces.API.csproj",
       "src\\Spaces.Domain\\Spaces.Domain.csproj",
       "src\\Spaces.Infrastructure\\Spaces.Infrastructure.csproj",
+      "tests\\Accounts.UnitTests\\Accounts.UnitTests.csproj",
       "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
       "tests\\Identity.UnitTests\\Identity.UnitTests.csproj",
       "tests\\Ordering.FunctionalTests\\Ordering.FunctionalTests.csproj",

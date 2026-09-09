@@ -583,6 +583,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newTab => 'حساب جديد';
 
   @override
+  String get findCustomer => 'دور على عميل';
+
+  @override
   String get newTabHint => 'حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.';
 
   @override
@@ -766,6 +769,98 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get done => 'تم';
+
+  @override
+  String get customerDetails => 'تفاصيل العميل';
+
+  @override
+  String get loyaltyPoints => 'نقط الولاء';
+
+  @override
+  String pointsBalance(int points) {
+    return '$points نقطة';
+  }
+
+  @override
+  String pointsWorth(String amount) {
+    return '≈ $amount';
+  }
+
+  @override
+  String get tierBronze => 'برونزي';
+
+  @override
+  String get tierSilver => 'فضي';
+
+  @override
+  String get tierGold => 'دهبي';
+
+  @override
+  String get tierPlatinum => 'بلاتيني';
+
+  @override
+  String get notEnrolled => 'مش مشترك في برنامج الولاء';
+
+  @override
+  String get joinsFromApp => 'العميل بيشترك ويستخدم نقطه من الأبلكيشن.';
+
+  @override
+  String get tabBalance => 'الحساب الآجل';
+
+  @override
+  String owesAmount(String amount) {
+    return 'عليه $amount';
+  }
+
+  @override
+  String creditAmount(String amount) {
+    return 'ليه $amount';
+  }
+
+  @override
+  String get settledUp => 'مفيش عليه حاجة';
+
+  @override
+  String get noTab => 'مفيش حساب آجل';
+
+  @override
+  String thisBill(String amount) {
+    return 'الحساب ده $amount';
+  }
+
+  @override
+  String get payTab => 'سداد الحساب';
+
+  @override
+  String get confirmTabPayment => 'استلم';
+
+  @override
+  String cappedAtBalance(String amount) {
+    return 'أقصى مبلغ هو المستحق: $amount';
+  }
+
+  @override
+  String get tabPaymentRecorded => 'اتسجل سداد الحساب';
+
+  @override
+  String get tabPaymentSlip => 'سداد حساب آجل';
+
+  @override
+  String tabPaymentNumber(int number) {
+    return 'سداد #$number';
+  }
+
+  @override
+  String get tabBalanceBefore => 'الرصيد قبل';
+
+  @override
+  String get newBalance => 'الرصيد الجديد';
+
+  @override
+  String get failedToPayTab => 'معرفناش نسجل السداد';
+
+  @override
+  String get tabPayments => 'سداد حسابات آجلة';
 
   @override
   String get voidTicket => 'إلغاء الحساب';

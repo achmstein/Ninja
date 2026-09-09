@@ -358,6 +358,7 @@
     }
   },
   "newTab": "New tab",
+  "findCustomer": "Find customer",
   "newTabHint": "A counter bill with no table, for someone who will order in a moment.",
   "ticketNumber": "Ticket #{id}",
   "@ticketNumber": {
@@ -442,6 +443,81 @@
   },
   "print": "Print",
   "done": "Done",
+  "customerDetails": "Customer details",
+  "loyaltyPoints": "Loyalty points",
+  "pointsBalance": "{points} pts",
+  "@pointsBalance": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "pointsWorth": "≈ {amount}",
+  "@pointsWorth": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tierBronze": "Bronze",
+  "tierSilver": "Silver",
+  "tierGold": "Gold",
+  "tierPlatinum": "Platinum",
+  "notEnrolled": "Not in the loyalty program",
+  "joinsFromApp": "Customers join and use their points from the app.",
+  "tabBalance": "Tab",
+  "owesAmount": "Owes {amount}",
+  "@owesAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "creditAmount": "{amount} in credit",
+  "@creditAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "settledUp": "Settled up",
+  "noTab": "No tab",
+  "thisBill": "this bill {amount}",
+  "@thisBill": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payTab": "Pay tab",
+  "confirmTabPayment": "Take payment",
+  "cappedAtBalance": "Capped at what is owed: {amount}",
+  "@cappedAtBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "tabPaymentRecorded": "Tab payment recorded",
+  "tabPaymentSlip": "Tab payment",
+  "tabPaymentNumber": "Tab payment #{number}",
+  "@tabPaymentNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "tabBalanceBefore": "Balance before",
+  "newBalance": "New balance",
+  "failedToPayTab": "Could not record the payment",
+  "tabPayments": "Tab payments",
   "voidTicket": "Void ticket",
   "voidReasonHint": "A reason is required — this is the audit trail.",
   "confirmVoid": "Void ticket",

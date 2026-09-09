@@ -34,7 +34,8 @@ public class Shift : Entity, IAggregateRoot
 
     /// <summary>
     /// What the drawer should have held at close:
-    /// float + cash sales − change given + pay-ins − pay-outs. Frozen at close.
+    /// float + cash sales − change given − cash refunds + cash tab payments
+    /// + pay-ins − pay-outs. Frozen at close.
     /// </summary>
     public decimal? ExpectedCash { get; private set; }
 
@@ -81,7 +82,7 @@ public class Shift : Entity, IAggregateRoot
     /// figures come from the tickets stamped with this shift — the caller
     /// aggregates them; the shift owns the arithmetic and the verdict.
     /// </summary>
-    public void Close(decimal closingCount, decimal cashPayments, decimal changeGiven, string closedBy, decimal cashRefunds = 0)
+    public void Close(decimal closingCount, decimal cashPayments, decimal changeGiven, string closedBy, decimal cashRefunds = 0, decimal cashTabPayments = 0)
     {
         EnsureOpen();
 
@@ -91,8 +92,9 @@ public class Shift : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(closedBy))
             throw new SalesDomainException("A shift needs the cashier closing it");
 
-        // Cash refunds left the drawer the way change did
-        ExpectedCash = OpeningFloat + cashPayments - changeGiven - cashRefunds + GetPayInsTotal() - GetPayOutsTotal();
+        // Cash refunds left the drawer the way change did; cash taken
+        // against a tab went in the way a sale did
+        ExpectedCash = OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments + GetPayInsTotal() - GetPayOutsTotal();
         ClosingCount = closingCount;
         OverShort = closingCount - ExpectedCash;
         ClosedBy = closedBy;

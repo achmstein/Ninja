@@ -1202,6 +1202,12 @@ abstract class AppLocalizations {
   /// **'POS credit note #{number}'**
   String posCreditNote(int number);
 
+  /// No description provided for @posTabPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab payment #{number}'**
+  String posTabPayment(int number);
+
   /// No description provided for @byPerson.
   ///
   /// In en, this message translates to:

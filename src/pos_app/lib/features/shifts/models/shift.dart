@@ -80,6 +80,10 @@ class ShiftView {
   final double cashRefunds;
   final double payInsTotal;
   final double payOutsTotal;
+
+  /// Money taken against tabs during the shift, by tender — beside the
+  /// sales, never inside them
+  final List<TenderTotal> tabPaymentTenderTotals;
   final double expectedInDrawer;
 
   const ShiftView({
@@ -102,6 +106,7 @@ class ShiftView {
     this.cashRefunds = 0,
     this.payInsTotal = 0,
     this.payOutsTotal = 0,
+    this.tabPaymentTenderTotals = const [],
     this.expectedInDrawer = 0,
   });
 
@@ -138,6 +143,9 @@ class ShiftView {
       cashRefunds: toNumber(json['cashRefunds']),
       payInsTotal: toNumber(json['payInsTotal']),
       payOutsTotal: toNumber(json['payOutsTotal']),
+      tabPaymentTenderTotals: ((json['tabPaymentTenderTotals'] as List<dynamic>?) ?? [])
+          .map((e) => TenderTotal.fromJson(e as Map<String, dynamic>))
+          .toList(),
       expectedInDrawer: toNumber(json['expectedInDrawer']),
     );
   }

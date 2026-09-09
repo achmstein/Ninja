@@ -49,6 +49,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
   const tenders = shift.tenderTotals ?? []
+  const tabPayments = shift.tabPaymentTenderTotals ?? []
   const movements = shift.movements ?? []
 
   const stat = (label: string, value: string) => (
@@ -144,6 +145,33 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
           <h2 className='mb-1 text-sm font-semibold'>{t('tenderSplit')}</h2>
           <div className='divide-y rounded-xl border'>
             {tenders.map((total) => (
+              <div
+                key={total.tender}
+                className='flex items-center justify-between gap-4 px-3 py-2'
+              >
+                <span>
+                  {tenderLabelKey[total.tender]
+                    ? t(tenderLabelKey[total.tender])
+                    : total.tender}
+                  <span className='text-muted-foreground text-sm tabular-nums'>
+                    {' '}× {toNumber(total.count)}
+                  </span>
+                </span>
+                <span className='font-semibold tabular-nums'>
+                  {money(total.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Money taken against tabs: beside the sales, never inside them */}
+      {tabPayments.length > 0 && (
+        <div>
+          <h2 className='mb-1 text-sm font-semibold'>{t('tabPayments')}</h2>
+          <div className='divide-y rounded-xl border'>
+            {tabPayments.map((total) => (
               <div
                 key={total.tender}
                 className='flex items-center justify-between gap-4 px-3 py-2'

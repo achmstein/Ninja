@@ -117,12 +117,15 @@ class SaleCustomer {
   final String? id;
   final String name;
 
-  const SaleCustomer({this.id, required this.name});
+  /// As the search knew it; shown on the customer card
+  final String? phone;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  const SaleCustomer({this.id, required this.name, this.phone});
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'phone': phone};
 
   factory SaleCustomer.fromJson(Map<String, dynamic> json) =>
-      SaleCustomer(id: json['id'] as String?, name: json['name'] as String? ?? '');
+      SaleCustomer(id: json['id'] as String?, name: json['name'] as String? ?? '', phone: json['phone'] as String?);
 }
 
 double saleTotal(List<SaleLine> lines) => lines.fold(0, (sum, l) => sum + l.total);

@@ -24,6 +24,19 @@ public class ShiftAggregateTest
     }
 
     [TestMethod]
+    public void Cash_taken_against_tabs_sits_in_the_drawer()
+    {
+        // Float 200, cash sales 500 with 20 change, a customer paid 100 of
+        // their tab in cash → 780 expected; card tab payments never touch it
+        var shift = new Shift(branchId: 1, openingFloat: 200, openedBy: "cashier");
+
+        shift.Close(closingCount: 780, cashPayments: 500, changeGiven: 20, closedBy: "cashier", cashRefunds: 0, cashTabPayments: 100);
+
+        Assert.AreEqual(780m, shift.ExpectedCash);
+        Assert.AreEqual(0m, shift.OverShort);
+    }
+
+    [TestMethod]
     public void Opening_and_closing_announce_themselves()
     {
         // Branch.API turns the branch flags on and off from these two events

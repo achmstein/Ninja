@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Loader2, User, UserPlus } from 'lucide-react'
+import { Info, Loader2, User, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,7 +11,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api-client'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
-import { useT } from '@/lib/i18n'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import type { SaleCustomer } from './cart'
 
 // Keycloak user as the identity BFF route returns it. No generated SDK for
@@ -62,6 +63,8 @@ type CustomerDialogProps = {
    * one tap instead of a search.
    */
   quickPicks?: { id: string; name: string }[]
+  /** The dialog's title; "Choose customer" unless it is a plain lookup. */
+  titleKey?: TranslationKey
 }
 
 /**
@@ -75,9 +78,11 @@ export function CustomerDialog({
   onSelect,
   accountsOnly = false,
   quickPicks = [],
+  titleKey = 'chooseCustomer',
 }: CustomerDialogProps) {
   const t = useT()
   const [term, setTerm] = useState('')
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const debouncedTerm = useDebounced(term.trim(), SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
@@ -98,7 +103,7 @@ export function CustomerDialog({
   })
 
   const pick = (user: IdentityUser) => {
-    onSelect({ id: user.id, name: displayName(user) })
+    onSelect({ id: user.id, name: displayName(user), phone: user.phoneNumber })
     onOpenChange(false)
   }
 
@@ -115,7 +120,7 @@ export function CustomerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='flex max-h-[85svh] flex-col gap-4 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('chooseCustomer')}</DialogTitle>
+          <DialogTitle className='text-xl'>{t(titleKey)}</DialogTitle>
         </DialogHeader>
 
         {quickPicks.length > 0 && (
@@ -187,11 +192,11 @@ export function CustomerDialog({
           ) : (
             <div className='flex flex-col'>
               {users.map((user) => (
+                <div key={user.id} className='flex items-center gap-1'>
                 <button
-                  key={user.id}
                   type='button'
                   onClick={() => pick(user)}
-                  className='hover:bg-accent flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-start'
+                  className='hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start'
                 >
                   <User className='text-muted-foreground size-5 shrink-0' />
                   <span className='min-w-0'>
@@ -220,6 +225,23 @@ export function CustomerDialog({
                     ) : null}
                   </span>
                 </button>
+                {/* A look before the pick: points and tab, without attaching */}
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='size-11 shrink-0'
+                  aria-label={t('customerDetails')}
+                  onClick={() =>
+                    setCardFor({
+                      id: user.id,
+                      name: displayName(user),
+                      phone: user.phoneNumber,
+                    })
+                  }
+                >
+                  <Info className='text-muted-foreground size-5' />
+                </Button>
+                </div>
               ))}
             </div>
           )}
@@ -234,6 +256,10 @@ export function CustomerDialog({
           {t('cancel')}
         </Button>
       </DialogContent>
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(open) => !open && setCardFor(null)}
+      />
     </Dialog>
   )
 }

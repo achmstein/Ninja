@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Star, User, UserPlus, X } from 'lucide-react'
 import type { ReservationViewModel } from '@/api/spaces/types.gen'
 import { Badge } from '@/components/ui/badge'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -18,6 +19,7 @@ export function SessionMembers({ session }: { session: ReservationViewModel }) {
   const t = useT()
   const actions = useSessionActions()
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const sessionId = toNumber(session.id)
 
   return (
@@ -36,7 +38,22 @@ export function SessionMembers({ session }: { session: ReservationViewModel }) {
               ) : (
                 <User className='size-3.5' />
               )}
-              {member.customerName || t('guest')}
+              {member.customerId ? (
+                <button
+                  type='button'
+                  className='underline-offset-4 hover:underline'
+                  onClick={() =>
+                    setCardFor({
+                      id: String(member.customerId),
+                      name: member.customerName ?? '',
+                    })
+                  }
+                >
+                  {member.customerName || t('guest')}
+                </button>
+              ) : (
+                member.customerName || t('guest')
+              )}
               {!isOwner && member.customerId && (
                 <button
                   type='button'
@@ -76,6 +93,10 @@ export function SessionMembers({ session }: { session: ReservationViewModel }) {
           if (picked.id) actions.addMember(sessionId, picked.id, picked.name)
           setPickerOpen(false)
         }}
+      />
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(open) => !open && setCardFor(null)}
       />
     </>
   )

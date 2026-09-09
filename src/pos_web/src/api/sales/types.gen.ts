@@ -89,6 +89,13 @@ export type PagedResultOfRefundSummary = {
     pageSize: number | string;
 };
 
+export type PagedResultOfTabPaymentView = {
+    items: Array<TabPaymentView>;
+    totalCount: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
 export type PagedResultOfTicketHistoryRow = {
     items: Array<TicketHistoryRow>;
     totalCount: number | string;
@@ -149,6 +156,9 @@ export type RangeReport = {
     vat?: number | string;
     refunds?: number | string;
     refundCount?: number | string;
+    tabPayments?: number | string;
+    tabPaymentCount?: number | string;
+    tabPaymentTenderTotals?: Array<TenderTotal>;
 };
 
 export type RefundLineRequest = {
@@ -254,7 +264,36 @@ export type ShiftView = {
     cashRefunds?: number | string;
     payInsTotal?: number | string;
     payOutsTotal?: number | string;
+    tabPaymentsTotal?: number | string;
+    cashTabPayments?: number | string;
+    tabPaymentTenderTotals?: Array<TenderTotal>;
+    tabPayments?: Array<TabPaymentView>;
     expectedInDrawer?: number | string;
+};
+
+export type TabPaymentRequest = {
+    customerId: string;
+    customerName: null | string;
+    tender: PaymentTender;
+    amount: number | string;
+};
+
+export type TabPaymentResult = {
+    id: number | string;
+    number: number | string;
+};
+
+export type TabPaymentView = {
+    id: number | string;
+    number: number | string;
+    branchId: number | string;
+    customerId: string;
+    customerName: null | string;
+    tender: string;
+    amount: number | string;
+    recordedBy: string;
+    recordedAt: string;
+    shiftId: null | number | string;
 };
 
 export type TenderTotal = {
@@ -552,6 +591,127 @@ export type GetRefundsResponses = {
 };
 
 export type GetRefundsResponse = GetRefundsResponses[keyof GetRefundsResponses];
+
+export type GetTabPaymentsData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/tab-payments';
+};
+
+export type GetTabPaymentsErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetTabPaymentsError = GetTabPaymentsErrors[keyof GetTabPaymentsErrors];
+
+export type GetTabPaymentsResponses = {
+    /**
+     * OK
+     */
+    200: PagedResultOfTabPaymentView;
+};
+
+export type GetTabPaymentsResponse = GetTabPaymentsResponses[keyof GetTabPaymentsResponses];
+
+export type RecordTabPaymentData = {
+    body: TabPaymentRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/tab-payments';
+};
+
+export type RecordTabPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RecordTabPaymentError = RecordTabPaymentErrors[keyof RecordTabPaymentErrors];
+
+export type RecordTabPaymentResponses = {
+    /**
+     * OK
+     */
+    200: TabPaymentResult;
+};
+
+export type RecordTabPaymentResponse = RecordTabPaymentResponses[keyof RecordTabPaymentResponses];
+
+export type GetTabPaymentData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/tab-payments/{id}';
+};
+
+export type GetTabPaymentErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTabPaymentResponses = {
+    /**
+     * OK
+     */
+    200: TabPaymentView;
+};
+
+export type GetTabPaymentResponse = GetTabPaymentResponses[keyof GetTabPaymentResponses];
 
 export type DiscardTicketData = {
     body?: never;

@@ -101,6 +101,9 @@ function AccountPage() {
                         : tx.source === 'posCreditNote' &&
                             tx.sourceNumber != null
                           ? t('posCreditNote', { number: tx.sourceNumber })
+                          : tx.source === 'posTabPayment' &&
+                              tx.sourceNumber != null
+                            ? t('posTabPayment', { number: tx.sourceNumber })
                           : tx.description ||
                             (tx.recordedBy
                               ? t('byPerson', { name: tx.recordedBy })

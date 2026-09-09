@@ -5,9 +5,9 @@ export interface AccountTransaction {
   type: TransactionType
   amount: number
   description?: string
-  // manual, posReceipt or posCreditNote — and the till's number for the
+  // manual, posReceipt, posCreditNote or posTabPayment — and the till's number for the
   // last two, so the label is built in the user's language
-  source?: 'manual' | 'posReceipt' | 'posCreditNote' | string
+  source?: 'manual' | 'posReceipt' | 'posCreditNote' | 'posTabPayment' | string
   sourceNumber?: number | null
   recordedBy: string
   createdAt: string

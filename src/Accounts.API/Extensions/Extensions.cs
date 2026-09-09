@@ -43,12 +43,15 @@ public static class Extensions
                 options.TypeInfoResolverChain.Add(AccountsIntegrationEventContext.Default))
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
-            .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
+            .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
+            .AddSubscription<TabPaymentRecordedIntegrationEvent, TabPaymentRecordedIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
+[JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
+[JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
 partial class AccountsIntegrationEventContext : JsonSerializerContext
 {
 }

@@ -53,6 +53,14 @@ class ShiftReportSheet extends StatelessWidget {
           for (final total in shift.tenderTotals)
             SheetRow('${tenderLabel(l10n, total.tender)} × ${total.count}', moneyWith(l10n, total.amount)),
         ],
+        if (shift.tabPaymentTenderTotals.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          const Dashes(),
+          const SizedBox(height: 8),
+          Text(l10n.tabPayments, style: const TextStyle(fontWeight: FontWeight.w600)),
+          for (final total in shift.tabPaymentTenderTotals)
+            SheetRow('${tenderLabel(l10n, total.tender)} × ${total.count}', moneyWith(l10n, total.amount)),
+        ],
         if (shift.movements.isNotEmpty) ...[
           const SizedBox(height: 8),
           const Dashes(),

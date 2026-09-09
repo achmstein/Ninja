@@ -395,5 +395,6 @@ class _TransactionTile extends StatelessWidget {
 String? _transactionDetail(AccountTransaction transaction, AppLocalizations l10n) {
   if (transaction.source == 'posReceipt' && transaction.sourceNumber != null) return l10n.posReceipt(transaction.sourceNumber!);
   if (transaction.source == 'posCreditNote' && transaction.sourceNumber != null) return l10n.posCreditNote(transaction.sourceNumber!);
+  if (transaction.source == 'posTabPayment' && transaction.sourceNumber != null) return l10n.posTabPayment(transaction.sourceNumber!);
   return transaction.description;
 }

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -68,6 +68,41 @@ export const getPayments = <ThrowOnError extends boolean = false>(options: Optio
 export const getRefunds = <ThrowOnError extends boolean = false>(options: Options<GetRefundsData, ThrowOnError>): RequestResult<GetRefundsResponses, GetRefundsErrors, ThrowOnError> => (options.client ?? client).get<GetRefundsResponses, GetRefundsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/refunds',
+    ...options
+});
+
+/**
+ * Tab payment slips taken in a window, newest first
+ *
+ * Money customers handed the till against their tabs. Not sales: the bills were counted when they went on account.
+ */
+export const getTabPayments = <ThrowOnError extends boolean = false>(options: Options<GetTabPaymentsData, ThrowOnError>): RequestResult<GetTabPaymentsResponses, GetTabPaymentsErrors, ThrowOnError> => (options.client ?? client).get<GetTabPaymentsResponses, GetTabPaymentsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/tab-payments',
+    ...options
+});
+
+/**
+ * Take money against a customer's tab
+ *
+ * Cash into the drawer, card or InstaPay to the terminal — never Account. A numbered slip, stamped with the branch's open shift so the drawer count and the Z report include it; Accounts lowers the balance owed off the event. Slips are never voided: a mistake is reversed by a manual charge on the ledger (and a cash pay-out if cash was handed back).
+ */
+export const recordTabPayment = <ThrowOnError extends boolean = false>(options: Options<RecordTabPaymentData, ThrowOnError>): RequestResult<RecordTabPaymentResponses, RecordTabPaymentErrors, ThrowOnError> => (options.client ?? client).post<RecordTabPaymentResponses, RecordTabPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/tab-payments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * One tab payment slip, to reprint it
+ */
+export const getTabPayment = <ThrowOnError extends boolean = false>(options: Options<GetTabPaymentData, ThrowOnError>): RequestResult<GetTabPaymentResponses, GetTabPaymentErrors, ThrowOnError> => (options.client ?? client).get<GetTabPaymentResponses, GetTabPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/tab-payments/{id}',
     ...options
 });
 

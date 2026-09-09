@@ -1,5 +1,6 @@
 #nullable enable
 using Chillax.Sales.API.Application.Commands;
+using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
 using Chillax.Sales.Infrastructure.Idempotency;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -55,5 +56,24 @@ public class IdentifiedCommandHandlerTest
         Assert.IsTrue(result);
         await _requestManager.DidNotReceive().CreateRequestForCommandAsync<VoidTicketCommand>(Arg.Any<Guid>());
         await _mediator.DidNotReceive().Send(Arg.Any<VoidTicketCommand>(), Arg.Any<CancellationToken>());
+    }
+
+    [TestMethod]
+    public async Task A_repeated_tab_payment_answers_with_no_slip_and_takes_no_money_twice()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _requestManager.ExistAsync(id).Returns(Task.FromResult(true));
+        var logger = Substitute.For<ILogger<IdentifiedCommandHandler<RecordTabPaymentCommand, TabPaymentResult>>>();
+        var command = new IdentifiedCommand<RecordTabPaymentCommand, TabPaymentResult>(
+            new RecordTabPaymentCommand(1, "u1", "Ahmed", PaymentTender.Cash, 100, "cashier"), id);
+
+        // Act
+        var handler = new RecordTabPaymentIdentifiedCommandHandler(_mediator, _requestManager, logger);
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert: number 0 tells the till "already recorded, re-read"
+        Assert.AreEqual(0, result.Number);
+        await _mediator.DidNotReceive().Send(Arg.Any<RecordTabPaymentCommand>(), Arg.Any<CancellationToken>());
     }
 }

@@ -185,6 +185,32 @@ class ShiftReport extends StatelessWidget {
             ],
           ),
         ],
+        if (shift.tabPaymentTenderTotals.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(l10n.tabPayments, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          _Bordered(
+            children: [
+              for (final total in shift.tabPaymentTenderTotals)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text.rich(TextSpan(
+                          text: tenderLabel(l10n, total.tender),
+                          style: theme.typography.base,
+                          children: [TextSpan(text: ' × ${total.count}', style: muted.copyWith(fontFeatures: _tabular))],
+                        )),
+                      ),
+                      Text(money(context, total.amount),
+                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 16),
         Text(l10n.drawerMovements, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),

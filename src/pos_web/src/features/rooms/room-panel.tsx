@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -80,6 +81,7 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
   const [pendingMode, setPendingMode] = useState<PlayerMode | null>(null)
   // Customer picker: adds a member (running) or assigns the owner (reserved)
   const [pickerFor, setPickerFor] = useState<'member' | 'assign' | null>(null)
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
   const active = isActive(session)
   const reserved = isReserved(session)
@@ -172,7 +174,22 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
                       ) : (
                         <User className='size-3.5' />
                       )}
-                      {member.customerName || t('guest')}
+                      {member.customerId ? (
+                        <button
+                          type='button'
+                          className='underline-offset-4 hover:underline'
+                          onClick={() =>
+                            setCardFor({
+                              id: String(member.customerId),
+                              name: member.customerName ?? '',
+                            })
+                          }
+                        >
+                          {member.customerName || t('guest')}
+                        </button>
+                      ) : (
+                        member.customerName || t('guest')
+                      )}
                       {!isOwner && member.customerId && (
                         <button
                           type='button'
@@ -387,6 +404,10 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
         }}
       />
 
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(isOpen) => !isOpen && setCardFor(null)}
+      />
       <CustomerDialog
         accountsOnly
         open={pickerFor != null}

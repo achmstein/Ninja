@@ -192,6 +192,7 @@ export const messages = {
   payment: { en: "Payment", ar: "دفع" },
   posReceipt: { en: "POS receipt #{number}", ar: "إيصال كاشير #{number}" },
   posCreditNote: { en: "POS credit note #{number}", ar: "مرتجع كاشير #{number}" },
+  posTabPayment: { en: "Tab payment #{number}", ar: "سداد حساب #{number}" },
   byPerson: { en: "by {name}", ar: "بواسطة {name}" },
   today: { en: "Today", ar: "النهاردة" },
   yesterday: { en: "Yesterday", ar: "إمبارح" },

@@ -14,6 +14,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/heading.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../orders/providers/pending_orders_provider.dart';
 import '../../orders/widgets/pending_orders.dart';
 import '../../rooms/dialogs/room_panel.dart';
@@ -28,6 +29,7 @@ import '../../tickets/models/open_ticket.dart';
 import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../sale/widgets/customer_dialog.dart';
 import '../dialogs/new_ticket_dialog.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/place_list.dart';
@@ -91,6 +93,15 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   Future<void> _newTab() async {
     final ticketId = await showNewTicketDialog(context);
     if (ticketId != null && mounted) context.go('/ticket/$ticketId');
+  }
+
+  // Search, then the card: no sale, no list of everyone
+  Future<void> _findCustomer() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await showCustomerDialog(context, accountsOnly: true, title: l10n.findCustomer);
+    final id = picked?.id;
+    if (id == null || id.isEmpty || !mounted) return;
+    await showCustomerCard(context, id: id, name: picked!.name, phone: picked.phone);
   }
 
   // A table with a bill is among the bills; the list only offers the free
@@ -259,6 +270,17 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                         variant: FButtonVariant.outline,
                         onPress: () => context.go('/receipts'),
                         child: const Icon(FIcons.receiptText, size: 20),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // The customer who walked in only to pay their tab:
+                    // search, then their card — no sale, no list of everyone
+                    SizedBox.square(
+                      dimension: 48,
+                      child: FButton.icon(
+                        variant: FButtonVariant.outline,
+                        onPress: _findCustomer,
+                        child: const Icon(FIcons.userSearch, size: 20),
                       ),
                     ),
                     const SizedBox(width: 8),

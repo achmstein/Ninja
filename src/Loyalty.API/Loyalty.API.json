@@ -80,7 +80,7 @@
           "Accounts"
         ],
         "summary": "Create loyalty account",
-        "description": "Create a new loyalty account for a user",
+        "description": "Enroll a user in the program — themself, or the back office on their behalf",
         "operationId": "CreateAccount",
         "parameters": [
           {
@@ -143,7 +143,7 @@
           "Accounts"
         ],
         "summary": "Get loyalty account",
-        "description": "Get a loyalty account by user ID",
+        "description": "Get a loyalty account by user ID — the user themself, or till staff",
         "operationId": "GetAccount",
         "parameters": [
           {
@@ -198,7 +198,7 @@
           "Accounts"
         ],
         "summary": "Get points balance",
-        "description": "Get the current points balance for a user",
+        "description": "Get the current points balance for a user — the user themself, or till staff",
         "operationId": "GetBalance",
         "parameters": [
           {
@@ -253,7 +253,7 @@
           "Transactions"
         ],
         "summary": "Get transaction history",
-        "description": "Get all transactions for a user",
+        "description": "Get all transactions for a user — the user themself, or till staff",
         "operationId": "GetTransactions",
         "parameters": [
           {
@@ -335,7 +335,7 @@
           "Transactions"
         ],
         "summary": "Earn points",
-        "description": "Add points to a user's account",
+        "description": "Add points to a user's account (Admin only)",
         "operationId": "EarnPoints",
         "parameters": [
           {
@@ -701,6 +701,12 @@
         "properties": {
           "userId": {
             "type": "string"
+          },
+          "userDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

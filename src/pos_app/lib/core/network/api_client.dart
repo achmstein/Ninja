@@ -144,6 +144,18 @@ final identityApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.identityApiUrl);
 });
 
+/// Loyalty and Accounts: neither is branch-scoped; the till only reads a
+/// customer's points and tab balance from them
+final loyaltyApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.loyaltyApiUrl);
+});
+
+final accountsApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.accountsApiUrl);
+});
+
 /// Branches API — no branch header (it IS the branch service)
 final branchesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);

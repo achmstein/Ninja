@@ -22,6 +22,9 @@ class AppConfig {
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
   // Sales.API serves both /api/tickets/* and /api/shifts/*
   static String get salesApiUrl => '$bffBaseUrl/api/';
+  // Read-only on the till: a customer's points and tab balance on their card
+  static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
+  static String get accountsApiUrl => '$bffBaseUrl/api/accounts/';
 
   // Keycloak configuration
   // Release: dedicated auth subdomain (Caddy proxies straight to Keycloak).

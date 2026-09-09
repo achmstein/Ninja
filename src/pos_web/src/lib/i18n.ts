@@ -286,6 +286,7 @@ const dictionary = {
     ar: 'ساكن {count}د',
   },
   newTab: { en: 'New tab', ar: 'حساب جديد' },
+  findCustomer: { en: 'Find customer', ar: 'دور على عميل' },
   newTabHint: {
     en: 'A counter bill with no table, for someone who will order in a moment.',
     ar: 'حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.',
@@ -393,6 +394,44 @@ const dictionary = {
   receiptNumber: { en: 'Receipt #{number}', ar: 'إيصال #{number}' },
   print: { en: 'Print', ar: 'اطبع' },
   done: { en: 'Done', ar: 'تم' },
+
+  // Customer card: points as information, the tab as something to act on
+  customerCard: { en: 'Customer', ar: 'العميل' },
+  customerDetails: { en: 'Customer details', ar: 'تفاصيل العميل' },
+  loyaltyPoints: { en: 'Loyalty points', ar: 'نقط الولاء' },
+  pointsBalance: { en: '{points} pts', ar: '{points} نقطة' },
+  pointsWorth: { en: '≈ {amount}', ar: '≈ {amount}' },
+  tierBronze: { en: 'Bronze', ar: 'برونزي' },
+  tierSilver: { en: 'Silver', ar: 'فضي' },
+  tierGold: { en: 'Gold', ar: 'دهبي' },
+  tierPlatinum: { en: 'Platinum', ar: 'بلاتيني' },
+  notEnrolled: { en: 'Not in the loyalty program', ar: 'مش مشترك في برنامج الولاء' },
+  joinsFromApp: {
+    en: 'Customers join and use their points from the app.',
+    ar: 'العميل بيشترك ويستخدم نقطه من الأبلكيشن.',
+  },
+  tabBalance: { en: 'Tab', ar: 'الحساب الآجل' },
+  owesAmount: { en: 'Owes {amount}', ar: 'عليه {amount}' },
+  creditAmount: { en: '{amount} in credit', ar: 'ليه {amount}' },
+  settledUp: { en: 'Settled up', ar: 'مفيش عليه حاجة' },
+  noTab: { en: 'No tab', ar: 'مفيش حساب آجل' },
+  thisBill: { en: 'this bill {amount}', ar: 'الحساب ده {amount}' },
+  payTab: { en: 'Pay tab', ar: 'سداد الحساب' },
+  confirmTabPayment: { en: 'Take payment', ar: 'استلم' },
+  cappedAtBalance: {
+    en: 'Capped at what is owed: {amount}',
+    ar: 'أقصى مبلغ هو المستحق: {amount}',
+  },
+  tabPaymentRecorded: { en: 'Tab payment recorded', ar: 'اتسجل سداد الحساب' },
+  tabPaymentSlip: { en: 'Tab payment', ar: 'سداد حساب آجل' },
+  tabPaymentNumber: { en: 'Tab payment #{number}', ar: 'سداد #{number}' },
+  tabBalanceBefore: { en: 'Balance before', ar: 'الرصيد قبل' },
+  newBalance: { en: 'New balance', ar: 'الرصيد الجديد' },
+  failedToPayTab: {
+    en: 'Could not record the payment',
+    ar: 'معرفناش نسجل السداد',
+  },
+  tabPayments: { en: 'Tab payments', ar: 'سداد حسابات آجلة' },
 
   // Void ticket (Owner-only)
   voidTicket: { en: 'Void ticket', ar: 'إلغاء الحساب' },

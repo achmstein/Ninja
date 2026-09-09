@@ -207,6 +207,7 @@
   "payment": "دفع",
   "posReceipt": "إيصال كاشير #{number}",
   "posCreditNote": "مرتجع كاشير #{number}",
+  "posTabPayment": "سداد حساب #{number}",
   "byPerson": "بواسطة {name}",
   "today": "النهاردة",
   "yesterday": "إمبارح",

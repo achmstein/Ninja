@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/app_theme.dart';
@@ -213,7 +214,10 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
                     children: [
                       Icon(member.isOwner ? FIcons.star : FIcons.user, size: 14, color: member.isOwner ? AppColors.amber500 : null),
                       const SizedBox(width: 6),
-                      Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                      FTappable(
+                        onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
+                        child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                      ),
                       if (!member.isOwner) ...[
                         const SizedBox(width: 4),
                         SizedBox.square(

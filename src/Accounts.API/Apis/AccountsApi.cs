@@ -45,6 +45,15 @@ public static class AccountsApi
             .WithTags("Admin")
             .RequireAuthorization("Admin");
 
+        // The till reads a balance, never the ledger: "owes 340" on the
+        // customer's card and beside their name when a bill goes on account
+        api.MapGet("/{customerId}/balance", GetAccountBalance)
+            .WithName("GetAccountBalance")
+            .WithSummary("Get a customer's tab balance")
+            .WithDescription("Balance alone, no transactions (till staff). 404 when the customer has no tab yet. Positive = owed.")
+            .WithTags("Pos")
+            .RequireAuthorization("Pos");
+
         api.MapGet("/{customerId}", GetAccountByCustomerId)
             .WithName("GetAccountByCustomerId")
             .WithSummary("Get customer account")
@@ -113,6 +122,14 @@ public static class AccountsApi
     {
         var accounts = await queries.SearchAccountsAsync(q);
         return TypedResults.Ok(accounts);
+    }
+
+    public static async Task<Results<Ok<AccountSummaryViewModel>, NotFound>> GetAccountBalance(
+        [FromServices] IAccountQueries queries,
+        [Description("The customer ID")] string customerId)
+    {
+        var account = await queries.GetAccountSummaryByCustomerIdAsync(customerId);
+        return account == null ? TypedResults.NotFound() : TypedResults.Ok(account);
     }
 
     public static async Task<Results<Ok<AccountViewModel>, NotFound>> GetAccountByCustomerId(

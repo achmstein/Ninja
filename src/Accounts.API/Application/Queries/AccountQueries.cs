@@ -25,6 +25,15 @@ public class AccountQueries : IAccountQueries
         return MapToViewModel(account);
     }
 
+    public async Task<AccountSummaryViewModel?> GetAccountSummaryByCustomerIdAsync(string customerId)
+    {
+        var account = await _context.CustomerAccounts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.CustomerId == customerId);
+
+        return account == null ? null : MapToSummaryViewModel(account);
+    }
+
     public async Task<IEnumerable<TransactionViewModel>> GetTransactionsByCustomerIdAsync(string customerId, int? limit = null)
     {
         var query = _context.AccountTransactions
@@ -117,6 +126,7 @@ public class AccountQueries : IAccountQueries
             {
                 TransactionSource.PosReceipt => "posReceipt",
                 TransactionSource.PosCreditNote => "posCreditNote",
+                TransactionSource.PosTabPayment => "posTabPayment",
                 _ => "manual"
             },
             SourceNumber = transaction.SourceNumber,

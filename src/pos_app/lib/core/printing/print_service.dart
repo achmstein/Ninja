@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/receipt/receipt_sheet.dart';
+import '../../features/receipt/tab_payment_sheet.dart';
 import '../../features/shifts/models/shift.dart';
 import '../../features/shifts/widgets/shift_report_sheet.dart';
 import '../../features/tickets/models/ticket_detail.dart';
@@ -60,6 +61,11 @@ class PrintService {
       provisionalReceiptNumber: provisionalReceiptNumber,
     );
     await printer.send(await _job(sheet, kickDrawer: kickDrawer));
+  }
+
+  Future<void> printTabPayment(TabPaymentSlip slip, {required AppLocalizations l10n, required Locale locale, bool kickDrawer = false}) async {
+    final printer = _printer();
+    await printer.send(await _job(TabPaymentSheet(slip: slip, l10n: l10n, locale: locale), kickDrawer: kickDrawer));
   }
 
   Future<void> printShiftReport(ShiftView shift, {required AppLocalizations l10n, required Locale locale}) async {

@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'New tab'**
   String get newTab;
 
+  /// No description provided for @findCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Find customer'**
+  String get findCustomer;
+
   /// No description provided for @newTabHint.
   ///
   /// In en, this message translates to:
@@ -1417,6 +1423,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Done'**
   String get done;
+
+  /// No description provided for @customerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer details'**
+  String get customerDetails;
+
+  /// No description provided for @loyaltyPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Loyalty points'**
+  String get loyaltyPoints;
+
+  /// No description provided for @pointsBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} pts'**
+  String pointsBalance(int points);
+
+  /// No description provided for @pointsWorth.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {amount}'**
+  String pointsWorth(String amount);
+
+  /// No description provided for @tierBronze.
+  ///
+  /// In en, this message translates to:
+  /// **'Bronze'**
+  String get tierBronze;
+
+  /// No description provided for @tierSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'Silver'**
+  String get tierSilver;
+
+  /// No description provided for @tierGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get tierGold;
+
+  /// No description provided for @tierPlatinum.
+  ///
+  /// In en, this message translates to:
+  /// **'Platinum'**
+  String get tierPlatinum;
+
+  /// No description provided for @notEnrolled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in the loyalty program'**
+  String get notEnrolled;
+
+  /// No description provided for @joinsFromApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers join and use their points from the app.'**
+  String get joinsFromApp;
+
+  /// No description provided for @tabBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab'**
+  String get tabBalance;
+
+  /// No description provided for @owesAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes {amount}'**
+  String owesAmount(String amount);
+
+  /// No description provided for @creditAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} in credit'**
+  String creditAmount(String amount);
+
+  /// No description provided for @settledUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled up'**
+  String get settledUp;
+
+  /// No description provided for @noTab.
+  ///
+  /// In en, this message translates to:
+  /// **'No tab'**
+  String get noTab;
+
+  /// No description provided for @thisBill.
+  ///
+  /// In en, this message translates to:
+  /// **'this bill {amount}'**
+  String thisBill(String amount);
+
+  /// No description provided for @payTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay tab'**
+  String get payTab;
+
+  /// No description provided for @confirmTabPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Take payment'**
+  String get confirmTabPayment;
+
+  /// No description provided for @cappedAtBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Capped at what is owed: {amount}'**
+  String cappedAtBalance(String amount);
+
+  /// No description provided for @tabPaymentRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab payment recorded'**
+  String get tabPaymentRecorded;
+
+  /// No description provided for @tabPaymentSlip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab payment'**
+  String get tabPaymentSlip;
+
+  /// No description provided for @tabPaymentNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab payment #{number}'**
+  String tabPaymentNumber(int number);
+
+  /// No description provided for @tabBalanceBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance before'**
+  String get tabBalanceBefore;
+
+  /// No description provided for @newBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'New balance'**
+  String get newBalance;
+
+  /// No description provided for @failedToPayTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not record the payment'**
+  String get failedToPayTab;
+
+  /// No description provided for @tabPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab payments'**
+  String get tabPayments;
 
   /// No description provided for @voidTicket.
   ///

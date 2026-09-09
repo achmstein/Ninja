@@ -11,6 +11,7 @@ import {
   ReceiptText,
   ShoppingBag,
   ShoppingCart,
+  UserSearch,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -41,6 +42,8 @@ import {
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList } from './place-list'
 
@@ -130,6 +133,8 @@ export function Floor() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [newTabOpen, setNewTabOpen] = useState(false)
+  const [findOpen, setFindOpen] = useState(false)
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
   // A session just started in this room: its bill is being opened by Sales
   // on the event, and the till goes there the moment it shows up
@@ -317,6 +322,18 @@ export function Floor() {
             >
               <ReceiptText className='size-5' />
             </Button>
+            {/* The customer who walked in only to pay their tab: search, then
+                their card — no sale, no list of everyone */}
+            <Button
+              size='lg'
+              variant='outline'
+              className='size-12'
+              aria-label={t('findCustomer')}
+              title={t('findCustomer')}
+              onClick={() => setFindOpen(true)}
+            >
+              <UserSearch className='size-5' />
+            </Button>
             <Button
               size='lg'
               variant='outline'
@@ -433,6 +450,17 @@ export function Floor() {
       </section>
 
       <NewTicketDialog open={newTabOpen} onOpenChange={setNewTabOpen} />
+      {/* Search, then the card: no sale, no list of everyone */}
+      <CustomerDialog
+        open={findOpen}
+        onOpenChange={setFindOpen}
+        accountsOnly
+        titleKey='findCustomer'
+        onSelect={(picked) => {
+          if (picked.id) setCardFor({ id: picked.id, name: picked.name, phone: picked.phone })
+        }}
+      />
+      <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
       <RoomPanel
         room={selectedRoom}
         session={selectedRoom ? sessionForRoom(selectedRoom.id) : undefined}

@@ -44,6 +44,7 @@ import { TimeSoFar } from '@/features/rooms/time-so-far'
 import { useRooms, useSession, useSessionActions } from '@/features/rooms/use-rooms'
 import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { getRealmRoles } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
@@ -221,6 +222,7 @@ export function TicketScreen({
   // who they were for; null when the picker is closed
   const [assignOrderIds, setAssignOrderIds] = useState<number[] | null>(null)
   const [assignLineIds, setAssignLineIds] = useState<number[] | null>(null)
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const closeAssign = () => {
     setAssignOrderIds(null)
     setAssignLineIds(null)
@@ -695,12 +697,29 @@ export function TicketScreen({
           {groups.map((group) => (
             <div key={group.key ?? '__unattributed__'}>
               <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'>
-                <span className='flex min-w-0 items-center gap-2 font-semibold'>
-                  <User className='size-4 shrink-0' />
-                  <span className='truncate'>
-                    {group.name ?? (group.key ? t('guest') : location)}
+                {group.lines[0]?.customerId ? (
+                  /* An account holder: tap the name for their card */
+                  <button
+                    type='button'
+                    className='flex min-w-0 items-center gap-2 font-semibold underline-offset-4 hover:underline'
+                    onClick={() =>
+                      setCardFor({
+                        id: String(group.lines[0].customerId),
+                        name: group.name ?? '',
+                      })
+                    }
+                  >
+                    <User className='size-4 shrink-0' />
+                    <span className='truncate'>{group.name ?? t('guest')}</span>
+                  </button>
+                ) : (
+                  <span className='flex min-w-0 items-center gap-2 font-semibold'>
+                    <User className='size-4 shrink-0' />
+                    <span className='truncate'>
+                      {group.name ?? (group.key ? t('guest') : location)}
+                    </span>
                   </span>
-                </span>
+                )}
                 <span className='shrink-0 tabular-nums'>
                   {money(group.total)}
                 </span>
@@ -976,6 +995,10 @@ export function TicketScreen({
         }}
         onSelect={doAssignCustomer}
         quickPicks={sessionRoster(session)}
+      />
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(open) => !open && setCardFor(null)}
       />
       {(isSettled || settleOutcome) && (
         <ReceiptSheet

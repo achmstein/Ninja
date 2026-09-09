@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { NumericKeypad } from '@/components/numeric-keypad'
+import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
@@ -47,6 +48,54 @@ type SettledView = {
   change: number
   /** The part that went on the customer's tab (0 when none). */
   accountAmount: number
+}
+
+/**
+ * One tab the bill can go on: the person, what they already owe (so the
+ * cashier is never adding to a tab blind), and their share of this bill.
+ */
+function HolderButton({
+  holder,
+  chosen,
+  onChoose,
+}: {
+  holder: AccountHolder
+  chosen: boolean
+  onChoose: () => void
+}) {
+  const t = useT()
+  const money = useMoney()
+  const { tab, noTab, isPending } = useTab(holder.id)
+  const owed = toNumber(tab?.balance)
+
+  return (
+    <Button
+      variant={chosen ? 'default' : 'outline'}
+      className='h-auto min-h-11 justify-between px-3 py-2 text-base'
+      onClick={onChoose}
+    >
+      <span className='truncate'>{holder.name || t('guest')}</span>
+      <span className='flex shrink-0 flex-col items-end text-sm leading-tight'>
+        <span
+          className={cn(
+            'tabular-nums',
+            !chosen && owed > 0 && 'text-destructive'
+          )}
+        >
+          {isPending
+            ? '…'
+            : noTab
+              ? t('noTab')
+              : t('owesAmount', { amount: money(Math.max(0, owed)) })}
+        </span>
+        {holder.subtotal > 0 && (
+          <span className='tabular-nums opacity-80'>
+            {t('thisBill', { amount: money(holder.subtotal) })}
+          </span>
+        )}
+      </span>
+    </Button>
+  )
 }
 
 type SettleDialogProps = {
@@ -174,6 +223,10 @@ export function SettleDialog({
       onSettled(outcome)
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+      // Whatever went on a tab changed what its holder owes
+      for (const p of payments) {
+        if (p.customerId) invalidateCustomer(queryClient, p.customerId)
+      }
     },
   })
 
@@ -358,21 +411,12 @@ export function SettleDialog({
                 <p className='text-muted-foreground text-sm'>{t('whoseAccount')}</p>
                 <div className='grid gap-2'>
                   {accountHolders.map((holder) => (
-                    <Button
+                    <HolderButton
                       key={holder.id}
-                      variant={
-                        chosenHolder?.id === holder.id ? 'default' : 'outline'
-                      }
-                      className='h-11 justify-between px-3 text-base'
-                      onClick={() => chooseHolder(holder)}
-                    >
-                      <span className='truncate'>{holder.name || t('guest')}</span>
-                      {holder.subtotal > 0 && (
-                        <span className='tabular-nums'>
-                          {money(holder.subtotal)}
-                        </span>
-                      )}
-                    </Button>
+                      holder={holder}
+                      chosen={chosenHolder?.id === holder.id}
+                      onChoose={() => chooseHolder(holder)}
+                    />
                   ))}
                 </div>
               </div>

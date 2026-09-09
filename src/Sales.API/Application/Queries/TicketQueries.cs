@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 using Chillax.Sales.Infrastructure;
 
 namespace Chillax.Sales.API.Application.Queries;
@@ -49,6 +50,12 @@ public interface ITicketQueries
 
     /// <summary>Credit notes issued in [from, to), newest first.</summary>
     Task<PagedResult<RefundSummary>> GetRefundsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize);
+
+    /// <summary>Tab payment slips taken in [from, to), newest first.</summary>
+    Task<PagedResult<TabPaymentView>> GetTabPaymentsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize);
+
+    /// <summary>One slip, to reprint it.</summary>
+    Task<TabPaymentView?> GetTabPaymentAsync(int id);
 }
 
 public class TicketQueries(SalesContext context) : ITicketQueries
@@ -156,6 +163,11 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .Where(r => r.BranchId == branchId && r.RefundedAt >= from && r.RefundedAt < to)
             .ToListAsync();
 
+        var tabPayments = await context.TabPayments
+            .AsNoTracking()
+            .Where(p => p.BranchId == branchId && p.RecordedAt >= from && p.RecordedAt < to)
+            .ToListAsync();
+
         return new RangeReport
         {
             From = from,
@@ -167,6 +179,9 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             Vat = tickets.Sum(t => t.Vat),
             Refunds = refunds.Sum(r => r.Amount),
             RefundCount = refunds.Count,
+            TabPayments = tabPayments.Sum(p => p.Amount),
+            TabPaymentCount = tabPayments.Count,
+            TabPaymentTenderTotals = ShiftQueries.TenderTotals(tabPayments),
             // Line discounts plus loyalty (negative) lines, reported positive
             Discounts = tickets
                 .SelectMany(t => t.Lines)
@@ -420,6 +435,29 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .ToList();
 
         return new PagedResult<PaymentRow>(rows, totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResult<TabPaymentView>> GetTabPaymentsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize)
+    {
+        var slips = context.TabPayments
+            .AsNoTracking()
+            .Where(p => p.BranchId == branchId && p.RecordedAt >= from && p.RecordedAt < to);
+
+        var totalCount = await slips.CountAsync();
+
+        var page = await slips
+            .OrderByDescending(p => p.Number)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<TabPaymentView>(page.Select(ShiftQueries.ToView).ToList(), totalCount, pageIndex, pageSize);
+    }
+
+    public async Task<TabPaymentView?> GetTabPaymentAsync(int id)
+    {
+        var slip = await context.TabPayments.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        return slip is null ? null : ShiftQueries.ToView(slip);
     }
 
     public async Task<PagedResult<RefundSummary>> GetRefundsAsync(int branchId, DateTime from, DateTime to, int pageIndex, int pageSize)

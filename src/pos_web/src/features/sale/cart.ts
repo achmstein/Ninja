@@ -38,6 +38,8 @@ export type SaleLine = {
 export type SaleCustomer = {
   id: string | null
   name: string
+  /** As the search knew it; shown on the customer card. */
+  phone?: string | null
 }
 
 export function lineKey(

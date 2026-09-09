@@ -30,9 +30,33 @@ public record ShiftView
     public decimal CashRefunds { get; init; }
     public decimal PayInsTotal { get; init; }
     public decimal PayOutsTotal { get; init; }
+    /// <summary>
+    /// Money taken against customers' tabs during the shift, all tenders.
+    /// Not sales — those were counted when the bills went on account — so
+    /// it sits beside <see cref="SalesTotal"/>, never inside it.
+    /// </summary>
+    public decimal TabPaymentsTotal { get; init; }
+    /// <summary>The part of those that went into the drawer as cash.</summary>
+    public decimal CashTabPayments { get; init; }
+    public List<TenderTotal> TabPaymentTenderTotals { get; init; } = [];
+    /// <summary>The slips themselves, newest first.</summary>
+    public List<TabPaymentView> TabPayments { get; init; } = [];
     /// <summary>Live drawer expectation; equals ExpectedCash once closed.</summary>
     public decimal ExpectedInDrawer { get; init; }
 }
+
+/// <summary>A tab payment slip: money a customer handed the till against their tab.</summary>
+public record TabPaymentView(
+    int Id,
+    int Number,
+    int BranchId,
+    string CustomerId,
+    string? CustomerName,
+    string Tender,
+    decimal Amount,
+    string RecordedBy,
+    DateTime RecordedAt,
+    int? ShiftId);
 
 public record CashMovementView(string Type, decimal Amount, string Reason, string RecordedBy, DateTime RecordedAt);
 
@@ -62,6 +86,10 @@ public record RangeReport
     /// <summary>Credit notes issued in the window, all tenders — not netted out of <see cref="Net"/>.</summary>
     public decimal Refunds { get; init; }
     public int RefundCount { get; init; }
+    /// <summary>Tab payments taken in the window, all tenders — beside <see cref="Net"/>, never inside it.</summary>
+    public decimal TabPayments { get; init; }
+    public int TabPaymentCount { get; init; }
+    public List<TenderTotal> TabPaymentTenderTotals { get; init; } = [];
 }
 
 public record TypeTotal(string Type, int Count, decimal Net);

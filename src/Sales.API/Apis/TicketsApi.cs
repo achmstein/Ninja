@@ -40,6 +40,20 @@ public static class TicketsApi
             .WithSummary("Credit notes issued in a window, newest first")
             .WithDescription("Every refund across the branch's tickets; open the ticket for the lines behind one.");
 
+        api.MapGet("/tab-payments", GetTabPayments)
+            .WithName("GetTabPayments")
+            .WithSummary("Tab payment slips taken in a window, newest first")
+            .WithDescription("Money customers handed the till against their tabs. Not sales: the bills were counted when they went on account.");
+
+        api.MapGet("/tab-payments/{id:int}", GetTabPayment)
+            .WithName("GetTabPayment")
+            .WithSummary("One tab payment slip, to reprint it");
+
+        api.MapPost("/tab-payments", RecordTabPayment)
+            .WithName("RecordTabPayment")
+            .WithSummary("Take money against a customer's tab")
+            .WithDescription("Cash into the drawer, card or InstaPay to the terminal — never Account. A numbered slip, stamped with the branch's open shift so the drawer count and the Z report include it; Accounts lowers the balance owed off the event. Slips are never voided: a mistake is reversed by a manual charge on the ledger (and a cash pay-out if cash was handed back).");
+
         api.MapGet("/{id:int}", GetTicket)
             .WithName("GetTicket")
             .WithSummary("Ticket detail with lines, payments and receipt number");
@@ -187,6 +201,58 @@ public static class TicketsApi
         var branchId = httpContext.GetRequiredBranchId();
         return TypedResults.Ok(await queries.GetRefundsAsync(
             branchId, from, to, Math.Max(0, pageIndex), Math.Clamp(pageSize, 1, 100)));
+    }
+
+    public static async Task<Results<Ok<PagedResult<TabPaymentView>>, BadRequest<string>>> GetTabPayments(
+        DateTime from,
+        DateTime to,
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        int pageIndex = 0,
+        int pageSize = 20)
+    {
+        if (to <= from)
+        {
+            return TypedResults.BadRequest("The window must end after it starts.");
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetTabPaymentsAsync(
+            branchId, from, to, Math.Max(0, pageIndex), Math.Clamp(pageSize, 1, 100)));
+    }
+
+    public static async Task<Results<Ok<TabPaymentView>, NotFound>> GetTabPayment(
+        int id,
+        [FromServices] ITicketQueries queries)
+    {
+        var slip = await queries.GetTabPaymentAsync(id);
+        return slip is null ? TypedResults.NotFound() : TypedResults.Ok(slip);
+    }
+
+    public static async Task<Results<Ok<TabPaymentResult>, BadRequest<string>>> RecordTabPayment(
+        TabPaymentRequest request,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+
+        try
+        {
+            var result = await mediator.SendIdentified<RecordTabPaymentCommand, TabPaymentResult>(requestId, new RecordTabPaymentCommand(
+                branchId,
+                request.CustomerId,
+                request.CustomerName,
+                request.Tender,
+                request.Amount,
+                httpContext.GetActor()));
+
+            return TypedResults.Ok(result);
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
     }
 
     public static async Task<Results<Ok<TicketDetail>, NotFound>> GetTicket(
@@ -446,6 +512,9 @@ public record VoidTicketRequest(string Reason);
 public record RefundRequest(List<RefundLineRequest> Lines, string Reason, PaymentTender Tender, string? CustomerId = null, string? CustomerName = null);
 
 public record RefundLineRequest(int LineId, decimal Qty);
+
+/// <summary>Money taken against a customer's tab; the amount is what the customer handed over.</summary>
+public record TabPaymentRequest(string CustomerId, string? CustomerName, PaymentTender Tender, decimal Amount);
 
 /// <summary>Rates are fractions: 0.14 is 14%.</summary>
 public record PricingRequest(decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate);

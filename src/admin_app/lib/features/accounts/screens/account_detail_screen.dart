@@ -597,6 +597,7 @@ class _AmountSheetState extends ConsumerState<_AmountSheet> {
 String _transactionLabel(AccountTransaction tx, AppLocalizations l10n, bool isCharge) {
   if (tx.source == 'posReceipt' && tx.sourceNumber != null) return l10n.posReceipt(tx.sourceNumber!);
   if (tx.source == 'posCreditNote' && tx.sourceNumber != null) return l10n.posCreditNote(tx.sourceNumber!);
+  if (tx.source == 'posTabPayment' && tx.sourceNumber != null) return l10n.posTabPayment(tx.sourceNumber!);
   if (tx.description?.isNotEmpty == true) return tx.description!;
   return isCharge ? l10n.charge : l10n.payment;
 }

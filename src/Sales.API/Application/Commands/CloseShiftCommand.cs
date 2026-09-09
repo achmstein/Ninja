@@ -21,7 +21,7 @@ public class CloseShiftCommandHandler(
         // aggregate turns them into the expectation and the verdict
         var cash = await shiftQueries.GetShiftCashAsync(shift.Id);
 
-        shift.Close(command.ClosingCount, cash.CashPayments, cash.ChangeGiven, command.ClosedBy, cash.CashRefunds);
+        shift.Close(command.ClosingCount, cash.CashPayments, cash.ChangeGiven, command.ClosedBy, cash.CashRefunds, cash.CashTabPayments);
 
         await shiftRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

@@ -1,0 +1,21 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsPublishable>false</IsPublishable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Accounts.API\Accounts.API.csproj" />
+    <ProjectReference Include="..\..\src\Accounts.Domain\Accounts.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Accounts.Infrastructure\Accounts.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

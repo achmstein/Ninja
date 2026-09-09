@@ -23,7 +23,25 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         var account = await _accountRepository.GetWithTransactionsByCustomerIdAsync(request.CustomerId);
 
         if (account == null)
-            throw new AccountsDomainException($"Account not found for customer {request.CustomerId}");
+        {
+            // Money the till already took cannot be refused for want of a
+            // row: open the tab and let it go into credit. By hand, a tab
+            // that was never charged has nothing to pay.
+            if (request.CustomerName == null)
+                throw new AccountsDomainException($"Account not found for customer {request.CustomerId}");
+
+            account = new CustomerAccount(request.CustomerId, request.CustomerName);
+            _accountRepository.Add(account);
+            await _accountRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+            account = await _accountRepository.GetWithTransactionsByCustomerIdAsync(request.CustomerId);
+            if (account == null)
+                throw new AccountsDomainException("Failed to create customer account");
+        }
+        else if (request.CustomerName != null && account.CustomerName != request.CustomerName)
+        {
+            account.UpdateCustomerName(request.CustomerName);
+        }
 
         // A referenced payment posts at most once — the bus redelivers, and a
         // credit note must never credit a tab twice

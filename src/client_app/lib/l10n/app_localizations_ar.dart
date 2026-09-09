@@ -609,6 +609,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String posTabPayment(int number) {
+    return 'سداد حساب #$number';
+  }
+
+  @override
   String byPerson(String name) {
     return 'بواسطة $name';
   }

@@ -19,6 +19,8 @@ import { getTicketByOrderOptions, getTicketOptions } from '@/api/sales/@tanstack
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { useLoyalty } from '@/features/customer/use-customer-card'
 import { sessionRoster } from '@/features/rooms/status'
 import { useSession, useSessionActions } from '@/features/rooms/use-rooms'
 import { API_VERSION } from '@/lib/api-client'
@@ -150,6 +152,24 @@ function CartLineRow({
  * opening a counter one, and the cashier lands back on the ticket with
  * nothing to pay yet.
  */
+/**
+ * The attached customer's points under their name — information only:
+ * points are earned and spent in the customer app, the till never touches
+ * them. Quiet when they never joined.
+ */
+function CustomerPointsLine({ userId }: { userId: string }) {
+  const t = useT()
+  const { account, notEnrolled } = useLoyalty(userId)
+  if (!account && !notEnrolled) return null
+  return (
+    <span className='text-muted-foreground block truncate text-xs tabular-nums'>
+      {notEnrolled
+        ? t('notEnrolled')
+        : t('pointsBalance', { points: toNumber(account?.pointsBalance) })}
+    </span>
+  )
+}
+
 export function SalePad({ ticketId }: { ticketId?: number }) {
   const addingToTicket = ticketId !== undefined
   const t = useT()
@@ -179,6 +199,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
   const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(null)
   const [customerOpen, setCustomerOpen] = useState(false)
+  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
   // Adding to a room's bill: the people in the room are the first choice
   // for whose round this is, and somebody picked from the search who is not
@@ -490,10 +511,27 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         <div className='border-b p-3'>
           {customer ? (
             <div className='bg-accent/50 flex items-center justify-between gap-1 rounded-lg py-1 ps-3'>
-              <span className='flex min-w-0 items-center gap-2'>
-                <User className='size-4 shrink-0' />
-                <span className='truncate font-medium'>{customer.name}</span>
-              </span>
+              {customer.id ? (
+                /* An account: tap for the card — points and tab at a glance */
+                <button
+                  type='button'
+                  className='flex min-w-0 flex-1 items-center gap-2 text-start'
+                  onClick={() =>
+                    setCardFor({ id: customer.id!, name: customer.name, phone: customer.phone })
+                  }
+                >
+                  <User className='size-4 shrink-0' />
+                  <span className='min-w-0'>
+                    <span className='block truncate font-medium'>{customer.name}</span>
+                    <CustomerPointsLine userId={customer.id} />
+                  </span>
+                </button>
+              ) : (
+                <span className='flex min-w-0 items-center gap-2'>
+                  <User className='size-4 shrink-0' />
+                  <span className='truncate font-medium'>{customer.name}</span>
+                </span>
+              )}
               <Button
                 variant='ghost'
                 size='icon'
@@ -572,6 +610,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         onOpenChange={setCustomerOpen}
         onSelect={pickCustomer}
         quickPicks={roster}
+      />
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(open) => !open && setCardFor(null)}
       />
 
       {/* Blocking wait: the sale is committed, nothing else may be touched

@@ -8,6 +8,7 @@ import '../models/pricing.dart';
 import '../models/refund.dart';
 import '../models/settled_ticket_summary.dart';
 import '../models/settle.dart';
+import '../models/tab_payment.dart';
 import '../models/ticket_detail.dart';
 import '../models/ticket_summary.dart';
 
@@ -62,6 +63,9 @@ abstract class TicketsRepository {
 
   /// Owner-only: a credit note against a settled ticket
   Future<RefundResult> refund(int id, RefundRequest request, {String? requestId});
+
+  /// Money taken against a customer's tab — a numbered slip on the open shift
+  Future<TabPaymentResult> recordTabPayment(TabPaymentRequest request, {String? requestId});
 }
 
 class ApiTicketsRepository implements TicketsRepository {
@@ -201,6 +205,20 @@ class ApiTicketsRepository implements TicketsRepository {
         requestId: requestId,
       );
       return RefundResult.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<TabPaymentResult> recordTabPayment(TabPaymentRequest request, {String? requestId}) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        'tickets/tab-payments',
+        data: request.toJson(),
+        requestId: requestId,
+      );
+      return TabPaymentResult.fromJson(response.data!);
     } on DioException catch (e) {
       throw asSalesException(e);
     }

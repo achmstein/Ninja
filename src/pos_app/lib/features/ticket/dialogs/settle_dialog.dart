@@ -13,6 +13,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../customers/providers/customer_providers.dart';
 import '../../receipt/receipt_sheet.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/settle.dart';
@@ -21,6 +22,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../tenders.dart';
+import '../widgets/tender_grid.dart';
 
 /// Someone on this bill with an account, and what their share comes to.
 class _AccountHolder {
@@ -250,6 +252,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
           .settle(widget.ticket.id, SettleRequest(payments: List.of(_payments)), requestId: _requestId);
       ref.read(openTicketsProvider.notifier).refresh();
       ref.invalidate(ticketProvider(widget.ticket.id));
+      // Whatever went on a tab changed what its holder owes
+      for (final p in _payments) {
+        if (p.customerId case final id? when id.isNotEmpty) invalidateCustomerFrom(ref, id);
+      }
       if (!mounted) return;
       final outcome = SettleOutcome(receiptNumber: result.receiptNumber, change: result.change, payments: List.of(_payments));
       setState(() => _result = outcome);
@@ -306,7 +312,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _TenderGrid(
+                    TenderGrid(
                       tenders: _tenders,
                       selected: _tender,
                       onSelect: _pickTender,
@@ -319,18 +325,11 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                       Text(l10n.whoseAccount, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                       const SizedBox(height: 8),
                       for (final holder in _holders) ...[
-                        SizedBox(
-                          height: 44,
-                          child: FButton(
-                            variant: _chosenHolder?.id == holder.id ? null : FButtonVariant.outline,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            onPress: () => _chooseHolder(holder),
-                            suffix: holder.subtotal > 0
-                                ? Text(money(context, holder.subtotal), style: theme.typography.base.forButton.copyWith(fontFeatures: tabular))
-                                : null,
-                            child: Text(holder.name.isNotEmpty ? holder.name : l10n.guest,
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
-                          ),
+                        _HolderButton(
+                          holder: holder,
+                          chosen: _chosenHolder?.id == holder.id,
+                          showBalance: widget.offline == null,
+                          onChoose: () => _chooseHolder(holder),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -453,50 +452,48 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   }
 }
 
-class _TenderGrid extends StatelessWidget {
-  final List<PaymentTender> tenders;
-  final PaymentTender selected;
-  final ValueChanged<PaymentTender> onSelect;
+/// One tab the bill can go on: the person, what they already owe (so the
+/// cashier is never adding to a tab blind), and their share of this bill.
+class _HolderButton extends ConsumerWidget {
+  final _AccountHolder holder;
+  final bool chosen;
+  final bool showBalance;
+  final VoidCallback onChoose;
 
-  const _TenderGrid({required this.tenders, required this.selected, required this.onSelect});
+  const _HolderButton({required this.holder, required this.chosen, required this.showBalance, required this.onChoose});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final columns = tenders.length == 4 ? 2 : 3;
-    final rows = <List<PaymentTender>>[];
-    for (var i = 0; i < tenders.length; i += columns) {
-      rows.add(tenders.sublist(i, i + columns > tenders.length ? tenders.length : i + columns));
-    }
-    return Column(
-      children: [
-        for (final (rowIndex, row) in rows.indexed) ...[
-          if (rowIndex > 0) const SizedBox(height: 8),
-          Row(
-            children: [
-              for (final (index, tender) in row.indexed) ...[
-                if (index > 0) const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    height: 44,
-                    child: FButton(
-                      variant: tender == selected ? null : FButtonVariant.outline,
-                      onPress: () => onSelect(tender),
-                      child: Text(tenderLabel(l10n, tender), style: theme.typography.base.forButton),
-                    ),
-                  ),
-                ),
-              ],
-              // Keep a short last row aligned with the grid
-              for (var i = row.length; i < columns; i++) ...[
-                const SizedBox(width: 8),
-                const Expanded(child: SizedBox()),
-              ],
-            ],
-          ),
-        ],
-      ],
+    const tabular = [FontFeature.tabularFigures()];
+    final tab = showBalance ? ref.watch(tabAccountProvider(holder.id)) : null;
+    final owed = tab?.value?.balance ?? 0;
+    final owedText = tab?.when(
+            loading: () => '…',
+            error: (_, _) => null,
+            data: (account) => account == null ? l10n.noTab : l10n.owesAmount(money(context, owed > 0 ? owed : 0)),
+        );
+    final small = theme.typography.sm.forButton.copyWith(fontFeatures: tabular);
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: FButton(
+        variant: chosen ? null : FButtonVariant.outline,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        onPress: onChoose,
+        suffix: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (owedText != null)
+              Text(owedText, style: small.copyWith(color: !chosen && owed > 0 ? theme.colors.destructive : null)),
+            if (holder.subtotal > 0) Text(l10n.thisBill(money(context, holder.subtotal)), style: small),
+          ],
+        ),
+        child: Text(holder.name.isNotEmpty ? holder.name : l10n.guest,
+            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+      ),
     );
   }
 }

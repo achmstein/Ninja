@@ -19,6 +19,7 @@ import '../../features/tickets/models/pricing.dart';
 import '../../features/tickets/models/refund.dart';
 import '../../features/tickets/models/settle.dart';
 import '../../features/tickets/models/settled_ticket_summary.dart';
+import '../../features/tickets/models/tab_payment.dart';
 import '../../features/tickets/models/ticket_detail.dart';
 import '../../features/tickets/models/ticket_summary.dart';
 import '../../features/tickets/services/tickets_service.dart';
@@ -301,6 +302,15 @@ class _DemoTicketsRepository implements TicketsRepository {
   }
 
   int _nextRefund = 7;
+
+  int _nextTabPayment = 1;
+
+  @override
+  Future<TabPaymentResult> recordTabPayment(TabPaymentRequest request, {String? requestId}) async {
+    if (request.tender == PaymentTender.account) throw const SalesException('A tab cannot be paid with itself.');
+    if (request.amount <= 0) throw const SalesException('A tab payment must be a positive amount.');
+    return TabPaymentResult(id: _nextTabPayment, number: _nextTabPayment++);
+  }
 
   @override
   Future<RefundResult> refund(int id, RefundRequest request, {String? requestId}) async {

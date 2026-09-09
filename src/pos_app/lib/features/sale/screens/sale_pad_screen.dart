@@ -17,6 +17,8 @@ import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
+import '../../customers/providers/customer_providers.dart';
 import '../../orders/services/order_service.dart';
 import '../../rooms/models/room.dart';
 import '../../rooms/providers/rooms_provider.dart';
@@ -456,8 +458,22 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                                 const Icon(FIcons.user, size: 16),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(customer.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                                  child: (customer.id ?? '').isNotEmpty
+                                      // An account: tap for the card — points and tab at a glance
+                                      ? FTappable(
+                                          onPress: () => showCustomerCard(context, id: customer.id!, name: customer.name, phone: customer.phone),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(customer.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                                              _CustomerPointsLine(userId: customer.id!),
+                                            ],
+                                          ),
+                                        )
+                                      : Text(customer.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
                                 ),
                                 SizedBox.square(
                                   dimension: 40,
@@ -578,4 +594,30 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
 extension<T> on T {
   R let<R>(R Function(T) f) => f(this);
+}
+
+/// The attached customer's points under their name — information only:
+/// points are earned and spent in the customer app, the till never touches
+/// them. Quiet while offline or until the read lands.
+class _CustomerPointsLine extends ConsumerWidget {
+  final String userId;
+  const _CustomerPointsLine({required this.userId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(onlineProvider)) return const SizedBox.shrink();
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final loyalty = ref.watch(loyaltyAccountProvider(userId));
+    final text = loyalty.when(
+      loading: () => null,
+      error: (_, _) => null,
+      data: (account) => account == null ? l10n.notEnrolled : l10n.pointsBalance(account.pointsBalance),
+    );
+    if (text == null) return const SizedBox.shrink();
+    return Text(text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]));
+  }
 }

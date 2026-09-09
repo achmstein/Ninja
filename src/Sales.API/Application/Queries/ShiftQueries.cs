@@ -1,5 +1,6 @@
 #nullable enable
 using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 using Chillax.Sales.Infrastructure;
 
 namespace Chillax.Sales.API.Application.Queries;
@@ -7,7 +8,7 @@ namespace Chillax.Sales.API.Application.Queries;
 /// <summary>
 /// The cash figures a shift's tickets contributed to the drawer.
 /// </summary>
-public record ShiftCashTotals(decimal CashPayments, decimal ChangeGiven, decimal CashRefunds);
+public record ShiftCashTotals(decimal CashPayments, decimal ChangeGiven, decimal CashRefunds, decimal CashTabPayments);
 
 public interface IShiftQueries
 {
@@ -71,10 +72,16 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             .Where(r => r.ShiftId == shiftId && r.Tender == PaymentTender.Cash)
             .SumAsync(r => r.Amount);
 
+        var cashTabPayments = await context.TabPayments
+            .AsNoTracking()
+            .Where(p => p.ShiftId == shiftId && p.Tender == PaymentTender.Cash)
+            .SumAsync(p => p.Amount);
+
         return new ShiftCashTotals(
             tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount),
             tickets.Sum(t => t.ChangeGiven),
-            cashRefunds);
+            cashRefunds,
+            cashTabPayments);
     }
 
     private async Task<ShiftView> BuildViewAsync(Shift shift)
@@ -100,6 +107,16 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
         var payIns = shift.GetPayInsTotal();
         var payOuts = shift.GetPayOutsTotal();
 
+        // Money taken against tabs during the shift: not sales (those were
+        // counted when the bill went on account), but cash ones sit in the
+        // drawer and the rest reconcile against the terminal
+        var tabPayments = await context.TabPayments
+            .AsNoTracking()
+            .Where(p => p.ShiftId == shift.Id)
+            .OrderByDescending(p => p.Number)
+            .ToListAsync();
+        var cashTabPayments = tabPayments.Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+
         return new ShiftView
         {
             Id = shift.Id,
@@ -123,12 +140,26 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             ChangeGiven = changeGiven,
             PayInsTotal = payIns,
             PayOutsTotal = payOuts,
+            TabPaymentsTotal = tabPayments.Sum(p => p.Amount),
+            CashTabPayments = cashTabPayments,
+            TabPaymentTenderTotals = TenderTotals(tabPayments),
+            TabPayments = tabPayments.Select(ToView).ToList(),
             // Live for an open shift; for a closed one the frozen ExpectedCash
             // is the authoritative number and these two should agree
-            ExpectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + payIns - payOuts,
+            ExpectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments + payIns - payOuts,
         };
     }
 
     private IQueryable<Ticket> ShiftTickets(int shiftId)
         => context.Tickets.AsNoTracking().Where(t => t.ShiftId == shiftId);
+
+    public static List<TenderTotal> TenderTotals(IEnumerable<TabPayment> payments)
+        => payments
+            .GroupBy(p => p.Tender)
+            .Select(g => new TenderTotal(g.Key.ToString(), g.Sum(p => p.Amount), g.Count()))
+            .OrderBy(t => t.Tender)
+            .ToList();
+
+    public static TabPaymentView ToView(TabPayment p)
+        => new(p.Id, p.Number, p.BranchId, p.CustomerId, p.CustomerName, p.Tender.ToString(), p.Amount, p.RecordedBy, p.RecordedAt, p.ShiftId);
 }

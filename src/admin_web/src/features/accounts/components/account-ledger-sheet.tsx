@@ -119,7 +119,12 @@ export function AccountLedgerSheet({
                             ? t('posCreditNote', {
                                 number: transaction.sourceNumber,
                               })
-                            : transaction.description ||
+                            : transaction.source === 'posTabPayment' &&
+                                transaction.sourceNumber != null
+                              ? t('posTabPayment', {
+                                  number: transaction.sourceNumber,
+                                })
+                              : transaction.description ||
                               (isCharge ? t('charge') : t('payment'))}
                       </p>
                       <p className='text-muted-foreground text-xs'>

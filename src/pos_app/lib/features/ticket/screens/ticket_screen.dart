@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:uuid/uuid.dart';
+import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/localized_text.dart';
@@ -501,6 +502,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                           _GroupHeading(
                             name: group.name ?? (group.unattributed ? location : l10n.guest),
                             total: group.total,
+                            customerId: group.lines.isNotEmpty ? group.lines.first.customerId : null,
                           ),
                           _LineList(
                             lines: shown(group.lines),
@@ -691,11 +693,19 @@ class _GroupHeading extends StatelessWidget {
   final String name;
   final double total;
 
-  const _GroupHeading({required this.name, required this.total});
+  /// An account holder: the name opens their card
+  final String? customerId;
+
+  const _GroupHeading({required this.name, required this.total, this.customerId});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final id = customerId;
+    final label = Text(name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -707,10 +717,9 @@ class _GroupHeading extends StatelessWidget {
           Icon(FIcons.user, size: 16, color: theme.colors.foreground),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+            child: id != null && id.isNotEmpty
+                ? FTappable(onPress: () => showCustomerCard(context, id: id, name: name), child: label)
+                : label,
           ),
           const SizedBox(width: 8),
           Text(money(context, total),
