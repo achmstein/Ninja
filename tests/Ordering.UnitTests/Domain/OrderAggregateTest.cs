@@ -224,92 +224,56 @@ public class OrderAggregateTest
 
         // Assert
         Assert.IsNotNull(order.ConfirmedAt);
-        Assert.AreEqual(PreparationStatus.NotStarted, order.Preparation);
-        Assert.IsNull(order.PreparingAt);
+        Assert.IsFalse(order.IsReady);
         Assert.IsNull(order.ReadyAt);
     }
 
     [TestMethod]
-    public void Kitchen_starts_then_finishes_a_confirmed_order()
-    {
-        // Arrange
-        var order = ConfirmedOrder();
-
-        // Act - start
-        order.SetPreparation(PreparationStatus.Preparing);
-
-        // Assert
-        Assert.AreEqual(PreparationStatus.Preparing, order.Preparation);
-        Assert.IsNotNull(order.PreparingAt);
-        Assert.IsNull(order.ReadyAt);
-
-        // Act - finish
-        order.SetPreparation(PreparationStatus.Ready);
-
-        // Assert
-        Assert.AreEqual(PreparationStatus.Ready, order.Preparation);
-        Assert.IsNotNull(order.ReadyAt);
-        Assert.AreEqual(2, order.DomainEvents.OfType<OrderPreparationChangedDomainEvent>().Count());
-    }
-
-    [TestMethod]
-    public void Kitchen_can_mark_an_order_ready_without_starting_it()
+    public void Kitchen_marks_a_confirmed_order_ready()
     {
         // Arrange
         var order = ConfirmedOrder();
 
         // Act
-        order.SetPreparation(PreparationStatus.Ready);
+        order.SetReady(true);
 
         // Assert
-        Assert.AreEqual(PreparationStatus.Ready, order.Preparation);
-        Assert.IsNull(order.PreparingAt);
+        Assert.IsTrue(order.IsReady);
         Assert.IsNotNull(order.ReadyAt);
+        var changed = order.DomainEvents.OfType<OrderReadyChangedDomainEvent>().Single();
+        Assert.IsTrue(changed.IsReady);
     }
 
     [TestMethod]
-    public void Kitchen_recalls_a_ready_order_back_to_preparing()
+    public void Kitchen_brings_a_ready_order_back_to_the_board()
     {
         // Arrange
         var order = ConfirmedOrder();
-        order.SetPreparation(PreparationStatus.Preparing);
-        var startedAt = order.PreparingAt;
-        order.SetPreparation(PreparationStatus.Ready);
+        order.SetReady(true);
 
         // Act
-        order.SetPreparation(PreparationStatus.Preparing);
+        order.SetReady(false);
 
         // Assert
-        Assert.AreEqual(PreparationStatus.Preparing, order.Preparation);
-        Assert.AreEqual(startedAt, order.PreparingAt);
+        Assert.IsFalse(order.IsReady);
         Assert.IsNull(order.ReadyAt);
+        Assert.AreEqual(2, order.DomainEvents.OfType<OrderReadyChangedDomainEvent>().Count());
     }
 
     [TestMethod]
     public void Kitchen_repeating_the_current_state_is_a_no_op()
     {
-        // Arrange
+        // Arrange: two screens tapping the same card must not race into an error
         var order = ConfirmedOrder();
-        order.SetPreparation(PreparationStatus.Preparing);
-        var startedAt = order.PreparingAt;
+        order.SetReady(true);
+        var readyAt = order.ReadyAt;
 
         // Act
-        order.SetPreparation(PreparationStatus.Preparing);
+        order.SetReady(true);
 
         // Assert
-        Assert.AreEqual(startedAt, order.PreparingAt);
-        Assert.AreEqual(1, order.DomainEvents.OfType<OrderPreparationChangedDomainEvent>().Count());
-    }
-
-    [TestMethod]
-    public void Kitchen_cannot_send_an_order_back_to_not_started()
-    {
-        // Arrange
-        var order = ConfirmedOrder();
-        order.SetPreparation(PreparationStatus.Preparing);
-
-        // Act - Assert
-        Assert.ThrowsExactly<OrderingDomainException>(() => order.SetPreparation(PreparationStatus.NotStarted));
+        Assert.AreEqual(readyAt, order.ReadyAt);
+        Assert.AreEqual(1, order.DomainEvents.OfType<OrderReadyChangedDomainEvent>().Count());
     }
 
     [TestMethod]
@@ -320,7 +284,7 @@ public class OrderAggregateTest
         order.SetStockConfirmedStatus();
 
         // Act - Assert
-        Assert.ThrowsExactly<OrderingDomainException>(() => order.SetPreparation(PreparationStatus.Preparing));
+        Assert.ThrowsExactly<OrderingDomainException>(() => order.SetReady(true));
     }
 
     [TestMethod]
