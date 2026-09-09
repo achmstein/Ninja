@@ -109,7 +109,16 @@ jobs:
           sed -i 's/^NOTIFICATION_API_PORT=$/NOTIFICATION_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^ACCOUNTS_API_PORT=$/ACCOUNTS_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^BRANCH_API_PORT=$/BRANCH_API_PORT=8080/' deploy-artifacts/.env
+          sed -i 's/^SALES_API_PORT=$/SALES_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^MOBILE_BFF_PORT=$/MOBILE_BFF_PORT=5000/' deploy-artifacts/.env
+
+          # A placeholder left empty becomes `expose: - ""`, and compose aborts
+          # the whole rollout half-way (2026-09-09: postgres recreated, APIs
+          # not). Refuse to ship an .env with any empty value.
+          if grep -qE '^[A-Z_]+=$' deploy-artifacts/.env; then
+            echo "ERROR: unfilled .env placeholders:"; grep -E '^[A-Z_]+=$' deploy-artifacts/.env
+            exit 1
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -139,6 +148,8 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: GHCR_TOKEN,GHCR_USER,FIREBASE_CREDENTIALS_JSON
           script: |
+            # A failed pull or `up` must fail the deploy, not report success
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
 
             # Write Firebase credentials
