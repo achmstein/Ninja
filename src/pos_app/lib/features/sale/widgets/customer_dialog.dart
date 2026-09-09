@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/utils/highlight.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../models/sale_line.dart';
@@ -106,6 +107,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
     final l10n = AppLocalizations.of(context)!;
     final typedName = _term.text.trim();
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    // The letters that matched, marked, so the eye lands on the right Ahmed
+    // without reading every row
+    final mark = TextStyle(
+      backgroundColor: theme.colors.primary.withValues(alpha: 0.15),
+      fontWeight: FontWeight.w700,
+    );
 
     Widget centered(String text) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 32),
@@ -208,10 +215,25 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(user.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                                                if (user.contact != null)
-                                                  Text(user.contact!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                                                Text.rich(
+                                                  TextSpan(children: highlightSpans(user.displayName, matchRanges(user.displayName, _search), mark)),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
+                                                ),
+                                                if (user.contact case final contact?)
+                                                  Text.rich(
+                                                    TextSpan(
+                                                      children: highlightSpans(
+                                                        contact,
+                                                        user.phoneNumber?.isNotEmpty == true ? phoneRanges(contact, _search) : matchRanges(contact, _search),
+                                                        mark,
+                                                      ),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: muted,
+                                                  ),
                                               ],
                                             ),
                                           ),

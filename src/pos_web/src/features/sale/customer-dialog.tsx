@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api-client'
+import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT } from '@/lib/i18n'
 import type { SaleCustomer } from './cart'
 
@@ -194,14 +195,29 @@ export function CustomerDialog({
                 >
                   <User className='text-muted-foreground size-5 shrink-0' />
                   <span className='min-w-0'>
+                    {/* The letters that matched, marked, so the eye lands on
+                        the right Ahmed without reading every row */}
                     <span className='block truncate text-base font-medium'>
-                      {displayName(user)}
+                      <Highlight
+                        text={displayName(user)}
+                        ranges={matchRanges(displayName(user), term)}
+                      />
                     </span>
-                    {(user.phoneNumber || user.email) && (
+                    {user.phoneNumber ? (
                       <span className='text-muted-foreground block truncate text-sm'>
-                        {user.phoneNumber || user.email}
+                        <Highlight
+                          text={user.phoneNumber}
+                          ranges={phoneRanges(user.phoneNumber, term)}
+                        />
                       </span>
-                    )}
+                    ) : user.email ? (
+                      <span className='text-muted-foreground block truncate text-sm'>
+                        <Highlight
+                          text={user.email}
+                          ranges={matchRanges(user.email, term)}
+                        />
+                      </span>
+                    ) : null}
                   </span>
                 </button>
               ))}
