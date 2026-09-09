@@ -1,4 +1,5 @@
 using Chillax.Identity.API;
+using Chillax.Identity.API.Directory;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -17,7 +18,14 @@ builder.Services.AddHttpClient("KeycloakAdmin", client =>
 {
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
-builder.Services.AddTransient<KeycloakAdmin>();
+builder.Services.AddSingleton<KeycloakAdmin>();
+
+// The customer index the till and the admin search from: Keycloak's own
+// search matches name and email as plain substrings and costs a role call
+// per user, which is neither the lookup a cashier needs nor one that
+// survives a thousand customers
+builder.Services.AddSingleton<UserDirectory>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<UserDirectory>());
 
 // Add RabbitMQ event bus for publishing profile update events
 builder.AddRabbitMqEventBus("eventbus")
@@ -30,6 +38,20 @@ app.MapDefaultEndpoints();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Any write that goes through this service (a registration, a profile or
+// role or branch change) rebuilds the directory shortly after, so the till
+// finds a customer who signed up in the app straight away
+app.Use(async (context, next) =>
+{
+    await next(context);
+    if (!HttpMethods.IsGet(context.Request.Method)
+        && context.Response.StatusCode is >= 200 and < 300
+        && context.Request.Path.StartsWithSegments("/api/identity"))
+    {
+        context.RequestServices.GetRequiredService<UserDirectory>().ScheduleRefresh();
+    }
+});
 
 // Registration endpoint
 app.MapPost("/api/identity/register", async (RegisterRequest request, IHttpClientFactory httpClientFactory, IConfiguration config) =>
@@ -260,104 +282,27 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
 
 // List users endpoint (admin only)
 // Supports filtering: role=Admin (only admins), excludeRole=Admin (exclude admins, i.e. customers only)
-app.MapGet("/api/identity/users", async (IHttpClientFactory httpClientFactory, IConfiguration config, int? first, int? max, string? search, string? role, string? excludeRole) =>
+app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, int? max, string? search, string? role, string? excludeRole, CancellationToken ct) =>
 {
-    var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
-    var realm = config["Keycloak:Realm"] ?? "chillax";
-    var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
-    var adminClientSecret = config["Keycloak:AdminClientSecret"];
-
-    var client = httpClientFactory.CreateClient("KeycloakAdmin");
-
-    // Get admin token
-    var tokenEndpoint = $"{keycloakUrl}/protocol/openid-connect/token";
-    var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
-    {
-        ["grant_type"] = "client_credentials",
-        ["client_id"] = adminClientId,
-        ["client_secret"] = adminClientSecret ?? ""
-    });
-
-    var tokenResponse = await client.PostAsync(tokenEndpoint, tokenRequest);
-    if (!tokenResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem("Failed to authenticate with identity provider", statusCode: 500);
-    }
-
-    var tokenJson = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>();
-    var accessToken = tokenJson.GetProperty("access_token").GetString();
-
-    var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-    // Fetch users from Keycloak Admin API (fetch more if we need to filter)
-    var fetchMax = (role != null || excludeRole != null) ? 500 : (max ?? 50);
-    var usersEndpoint = $"{adminUrl}/admin/realms/{realm}/users";
-
-    // Build query parameters
-    var queryParams = new List<string>();
-    queryParams.Add($"first=0");
-    queryParams.Add($"max={fetchMax}");
-    if (!string.IsNullOrEmpty(search)) queryParams.Add($"search={Uri.EscapeDataString(search)}");
-
-    usersEndpoint += "?" + string.Join("&", queryParams);
-
-    var usersResponse = await client.GetAsync(usersEndpoint);
-
-    if (!usersResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem("Failed to fetch users", statusCode: (int)usersResponse.StatusCode);
-    }
-
-    var users = await usersResponse.Content.ReadFromJsonAsync<List<KeycloakUser>>() ?? [];
-
-    // Fetch realm roles for each user and build result
-    var allUsers = new List<UserDto>();
-    foreach (var user in users)
-    {
-        var rolesEndpoint = $"{adminUrl}/admin/realms/{realm}/users/{user.Id}/role-mappings/realm";
-        var rolesResponse = await client.GetAsync(rolesEndpoint);
-        var realmRoles = new List<string>();
-
-        if (rolesResponse.IsSuccessStatusCode)
-        {
-            var roles = await rolesResponse.Content.ReadFromJsonAsync<List<KeycloakRole>>();
-            realmRoles = roles?.Select(r => r.Name).Where(n => n != null).Cast<string>().ToList() ?? [];
-        }
-
-        allUsers.Add(new UserDto(
-            user.Id,
-            user.Username,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.Enabled,
-            user.CreatedTimestamp,
-            realmRoles,
-            user.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault(),
-            BranchesOf(user.Attributes)
-        ));
-    }
-
-    // Apply role filters
-    IEnumerable<UserDto> filteredUsers = allUsers;
-
     // Either filter takes one role or a comma-separated list
     var include = SplitRoles(role);
     var exclude = SplitRoles(excludeRole);
-    if (include.Length > 0)
+
+    var snapshot = await directory.GetAsync(ct);
+    var matches = snapshot.Search(search, include, exclude).ToList();
+
+    // Nothing found and the index is not fresh: the person may have signed up
+    // on Keycloak's own page a minute ago. Rebuild once and look again.
+    if (matches.Count == 0 && !string.IsNullOrWhiteSpace(search))
     {
-        filteredUsers = filteredUsers.Where(u => u.RealmRoles.Any(include.Contains));
-    }
-    if (exclude.Length > 0)
-    {
-        filteredUsers = filteredUsers.Where(u => !u.RealmRoles.Any(exclude.Contains));
+        snapshot = await directory.RefreshIfStaleAsync(ct);
+        matches = snapshot.Search(search, include, exclude).ToList();
     }
 
-    // Apply pagination after filtering
-    var result = filteredUsers
+    var result = matches
         .Skip(first ?? 0)
         .Take(max ?? 50)
+        .Select(ToDto)
         .ToList();
 
     return Results.Ok(result);
@@ -442,46 +387,10 @@ app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFact
 }).RequireAuthorization("Admin");
 
 // Get user count endpoint
-app.MapGet("/api/identity/users/count", async (IHttpClientFactory httpClientFactory, IConfiguration config) =>
+app.MapGet("/api/identity/users/count", async (UserDirectory directory, string? search, string? role, string? excludeRole, CancellationToken ct) =>
 {
-    var keycloakUrl = config["Identity:Url"] ?? throw new InvalidOperationException("Identity:Url not configured");
-    var realm = config["Keycloak:Realm"] ?? "chillax";
-    var adminClientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
-    var adminClientSecret = config["Keycloak:AdminClientSecret"];
-
-    var client = httpClientFactory.CreateClient("KeycloakAdmin");
-
-    // Get admin token
-    var tokenEndpoint = $"{keycloakUrl}/protocol/openid-connect/token";
-    var tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
-    {
-        ["grant_type"] = "client_credentials",
-        ["client_id"] = adminClientId,
-        ["client_secret"] = adminClientSecret ?? ""
-    });
-
-    var tokenResponse = await client.PostAsync(tokenEndpoint, tokenRequest);
-    if (!tokenResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem("Failed to authenticate with identity provider", statusCode: 500);
-    }
-
-    var tokenJson = await tokenResponse.Content.ReadFromJsonAsync<JsonElement>();
-    var accessToken = tokenJson.GetProperty("access_token").GetString();
-
-    // Fetch user count from Keycloak Admin API
-    var adminUrl = keycloakUrl.Replace($"/realms/{realm}", "");
-    var countEndpoint = $"{adminUrl}/admin/realms/{realm}/users/count";
-
-    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    var countResponse = await client.GetAsync(countEndpoint);
-
-    if (!countResponse.IsSuccessStatusCode)
-    {
-        return Results.Problem("Failed to fetch user count", statusCode: (int)countResponse.StatusCode);
-    }
-
-    var count = await countResponse.Content.ReadFromJsonAsync<int>();
+    var snapshot = await directory.GetAsync(ct);
+    var count = snapshot.Search(search, SplitRoles(role), SplitRoles(excludeRole)).Count();
     return Results.Ok(new { count });
 }).RequireAuthorization("Admin");
 
@@ -1215,12 +1124,19 @@ app.MapGet("/api/identity/my-profile", async (HttpContext httpContext, IHttpClie
 }).RequireAuthorization();
 
 // Branch ids from the `branches` user attribute (strings on the wire)
-static List<int> BranchesOf(Dictionary<string, string[]>? attributes) =>
-    (attributes?.GetValueOrDefault("branches") ?? [])
-        .Select(v => int.TryParse(v, out var id) ? id : (int?)null)
-        .OfType<int>()
-        .Order()
-        .ToList();
+static List<int> BranchesOf(Dictionary<string, string[]>? attributes) => UserAttributes.BranchesOf(attributes);
+
+static UserDto ToDto(DirectoryUser user) => new(
+    user.Id,
+    user.Username,
+    user.Email,
+    user.FirstName,
+    user.LastName,
+    user.Enabled,
+    user.CreatedTimestamp,
+    user.RealmRoles.ToList(),
+    user.PhoneNumber,
+    user.Branches.ToList());
 
 // "Admin" or "Admin,Owner,Cashier"
 static string[] SplitRoles(string? roles) =>

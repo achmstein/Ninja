@@ -16,7 +16,8 @@ public sealed class KeycloakAdmin(IHttpClientFactory httpClientFactory, IConfigu
     private readonly string _clientId = config["Keycloak:AdminClientId"] ?? "admin-cli";
     private readonly string _clientSecret = config["Keycloak:AdminClientSecret"] ?? "";
 
-    private string AdminUrl => $"{_realmUrl.Replace($"/realms/{_realm}", "")}/admin/realms/{_realm}";
+    /// <summary>The realm's admin REST root.</summary>
+    public string AdminUrl => $"{_realmUrl.Replace($"/realms/{_realm}", "")}/admin/realms/{_realm}";
 
     /// <summary>A client carrying a fresh service-account token.</summary>
     public async Task<HttpClient> AuthorizedClientAsync()
