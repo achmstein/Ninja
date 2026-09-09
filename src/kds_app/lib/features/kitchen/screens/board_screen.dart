@@ -4,19 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/network/api_errors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../providers/kitchen_orders_provider.dart';
 import '../widgets/order_card.dart';
+import '../widgets/order_grid.dart';
 
-/// The kitchen board, as kds_web's Board: three lanes — New, In progress,
-/// Ready — each scrolling on its own, oldest order first. Everything
-/// confirmed lands in New the moment it is confirmed (app order, table QR
-/// or counter sale alike); Start and Ready move it right, Recall brings a
-/// bumped card back, and Ready cards clear themselves after half an hour.
-/// Sized to be read from across a kitchen and tapped with a wet finger.
+/// The kitchen board, as kds_web's Board: one grid of open orders, oldest
+/// first, as many across as the screen fits. Everything confirmed lands
+/// here the moment it is confirmed (app order, table QR or counter sale
+/// alike); Ready takes it off the board and into the history behind the
+/// clock icon in the header, from where it can be brought back. Sized for
+/// a tablet at arm's length, tapped with a wet finger.
 class BoardScreen extends ConsumerStatefulWidget {
   const BoardScreen({super.key});
 
@@ -41,12 +41,12 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     super.dispose();
   }
 
-  Future<void> _act(KitchenOrder order, PreparationStatus target) async {
+  Future<void> _markReady(KitchenOrder order) async {
     final id = order.orderNumber;
     if (_acting.contains(id)) return;
     setState(() => _acting.add(id));
     try {
-      await ref.read(kitchenOrdersProvider.notifier).setPreparation(id, target);
+      await ref.read(kitchenOrdersProvider.notifier).setReady(id, true);
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
@@ -59,116 +59,27 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(kitchenOrdersProvider);
     final orders = async.value ?? const <KitchenOrder>[];
     final isLoading = async.isLoading && async.value == null;
     final now = DateTime.now();
+    final open = openOrders(orders);
 
-    if (!isLoading && orders.isEmpty) return const _EmptyBoard();
+    if (!isLoading && open.isEmpty) return const _EmptyBoard();
 
-    final lanes = [
-      (PreparationStatus.notStarted, l10n.laneNew, AppColors.sky500),
-      (PreparationStatus.preparing, l10n.laneInProgress, AppColors.amber500),
-      (PreparationStatus.ready, l10n.laneReady, AppColors.emerald500),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (index, lane) in lanes.indexed) ...[
-            if (index > 0) const SizedBox(width: 12),
-            Expanded(
-              child: _Lane(
-                title: lane.$2,
-                dot: lane.$3,
-                orders: laneOrders(orders, lane.$1),
-                loading: isLoading && lane.$1 == PreparationStatus.notStarted,
-                now: now,
-                acting: _acting,
-                onAct: _act,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Lane extends StatelessWidget {
-  final String title;
-  final Color dot;
-  final List<KitchenOrder> orders;
-  final bool loading;
-  final DateTime now;
-  final Set<int> acting;
-  final void Function(KitchenOrder order, PreparationStatus target) onAct;
-
-  const _Lane({
-    required this.title,
-    required this.dot,
-    required this.orders,
-    required this.loading,
-    required this.now,
-    required this.acting,
-    required this.onAct,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colors.muted.withValues(alpha: 0.3),
-        border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Row(
-              children: [
-                Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
-                const SizedBox(width: 8),
-                Text(title, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(width: 8),
-                FBadge(
-                  variant: FBadgeVariant.secondary,
-                  child: Text('${orders.length}', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()])),
-                ),
-              ],
-            ),
+    return OrderGrid(
+      children: [
+        if (isLoading)
+          for (var i = 0; i < 3; i++) const _CardSkeleton(),
+        for (final order in open)
+          OrderCard(
+            key: ValueKey(order.orderNumber),
+            order: order,
+            now: now,
+            acting: _acting.contains(order.orderNumber),
+            onReady: () => _markReady(order),
           ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              children: [
-                if (loading)
-                  for (var i = 0; i < 2; i++)
-                    const Padding(padding: EdgeInsets.only(bottom: 12), child: _CardSkeleton()),
-                for (final (index, order) in orders.indexed)
-                  Padding(
-                    padding: EdgeInsets.only(top: index > 0 ? 12 : 0),
-                    child: OrderCard(
-                      key: ValueKey(order.orderNumber),
-                      order: order,
-                      now: now,
-                      acting: acting.contains(order.orderNumber),
-                      onStart: () => onAct(order, PreparationStatus.preparing),
-                      onReady: () => onAct(order, PreparationStatus.ready),
-                      onRecall: () => onAct(order, PreparationStatus.preparing),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -184,7 +95,7 @@ class _CardSkeleton extends StatelessWidget {
       baseColor: theme.colors.muted,
       highlightColor: theme.colors.background,
       child: Container(
-        height: 160,
+        height: 144,
         decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12)),
       ),
     );

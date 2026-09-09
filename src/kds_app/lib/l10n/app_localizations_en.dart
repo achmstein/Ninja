@@ -49,15 +49,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
-  String get laneNew => 'New';
-
-  @override
-  String get laneInProgress => 'In progress';
-
-  @override
-  String get laneReady => 'Ready';
-
-  @override
   String get noOrders => 'Nothing to prepare';
 
   @override
@@ -65,13 +56,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'New orders show up here the moment they are confirmed.';
 
   @override
-  String get start => 'Start';
-
-  @override
   String get ready => 'Ready';
 
   @override
-  String get recall => 'Recall';
+  String get history => 'History';
+
+  @override
+  String get historyHint =>
+      'Orders marked ready today, newest first. Bring one back to put it on the board again.';
+
+  @override
+  String get noHistory => 'Nothing ready yet today';
+
+  @override
+  String get bringBack => 'Bring back';
 
   @override
   String get counter => 'Counter';

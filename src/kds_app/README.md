@@ -1,10 +1,11 @@
 # Chillax Kitchen (kds_app)
 
-The kitchen display as a native Android-tablet app: the same three-lane
-board as `src/kds_web`, on Forui, forked from `src/pos_app`. New orders
-land in **New** the moment they are confirmed, **Start** and **Ready** move
-them right, **Recall** brings a bumped card back, and Ready cards clear
-themselves after half an hour. A confirmed order chimes.
+The kitchen display as a native Android-tablet app: the same board as
+`src/kds_web`, on Forui, forked from `src/pos_app`. New orders land on the
+board the moment they are confirmed, **Ready** takes a card off it and into
+the day's **History** behind the clock icon in the header, and **Bring
+back** from there puts a card bumped too early on the board again. A
+confirmed order chimes.
 
 Why native rather than the web board on a tablet: the app locks the tablet
 into the board (kiosk mode), plays the chime without a first tap, keeps the
@@ -13,7 +14,7 @@ screen awake, and signs in once.
 ## Backend it needs
 
 Nothing new. The board is `GET /api/orders/kitchen` (branch-scoped by
-`X-Branch-Id`) and the taps are `PUT /api/orders/{orderId}/preparation`
+`X-Branch-Id`) and the taps are `PUT /api/orders/{orderId}/ready`
 with an `x-requestid` per tap; live updates come from the same
 `/hub/notifications` hub kds_web joins (`JoinAdminGroup`). Sign-in is the
 password grant against the Keycloak client `kds-app` (added to
@@ -49,7 +50,7 @@ client is not re-imported: add it in the admin console (clone `pos-app`) or
 reset the volume.
 
 Demo mode needs neither backend nor Keycloak — a signed-in kitchen, two
-branches and a board of sample orders in every state:
+branches, a board of sample orders and one in the history:
 
 ```
 flutter run --dart-define=KDS_DEMO=true
@@ -59,14 +60,14 @@ flutter run --dart-define=KDS_DEMO=true --dart-define=KDS_DEMO_EMPTY=true
 
 ## The board
 
-Three lanes, each scrolling on its own, oldest order first. A card shows
-the order number, a clock running from confirmation (or from Ready, where
-it becomes "how long ago"), where it goes (room, table, counter or pickup),
-who it is for, the lines with their customizations and instructions, and
-the customer's note. The clock and border turn amber after 5 minutes and
-red after 10, the same tiers as kds_web. A tap moves the card at once and
-the board refetches once the server has answered; a refusal puts it back
-with the server's reason in a toast.
+One grid, as many cards across as the screen fits, oldest order first. A
+card shows the order number, where it goes (room, table, counter or
+pickup), who it is for, a clock running from confirmation (the time it was
+finished, in the history), the lines with their customizations and
+instructions, and the customer's note. The clock and border turn amber
+after 5 minutes and red after 10, the same tiers as kds_web. A tap moves
+the card at once and the board refetches once the server has answered; a
+refusal puts it back with the server's reason in a toast.
 
 Theme defaults to dark. Language, theme, settings and sign-out live behind
 the header menu.
@@ -102,7 +103,8 @@ lib/
   features/
     auth/        login screen
     kitchen/     model, repository, provider (poll + optimistic taps),
-                 status (urgency + clock), board screen, order card
+                 status (urgency + clock), board screen, order card,
+                 card grid, history dialog
     settings/    kiosk card
   l10n/          ARB sources (EN + Egyptian Arabic); keys mirror
                  kds_web/src/lib/i18n.ts

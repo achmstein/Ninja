@@ -60,9 +60,7 @@ public record KitchenOrder
     public DateTime Date { get; init; }
     /// <summary>When staff confirmed it — the kitchen's clock starts here.</summary>
     public DateTime? ConfirmedAt { get; init; }
-    /// <summary>NotStarted, Preparing or Ready.</summary>
-    public string Preparation { get; init; } = string.Empty;
-    public DateTime? PreparingAt { get; init; }
+    /// <summary>When the kitchen finished it; null while it is still on the board.</summary>
     public DateTime? ReadyAt { get; init; }
     /// <summary>Who placed it: Customer, Guest, or Pos.</summary>
     public string Source { get; init; } = string.Empty;

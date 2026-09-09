@@ -2,18 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/kitchen/providers/kitchen_orders_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
+import '../network/api_errors.dart';
 import '../providers/locale_provider.dart';
 import '../theme/app_theme.dart';
+import '../../features/kitchen/widgets/history_dialog.dart';
 import 'branch_switcher.dart';
+import 'kds_toast.dart';
 
 /// The single app-chrome row, as kds_web's kitchen-header: brand + branch
-/// on the start side, the settings menu on the end side. Language, theme
-/// and sign-out are a shift's worth of taps apart in practice, so they live
-/// behind the menu instead of spending header width all day. No fullscreen
-/// toggle: the app is already immersive. All targets ≥ 48 dp for wet,
-/// hurried fingers — menu rows included.
+/// on the start side; the day's history and the settings menu on the end
+/// side. Language, theme and sign-out are a shift's worth of taps apart in
+/// practice, so they live behind the menu instead of spending header width
+/// all day. No fullscreen toggle: the app is already immersive. All targets
+/// ≥ 48 dp for wet, hurried fingers — menu rows included.
 class KdsHeader extends ConsumerStatefulWidget {
   const KdsHeader({super.key});
 
@@ -34,6 +38,20 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
   void _pick(VoidCallback action) {
     _menu.hide();
     action();
+  }
+
+  /// The history resolves to an order to bring back; a refusal is said here,
+  /// where the board's context still lives
+  Future<void> _openHistory() async {
+    final orderNumber = await showHistoryDialog(context);
+    if (orderNumber == null) return;
+    try {
+      await ref.read(kitchenOrdersProvider.notifier).setReady(orderNumber, false);
+    } catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      showKdsToast(context, KdsToastType.error, l10n.failedToUpdate, description: describeError(e, l10n));
+    }
   }
 
   @override
@@ -57,6 +75,14 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
         children: [
           const BranchSwitcher(),
           const Spacer(),
+          SizedBox.square(
+            dimension: 48,
+            child: FButton.icon(
+              variant: FButtonVariant.ghost,
+              onPress: _openHistory,
+              child: const Icon(FIcons.history, size: 20),
+            ),
+          ),
           FPopoverMenu(
             control: FPopoverControl.managed(controller: _menu),
             menuAnchor: AlignmentDirectional.topEnd,

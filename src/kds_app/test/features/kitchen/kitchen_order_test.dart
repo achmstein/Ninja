@@ -7,8 +7,6 @@ void main() {
       'orderNumber': 3121,
       'date': '2026-09-05T19:50:00Z',
       'confirmedAt': '2026-09-05T19:52:00Z',
-      'preparation': 'Preparing',
-      'preparingAt': '2026-09-05T19:53:00Z',
       'readyAt': null,
       'source': 'Customer',
       'roomName': {'en': 'Room 3', 'ar': 'اوضة 3'},
@@ -32,7 +30,7 @@ void main() {
     });
 
     expect(order.orderNumber, 3121);
-    expect(order.preparation, PreparationStatus.preparing);
+    expect(order.isReady, isFalse);
     expect(order.since, DateTime.utc(2026, 9, 5, 19, 52));
     expect(order.roomName?.ar, 'اوضة 3');
     expect(order.tableName, isNull);
@@ -47,15 +45,14 @@ void main() {
     expect(order.items[1].specialInstructions, isNull);
   });
 
-  test('a string order number, an unknown state and no confirmation still make a card', () {
+  test('a string order number and no confirmation still make a card', () {
     final order = KitchenOrder.fromJson({
       'orderNumber': '3122',
       'date': '2026-09-05T19:50:00Z',
-      'preparation': 'Whatever',
       'source': 'Pos',
     });
     expect(order.orderNumber, 3122);
-    expect(order.preparation, PreparationStatus.notStarted);
+    expect(order.isReady, isFalse);
     expect(order.since, order.date);
     expect(order.isPos, isTrue);
     expect(order.items, isEmpty);
@@ -68,18 +65,12 @@ void main() {
     expect(readUtc(''), isNull);
   });
 
-  test('copyWith clears readyAt only when asked', () {
-    final order = KitchenOrder(orderNumber: 1, date: DateTime.utc(2026, 9, 5), readyAt: DateTime.utc(2026, 9, 5, 1));
-    expect(order.copyWith(preparation: PreparationStatus.preparing).readyAt, isNotNull);
-    expect(order.copyWith(clearReadyAt: true).readyAt, isNull);
-    final later = DateTime.utc(2026, 9, 5, 2);
-    expect(order.copyWith(readyAt: later).readyAt, later);
-  });
-
-  test('preparation states parse by wire name, any case', () {
-    expect(PreparationStatus.parse('Ready'), PreparationStatus.ready);
-    expect(PreparationStatus.parse('notstarted'), PreparationStatus.notStarted);
-    expect(PreparationStatus.parse(null), PreparationStatus.notStarted);
-    expect(PreparationStatus.ready.wire, 'Ready');
+  test('a ready order is one with a ready time, and withReadyAt sets or clears it', () {
+    final open = KitchenOrder(orderNumber: 1, date: DateTime.utc(2026, 9, 5));
+    expect(open.isReady, isFalse);
+    final ready = open.withReadyAt(DateTime.utc(2026, 9, 5, 1));
+    expect(ready.isReady, isTrue);
+    expect(ready.orderNumber, 1);
+    expect(ready.withReadyAt(null).isReady, isFalse);
   });
 }

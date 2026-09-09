@@ -23,12 +23,6 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .HasDefaultValue(OrderSource.Customer);
 
         orderConfiguration
-            .Property(o => o.Preparation)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .HasDefaultValue(PreparationStatus.NotStarted);
-
-        orderConfiguration
             .Property(o => o.Description)
             .HasMaxLength(500);
 

@@ -92,13 +92,13 @@ public static partial class OrdersApi
         api.MapGet("/kitchen", GetKitchenOrdersAsync)
             .WithName("GetKitchenOrders")
             .WithSummary("Confirmed orders in the kitchen, for the kitchen display (staff)")
-            .WithDescription("Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.")
+            .WithDescription("Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.")
             .RequireAuthorization("Pos");
 
-        api.MapPut("/{orderId:int}/preparation", SetOrderPreparationAsync)
-            .WithName("SetOrderPreparation")
-            .WithSummary("Move a confirmed order along in the kitchen (staff)")
-            .WithDescription("Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.")
+        api.MapPut("/{orderId:int}/ready", SetOrderReadyAsync)
+            .WithName("SetOrderReady")
+            .WithSummary("Mark a confirmed order ready in the kitchen, or bring it back (staff)")
+            .WithDescription("Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.")
             .RequireAuthorization("Pos");
 
         api.MapGet("/all", GetAllOrdersAsync)
@@ -581,10 +581,10 @@ public static partial class OrdersApi
         return TypedResults.Ok(orders);
     }
 
-    public static async Task<Results<NoContent, BadRequest<string>, NotFound>> SetOrderPreparationAsync(
+    public static async Task<Results<NoContent, BadRequest<string>, NotFound>> SetOrderReadyAsync(
         int orderId,
         [FromHeader(Name = "x-requestid")] Guid requestId,
-        SetOrderPreparationRequest request,
+        SetOrderReadyRequest request,
         [AsParameters] OrderServices services)
     {
         if (requestId == Guid.Empty)
@@ -592,18 +592,18 @@ public static partial class OrdersApi
             return TypedResults.BadRequest("Empty GUID is not valid for request ID");
         }
 
-        var command = new SetOrderPreparationCommand(orderId, request.Preparation);
-        var requestSetPreparation = new IdentifiedCommand<SetOrderPreparationCommand, bool>(command, requestId);
+        var command = new SetOrderReadyCommand(orderId, request.Ready);
+        var requestSetReady = new IdentifiedCommand<SetOrderReadyCommand, bool>(command, requestId);
 
         services.Logger.LogInformation(
-            "Sending command: {CommandName} - OrderId: {OrderId}, Preparation: {Preparation}",
-            requestSetPreparation.GetGenericTypeName(),
+            "Sending command: {CommandName} - OrderId: {OrderId}, Ready: {Ready}",
+            requestSetReady.GetGenericTypeName(),
             orderId,
-            request.Preparation);
+            request.Ready);
 
         try
         {
-            var found = await services.Mediator.Send(requestSetPreparation);
+            var found = await services.Mediator.Send(requestSetReady);
 
             if (!found)
             {
@@ -756,7 +756,7 @@ public record RateOrderRequest(
     string? Comment);
 
 /// <summary>
-/// Request model for moving an order along in the kitchen.
+/// Request model for the kitchen display's one move.
 /// </summary>
-/// <param name="Preparation">Preparing to start it (or recall a ready one), Ready when it is done.</param>
-public record SetOrderPreparationRequest(PreparationStatus Preparation);
+/// <param name="Ready">True when the order is done, false to bring a ready order back to the board.</param>
+public record SetOrderReadyRequest(bool Ready);

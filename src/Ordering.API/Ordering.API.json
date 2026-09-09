@@ -657,7 +657,7 @@
           "Orders"
         ],
         "summary": "Confirmed orders in the kitchen, for the kitchen display (staff)",
-        "description": "Orders confirmed in the last day that are not started or being prepared, plus those marked ready in the last half hour. Kitchen-only state; customers never see it.",
+        "description": "Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.",
         "operationId": "GetKitchenOrders",
         "parameters": [
           {
@@ -697,14 +697,14 @@
         ]
       }
     },
-    "/api/orders/{orderId}/preparation": {
+    "/api/orders/{orderId}/ready": {
       "put": {
         "tags": [
           "Orders"
         ],
-        "summary": "Move a confirmed order along in the kitchen (staff)",
-        "description": "Preparing to start it (or to recall a ready one), Ready when it is done. Repeating the current state is a no-op. Never shown to the customer.",
-        "operationId": "SetOrderPreparation",
+        "summary": "Mark a confirmed order ready in the kitchen, or bring it back (staff)",
+        "description": "Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.",
+        "operationId": "SetOrderReady",
         "parameters": [
           {
             "name": "orderId",
@@ -740,7 +740,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetOrderPreparationRequest"
+                "$ref": "#/components/schemas/SetOrderReadyRequest"
               }
             }
           },
@@ -1391,16 +1391,6 @@
             "format": "date-time"
           },
           "confirmedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "preparation": {
-            "type": "string"
-          },
-          "preparingAt": {
             "type": [
               "null",
               "string"
@@ -2126,13 +2116,6 @@
           }
         }
       },
-      "PreparationStatus": {
-        "enum": [
-          "NotStarted",
-          "Preparing",
-          "Ready"
-        ]
-      },
       "RateOrderRequest": {
         "required": [
           "ratingValue",
@@ -2156,14 +2139,14 @@
           }
         }
       },
-      "SetOrderPreparationRequest": {
+      "SetOrderReadyRequest": {
         "required": [
-          "preparation"
+          "ready"
         ],
         "type": "object",
         "properties": {
-          "preparation": {
-            "$ref": "#/components/schemas/PreparationStatus"
+          "ready": {
+            "type": "boolean"
           }
         }
       }

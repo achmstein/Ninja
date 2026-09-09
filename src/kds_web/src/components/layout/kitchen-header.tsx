@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
+import { HistoryDialog } from '@/features/board/history-dialog'
 import { useFullscreen } from '@/hooks/use-fullscreen'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -25,11 +26,11 @@ import { useInstallPrompt } from '@/lib/use-install-prompt'
 import { useTheme } from '@/context/theme-provider'
 
 /**
- * The single app-chrome row: brand + branch on the start side, full screen
- * and the settings menu on the end side. Language, theme, install and
- * sign-out are set once per screen in practice, so they live behind the
- * menu instead of spending header width all day. All targets ≥ 48px for
- * wet, hurried fingers — menu rows included.
+ * The single app-chrome row: brand + branch on the start side; the day's
+ * history, full screen and the settings menu on the end side. Language,
+ * theme, install and sign-out are set once per screen in practice, so they
+ * live behind the menu instead of spending header width all day. All
+ * targets ≥ 48px for wet, hurried fingers — menu rows included.
  */
 export function KitchenHeader() {
   const t = useT()
@@ -57,6 +58,7 @@ export function KitchenHeader() {
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3'>
       <BranchSwitcher />
       <div className='ms-auto flex items-center gap-1'>
+        <HistoryDialog />
         {fullscreen.supported && (
           <Button
             variant='ghost'

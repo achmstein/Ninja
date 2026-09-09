@@ -48,28 +48,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get retry => 'حاول تاني';
 
   @override
-  String get laneNew => 'جديد';
-
-  @override
-  String get laneInProgress => 'شغالين عليه';
-
-  @override
-  String get laneReady => 'جاهز';
-
-  @override
   String get noOrders => 'مفيش حاجة تتعمل';
 
   @override
   String get noOrdersHint => 'الطلبات الجديدة هتظهر هنا أول ما تتأكد.';
 
   @override
-  String get start => 'ابدأ';
-
-  @override
   String get ready => 'جاهز';
 
   @override
-  String get recall => 'رجّعه';
+  String get history => 'السجل';
+
+  @override
+  String get historyHint =>
+      'الطلبات اللي اتعلمت جاهزة النهارده، الأحدث الأول. رجّع أي طلب عشان يرجع على الشاشة تاني.';
+
+  @override
+  String get noHistory => 'لسه مفيش طلبات جاهزة النهارده';
+
+  @override
+  String get bringBack => 'رجّعه';
 
   @override
   String get counter => 'الكاشير';

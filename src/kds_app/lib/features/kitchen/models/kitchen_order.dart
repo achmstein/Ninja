@@ -1,22 +1,5 @@
 import '../../../core/models/localized_text.dart';
 
-/// Where an order is in the kitchen — the wire names are Ordering's
-/// `PreparationStatus` enum, and the three lanes of the board.
-enum PreparationStatus {
-  notStarted('NotStarted'),
-  preparing('Preparing'),
-  ready('Ready');
-
-  final String wire;
-  const PreparationStatus(this.wire);
-
-  /// Unknown or missing reads as New, like kds_web's `preparation ?? 'NotStarted'`
-  static PreparationStatus parse(Object? value) {
-    final text = value?.toString().toLowerCase();
-    return values.firstWhere((s) => s.wire.toLowerCase() == text, orElse: () => notStarted);
-  }
-}
-
 /// One line of an order, as the kitchen needs it: what and how many, plus
 /// the customizations and instructions that change how it is made. No money.
 class KitchenOrderItem {
@@ -40,14 +23,13 @@ class KitchenOrderItem {
       );
 }
 
-/// An order on the board: `GET /api/orders/kitchen` returns confirmed
-/// orders of the last day (Ready ones linger half an hour), oldest first.
+/// An order in the kitchen: `GET /api/orders/kitchen` returns the confirmed
+/// orders of the last day, oldest first. `readyAt` is the only kitchen
+/// state — null while it is on the board, set once it is done.
 class KitchenOrder {
   final int orderNumber;
   final DateTime date;
   final DateTime? confirmedAt;
-  final PreparationStatus preparation;
-  final DateTime? preparingAt;
   final DateTime? readyAt;
 
   /// Who placed it: Customer, Guest or Pos
@@ -62,8 +44,6 @@ class KitchenOrder {
     required this.orderNumber,
     required this.date,
     this.confirmedAt,
-    this.preparation = PreparationStatus.notStarted,
-    this.preparingAt,
     this.readyAt,
     this.source = 'Customer',
     this.roomName,
@@ -76,21 +56,14 @@ class KitchenOrder {
   /// The clock runs from confirmation — the moment the order reached the kitchen
   DateTime get since => confirmedAt ?? date;
   bool get isPos => source == 'Pos';
-  bool get isReady => preparation == PreparationStatus.ready;
+  bool get isReady => readyAt != null;
 
-  KitchenOrder copyWith({
-    PreparationStatus? preparation,
-    DateTime? preparingAt,
-    DateTime? readyAt,
-    bool clearReadyAt = false,
-  }) =>
-      KitchenOrder(
+  /// The same order marked ready at [readyAt], or back on the board for null
+  KitchenOrder withReadyAt(DateTime? readyAt) => KitchenOrder(
         orderNumber: orderNumber,
         date: date,
         confirmedAt: confirmedAt,
-        preparation: preparation ?? this.preparation,
-        preparingAt: preparingAt ?? this.preparingAt,
-        readyAt: clearReadyAt ? null : (readyAt ?? this.readyAt),
+        readyAt: readyAt,
         source: source,
         roomName: roomName,
         tableName: tableName,
@@ -103,8 +76,6 @@ class KitchenOrder {
         orderNumber: readInt(json['orderNumber']),
         date: readUtc(json['date']) ?? DateTime.now().toUtc(),
         confirmedAt: readUtc(json['confirmedAt']),
-        preparation: PreparationStatus.parse(json['preparation']),
-        preparingAt: readUtc(json['preparingAt']),
         readyAt: readUtc(json['readyAt']),
         source: _text(json['source']) ?? 'Customer',
         roomName: LocalizedText.parseNullable(json['roomName']),

@@ -62,17 +62,12 @@ const dictionary = {
   retry: { en: 'Retry', ar: 'حاول تاني' },
 
   // Board
-  laneNew: { en: 'New', ar: 'جديد' },
-  laneInProgress: { en: 'In progress', ar: 'شغالين عليه' },
-  laneReady: { en: 'Ready', ar: 'جاهز' },
   noOrders: { en: 'Nothing to prepare', ar: 'مفيش حاجة تتعمل' },
   noOrdersHint: {
     en: 'New orders show up here the moment they are confirmed.',
     ar: 'الطلبات الجديدة هتظهر هنا أول ما تتأكد.',
   },
-  start: { en: 'Start', ar: 'ابدأ' },
   ready: { en: 'Ready', ar: 'جاهز' },
-  recall: { en: 'Recall', ar: 'رجّعه' },
   counter: { en: 'Counter', ar: 'الكاشير' },
   pickup: { en: 'Pickup', ar: 'استلام' },
   walkIn: { en: 'Walk-in', ar: 'زبون' },
@@ -80,6 +75,15 @@ const dictionary = {
     en: 'Tap anywhere once to enable sound alerts',
     ar: 'دوس في أي حتة مرة واحدة عشان يشتغل صوت التنبيه',
   },
+
+  // History
+  history: { en: 'History', ar: 'السجل' },
+  historyHint: {
+    en: 'Orders marked ready today, newest first. Bring one back to put it on the board again.',
+    ar: 'الطلبات اللي اتعلمت جاهزة النهارده، الأحدث الأول. رجّع أي طلب عشان يرجع على الشاشة تاني.',
+  },
+  noHistory: { en: 'Nothing ready yet today', ar: 'لسه مفيش طلبات جاهزة النهارده' },
+  bringBack: { en: 'Bring back', ar: 'رجّعه' },
 
   // Toasts
   newOrderToast: { en: 'New order #{orderId}', ar: 'طلب جديد #{orderId}' },

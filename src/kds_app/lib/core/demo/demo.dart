@@ -69,9 +69,9 @@ class _DemoBranchRepository implements BranchRepository {
       ];
 }
 
-/// The board in memory: Start / Ready / Recall move the sample cards the
-/// way the server would, after a pause long enough to see the tapped card
-/// go quiet.
+/// The board in memory: Ready / Bring back move the sample cards the way
+/// the server would, after a pause long enough to see the tapped card go
+/// quiet.
 class _DemoKitchenRepository implements KitchenRepository {
   final List<KitchenOrder> _orders = kDemoEmpty ? [] : List.of(_sampleOrders);
 
@@ -79,18 +79,13 @@ class _DemoKitchenRepository implements KitchenRepository {
   Future<List<KitchenOrder>> getKitchenOrders() async => List.of(_orders);
 
   @override
-  Future<void> setPreparation(int orderNumber, PreparationStatus target, {required String requestId}) async {
+  Future<void> setReady(int orderNumber, bool ready, {required String requestId}) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     final now = DateTime.now().toUtc();
     for (var i = 0; i < _orders.length; i++) {
       final order = _orders[i];
       if (order.orderNumber != orderNumber) continue;
-      _orders[i] = order.copyWith(
-        preparation: target,
-        preparingAt: target == PreparationStatus.preparing ? (order.preparingAt ?? now) : order.preparingAt,
-        readyAt: target == PreparationStatus.ready ? now : null,
-        clearReadyAt: target != PreparationStatus.ready,
-      );
+      _orders[i] = order.withReadyAt(ready ? now : null);
     }
   }
 }
@@ -106,9 +101,9 @@ KitchenOrderItem _item(String en, String ar, int units, {String? customEn, Strin
 
 final _now = DateTime.now().toUtc();
 
-/// Every card variant the board can show: each lane, each destination, a
-/// customization, an instruction, a note, and ages that exercise the
-/// fresh / warning / delayed tiers.
+/// Every card variant the board can show: each destination, a
+/// customization, an instruction, a note, ages that exercise the
+/// fresh / warning / delayed tiers, and a finished order for the history.
 final List<KitchenOrder> _sampleOrders = [
   KitchenOrder(
     orderNumber: 3121,
@@ -148,8 +143,6 @@ final List<KitchenOrder> _sampleOrders = [
     orderNumber: 3118,
     date: _now.subtract(const Duration(minutes: 4, seconds: 40)),
     confirmedAt: _now.subtract(const Duration(minutes: 4)),
-    preparation: PreparationStatus.preparing,
-    preparingAt: _now.subtract(const Duration(minutes: 2)),
     source: 'Customer',
     customerName: 'Mariam',
     items: [
@@ -161,8 +154,6 @@ final List<KitchenOrder> _sampleOrders = [
     orderNumber: 3112,
     date: _now.subtract(const Duration(minutes: 9)),
     confirmedAt: _now.subtract(const Duration(minutes: 9)),
-    preparation: PreparationStatus.preparing,
-    preparingAt: _now.subtract(const Duration(minutes: 7)),
     source: 'Pos',
     tableName: _lt('Table 2', 'ترابيزة 2'),
     items: [
@@ -173,8 +164,6 @@ final List<KitchenOrder> _sampleOrders = [
     orderNumber: 3108,
     date: _now.subtract(const Duration(minutes: 20)),
     confirmedAt: _now.subtract(const Duration(minutes: 20)),
-    preparation: PreparationStatus.ready,
-    preparingAt: _now.subtract(const Duration(minutes: 15)),
     readyAt: _now.subtract(const Duration(minutes: 3)),
     source: 'Customer',
     roomName: _lt('Room 1', 'اوضة 1'),

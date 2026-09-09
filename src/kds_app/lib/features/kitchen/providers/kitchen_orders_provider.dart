@@ -6,10 +6,11 @@ import '../../../core/providers/branch_provider.dart';
 import '../models/kitchen_order.dart';
 import '../services/kitchen_service.dart';
 
-/// The board: every order the kitchen still has to deal with, oldest
+/// The kitchen's day: every confirmed order of the last 24 hours, oldest
 /// first, for the active branch (the X-Branch-Id header every request
-/// carries). SignalR is the primary update path; the poll is only a
-/// fallback, as in kds_web's use-kitchen-orders.
+/// carries). The board shows the open ones, the history the ready ones.
+/// SignalR is the primary update path; the poll is only a fallback, as in
+/// kds_web's use-kitchen-orders.
 class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
   Timer? _poll;
 
@@ -30,29 +31,21 @@ class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
     if (result.hasValue) state = result;
   }
 
-  /// Start / Ready / Recall. The card moves lanes the instant it is tapped —
-  /// optimistic, because a barista with a hot cup in one hand does not wait
-  /// for a round trip — and the board refetches once the server has spoken,
-  /// whichever way. A refusal puts the card back and rethrows so the screen
-  /// can say why.
-  Future<void> setPreparation(int orderNumber, PreparationStatus target) async {
+  /// Ready / Bring back. The card leaves (or rejoins) the board the instant
+  /// it is tapped — optimistic, because a barista with a hot cup in one hand
+  /// does not wait for a round trip — and the board refetches once the
+  /// server has spoken, whichever way. A refusal puts the card back and
+  /// rethrows so the screen can say why.
+  Future<void> setReady(int orderNumber, bool ready) async {
     final previous = state.value;
     if (previous == null) return;
     final now = DateTime.now().toUtc();
     state = AsyncData([
       for (final order in previous)
-        if (order.orderNumber == orderNumber)
-          order.copyWith(
-            preparation: target,
-            preparingAt: target == PreparationStatus.preparing ? (order.preparingAt ?? now) : order.preparingAt,
-            readyAt: target == PreparationStatus.ready ? now : null,
-            clearReadyAt: target != PreparationStatus.ready,
-          )
-        else
-          order,
+        if (order.orderNumber == orderNumber) order.withReadyAt(ready ? now : null) else order,
     ]);
     try {
-      await ref.read(kitchenRepositoryProvider).setPreparation(orderNumber, target, requestId: const Uuid().v4());
+      await ref.read(kitchenRepositoryProvider).setReady(orderNumber, ready, requestId: const Uuid().v4());
     } catch (_) {
       if (ref.mounted) state = AsyncData(previous);
       rethrow;
@@ -66,8 +59,14 @@ class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
 
 final kitchenOrdersProvider = AsyncNotifierProvider<KitchenOrdersNotifier, List<KitchenOrder>>(KitchenOrdersNotifier.new);
 
-/// The orders in one lane, in board order
-List<KitchenOrder> laneOrders(List<KitchenOrder> orders, PreparationStatus lane) => [
+/// The board: what is still to be made, oldest first
+List<KitchenOrder> openOrders(List<KitchenOrder> orders) => [
       for (final order in orders)
-        if (order.preparation == lane) order,
+        if (!order.isReady) order,
     ];
+
+/// The history: what was finished today, newest first
+List<KitchenOrder> finishedOrders(List<KitchenOrder> orders) => [
+      for (final order in orders)
+        if (order.isReady) order,
+    ]..sort((a, b) => b.readyAt!.compareTo(a.readyAt!));

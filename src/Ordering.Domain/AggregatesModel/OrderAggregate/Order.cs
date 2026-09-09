@@ -147,16 +147,14 @@ public class Order
     public DateTime? ConfirmedAt { get; private set; }
 
     /// <summary>
-    /// Where a confirmed order stands in the kitchen. Kitchen-only: never
-    /// shown to the customer, never changes what the order costs.
+    /// When the kitchen finished it; null while it is still on the board,
+    /// and null again if the kitchen brings it back. The order's only
+    /// kitchen state: never shown to the customer, never changes what the
+    /// order costs.
     /// </summary>
-    public PreparationStatus Preparation { get; private set; }
-
-    /// <summary>When the kitchen started on it (null until Preparing).</summary>
-    public DateTime? PreparingAt { get; private set; }
-
-    /// <summary>When the kitchen finished it (cleared again by a recall).</summary>
     public DateTime? ReadyAt { get; private set; }
+
+    public bool IsReady => ReadyAt != null;
 
     public static Order NewDraft()
     {
@@ -369,44 +367,26 @@ public class Order
     }
 
     /// <summary>
-    /// Move the order along in the kitchen. Allowed: NotStarted -> Preparing,
-    /// NotStarted -> Ready (one tap for a quick order), Preparing -> Ready,
-    /// and Ready -> Preparing as the recall for a card bumped too early. The
-    /// same state twice is a no-op, so two screens tapping the same card do
-    /// not race each other into an error. Nothing goes back to NotStarted,
-    /// and only a confirmed order is in the kitchen at all.
+    /// Mark the order ready in the kitchen, or bring a ready one back to the
+    /// board (a card bumped too early, or a remake). The same state twice is
+    /// a no-op, so two screens tapping the same card do not race each other
+    /// into an error. Only a confirmed order is in the kitchen at all.
     /// </summary>
-    public void SetPreparation(PreparationStatus target)
+    public void SetReady(bool ready)
     {
         if (OrderStatus != OrderStatus.Confirmed)
         {
-            throw new OrderingDomainException($"Cannot change preparation from status {OrderStatus}. Only a confirmed order is in the kitchen.");
+            throw new OrderingDomainException($"Cannot change kitchen state from status {OrderStatus}. Only a confirmed order is in the kitchen.");
         }
 
-        if (target == Preparation)
+        if (ready == IsReady)
         {
             return;
         }
 
-        switch (target)
-        {
-            case PreparationStatus.Preparing:
-                // Starting it, or recalling it from Ready; the first start time stays
-                Preparation = PreparationStatus.Preparing;
-                PreparingAt ??= DateTime.UtcNow;
-                ReadyAt = null;
-                break;
+        ReadyAt = ready ? DateTime.UtcNow : null;
 
-            case PreparationStatus.Ready:
-                Preparation = PreparationStatus.Ready;
-                ReadyAt = DateTime.UtcNow;
-                break;
-
-            default:
-                throw new OrderingDomainException("An order in the kitchen cannot go back to not started.");
-        }
-
-        AddDomainEvent(new OrderPreparationChangedDomainEvent(Id, BranchId, Preparation));
+        AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
     }
 
     /// <summary>

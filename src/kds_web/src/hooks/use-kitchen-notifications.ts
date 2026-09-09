@@ -12,7 +12,7 @@ type OrderStatusChangedEvent = {
   orderId?: number
   buyerName?: string | null
   branchId?: number
-  preparation?: string
+  isReady?: boolean
 }
 
 // Order events go to every staff connection, but the board is
@@ -28,8 +28,8 @@ function isForActiveBranch(event: OrderStatusChangedEvent): boolean {
  * authenticated layout). Joins the staff ("admin") group and maps every
  * OrderStatusChanged to a refetch of the board — a chime on top when an
  * order is confirmed, which is the moment it reaches the kitchen. Another
- * screen's Start / Ready / Recall arrives the same way (type
- * `order_preparation`), so two screens never disagree for long.
+ * screen's Ready / Bring back arrives the same way (type `order_ready`), so
+ * two screens never disagree for long.
  *
  * Trimmed copy of pos_web's use-pos-notifications with the same reconnect
  * hardening (backoff start, rejoin on reconnect, restart when the tab

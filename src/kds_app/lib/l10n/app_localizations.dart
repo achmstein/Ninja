@@ -176,24 +176,6 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
-  /// No description provided for @laneNew.
-  ///
-  /// In en, this message translates to:
-  /// **'New'**
-  String get laneNew;
-
-  /// No description provided for @laneInProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'In progress'**
-  String get laneInProgress;
-
-  /// No description provided for @laneReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready'**
-  String get laneReady;
-
   /// No description provided for @noOrders.
   ///
   /// In en, this message translates to:
@@ -206,23 +188,35 @@ abstract class AppLocalizations {
   /// **'New orders show up here the moment they are confirmed.'**
   String get noOrdersHint;
 
-  /// No description provided for @start.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get start;
-
   /// No description provided for @ready.
   ///
   /// In en, this message translates to:
   /// **'Ready'**
   String get ready;
 
-  /// No description provided for @recall.
+  /// No description provided for @history.
   ///
   /// In en, this message translates to:
-  /// **'Recall'**
-  String get recall;
+  /// **'History'**
+  String get history;
+
+  /// No description provided for @historyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders marked ready today, newest first. Bring one back to put it on the board again.'**
+  String get historyHint;
+
+  /// No description provided for @noHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing ready yet today'**
+  String get noHistory;
+
+  /// No description provided for @bringBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring back'**
+  String get bringBack;
 
   /// No description provided for @counter.
   ///

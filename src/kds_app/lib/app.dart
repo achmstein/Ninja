@@ -108,7 +108,7 @@ class _ChillaxKdsAppState extends ConsumerState<ChillaxKdsApp> with WidgetsBindi
     }
 
     // Every order event moves something on the board — a confirmation lands
-    // a card in New, a preparation change on another screen moves one, a
+    // a card, a Ready or Bring back on another screen moves one, a
     // cancellation removes one. Only a confirmation is worth a sound.
     _signalRSubscriptions.add(
       signalR.onOrderStatusChanged.listen((event) {

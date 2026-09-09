@@ -126,11 +126,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
 
     public async Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId)
     {
-        var now = DateTime.UtcNow;
-        // A card left on the board overnight is stale, not work
-        var confirmedSince = now.AddHours(-24);
-        // Ready cards linger long enough to be recalled, then clear themselves
-        var readySince = now.AddMinutes(-30);
+        // A card left on the board overnight is stale, not work; ready orders
+        // stay in the same window as the day's history the screen can recall from
+        var confirmedSince = DateTime.UtcNow.AddHours(-24);
 
         return await context.Orders
             .AsNoTracking()
@@ -138,16 +136,12 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
             // Confirmed before the kitchen display existed: not its business
             .Where(o => o.ConfirmedAt != null && o.ConfirmedAt >= confirmedSince)
-            .Where(o => o.Preparation != Ordering.Domain.AggregatesModel.OrderAggregate.PreparationStatus.Ready
-                        || o.ReadyAt >= readySince)
             .OrderBy(o => o.ConfirmedAt)
             .Select(o => new KitchenOrder
             {
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 ConfirmedAt = o.ConfirmedAt,
-                Preparation = o.Preparation.ToString(),
-                PreparingAt = o.PreparingAt,
                 ReadyAt = o.ReadyAt,
                 Source = o.Source.ToString(),
                 RoomName = o.RoomName,

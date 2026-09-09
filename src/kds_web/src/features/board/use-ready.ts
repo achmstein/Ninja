@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { setOrderPreparationMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import type { KitchenOrder, PreparationStatus } from '@/api/ordering/types.gen'
+import { setOrderReadyMutation } from '@/api/ordering/@tanstack/react-query.gen'
+import type { KitchenOrder } from '@/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -8,24 +8,24 @@ import { toast } from '@/lib/toast'
 const BOARD_KEY = [{ _id: 'getKitchenOrders' }]
 
 /**
- * Start / Ready / Recall, the one call the kitchen makes. Each carries a
- * fresh idempotency key: a double tap on a slow connection must not turn
- * into two commands (the backend treats a repeat as a no-op anyway).
+ * Ready / Bring back, the one call the kitchen makes. Each carries a fresh
+ * idempotency key: a double tap on a slow connection must not turn into two
+ * commands (the backend treats a repeat as a no-op anyway).
  *
- * The card moves lanes the instant it is tapped — optimistic, because a
- * barista with a hot cup in one hand does not wait for a round trip — and
+ * The card leaves the board the instant it is tapped — optimistic, because
+ * a barista with a hot cup in one hand does not wait for a round trip — and
  * the board refetches once the server has spoken, whichever way.
  */
-export function usePreparation() {
+export function useReady() {
   const t = useT()
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    ...setOrderPreparationMutation(),
+    ...setOrderReadyMutation(),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: BOARD_KEY })
       const orderNumber = Number(variables.path?.orderId)
-      const target = variables.body?.preparation
+      const ready = variables.body?.ready ?? false
       const previous = queryClient.getQueriesData<KitchenOrder[]>({
         queryKey: BOARD_KEY,
       })
@@ -33,15 +33,7 @@ export function usePreparation() {
       queryClient.setQueriesData<KitchenOrder[]>({ queryKey: BOARD_KEY }, (old) =>
         old?.map((order) =>
           Number(order.orderNumber) === orderNumber
-            ? {
-                ...order,
-                preparation: target,
-                preparingAt:
-                  target === 'Preparing'
-                    ? (order.preparingAt ?? nowIso)
-                    : order.preparingAt,
-                readyAt: target === 'Ready' ? nowIso : null,
-              }
+            ? { ...order, readyAt: ready ? nowIso : null }
             : order
         )
       )
@@ -58,10 +50,10 @@ export function usePreparation() {
     },
   })
 
-  const setPreparation = (orderNumber: number, preparation: PreparationStatus) =>
+  const setReady = (orderNumber: number, ready: boolean) =>
     mutation.mutate({
       path: { orderId: orderNumber },
-      body: { preparation },
+      body: { ready },
       headers: { 'x-requestid': crypto.randomUUID() },
       query: { 'api-version': API_VERSION },
     })
@@ -71,5 +63,5 @@ export function usePreparation() {
     ? Number(mutation.variables?.path?.orderId)
     : null
 
-  return { setPreparation, actingOrderNumber }
+  return { setReady, actingOrderNumber }
 }
