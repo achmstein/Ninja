@@ -47,21 +47,25 @@ export function Board() {
         </div>
       ) : (
         <div className='min-h-0 flex-1 overflow-y-auto p-3'>
-          <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start gap-3'>
+          {/* Columns, not a grid: cards are as tall as their own order, and a
+              grid would pad every row out to its tallest card, leaving holes
+              under the short ones */}
+          <div className='columns-[16rem] gap-3'>
             {isLoading &&
               [0, 1, 2].map((i) => (
-                <Skeleton key={i} className='h-36 rounded-xl' />
+                <Skeleton key={i} className='mb-3 h-36 rounded-xl' />
               ))}
             {open.map((order) => {
               const id = Number(order.orderNumber)
               return (
-                <OrderCard
-                  key={id}
-                  order={order}
-                  nowMs={nowMs}
-                  isActing={actingOrderNumber === id}
-                  onReady={() => setReady(id, true)}
-                />
+                <div key={id} className='mb-3 break-inside-avoid'>
+                  <OrderCard
+                    order={order}
+                    nowMs={nowMs}
+                    isActing={actingOrderNumber === id}
+                    onReady={() => setReady(id, true)}
+                  />
+                </div>
               )
             })}
           </div>

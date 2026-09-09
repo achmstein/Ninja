@@ -60,20 +60,22 @@ export function HistoryDialog() {
               {t('noHistory')}
             </p>
           ) : (
-            <div className='grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] items-start gap-3'>
+            // Columns, as on the board: no holes under short cards
+            <div className='columns-[16rem] gap-3'>
               {finished.map((order) => {
                 const id = Number(order.orderNumber)
                 return (
-                  <OrderCard
-                    key={id}
-                    order={order}
-                    nowMs={nowMs}
-                    isActing={actingOrderNumber === id}
-                    onBringBack={() => {
-                      setReady(id, false)
-                      setOpen(false)
-                    }}
-                  />
+                  <div key={id} className='mb-3 break-inside-avoid'>
+                    <OrderCard
+                      order={order}
+                      nowMs={nowMs}
+                      isActing={actingOrderNumber === id}
+                      onBringBack={() => {
+                        setReady(id, false)
+                        setOpen(false)
+                      }}
+                    />
+                  </div>
                 )
               })}
             </div>

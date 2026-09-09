@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-/// The kitchen's card grid, as kds_web's `repeat(auto-fill, minmax(16rem,
-/// 1fr))`: as many columns as fit at [minCardWidth], cards top-aligned in
-/// each row and as tall as their own content, the whole thing scrolling.
+/// The kitchen's card grid, as kds_web's CSS columns: as many columns as
+/// fit at [minCardWidth], each card as tall as its own order, and every
+/// next card dropped into the shortest column — no holes under the short
+/// ones, which a row-aligned grid would leave.
 class OrderGrid extends StatelessWidget {
   final List<Widget> children;
   final double minCardWidth;
@@ -23,17 +25,13 @@ class OrderGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth - padding.horizontal;
         final columns = ((width + gap) / (minCardWidth + gap)).floor().clamp(1, 12);
-        final cardWidth = (width - gap * (columns - 1)) / columns;
-        return SingleChildScrollView(
+        return MasonryGridView.count(
           padding: padding,
-          child: Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            crossAxisAlignment: WrapCrossAlignment.start,
-            children: [
-              for (final child in children) SizedBox(width: cardWidth, child: child),
-            ],
-          ),
+          crossAxisCount: columns,
+          mainAxisSpacing: gap,
+          crossAxisSpacing: gap,
+          itemCount: children.length,
+          itemBuilder: (context, index) => children[index],
         );
       },
     );
