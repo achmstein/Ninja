@@ -474,6 +474,27 @@ jobs:
             done
 
             echo ""
+            echo "=== Reload the login theme if it changed ==="
+            # Keycloak caches theme templates in memory and keeps a
+            # pre-gzipped copy of every static file under data/tmp on its
+            # volume; Caddy asks upstream for gzip, so a changed stylesheet
+            # kept serving from that stale copy (2026-09-09). Clear the
+            # cache and restart only when the theme files actually changed.
+            THEME_SHA=$(find "$DEPLOY_DIR/keycloak-themes" -type f -exec sha256sum {} + | sort | sha256sum | cut -d' ' -f1)
+            if [ "$(cat "$DEPLOY_DIR/.keycloak-theme.sha" 2>/dev/null)" != "$THEME_SHA" ]; then
+              docker exec "$CONTAINER" sh -c 'rm -rf /opt/keycloak/data/tmp/kc-gzip-cache'
+              docker restart "$CONTAINER" > /dev/null
+              for i in $(seq 1 30); do
+                docker logs --since 2m "$CONTAINER" 2>&1 | grep -q "started in" && break
+                sleep 3
+              done
+              echo "$THEME_SHA" > "$DEPLOY_DIR/.keycloak-theme.sha"
+              echo "  Theme changed: gzip cache cleared, Keycloak restarted"
+            else
+              echo "  Theme unchanged"
+            fi
+
+            echo ""
             echo "=== Keycloak token exchange setup complete ==="
 
   notify:
