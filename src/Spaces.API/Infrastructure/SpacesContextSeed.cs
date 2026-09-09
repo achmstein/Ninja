@@ -39,14 +39,15 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<Sp
         {
             var tables = new List<Table>();
 
-            // El-Manshia (Branch 1)
-            for (var i = 1; i <= 8; i++)
+            // El-Manshia (Branch 1): four tables and the high chairs at the bar
+            for (var i = 1; i <= 4; i++)
             {
                 tables.Add(new Table($"Table {i}", 1, $"ترابيزة {i}"));
             }
+            tables.Add(new Table("High Chairs", 1, "الكراسي العالية"));
 
             // El-Benzina (Branch 2)
-            for (var i = 1; i <= 6; i++)
+            for (var i = 1; i <= 5; i++)
             {
                 tables.Add(new Table($"Table {i}", 2, $"ترابيزة {i}"));
             }
