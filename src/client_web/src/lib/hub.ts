@@ -5,6 +5,7 @@ import {
   type HubConnection,
 } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from 'react-oidc-context'
 import { getGuestId } from '@/stores/guest-store'
 import { getStoredUser } from './oidc'
 import { translate } from './i18n'
@@ -39,6 +40,20 @@ function ensureStarted(conn: HubConnection) {
 }
 
 /**
+ * The hub learns who is connected from the token sent at connect time, and
+ * puts a signed-in customer in their own group right then. A connection
+ * opened before sign-in completed (the app boots, then the code exchange
+ * lands) is anonymous for its whole life — so it is torn down and reopened
+ * whenever the signed-in user changes, sign-out included.
+ */
+async function restart(conn: HubConnection) {
+  if (conn.state !== HubConnectionState.Disconnected) {
+    await conn.stop().catch(() => {})
+  }
+  ensureStarted(conn)
+}
+
+/**
  * A signed-in customer is put in their own group by the hub on connect, from
  * the token. A guest has no token, so they ask to join the group named by the
  * guest id their browser holds — sent as an invocation rather than in the
@@ -62,6 +77,16 @@ function joinGuestGroup(conn: HubConnection): string | null {
  *  invalidations. */
 export function useHub() {
   const queryClient = useQueryClient()
+  const auth = useAuth()
+  const userId = auth.user?.profile.sub ?? null
+
+  // Reconnect as the user who just signed in (or as nobody, after sign-out).
+  // The first run is a plain start; only a change in identity restarts.
+  useEffect(() => {
+    const conn = getConnection()
+    if (conn.state === HubConnectionState.Disconnected) ensureStarted(conn)
+    else void restart(conn)
+  }, [userId])
 
   useEffect(() => {
     const conn = getConnection()
@@ -118,6 +143,11 @@ export function useHub() {
     joinIfNeeded()
     const guestGroupTimer = setInterval(joinIfNeeded, 2000)
 
+    // A start that failed (the token still being renewed, the network not
+    // yet back) is not retried by automatic reconnect, which only covers a
+    // drop of a connection that once was up — so keep trying until it is
+    const retryTimer = setInterval(() => ensureStarted(conn), 5000)
+
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') ensureStarted(conn)
     }
@@ -125,6 +155,7 @@ export function useHub() {
 
     return () => {
       clearInterval(guestGroupTimer)
+      clearInterval(retryTimer)
       document.removeEventListener('visibilitychange', handleVisibility)
       conn.off('OrderStatusChanged', onOrder)
       conn.off('RoomStatusChanged', onRoom)
