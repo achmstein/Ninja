@@ -468,6 +468,13 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                           ),
+                          RoomClock(
+                            session: activeSession,
+                            style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [FontFeature.tabularFigures()]),
+                          ),
+                          const SizedBox(width: 12),
                           Text('≈ ', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                           TimeSoFar(
                             session: activeSession,

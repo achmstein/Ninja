@@ -32,3 +32,31 @@ class _TimeSoFarState extends State<TimeSoFar> {
   Widget build(BuildContext context) =>
       Text(money(context, widget.session.estimate(DateTime.now()).amount), style: widget.style);
 }
+
+/// The session's elapsed wall time as a live hh:mm:ss clock, ticking on its
+/// own so the ticket around it does not rebuild every second. The counting
+/// "timer" the cashier watches; the cost beside it (TimeSoFar) steps only
+/// as the billed quarter-hours tick over.
+class RoomClock extends StatefulWidget {
+  final RoomSession session;
+  final TextStyle? style;
+
+  const RoomClock({super.key, required this.session, this.style});
+
+  @override
+  State<RoomClock> createState() => _RoomClockState();
+}
+
+class _RoomClockState extends State<RoomClock> {
+  late final Timer _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+
+  @override
+  void dispose() {
+    _clock.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(formatClock(widget.session.elapsedSeconds(DateTime.now())), style: widget.style);
+}
