@@ -1,20 +1,29 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../customers/services/customer_search_service.dart';
+import '../../sale/models/sale_line.dart';
+import '../../sale/pending_ticket_customer.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/open_ticket.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 
+const _searchDebounce = Duration(milliseconds: 300);
+const _minSearchLength = 2;
+
 /// Opens a counter tab: a bill with no place, named after whoever it is
-/// for. Tables open from their own row on the floor and rooms follow their
-/// sessions, so this is the one kind of bill that needs asking about.
+/// for. Typing looks up accounts — pick one to open the tab for them so the
+/// round goes on their tab, or just use the typed name for a walk-in. The
+/// name is optional; leave it blank for an unnamed tab.
 ///
 /// Resolves to the new ticket's id; the caller goes there.
 Future<int?> showNewTicketDialog(BuildContext context) {
@@ -34,13 +43,68 @@ class _NewTicketDialog extends ConsumerStatefulWidget {
 class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
   final _label = TextEditingController();
   bool _pending = false;
-  // A retry on café Wi-Fi must not become a second command
   final String _requestId = const Uuid().v4();
+
+  // The account this tab is being opened for, once one is picked
+  SaleCustomer? _picked;
+  Timer? _debounce;
+  String _search = '';
+  List<IdentityUser> _users = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _label.addListener(_onLabelChanged);
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _label.dispose();
     super.dispose();
+  }
+
+  void _onLabelChanged() {
+    // Typing after a pick means the cashier is choosing someone else
+    if (_picked != null) setState(() => _picked = null);
+    _debounce?.cancel();
+    _debounce = Timer(_searchDebounce, _runSearch);
+  }
+
+  Future<void> _runSearch() async {
+    final term = _label.text.trim();
+    final search = term.length >= _minSearchLength ? term : '';
+    if (search == _search) return;
+    _search = search;
+    if (search.isEmpty) {
+      if (mounted) setState(() => _users = const []);
+      return;
+    }
+    try {
+      final users = await ref.read(customerSearchServiceProvider).search(search);
+      if (!mounted || _search != search) return;
+      setState(() => _users = users);
+    } catch (_) {
+      if (mounted) setState(() => _users = const []);
+    }
+  }
+
+  void _pickAccount(IdentityUser user) {
+    setState(() {
+      _picked = SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber);
+      _users = const [];
+      _search = user.displayName;
+    });
+    _label.text = user.displayName;
+  }
+
+  void _clear() {
+    _label.clear();
+    setState(() {
+      _picked = null;
+      _users = const [];
+      _search = '';
+    });
   }
 
   Future<void> _open() async {
@@ -48,13 +112,16 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _pending = true);
     try {
-      final label = _label.text.trim();
-      final ticketId = await ref
-          .read(ticketsRepositoryProvider)
-          .openTicket(
+      final label = _picked?.name ?? _label.text.trim();
+      final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
             OpenTicketRequest(type: TicketType.counter, label: label.isEmpty ? null : label),
             requestId: _requestId,
           );
+      // Client-side link: remember the account so the sale pad pre-selects it
+      final picked = _picked;
+      if (picked?.id != null && picked!.id!.isNotEmpty) {
+        pendingTicketCustomer[ticketId] = picked;
+      }
       ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(ticketId);
@@ -69,8 +136,12 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    // Scrolls when the keyboard squeezes it: on a landscape tablet the
-    // keyboard leaves less height than even this dialog needs
+    final mark = TextStyle(
+      backgroundColor: theme.colors.primary.withValues(alpha: 0.15),
+      fontWeight: FontWeight.w700,
+    );
+    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+
     return DialogScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -93,12 +164,93 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                 ],
               ),
             ),
-            // No autofocus: the name is optional, so the keyboard waits for a
-            // deliberate tap rather than jumping up over the dialog.
+            // No autofocus: the name is optional; the keyboard waits for a tap.
             maxLines: 1,
             textInputAction: TextInputAction.done,
             onSubmit: (_) => _open(),
+            suffixBuilder: _label.text.isEmpty
+                ? null
+                : (context, style, _) => FTappable(
+                      onPress: _clear,
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 12),
+                        child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                      ),
+                    ),
           ),
+          // The account this round will go on, once picked
+          if (_picked?.id != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: theme.colors.secondary.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(10)),
+              child: Row(
+                children: [
+                  Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l10n.onCustomerTabHint(_picked!.name), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                ],
+              ),
+            ),
+          ] else if (_users.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 240),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final user = _users[index];
+                  final contact = user.contact;
+                  return FTappable(
+                    onPress: () => _pickAccount(user),
+                    builder: (context, states, child) => Container(
+                      constraints: const BoxConstraints(minHeight: 52),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: child,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(FIcons.userPlus, size: 20, color: theme.colors.mutedForeground),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text.rich(
+                                TextSpan(children: highlightSpans(user.displayName, matchRanges(user.displayName, _search), mark)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
+                              ),
+                              if (contact != null)
+                                Text.rich(
+                                  TextSpan(
+                                    children: highlightSpans(
+                                      contact,
+                                      user.phoneNumber?.isNotEmpty == true ? phoneRanges(contact, _search) : matchRanges(contact, _search),
+                                      mark,
+                                    ),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: muted,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

@@ -34,6 +34,7 @@ import '../../tickets/services/tickets_service.dart';
 import '../models/pos_order_request.dart';
 import '../models/sale_line.dart';
 import '../providers/sale_provider.dart';
+import '../pending_ticket_customer.dart';
 import '../widgets/cart_line_row.dart';
 import '../widgets/customer_dialog.dart';
 import '../widgets/customize_dialog.dart';
@@ -316,6 +317,11 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   /// then the session owner, then the only member. Null when the bill is
   /// already split across people — then the cashier says whose round it is.
   SaleCustomer? _defaultTicketCustomer(TicketDetail ticket, RoomSession? session) {
+    // A tab opened for an account (the new-tab dialog) pre-selects them so the
+    // round lands on their tab. One-shot: read once, then cleared.
+    final pending = pendingTicketCustomer.remove(ticket.id);
+    if (pending != null) return pending;
+
     final byId = <String, String>{};
     for (final line in ticket.lines) {
       final id = line.customerId;

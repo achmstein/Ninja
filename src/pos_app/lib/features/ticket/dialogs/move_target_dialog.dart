@@ -131,6 +131,15 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
             padding: const EdgeInsetsDirectional.only(start: 12),
             child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
           ),
+          suffixBuilder: _search.text.isEmpty
+              ? null
+              : (context, style, _) => FTappable(
+                    onPress: () => setState(() => _search.clear()),
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 12),
+                      child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                    ),
+                  ),
         ),
         const SizedBox(height: 12),
         if (visible.isEmpty)

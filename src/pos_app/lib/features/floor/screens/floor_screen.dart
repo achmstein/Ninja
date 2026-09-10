@@ -349,7 +349,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   }
 }
 
-class _Bills extends StatelessWidget {
+class _Bills extends StatefulWidget {
   final List<TicketSummary> bills;
   final List<Widget> above;
   final Set<int> waitingIds;
@@ -367,8 +367,40 @@ class _Bills extends StatelessWidget {
   });
 
   @override
+  State<_Bills> createState() => _BillsState();
+}
+
+class _BillsState extends State<_Bills> {
+  bool _searchOpen = false;
+  final _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _closeSearch() {
+    _search.clear();
+    setState(() => _searchOpen = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
+    final bills = widget.bills;
+    final above = widget.above;
+    final waitingIds = widget.waitingIds;
+    final clocks = widget.clocks;
+    final filter = widget.filter;
+    final onFilter = widget.onFilter;
     // Bills by last activity: what just happened is what the cashier is
     // about to be asked about
     final sorted = [...bills]
@@ -388,12 +420,19 @@ class _Bills extends StatelessWidget {
       _Filter.table: sorted.where((b) => b.type == TicketType.table).length,
       _Filter.counter: sorted.where((b) => b.type == TicketType.counter).length,
     };
-    final shown = switch (filter) {
+    final byType = switch (filter) {
       _Filter.all => sorted,
       _Filter.room => sorted.where((b) => b.type == TicketType.room).toList(),
       _Filter.table => sorted.where((b) => b.type == TicketType.table).toList(),
       _Filter.counter => sorted.where((b) => b.type == TicketType.counter).toList(),
     };
+    final q = _search.text.trim().toLowerCase();
+    final shown = q.isEmpty
+        ? byType
+        : byType.where((b) {
+            final name = (b.locationName?.localized(context) ?? b.label ?? '').toLowerCase();
+            return name.contains(q) || '${b.id}'.contains(q);
+          }).toList();
 
     return SingleChildScrollView(
       child: Column(
@@ -417,6 +456,38 @@ class _Bills extends StatelessWidget {
                     selected: filter == f,
                     onTap: () => onFilter(f),
                   ),
+              // Many bills open? A search that expands from an icon and takes
+              // the keyboard straight away, right after the filters.
+              if (sorted.length > 6)
+                _searchOpen
+                    ? SizedBox(
+                        width: 220,
+                        child: FTextField(
+                          control: FTextFieldControl.managed(controller: _search),
+                          hint: l10n.searchBills,
+                          autofocus: true,
+                          maxLines: 1,
+                          prefixBuilder: (context, style, _) => Padding(
+                            padding: const EdgeInsetsDirectional.only(start: 12),
+                            child: Icon(FIcons.search, size: 18, color: theme.colors.mutedForeground),
+                          ),
+                          suffixBuilder: (context, style, _) => FTappable(
+                            onPress: _closeSearch,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 12),
+                              child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                            ),
+                          ),
+                        ),
+                      )
+                    : SizedBox.square(
+                        dimension: 40,
+                        child: FButton.icon(
+                          variant: FButtonVariant.outline,
+                          onPress: () => setState(() => _searchOpen = true),
+                          child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
+                        ),
+                      ),
             ],
           ),
           const SizedBox(height: 12),

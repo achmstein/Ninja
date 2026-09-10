@@ -358,6 +358,10 @@
     }
   },
   "newTab": "حساب جديد",
+  "onCustomerTabHint": "على حساب {name}",
+  "@onCustomerTabHint": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "findCustomer": "دور على عميل",
   "newTabHint": "حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.",
   "ticketNumber": "حساب #{id}",

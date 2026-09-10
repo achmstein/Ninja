@@ -358,6 +358,10 @@
     }
   },
   "newTab": "New tab",
+  "onCustomerTabHint": "On {name}'s tab",
+  "@onCustomerTabHint": {
+    "placeholders": { "name": { "type": "String" } }
+  },
   "findCustomer": "Find customer",
   "newTabHint": "A counter bill with no table, for someone who will order in a moment.",
   "ticketNumber": "Ticket #{id}",
