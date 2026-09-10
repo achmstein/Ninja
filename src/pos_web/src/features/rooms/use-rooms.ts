@@ -97,6 +97,11 @@ export function useSession(
     ...getSessionOptions({ path: { sessionId: Number(sessionId) } }),
     enabled: enabled && sessionId != null,
     refetchInterval: 30_000,
+    // Always fetch fresh when a screen opens: a member added on another screen
+    // (or just now, before navigating straight into a new sale) must be on the
+    // roster without a page refresh.
+    refetchOnMount: 'always',
+    staleTime: 0,
   })
   return query.data
 }
