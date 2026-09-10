@@ -93,7 +93,8 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                 ],
               ),
             ),
-            autofocus: true,
+            // No autofocus: the name is optional, so the keyboard waits for a
+            // deliberate tap rather than jumping up over the dialog.
             maxLines: 1,
             textInputAction: TextInputAction.done,
             onSubmit: (_) => _open(),
