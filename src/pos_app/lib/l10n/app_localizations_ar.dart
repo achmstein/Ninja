@@ -643,6 +643,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moveTo => 'انقل إلى';
 
   @override
+  String get newBill => 'حساب جديد';
+
+  @override
+  String get moveToBill => 'انقل لحساب';
+
+  @override
+  String get searchBills => 'دور في الحسابات المفتوحة';
+
+  @override
+  String get noBillsToMoveTo => 'مفيش حسابات مفتوحة تانية';
+
+  @override
+  String get counterTabs => 'حسابات الكاونتر';
+
+  @override
+  String get whoseRound => 'الطلب ده لمين؟';
+
+  @override
+  String get someoneElse => 'حد تاني';
+
+  @override
   String get newTicketForPlace => 'حساب جديد لنفس المكان';
 
   @override

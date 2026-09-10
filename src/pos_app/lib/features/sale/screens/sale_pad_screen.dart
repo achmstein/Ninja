@@ -47,6 +47,11 @@ import '../widgets/item_tile.dart';
 /// Given a `ticketId` it is the same pad against a bill that is already on
 /// the floor: the order names that ticket, so Sales appends to it instead
 /// of opening a counter one, and the cashier lands back on the ticket.
+// Whose round the last add on a session went to, so the next round defaults
+// to the same person without re-picking. Keyed by session id; kept for the
+// life of the app run, which is a till's shift.
+final Map<int, SaleCustomer> _lastRoundBySession = {};
+
 class SalePadScreen extends ConsumerStatefulWidget {
   final int? ticketId;
 
@@ -305,11 +310,12 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     if (mounted) setState(() => _pendingOrderId = null);
   }
 
-  /// The one account this ticket is already for, so more items go onto it
-  /// without re-picking. Its lines' single account wins; failing that, a
-  /// room with a single member. Null when nobody, or more than one person,
-  /// is on the bill — then the cashier says whose round it is.
-  SaleCustomer? _singleTicketCustomer(TicketDetail ticket, RoomSession? session) {
+  /// Who this round should go to by default, so items keep landing on the
+  /// right account without re-picking. The single account already on the
+  /// bill wins. Otherwise, on a room: the person the last round went to,
+  /// then the session owner, then the only member. Null when the bill is
+  /// already split across people — then the cashier says whose round it is.
+  SaleCustomer? _defaultTicketCustomer(TicketDetail ticket, RoomSession? session) {
     final byId = <String, String>{};
     for (final line in ticket.lines) {
       final id = line.customerId;
@@ -319,11 +325,40 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       final entry = byId.entries.first;
       return SaleCustomer(id: entry.key, name: entry.value);
     }
-    if (byId.isEmpty && session != null) {
-      final roster = session.roster;
-      if (roster.length == 1) return SaleCustomer(id: roster.first.id, name: roster.first.name);
-    }
+    if (byId.isNotEmpty || session == null) return null;
+
+    final roster = session.roster;
+    if (roster.isEmpty) return null;
+    if (roster.length == 1) return SaleCustomer(id: roster.first.id, name: roster.first.name);
+
+    final last = _lastRoundBySession[session.id];
+    if (last?.id != null && roster.any((m) => m.id == last!.id)) return last;
+
+    final ownerId = session.members.where((m) => m.isOwner).map((m) => m.customerId).firstOrNull;
+    final owner = ownerId == null ? null : roster.where((m) => m.id == ownerId).firstOrNull;
+    if (owner != null) return SaleCustomer(id: owner.id, name: owner.name);
+
     return null;
+  }
+
+  // Attribute this round in a room: remember it for the next round, and put
+  // a newly named person onto the roster so their share needs a tab at settle
+  void _pickInRoom(SaleCustomer picked, RoomSession? session) {
+    ref.read(saleProvider.notifier).setCustomer(picked);
+    if (session != null && (picked.id ?? '').isNotEmpty) {
+      _lastRoundBySession[session.id] = picked;
+      if (!session.roster.any((m) => m.id == picked.id)) {
+        SessionActions(ref, context).addMember(session.id, picked.id!, picked.name);
+      }
+    }
+  }
+
+  // Someone not shown as a chip: the search, adding them to the room
+  Future<void> _chooseSomeoneElse(RoomSession? session) async {
+    final roster = session?.roster ?? const <({String id, String name})>[];
+    final picked = await showCustomerDialog(context, quickPicks: roster);
+    if (picked == null || !mounted) return;
+    _pickInRoom(picked, session);
   }
 
   @override
@@ -336,11 +371,15 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     final synced = sale.target == widget.ticketId;
     final lines = synced ? sale.lines : const <SaleLine>[];
     final customer = synced ? sale.customer : null;
+    final roster = roomSession?.roster ?? const <({String id, String name})>[];
+    // A room with more than one person: show whose-round chips instead of the
+    // plain picker, so attributing a round is one tap.
+    final showChips = _addingToTicket && roomSession != null && roster.length >= 2;
     if (_addingToTicket && synced && !_prefilledCustomer) {
       final ticket = ref.watch(ticketProvider(widget.ticketId!)).value;
       if (ticket != null) {
         _prefilledCustomer = true;
-        final only = _singleTicketCustomer(ticket, roomSession);
+        final only = _defaultTicketCustomer(ticket, roomSession);
         if (only != null && sale.customer == null && sale.lines.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) ref.read(saleProvider.notifier).setCustomer(only);
@@ -490,8 +529,21 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-                    child: customer != null
-                        ? Container(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (showChips) ...[
+                          _WhoseRoundChips(
+                            roster: roster,
+                            selectedId: customer?.id,
+                            onPick: (m) => _pickInRoom(SaleCustomer(id: m.id, name: m.name), roomSession),
+                            onSomeoneElse: () => _chooseSomeoneElse(roomSession),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        if (customer != null)
+                          Container(
                             padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
                             decoration: BoxDecoration(
                               color: theme.colors.secondary.withValues(alpha: 0.5),
@@ -530,7 +582,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                               ],
                             ),
                           )
-                        : SizedBox(
+                        else if (!showChips)
+                          SizedBox(
                             height: 48,
                             child: FButton(
                               variant: FButtonVariant.outline,
@@ -566,6 +619,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                               ),
                             ),
                           ),
+                      ],
+                    ),
                   ),
                   Expanded(
                     child: lines.isEmpty
@@ -659,5 +714,61 @@ class _CustomerPointsLine extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]));
+  }
+}
+
+/// "Whose round?" — the room's members as one-tap chips, the selected one
+/// filled, plus a "someone else" chip for a person not in the room yet.
+class _WhoseRoundChips extends StatelessWidget {
+  final List<({String id, String name})> roster;
+  final String? selectedId;
+  final void Function(({String id, String name}) member) onPick;
+  final VoidCallback onSomeoneElse;
+
+  const _WhoseRoundChips({
+    required this.roster,
+    required this.selectedId,
+    required this.onPick,
+    required this.onSomeoneElse,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(l10n.whoseRound, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final member in roster)
+              SizedBox(
+                height: 40,
+                child: FButton(
+                  variant: member.id == selectedId ? null : FButtonVariant.outline,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => onPick(member),
+                  child: Text(member.name.isEmpty ? l10n.guest : member.name, style: theme.typography.base.forButton),
+                ),
+              ),
+            SizedBox(
+              height: 40,
+              child: FButton(
+                variant: FButtonVariant.outline,
+                mainAxisSize: MainAxisSize.min,
+                onPress: onSomeoneElse,
+                prefix: Icon(FIcons.userPlus, size: 16, color: theme.colors.mutedForeground),
+                child: Text(l10n.someoneElse, style: theme.typography.base.forButton),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }

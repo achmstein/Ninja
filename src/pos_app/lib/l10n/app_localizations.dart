@@ -1178,6 +1178,48 @@ abstract class AppLocalizations {
   /// **'Move to'**
   String get moveTo;
 
+  /// No description provided for @newBill.
+  ///
+  /// In en, this message translates to:
+  /// **'New bill'**
+  String get newBill;
+
+  /// No description provided for @moveToBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to…'**
+  String get moveToBill;
+
+  /// No description provided for @searchBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Search open bills'**
+  String get searchBills;
+
+  /// No description provided for @noBillsToMoveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'No other open bills'**
+  String get noBillsToMoveTo;
+
+  /// No description provided for @counterTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter tabs'**
+  String get counterTabs;
+
+  /// No description provided for @whoseRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Whose round?'**
+  String get whoseRound;
+
+  /// No description provided for @someoneElse.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else'**
+  String get someoneElse;
+
   /// No description provided for @newTicketForPlace.
   ///
   /// In en, this message translates to:

@@ -638,6 +638,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveTo => 'Move to';
 
   @override
+  String get newBill => 'New bill';
+
+  @override
+  String get moveToBill => 'Move to…';
+
+  @override
+  String get searchBills => 'Search open bills';
+
+  @override
+  String get noBillsToMoveTo => 'No other open bills';
+
+  @override
+  String get counterTabs => 'Counter tabs';
+
+  @override
+  String get whoseRound => 'Whose round?';
+
+  @override
+  String get someoneElse => 'Someone else';
+
+  @override
   String get newTicketForPlace => 'New ticket for this place';
 
   @override

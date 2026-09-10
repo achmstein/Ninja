@@ -200,13 +200,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
   // Where the lines go: an open bill, a new tab or table, or a fresh ticket
   // for the same place (the split) when nothing else is named
-  Future<void> _move(TicketDetail ticket) async {
+  Future<void> _move(TicketDetail ticket, {required MoveMode mode}) async {
     final movable = ticket.lines.where((l) => l.source != 'SessionTime').length;
     final target = await showMoveTargetDialog(
       context,
       ticket: ticket,
       count: _selected.length,
       allSelected: _selected.length >= movable,
+      mode: mode,
     );
     if (target == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -558,7 +559,8 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
               onPrint: () => _print(ticket),
               onRefund: () => _refund(ticket),
               onAssign: () => _assign(ticket),
-              onMove: () => _move(ticket),
+              onMoveTo: () => _move(ticket, mode: MoveMode.move),
+              onNewBill: () => _move(ticket, mode: MoveMode.newBill),
             ),
           ),
       ],
@@ -974,7 +976,8 @@ class _ActionBar extends StatelessWidget {
   final VoidCallback onPrint;
   final VoidCallback onRefund;
   final VoidCallback onAssign;
-  final VoidCallback onMove;
+  final VoidCallback onMoveTo;
+  final VoidCallback onNewBill;
 
   const _ActionBar({
     required this.ticket,
@@ -987,7 +990,8 @@ class _ActionBar extends StatelessWidget {
     required this.onPrint,
     required this.onRefund,
     required this.onAssign,
-    required this.onMove,
+    required this.onMoveTo,
+    required this.onNewBill,
   });
 
   @override
@@ -1047,7 +1051,13 @@ class _ActionBar extends StatelessWidget {
                     icon: FIcons.userPlus,
                     padding: 8),
                 const SizedBox(width: 8),
-                big(l10n.moveLinesAction(selectedCount), onPress: selectedCount == 0 || busy ? null : onMove, padding: 12),
+                big(l10n.moveToBill,
+                    onPress: selectedCount == 0 || busy ? null : onMoveTo,
+                    variant: FButtonVariant.outline,
+                    icon: FIcons.arrowRightLeft,
+                    padding: 8),
+                const SizedBox(width: 8),
+                big(l10n.newBill, onPress: selectedCount == 0 || busy ? null : onNewBill, icon: FIcons.plus, padding: 8),
               ]
             : [big(l10n.settleAction, onPress: onSettle)];
 
