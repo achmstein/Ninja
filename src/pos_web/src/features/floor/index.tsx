@@ -27,7 +27,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { RoomPanel } from '@/features/rooms/room-panel'
+import { StartSessionDialog } from '@/features/rooms/start-session-dialog'
 import {
+  ROOM_AVAILABLE,
   elapsedSeconds,
   formatClock,
   isActive,
@@ -136,6 +138,9 @@ export function Floor() {
   const [findOpen, setFindOpen] = useState(false)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
+  // A free room has one thing to do: start the clock. It opens the
+  // single/multi choice directly; the panel is for rooms with more to see
+  const [startRoomId, setStartRoomId] = useState<number | null>(null)
   // A session just started in this room: its bill is being opened by Sales
   // on the event, and the till goes there the moment it shows up
   const [startedRoomId, setStartedRoomId] = useState<number | null>(null)
@@ -242,6 +247,17 @@ export function Floor() {
 
   const selectedRoom =
     rooms.find((room) => toNumber(room.id) === selectedRoomId) ?? null
+  const startRoom =
+    rooms.find((room) => toNumber(room.id) === startRoomId) ?? null
+  const pickRoom = (room: RoomViewModel) => {
+    const id = toNumber(room.id)
+    if (
+      Number(room.displayStatus) === ROOM_AVAILABLE &&
+      !sessionForRoom(room.id)
+    )
+      setStartRoomId(id)
+    else setSelectedRoomId(id)
+  }
 
   const pickTable = (table: TableViewModel) =>
     openTable.mutate({
@@ -280,7 +296,7 @@ export function Floor() {
           tickets={tickets}
           busy={openTable.isPending}
           onNewTab={() => setNewTabOpen(true)}
-          onPickRoom={(room: RoomViewModel) => setSelectedRoomId(toNumber(room.id))}
+          onPickRoom={pickRoom}
           onPickTable={pickTable}
         />
       </aside>
@@ -461,6 +477,17 @@ export function Floor() {
         }}
       />
       <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
+      <StartSessionDialog
+        room={startRoom}
+        onOpenChange={(open) => {
+          if (!open) setStartRoomId(null)
+        }}
+        onStarted={() => {
+          if (startRoomId == null) return
+          setStartedRoomId(startRoomId)
+          setStartRoomId(null)
+        }}
+      />
       <RoomPanel
         room={selectedRoom}
         session={selectedRoom ? sessionForRoom(selectedRoom.id) : undefined}

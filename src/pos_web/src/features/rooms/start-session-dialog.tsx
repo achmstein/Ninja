@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Play } from 'lucide-react'
+import { Clock, Loader2, Play } from 'lucide-react'
 import type { ReservationViewModel, RoomViewModel } from '@/api/spaces/types.gen'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,6 +48,15 @@ export function StartSessionDialog({
   useEffect(() => {
     if (!open) setPlayerMode('Single')
   }, [open])
+
+  // The room panel used to offer Reserve beside Start; a free room now
+  // opens this dialog directly, so it lives here for a walk-in
+  const reserve = () => {
+    if (!room) return
+    actions.reserve(toNumber(room.id), null, {
+      onSuccess: () => onOpenChange(false),
+    })
+  }
 
   const start = () => {
     if (!room) return
@@ -103,6 +112,18 @@ export function StartSessionDialog({
         </div>
 
         <DialogFooter className='gap-2'>
+          {!session && (
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-12 sm:me-auto'
+              disabled={actions.isBusy}
+              onClick={reserve}
+            >
+              <Clock className='size-5' />
+              {t('reserve')}
+            </Button>
+          )}
           <Button
             variant='outline'
             size='lg'
