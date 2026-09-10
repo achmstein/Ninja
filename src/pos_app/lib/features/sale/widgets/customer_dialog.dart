@@ -113,19 +113,18 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     // The letters that matched, marked, so the eye lands on the right Ahmed
     // without reading every row
-    final mark = TextStyle(
-      backgroundColor: theme.colors.primary.withValues(alpha: 0.15),
-      fontWeight: FontWeight.w700,
-    );
+    final mark = TextStyle(backgroundColor: theme.colors.primary.withValues(alpha: 0.15), fontWeight: FontWeight.w700);
 
     Widget centered(String text) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Text(text, textAlign: TextAlign.center, style: muted),
-        );
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Text(text, textAlign: TextAlign.center, style: muted),
+    );
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
-      child: Padding(
+      // The whole dialog scrolls when the keyboard squeezes it (half the
+      // screen on a landscape tablet); the results shrink-wrap inside it
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -148,8 +147,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => _pick(SaleCustomer(id: person.id, name: person.name)),
                         prefix: Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
-                        child: Text(person.name.isNotEmpty ? person.name : l10n.guest,
-                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+                        child: Text(
+                          person.name.isNotEmpty ? person.name : l10n.guest,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.typography.base.forButton,
+                        ),
                       ),
                     ),
                 ],
@@ -174,8 +177,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(l10n.useNameAction(typedName), maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: theme.typography.base.forButton.copyWith(fontWeight: FontWeight.w500)),
+                      Text(
+                        l10n.useNameAction(typedName),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.typography.base.forButton.copyWith(fontWeight: FontWeight.w500),
+                      ),
                       Text(l10n.noAccountNeeded, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                     ],
                   ),
@@ -183,85 +190,88 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
               ),
             ],
             const SizedBox(height: 8),
-            Flexible(
-              child: _search.isEmpty
-                  ? centered(l10n.typeToSearch)
-                  : _loading
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 32),
-                          child: Center(child: SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2))),
-                        )
-                      : _failed
-                          ? centered(l10n.somethingWentWrong)
-                          : _users.isEmpty
-                              ? centered(l10n.noCustomersFound)
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: _users.length,
-                                  itemBuilder: (context, index) {
-                                    final user = _users[index];
-                                    return Row(
-                                      children: [
-                                        Expanded(
-                                          child: FTappable(
-                                      onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber)),
-                                      builder: (context, states, child) => Container(
-                                        constraints: const BoxConstraints(minHeight: 56),
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                        decoration: BoxDecoration(
-                                          color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: child,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(FIcons.user, size: 20, color: theme.colors.mutedForeground),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text.rich(
-                                                  TextSpan(children: highlightSpans(user.displayName, matchRanges(user.displayName, _search), mark)),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
-                                                ),
-                                                if (user.contact case final contact?)
-                                                  Text.rich(
-                                                    TextSpan(
-                                                      children: highlightSpans(
-                                                        contact,
-                                                        user.phoneNumber?.isNotEmpty == true ? phoneRanges(contact, _search) : matchRanges(contact, _search),
-                                                        mark,
-                                                      ),
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: muted,
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                          ),
-                                        ),
-                                        // A look before the pick: points and tab, without attaching
-                                        SizedBox.square(
-                                          dimension: 44,
-                                          child: FButton.icon(
-                                            variant: FButtonVariant.ghost,
-                                            onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber),
-                                            child: Icon(FIcons.info, size: 20, color: theme.colors.mutedForeground),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
+            _search.isEmpty
+                ? centered(l10n.typeToSearch)
+                : _loading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                  )
+                : _failed
+                ? centered(l10n.somethingWentWrong)
+                : _users.isEmpty
+                ? centered(l10n.noCustomersFound)
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _users.length,
+                    itemBuilder: (context, index) {
+                      final user = _users[index];
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: FTappable(
+                              onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber)),
+                              builder: (context, states, child) => Container(
+                                constraints: const BoxConstraints(minHeight: 56),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-            ),
+                                child: child,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(FIcons.user, size: 20, color: theme.colors.mutedForeground),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text.rich(
+                                          TextSpan(
+                                            children: highlightSpans(user.displayName, matchRanges(user.displayName, _search), mark),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
+                                        ),
+                                        if (user.contact case final contact?)
+                                          Text.rich(
+                                            TextSpan(
+                                              children: highlightSpans(
+                                                contact,
+                                                user.phoneNumber?.isNotEmpty == true
+                                                    ? phoneRanges(contact, _search)
+                                                    : matchRanges(contact, _search),
+                                                mark,
+                                              ),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: muted,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // A look before the pick: points and tab, without attaching
+                          SizedBox.square(
+                            dimension: 44,
+                            child: FButton.icon(
+                              variant: FButtonVariant.ghost,
+                              onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber),
+                              child: Icon(FIcons.info, size: 20, color: theme.colors.mutedForeground),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
             const SizedBox(height: 16),
             SizedBox(
               height: 48,

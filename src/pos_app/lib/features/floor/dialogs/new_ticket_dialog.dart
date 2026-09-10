@@ -54,7 +54,9 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
     setState(() => _pending = true);
     try {
       final label = _label.text.trim();
-      final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
+      final ticketId = await ref
+          .read(ticketsRepositoryProvider)
+          .openTicket(
             OpenTicketRequest(type: TicketType.counter, label: label.isEmpty ? null : label),
             requestId: _requestId,
           );
@@ -72,7 +74,9 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
+    // Scrolls when the keyboard squeezes it: on a landscape tablet the
+    // keyboard leaves less height than even this dialog needs
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,

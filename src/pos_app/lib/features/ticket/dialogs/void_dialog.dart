@@ -76,7 +76,9 @@ class _VoidDialogState extends ConsumerState<_VoidDialog> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
+    // Scrolls when the keyboard squeezes it: on a landscape tablet the
+    // keyboard leaves less height than even this dialog needs
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
