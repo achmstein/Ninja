@@ -138,6 +138,18 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
   }
 
+  // Cash opens the drawer even though the receipt no longer prints by
+  // itself — the cashier needs to make change. Quiet if there is no printer
+  // (the drawer kicks through it) or it cannot be reached.
+  Future<void> _openDrawerForCash(List<SettlePayment> payments) async {
+    final service = ref.read(printServiceProvider);
+    if (!service.isConfigured) return;
+    if (!payments.any((p) => p.tender == PaymentTender.cash)) return;
+    try {
+      await service.kickDrawer();
+    } catch (_) {}
+  }
+
   Future<void> _print(SettleOutcome outcome, {bool auto = false}) async {
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -159,8 +171,8 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   }
 
   // The money is taken; the sale waits on the till for the network. The
-  // receipt prints now, with a number of the till's own, and the drawer
-  // opens for cash exactly as it would online.
+  // drawer opens for cash exactly as it would online; the receipt, with a
+  // number of the till's own, is a tap away on Print rather than automatic.
   Future<void> _settleOffline(OfflineSaleDraft draft) async {
     setState(() => _settling = true);
     try {
@@ -185,7 +197,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
       if (!mounted) return;
       final outcome = SettleOutcome(receiptNumber: 0, provisionalReceiptNumber: number, change: sale.change, payments: payments);
       setState(() => _result = outcome);
-      if (ref.read(printServiceProvider).isConfigured) _print(outcome, auto: true);
+      // Drawer for cash; the provisional receipt is on screen and one tap
+      // away on Print, but does not come out on its own.
+      _openDrawerForCash(payments);
     } finally {
       if (mounted) setState(() => _settling = false);
     }
@@ -254,9 +268,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
       if (!mounted) return;
       final outcome = SettleOutcome(receiptNumber: result.receiptNumber, change: result.change, payments: List.of(_payments));
       setState(() => _result = outcome);
-      // The receipt comes out by itself, and cash opens the drawer. A till
-      // with no printer stays quiet; one that cannot reach it says so.
-      if (ref.read(printServiceProvider).isConfigured) _print(outcome, auto: true);
+      // No paper by default — many single-item orders never need one. Cash
+      // still opens the drawer; the receipt waits for the Print button.
+      _openDrawerForCash(outcome.payments);
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
