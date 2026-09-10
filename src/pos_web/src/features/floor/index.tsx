@@ -147,6 +147,7 @@ export function Floor() {
   // on the event, and the till goes there the moment it shows up
   const [startedRoomId, setStartedRoomId] = useState<number | null>(null)
   const [billSearch, setBillSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   // The places column collapses so a busy floor gets the whole width; the
   // choice is remembered on this till (localStorage may be blocked — default open)
   const [placesOpen, setPlacesOpen] = useState(() => {
@@ -455,18 +456,34 @@ export function Floor() {
                   </Button>
                 )
               })}
-              {bills.length > 6 && (
-                <div className='relative ms-auto w-full sm:w-56'>
-                  <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
-                  <Input
-                    value={billSearch}
-                    onChange={(e) => setBillSearch(e.target.value)}
-                    placeholder={t('searchBills')}
-                    className='h-11 ps-9'
-                    autoComplete='off'
-                  />
-                </div>
-              )}
+              {bills.length > 6 &&
+                (searchOpen ? (
+                  <div className='relative w-full sm:w-56'>
+                    <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
+                    <Input
+                      autoFocus
+                      value={billSearch}
+                      onChange={(e) => setBillSearch(e.target.value)}
+                      onBlur={() => {
+                        if (!billSearch.trim()) setSearchOpen(false)
+                      }}
+                      placeholder={t('searchBills')}
+                      className='h-11 ps-9'
+                      autoComplete='off'
+                    />
+                  </div>
+                ) : (
+                  <Button
+                    type='button'
+                    size='icon'
+                    variant='outline'
+                    className='size-11 rounded-full'
+                    aria-label={t('searchBills')}
+                    onClick={() => setSearchOpen(true)}
+                  >
+                    <Search className='size-5' />
+                  </Button>
+                ))}
             </div>
 
             {/* Rounded cards cap at ~220px so a lone bill stays a normal card,
