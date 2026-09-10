@@ -46,7 +46,11 @@ class _ChillaxPosAppState extends ConsumerState<ChillaxPosApp> with WidgetsBindi
     // Sales rung up offline replay the moment the network is back — and at
     // start, in case the till was restarted while some were still waiting
     ref.listenManual(onlineProvider, (previous, next) {
-      if (next && previous == false) ref.read(offlineQueueProvider.notifier).drain();
+      if (next && previous == false) {
+        ref.read(offlineQueueProvider.notifier).drain();
+        // The hub may have given up while the network was out
+        ref.read(signalRServiceProvider).reconnectIfNeeded();
+      }
     });
     Future.microtask(() {
       if (ref.read(onlineProvider)) ref.read(offlineQueueProvider.notifier).drain();

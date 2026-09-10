@@ -12,6 +12,12 @@ class SignalRService {
   HubConnection? _hubConnection;
   bool _isConnecting = false;
 
+  /// Set from connect() until disconnect(): the app wants a hub. A hub that
+  /// closes on its own is reopened only while this holds.
+  bool _wanted = false;
+  Timer? _retry;
+  static const _retryAfter = Duration(seconds: 30);
+
   // Event streams for different update types
   final _roomStatusChanged = StreamController<Map<String, dynamic>>.broadcast();
   final _orderStatusChanged = StreamController<Map<String, dynamic>>.broadcast();
@@ -41,6 +47,7 @@ class SignalRService {
   Future<void> connect() async {
     if (_hubConnection != null || _isConnecting) return;
     _isConnecting = true;
+    _wanted = true;
 
     try {
       final hubUrl = '${AppConfig.bffBaseUrl}/hub/notifications';
@@ -65,8 +72,16 @@ class SignalRService {
       _register('TicketUpdated', _ticketUpdated);
       _register('CatalogChanged', _catalogChanged);
 
-      _hubConnection!.onclose(({error}) {
+      final hub = _hubConnection!;
+      hub.onclose(({error}) {
         debugPrint('SignalR connection closed: $error');
+        // Automatic reconnect gave up: the café Wi-Fi was out for minutes.
+        // A kiosk never leaves the foreground, so no resume will reopen the
+        // hub — schedule it here. A close we asked for has already been
+        // replaced (or cleared) and is left alone.
+        if (!identical(_hubConnection, hub)) return;
+        _hubConnection = null;
+        _scheduleRetry();
       });
 
       _hubConnection!.onreconnecting(({error}) {
@@ -81,12 +96,15 @@ class SignalRService {
 
       await _hubConnection!.start();
       debugPrint('SignalR connected to $hubUrl');
+      _retry?.cancel();
+      _retry = null;
 
       // Join admin and rooms groups on connect
       await _joinGroups();
     } catch (e) {
       debugPrint('SignalR connection failed: $e');
       _hubConnection = null;
+      _scheduleRetry();
     } finally {
       _isConnecting = false;
     }
@@ -119,29 +137,45 @@ class SignalRService {
     }
   }
 
-  /// Reconnect if the connection was lost (e.g. after app resumed from background)
+  /// Try again a little later, once, unless the app no longer wants a hub
+  void _scheduleRetry() {
+    if (!_wanted || _retry != null) return;
+    _retry = Timer(_retryAfter, () {
+      _retry = null;
+      reconnectIfNeeded();
+    });
+  }
+
+  /// Reconnect if the connection was lost: after the app resumed from the
+  /// background, after the network came back, or from the retry timer
   Future<void> reconnectIfNeeded() async {
-    if (_isConnecting) return;
+    if (!_wanted || _isConnecting) return;
     if (_hubConnection == null) {
       await connect();
       return;
     }
     if (_hubConnection!.state == HubConnectionState.Connected) return;
 
-    // Connection is dead — tear down and reconnect fresh
-    try { await _hubConnection?.stop(); } catch (_) {}
+    // Connection is dead — tear down and reconnect fresh. Clearing the field
+    // first tells the close handler this stop is ours.
+    final stale = _hubConnection!;
     _hubConnection = null;
+    try { await stale.stop(); } catch (_) {}
     await connect();
   }
 
   /// Disconnect from the SignalR hub
   Future<void> disconnect() async {
+    _wanted = false;
+    _retry?.cancel();
+    _retry = null;
+    final hub = _hubConnection;
+    _hubConnection = null;
     try {
-      await _hubConnection?.stop();
+      await hub?.stop();
     } catch (e) {
       debugPrint('SignalR disconnect error: $e');
     }
-    _hubConnection = null;
   }
 
   /// Dispose all resources

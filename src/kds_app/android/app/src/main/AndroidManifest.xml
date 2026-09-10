@@ -4,12 +4,6 @@
     <!-- The kitchen screen stays on all day (wakelock_plus) -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-    <!-- A landscape tablet app: phones are not a target -->
-    <supports-screens
-        android:smallScreens="false"
-        android:normalScreens="false"
-        android:largeScreens="true"
-        android:xlargeScreens="true"/>
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
 
     <application

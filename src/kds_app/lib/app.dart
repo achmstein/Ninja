@@ -38,6 +38,12 @@ class _ChillaxKdsAppState extends ConsumerState<ChillaxKdsApp> with WidgetsBindi
     WidgetsBinding.instance.addObserver(this);
     _initializeApp();
 
+    // The hub may have given up while the network was out; reopen it the
+    // moment the backend answers again
+    ref.listenManual(onlineProvider, (previous, next) {
+      if (next && previous == false) ref.read(signalRServiceProvider).reconnectIfNeeded();
+    });
+
     // When the kitchen signs in, load branches and connect SignalR
     ref.listenManual(authServiceProvider, (previous, next) {
       if (previous != null && !previous.isAuthenticated && next.isAuthenticated) {
