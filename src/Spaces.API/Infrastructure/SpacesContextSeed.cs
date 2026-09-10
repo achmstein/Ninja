@@ -42,14 +42,14 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<Sp
             // El-Manshia (Branch 1): four tables and the high chairs at the bar
             for (var i = 1; i <= 4; i++)
             {
-                tables.Add(new Table($"Table {i}", 1, $"ترابيزة {i}"));
+                tables.Add(new Table($"Table {i}", 1, $"ترابيزة {ArabicDigits(i)}"));
             }
             tables.Add(new Table("High Chairs", 1, "الكراسي العالية"));
 
             // El-Benzina (Branch 2)
             for (var i = 1; i <= 5; i++)
             {
-                tables.Add(new Table($"Table {i}", 2, $"ترابيزة {i}"));
+                tables.Add(new Table($"Table {i}", 2, $"ترابيزة {ArabicDigits(i)}"));
             }
 
             context.Tables.AddRange(tables);
@@ -57,4 +57,9 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<Sp
             logger.LogInformation("Seeded {NumTables} tables", tables.Count);
         }
     }
+    // Arabic-Indic numerals for the Arabic name, so a table reads ترابيزة ١
+    // the way the rooms read اوضة ١ rather than mixing Western digits in.
+    private static string ArabicDigits(int n) => n.ToString()
+        .Replace('0', '٠').Replace('1', '١').Replace('2', '٢').Replace('3', '٣').Replace('4', '٤')
+        .Replace('5', '٥').Replace('6', '٦').Replace('7', '٧').Replace('8', '٨').Replace('9', '٩');
 }
