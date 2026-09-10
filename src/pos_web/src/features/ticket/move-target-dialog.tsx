@@ -43,6 +43,9 @@ export type MoveTarget =
 
 type MoveTargetDialogProps = {
   open: boolean
+  /** 'new' shows only ways to open a fresh bill; 'move' the searchable list
+   *  of bills already open. Two focused screens instead of one long modal. */
+  mode: 'new' | 'move'
   onOpenChange: (open: boolean) => void
   ticket: TicketDetail
   /** How many lines are selected — the dialog only says what it will move. */
@@ -72,6 +75,7 @@ function Heading({ children }: { children: React.ReactNode }) {
  */
 export function MoveTargetDialog({
   open,
+  mode,
   onOpenChange,
   ticket,
   count,
@@ -83,9 +87,13 @@ export function MoveTargetDialog({
   const localized = useLocalized()
   const money = useMoney()
   const [label, setLabel] = useState('')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    if (!open) setLabel('')
+    if (!open) {
+      setLabel('')
+      setSearch('')
+    }
   }, [open])
 
   const { data: tickets = [] } = useQuery({
@@ -100,6 +108,22 @@ export function MoveTargetDialog({
   const others = tickets.filter(
     (candidate) => toNumber(candidate.id) !== toNumber(ticket.id)
   )
+  const q = search.trim().toLowerCase()
+  const visibleOthers = q
+    ? others.filter((target) => {
+        const title = (
+          localized(target.locationName) ||
+          target.label ||
+          ''
+        ).toLowerCase()
+        const type = (target.type ?? '').toLowerCase()
+        return (
+          title.includes(q) ||
+          type.includes(q) ||
+          String(toNumber(target.id)).includes(q)
+        )
+      })
+    : others
   const freeTables = tables.filter(
     (table) =>
       table.isActive !== false &&
@@ -120,17 +144,31 @@ export function MoveTargetDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[90svh] gap-3 overflow-y-auto sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('moveTo')}</DialogTitle>
+          <DialogTitle className='text-xl'>
+            {mode === 'new' ? t('newBill') : t('moveToBill')}
+          </DialogTitle>
           <DialogDescription className='text-base'>
             {t('moveLinesAction', { count })}
           </DialogDescription>
         </DialogHeader>
 
-        {others.length > 0 && (
+        {mode === 'move' && (
           <>
-            <Heading>{t('openBills')}</Heading>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('searchBills')}
+              className='h-12 text-base'
+              autoComplete='off'
+              autoFocus
+            />
+            {visibleOthers.length === 0 ? (
+              <p className='text-muted-foreground py-8 text-center text-sm'>
+                {t('noBillsToMoveTo')}
+              </p>
+            ) : (
             <div className='flex flex-col gap-2'>
-              {others.map((target) => {
+              {visibleOthers.map((target) => {
                 const Icon = typeIcon[target.type ?? ''] ?? ShoppingBag
                 const title =
                   localized(target.locationName) ||
@@ -161,9 +199,12 @@ export function MoveTargetDialog({
                 )
               })}
             </div>
+            )}
           </>
         )}
 
+        {mode === 'new' && (
+        <>
         <Heading>{t('newTicket')}</Heading>
         <div className='flex flex-col gap-2'>
           {/* A counter tab, named for whoever is taking their lines to the
@@ -228,6 +269,8 @@ export function MoveTargetDialog({
               ))}
             </div>
           </>
+        )}
+        </>
         )}
       </DialogContent>
     </Dialog>

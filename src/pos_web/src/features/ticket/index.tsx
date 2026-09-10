@@ -208,7 +208,7 @@ export function TicketScreen({
   const auth = useAuth()
 
   const [discardOpen, setDiscardOpen] = useState(false)
-  const [moveTargetOpen, setMoveTargetOpen] = useState(false)
+  const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
   const [refundOpen, setRefundOpen] = useState(false)
   const [settleOpen, setSettleOpen] = useState(false)
   const [settleGuardOpen, setSettleGuardOpen] = useState(false)
@@ -292,7 +292,7 @@ export function TicketScreen({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       toast.success(t('linesMoved'))
-      setMoveTargetOpen(false)
+      setMoveMode(null)
       setSelecting(false)
       setSelectedIds(new Set())
       navigate({
@@ -884,15 +884,24 @@ export function TicketScreen({
                   {t('assignCustomer')}
                 </Button>
               <Button
+                variant='outline'
                 size='lg'
-                className='h-14 px-6 text-lg'
+                className='h-14 gap-2 px-5 text-lg'
                 disabled={selectedIds.size === 0 || moveLines.isPending}
-                onClick={() => setMoveTargetOpen(true)}
+                onClick={() => setMoveMode('move')}
+              >
+                {t('moveToBill')}
+              </Button>
+              <Button
+                size='lg'
+                className='h-14 gap-2 px-6 text-lg'
+                disabled={selectedIds.size === 0 || moveLines.isPending}
+                onClick={() => setMoveMode('new')}
               >
                 {moveLines.isPending && (
                   <Loader2 className='size-5 animate-spin' />
                 )}
-                {t('moveLinesAction', { count: selectedIds.size })}
+                {t('newBill')}
               </Button>
               </div>
             ) : (
@@ -922,8 +931,9 @@ export function TicketScreen({
         onOpenChange={setDiscardOpen}
       />
       <MoveTargetDialog
-        open={moveTargetOpen}
-        onOpenChange={setMoveTargetOpen}
+        open={moveMode !== null}
+        mode={moveMode ?? 'move'}
+        onOpenChange={(o) => !o && setMoveMode(null)}
         ticket={ticket}
         count={selectedIds.size}
         allSelected={selectedIds.size >= movableCount}
