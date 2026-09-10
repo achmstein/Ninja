@@ -768,6 +768,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get print => 'اطبع';
 
   @override
+  String get openBill => 'افتح الحساب';
+
+  @override
   String get done => 'تم';
 
   @override

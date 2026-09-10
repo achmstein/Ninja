@@ -1418,6 +1418,12 @@ abstract class AppLocalizations {
   /// **'Print'**
   String get print;
 
+  /// No description provided for @openBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Open bill'**
+  String get openBill;
+
   /// No description provided for @done.
   ///
   /// In en, this message translates to:

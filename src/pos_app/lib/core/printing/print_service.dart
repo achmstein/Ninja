@@ -7,6 +7,7 @@ import '../../features/shifts/models/shift.dart';
 import '../../features/shifts/widgets/shift_report_sheet.dart';
 import '../../features/tickets/models/ticket_detail.dart';
 import '../../l10n/app_localizations.dart';
+import 'brand_logo.dart';
 import 'escpos_builder.dart';
 import 'image_raster.dart';
 import 'network_escpos_printer.dart';
@@ -56,6 +57,7 @@ class PrintService {
       ticket: ticket,
       l10n: l10n,
       locale: locale,
+      logo: await _logo(),
       paymentsOverride: paymentsOverride,
       receiptNumberOverride: receiptNumberOverride,
       provisionalReceiptNumber: provisionalReceiptNumber,
@@ -65,7 +67,7 @@ class PrintService {
 
   Future<void> printTabPayment(TabPaymentSlip slip, {required AppLocalizations l10n, required Locale locale, bool kickDrawer = false}) async {
     final printer = _printer();
-    await printer.send(await _job(TabPaymentSheet(slip: slip, l10n: l10n, locale: locale), kickDrawer: kickDrawer));
+    await printer.send(await _job(TabPaymentSheet(slip: slip, l10n: l10n, locale: locale, logo: await _logo()), kickDrawer: kickDrawer));
   }
 
   Future<void> printShiftReport(ShiftView shift, {required AppLocalizations l10n, required Locale locale}) async {
@@ -75,10 +77,20 @@ class PrintService {
 
   Future<void> testPrint({required AppLocalizations l10n, required Locale locale}) async {
     final printer = _printer();
-    await printer.send(await _job(TestSheet(l10n: l10n, locale: locale)));
+    await printer.send(await _job(TestSheet(l10n: l10n, locale: locale, logo: await _logo())));
   }
 
   Future<void> kickDrawer() => _printer().send(EscPosBuilder().init().kickDrawer().toBytes());
+
+  /// The wordmark, or nothing if the asset cannot be decoded: the sheet
+  /// falls back to the name in text rather than the receipt not printing
+  Future<ui.Image?> _logo() async {
+    try {
+      return await brandLogo();
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<List<int>> _job(Widget sheet, {bool kickDrawer = false}) async {
     final image = await rasterizeWidget(sheet, width: receiptWidth);

@@ -11,6 +11,7 @@ import '../../../core/models/money.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
+import '../../receipt/receipt_preview_dialog.dart';
 import '../../tickets/models/settled_ticket_summary.dart';
 import '../../tickets/services/tickets_service.dart';
 
@@ -171,7 +172,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                       children: [
                         for (final (index, bill) in bills.indexed) ...[
                           if (index > 0) Container(height: 1, color: theme.colors.border),
-                          _ReceiptRow(bill: bill, onTap: () => context.go('/ticket/${bill.id}?from=receipts')),
+                          _ReceiptRow(bill: bill, onTap: () => showReceiptPreview(context, bill.id)),
                         ],
                       ],
                     ),

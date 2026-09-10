@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../core/theme/app_theme.dart';
@@ -44,6 +45,26 @@ class Paper extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The brand at the top of a sheet: the wordmark when it has been decoded,
+/// the name in bold text otherwise (a missing asset must never stop a
+/// receipt). The image is drawn at its decoded size, 1:1 with the dots.
+class BrandMark extends StatelessWidget {
+  final ui.Image? logo;
+  final String text;
+
+  const BrandMark({super.key, required this.logo, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final logo = this.logo;
+    if (logo == null) return Text(text, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: RawImage(image: logo, width: logo.width.toDouble(), height: logo.height.toDouble(), filterQuality: FilterQuality.none),
     );
   }
 }

@@ -442,6 +442,7 @@
     }
   },
   "print": "اطبع",
+  "openBill": "افتح الحساب",
   "done": "تم",
   "customerDetails": "تفاصيل العميل",
   "loyaltyPoints": "نقط الولاء",

@@ -763,6 +763,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get print => 'Print';
 
   @override
+  String get openBill => 'Open bill';
+
+  @override
   String get done => 'Done';
 
   @override

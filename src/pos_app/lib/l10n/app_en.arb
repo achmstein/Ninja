@@ -442,6 +442,7 @@
     }
   },
   "print": "Print",
+  "openBill": "Open bill",
   "done": "Done",
   "customerDetails": "Customer details",
   "loyaltyPoints": "Loyalty points",

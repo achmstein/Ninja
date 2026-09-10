@@ -67,7 +67,12 @@ export function ReceiptSheet({
     <div className='receipt-sheet'>
       {/* TODO(pos-plan phase 2): print the branch name once receipts carry it */}
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>{t('brandName')}</div>
+        {/* The wordmark, about half the paper wide, as the tablet till prints it */}
+        <img
+          src='/images/logo.png'
+          alt={t('brandName')}
+          style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
+        />
         {receiptNumber != null && (
           <div style={{ fontSize: 13, fontWeight: 600 }}>
             {t('receiptNumber', { number: toNumber(receiptNumber) })}

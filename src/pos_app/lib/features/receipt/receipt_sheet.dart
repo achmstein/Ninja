@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../core/models/money.dart';
 import '../../l10n/app_localizations.dart';
@@ -33,11 +34,15 @@ class ReceiptSheet extends StatelessWidget {
   /// the sale has been replayed
   final String? provisionalReceiptNumber;
 
+  /// The decoded wordmark; the name prints as text without it
+  final ui.Image? logo;
+
   const ReceiptSheet({
     super.key,
     required this.ticket,
     required this.l10n,
     required this.locale,
+    this.logo,
     this.paymentsOverride,
     this.receiptNumberOverride,
     this.provisionalReceiptNumber,
@@ -58,7 +63,7 @@ class ReceiptSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          Text(l10n.brandName, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
+          BrandMark(logo: logo, text: l10n.brandName),
           if (receiptNumber != null)
             Text(l10n.receiptNumber(receiptNumber), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
           if (provisional != null)
@@ -121,8 +126,9 @@ class ReceiptSheet extends StatelessWidget {
 class TestSheet extends StatelessWidget {
   final AppLocalizations l10n;
   final Locale locale;
+  final ui.Image? logo;
 
-  const TestSheet({super.key, required this.l10n, required this.locale});
+  const TestSheet({super.key, required this.l10n, required this.locale, this.logo});
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +136,7 @@ class TestSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          Text(l10n.brandName, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
+          BrandMark(logo: logo, text: l10n.brandName),
           Text(l10n.testPrintTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
           Text(sheetDate(DateTime.now(), locale), style: const TextStyle(fontSize: 22)),
         ]),

@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../core/models/money.dart';
 import '../../l10n/app_localizations.dart';
@@ -35,8 +36,9 @@ class TabPaymentSheet extends StatelessWidget {
   final TabPaymentSlip slip;
   final AppLocalizations l10n;
   final Locale locale;
+  final ui.Image? logo;
 
-  const TabPaymentSheet({super.key, required this.slip, required this.l10n, required this.locale});
+  const TabPaymentSheet({super.key, required this.slip, required this.l10n, required this.locale, this.logo});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,7 @@ class TabPaymentSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          Text(l10n.brandName, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
+          BrandMark(logo: logo, text: l10n.brandName),
           Text(l10n.tabPaymentSlip, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
           if (slip.number > 0)
             Text(l10n.tabPaymentNumber(slip.number), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
