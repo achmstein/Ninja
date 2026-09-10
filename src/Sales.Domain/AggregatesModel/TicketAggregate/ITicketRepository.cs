@@ -17,6 +17,14 @@ public interface ITicketRepository : IRepository<Ticket>
     Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId);
 
     /// <summary>
+    /// The open room ticket for a room in a branch, matched by room id when
+    /// given and otherwise by room name. The fallback for a confirmed order
+    /// that names its room but, from an older app build, carries no session
+    /// or room id — so it still lands on the room's bill, not a counter tab.
+    /// </summary>
+    Task<Ticket?> FindOpenRoomAsync(int branchId, int? roomId, LocalizedText? roomName);
+
+    /// <summary>
     /// The open counter ticket in a branch that already carries lines for a
     /// customer — by account, or by guest id for a guest — so a second
     /// order-ahead before they pay joins the first instead of opening a new

@@ -44,6 +44,33 @@ public class TicketRepository : ITicketRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task<Ticket?> FindOpenRoomAsync(int branchId, int? roomId, LocalizedText? roomName)
+    {
+        var open = await _context.Tickets
+            .Where(t => t.BranchId == branchId && t.Type == TicketType.Room && t.Status == TicketStatus.Open)
+            .ToListAsync();
+
+        // A room has at most one open ticket and room names are unique within a
+        // branch, so either key is unambiguous. LocationName is jsonb (awkward
+        // to compare in SQL) and there are only a handful of open room tickets,
+        // so the name match is done in memory.
+        if (roomId is int id)
+        {
+            var byId = open.FirstOrDefault(t => t.RoomId == id);
+            if (byId is not null) return byId;
+        }
+
+        if (roomName is { } name && !string.IsNullOrWhiteSpace(name.En))
+        {
+            return open.FirstOrDefault(t =>
+                t.LocationName is { } loc &&
+                (string.Equals(loc.En, name.En, StringComparison.OrdinalIgnoreCase) ||
+                 (loc.Ar is not null && name.Ar is not null && string.Equals(loc.Ar, name.Ar, StringComparison.Ordinal))));
+        }
+
+        return null;
+    }
+
     public async Task<bool> HasOrderAsync(int orderId)
         => await _context.Tickets.AnyAsync(t => t.Lines.Any(l => l.OrderId == orderId));
 

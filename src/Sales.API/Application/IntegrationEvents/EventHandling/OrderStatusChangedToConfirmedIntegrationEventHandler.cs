@@ -122,6 +122,24 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             return tableTicket ?? ticketRepository.Add(Ticket.OpenForTable(tableId, @event.TableName, @event.BranchId));
         }
 
+        // A room order from an older customer app build names its room but
+        // carries no session or room id (newer builds send the ids, matched
+        // above). Land it on the room's open ticket by name so it joins the
+        // session's bill instead of opening a stray counter tab in the
+        // customer's name.
+        if (@event.SessionId is null && @event.TableId is null &&
+            (@event.RoomId is not null || @event.RoomName is not null))
+        {
+            var roomTicket = await ticketRepository.FindOpenRoomAsync(@event.BranchId, @event.RoomId, @event.RoomName);
+            if (roomTicket is not null)
+            {
+                logger.LogInformation(
+                    "Order {OrderId} matched open room ticket {TicketId} by {Key}",
+                    @event.OrderId, roomTicket.Id, @event.RoomId is not null ? "room id" : "room name");
+                return roomTicket;
+            }
+        }
+
         // No destination: a counter sale keyed at the POS, or an order-ahead
         // that gets paid at the counter. A customer who orders again before
         // paying joins the counter tab already open for them — one bill to
