@@ -20,11 +20,23 @@ class TimeSoFar extends StatefulWidget {
 }
 
 class _TimeSoFarState extends State<TimeSoFar> {
-  late final Timer _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  Timer? _clock;
+
+  @override
+  void initState() {
+    super.initState();
+    // Started here, not as a `late final` field: a lazily-initialised field is
+    // only created on first read, which never happens in build, so the timer
+    // would not tick on a screen (the ticket detail) that has no 1s rebuild
+    // of its own.
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
-    _clock.cancel();
+    _clock?.cancel();
     super.dispose();
   }
 
@@ -48,11 +60,23 @@ class RoomClock extends StatefulWidget {
 }
 
 class _RoomClockState extends State<RoomClock> {
-  late final Timer _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  Timer? _clock;
+
+  @override
+  void initState() {
+    super.initState();
+    // Started here, not as a `late final` field: a lazily-initialised field is
+    // only created on first read, which never happens in build, so the timer
+    // would not tick on a screen (the ticket detail) that has no 1s rebuild
+    // of its own.
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
-    _clock.cancel();
+    _clock?.cancel();
     super.dispose();
   }
 
