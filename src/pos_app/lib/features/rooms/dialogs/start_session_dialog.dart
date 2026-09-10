@@ -40,6 +40,16 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
   String _playerMode = 'Single';
   bool _busy = false;
 
+  // Reserve instead: the room panel used to offer this beside Start, and a
+  // free room now opens this dialog directly
+  Future<void> _reserve() async {
+    setState(() => _busy = true);
+    final ok = await SessionActions(ref, context).reserve(widget.room.id);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) Navigator.of(context, rootNavigator: true).pop(false);
+  }
+
   Future<void> _start() async {
     setState(() => _busy = true);
     final actions = SessionActions(ref, context);
@@ -123,6 +133,19 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (session == null) ...[
+                SizedBox(
+                  height: 48,
+                  child: FButton(
+                    variant: FButtonVariant.outline,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: _busy ? null : _reserve,
+                    prefix: const Icon(FIcons.clock, size: 20),
+                    child: Text(l10n.reserve, style: theme.typography.base.forButton),
+                  ),
+                ),
+                const Spacer(),
+              ],
               SizedBox(
                 height: 48,
                 child: FButton(

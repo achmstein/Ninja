@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/open_ticket.dart';
@@ -17,15 +18,9 @@ import '../../tickets/services/tickets_service.dart';
 ///
 /// Resolves to the new ticket's id; the caller goes there.
 Future<int?> showNewTicketDialog(BuildContext context) {
-  return showFDialog<int>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => const _NewTicketDialog(),
-    ),
+  return showPosDialog<int>(
+    context,
+    builder: (context) => const _NewTicketDialog(),
   );
 }
 
@@ -76,8 +71,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
     final l10n = AppLocalizations.of(context)!;
     // Scrolls when the keyboard squeezes it: on a landscape tablet the
     // keyboard leaves less height than even this dialog needs
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return DialogScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

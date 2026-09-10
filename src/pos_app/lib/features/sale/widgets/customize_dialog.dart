@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../models/sale_line.dart';
@@ -14,15 +15,9 @@ import '../models/sale_line.dart';
 /// defaults only: the cashier is signed in, not the customer, so the saved
 /// preferences the customer app applies would be the wrong person's.
 Future<SaleLine?> showCustomizeDialog(BuildContext context, CatalogItem item) {
-  return showFDialog<SaleLine>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _CustomizeForm(item: item),
-    ),
+  return showPosDialog<SaleLine>(
+    context,
+    builder: (context) => _CustomizeForm(item: item),
   );
 }
 
@@ -112,8 +107,7 @@ class _CustomizeFormState extends State<_CustomizeForm> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      child: DialogScroll(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

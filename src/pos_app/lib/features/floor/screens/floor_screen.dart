@@ -18,6 +18,7 @@ import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../orders/providers/pending_orders_provider.dart';
 import '../../orders/widgets/pending_orders.dart';
 import '../../rooms/dialogs/room_panel.dart';
+import '../../rooms/dialogs/start_session_dialog.dart';
 import '../../rooms/models/room.dart';
 import '../../rooms/providers/rooms_provider.dart';
 import '../../rooms/status.dart';
@@ -132,8 +133,17 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     }
   }
 
+  // A free room has one thing to do: start the clock. Straight to the
+  // single/multi choice, no panel in between; the panel still opens for
+  // a room with a session or a reservation, where there is more to see.
   Future<void> _pickRoom(int roomId) async {
-    final started = await showRoomPanel(context, roomId);
+    final room = ref.read(roomsProvider).rooms.where((r) => r.id == roomId).firstOrNull;
+    final bool started;
+    if (room != null && room.status == RoomStatus.available) {
+      started = await showStartSessionDialog(context, room);
+    } else {
+      started = await showRoomPanel(context, roomId);
+    }
     if (started && mounted) await _openStartedRoomTicket(roomId);
   }
 

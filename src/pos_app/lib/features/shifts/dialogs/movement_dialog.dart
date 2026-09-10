@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
@@ -16,15 +17,9 @@ import '../widgets/amount_entry.dart';
 /// the reason is required — an unexplained drawer movement is exactly what
 /// the Z report exists to catch. Resolves to true once recorded.
 Future<bool> showMovementDialog(BuildContext context, int shiftId, CashMovementType type) async {
-  final recorded = await showFDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _MovementDialog(shiftId: shiftId, type: type),
-    ),
+  final recorded = await showPosDialog<bool>(
+    context,
+    builder: (context) => _MovementDialog(shiftId: shiftId, type: type),
   );
   return recorded ?? false;
 }
@@ -86,8 +81,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final title = widget.type == CashMovementType.payOut ? l10n.payOut : l10n.payIn;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return DialogScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

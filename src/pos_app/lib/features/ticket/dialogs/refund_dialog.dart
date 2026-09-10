@@ -7,6 +7,7 @@ import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../shifts/providers/shifts_provider.dart';
 import '../../tickets/models/enums.dart';
@@ -22,15 +23,9 @@ import '../../tickets/services/tickets_service.dart';
 /// answer is the one printed. Cash comes out of the drawer; a tab that paid
 /// can be credited instead. The reason is mandatory: it is the audit trail.
 Future<RefundResult?> showRefundDialog(BuildContext context, TicketDetail ticket) {
-  return showFDialog<RefundResult>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _RefundDialog(ticket: ticket),
-    ),
+  return showPosDialog<RefundResult>(
+    context,
+    builder: (context) => _RefundDialog(ticket: ticket),
   );
 }
 
@@ -171,8 +166,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      child: DialogScroll(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -5,6 +5,7 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/heading.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
 import '../../tables/models/cafe_table.dart';
@@ -27,15 +28,9 @@ Future<MoveTarget?> showMoveTargetDialog(
   required int count,
   required bool allSelected,
 }) {
-  return showFDialog<MoveTarget>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _MoveTargetDialog(ticket: ticket, count: count, allSelected: allSelected),
-    ),
+  return showPosDialog<MoveTarget>(
+    context,
+    builder: (context) => _MoveTargetDialog(ticket: ticket, count: count, allSelected: allSelected),
   );
 }
 
@@ -77,8 +72,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      child: DialogScroll(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
@@ -14,15 +15,9 @@ import '../../tickets/services/tickets_service.dart';
 /// trail left behind (the server refuses to void settled tickets).
 /// Resolves to true once voided; the caller leaves the screen.
 Future<bool> showVoidDialog(BuildContext context, int ticketId) async {
-  final voided = await showFDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _VoidDialog(ticketId: ticketId),
-    ),
+  final voided = await showPosDialog<bool>(
+    context,
+    builder: (context) => _VoidDialog(ticketId: ticketId),
   );
   return voided ?? false;
 }
@@ -78,8 +73,7 @@ class _VoidDialogState extends ConsumerState<_VoidDialog> {
     final l10n = AppLocalizations.of(context)!;
     // Scrolls when the keyboard squeezes it: on a landscape tablet the
     // keyboard leaves less height than even this dialog needs
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return DialogScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

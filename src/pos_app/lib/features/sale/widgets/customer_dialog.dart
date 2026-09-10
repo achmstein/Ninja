@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/services/customer_search_service.dart';
@@ -27,15 +28,9 @@ Future<SaleCustomer?> showCustomerDialog(
   List<({String id, String name})> quickPicks = const [],
   String? title,
 }) {
-  return showFDialog<SaleCustomer>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title),
-    ),
+  return showPosDialog<SaleCustomer>(
+    context,
+    builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title),
   );
 }
 
@@ -124,8 +119,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
       // The whole dialog scrolls when the keyboard squeezes it (half the
       // screen on a landscape tablet); the results shrink-wrap inside it
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      child: DialogScroll(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
