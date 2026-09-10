@@ -17,6 +17,14 @@ public interface ITicketRepository : IRepository<Ticket>
     Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId);
 
     /// <summary>
+    /// The open counter ticket in a branch that already carries lines for a
+    /// customer — by account, or by guest id for a guest — so a second
+    /// order-ahead before they pay joins the first instead of opening a new
+    /// tab. Null when they have none open (or nobody was identified).
+    /// </summary>
+    Task<Ticket?> FindOpenCounterForCustomerAsync(int branchId, string? customerId, string? guestId);
+
+    /// <summary>
     /// Whether any ticket already carries a confirmed order's lines — the
     /// dedupe for a redelivered confirmation, across tickets because the
     /// lines may have moved since they first landed.

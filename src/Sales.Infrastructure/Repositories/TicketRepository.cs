@@ -29,6 +29,21 @@ public class TicketRepository : ITicketRepository
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.TableId == tableId && t.BranchId == branchId && t.Status == TicketStatus.Open);
 
+    public async Task<Ticket?> FindOpenCounterForCustomerAsync(int branchId, string? customerId, string? guestId)
+    {
+        if (customerId is null && guestId is null) return null;
+
+        // The most recently touched one, should two ever exist (a cashier
+        // could have opened a walk-in tab for the same person meanwhile)
+        return await _context.Tickets
+            .Where(t => t.BranchId == branchId && t.Type == TicketType.Counter && t.Status == TicketStatus.Open)
+            .Where(t => t.Lines.Any(l =>
+                (customerId != null && l.CustomerId == customerId) ||
+                (guestId != null && l.GuestId == guestId)))
+            .OrderByDescending(t => t.LastActivityAt)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> HasOrderAsync(int orderId)
         => await _context.Tickets.AnyAsync(t => t.Lines.Any(l => l.OrderId == orderId));
 

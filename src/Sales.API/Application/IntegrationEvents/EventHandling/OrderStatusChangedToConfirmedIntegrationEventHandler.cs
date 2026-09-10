@@ -123,9 +123,20 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         }
 
         // No destination: a counter sale keyed at the POS, or an order-ahead
-        // that gets paid at the counter — either way its own one-shot ticket,
-        // named after whoever it is for when somebody was named. The account
-        // behind that name is on the lines, where settle looks for it.
+        // that gets paid at the counter. A customer who orders again before
+        // paying joins the counter tab already open for them — one bill to
+        // settle, not one per order. Nobody identified (an anonymous walk-in)
+        // means a fresh one-shot ticket, named after whoever it is for when
+        // somebody was named. The account behind that name is on the lines,
+        // where settle looks for it.
+        var buyerId = string.IsNullOrEmpty(@event.BuyerIdentityGuid) ? null : @event.BuyerIdentityGuid;
+        var own = await ticketRepository.FindOpenCounterForCustomerAsync(@event.BranchId, buyerId, @event.GuestId);
+        if (own is not null)
+        {
+            logger.LogInformation("Order {OrderId} joins the open counter ticket {TicketId} of its customer", @event.OrderId, own.Id);
+            return own;
+        }
+
         return ticketRepository.Add(Ticket.OpenForCounter(@event.BranchId, @event.CustomerName));
     }
 }
