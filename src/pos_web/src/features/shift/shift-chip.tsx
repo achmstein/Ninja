@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
@@ -20,13 +20,26 @@ export function ShiftChip() {
   const t = useT()
   const locale = useLocale()
   const [panelOpen, setPanelOpen] = useState(false)
-  const { shift, noShift } = useCurrentShift({ refetchInterval: 60_000 })
+  const { shift: liveShift, noShift: liveNoShift } = useCurrentShift({
+    refetchInterval: 60_000,
+  })
   const { paused } = useBranchFlags()
 
-  // Neither the shift nor the 404 has landed yet — the first load, or right
-  // after a branch switch resets every query. Hold the chip's place with a
-  // neutral placeholder so the header never flickers out and back.
-  if (!shift && !noShift) {
+  // Keep showing the last definite answer through any transient gap — a tab
+  // regaining focus refetches (and may briefly re-auth), a branch switch
+  // resets every query — so the chip never blinks out once it has loaded.
+  const lastRef = useRef<{ shift: typeof liveShift; noShift: boolean } | null>(
+    null
+  )
+  const settled = liveShift != null || liveNoShift
+  if (settled) lastRef.current = { shift: liveShift, noShift: liveNoShift }
+  const view = settled
+    ? { shift: liveShift, noShift: liveNoShift }
+    : lastRef.current
+
+  // Only the very first load, before any answer has ever arrived, holds the
+  // place with a neutral placeholder.
+  if (!view) {
     return (
       <Button variant='outline' className='h-12 gap-2 px-4' disabled>
         <span aria-hidden className='bg-muted-foreground/40 size-2 rounded-full' />
@@ -34,6 +47,7 @@ export function ShiftChip() {
       </Button>
     )
   }
+  const shift = view.shift
 
   const openedAt = shift?.openedAt
     ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
