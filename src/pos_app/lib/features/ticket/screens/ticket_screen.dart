@@ -340,7 +340,11 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // shows the running clock and guards the settle until then. The session
     // is read by id, not off the active list: once it has ended the bill is
     // still open, and the people in the room are still its account holders
-    final session = ticket.isOpen && ticket.sessionId != null ? ref.watch(sessionProvider(ticket.sessionId!)).value : null;
+    final sessionAsync = ticket.isOpen && ticket.sessionId != null ? ref.watch(sessionProvider(ticket.sessionId!)) : null;
+    final session = sessionAsync?.value;
+    // A room ticket whose session hasn't arrived yet: shimmer the room card in
+    // its place rather than showing nothing until it lands.
+    final sessionLoading = sessionAsync != null && !sessionAsync.hasValue;
     final activeSession = session != null && session.isActive ? session : null;
     // Ended, bill still open: the time has landed and the roster stays
     // editable so every share can find its tab
@@ -393,6 +397,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     onVoid: () => _voidGuarded(activeSession),
                   ),
                   const FDivider(),
+                  if (sessionLoading) ...[
+                    const _SessionCardSkeleton(),
+                    const SizedBox(height: 16),
+                  ],
                   if (activeSession != null) ...[
                     SessionBar(session: activeSession),
                     const SizedBox(height: 16),
@@ -1109,6 +1117,25 @@ class _ActionBar extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A shimmer stand-in for the room card while the session loads, so opening
+/// a room ticket shows the card's shape at once instead of a blank gap.
+class _SessionCardSkeleton extends StatelessWidget {
+  const _SessionCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Shimmer.fromColors(
+      baseColor: theme.colors.muted,
+      highlightColor: theme.colors.background,
+      child: Container(
+        height: 180,
+        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
