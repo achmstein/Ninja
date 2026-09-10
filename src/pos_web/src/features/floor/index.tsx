@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ReceiptText,
+  Search,
   ShoppingBag,
   ShoppingCart,
   UserSearch,
@@ -22,6 +23,7 @@ import type { TicketSummary } from '@/api/sales/types.gen'
 import { listTablesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
@@ -144,6 +146,7 @@ export function Floor() {
   // A session just started in this room: its bill is being opened by Sales
   // on the event, and the till goes there the moment it shows up
   const [startedRoomId, setStartedRoomId] = useState<number | null>(null)
+  const [billSearch, setBillSearch] = useState('')
   // The places column collapses so a busy floor gets the whole width; the
   // choice is remembered on this till (localStorage may be blocked — default open)
   const [placesOpen, setPlacesOpen] = useState(() => {
@@ -238,7 +241,14 @@ export function Floor() {
     Table: bills.filter((b) => b.type === 'Table').length,
     Counter: bills.filter((b) => b.type === 'Counter').length,
   }
-  const shownBills = filter === 'all' ? bills : bills.filter((b) => b.type === filter)
+  const billQuery = billSearch.trim().toLowerCase()
+  const shownBills = bills
+    .filter((b) => filter === 'all' || b.type === filter)
+    .filter((b) => {
+      if (!billQuery) return true
+      const name = (localized(b.locationName) || b.label || '').toLowerCase()
+      return name.includes(billQuery) || String(toNumber(b.id)).includes(billQuery)
+    })
   const waitingIds = new Set(
     bills
       .filter((b) => pendingForTicket(pending, b).length > 0)
@@ -418,6 +428,18 @@ export function Floor() {
           </div>
         ) : (
           <div className='flex flex-col gap-3'>
+            {bills.length > 6 && (
+              <div className='relative'>
+                <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2' />
+                <Input
+                  value={billSearch}
+                  onChange={(e) => setBillSearch(e.target.value)}
+                  placeholder={t('searchBills')}
+                  className='h-12 ps-10 text-base'
+                  autoComplete='off'
+                />
+              </div>
+            )}
             <div className='flex flex-wrap gap-2'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
                 if (key !== 'all' && counts[key] === 0) return null
