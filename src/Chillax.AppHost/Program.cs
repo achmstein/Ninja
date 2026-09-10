@@ -75,6 +75,13 @@ var catalogApi = builder.AddProject<Projects.Catalog_API>("catalog-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
+if (builder.ExecutionContext.IsPublishMode)
+{
+    // Picture links are absolute and reach phones and browsers: they must
+    // carry the public https host, not the scheme the BFF forwards (http).
+    catalogApi.WithEnvironment("CatalogOptions__PicBaseUrl", "https://api.chillax.site");
+}
+
 var orderingApi = builder.AddProject<Projects.Ordering_API>("ordering-api")
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(orderDb).WaitFor(orderDb)

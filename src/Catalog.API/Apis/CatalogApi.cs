@@ -1297,6 +1297,16 @@ public static class CatalogApi
 
     private static string GetBaseUrl(HttpContext httpContext)
     {
+        // The public address, when one is configured: behind Caddy and the
+        // YARP BFF the forwarded scheme arrives as the BFF's own (http), and
+        // picture links built from it are refused by iOS and by browsers on
+        // an https page. Production pins it; development derives it below.
+        var configured = httpContext.RequestServices.GetRequiredService<IOptions<CatalogOptions>>().Value.PicBaseUrl;
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.TrimEnd('/');
+        }
+
         var request = httpContext.Request;
 
         // Check for forwarded headers (when behind a reverse proxy like YARP)
