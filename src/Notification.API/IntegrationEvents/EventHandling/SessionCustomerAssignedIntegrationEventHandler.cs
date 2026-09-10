@@ -7,8 +7,9 @@ namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A customer was put on a session: every room screen refetches so the
-/// name appears at once. The customer's own phone is told through the
-/// member-joined event Spaces raises alongside this one.
+/// name appears at once, and the customer's own connection is told so
+/// their "my session" view updates wherever they are in the app. (Their
+/// phone's push comes from the member-joined event Spaces raises alongside.)
 /// </summary>
 public class SessionCustomerAssignedIntegrationEventHandler(
     IHubContext<NotificationHub> hubContext,
@@ -19,11 +20,13 @@ public class SessionCustomerAssignedIntegrationEventHandler(
         logger.LogInformation("Session {ReservationId} in room {RoomId} assigned to {CustomerId} - notifying rooms group",
             @event.ReservationId, @event.RoomId, @event.CustomerId);
 
-        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
+        var payload = new
         {
             type = "customer_assigned",
             roomId = @event.RoomId,
             reservationId = @event.ReservationId
-        });
+        };
+        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", payload);
+        await hubContext.Clients.Group($"user:{@event.CustomerId}").SendAsync("RoomStatusChanged", payload);
     }
 }

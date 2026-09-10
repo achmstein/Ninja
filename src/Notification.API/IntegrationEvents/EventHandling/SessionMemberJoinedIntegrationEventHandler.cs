@@ -1,19 +1,31 @@
 using Chillax.EventBus.Abstractions;
+using Chillax.Notification.API.Hubs;
 using Chillax.Notification.API.IntegrationEvents.Events;
 using Chillax.Notification.API.Model;
 using Chillax.Notification.API.Services;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
 
 public class SessionMemberJoinedIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
+    IHubContext<NotificationHub> hubContext,
     ILogger<SessionMemberJoinedIntegrationEventHandler> logger) : IIntegrationEventHandler<SessionMemberJoinedIntegrationEvent>
 {
     public async Task Handle(SessionMemberJoinedIntegrationEvent @event)
     {
         logger.LogInformation("Handling SessionMemberJoinedIntegrationEvent: ReservationId={ReservationId}, MemberId={MemberId}",
             @event.ReservationId, @event.MemberUserId);
+
+        // The member's open app (the web has no push) refetches its sessions
+        await hubContext.Clients.Group($"user:{@event.MemberUserId}").SendAsync("RoomStatusChanged", new
+        {
+            type = "member_joined",
+            roomId = @event.RoomId,
+            reservationId = @event.ReservationId
+        });
+
 
         // Get session notification subscription for the joining member
         var subscriptions = await context.Subscriptions
