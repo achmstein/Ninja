@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
 import { cn } from '@/lib/utils'
 import { useLocale, useT } from '@/lib/i18n'
@@ -22,7 +23,17 @@ export function ShiftChip() {
   const { shift, noShift } = useCurrentShift({ refetchInterval: 60_000 })
   const { paused } = useBranchFlags()
 
-  if (!shift && !noShift) return null
+  // Neither the shift nor the 404 has landed yet — the first load, or right
+  // after a branch switch resets every query. Hold the chip's place with a
+  // neutral placeholder so the header never flickers out and back.
+  if (!shift && !noShift) {
+    return (
+      <Button variant='outline' className='h-12 gap-2 px-4' disabled>
+        <span aria-hidden className='bg-muted-foreground/40 size-2 rounded-full' />
+        <Skeleton className='h-4 w-20' />
+      </Button>
+    )
+  }
 
   const openedAt = shift?.openedAt
     ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(

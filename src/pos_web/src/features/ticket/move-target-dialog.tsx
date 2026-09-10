@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -142,7 +143,12 @@ export function MoveTargetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] gap-3 overflow-y-auto sm:max-w-md'>
+      <DialogContent
+        className={cn(
+          'max-h-[90svh] gap-3 overflow-y-auto',
+          mode === 'move' ? 'sm:max-w-3xl' : 'sm:max-w-md'
+        )}
+      >
         <DialogHeader>
           <DialogTitle className='text-xl'>
             {mode === 'new' ? t('newBill') : t('moveToBill')}
@@ -167,38 +173,61 @@ export function MoveTargetDialog({
                 {t('noBillsToMoveTo')}
               </p>
             ) : (
-            <div className='flex flex-col gap-2'>
-              {visibleOthers.map((target) => {
-                const Icon = typeIcon[target.type ?? ''] ?? ShoppingBag
-                const title =
-                  localized(target.locationName) ||
-                  target.label ||
-                  typeLabel(target)
-                return (
-                  <Button
-                    key={String(target.id)}
-                    variant='outline'
-                    size='lg'
-                    className='h-14 justify-start gap-3 text-base'
-                    disabled={isPending}
-                    onClick={() =>
-                      onPick({ kind: 'ticket', ticketId: toNumber(target.id) })
-                    }
-                  >
-                    <Icon className='text-muted-foreground size-5 shrink-0' />
-                    <span className='flex min-w-0 flex-1 items-baseline gap-2 text-start'>
-                      <span className='truncate'>{title}</span>
-                      <span className='text-muted-foreground shrink-0 text-sm'>
-                        {typeLabel(target)} · #{toNumber(target.id)}
-                      </span>
-                    </span>
-                    <span className='shrink-0 tabular-nums'>
-                      {money(target.total)}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
+              <div className='flex flex-col gap-3'>
+                {(
+                  [
+                    { type: 'Room', label: t('rooms') },
+                    { type: 'Table', label: t('tables') },
+                    { type: 'Counter', label: t('counterTabs') },
+                  ] as const
+                ).map(({ type, label }) => {
+                  const group = visibleOthers.filter((x) => x.type === type)
+                  if (group.length === 0) return null
+                  const Icon = typeIcon[type] ?? ShoppingBag
+                  return (
+                    <div key={type}>
+                      <Heading>{label}</Heading>
+                      <div className='mt-1 grid grid-cols-2 gap-2 sm:grid-cols-3'>
+                        {group.map((target) => {
+                          const title =
+                            localized(target.locationName) ||
+                            target.label ||
+                            typeLabel(target)
+                          return (
+                            <button
+                              key={String(target.id)}
+                              type='button'
+                              disabled={isPending}
+                              onClick={() =>
+                                onPick({
+                                  kind: 'ticket',
+                                  ticketId: toNumber(target.id),
+                                })
+                              }
+                              className='hover:border-primary hover:bg-accent/50 flex flex-col gap-1 rounded-lg border p-3 text-start disabled:opacity-50'
+                            >
+                              <span className='flex items-center gap-2'>
+                                <Icon className='text-muted-foreground size-4 shrink-0' />
+                                <span className='truncate font-medium'>
+                                  {title}
+                                </span>
+                              </span>
+                              <span className='flex items-baseline justify-between gap-2'>
+                                <span className='text-muted-foreground text-xs'>
+                                  #{toNumber(target.id)}
+                                </span>
+                                <span className='font-semibold tabular-nums'>
+                                  {money(target.total)}
+                                </span>
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </>
         )}

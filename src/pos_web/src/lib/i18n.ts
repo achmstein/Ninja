@@ -281,6 +281,7 @@ const dictionary = {
   noPlaceMatches: { en: 'Nothing matches', ar: 'مفيش حاجة بالاسم ده' },
   everyPlaceHasABill: { en: 'Every room and table already has a bill', ar: 'كل الاوض والترابيزات عليها حسابات' },
   tables: { en: 'Tables', ar: 'الترابيزات' },
+  counterTabs: { en: 'Counter tabs', ar: 'حسابات الكاونتر' },
   freeTables: { en: 'Free tables', ar: 'ترابيزات فاضية' },
   openBills: { en: 'Open bills', ar: 'الحسابات المفتوحة' },
   allBills: { en: 'All', ar: 'الكل' },
