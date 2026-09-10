@@ -112,6 +112,15 @@ jobs:
           sed -i 's/^SALES_API_PORT=$/SALES_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^MOBILE_BFF_PORT=$/MOBILE_BFF_PORT=5000/' deploy-artifacts/.env
 
+          # Aspire also emits an empty *_API_IMAGE per service. The compose file
+          # names the images itself, so these are unused today; fill them with
+          # the same references so the guard below passes and they are right
+          # should a future Aspire start reading them.
+          for svc in catalog ordering spaces sales identity loyalty notification accounts branch; do
+            upper=$(echo "$svc" | tr a-z A-Z)
+            sed -i "s|^${upper}_API_IMAGE=$|${upper}_API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${svc}:latest|" deploy-artifacts/.env
+          done
+
           # A placeholder left empty becomes `expose: - ""`, and compose aborts
           # the whole rollout half-way (2026-09-09: postgres recreated, APIs
           # not). Refuse to ship an .env with any empty value.
