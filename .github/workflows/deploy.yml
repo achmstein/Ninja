@@ -372,13 +372,17 @@ jobs:
             echo "=== Shape the user profile like the app's registration form ==="
             # One Name field (firstName; lastName is admin-only), email and an
             # Egyptian mobile number, required of users but not of admins
-            # creating staff. Idempotent.
+            # creating staff. Email is NOT required here: registration already
+            # needs one (email is the username), and Apple sign-in creates
+            # accounts with no email field at all — a required email makes
+            # every later profile write on those accounts fail. Idempotent.
             docker exec "$CONTAINER" $KC get users/profile -r $REALM | python3 -c '
             import sys,json
             p=json.load(sys.stdin)
             by={a["name"]:a for a in p["attributes"]}
             first=by["firstName"]; first["displayName"]="${name}"; first["required"]={"roles":["user"]}
-            by["email"].setdefault("annotations",{})["inputType"]="html5-email"
+            email=by["email"]; email.pop("required",None)
+            email.setdefault("annotations",{})["inputType"]="html5-email"
             last=by["lastName"]; last.pop("required",None); last["permissions"]={"view":["admin"],"edit":["admin"]}
             phone=by.setdefault("phoneNumber",{"name":"phoneNumber","multivalued":False})
             phone.update({"displayName":"${phoneNumber}","required":{"roles":["user"]},
