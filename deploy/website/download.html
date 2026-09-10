@@ -36,7 +36,13 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.73c.18.09.38.14.58.14.2 0 .41-.05.6-.16l9.15-5.27-2.65-2.65-7.68 7.94zm-.63-1.82V2.09c0-.15.02-.29.05-.43L10.96 10l-8.36 8.64c-.03-.14-.05-.28-.05-.43v-.3zm1.2-20.73c-.18-.1-.37-.15-.57-.15-.21 0-.42.06-.61.17l7.65 7.91 2.68-2.68L3.75 1.18zM20.95 10.5l-3.2-1.84-3.05 3.15 3.08 3.08 3.17-1.83c.62-.36.99-1.02.99-1.72 0-.71-.37-1.37-.99-1.84z"/></svg>
         Google Play
       </a>
+      <a href="/apk/chillax.apk" class="store-btn" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Android APK
+      </a>
     </div>
+    <p class="text-sm text-muted" id="version" style="margin-top:1rem">&nbsp;</p>
+    <p class="text-sm text-muted">The APK is for Android phones without Google Play. Installing it over the Google Play version is not possible; uninstall that first.</p>
   </main>
 
   <footer>
@@ -49,5 +55,13 @@
       </nav>
     </div>
   </footer>
+  <script>
+    fetch('/apk/chillax.json', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        document.getElementById('version').textContent = 'APK version ' + v.version + ' (build ' + v.build + ') · ' + v.date;
+      })
+      .catch(function () {});
+  </script>
 </body>
 </html>

@@ -310,6 +310,22 @@ li {
   flex-shrink: 0;
 }
 
+.install-steps {
+  max-width: 32rem;
+  margin: 2.5rem auto 1rem;
+  padding-left: 1.25rem;
+  text-align: left;
+  color: var(--muted-foreground);
+}
+
+.install-steps li {
+  margin-bottom: 0.75rem;
+}
+
+.install-steps strong {
+  color: var(--foreground);
+}
+
 /* ---- Legal pages ---- */
 
 .legal h1 {

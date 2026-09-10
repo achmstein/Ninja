@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chillax POS for Android</title>
+  <meta name="description" content="Install the Chillax POS till app on a café tablet.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo"><img src="/logo.png" alt="Chillax"></a>
+      <nav>
+        <a href="/download.html">Download</a>
+        <a href="/support.html">Support</a>
+        <a href="/privacy.html">Privacy</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container download-page">
+    <h1>Chillax POS</h1>
+    <p>The till app for café tablets. Staff only.</p>
+    <p class="text-sm text-muted" id="version">&nbsp;</p>
+
+    <div class="store-buttons">
+      <a href="/apk/chillax-pos.apk" class="store-btn" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download APK
+      </a>
+    </div>
+
+    <ol class="install-steps">
+      <li>Open this page in Chrome on the tablet and tap <strong>Download APK</strong>.</li>
+      <li>Open the downloaded file. If Android asks, allow Chrome to install unknown apps, then go back and open it again.</li>
+      <li>To update later, download and install the new file the same way. The app keeps its settings and printer.</li>
+    </ol>
+    <p class="text-sm text-muted">A tablet with the Google Play version installed must uninstall it first. The two are signed differently and cannot update each other.</p>
+  </main>
+
+  <footer>
+    <div class="container">
+      <span>&copy; 2026 Chillax</span>
+      <nav>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/support.html">Support</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    fetch('/apk/chillax-pos.json', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        document.getElementById('version').textContent = 'Version ' + v.version + ' (build ' + v.build + ') · ' + v.date;
+      })
+      .catch(function () {});
+  </script>
+</body>
+</html>

@@ -109,6 +109,27 @@ jobs:
           name: client-app-android-aab
           path: src/client_app/build/app/outputs/bundle/release/app-release.aab
 
+      # The same signed build as an APK, for tablets and phones that install
+      # from chillax.site instead of Google Play. key.properties is still in
+      # place from the Fastlane step, so it carries the same upload signature.
+      - name: Build APK for direct download
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apk-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax.json
+
+      - name: Publish APK to chillax.site
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "src/client_app/build/apk-publish/*"
+          target: ${{ secrets.DEPLOY_PATH }}/website/apk
+          strip_components: 4
+
   build-android-admin:
     if: |
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'admin_app') &&
@@ -241,6 +262,27 @@ jobs:
           name: pos-app-android-aab
           path: src/pos_app/build/app/outputs/bundle/release/app-release.aab
 
+      # The same signed build as an APK, for tablets and phones that install
+      # from chillax.site instead of Google Play. key.properties is still in
+      # place from the Fastlane step, so it carries the same upload signature.
+      - name: Build APK for direct download
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apk-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-pos.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax-pos.json
+
+      - name: Publish APK to chillax.site
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "src/pos_app/build/apk-publish/*"
+          target: ${{ secrets.DEPLOY_PATH }}/website/apk
+          strip_components: 4
+
   build-android-kds:
     if: |
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'kds_app') &&
@@ -308,6 +350,27 @@ jobs:
           if-no-files-found: ignore
           name: kds-app-android-aab
           path: src/kds_app/build/app/outputs/bundle/release/app-release.aab
+
+      # The same signed build as an APK, for tablets and phones that install
+      # from chillax.site instead of Google Play. key.properties is still in
+      # place from the Fastlane step, so it carries the same upload signature.
+      - name: Build APK for direct download
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apk-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-kds.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax-kds.json
+
+      - name: Publish APK to chillax.site
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "src/kds_app/build/apk-publish/*"
+          target: ${{ secrets.DEPLOY_PATH }}/website/apk
+          strip_components: 4
 
   # ==========================================
   # iOS Builds (Fastlane + Match)
