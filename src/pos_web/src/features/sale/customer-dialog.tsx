@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Info, Loader2, User, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -99,6 +99,7 @@ export function CustomerDialog({
       )
       return response.data
     },
+    placeholderData: keepPreviousData,
     enabled: open && search.length > 0,
   })
 
@@ -177,7 +178,7 @@ export function CustomerDialog({
             <p className='text-muted-foreground py-8 text-center text-sm'>
               {t('typeToSearch')}
             </p>
-          ) : isFetching ? (
+          ) : isFetching && users.length === 0 ? (
             <div className='flex justify-center py-8'>
               <Loader2 className='text-muted-foreground size-6 animate-spin' />
             </div>

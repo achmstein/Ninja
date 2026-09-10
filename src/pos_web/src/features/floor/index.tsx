@@ -428,19 +428,7 @@ export function Floor() {
           </div>
         ) : (
           <div className='flex flex-col gap-3'>
-            {bills.length > 6 && (
-              <div className='relative'>
-                <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2' />
-                <Input
-                  value={billSearch}
-                  onChange={(e) => setBillSearch(e.target.value)}
-                  placeholder={t('searchBills')}
-                  className='h-12 ps-10 text-base'
-                  autoComplete='off'
-                />
-              </div>
-            )}
-            <div className='flex flex-wrap gap-2'>
+            <div className='flex flex-wrap items-center gap-2'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
                 if (key !== 'all' && counts[key] === 0) return null
                 const label =
@@ -467,6 +455,18 @@ export function Floor() {
                   </Button>
                 )
               })}
+              {bills.length > 6 && (
+                <div className='relative ms-auto w-full sm:w-56'>
+                  <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
+                  <Input
+                    value={billSearch}
+                    onChange={(e) => setBillSearch(e.target.value)}
+                    placeholder={t('searchBills')}
+                    className='h-11 ps-9'
+                    autoComplete='off'
+                  />
+                </div>
+              )}
             </div>
 
             {/* Rounded cards cap at ~220px so a lone bill stays a normal card,

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, User, UserPlus, X } from 'lucide-react'
 import { openTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
@@ -18,6 +23,7 @@ import { Label } from '@/components/ui/label'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
 
 type NewTicketDialogProps = {
@@ -85,10 +91,13 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
         '/api/identity/users',
-        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 8 } }
+        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } }
       )
       return response.data
     },
+    // Keep the previous matches on screen while the next query loads, so the
+    // list doesn't blank and rebind on every keystroke.
+    placeholderData: keepPreviousData,
     enabled: open && search.length > 0,
   })
 
@@ -180,7 +189,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
             </div>
           ) : (
             users.length > 0 && (
-              <div className='mt-1 flex flex-col gap-1'>
+              <div className='mt-1 flex max-h-64 flex-col gap-1 overflow-y-auto'>
                 {users.map((user) => (
                   <button
                     key={user.id}
@@ -192,12 +201,20 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
                   >
                     <UserPlus className='text-muted-foreground size-4 shrink-0' />
                     <span className='min-w-0 flex-1'>
+                      {/* The matched letters marked, so the eye lands on the
+                          right person without reading every row */}
                       <span className='block truncate font-medium'>
-                        {displayName(user)}
+                        <Highlight
+                          text={displayName(user)}
+                          ranges={matchRanges(displayName(user), label)}
+                        />
                       </span>
                       {user.phoneNumber && (
                         <span className='text-muted-foreground block truncate text-xs'>
-                          {user.phoneNumber}
+                          <Highlight
+                            text={user.phoneNumber}
+                            ranges={phoneRanges(user.phoneNumber, label)}
+                          />
                         </span>
                       )}
                     </span>
