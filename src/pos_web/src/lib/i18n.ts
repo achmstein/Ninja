@@ -348,6 +348,7 @@ const dictionary = {
   },
   chargeAction: { en: 'Charge', ar: 'حاسب' },
   clearSale: { en: 'Clear sale', ar: 'امسح البيع' },
+  clear: { en: 'Clear', ar: 'امسح' },
   sendingToKitchen: { en: 'Sending to kitchen…', ar: 'بيتبعت للمطبخ…' },
   orderAlreadyPlaced: {
     en: 'This order was already placed',

@@ -6,6 +6,7 @@ import {
   Plus,
   ShoppingBag,
   Split,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
@@ -160,14 +161,26 @@ export function MoveTargetDialog({
 
         {mode === 'move' && (
           <>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('searchBills')}
-              className='h-12 text-base'
-              autoComplete='off'
-              autoFocus
-            />
+            <div className='relative'>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('searchBills')}
+                className='h-12 pe-10 text-base'
+                autoComplete='off'
+                autoFocus
+              />
+              {search && (
+                <button
+                  type='button'
+                  aria-label={t('clear')}
+                  onClick={() => setSearch('')}
+                  className='text-muted-foreground hover:text-foreground absolute end-3 top-1/2 -translate-y-1/2'
+                >
+                  <X className='size-4' />
+                </button>
+              )}
+            </div>
             {visibleOthers.length === 0 ? (
               <p className='text-muted-foreground py-8 text-center text-sm'>
                 {t('noBillsToMoveTo')}

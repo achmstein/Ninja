@@ -11,6 +11,7 @@ import {
   ReceiptText,
   Search,
   ShoppingBag,
+  X,
   ShoppingCart,
   UserSearch,
   type LucideIcon,
@@ -468,9 +469,21 @@ export function Floor() {
                         if (!billSearch.trim()) setSearchOpen(false)
                       }}
                       placeholder={t('searchBills')}
-                      className='h-11 ps-9'
+                      className='h-11 ps-9 pe-9'
                       autoComplete='off'
                     />
+                    {billSearch && (
+                      <button
+                        type='button'
+                        aria-label={t('clear')}
+                        // Keep focus so clearing doesn't blur and collapse the box
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => setBillSearch('')}
+                        className='text-muted-foreground hover:text-foreground absolute end-2 top-1/2 -translate-y-1/2'
+                      >
+                        <X className='size-4' />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <Button

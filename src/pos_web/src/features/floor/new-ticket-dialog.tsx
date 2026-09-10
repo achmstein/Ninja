@@ -159,19 +159,34 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
               ({t('optional')})
             </span>
           </Label>
-          <Input
-            id='tab-label'
-            value={label}
-            onChange={(e) => {
-              setLabel(e.target.value)
-              if (picked) setPicked(null)
-            }}
-            className='h-12 text-base'
-            autoComplete='off'
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') openCounter()
-            }}
-          />
+          <div className='relative'>
+            <Input
+              id='tab-label'
+              value={label}
+              onChange={(e) => {
+                setLabel(e.target.value)
+                if (picked) setPicked(null)
+              }}
+              className='h-12 pe-10 text-base'
+              autoComplete='off'
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') openCounter()
+              }}
+            />
+            {label && (
+              <button
+                type='button'
+                aria-label={t('clear')}
+                onClick={() => {
+                  setLabel('')
+                  setPicked(null)
+                }}
+                className='text-muted-foreground hover:text-foreground absolute end-3 top-1/2 -translate-y-1/2'
+              >
+                <X className='size-4' />
+              </button>
+            )}
+          </div>
 
           {picked?.id ? (
             <div className='bg-accent/50 flex items-center gap-2 rounded-lg px-3 py-2 text-sm'>
