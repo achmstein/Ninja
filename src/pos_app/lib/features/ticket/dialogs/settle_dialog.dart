@@ -101,12 +101,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
   double get _changeDue => _round2(math.max(0, _paid + _entered - _total));
 
-  List<PaymentTender> get _tenders =>
-      _holders.isNotEmpty && widget.offline == null ? [...baseTenders, PaymentTender.account] : baseTenders;
+  List<PaymentTender> get _tenders => _holders.isNotEmpty && widget.offline == null ? [...baseTenders, PaymentTender.account] : baseTenders;
 
   // One account holder needs no choosing
-  _AccountHolder? get _chosenHolder =>
-      _accountHolder ?? (_holders.length == 1 ? _holders.first : null);
+  _AccountHolder? get _chosenHolder => _accountHolder ?? (_holders.length == 1 ? _holders.first : null);
 
   @override
   void initState() {
@@ -143,7 +141,9 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   Future<void> _print(SettleOutcome outcome, {bool auto = false}) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(printServiceProvider).printReceipt(
+      await ref
+          .read(printServiceProvider)
+          .printReceipt(
             widget.ticket,
             l10n: l10n,
             locale: Localizations.localeOf(context),
@@ -229,12 +229,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     if (amount <= 0) return;
     final holder = _tender == PaymentTender.account ? _chosenHolder : null;
     setState(() {
-      _payments.add(SettlePayment(
-        tender: _tender,
-        amount: amount,
-        customerId: holder?.id,
-        customerName: holder?.name,
-      ));
+      _payments.add(SettlePayment(tender: _tender, amount: amount, customerId: holder?.id, customerName: holder?.name));
       _accountHolder = null;
       // Prefill whatever is still owed for the next payment — never for a
       // tab: what goes on account is typed, share by share
@@ -281,173 +276,172 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     final brightness = Theme.of(context).brightness;
     final tabular = const [FontFeature.tabularFigures()];
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Header: what is being settled and how much
-        Container(
-          padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(l10n.settleTitle, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
-              const Spacer(),
-              Text(
-                money(context, _total),
-                style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+    // Cap the height and scroll: on a shorter tablet the keypad, holders and
+    // payment list together run past the dialog, and the confirm button was
+    // overflowing off the bottom.
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header: what is being settled and how much
+            Container(
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 12),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: theme.colors.border)),
               ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // How much and how: tender, amount, keypad
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TenderGrid(
-                      tenders: _tenders,
-                      selected: _tender,
-                      onSelect: _pickTender,
-                    ),
-                    // Whose tab. Always in view, even when there is only one
-                    // person to choose: a charge must never land on a tab
-                    // nobody saw.
-                    if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Text(l10n.whoseAccount, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                      const SizedBox(height: 8),
-                      for (final holder in _holders) ...[
-                        _HolderButton(
-                          holder: holder,
-                          chosen: _chosenHolder?.id == holder.id,
-                          showBalance: widget.offline == null,
-                          onChoose: () => _chooseHolder(holder),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ],
-                    const SizedBox(height: 12),
-                    // The amount being typed, always LTR
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Container(
-                        height: 56,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: theme.colors.muted,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _amountStr.isEmpty ? '0' : _amountStr,
-                          style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 48,
-                      child: FButton(
-                        variant: FButtonVariant.secondary,
-                        onPress: _entered > 0 ? _addPayment : null,
-                        child: Text(l10n.addPayment, style: theme.typography.base.forButton),
-                      ),
-                    ),
-                  ],
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(l10n.settleTitle, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  Text(
+                    money(context, _total),
+                    style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              // What has been taken and what is left
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_payments.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Text(
-                          l10n.noPaymentsYet,
-                          textAlign: TextAlign.center,
-                          style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
-                        ),
-                      )
-                    else
-                      for (final (index, payment) in _payments.indexed) ...[
-                        Container(
-                          padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
-                          decoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              FBadge(
-                                variant: FBadgeVariant.secondary,
-                                child: Text(
-                                  payment.customerName != null
-                                      ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
-                                      : tenderLabel(l10n, payment.tender),
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                money(context, payment.amount),
-                                style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
-                              ),
-                              const SizedBox(width: 4),
-                              SizedBox.square(
-                                dimension: 40,
-                                child: FButton.icon(
-                                  variant: FButtonVariant.ghost,
-                                  onPress: () => setState(() {
-                                    _payments.removeAt(index);
-                                    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
-                                  }),
-                                  child: const Icon(FIcons.x, size: 16),
-                                ),
-                              ),
-                            ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // How much and how: tender, amount, keypad
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TenderGrid(tenders: _tenders, selected: _tender, onSelect: _pickTender),
+                        // Whose tab. Always in view, even when there is only one
+                        // person to choose: a charge must never land on a tab
+                        // nobody saw.
+                        if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(l10n.whoseAccount, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                          const SizedBox(height: 8),
+                          for (final holder in _holders) ...[
+                            _HolderButton(
+                              holder: holder,
+                              chosen: _chosenHolder?.id == holder.id,
+                              showBalance: widget.offline == null,
+                              onChoose: () => _chooseHolder(holder),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ],
+                        const SizedBox(height: 12),
+                        // The amount being typed, always LTR
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Container(
+                            height: 56,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              _amountStr.isEmpty ? '0' : _amountStr,
+                              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
+                        NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 48,
+                          child: FButton(
+                            variant: FButtonVariant.secondary,
+                            onPress: _entered > 0 ? _addPayment : null,
+                            child: Text(l10n.addPayment, style: theme.typography.base.forButton),
+                          ),
+                        ),
                       ],
-                    const SizedBox(height: 8),
-                    _TotalsRow(
-                      label: l10n.remaining,
-                      value: money(context, _remaining),
-                      color: _remaining > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
                     ),
-                    if (_changeDue > 0)
-                      _TotalsRow(
-                        label: l10n.changeDue,
-                        value: money(context, _changeDue),
-                        color: AppColors.emerald(brightness),
-                      ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 56,
-                      child: FButton(
-                        onPress: _payments.isNotEmpty && _remaining <= 0 && !_settling ? _settle : null,
-                        child: Text(l10n.confirmSettle, style: theme.typography.lg.forButton),
-                      ),
+                  ),
+                  const SizedBox(width: 16),
+                  // What has been taken and what is left
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_payments.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              l10n.noPaymentsYet,
+                              textAlign: TextAlign.center,
+                              style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                            ),
+                          )
+                        else
+                          for (final (index, payment) in _payments.indexed) ...[
+                            Container(
+                              padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
+                              decoration: BoxDecoration(
+                                color: theme.colors.secondary.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  FBadge(
+                                    variant: FBadgeVariant.secondary,
+                                    child: Text(
+                                      payment.customerName != null
+                                          ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
+                                          : tenderLabel(l10n, payment.tender),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    money(context, payment.amount),
+                                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  SizedBox.square(
+                                    dimension: 40,
+                                    child: FButton.icon(
+                                      variant: FButtonVariant.ghost,
+                                      onPress: () => setState(() {
+                                        _payments.removeAt(index);
+                                        _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+                                      }),
+                                      child: const Icon(FIcons.x, size: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        const SizedBox(height: 8),
+                        _TotalsRow(
+                          label: l10n.remaining,
+                          value: money(context, _remaining),
+                          color: _remaining > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
+                        ),
+                        if (_changeDue > 0)
+                          _TotalsRow(label: l10n.changeDue, value: money(context, _changeDue), color: AppColors.emerald(brightness)),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 56,
+                          child: FButton(
+                            onPress: _payments.isNotEmpty && _remaining <= 0 && !_settling ? _settle : null,
+                            child: Text(l10n.confirmSettle, style: theme.typography.lg.forButton),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -470,10 +464,10 @@ class _HolderButton extends ConsumerWidget {
     final tab = showBalance ? ref.watch(tabAccountProvider(holder.id)) : null;
     final owed = tab?.value?.balance ?? 0;
     final owedText = tab?.when(
-            loading: () => '…',
-            error: (_, _) => null,
-            data: (account) => account == null ? l10n.noTab : l10n.owesAmount(money(context, owed > 0 ? owed : 0)),
-        );
+      loading: () => '…',
+      error: (_, _) => null,
+      data: (account) => account == null ? l10n.noTab : l10n.owesAmount(money(context, owed > 0 ? owed : 0)),
+    );
     final small = theme.typography.sm.forButton.copyWith(fontFeatures: tabular);
 
     return ConstrainedBox(
@@ -486,13 +480,16 @@ class _HolderButton extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (owedText != null)
-              Text(owedText, style: small.copyWith(color: !chosen && owed > 0 ? theme.colors.destructive : null)),
+            if (owedText != null) Text(owedText, style: small.copyWith(color: !chosen && owed > 0 ? theme.colors.destructive : null)),
             if (holder.subtotal > 0) Text(l10n.thisBill(money(context, holder.subtotal)), style: small),
           ],
         ),
-        child: Text(holder.name.isNotEmpty ? holder.name : l10n.guest,
-            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+        child: Text(
+          holder.name.isNotEmpty ? holder.name : l10n.guest,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.typography.base.forButton,
+        ),
       ),
     );
   }
@@ -539,21 +536,19 @@ class _SettledView extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final accountAmount = result.payments
-        .where((p) => p.tender == PaymentTender.account)
-        .fold<double>(0, (sum, p) => sum + p.amount);
+    final accountAmount = result.payments.where((p) => p.tender == PaymentTender.account).fold<double>(0, (sum, p) => sum + p.amount);
 
     Widget box(String label, String value, TextStyle valueStyle) => Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(14)),
-          child: Column(
-            children: [
-              Text(label, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-              Text(value, style: valueStyle),
-            ],
-          ),
-        );
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        children: [
+          Text(label, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(value, style: valueStyle),
+        ],
+      ),
+    );
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 448),
@@ -565,7 +560,11 @@ class _SettledView extends StatelessWidget {
           children: [
             const Icon(FIcons.circleCheck, size: 56, color: AppColors.emerald500),
             const SizedBox(height: 12),
-            Text(l10n.ticketSettled, textAlign: TextAlign.center, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              l10n.ticketSettled,
+              textAlign: TextAlign.center,
+              style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 12),
             Text(
               result.provisionalReceiptNumber != null
@@ -587,20 +586,30 @@ class _SettledView extends StatelessWidget {
                   children: [
                     Text(l10n.savedOffline, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text(l10n.savedOfflineHint, textAlign: TextAlign.center, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                    Text(
+                      l10n.savedOfflineHint,
+                      textAlign: TextAlign.center,
+                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                    ),
                   ],
                 ),
               ),
             ],
             if (result.change > 0) ...[
               const SizedBox(height: 12),
-              box(l10n.changeDue, money(context, result.change),
-                  theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+              box(
+                l10n.changeDue,
+                money(context, result.change),
+                theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+              ),
             ],
             if (accountAmount > 0) ...[
               const SizedBox(height: 12),
-              box(l10n.onCustomerTab, money(context, accountAmount),
-                  theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+              box(
+                l10n.onCustomerTab,
+                money(context, accountAmount),
+                theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+              ),
             ],
             const SizedBox(height: 20),
             Row(
