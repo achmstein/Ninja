@@ -14,6 +14,7 @@ import '../../tickets/models/enums.dart';
 import '../../tickets/models/move_lines.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
+import '../../../core/utils/bidi.dart';
 
 /// Where the selected lines go. Any bill already on the floor — the
 /// customer who ordered at a table and then took a room. Or a new one: a
@@ -104,7 +105,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
                         style: theme.typography.base.forButton,
                         children: [
                           TextSpan(
-                            text: '  ${ticketTypeLabel(l10n, target.type)} · #${target.id}',
+                            text: '  ${ticketTypeLabel(l10n, target.type)} · ${bidiIsolate('#${target.id}')}',
                             style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground),
                           ),
                         ],

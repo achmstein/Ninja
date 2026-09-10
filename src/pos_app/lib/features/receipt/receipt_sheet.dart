@@ -84,7 +84,8 @@ class ReceiptSheet extends StatelessWidget {
                 : '${_qty(line.qty)} × ${moneyWith(l10n, line.unitPrice)}',
             style: const TextStyle(fontSize: 20),
           ),
-          if (line.details != null && line.details!.isNotEmpty) Text(line.details!, style: const TextStyle(fontSize: 20)),
+          if (line.details?.getText(locale) case final details? when details.isNotEmpty)
+            Text(details, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 6),
         ],
         const SizedBox(height: 2),

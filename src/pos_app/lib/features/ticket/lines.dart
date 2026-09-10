@@ -18,7 +18,8 @@ List<TicketLineView> mergeIdenticalLines(List<TicketLineView> lines) {
       line.source,
       line.description?.en ?? '',
       line.description?.ar ?? '',
-      line.details ?? '',
+      line.details?.en ?? '',
+      line.details?.ar ?? '',
       line.unitPrice,
       line.discount,
     ]);

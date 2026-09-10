@@ -8,7 +8,8 @@ class TicketLineView {
   final String source;
   final int? orderId;
   final LocalizedText? description;
-  final String? details;
+  /// Chosen options, bilingual like the item name (Sales `LocalizedText`)
+  final LocalizedText? details;
   final double qty;
   final double unitPrice;
   final double discount;
@@ -38,7 +39,7 @@ class TicketLineView {
       source: json['source'] as String? ?? 'Order',
       orderId: json['orderId'] == null ? null : toInt(json['orderId']),
       description: LocalizedText.parseNullable(json['description']),
-      details: json['details'] as String?,
+      details: LocalizedText.parseNullable(json['details']),
       qty: toNumber(json['qty']),
       unitPrice: toNumber(json['unitPrice']),
       discount: toNumber(json['discount']),

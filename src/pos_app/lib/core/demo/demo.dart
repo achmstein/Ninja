@@ -27,6 +27,7 @@ import '../auth/auth_service.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../services/branch_service.dart';
+import '../../features/sale/models/sale_line.dart';
 
 /// Design-time mode: `flutter run --dart-define=POS_DEMO=true`.
 ///
@@ -176,10 +177,7 @@ class _DemoTicketsRepository implements TicketsRepository {
           id: _nextLine++,
           orderId: orderId,
           description: _lt(line.nameEn, line.nameAr),
-          details: [
-            for (final c in line.customizations) c.optionNameEn,
-            if (line.specialInstructions != null) line.specialInstructions!,
-          ].join(', ').let((d) => d.isEmpty ? null : d),
+          details: _details(line),
           qty: line.quantity.toDouble(),
           unitPrice: line.price,
           total: line.total,
@@ -411,9 +409,6 @@ class _DemoTicketsRepository implements TicketsRepository {
   }
 }
 
-extension<T> on T {
-  R let<R>(R Function(T) f) => f(this);
-}
 
 class _DemoOrderRepository implements OrderRepository {
   final _DemoTicketsRepository tickets;
@@ -464,7 +459,7 @@ class _DemoOrderRepository implements OrderRepository {
             id: tickets._nextLine++,
             orderId: order.id,
             description: item.productName,
-            details: item.customizationsDescription?.en,
+            details: item.customizationsDescription,
             qty: item.units.toDouble(),
             unitPrice: item.unitPrice,
             total: item.unitPrice * item.units,
@@ -899,12 +894,22 @@ class _DemoCatalogRepository implements CatalogRepository {
 
 LocalizedText _lt(String en, String ar) => LocalizedText.parse({'en': en, 'ar': ar});
 
+/// The chosen options in both languages, the note as typed — what Sales
+/// stores on a line from a real POS order
+LocalizedText? _details(SaleLine line) {
+  String join(Iterable<String> parts) => parts.where((s) => s.isNotEmpty).join(', ');
+  final note = line.specialInstructions ?? '';
+  final en = join([for (final c in line.customizations) c.optionNameEn, note]);
+  final ar = join([for (final c in line.customizations) c.optionNameAr ?? c.optionNameEn, note]);
+  return en.isEmpty && ar.isEmpty ? null : LocalizedText(en: en, ar: ar);
+}
+
 TicketLineView _line(int id, String en, String ar, double qty, double unitPrice,
         {String? details, String? customerId, String? customerName}) =>
     TicketLineView(
       id: id,
       description: _lt(en, ar),
-      details: details,
+      details: details == null ? null : LocalizedText.fromString(details),
       qty: qty,
       unitPrice: unitPrice,
       total: qty * unitPrice,

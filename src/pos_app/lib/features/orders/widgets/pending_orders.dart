@@ -12,6 +12,7 @@ import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 import '../status.dart';
 import 'order_detail_dialog.dart';
+import '../../../core/utils/bidi.dart';
 
 /// The queue of customer app orders waiting for a cashier's tap, wherever
 /// it is shown: sideways on the floor, stacked on the ticket they will land
@@ -177,7 +178,7 @@ class _PendingOrderCard extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    subtitle == null || subtitle.isEmpty ? '#${order.id}' : '#${order.id} · $subtitle',
+                    subtitle == null || subtitle.isEmpty ? '#${order.id}' : '${bidiIsolate('#${order.id}')} · $subtitle',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),

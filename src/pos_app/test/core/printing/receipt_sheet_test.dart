@@ -28,7 +28,7 @@ void main() {
     vatRate: 0.14,
     total: 126,
     lines: [
-      TicketLineView(id: 1, description: LocalizedText.parse({'en': 'Latte', 'ar': 'لاتيه'}), details: 'Oat milk', qty: 2, unitPrice: 50, total: 100),
+      TicketLineView(id: 1, description: LocalizedText.parse({'en': 'Latte', 'ar': 'لاتيه'}), details: LocalizedText.fromString('Oat milk'), qty: 2, unitPrice: 50, total: 100),
     ],
     payments: const [PaymentView(id: 1, tender: PaymentTender.cash, amount: 150)],
   );

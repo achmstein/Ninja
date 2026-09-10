@@ -104,6 +104,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     super.dispose();
   }
 
+  /// The chosen options in both languages (an option without an Arabic
+  /// name shows its English one), the note as typed
+  static LocalizedText? _details(SaleLine line) {
+    String join(Iterable<String> parts) => parts.where((s) => s.isNotEmpty).join(', ');
+    final note = line.specialInstructions ?? '';
+    final en = join([for (final c in line.customizations) c.optionNameEn, note]);
+    final ar = join([for (final c in line.customizations) c.optionNameAr ?? c.optionNameEn, note]);
+    return en.isEmpty && ar.isEmpty ? null : LocalizedText(en: en, ar: ar);
+  }
+
   Future<void> _tapItem(CatalogItem item) async {
     if (item.customizations.isNotEmpty) {
       final line = await showCustomizeDialog(context, item);
@@ -222,10 +232,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
           TicketLineView(
             id: index + 1,
             description: LocalizedText(en: line.nameEn, ar: line.nameAr),
-            details: [
-              for (final c in line.customizations) c.optionNameEn,
-              if (line.specialInstructions != null && line.specialInstructions!.isNotEmpty) line.specialInstructions!,
-            ].join(', ').let((d) => d.isEmpty ? null : d),
+            details: _details(line),
             qty: line.quantity.toDouble(),
             unitPrice: line.price,
             total: line.total,
@@ -590,10 +597,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       ],
     );
   }
-}
-
-extension<T> on T {
-  R let<R>(R Function(T) f) => f(this);
 }
 
 /// The attached customer's points under their name — information only:

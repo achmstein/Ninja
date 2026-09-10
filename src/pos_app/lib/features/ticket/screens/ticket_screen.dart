@@ -42,6 +42,7 @@ import '../dialogs/refund_dialog.dart';
 import '../dialogs/settle_dialog.dart';
 import '../dialogs/void_dialog.dart';
 import '../lines.dart';
+import '../../../core/utils/bidi.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 96.0;
@@ -607,7 +608,7 @@ class _Header extends StatelessWidget {
               style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700),
               children: [
                 TextSpan(
-                  text: '  #${ticket.id}',
+                  text: '  ${bidiIsolate('#${ticket.id}')}',
                   style: theme.typography.base.copyWith(
                     fontWeight: FontWeight.w500,
                     color: theme.colors.mutedForeground,
@@ -774,7 +775,7 @@ class _LineRow extends StatelessWidget {
     final negative = line.total < 0;
     final emerald = AppColors.emerald(theme.colors.brightness);
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
-    final details = line.details;
+    final details = line.details?.localized(context);
 
     final content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,

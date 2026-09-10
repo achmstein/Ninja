@@ -19,7 +19,7 @@ TicketLineView line(
       id: id,
       source: source,
       description: LocalizedText.parse({'en': name, 'ar': name}),
-      details: details,
+      details: details == null ? null : LocalizedText.fromString(details),
       qty: qty,
       unitPrice: unitPrice,
       discount: discount,
