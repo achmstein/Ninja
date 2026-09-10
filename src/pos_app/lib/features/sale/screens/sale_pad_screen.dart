@@ -74,6 +74,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   bool get _addingToTicket => widget.ticketId != null;
 
+  // Pre-select the ticket's customer once, so adding items to someone's
+  // open bill keeps going onto their account without re-asking
+  bool _prefilledCustomer = false;
+
   /// The room's session behind the bill being added to, watched so the
   /// customer picker can offer the roster; null for a table or the counter
   RoomSession? _watchRoomSession() {
@@ -301,6 +305,27 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     if (mounted) setState(() => _pendingOrderId = null);
   }
 
+  /// The one account this ticket is already for, so more items go onto it
+  /// without re-picking. Its lines' single account wins; failing that, a
+  /// room with a single member. Null when nobody, or more than one person,
+  /// is on the bill — then the cashier says whose round it is.
+  SaleCustomer? _singleTicketCustomer(TicketDetail ticket, RoomSession? session) {
+    final byId = <String, String>{};
+    for (final line in ticket.lines) {
+      final id = line.customerId;
+      if (id != null && id.isNotEmpty) byId[id] = line.customerName ?? '';
+    }
+    if (byId.length == 1) {
+      final entry = byId.entries.first;
+      return SaleCustomer(id: entry.key, name: entry.value);
+    }
+    if (byId.isEmpty && session != null) {
+      final roster = session.roster;
+      if (roster.length == 1) return SaleCustomer(id: roster.first.id, name: roster.first.name);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final roomSession = _watchRoomSession();
@@ -311,6 +336,18 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     final synced = sale.target == widget.ticketId;
     final lines = synced ? sale.lines : const <SaleLine>[];
     final customer = synced ? sale.customer : null;
+    if (_addingToTicket && synced && !_prefilledCustomer) {
+      final ticket = ref.watch(ticketProvider(widget.ticketId!)).value;
+      if (ticket != null) {
+        _prefilledCustomer = true;
+        final only = _singleTicketCustomer(ticket, roomSession);
+        if (only != null && sale.customer == null && sale.lines.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) ref.read(saleProvider.notifier).setCustomer(only);
+          });
+        }
+      }
+    }
     final categories = ref.watch(catalogCategoriesProvider).value ?? const <CatalogCategory>[];
     final itemsAsync = ref.watch(catalogItemsProvider);
     // Keep the branch's money rules warm: an offline charge prices with them

@@ -188,6 +188,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     setNote,
     setCustomer,
     setTarget,
+    target,
     clear,
   } = useSale()
 
@@ -224,6 +225,32 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       sessionActions.addMember(toNumber(roomSession.id), picked.id, picked.name)
     }
   }
+
+  // Pre-select the ticket's customer once, so adding items to someone's open
+  // bill keeps going onto their account without re-asking. The lines' single
+  // account wins; failing that, a room with a single member. Nobody, or more
+  // than one person, leaves it to the cashier to say whose round it is.
+  const prefilledForRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (!addingToTicket || ticketId === undefined) return
+    if (prefilledForRef.current === ticketId) return
+    const ticket = ticketQuery.data
+    if (!ticket || target !== ticketId) return
+    prefilledForRef.current = ticketId
+    if (customer || lines.length > 0) return
+    const byId = new Map<string, string>()
+    for (const line of ticket.lines ?? []) {
+      if (line.customerId) byId.set(String(line.customerId), line.customerName ?? '')
+    }
+    let only: SaleCustomer | null = null
+    if (byId.size === 1) {
+      const [id, name] = [...byId.entries()][0]
+      only = { id, name }
+    } else if (byId.size === 0 && roster.length === 1) {
+      only = { id: roster[0].id, name: roster[0].name }
+    }
+    if (only) setCustomer(only)
+  }, [addingToTicket, ticketId, ticketQuery.data, target, customer, lines.length, roster, setCustomer])
 
   // Set once the order is accepted; drives the blocking "sending to
   // kitchen" state while the ticket lookup polls
