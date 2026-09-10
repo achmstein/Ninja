@@ -74,6 +74,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     if (!open) {
       setLabel('')
       setPicked(null)
+      setDebounced('')
     }
   }, [open])
 
@@ -188,6 +189,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
               </button>
             </div>
           ) : (
+            search.length > 0 &&
             users.length > 0 && (
               <div className='mt-1 flex max-h-64 flex-col gap-1 overflow-y-auto'>
                 {users.map((user) => (
