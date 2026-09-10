@@ -29,6 +29,7 @@ import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
 import { CustomerDialog } from './customer-dialog'
+import { cn } from '@/lib/utils'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
 import { ItemImage } from './item-image'
@@ -170,6 +171,16 @@ function CustomerPointsLine({ userId }: { userId: string }) {
   )
 }
 
+function readLastCustomer(key: string | null): { id: string; name: string } | null {
+  if (!key) return null
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as { id: string; name: string }) : null
+  } catch {
+    return null
+  }
+}
+
 export function SalePad({ ticketId }: { ticketId?: number }) {
   const addingToTicket = ticketId !== undefined
   const t = useT()
@@ -218,9 +229,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     ticketQuery.data?.type === 'Room'
   )
   const roster = sessionRoster(roomSession)
+  const ownerId = (roomSession?.members ?? []).find((m) => m.role === 'Owner')?.customerId
+  const sessionId = roomSession?.id != null ? Number(roomSession.id) : null
+  const lastKey = sessionId != null ? `pos.session.${sessionId}.lastCustomer` : null
   const sessionActions = useSessionActions()
+  const rememberLast = (picked: SaleCustomer) => {
+    if (!lastKey || !picked.id) return
+    try {
+      localStorage.setItem(lastKey, JSON.stringify({ id: picked.id, name: picked.name }))
+    } catch {
+      // A browser that refuses storage just loses the convenience
+    }
+  }
   const pickCustomer = (picked: SaleCustomer) => {
     setCustomer(picked)
+    rememberLast(picked)
     if (roomSession && picked.id && !roster.some((m) => m.id === picked.id)) {
       sessionActions.addMember(toNumber(roomSession.id), picked.id, picked.name)
     }
@@ -244,13 +267,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }
     let only: SaleCustomer | null = null
     if (byId.size === 1) {
+      // Everything on the bill is one person's — keep going onto them
       const [id, name] = [...byId.entries()][0]
       only = { id, name }
-    } else if (byId.size === 0 && roster.length === 1) {
-      only = { id: roster[0].id, name: roster[0].name }
+    } else if (byId.size === 0 && roster.length >= 1) {
+      // Nothing tagged yet: the person the last round went to, else the owner,
+      // else the only member. More than one already-billed person → don't guess.
+      const remembered = readLastCustomer(lastKey)
+      const pick =
+        (remembered && roster.find((m) => m.id === remembered.id)) ||
+        (ownerId && roster.find((m) => m.id === ownerId)) ||
+        (roster.length === 1 ? roster[0] : null)
+      if (pick) only = { id: pick.id, name: pick.name }
     }
     if (only) setCustomer(only)
-  }, [addingToTicket, ticketId, ticketQuery.data, target, customer, lines.length, roster, setCustomer])
+  }, [addingToTicket, ticketId, ticketQuery.data, target, customer, lines.length, roster, ownerId, lastKey, setCustomer])
 
   // Set once the order is accepted; drives the blocking "sending to
   // kitchen" state while the ticket lookup polls
@@ -536,6 +567,38 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         </div>
 
         <div className='border-b p-3'>
+          {addingToTicket && roomSession && roster.length >= 2 && (
+            <div className='mb-2 flex flex-col gap-1.5'>
+              <span className='text-muted-foreground text-xs font-medium'>
+                {t('whoseRound')}
+              </span>
+              <div className='flex flex-wrap gap-2'>
+                {roster.map((m) => (
+                  <button
+                    key={m.id}
+                    type='button'
+                    onClick={() => pickCustomer({ id: m.id, name: m.name })}
+                    className={cn(
+                      'rounded-full border px-3 py-1.5 text-sm',
+                      customer?.id === m.id
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'bg-background'
+                    )}
+                  >
+                    {m.name || t('guest')}
+                  </button>
+                ))}
+                <button
+                  type='button'
+                  onClick={() => setCustomerOpen(true)}
+                  className='text-muted-foreground flex items-center gap-1 rounded-full border border-dashed px-3 py-1.5 text-sm'
+                >
+                  <UserPlus className='size-4' />
+                  {t('someoneElse')}
+                </button>
+              </div>
+            </div>
+          )}
           {customer ? (
             <div className='bg-accent/50 flex items-center justify-between gap-1 rounded-lg py-1 ps-3'>
               {customer.id ? (
@@ -569,7 +632,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                 <X className='size-4' />
               </Button>
             </div>
-          ) : (
+          ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
             <Button
               variant='outline'
               className='h-12 w-full gap-2 text-base'
