@@ -29,6 +29,7 @@ import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
 import { CustomerDialog } from './customer-dialog'
+import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { cn } from '@/lib/utils'
 import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
@@ -261,6 +262,21 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     if (!ticket || target !== ticketId) return
     prefilledForRef.current = ticketId
     if (customer || lines.length > 0) return
+    // A tab opened for an account (the new-tab dialog) pre-selects them so
+    // the round lands on their tab. One-shot: read once, then cleared.
+    try {
+      const raw = localStorage.getItem(pendingTicketCustomerKey(ticketId))
+      if (raw) {
+        localStorage.removeItem(pendingTicketCustomerKey(ticketId))
+        const pendingCustomer = JSON.parse(raw) as SaleCustomer
+        if (pendingCustomer?.id) {
+          setCustomer(pendingCustomer)
+          return
+        }
+      }
+    } catch {
+      // No stored pre-selection; fall through to deriving from the bill
+    }
     const byId = new Map<string, string>()
     for (const line of ticket.lines ?? []) {
       if (line.customerId) byId.set(String(line.customerId), line.customerName ?? '')

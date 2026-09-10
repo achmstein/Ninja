@@ -391,6 +391,7 @@ const dictionary = {
     en: "On the customer's tab",
     ar: 'اتحط على حساب العميل',
   },
+  onCustomerTabHint: { en: "On {name}'s tab", ar: 'على حساب {name}' },
   amount: { en: 'Amount', ar: 'المبلغ' },
   addPayment: { en: 'Add payment', ar: 'ضيف دفعة' },
   remaining: { en: 'Remaining', ar: 'الناقص' },
