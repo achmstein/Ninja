@@ -17,6 +17,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../models/bundle_deal.dart';
 import '../models/menu_item.dart';
 import '../models/user_preference.dart';
+import '../../../core/utils/search_normalize.dart';
 import '../services/menu_service.dart';
 import '../providers/favorites_provider.dart';
 import '../../cart/models/cart_item.dart';
@@ -397,7 +398,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     if (_searchQuery.isEmpty) return items;
 
     final filtered = <MenuCategory, List<MenuItem>>{};
-    final query = _searchQuery.toLowerCase();
+    final query = normalizeSearch(_searchQuery);
 
     for (final entry in items.entries) {
       // Skip the synthetic "Most Popular" group (id -1): it re-lists popular
@@ -406,10 +407,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       if (entry.key.id == -1) continue;
       final matchingItems = entry.value
           .where((item) =>
-              item.name.getText(locale).toLowerCase().contains(query) ||
-              item.description.getText(locale).toLowerCase().contains(query) ||
-              item.name.en.toLowerCase().contains(query) ||
-              item.description.en.toLowerCase().contains(query))
+              normalizeSearch(item.name.getText(locale)).contains(query) ||
+              normalizeSearch(item.description.getText(locale)).contains(query) ||
+              normalizeSearch(item.name.en).contains(query) ||
+              normalizeSearch(item.description.en).contains(query))
           .toList();
       if (matchingItems.isNotEmpty) {
         filtered[entry.key] = matchingItems;

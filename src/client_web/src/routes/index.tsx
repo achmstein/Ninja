@@ -9,6 +9,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { useSelectedBranch } from '@/lib/branch'
 import { useLocalized, useT } from '@/lib/i18n'
+import { normalizeSearch } from '@/lib/normalize'
 import { Input } from '@/components/ui/input'
 import { InstallBanner } from '@/components/install-banner'
 import { CategoryRail, type MenuSection } from '@/components/menu/category-rail'
@@ -158,12 +159,12 @@ function MenuPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [sections])
 
-  const term = search.trim().toLowerCase()
+  const term = normalizeSearch(search)
   const searchResults = term
     ? items.filter(
         (i) =>
-          i.name?.en?.toLowerCase().includes(term) ||
-          i.name?.ar?.includes(search.trim())
+          normalizeSearch(i.name?.en).includes(term) ||
+          normalizeSearch(i.name?.ar).includes(term)
       )
     : []
 
