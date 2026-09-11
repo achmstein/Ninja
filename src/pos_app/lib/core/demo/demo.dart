@@ -890,6 +890,15 @@ class _DemoCatalogRepository implements CatalogRepository {
 
   @override
   Future<void> setAvailability(int itemId, bool isAvailable, {String? requestId}) async {}
+
+  @override
+  Future<Map<int, List<int>>> getCustomerItemPreference(String userId, int itemId) async => const {};
+
+  @override
+  Future<List<int>> getCustomerTopItems(String userId) async => const [1, 3, 6];
+
+  @override
+  Future<void> saveCustomerPreferences(String userId, List<Map<String, dynamic>> items) async {}
 }
 
 LocalizedText _lt(String en, String ar) => LocalizedText.parse({'en': en, 'ar': ar});

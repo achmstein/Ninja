@@ -13,6 +13,7 @@ platform :ios do
       app_identifier: ["com.chillax.client", "com.chillax.client.ChillaxLiveActivity"],
       readonly: false,
       force: true,
+      api_key_path: ENV["API_KEY_PATH"],
     )
 
     update_code_signing_settings(
