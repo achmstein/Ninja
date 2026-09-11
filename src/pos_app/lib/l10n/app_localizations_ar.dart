@@ -666,7 +666,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get whoseRound => 'الطلب ده لمين؟';
 
   @override
-  String get usuals => 'المعتاد';
+  String get usuals => 'على مزاجه';
 
   @override
   String get someoneElse => 'حد تاني';

@@ -888,7 +888,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mostPopular => 'الأكثر طلباً';
 
   @override
-  String get yourUsuals => 'طلباتك المعتادة';
+  String get yourUsuals => 'على مزاجك';
 
   @override
   String get fastOrder => 'طلب سريع';

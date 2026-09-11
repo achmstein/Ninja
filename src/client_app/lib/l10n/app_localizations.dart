@@ -1715,7 +1715,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourUsuals.
   ///
   /// In en, this message translates to:
-  /// **'Your Usuals'**
+  /// **'Your usual'**
   String get yourUsuals;
 
   /// No description provided for @fastOrder.

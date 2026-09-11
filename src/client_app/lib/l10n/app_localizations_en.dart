@@ -902,7 +902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mostPopular => 'Most Popular';
 
   @override
-  String get yourUsuals => 'Your Usuals';
+  String get yourUsuals => 'Your usual';
 
   @override
   String get fastOrder => 'Fast Order';
