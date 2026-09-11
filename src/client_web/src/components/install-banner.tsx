@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { InstallDialog } from './install-dialog'
 
@@ -47,21 +46,25 @@ export function InstallBanner() {
 
   return (
     <>
-      <Alert>
-        <Download />
-        <AlertTitle>{t('installAppTitle')}</AlertTitle>
-        <AlertDescription>
-          <p>{t('installAppDescription')}</p>
-          <div className='mt-1 flex gap-2'>
-            <Button size='sm' onClick={onInstall}>
-              {canInstall ? t('install') : t('howTo')}
-            </Button>
-            <Button size='sm' variant='ghost' onClick={dismiss}>
-              {t('notNow')}
-            </Button>
-          </div>
-        </AlertDescription>
-      </Alert>
+      {/* Compact single row: icon, title, install action, dismiss — no
+          description, so it stays out of the way above the menu */}
+      <div className='flex items-center gap-2.5 rounded-lg border px-3 py-2'>
+        <Download className='text-primary size-4 shrink-0' />
+        <span className='min-w-0 flex-1 truncate text-sm font-medium'>
+          {t('installAppTitle')}
+        </span>
+        <Button size='sm' className='h-8 shrink-0' onClick={onInstall}>
+          {canInstall ? t('install') : t('howTo')}
+        </Button>
+        <button
+          type='button'
+          onClick={dismiss}
+          aria-label={t('notNow')}
+          className='text-muted-foreground hover:text-foreground shrink-0'
+        >
+          <X className='size-4' />
+        </button>
+      </div>
       <InstallDialog open={howOpen} onOpenChange={setHowOpen} />
     </>
   )

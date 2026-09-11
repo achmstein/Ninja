@@ -13,7 +13,14 @@ const tabs = [
 
 export function BottomNav() {
   const t = useT()
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  // Track the *resolved* (committed) location, not the pending one. On a slow
+  // navigation the pending location flips to /cart before the heavy cart page
+  // paints; reading it here would hide the tab bar while the menu (and its
+  // "view cart" pill) is still on screen — a jarring gap. resolvedLocation
+  // stays in step with what the Outlet actually shows.
+  const pathname = useRouterState(
+    { select: (s) => (s.resolvedLocation ?? s.location).pathname }
+  )
 
   // The cart is a pushed full-screen page on mobile (no tab bar) —
   // mobile parity. (The menu's "view cart" pill lives in ViewCartBar.)

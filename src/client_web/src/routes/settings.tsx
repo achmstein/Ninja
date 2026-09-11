@@ -177,7 +177,6 @@ function SettingsPage() {
             <TileButton
               icon={Download}
               label={t('installApp')}
-              sublabel={t('installAppDescription')}
               onClick={() => {
                 if (canInstall) void install()
                 else setInstallOpen(true)
