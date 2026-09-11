@@ -53,9 +53,13 @@ const queryClient = new QueryClient({
     onError: (error) => {
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
-          toast.error('Session expired!')
-          const redirect = `${router.history.location.href}`
-          router.navigate({ to: '/sign-in', search: { redirect } })
+          // Session expired: go straight to sign-in, no toast. Every failed
+          // query fires onError, so a burst of parallel 401s would otherwise
+          // stack toasts; the guard also keeps it to a single redirect.
+          if (router.state.location.pathname !== '/sign-in') {
+            const redirect = `${router.history.location.href}`
+            router.navigate({ to: '/sign-in', search: { redirect } })
+          }
         }
         if (error.response?.status === 500) {
           toast.error('Internal Server Error!')

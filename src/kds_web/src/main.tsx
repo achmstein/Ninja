@@ -7,8 +7,6 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { toast } from '@/lib/toast'
-import { translate } from '@/lib/i18n'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
 import { DirectionProvider } from './context/direction-provider'
@@ -41,9 +39,13 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
-        toast.error(translate('sessionExpired'))
-        const redirect = `${router.history.location.href}`
-        router.navigate({ to: '/sign-in', search: { redirect } })
+        // Session expired: go straight to sign-in, no toast. Every failed
+        // query fires onError, so a burst of parallel 401s would otherwise
+        // stack toasts; the pathname guard also keeps it to a single redirect.
+        if (router.state.location.pathname !== '/sign-in') {
+          const redirect = `${router.history.location.href}`
+          router.navigate({ to: '/sign-in', search: { redirect } })
+        }
       }
     },
   }),
