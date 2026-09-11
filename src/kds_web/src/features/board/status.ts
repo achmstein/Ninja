@@ -1,12 +1,15 @@
-// How long an order has been in the kitchen decides the colour of its clock
-// and border: amber once it has waited longer than a drink should take, red
-// once it is the order someone is about to ask about. Slower tiers than the
-// till's pending queue (2/3 min): that one measures a cashier's tap, this
-// one measures actually making the thing.
+// How long an order has been in the kitchen decides the colour of its
+// header band and clock: amber once it has waited longer than a drink
+// should take, red once it is the order someone is about to ask about.
+// Slower tiers than the till's pending queue (2/3 min): that one measures
+// a cashier's tap, this one measures actually making the thing.
 export const WARN_AFTER_MINUTES = 5
 export const DELAYED_AFTER_MINUTES = 10
 
 export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
+
+/** What the card's header band is saying: how late the order is, or that it is done. */
+export type CardTone = OrderUrgency | 'ready'
 
 export function orderUrgency(
   value: string | null | undefined,
@@ -19,22 +22,50 @@ export function orderUrgency(
   return 'fresh'
 }
 
-/** Colouring for an order's clock — the one place colour means something on the board. */
-export function urgencyTextClass(urgency: OrderUrgency): string {
-  return urgency === 'delayed'
-    ? 'text-destructive'
-    : urgency === 'warning'
-      ? 'text-amber-600 dark:text-amber-500'
-      : 'text-muted-foreground'
+/**
+ * The header band is the one place colour means something on the board:
+ * the whole strip tints with the clock, the way every kitchen display does
+ * it, so a late ticket is read across the room and not from a thin border.
+ */
+export function toneBandClass(tone: CardTone): string {
+  switch (tone) {
+    case 'delayed':
+      return 'bg-destructive/10 dark:bg-destructive/20'
+    case 'warning':
+      return 'bg-amber-500/15 dark:bg-amber-500/20'
+    case 'ready':
+      return 'bg-emerald-500/15 dark:bg-emerald-500/20'
+    default:
+      return 'bg-muted/50'
+  }
 }
 
-/** The card border follows the clock, so a late order stands out across the room. */
-export function urgencyBorderClass(urgency: OrderUrgency): string {
-  return urgency === 'delayed'
-    ? 'border-destructive/70'
-    : urgency === 'warning'
-      ? 'border-amber-500/70'
-      : ''
+/** The clock on the band, in the band's colour. */
+export function toneClockClass(tone: CardTone): string {
+  switch (tone) {
+    case 'delayed':
+      return 'text-destructive'
+    case 'warning':
+      return 'text-amber-700 dark:text-amber-400'
+    case 'ready':
+      return 'text-emerald-700 dark:text-emerald-400'
+    default:
+      return 'text-foreground'
+  }
+}
+
+/** A late card's outline picks up the band's colour too, faintly. */
+export function toneBorderClass(tone: CardTone): string {
+  switch (tone) {
+    case 'delayed':
+      return 'border-destructive/40'
+    case 'warning':
+      return 'border-amber-500/40'
+    case 'ready':
+      return 'border-emerald-500/40'
+    default:
+      return ''
+  }
 }
 
 /**

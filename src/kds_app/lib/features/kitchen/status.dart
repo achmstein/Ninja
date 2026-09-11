@@ -1,11 +1,25 @@
 /// How long an order has been in the kitchen decides the colour of its
-/// clock and border: amber once it has waited longer than a drink should
-/// take, red once it is the order someone is about to ask about. Same
-/// tiers as kds_web's status.ts.
+/// header band and clock: amber once it has waited longer than a drink
+/// should take, red once it is the order someone is about to ask about.
+/// Same tiers as kds_web's status.ts.
 const int warnAfterMinutes = 5;
 const int delayedAfterMinutes = 10;
 
-enum OrderUrgency { fresh, warning, delayed }
+enum OrderUrgency {
+  fresh,
+  warning,
+  delayed;
+
+  CardTone get tone => switch (this) {
+        OrderUrgency.fresh => CardTone.fresh,
+        OrderUrgency.warning => CardTone.warning,
+        OrderUrgency.delayed => CardTone.delayed,
+      };
+}
+
+/// What a card's header band is saying: how late the order is, or that it
+/// is done.
+enum CardTone { fresh, warning, delayed, ready }
 
 OrderUrgency orderUrgency(DateTime? since, DateTime now) {
   if (since == null) return OrderUrgency.fresh;
