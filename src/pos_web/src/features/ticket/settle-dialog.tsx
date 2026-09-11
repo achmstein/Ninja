@@ -448,14 +448,17 @@ export function SettleDialog({
                 {payments.map((payment, index) => (
                   <div
                     key={index}
-                    className='bg-accent/50 flex items-center justify-between rounded-lg px-3 py-2'
+                    className='bg-accent/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'
                   >
-                    <Badge variant='secondary'>
+                    <Badge
+                      variant='secondary'
+                      className='min-w-0 max-w-full shrink truncate'
+                    >
                       {tenderLabel(payment.tenderName)}
                       {payment.customerName && ` · ${payment.customerName}`}
                     </Badge>
-                    <div className='flex items-center gap-1'>
-                      <span className='font-semibold tabular-nums'>
+                    <div className='flex shrink-0 items-center gap-1'>
+                      <span className='font-semibold whitespace-nowrap tabular-nums'>
                         {money(payment.amount)}
                       </span>
                       <Button

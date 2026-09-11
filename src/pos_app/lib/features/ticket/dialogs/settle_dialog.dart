@@ -401,17 +401,30 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                               ),
                               child: Row(
                                 children: [
-                                  FBadge(
-                                    variant: FBadgeVariant.secondary,
-                                    child: Text(
-                                      payment.customerName != null
-                                          ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
-                                          : tenderLabel(l10n, payment.tender),
+                                  // Takes the leading space and ellipsizes a
+                                  // long account label ("على الحساب · Name")
+                                  // so it never pushes the amount onto a new
+                                  // line.
+                                  Expanded(
+                                    child: Align(
+                                      alignment: AlignmentDirectional.centerStart,
+                                      child: FBadge(
+                                        variant: FBadgeVariant.secondary,
+                                        child: Text(
+                                          payment.customerName != null
+                                              ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
+                                              : tenderLabel(l10n, payment.tender),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  const Spacer(),
+                                  const SizedBox(width: 8),
                                   Text(
                                     money(context, payment.amount),
+                                    maxLines: 1,
+                                    softWrap: false,
                                     style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
                                   ),
                                   const SizedBox(width: 4),
