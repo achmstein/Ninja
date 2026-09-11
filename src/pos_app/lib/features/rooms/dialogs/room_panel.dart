@@ -65,11 +65,12 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     if (started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
   }
 
-  Future<void> _guarded(Future<bool> Function(SessionActions actions) call) async {
-    if (_busy) return;
+  Future<bool> _guarded(Future<bool> Function(SessionActions actions) call) async {
+    if (_busy) return false;
     setState(() => _busy = true);
-    await call(SessionActions(ref, context));
+    final ok = await call(SessionActions(ref, context));
     if (mounted) setState(() => _busy = false);
+    return ok;
   }
 
   Future<void> _confirmEnd(RoomSession session) async {
@@ -96,7 +97,12 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
       actionLabel: active ? l10n.cancelSessionButton : l10n.cancelReservation,
       destructive: true,
     );
-    if (ok && mounted) await _guarded((a) => a.cancelSession(session.id, wasActive: active));
+    if (ok && mounted) {
+      // Close the panel once cancelled — otherwise it reverts to the
+      // available state, re-showing Start/Reserve as if prompting to start.
+      final cancelled = await _guarded((a) => a.cancelSession(session.id, wasActive: active));
+      if (cancelled && mounted) _close();
+    }
   }
 
   Future<void> _confirmMode(RoomSession session, String mode) async {

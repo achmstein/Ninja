@@ -443,7 +443,10 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
         cancelLabel={t('keepIt')}
         actionLabel={active ? t('cancelSessionButton') : t('cancelReservation')}
         destructive
-        onAction={() => actions.cancelSession(sessionId, active)}
+        // Close the panel once cancelled — otherwise it falls through to the
+        // "available" state, re-showing the Start/Reserve options as if
+        // prompting to start again.
+        onAction={() => actions.cancelSession(sessionId, active, { onSuccess: close })}
       />
 
       <ConfirmDialog
