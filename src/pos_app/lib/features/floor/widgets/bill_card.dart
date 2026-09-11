@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
@@ -49,10 +50,11 @@ class BillCard extends StatelessWidget {
 
     return FTappable(
       onPress: onTap,
-      // A fixed card height (pos_web's min-h-28) is what lets the total sit at
-      // the bottom: inside a Wrap there is no other height to fill
+      // A fixed card height (pos_web's min-h-28 plus a second name line) is
+      // what lets the total sit at the bottom: inside a Wrap there is no
+      // other height to fill
       builder: (context, states, child) => Container(
-        height: 112,
+        height: 128,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: states.contains(FTappableVariant.pressed) || states.contains(FTappableVariant.hovered)
@@ -74,12 +76,17 @@ class BillCard extends StatelessWidget {
                 child: Icon(ticketTypeIcon(ticket.type), size: 16, color: theme.colors.mutedForeground),
               ),
               const SizedBox(width: 8),
+              // Two lines for a name, laid out in the name's own script so
+              // a long English name in an Arabic till is cut at its end,
+              // not its start
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+                  textDirection: textDirectionFor(label),
+                  textAlign: textAlignFor(context),
+                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25),
                 ),
               ),
               if (waiting) ...[

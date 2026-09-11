@@ -10,8 +10,10 @@ import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/services/customer_search_service.dart';
+import '../../rooms/providers/rooms_provider.dart';
 import '../../sale/models/sale_line.dart';
 import '../../sale/pending_ticket_customer.dart';
+import '../../tickets/busy_customers.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/open_ticket.dart';
 import '../../tickets/providers/tickets_provider.dart';
@@ -23,7 +25,9 @@ const _minSearchLength = 2;
 /// Opens a counter tab: a bill with no place, named after whoever it is
 /// for. Typing looks up accounts — pick one to open the tab for them so the
 /// round goes on their tab, or just use the typed name for a walk-in. The
-/// name is optional; leave it blank for an unnamed tab.
+/// name is optional; leave it blank for an unnamed tab. Accounts that already
+/// have a bill running (on a tab, at a table, in a room) are left out of the
+/// matches: one person, one bill.
 ///
 /// Resolves to the new ticket's id; the caller goes there.
 Future<int?> showNewTicketDialog(BuildContext context) {
@@ -65,8 +69,9 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
   }
 
   void _onLabelChanged() {
-    // Typing after a pick means the cashier is choosing someone else
-    if (_picked != null) setState(() => _picked = null);
+    // Typing after a pick means the cashier is choosing someone else (the
+    // pick itself writes the name into the field, which is not typing)
+    if (_picked != null && _label.text != _picked!.name) setState(() => _picked = null);
     _debounce?.cancel();
     _debounce = Timer(_searchDebounce, _runSearch);
   }
@@ -83,7 +88,12 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
     try {
       final users = await ref.read(customerSearchServiceProvider).search(search);
       if (!mounted || _search != search) return;
-      setState(() => _users = users);
+      final busy = customersOnOpenBills(
+        openTickets: ref.read(openTicketsProvider).value ?? const [],
+        activeSessions: ref.read(roomsProvider).activeSessions,
+        pending: pendingTicketCustomer,
+      );
+      setState(() => _users = [for (final user in users) if (!busy.contains(user.id)) user]);
     } catch (_) {
       if (mounted) setState(() => _users = const []);
     }
@@ -96,6 +106,8 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
       _search = user.displayName;
     });
     _label.text = user.displayName;
+    // The name is settled; the keyboard was covering the Open button
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _clear() {

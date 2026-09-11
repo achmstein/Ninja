@@ -7,6 +7,7 @@ import {
   Loader2,
   Minus,
   Plus,
+  Sparkles,
   Trash2,
   User,
   UserPlus,
@@ -40,6 +41,8 @@ import { ItemImage } from './item-image'
 // there); the SignalR TicketUpdated invalidation short-circuits the wait.
 const TICKET_POLL_INTERVAL_MS = 600
 const TICKET_POLL_TIMEOUT_MS = 12_000
+/** The attached customer's usuals, shown as a category of their own */
+const USUALS_CATEGORY = -1
 
 function ItemTile({
   item,
@@ -313,18 +316,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
 
-  const sortedCategories = categories
-    .slice()
-    .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
-  const activeCategoryId =
-    activeCategory ??
-    (sortedCategories.length > 0 ? toNumber(sortedCategories[0].id) : null)
-  const visibleItems = items
-    .filter((item) => toNumber(item.catalogTypeId) === activeCategoryId)
-    .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
-
   // The attached customer's most-ordered items, ranked. A walk-in (no id) or a
-  // customer without enough history gets nothing; the strip then hides.
+  // customer without enough history gets nothing; the chip then hides.
   const { data: usualIds = [] } = useQuery({
     queryKey: ['customerTopItems', customer?.id],
     queryFn: async () => {
@@ -343,6 +336,36 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         .filter((i): i is CatalogItemDto => !!i && i.isAvailable !== false)
         .slice(0, 8)
     : []
+
+  // Their usuals are a category of their own, first in the row and open by
+  // default while they are attached — never a second copy of an item above
+  // the category it also lives in
+  const customerId = customer?.id
+  useEffect(() => {
+    setActiveCategory(null)
+  }, [customerId])
+  const sortedCategories = categories
+    .slice()
+    .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+  const firstCategoryId =
+    sortedCategories.length > 0 ? toNumber(sortedCategories[0].id) : null
+  const hasUsuals = usualItems.length > 0
+  const activeCategoryId =
+    activeCategory === null
+      ? hasUsuals
+        ? USUALS_CATEGORY
+        : firstCategoryId
+      : activeCategory === USUALS_CATEGORY && !hasUsuals
+        ? firstCategoryId
+        : activeCategory
+  const visibleItems =
+    activeCategoryId === USUALS_CATEGORY
+      ? usualItems
+      : items
+          .filter((item) => toNumber(item.catalogTypeId) === activeCategoryId)
+          .sort(
+            (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
+          )
 
   const total = saleTotal(lines)
   const count = saleCount(lines)
@@ -573,6 +596,18 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           {/* Every category in view: the chips wrap into rows rather than
               scrolling sideways behind a scrollbar */}
           <div className='flex min-w-0 flex-1 flex-wrap gap-2'>
+            {hasUsuals && (
+              <Button
+                variant={
+                  activeCategoryId === USUALS_CATEGORY ? 'default' : 'outline'
+                }
+                className='h-11 shrink-0 px-4 text-base'
+                onClick={() => setActiveCategory(USUALS_CATEGORY)}
+              >
+                <Sparkles className='size-4' />
+                {t('usuals')}
+              </Button>
+            )}
             {sortedCategories.map((category) => {
               const id = toNumber(category.id)
               return (
@@ -590,20 +625,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         </div>
 
         <div className='flex-1 overflow-y-auto p-3'>
-          {usualItems.length > 0 && (
-            <div className='mb-4'>
-              <h3 className='text-muted-foreground mb-2 text-sm font-semibold'>
-                {t('usuals')}
-              </h3>
-              <div className='flex gap-3 overflow-x-auto pb-1'>
-                {usualItems.map((item) => (
-                  <div key={String(item.id)} className='w-[140px] shrink-0'>
-                    <ItemTile item={item} onTap={tapItem} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
           {itemsLoading ? (
             <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
               {Array.from({ length: 8 }).map((_, i) => (

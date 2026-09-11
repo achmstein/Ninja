@@ -16,6 +16,10 @@ class TicketSummary {
   final DateTime? openedAt;
   final DateTime? lastActivityAt;
 
+  /// The accounts already on this bill's lines, each once — so the till can
+  /// keep one person from ending up with two tabs at the same time.
+  final List<String> customerIds;
+
   const TicketSummary({
     required this.id,
     this.type,
@@ -28,6 +32,7 @@ class TicketSummary {
     this.total = 0,
     this.openedAt,
     this.lastActivityAt,
+    this.customerIds = const [],
   });
 
   factory TicketSummary.fromJson(Map<String, dynamic> json) {
@@ -44,6 +49,7 @@ class TicketSummary {
       openedAt: json['openedAt'] == null ? null : DateTime.tryParse(json['openedAt'] as String),
       lastActivityAt:
           json['lastActivityAt'] == null ? null : DateTime.tryParse(json['lastActivityAt'] as String),
+      customerIds: [for (final id in json['customerIds'] as List<dynamic>? ?? const []) id as String],
     );
   }
 }

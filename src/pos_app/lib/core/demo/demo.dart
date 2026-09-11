@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../../features/catalog/models/catalog_item.dart';
 import '../../features/catalog/services/catalog_service.dart';
+import '../../features/customers/services/customer_search_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
 import '../../features/rooms/models/room.dart';
@@ -59,6 +60,7 @@ final demoOverrides = [
   shiftsRepositoryProvider.overrideWithValue(_DemoShiftsRepository()),
   serviceRequestsRepositoryProvider.overrideWithValue(_DemoServiceRequestsRepository()),
   roomRepositoryProvider.overrideWithValue(_DemoRoomRepository()),
+  customerSearchServiceProvider.overrideWithValue(_DemoCustomerSearchService()),
 ];
 
 class _DemoAuthService extends AuthService {
@@ -991,7 +993,8 @@ final List<TicketDetail> _sampleTickets = [
   TicketDetail(
     id: 103,
     type: TicketType.counter,
-    label: 'Sara',
+    // A long Latin name: the floor card has to cut it at its end in Arabic too
+    label: 'Sara Abdelrahman Elsayed',
     openedAt: _now.subtract(const Duration(minutes: 6)),
     subtotal: 95,
     total: 95,
@@ -1013,3 +1016,24 @@ final List<TicketDetail> _sampleTickets = [
     ],
   ),
 ];
+
+/// Four accounts for the customer pickers. Ahmed is in Room 3, so the
+/// new-tab dialog leaves him out; the others are free.
+class _DemoCustomerSearchService implements CustomerSearchService {
+  static const _users = [
+    IdentityUser(id: 'u1', firstName: 'Ahmed', lastName: 'Hassan', phoneNumber: '01001234567'),
+    IdentityUser(id: 'u2', firstName: 'Mona', lastName: 'Adel', phoneNumber: '01112345678'),
+    IdentityUser(id: 'u3', firstName: 'Mohamed', lastName: 'Abdelrahman Elsayed', phoneNumber: '01223456789'),
+    IdentityUser(id: 'u4', firstName: 'Sara', lastName: 'Ali', phoneNumber: '01098765432'),
+  ];
+
+  @override
+  Future<List<IdentityUser>> search(String term, {int max = 20}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final needle = term.toLowerCase();
+    return [
+      for (final u in _users)
+        if (u.displayName.toLowerCase().contains(needle) || (u.phoneNumber ?? '').contains(needle)) u,
+    ].take(max).toList();
+  }
+}

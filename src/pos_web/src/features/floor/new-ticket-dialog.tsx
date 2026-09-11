@@ -7,8 +7,12 @@ import {
 } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, User, UserPlus, X } from 'lucide-react'
-import { openTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  getOpenTicketsOptions,
+  openTicketMutation,
+} from '@/api/sales/@tanstack/react-query.gen'
 import type { SaleCustomer } from '@/features/sale/cart'
+import { useRooms } from '@/features/rooms/use-rooms'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,6 +29,7 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
+import { SESSION_ACTIVE } from '@/features/rooms/status'
 
 type NewTicketDialogProps = {
   open: boolean
@@ -56,11 +61,24 @@ export function pendingTicketCustomerKey(ticketId: number | string) {
   return `pos.ticket.${ticketId}.customer`
 }
 
+/** The account a tab was opened for on this till but who has not ordered
+ *  yet — that link only lives here until the first round lands. */
+function readPendingCustomerId(ticketId: number | string): string | null {
+  try {
+    const raw = localStorage.getItem(pendingTicketCustomerKey(ticketId))
+    return raw ? ((JSON.parse(raw) as SaleCustomer).id ?? null) : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Opens a counter tab: a bill with no place, named after whoever it is for.
  * Typing looks up accounts — pick one to open the tab for them so the round
  * goes on their tab, or just use the typed name for a walk-in. The name is
- * optional; leave it blank for an unnamed tab.
+ * optional; leave it blank for an unnamed tab. Accounts that already have a
+ * bill running (on a tab, at a table, in a room) are left out of the matches:
+ * one person, one bill.
  */
 export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   const t = useT()
@@ -85,9 +103,31 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     return () => clearTimeout(id)
   }, [label])
 
+  // Who already has a bill: whoever is on an open bill's lines, whoever is
+  // in a room right now, and whoever a tab was just opened for on this till
+  const { data: openTickets = [] } = useQuery({
+    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    enabled: open,
+  })
+  const { sessions } = useRooms({ enabled: open })
+  const busy = new Set<string>()
+  for (const ticket of openTickets) {
+    for (const id of ticket.customerIds ?? []) busy.add(id)
+    if (ticket.id !== undefined) {
+      const pendingId = readPendingCustomerId(ticket.id)
+      if (pendingId) busy.add(pendingId)
+    }
+  }
+  for (const session of sessions) {
+    if (Number(session.status) !== SESSION_ACTIVE) continue
+    for (const member of session.members ?? []) {
+      if (member.customerId) busy.add(member.customerId)
+    }
+  }
+
   const search =
     !picked && debounced.length >= MIN_SEARCH_LENGTH ? debounced : ''
-  const { data: users = [] } = useQuery({
+  const { data: matches = [] } = useQuery({
     queryKey: ['identityUserSearch', search],
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
@@ -101,6 +141,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     placeholderData: keepPreviousData,
     enabled: open && search.length > 0,
   })
+  const users = matches.filter((user) => !busy.has(user.id))
 
   const openTicket = useMutation({
     ...openTicketMutation(),

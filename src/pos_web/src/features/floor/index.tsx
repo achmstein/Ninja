@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   X,
   ShoppingCart,
-  UserSearch,
+  IdCard,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -101,7 +101,12 @@ function BillCard({
     >
       <div className='flex items-start gap-2'>
         <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
-        <span className='min-w-0 flex-1 truncate text-base font-semibold'>
+        {/* Two lines for a name, laid out in the name's own script so a long
+            English name in an Arabic till is cut at its end, not its start */}
+        <span
+          dir='auto'
+          className='line-clamp-2 min-w-0 flex-1 text-base font-semibold ltr:text-left rtl:text-right'
+        >
           {title}
         </span>
         {waiting && (
@@ -361,7 +366,7 @@ export function Floor() {
               title={t('findCustomer')}
               onClick={() => setFindOpen(true)}
             >
-              <UserSearch className='size-5' />
+              <IdCard className='size-5' />
             </Button>
             <Button
               size='lg'

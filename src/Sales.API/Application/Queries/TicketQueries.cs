@@ -86,6 +86,11 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             LastActivityAt = t.LastActivityAt,
             LineCount = t.Lines.Count,
             Total = t.GetBill(rules).Total,
+            CustomerIds = t.Lines
+                .Select(l => l.CustomerId)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Distinct()
+                .ToList()!,
         });
     }
 

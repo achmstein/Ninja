@@ -382,6 +382,7 @@ export type TicketSummary = {
     lastActivityAt?: string;
     lineCount?: number | string;
     total?: number | string;
+    customerIds?: Array<string>;
 };
 
 export type TicketType = number;

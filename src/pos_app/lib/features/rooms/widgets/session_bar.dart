@@ -29,8 +29,16 @@ class SessionBar extends ConsumerStatefulWidget {
 }
 
 class _SessionBarState extends ConsumerState<SessionBar> {
-  late final Timer _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  // Started eagerly: a lazy `late final` field is first touched in dispose,
+  // so the clock would never tick while the card is on screen
+  late final Timer _clock;
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -118,24 +126,32 @@ class _SessionBarState extends ConsumerState<SessionBar> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Icon(FIcons.timer, size: 24, color: theme.colors.mutedForeground),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(formatClock(session.elapsedSeconds(now)),
-                        style: theme.typography.xl3.copyWith(fontFeatures: tabular)),
+                    // The icon sits on the clock's own line, centred on it,
+                    // whatever the font's line height turns out to be
+                    Row(
+                      children: [
+                        Icon(FIcons.timer, size: 24, color: theme.colors.mutedForeground),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(formatClock(session.elapsedSeconds(now)),
+                              style: theme.typography.xl3.copyWith(fontFeatures: tabular)),
+                        ),
+                      ],
+                    ),
                     // Per-mode split only once both modes have been used
                     if (single > 0 && multi > 0)
-                      Text(
-                        '${l10n.playerModeSingle} ${formatClock(single)} · ${l10n.playerModeMulti} ${formatClock(multi)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: muted.copyWith(fontFeatures: tabular),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 36),
+                        child: Text(
+                          '${l10n.playerModeSingle} ${formatClock(single)} · ${l10n.playerModeMulti} ${formatClock(multi)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: muted.copyWith(fontFeatures: tabular),
+                        ),
                       ),
                   ],
                 ),

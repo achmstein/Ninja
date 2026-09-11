@@ -22,6 +22,13 @@ public record TicketSummary
     public DateTime LastActivityAt { get; init; }
     public int LineCount { get; init; }
     public decimal Total { get; init; }
+
+    /// <summary>
+    /// The accounts already on this bill's lines, each once. The till uses
+    /// the union across open bills to keep one person from ending up with
+    /// two tabs at the same time.
+    /// </summary>
+    public IReadOnlyCollection<string> CustomerIds { get; init; } = [];
 }
 
 /// <summary>A settled bill as the receipts screen lists it.</summary>

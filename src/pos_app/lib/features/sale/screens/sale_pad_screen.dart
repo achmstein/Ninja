@@ -55,6 +55,9 @@ import '../widgets/item_tile.dart';
 // life of the app run, which is a till's shift.
 final Map<int, SaleCustomer> _lastRoundBySession = {};
 
+/// The attached customer's usuals, shown as a category of their own
+const _usualsCategory = -1;
+
 /// A muted, rounded shimmer bar sized to a fraction of its row — the stand-in
 /// for a line of text while a skeleton loads.
 Widget _bar(FThemeData theme, {required double widthFactor, double height = 12}) => SizedBox(
@@ -139,48 +142,19 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     return en.isEmpty && ar.isEmpty ? null : LocalizedText(en: en, ar: ar);
   }
 
-  /// A horizontal strip of the attached customer's most-ordered items, above
-  /// the grid. Hidden for a walk-in or a customer without enough history.
-  /// Tapping reuses [_tapItem], so a customized item opens the prefilled dialog.
-  Widget _usualsStrip(BuildContext context, String? customerId, List<CatalogItem> items) {
-    if (customerId == null || customerId.isEmpty) return const SizedBox.shrink();
+  /// The attached customer's most-ordered items that are on sale today, in
+  /// rank order. Empty for a walk-in or a customer without enough history.
+  /// They are a category of their own in the chip row — never a second copy
+  /// of an item above the category it also lives in.
+  List<CatalogItem> _usualItems(String? customerId, List<CatalogItem> items) {
+    if (customerId == null || customerId.isEmpty) return const [];
     final topIds = ref.watch(customerTopItemsProvider(customerId)).value ?? const <int>[];
-    if (topIds.isEmpty) return const SizedBox.shrink();
+    if (topIds.isEmpty) return const [];
     final byId = {for (final i in items) i.id: i};
-    final usuals = [
+    return [
       for (final id in topIds)
         if (byId[id]?.isAvailable ?? false) byId[id]!,
     ].take(8).toList();
-    if (usuals.isEmpty) return const SizedBox.shrink();
-
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.usuals,
-            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: theme.colors.mutedForeground),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            // A 140-wide tile: square picture plus two text lines, matching the grid.
-            height: 202,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: usuals.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) => SizedBox(
-                width: 140,
-                child: ItemTile(item: usuals[index], onTap: () => _tapItem(usuals[index])),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   /// After a POS order, save the attached customer's customization choices so
@@ -480,7 +454,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     // Keep the branch's money rules warm: an offline charge prices with them
     ref.watch(pricingProvider);
 
-    final activeCategoryId = _activeCategory ?? (categories.isNotEmpty ? categories.first.id : null);
+    // Their usuals open by default while they are attached; a different
+    // customer (or none) starts the chips over
+    ref.listen(saleProvider.select((s) => s.customer?.id), (_, _) => setState(() => _activeCategory = null));
+    final usuals = _usualItems(customer?.id, itemsAsync.value ?? const <CatalogItem>[]);
+    final firstCategoryId = categories.isNotEmpty ? categories.first.id : null;
+    final activeCategoryId = switch (_activeCategory) {
+      null => usuals.isNotEmpty ? _usualsCategory : firstCategoryId,
+      _usualsCategory when usuals.isEmpty => firstCategoryId,
+      final id => id,
+    };
     final wide = MediaQuery.sizeOf(context).width >= 1280;
     final busy = _placing || _pendingOrderId != null;
 
@@ -515,6 +498,17 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             spacing: 8,
                             runSpacing: 8,
                             children: [
+                              if (usuals.isNotEmpty)
+                                SizedBox(
+                                  height: 44,
+                                  child: FButton(
+                                    variant: activeCategoryId == _usualsCategory ? null : FButtonVariant.outline,
+                                    mainAxisSize: MainAxisSize.min,
+                                    onPress: () => setState(() => _activeCategory = _usualsCategory),
+                                    prefix: const Icon(FIcons.sparkles, size: 16),
+                                    child: Text(l10n.usuals, style: theme.typography.base.forButton),
+                                  ),
+                                ),
                               for (final category in categories)
                                 SizedBox(
                                   height: 44,
@@ -531,7 +525,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                       ],
                     ),
                   ),
-                  _usualsStrip(context, customer?.id, itemsAsync.value ?? const <CatalogItem>[]),
                   Expanded(
                     child: itemsAsync.when(
                       loading: () => LayoutBuilder(
@@ -594,8 +587,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                       ),
                       error: (_, _) => Center(child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground))),
                       data: (items) {
-                        final visible = items.where((i) => i.catalogTypeId == activeCategoryId).toList()
-                          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+                        final visible = activeCategoryId == _usualsCategory
+                            ? usuals
+                            : (items.where((i) => i.catalogTypeId == activeCategoryId).toList()
+                              ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder)));
                         if (visible.isEmpty) {
                           return Center(
                             child: Text(l10n.noItemsInCategory, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),

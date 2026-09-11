@@ -4045,6 +4045,12 @@
               "string"
             ],
             "format": "double"
+          },
+          "customerIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

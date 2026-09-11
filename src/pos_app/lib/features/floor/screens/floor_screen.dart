@@ -352,7 +352,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       child: FButton.icon(
                         variant: FButtonVariant.outline,
                         onPress: _findCustomer,
-                        child: const Icon(FIcons.userSearch, size: 20),
+                        child: const Icon(FIcons.idCard, size: 20),
                       ),
                     ),
                     const SizedBox(width: 8),

@@ -178,26 +178,34 @@ class _RequestCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
+              // "Acknowledge" is the long word; it gets the wider half
               if (!acked) ...[
                 Expanded(
+                  flex: 3,
                   child: SizedBox(
                     height: 44,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: acting ? null : onAcknowledge,
                       prefix: const Icon(FIcons.check, size: 20),
-                      child: Text(l10n.acknowledgeRequest, style: theme.typography.sm.forButton),
+                      child: Text(
+                        l10n.acknowledgeRequest,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.typography.sm.forButton,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
               ],
               Expanded(
+                flex: 2,
                 child: SizedBox(
                   height: 44,
                   child: FButton(
                     onPress: acting ? null : onDone,
-                    child: Text(l10n.done, style: theme.typography.sm.forButton),
+                    child: Text(l10n.done, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.forButton),
                   ),
                 ),
               ),
