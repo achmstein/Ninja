@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus, Sparkles } from 'lucide-react'
 import type {
   CatalogItemDto,
   ItemCustomizationDto,
@@ -160,11 +160,14 @@ function CustomizeForm({
   // hasn't touched the options yet — never clobber a manual change.
   const touched = useRef(false)
   const applied = useRef(false)
+  // Shown as a badge so the cashier knows the options came from this customer.
+  const [prefApplied, setPrefApplied] = useState(false)
   useEffect(() => {
     if (applied.current || touched.current) return
     if (preference?.selectedOptions?.length) {
       setSelections(preferenceSelections(item.customizations, preference))
       applied.current = true
+      setPrefApplied(true)
     }
   }, [preference, item.customizations])
 
@@ -214,7 +217,18 @@ function CustomizeForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className='text-xl'>{localized(item.name)}</DialogTitle>
+        <DialogTitle className='flex items-center gap-2 text-xl'>
+          {localized(item.name)}
+          {prefApplied && (
+            <span
+              title={t('preferenceLoaded')}
+              aria-label={t('preferenceLoaded')}
+              className='text-primary inline-flex'
+            >
+              <Sparkles className='size-4' />
+            </span>
+          )}
+        </DialogTitle>
         {localized(item.description) && (
           <DialogDescription>{localized(item.description)}</DialogDescription>
         )}

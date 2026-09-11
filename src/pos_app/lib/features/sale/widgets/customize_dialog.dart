@@ -41,6 +41,9 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
   // Once the cashier changes an option, a late-arriving preference must not
   // clobber it.
   bool _touched = false;
+  // True once the customer's saved choices were overlaid — drives the small
+  // indicator next to the item name.
+  bool _prefLoaded = false;
 
   CatalogItem get item => widget.item;
 
@@ -59,13 +62,18 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
     final saved = await ref.read(catalogRepositoryProvider).getCustomerItemPreference(userId, item.id);
     if (!mounted || _touched || saved.isEmpty) return;
     setState(() {
+      var appliedAny = false;
       for (final c in item.customizations) {
         final validOptionIds = c.options.map((o) => o.id).toSet();
         final chosen = (saved[c.id] ?? const <int>[]).where(validOptionIds.contains).toList();
         // Only overlay groups the customer actually has a saved choice for;
         // leave the item default in place otherwise.
-        if (chosen.isNotEmpty) _selections[c.id] = chosen;
+        if (chosen.isNotEmpty) {
+          _selections[c.id] = chosen;
+          appliedAny = true;
+        }
       }
+      if (appliedAny) _prefLoaded = true;
     });
   }
 
@@ -138,7 +146,17 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(item.name.localized(context), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(item.name.localized(context), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                if (_prefLoaded) ...[
+                  const SizedBox(width: 8),
+                  Icon(FIcons.sparkles, size: 18, color: theme.colors.primary),
+                ],
+              ],
+            ),
             if (description != null && description.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(description, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),

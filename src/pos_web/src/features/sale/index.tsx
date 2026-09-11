@@ -370,9 +370,39 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // content changes.
   const requestIdRef = useRef<{ signature: string; id: string } | null>(null)
 
+  // After a POS order for an attached customer, remember how their items were
+  // customized so it prefills next time — the same thing the customer app does
+  // for its own orders. Fire-and-forget; a failure just means no prefill.
+  const saveCustomerPreferences = (customerId: string, saleLines: SaleLine[]) => {
+    const byProduct = new Map<
+      number,
+      { customizationId: number; optionId: number }[]
+    >()
+    for (const line of saleLines) {
+      if (!line.customizations?.length) continue
+      // Last line for a product wins, matching the app's last-order-wins rule
+      byProduct.set(
+        line.productId,
+        line.customizations.map((c) => ({
+          customizationId: c.customizationId,
+          optionId: c.optionId,
+        }))
+      )
+    }
+    if (byProduct.size === 0) return
+    const items = [...byProduct.entries()].map(
+      ([catalogItemId, selectedOptions]) => ({ catalogItemId, selectedOptions })
+    )
+    apiClient
+      .post(`/api/catalog/customers/${customerId}/preferences`, { items })
+      .catch(() => {})
+  }
+
   const placeOrder = useMutation({
     ...createPosOrderMutation(),
     onSuccess: (data) => {
+      // Save the attached customer's choices before the cart is cleared below
+      if (customer?.id) saveCustomerPreferences(customer.id, lines)
       // The order landed — the next charge is a new logical request
       requestIdRef.current = null
       const orderId = toNumber(data.orderId)

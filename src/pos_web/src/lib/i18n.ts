@@ -388,6 +388,7 @@ const dictionary = {
   inTheRoom: { en: 'In the room', ar: 'اللي في الأوضة' },
   whoseRound: { en: "Whose round?", ar: 'الطلب ده لمين؟' },
   usuals: { en: 'Usuals', ar: 'المعتاد' },
+  preferenceLoaded: { en: 'Usual', ar: 'المعتاد' },
   someoneElse: { en: 'Someone else', ar: 'حد تاني' },
   onCustomerTab: {
     en: "On the customer's tab",

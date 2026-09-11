@@ -223,6 +223,13 @@ public static class CatalogApi
             .WithTags("Preferences")
             .RequireAuthorization();
 
+        api.MapPost("/customers/{userId}/preferences", SaveUserPreferencesForCustomer)
+            .WithName("SaveUserPreferencesForCustomer")
+            .WithSummary("Save a specific customer's preferences")
+            .WithDescription("Staff-only: record a given customer's customization choices after a POS order, so they pre-fill next time.")
+            .WithTags("Preferences")
+            .RequireAuthorization("Pos");
+
         // Bundle deals endpoints
         api.MapGet("/bundles", GetBundles)
             .WithName("GetBundles")
@@ -1436,9 +1443,41 @@ public static class CatalogApi
         [FromBody] SaveUserPreferencesRequest request)
     {
         var userId = user.GetUserId();
-        if (string.IsNullOrEmpty(userId) || request.Items.Count == 0)
+        if (string.IsNullOrEmpty(userId))
         {
             return TypedResults.Ok();
+        }
+
+        await SavePreferencesForUserAsync(services.Context, userId, request);
+        return TypedResults.Ok();
+    }
+
+    // Staff save a specific customer's preferences (the till, after a POS order
+    // for an attached customer, records how the cashier customized their items —
+    // so it prefills next time, the same as the customer app does for its own
+    // orders). Guarded by "Pos".
+    public static async Task<Ok> SaveUserPreferencesForCustomer(
+        [AsParameters] CatalogServices services,
+        [Description("The customer's identity id")] string userId,
+        [FromBody] SaveUserPreferencesRequest request)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return TypedResults.Ok();
+        }
+
+        await SavePreferencesForUserAsync(services.Context, userId, request);
+        return TypedResults.Ok();
+    }
+
+    // Upsert one user's saved customization options, last-write-wins per item.
+    // Shared by the token-scoped and the staff (for-customer) save endpoints.
+    private static async Task SavePreferencesForUserAsync(
+        CatalogContext context, string userId, SaveUserPreferencesRequest request)
+    {
+        if (request.Items.Count == 0)
+        {
+            return;
         }
 
         foreach (var item in request.Items)
@@ -1448,8 +1487,7 @@ public static class CatalogApi
                 continue;
             }
 
-            // Find or create preference
-            var existingPreference = await services.Context.UserItemPreferences
+            var existingPreference = await context.UserItemPreferences
                 .Include(p => p.SelectedOptions)
                 .FirstOrDefaultAsync(p =>
                     p.UserId == userId &&
@@ -1457,10 +1495,8 @@ public static class CatalogApi
 
             if (existingPreference != null)
             {
-                // Update existing preference - clear old options and add new ones
-                services.Context.UserPreferenceOptions.RemoveRange(existingPreference.SelectedOptions);
+                context.UserPreferenceOptions.RemoveRange(existingPreference.SelectedOptions);
                 existingPreference.SelectedOptions.Clear();
-
                 foreach (var option in item.SelectedOptions)
                 {
                     existingPreference.SelectedOptions.Add(new Model.UserPreferenceOption
@@ -1473,14 +1509,12 @@ public static class CatalogApi
             }
             else
             {
-                // Create new preference
                 var newPreference = new Model.UserItemPreference
                 {
                     UserId = userId,
                     CatalogItemId = item.CatalogItemId,
                     LastUpdated = DateTime.UtcNow
                 };
-
                 foreach (var option in item.SelectedOptions)
                 {
                     newPreference.SelectedOptions.Add(new Model.UserPreferenceOption
@@ -1489,13 +1523,11 @@ public static class CatalogApi
                         OptionId = option.OptionId
                     });
                 }
-
-                services.Context.UserItemPreferences.Add(newPreference);
+                context.UserItemPreferences.Add(newPreference);
             }
         }
 
-        await services.Context.SaveChangesAsync();
-        return TypedResults.Ok();
+        await context.SaveChangesAsync();
     }
 
     // Favorites handlers

@@ -17,6 +17,11 @@ abstract class CatalogRepository {
   /// A customer's most-frequently-ordered item ids, ranked. Empty when the
   /// customer has too little history (or the lookup fails).
   Future<List<int>> getCustomerTopItems(String userId);
+
+  /// Record a customer's customization choices after a POS order, so they
+  /// prefill next time. `items` is `[{catalogItemId, selectedOptions:[{customizationId, optionId}]}]`.
+  /// Fire-and-forget: a failure just means no prefill.
+  Future<void> saveCustomerPreferences(String userId, List<Map<String, dynamic>> items);
 }
 
 class ApiCatalogRepository implements CatalogRepository {
@@ -67,6 +72,16 @@ class ApiCatalogRepository implements CatalogRepository {
       return (response.data ?? []).map((e) => (e as num).toInt()).toList();
     } catch (_) {
       return const [];
+    }
+  }
+
+  @override
+  Future<void> saveCustomerPreferences(String userId, List<Map<String, dynamic>> items) async {
+    if (items.isEmpty) return;
+    try {
+      await _apiClient.post('customers/$userId/preferences', data: {'items': items});
+    } catch (_) {
+      // A failure just means the customer's choices aren't remembered this time.
     }
   }
 }

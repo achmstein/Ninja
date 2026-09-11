@@ -18,6 +18,7 @@ import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
+import '../../catalog/services/catalog_service.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/providers/customer_providers.dart';
 import '../../orders/services/order_service.dart';
@@ -182,6 +183,24 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     );
   }
 
+  /// After a POS order, save the attached customer's customization choices so
+  /// they prefill next time. Last line per product wins (matches the app).
+  void _saveCustomerPreferences(String? customerId, List<SaleLine> lines) {
+    if (customerId == null || customerId.isEmpty) return;
+    final byProduct = <int, List<Map<String, int>>>{};
+    for (final line in lines) {
+      if (line.customizations.isEmpty) continue;
+      byProduct[line.productId] = [
+        for (final c in line.customizations) {'customizationId': c.customizationId, 'optionId': c.optionId},
+      ];
+    }
+    if (byProduct.isEmpty) return;
+    final items = [
+      for (final entry in byProduct.entries) {'catalogItemId': entry.key, 'selectedOptions': entry.value},
+    ];
+    unawaited(ref.read(catalogRepositoryProvider).saveCustomerPreferences(customerId, items));
+  }
+
   Future<void> _tapItem(CatalogItem item) async {
     if (item.customizations.isNotEmpty) {
       // Pre-fill from the attached customer's saved choices, if any.
@@ -232,6 +251,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       // The order landed — the next charge is a new logical request
       _requestSignature = null;
       _requestId = null;
+      // Remember how this customer's items were customized, so they prefill
+      // next time — fire-and-forget, the same as the customer app does.
+      _saveCustomerPreferences(sale.customer?.id, sale.lines);
       if (!mounted) return;
 
       // Adding to a bill already on the floor: the order names the ticket,
