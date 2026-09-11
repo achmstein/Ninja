@@ -400,6 +400,10 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     final query = _searchQuery.toLowerCase();
 
     for (final entry in items.entries) {
+      // Skip the synthetic "Most Popular" group (id -1): it re-lists popular
+      // items that also live in their real category, which would otherwise make
+      // a popular item show twice in search results.
+      if (entry.key.id == -1) continue;
       final matchingItems = entry.value
           .where((item) =>
               item.name.getText(locale).toLowerCase().contains(query) ||
