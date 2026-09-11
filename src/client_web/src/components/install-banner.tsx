@@ -33,12 +33,7 @@ export function InstallBanner() {
   const [dismissed, setDismissed] = useState(readDismissed)
   const [howOpen, setHowOpen] = useState(false)
 
-  // TEMPORARY (revert after review): always render the banner on prod so its
-  // look can be reviewed. Real guard:
-  // if (isStandalone || dismissed || !(canInstall || isIos)) return null
-  void isStandalone
-  void dismissed
-  void isIos
+  if (isStandalone || dismissed || !(canInstall || isIos)) return null
 
   const onInstall = () => {
     if (canInstall) void install()

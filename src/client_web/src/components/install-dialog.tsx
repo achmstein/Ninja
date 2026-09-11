@@ -3,7 +3,6 @@ import { useT } from '@/lib/i18n'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -21,7 +20,7 @@ export function InstallDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t('installChillax')}</DialogTitle>
         </DialogHeader>
@@ -29,7 +28,6 @@ export function InstallDialog({
           <Step number={1} icon={Share} text={t('installIosStepShare')} />
           <Step number={2} icon={SquarePlus} text={t('installIosStepAdd')} />
         </ol>
-        <DialogDescription>{t('installIosOutcome')}</DialogDescription>
       </DialogContent>
     </Dialog>
   )

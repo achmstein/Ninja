@@ -83,10 +83,6 @@ const webExtras = {
     en: 'Choose “Add to Home Screen”',
     ar: 'اختار «Add to Home Screen» (إضافة إلى الشاشة الرئيسية)',
   },
-  installIosOutcome: {
-    en: 'Chillax then opens full screen from your home screen, like any other app.',
-    ar: 'بعدها تشيلاكس هيفتح من الهوم سكرين بشاشة كاملة زي أي ابلكيشن.',
-  },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }
