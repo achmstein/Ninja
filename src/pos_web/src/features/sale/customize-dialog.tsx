@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus } from 'lucide-react'
 import type {
   CatalogItemDto,
   ItemCustomizationDto,
+  UserItemPreferenceDto,
 } from '@/api/catalog/types.gen'
+import { apiClient } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -36,6 +39,31 @@ function defaultSelections(
   return result
 }
 
+// When a customer is attached, their saved choices take precedence over the
+// item defaults (same overlay client_web applies for the customer themselves);
+// options that no longer exist on the item are dropped.
+function preferenceSelections(
+  customizations: ItemCustomizationDto[] | undefined,
+  preference: UserItemPreferenceDto | undefined
+): Selections {
+  if (!preference?.selectedOptions?.length) {
+    return defaultSelections(customizations)
+  }
+  const result = defaultSelections(customizations)
+  for (const customization of customizations ?? []) {
+    const saved = preference.selectedOptions
+      .filter((o) => Number(o.customizationId) === Number(customization.id))
+      .map((o) => Number(o.optionId))
+      .filter((optionId) =>
+        (customization.options ?? []).some((o) => Number(o.id) === optionId)
+      )
+    if (saved.length > 0) {
+      result[String(customization.id)] = saved
+    }
+  }
+  return result
+}
+
 function selectionsToCustomizations(
   item: CatalogItemDto,
   selections: Selections
@@ -58,6 +86,9 @@ function selectionsToCustomizations(
 
 type CustomizeDialogProps = {
   item: CatalogItemDto | null
+  /** The account this round is for, if one is attached; its saved choices
+   *  pre-fill the form. Null for a walk-in — item defaults only. */
+  customerId?: string | null
   onOpenChange: (open: boolean) => void
   onAdd: (line: SaleLine) => void
 }
@@ -70,6 +101,7 @@ type CustomizeDialogProps = {
  */
 export function CustomizeDialog({
   item,
+  customerId,
   onOpenChange,
   onAdd,
 }: CustomizeDialogProps) {
@@ -77,8 +109,13 @@ export function CustomizeDialog({
     <Dialog open={!!item} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
         {item && (
-          // Keyed so switching items resets the form state
-          <CustomizeForm key={String(item.id)} item={item} onAdd={onAdd} />
+          // Keyed on item + customer so switching either resets the form state
+          <CustomizeForm
+            key={`${item.id}:${customerId ?? ''}`}
+            item={item}
+            customerId={customerId}
+            onAdd={onAdd}
+          />
         )}
       </DialogContent>
     </Dialog>
@@ -87,9 +124,11 @@ export function CustomizeDialog({
 
 function CustomizeForm({
   item,
+  customerId,
   onAdd,
 }: {
   item: CatalogItemDto
+  customerId?: string | null
   onAdd: (line: SaleLine) => void
 }) {
   const t = useT()
@@ -101,6 +140,33 @@ function CustomizeForm({
   const [selections, setSelections] = useState<Selections>(() =>
     defaultSelections(item.customizations)
   )
+
+  // The attached customer's saved choices for this item. A miss (404) just
+  // leaves the defaults; the lookup never blocks adding the item.
+  const { data: preference } = useQuery({
+    queryKey: ['itemPreferenceForCustomer', customerId, item.id],
+    queryFn: async () => {
+      const response = await apiClient.get<UserItemPreferenceDto>(
+        `/api/catalog/preferences/${item.id}/for/${customerId}`
+      )
+      return response.data
+    },
+    enabled: !!customerId,
+    retry: false,
+    staleTime: 60_000,
+  })
+
+  // Overlay the saved preference once it arrives, but only while the cashier
+  // hasn't touched the options yet — never clobber a manual change.
+  const touched = useRef(false)
+  const applied = useRef(false)
+  useEffect(() => {
+    if (applied.current || touched.current) return
+    if (preference?.selectedOptions?.length) {
+      setSelections(preferenceSelections(item.customizations, preference))
+      applied.current = true
+    }
+  }, [preference, item.customizations])
 
   const chosen = selectionsToCustomizations(item, selections)
   const unitPrice =
@@ -115,6 +181,7 @@ function CustomizeForm({
     customization: ItemCustomizationDto,
     optionId: number
   ) => {
+    touched.current = true
     const key = String(customization.id)
     const current = selections[key] ?? []
     if (customization.allowMultiple) {

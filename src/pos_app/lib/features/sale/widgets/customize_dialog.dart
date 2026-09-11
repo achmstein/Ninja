@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -6,33 +7,40 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
+import '../../catalog/services/catalog_service.dart';
 import '../models/sale_line.dart';
 
 /// Customization picker for an item pad tile: option chips (defaults
 /// pre-selected), quantity, special instructions. Same selection semantics
 /// as the customer app — required single-choice groups cannot be cleared,
-/// optional ones toggle off, allowMultiple groups multi-select. Item
-/// defaults only: the cashier is signed in, not the customer, so the saved
-/// preferences the customer app applies would be the wrong person's.
-Future<SaleLine?> showCustomizeDialog(BuildContext context, CatalogItem item) {
+/// optional ones toggle off, allowMultiple groups multi-select.
+///
+/// When a customer is attached to the sale ([customerId]), their saved
+/// choices for this item overlay the defaults, so the round comes up the way
+/// they usually take it. The cashier can still change anything.
+Future<SaleLine?> showCustomizeDialog(BuildContext context, CatalogItem item, {String? customerId}) {
   return showPosDialog<SaleLine>(
     context,
-    builder: (context) => _CustomizeForm(item: item),
+    builder: (context) => _CustomizeForm(item: item, customerId: customerId),
   );
 }
 
-class _CustomizeForm extends StatefulWidget {
+class _CustomizeForm extends ConsumerStatefulWidget {
   final CatalogItem item;
-  const _CustomizeForm({required this.item});
+  final String? customerId;
+  const _CustomizeForm({required this.item, this.customerId});
 
   @override
-  State<_CustomizeForm> createState() => _CustomizeFormState();
+  ConsumerState<_CustomizeForm> createState() => _CustomizeFormState();
 }
 
-class _CustomizeFormState extends State<_CustomizeForm> {
+class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
   int _quantity = 1;
   final _instructions = TextEditingController();
   late final Map<int, List<int>> _selections;
+  // Once the cashier changes an option, a late-arriving preference must not
+  // clobber it.
+  bool _touched = false;
 
   CatalogItem get item => widget.item;
 
@@ -42,6 +50,23 @@ class _CustomizeFormState extends State<_CustomizeForm> {
     _selections = {
       for (final c in item.customizations) c.id: c.options.where((o) => o.isDefault).map((o) => o.id).toList(),
     };
+    _loadPreference();
+  }
+
+  Future<void> _loadPreference() async {
+    final userId = widget.customerId;
+    if (userId == null || userId.isEmpty) return;
+    final saved = await ref.read(catalogRepositoryProvider).getCustomerItemPreference(userId, item.id);
+    if (!mounted || _touched || saved.isEmpty) return;
+    setState(() {
+      for (final c in item.customizations) {
+        final validOptionIds = c.options.map((o) => o.id).toSet();
+        final chosen = (saved[c.id] ?? const <int>[]).where(validOptionIds.contains).toList();
+        // Only overlay groups the customer actually has a saved choice for;
+        // leave the item default in place otherwise.
+        if (chosen.isNotEmpty) _selections[c.id] = chosen;
+      }
+    });
   }
 
   @override
@@ -71,6 +96,7 @@ class _CustomizeFormState extends State<_CustomizeForm> {
       item.customizations.any((c) => c.isRequired && (_selections[c.id] ?? const []).isEmpty);
 
   void _toggle(ItemCustomization customization, int optionId) {
+    _touched = true;
     final current = _selections[customization.id] ?? const [];
     setState(() {
       if (customization.allowMultiple) {

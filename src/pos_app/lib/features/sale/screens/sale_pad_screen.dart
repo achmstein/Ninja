@@ -140,7 +140,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   Future<void> _tapItem(CatalogItem item) async {
     if (item.customizations.isNotEmpty) {
-      final line = await showCustomizeDialog(context, item);
+      // Pre-fill from the attached customer's saved choices, if any.
+      final customerId = ref.read(saleProvider).customer?.id;
+      final line = await showCustomizeDialog(context, item, customerId: customerId);
       if (line != null) ref.read(saleProvider.notifier).add(line);
       return;
     }

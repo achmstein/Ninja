@@ -715,6 +715,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
       <CustomizeDialog
         item={customizeItem}
+        customerId={customer?.id ?? null}
         onOpenChange={(open) => !open && setCustomizeItem(null)}
         onAdd={(line) => {
           add(line)

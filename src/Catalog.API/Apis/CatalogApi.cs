@@ -195,6 +195,13 @@ public static class CatalogApi
             .WithTags("Preferences")
             .RequireAuthorization();
 
+        api.MapGet("/preferences/{catalogItemId:int}/for/{userId}", GetUserPreferenceForCustomer)
+            .WithName("GetUserPreferenceForCustomer")
+            .WithSummary("Get a specific customer's saved preferences for a menu item")
+            .WithDescription("Staff-only: read a given customer's saved customization preferences for a menu item, so the till can pre-fill the customize dialog when that customer is attached to the sale.")
+            .WithTags("Preferences")
+            .RequireAuthorization("Pos");
+
         api.MapGet("/preferences", GetUserPreferences)
             .WithName("GetUserPreferences")
             .WithSummary("Get all user preferences")
@@ -1329,6 +1336,31 @@ public static class CatalogApi
         [Description("The catalog item id")] int catalogItemId)
     {
         var userId = user.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return TypedResults.NotFound();
+        }
+
+        var preference = await services.Context.UserItemPreferences
+            .Include(p => p.SelectedOptions)
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.CatalogItemId == catalogItemId);
+
+        if (preference == null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        return TypedResults.Ok(preference.ToDto());
+    }
+
+    // Staff read a specific customer's saved preferences (the cashier is
+    // signed in, not the customer, so we take the customer id from the route
+    // rather than the token). Guarded by the "Pos" policy.
+    public static async Task<Results<Ok<UserItemPreferenceDto>, NotFound>> GetUserPreferenceForCustomer(
+        [AsParameters] CatalogServices services,
+        [Description("The catalog item id")] int catalogItemId,
+        [Description("The customer's identity id")] string userId)
+    {
         if (string.IsNullOrEmpty(userId))
         {
             return TypedResults.NotFound();
