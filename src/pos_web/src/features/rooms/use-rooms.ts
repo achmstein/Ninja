@@ -15,7 +15,7 @@ import {
   startWalkInSessionMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import type { ReservationViewModel } from '@/api/spaces/types.gen'
-import { useT, type TranslationKey } from '@/lib/i18n'
+import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { type PlayerMode, SESSION_ACTIVE, SESSION_RESERVED } from './status'
@@ -25,6 +25,12 @@ import { type PlayerMode, SESSION_ACTIVE, SESSION_RESERVED } from './status'
  * reads behind every room screen. SignalR's RoomStatusChanged is the
  * primary update path (see use-pos-notifications); the polls are fallbacks.
  */
+/** Orders names the way people read them: digit runs compare by value, so
+ *  "Room 2" comes before "Room 10", and letter case does not matter. */
+export function naturalCompare(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+}
+
 export function useRooms({ enabled = true }: { enabled?: boolean } = {}) {
   const roomsQuery = useQuery({
     ...listRoomsOptions(),
@@ -37,12 +43,14 @@ export function useRooms({ enabled = true }: { enabled?: boolean } = {}) {
     refetchInterval: 30_000,
   })
 
+  // In the order people count them: Room 2 before Room 10
+  const localized = useLocalized()
   const rooms = useMemo(
     () =>
       [...(roomsQuery.data ?? [])].sort((a, b) =>
-        (a.name?.en ?? '').localeCompare(b.name?.en ?? '')
+        naturalCompare(localized(a.name), localized(b.name))
       ),
-    [roomsQuery.data]
+    [roomsQuery.data, localized]
   )
   const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
 

@@ -7,6 +7,11 @@ import 'package:forui/forui.dart';
 /// scrolled up into the part still showing. Forui's default would shove
 /// the dialog up and squeeze it into the half of a landscape tablet the
 /// keyboard leaves — less than most dialogs need.
+///
+/// A tap anywhere that is not a control while the keyboard is up — the
+/// dimmed screen or the dialog's own blank space — only puts the keyboard
+/// away: the cashier tapped to see the dialog again, not to throw away what
+/// they typed. With no keyboard up, a tap outside dismisses, as before.
 Future<T?> showPosDialog<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -15,6 +20,8 @@ Future<T?> showPosDialog<T>(
   return showFDialog<T>(
     context: context,
     useRootNavigator: true,
+    // Forui's barrier pops on any tap; ours (below) asks about the keyboard first
+    barrierDismissible: false,
     builder: (context, style, animation) {
       // Read the keyboard here, above the dialog, then hide it from the
       // dialog so it stays put; the body gets it back through [_Keyboard]
@@ -24,11 +31,35 @@ Future<T?> showPosDialog<T>(
         removeBottom: true,
         child: _Keyboard(
           height: keyboard,
-          child: FDialog.raw(
-            style: style,
-            animation: animation,
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            builder: (context, _) => builder(context),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  excludeFromSemantics: true,
+                  onTap: () {
+                    if (keyboard > 0) {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                    } else {
+                      Navigator.of(context, rootNavigator: true).pop();
+                    }
+                  },
+                ),
+              ),
+              // Blank space inside the dialog: controls win the tap, anything
+              // else lands here
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                excludeFromSemantics: true,
+                onTap: keyboard > 0 ? () => FocusManager.instance.primaryFocus?.unfocus() : null,
+                child: FDialog.raw(
+                  style: style,
+                  animation: animation,
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  builder: (context, _) => builder(context),
+                ),
+              ),
+            ],
           ),
         ),
       );

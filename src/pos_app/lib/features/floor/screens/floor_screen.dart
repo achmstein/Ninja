@@ -13,6 +13,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/heading.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/utils/natural_order.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../orders/providers/pending_orders_provider.dart';
@@ -232,7 +233,26 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final tickets = ref.watch(openTicketsProvider);
     final rooms = ref.watch(roomsProvider);
     final tablesAsync = ref.watch(tablesProvider);
-    final tables = tablesAsync.value ?? const <CafeTable>[];
+    // Places in the order people count them — Room 2 before Room 10 — and
+    // bills in the order of their places: rooms, then tables, then tabs
+    final sortedRooms = [...rooms.rooms]
+      ..sort((a, b) => naturalCompare(a.name.localized(context), b.name.localized(context)));
+    final sortedTables = [...tablesAsync.value ?? const <CafeTable>[]]
+      ..sort((a, b) => naturalCompare(a.name.localized(context), b.name.localized(context)));
+    final roomRank = {for (final (i, room) in sortedRooms.indexed) room.id: i};
+    final tableRank = {for (final (i, table) in sortedTables.indexed) table.id: i};
+    int placeRank(TicketSummary b) => switch (b.type) {
+          TicketType.room => roomRank[b.roomId] ?? sortedRooms.length,
+          TicketType.table => tableRank[b.tableId] ?? sortedTables.length,
+          _ => 0,
+        };
+    int compareBills(TicketSummary a, TicketSummary b) {
+      final byType = (a.type?.index ?? 99).compareTo(b.type?.index ?? 99);
+      if (byType != 0) return byType;
+      final byPlace = placeRank(a).compareTo(placeRank(b));
+      if (byPlace != 0) return byPlace;
+      return (a.openedAt ?? DateTime(0)).compareTo(b.openedAt ?? DateTime(0));
+    }
     // First load of the room/table list: shimmer the column, not blank
     final placesLoading = (rooms.isLoading && rooms.rooms.isEmpty) || !tablesAsync.hasValue;
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
@@ -280,9 +300,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       child: placesLoading
                           ? _placesSkeleton(context)
                           : PlaceList(
-                              rooms: rooms.rooms,
+                              rooms: sortedRooms,
                               sessions: rooms.activeSessions,
-                              tables: tables,
+                              tables: sortedTables,
                               tickets: tickets.value ?? const [],
                               busy: _openingTable,
                               onNewTab: _newTab,
@@ -391,7 +411,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                           style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                     ),
                     data: (list) => _Bills(
-                      bills: list,
+                      bills: [...list]..sort(compareBills),
                       above: above,
                       // An order still waiting lights the bill it will land on
                       waitingIds: {
@@ -469,10 +489,8 @@ class _BillsState extends State<_Bills> {
     final clocks = widget.clocks;
     final filter = widget.filter;
     final onFilter = widget.onFilter;
-    // Bills by last activity: what just happened is what the cashier is
-    // about to be asked about
-    final sorted = [...bills]
-      ..sort((a, b) => (b.lastActivityAt ?? DateTime(0)).compareTo(a.lastActivityAt ?? DateTime(0)));
+    // Already in place order: rooms, tables, then counter tabs
+    final sorted = bills;
     if (sorted.isEmpty) {
       return SingleChildScrollView(
         child: Column(

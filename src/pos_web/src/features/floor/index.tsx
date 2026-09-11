@@ -38,7 +38,11 @@ import {
   isActive,
   isReserved,
 } from '@/features/rooms/status'
-import { useRooms, useSecondsClock } from '@/features/rooms/use-rooms'
+import {
+  naturalCompare,
+  useRooms,
+  useSecondsClock,
+} from '@/features/rooms/use-rooms'
 import { API_VERSION } from '@/lib/api-client'
 import {
   pendingForTicket,
@@ -186,7 +190,12 @@ export function Floor() {
   })
   const { rooms, sessions, sessionForRoom, isLoading: roomsLoading } = useRooms()
   const { pending } = usePendingOrders()
-  const { data: tables = [], isLoading: tablesLoading } = useQuery(listTablesOptions())
+  const { data: unsortedTables = [], isLoading: tablesLoading } = useQuery(
+    listTablesOptions()
+  )
+  const tables = [...unsortedTables].sort((a, b) =>
+    naturalCompare(localized(a.name), localized(b.name))
+  )
 
   const openTable = useMutation({
     ...openTicketMutation(),
@@ -234,12 +243,23 @@ export function Floor() {
   const running = tickets.some((ticket) => isActive(sessionForTicket(ticket)))
   const nowMs = useSecondsClock(running || reserved.length > 0)
 
-  // Bills by last activity: what just happened is what the cashier is
-  // about to be asked about
+  // Bills in the order of their places: rooms, then tables, then counter
+  // tabs, each in place order, oldest first within a place
+  const roomRank = new Map(rooms.map((r, i) => [toNumber(r.id), i]))
+  const tableRank = new Map(tables.map((tb, i) => [toNumber(tb.id), i]))
+  const typeRank = (type?: string) =>
+    type === 'Room' ? 0 : type === 'Table' ? 1 : 2
+  const placeRank = (ticket: TicketSummary) =>
+    ticket.type === 'Room'
+      ? (roomRank.get(toNumber(ticket.roomId)) ?? rooms.length)
+      : ticket.type === 'Table'
+        ? (tableRank.get(toNumber(ticket.tableId)) ?? tables.length)
+        : 0
   const bills = [...tickets].sort(
     (a, b) =>
-      new Date(b.lastActivityAt ?? 0).getTime() -
-      new Date(a.lastActivityAt ?? 0).getTime()
+      typeRank(a.type) - typeRank(b.type) ||
+      placeRank(a) - placeRank(b) ||
+      new Date(a.openedAt ?? 0).getTime() - new Date(b.openedAt ?? 0).getTime()
   )
 
   const counts = {
