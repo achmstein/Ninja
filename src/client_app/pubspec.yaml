@@ -1,7 +1,7 @@
 ﻿name: chillax_mobile
 description: "Chillax - Cafe ordering and gaming rooms"
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.3+4
 
 environment:
   sdk: ^3.11.0
