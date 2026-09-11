@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,12 @@ export function InstallBanner() {
   const [dismissed, setDismissed] = useState(readDismissed)
   const [howOpen, setHowOpen] = useState(false)
 
-  if (isStandalone || dismissed || !(canInstall || isIos)) return null
+  // TEMPORARY (revert after review): always render the banner on prod so its
+  // look can be reviewed. Real guard:
+  // if (isStandalone || dismissed || !(canInstall || isIos)) return null
+  void isStandalone
+  void dismissed
+  void isIos
 
   const onInstall = () => {
     if (canInstall) void install()
@@ -46,13 +51,12 @@ export function InstallBanner() {
 
   return (
     <>
-      {/* Compact single row: icon, title, install action, dismiss — no
-          description, so it stays out of the way above the menu */}
-      <div className='flex items-center gap-2.5 rounded-lg border px-3 py-2'>
-        <Download className='text-primary size-4 shrink-0' />
-        <span className='min-w-0 flex-1 truncate text-sm font-medium'>
+      {/* Compact strip; the traveling border beam is the eye-catch (no icon —
+          the app mark already sits in the top bar). */}
+      <div className='border-beam bg-card relative flex items-center gap-2.5 rounded-[10px] border px-3 py-2 shadow-sm'>
+        <p className='font-display-ar text-primary min-w-0 flex-1 text-lg leading-tight'>
           {t('installAppTitle')}
-        </span>
+        </p>
         <Button size='sm' className='h-8 shrink-0' onClick={onInstall}>
           {canInstall ? t('install') : t('howTo')}
         </Button>

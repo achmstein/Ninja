@@ -70,7 +70,7 @@ const webExtras = {
   toastWarning: { en: 'Warning', ar: 'تنبيه' },
   // Installing the PWA — web only by definition
   installApp: { en: 'Install app', ar: 'نزّل الابلكيشن' },
-  installAppTitle: { en: 'Install the Chillax app', ar: 'نزّل ابلكيشن تشيلاكس' },
+  installAppTitle: { en: 'Get the Chillax app now', ar: 'نزل الابلكيشن عندك دلوقتي' },
   install: { en: 'Install', ar: 'تنزيل' },
   howTo: { en: 'How?', ar: 'إزاي؟' },
   notNow: { en: 'Not now', ar: 'مش دلوقتي' },

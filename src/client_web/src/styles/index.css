@@ -122,3 +122,37 @@ body[data-scroll-locked][data-scroll-locked] {
     transform: translateX(-100%);
   }
 }
+
+/* Install banner — "border beam" (MagicUI-style): a short light comet travels
+   along the rounded border to draw the eye. Pure CSS via offset-path; the comet
+   turns to follow the border (offset-rotate: auto). */
+@keyframes beam-travel {
+  to {
+    offset-distance: 100%;
+  }
+}
+.border-beam::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #f59e0b, #fde68a, transparent);
+  filter: drop-shadow(0 0 5px #f59e0b);
+  offset-path: rect(0 100% 100% 0 round 10px);
+  offset-distance: 0%;
+  offset-rotate: auto;
+  animation: beam-travel 4s linear infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .border-beam::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Punchy Arabic display face for the install headline */
+.font-display-ar {
+  font-family: 'Lalezar', 'Cairo', system-ui, sans-serif;
+}
