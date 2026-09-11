@@ -179,9 +179,9 @@ export function Floor() {
     // quick poll while a just-started session's bill is on its way
     refetchInterval: startedRoomId != null ? 600 : 20_000,
   })
-  const { rooms, sessions, sessionForRoom } = useRooms()
+  const { rooms, sessions, sessionForRoom, isLoading: roomsLoading } = useRooms()
   const { pending } = usePendingOrders()
-  const { data: tables = [] } = useQuery(listTablesOptions())
+  const { data: tables = [], isLoading: tablesLoading } = useQuery(listTablesOptions())
 
   const openTable = useMutation({
     ...openTicketMutation(),
@@ -308,6 +308,7 @@ export function Floor() {
           tickets={tickets}
           busy={openTable.isPending}
           onNewTab={() => setNewTabOpen(true)}
+          loading={roomsLoading || tablesLoading}
           onPickRoom={pickRoom}
           onPickTable={pickTable}
         />
@@ -422,7 +423,22 @@ export function Floor() {
         )}
 
         {isLoading ? (
-          <Skeleton className='h-48 rounded-xl' />
+          <div className='grid grid-cols-[repeat(auto-fill,minmax(180px,220px))] gap-3'>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className='bg-card flex min-h-28 flex-col gap-2 rounded-xl border p-3'
+              >
+                {/* icon + name, a clock line, and the total — a bill card's shape */}
+                <div className='flex items-center gap-2'>
+                  <Skeleton className='size-4 rounded' />
+                  <Skeleton className='h-4 flex-1' />
+                </div>
+                <Skeleton className='h-3 w-16' />
+                <Skeleton className='mt-auto h-6 w-20' />
+              </div>
+            ))}
+          </div>
         ) : bills.length === 0 ? (
           <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
             <p className='text-lg font-medium'>{t('noOpenBills')}</p>

@@ -371,9 +371,21 @@ export function TicketScreen({
 
   if (isLoading) {
     return (
-      <div className='mx-auto flex max-w-3xl flex-col gap-3 p-4'>
-        <Skeleton className='h-12 w-64' />
-        <Skeleton className='h-64 rounded-xl' />
+      <div className='mx-auto flex max-w-3xl flex-col gap-4 p-4'>
+        {/* Title, then bill lines (name + amount), then a total — the ticket's shape */}
+        <Skeleton className='h-10 w-56' />
+        <div className='bg-card flex flex-col gap-4 rounded-xl border p-4'>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className='flex items-center justify-between gap-3'>
+              <Skeleton className='h-4 w-1/2' />
+              <Skeleton className='h-4 w-14' />
+            </div>
+          ))}
+          <div className='mt-2 flex items-center justify-between gap-3 border-t pt-3'>
+            <Skeleton className='h-5 w-20' />
+            <Skeleton className='h-5 w-20' />
+          </div>
+        </div>
       </div>
     )
   }

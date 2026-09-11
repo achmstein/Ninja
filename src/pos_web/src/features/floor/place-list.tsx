@@ -3,6 +3,7 @@ import { Armchair, DoorOpen, Plus, Search, ShoppingBag } from 'lucide-react'
 import type { TicketSummary } from '@/api/sales/types.gen'
 import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   elapsedSeconds,
   formatClock,
@@ -22,6 +23,7 @@ type PlaceListProps = {
   tables: TableViewModel[]
   tickets: TicketSummary[]
   busy: boolean
+  loading: boolean
   onNewTab: () => void
   onPickRoom: (room: RoomViewModel) => void
   onPickTable: (table: TableViewModel) => void
@@ -51,6 +53,7 @@ export function PlaceList({
   tables,
   tickets,
   busy,
+  loading,
   onNewTab,
   onPickRoom,
   onPickTable,
@@ -101,6 +104,19 @@ export function PlaceList({
           <span className='flex-1 font-medium'>{t('newTab')}</span>
           <ShoppingBag className='text-muted-foreground size-4' />
         </button>
+      )}
+
+      {loading && freeRooms.length === 0 && freeTables.length === 0 && (
+        <>
+          <Heading>{t('rooms')}</Heading>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className='flex h-12 w-full items-center gap-3 px-3'>
+              {/* status dot + place name — a place row's shape */}
+              <Skeleton className='size-2.5 rounded-full' />
+              <Skeleton className='h-4 flex-1' />
+            </div>
+          ))}
+        </>
       )}
 
       {freeRooms.length > 0 && (

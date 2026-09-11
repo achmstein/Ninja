@@ -145,7 +145,18 @@ export function Availability() {
       )}
 
       {isLoading ? (
-        <Skeleton className='h-48 rounded-xl' />
+        <div className='bg-card divide-y overflow-hidden rounded-xl border'>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className='flex min-h-16 w-full items-center gap-3 px-3 py-2'>
+              {/* name + price, and the sold-out switch — an availability row */}
+              <div className='min-w-0 flex-1 space-y-1.5'>
+                <Skeleton className='h-4 w-2/5' />
+                <Skeleton className='h-3 w-16' />
+              </div>
+              <Skeleton className='h-6 w-11 shrink-0 rounded-full' />
+            </div>
+          ))}
+        </div>
       ) : visibleItems.length === 0 ? (
         <p className='text-muted-foreground py-16 text-center'>
           {search ? t('noItemsMatch') : t('noItemsInCategory')}

@@ -542,7 +542,17 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           {itemsLoading ? (
             <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
               {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className='aspect-[4/5] rounded-xl' />
+                <div
+                  key={i}
+                  className='flex flex-col overflow-hidden rounded-xl border shadow-xs'
+                >
+                  {/* Square picture, then name and price lines — the item tile's shape */}
+                  <Skeleton className='aspect-square w-full rounded-none' />
+                  <div className='flex flex-col gap-1.5 p-2'>
+                    <Skeleton className='h-4 w-full' />
+                    <Skeleton className='h-3 w-1/2' />
+                  </div>
+                </div>
               ))}
             </div>
           ) : visibleItems.length === 0 ? (

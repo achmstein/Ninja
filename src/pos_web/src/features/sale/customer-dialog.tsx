@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Info, Loader2, User, UserPlus } from 'lucide-react'
+import { Info, User, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api-client'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
@@ -179,8 +180,20 @@ export function CustomerDialog({
               {t('typeToSearch')}
             </p>
           ) : isFetching && users.length === 0 ? (
-            <div className='flex justify-center py-8'>
-              <Loader2 className='text-muted-foreground size-6 animate-spin' />
+            <div className='flex flex-col'>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className='flex min-h-14 items-center gap-3 px-3 py-2'
+                >
+                  {/* avatar, name, phone — a customer row's shape */}
+                  <Skeleton className='size-5 shrink-0 rounded-full' />
+                  <div className='min-w-0 flex-1 space-y-1.5'>
+                    <Skeleton className='h-4 w-1/2' />
+                    <Skeleton className='h-3 w-1/3' />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : isError ? (
             <p className='text-muted-foreground py-8 text-center text-sm'>

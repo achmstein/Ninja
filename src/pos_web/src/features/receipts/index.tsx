@@ -112,7 +112,20 @@ export function Receipts() {
       </div>
 
       {isLoading ? (
-        <Skeleton className='h-48 rounded-xl' />
+        <div className='bg-card divide-y overflow-hidden rounded-xl border'>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className='flex h-16 w-full items-center gap-3 px-3'>
+              {/* number, icon, place + date, total — a receipt row's shape */}
+              <Skeleton className='h-5 w-10 shrink-0' />
+              <Skeleton className='size-5 shrink-0 rounded' />
+              <div className='min-w-0 flex-1 space-y-1.5'>
+                <Skeleton className='h-4 w-1/2' />
+                <Skeleton className='h-3 w-1/3' />
+              </div>
+              <Skeleton className='h-5 w-16 shrink-0' />
+            </div>
+          ))}
+        </div>
       ) : bills.length === 0 ? (
         <p className='text-muted-foreground py-16 text-center'>
           {t('noReceipts')}
