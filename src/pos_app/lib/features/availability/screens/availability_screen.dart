@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/app_theme.dart';
@@ -17,6 +17,30 @@ import '../../catalog/providers/catalog_provider.dart';
 /// The server ANDs the branch override with the global flag, so a row
 /// shows the effective state: an item the back office pulled everywhere
 /// stays off whatever the till says.
+// An availability row's shape: item name and price, then the toggle.
+Widget _itemRowSkeleton(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              skeletonBar(context, widthFactor: 0.5, height: 14),
+              const SizedBox(height: 8),
+              skeletonBar(context, widthFactor: 0.3, height: 12),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        skeletonBox(context, width: 48, height: 28, radius: 14),
+      ],
+    ),
+  );
+}
+
 class AvailabilityScreen extends ConsumerStatefulWidget {
   const AvailabilityScreen({super.key});
 
@@ -114,12 +138,18 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               ],
               const SizedBox(height: 16),
               itemsAsync.when(
-                loading: () => Shimmer.fromColors(
-                  baseColor: theme.colors.muted,
-                  highlightColor: theme.colors.background,
+                loading: () => Skeleton(
                   child: Container(
-                    height: 192,
-                    decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < 8; i++) ...[
+                          if (i > 0) Container(height: 1, color: theme.colors.border),
+                          _itemRowSkeleton(context),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
                 error: (_, _) => Padding(

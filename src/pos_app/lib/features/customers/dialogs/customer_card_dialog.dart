@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/network_status.dart';
 import '../../../core/theme/app_theme.dart';
@@ -78,11 +79,13 @@ class _CustomerCard extends ConsumerWidget {
 
     Widget offlineHint() => Text(l10n.offlineNotAvailable, style: muted);
 
-    final loading = SizedBox(
-      height: 28,
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground)),
+    final loading = Skeleton(
+      child: SizedBox(
+        height: 28,
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: skeletonBar(context, widthFactor: 0.5, height: 16),
+        ),
       ),
     );
 

@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/theme/app_theme.dart';
@@ -46,6 +46,63 @@ const _placesWidth = 240.0;
 /// reservations join it in the next phase). Neither grows with the size of
 /// the building — the list scrolls and searches, the bills are only the
 /// open ones.
+// A bill card's shape while the floor loads: a bordered card with a name
+// line, a short line, and a total.
+Widget _billCardSkeleton(BuildContext context) {
+  final theme = context.theme;
+  return Container(
+    height: 112,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        skeletonBar(context, widthFactor: 0.7, height: 14),
+        skeletonBar(context, widthFactor: 0.4),
+        skeletonBar(context, widthFactor: 0.5, height: 18),
+      ],
+    ),
+  );
+}
+
+// The open-places column while rooms and tables load: rows shaped like the
+// place cards (an icon, a name, a status).
+Widget _placesSkeleton(BuildContext context) {
+  final theme = context.theme;
+  return Skeleton(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < 6; i++) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+            child: Row(
+              children: [
+                skeletonBox(context, width: 36, height: 36),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      skeletonBar(context, widthFactor: 0.5, height: 13),
+                      const SizedBox(height: 8),
+                      skeletonBar(context, widthFactor: 0.3, height: 11),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ],
+    ),
+  );
+}
+
 class FloorScreen extends ConsumerStatefulWidget {
   const FloorScreen({super.key});
 
@@ -174,7 +231,10 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final l10n = AppLocalizations.of(context)!;
     final tickets = ref.watch(openTicketsProvider);
     final rooms = ref.watch(roomsProvider);
-    final tables = ref.watch(tablesProvider).value ?? const <CafeTable>[];
+    final tablesAsync = ref.watch(tablesProvider);
+    final tables = tablesAsync.value ?? const <CafeTable>[];
+    // First load of the room/table list: shimmer the column, not blank
+    final placesLoading = (rooms.isLoading && rooms.rooms.isEmpty) || !tablesAsync.hasValue;
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
     final sessions = rooms.activeSessions;
     // Reservations are the one thing not yet a bill that the cashier must
@@ -217,16 +277,18 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                   const SizedBox(height: 8),
                   Expanded(
                     child: SingleChildScrollView(
-                      child: PlaceList(
-                        rooms: rooms.rooms,
-                        sessions: rooms.activeSessions,
-                        tables: tables,
-                        tickets: tickets.value ?? const [],
-                        busy: _openingTable,
-                        onNewTab: _newTab,
-                        onPickRoom: (room) => _pickRoom(room.id),
-                        onPickTable: _pickTable,
-                      ),
+                      child: placesLoading
+                          ? _placesSkeleton(context)
+                          : PlaceList(
+                              rooms: rooms.rooms,
+                              sessions: rooms.activeSessions,
+                              tables: tables,
+                              tickets: tickets.value ?? const [],
+                              busy: _openingTable,
+                              onNewTab: _newTab,
+                              onPickRoom: (room) => _pickRoom(room.id),
+                              onPickTable: _pickTable,
+                            ),
                     ),
                   ),
                 ],
@@ -307,15 +369,21 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                 const SizedBox(height: 20),
                 Expanded(
                   child: tickets.when(
-                    loading: () => Align(
-                      alignment: Alignment.topCenter,
-                      child: Shimmer.fromColors(
-                        baseColor: theme.colors.muted,
-                        highlightColor: theme.colors.background,
-                        child: Container(
-                          height: 192,
-                          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
-                        ),
+                    loading: () => Skeleton(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          const gap = 12.0;
+                          final columns = math.max(1, ((constraints.maxWidth + gap) / (180 + gap)).floor());
+                          final width = math.min(220.0, (constraints.maxWidth - gap * (columns - 1)) / columns);
+                          return Wrap(
+                            spacing: gap,
+                            runSpacing: gap,
+                            children: [
+                              for (var i = 0; i < columns * 2; i++)
+                                SizedBox(width: width, child: _billCardSkeleton(context)),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     error: (e, _) => Center(

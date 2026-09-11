@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -187,9 +188,32 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             _search.isEmpty
                 ? centered(l10n.typeToSearch)
                 : _loading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                ? Skeleton(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < 5; i++)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                skeletonBox(context, width: 40, height: 40, circle: true),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      skeletonBar(context, widthFactor: 0.5, height: 14),
+                                      const SizedBox(height: 8),
+                                      skeletonBar(context, widthFactor: 0.3, height: 12),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   )
                 : _failed
                 ? centered(l10n.somethingWentWrong)

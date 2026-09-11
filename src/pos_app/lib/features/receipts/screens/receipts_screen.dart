@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
+import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -23,6 +23,37 @@ const _searchDebounce = Duration(milliseconds: 250);
 /// it. Typing a receipt number finds that one; otherwise the recent ones
 /// show, a page at a time as the cashier scrolls. `/settled` has no total
 /// count, so a full page means "maybe more" and a short page is the end.
+// A receipt row's shape: the number, the type icon, then the place and meta.
+Widget _receiptRowSkeleton(BuildContext context) {
+  return SizedBox(
+    height: 64,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          SizedBox(width: 44, child: skeletonBar(context, widthFactor: 1, height: 14)),
+          const SizedBox(width: 12),
+          skeletonBox(context, width: 20, height: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                skeletonBar(context, widthFactor: 0.5, height: 13),
+                const SizedBox(height: 8),
+                skeletonBar(context, widthFactor: 0.35, height: 11),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(width: 56, child: skeletonBar(context, widthFactor: 1, height: 16)),
+        ],
+      ),
+    ),
+  );
+}
+
 class ReceiptsScreen extends ConsumerStatefulWidget {
   const ReceiptsScreen({super.key});
 
@@ -145,12 +176,18 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (bills == null)
-                  Shimmer.fromColors(
-                    baseColor: theme.colors.muted,
-                    highlightColor: theme.colors.background,
+                  Skeleton(
                     child: Container(
-                      height: 192,
-                      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < 8; i++) ...[
+                            if (i > 0) Container(height: 1, color: theme.colors.border),
+                            _receiptRowSkeleton(context),
+                          ],
+                        ],
+                      ),
                     ),
                   )
                 else if (bills.isEmpty)
