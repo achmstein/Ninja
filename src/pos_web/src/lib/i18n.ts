@@ -387,6 +387,7 @@ const dictionary = {
   whoseAccount: { en: 'Whose account?', ar: 'حساب مين؟' },
   inTheRoom: { en: 'In the room', ar: 'اللي في الأوضة' },
   whoseRound: { en: "Whose round?", ar: 'الطلب ده لمين؟' },
+  usuals: { en: 'Usuals', ar: 'المعتاد' },
   someoneElse: { en: 'Someone else', ar: 'حد تاني' },
   onCustomerTab: {
     en: "On the customer's tab",

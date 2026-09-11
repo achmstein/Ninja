@@ -23,7 +23,7 @@ import { CustomerCard, type CardCustomer } from '@/features/customer/customer-ca
 import { useLoyalty } from '@/features/customer/use-customer-card'
 import { sessionRoster } from '@/features/rooms/status'
 import { useSession, useSessionActions } from '@/features/rooms/use-rooms'
-import { API_VERSION } from '@/lib/api-client'
+import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -323,6 +323,27 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     .filter((item) => toNumber(item.catalogTypeId) === activeCategoryId)
     .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
 
+  // The attached customer's most-ordered items, ranked. A walk-in (no id) or a
+  // customer without enough history gets nothing; the strip then hides.
+  const { data: usualIds = [] } = useQuery({
+    queryKey: ['customerTopItems', customer?.id],
+    queryFn: async () => {
+      const response = await apiClient.get<number[]>(
+        `/api/catalog/customers/${customer!.id}/top-items`
+      )
+      return response.data
+    },
+    enabled: !!customer?.id,
+    staleTime: 60_000,
+  })
+  const itemsById = new Map(items.map((i) => [Number(i.id), i]))
+  const usualItems = customer?.id
+    ? usualIds
+        .map((id) => itemsById.get(Number(id)))
+        .filter((i): i is CatalogItemDto => !!i && i.isAvailable !== false)
+        .slice(0, 8)
+    : []
+
   const total = saleTotal(lines)
   const count = saleCount(lines)
 
@@ -539,6 +560,20 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         </div>
 
         <div className='flex-1 overflow-y-auto p-3'>
+          {usualItems.length > 0 && (
+            <div className='mb-4'>
+              <h3 className='text-muted-foreground mb-2 text-sm font-semibold'>
+                {t('usuals')}
+              </h3>
+              <div className='flex gap-3 overflow-x-auto pb-1'>
+                {usualItems.map((item) => (
+                  <div key={String(item.id)} className='w-[140px] shrink-0'>
+                    <ItemTile item={item} onTap={tapItem} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {itemsLoading ? (
             <div className='grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3'>
               {Array.from({ length: 8 }).map((_, i) => (

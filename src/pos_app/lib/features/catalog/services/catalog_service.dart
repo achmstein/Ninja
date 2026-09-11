@@ -13,6 +13,10 @@ abstract class CatalogRepository {
   /// `customizationId -> [optionId, ...]`. Empty when the customer has no
   /// saved preference (or the lookup fails) — it must never block a sale.
   Future<Map<int, List<int>>> getCustomerItemPreference(String userId, int itemId);
+
+  /// A customer's most-frequently-ordered item ids, ranked. Empty when the
+  /// customer has too little history (or the lookup fails).
+  Future<List<int>> getCustomerTopItems(String userId);
 }
 
 class ApiCatalogRepository implements CatalogRepository {
@@ -53,6 +57,16 @@ class ApiCatalogRepository implements CatalogRepository {
     } catch (_) {
       // A miss (404) or any hiccup just leaves the item defaults in place.
       return const {};
+    }
+  }
+
+  @override
+  Future<List<int>> getCustomerTopItems(String userId) async {
+    try {
+      final response = await _apiClient.get<List<dynamic>>('customers/$userId/top-items');
+      return (response.data ?? []).map((e) => (e as num).toInt()).toList();
+    } catch (_) {
+      return const [];
     }
   }
 }

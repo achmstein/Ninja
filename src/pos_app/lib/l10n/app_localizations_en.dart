@@ -661,6 +661,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whoseRound => 'Whose round?';
 
   @override
+  String get usuals => 'Usuals';
+
+  @override
   String get someoneElse => 'Someone else';
 
   @override

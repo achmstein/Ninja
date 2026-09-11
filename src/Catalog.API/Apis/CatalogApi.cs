@@ -307,6 +307,21 @@ public static class CatalogApi
             .WithTags("Favorites")
             .RequireAuthorization();
 
+        // "Usuals" — a customer's most-frequently-ordered items
+        api.MapGet("/top-items", GetMyTopItems)
+            .WithName("GetMyTopItems")
+            .WithSummary("Get my most-ordered items")
+            .WithDescription("The current user's most-frequently-ordered catalog item IDs, ranked, for the customer menu's 'your usuals' section.")
+            .WithTags("Preferences")
+            .RequireAuthorization();
+
+        api.MapGet("/customers/{userId}/top-items", GetCustomerTopItems)
+            .WithName("GetCustomerTopItems")
+            .WithSummary("Get a customer's most-ordered items")
+            .WithDescription("Staff-only: a given customer's most-frequently-ordered catalog item IDs, ranked, for the till's usuals quick-pick.")
+            .WithTags("Preferences")
+            .RequireAuthorization("Pos");
+
         // Branch override endpoints (Admin)
         api.MapPut("/branches/{branchId:int}/items/{itemId:int}/override", SetBranchItemOverride)
             .WithName("SetBranchItemOverride")
@@ -1501,6 +1516,62 @@ public static class CatalogApi
             .ToListAsync();
 
         return TypedResults.Ok(favoriteIds);
+    }
+
+    // "Usuals" handlers ------------------------------------------------------
+
+    /// <summary>
+    /// An item must have been ordered on at least this many separate orders to
+    /// count as a "usual" — a one-off or two never shows, only what a frequent
+    /// customer actually reorders.
+    /// </summary>
+    private const int MinOrdersForUsual = 3;
+
+    /// <summary>How many ranked ids to return at most; the front-ends render the ones they carry.</summary>
+    private const int TopItemsLimit = 12;
+
+    // A customer's most-frequently-ordered items: grouped by item, kept only
+    // when ordered on >= MinOrdersForUsual orders, ranked by order count then
+    // recency. Ids only — every front-end already holds the branch-priced item
+    // list in memory and maps ids to its own tiles.
+    private static Task<List<int>> RankTopItemsAsync(CatalogContext context, string userId, int max)
+    {
+        return context.CustomerItemPurchases
+            .Where(p => p.UserId == userId)
+            .GroupBy(p => p.CatalogItemId)
+            .Where(g => g.Count() >= MinOrdersForUsual)
+            .OrderByDescending(g => g.Count())
+            .ThenByDescending(g => g.Max(p => p.OrderedAt))
+            .Select(g => g.Key)
+            .Take(max)
+            .ToListAsync();
+    }
+
+    public static async Task<Ok<List<int>>> GetMyTopItems(
+        [AsParameters] CatalogServices services,
+        ClaimsPrincipal user)
+    {
+        var userId = user.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return TypedResults.Ok(new List<int>());
+        }
+
+        var ids = await RankTopItemsAsync(services.Context, userId, TopItemsLimit);
+        return TypedResults.Ok(ids);
+    }
+
+    public static async Task<Ok<List<int>>> GetCustomerTopItems(
+        [AsParameters] CatalogServices services,
+        [Description("The customer's identity id")] string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return TypedResults.Ok(new List<int>());
+        }
+
+        var ids = await RankTopItemsAsync(services.Context, userId, TopItemsLimit);
+        return TypedResults.Ok(ids);
     }
 
     public static async Task<Results<Ok, NotFound>> AddFavorite(

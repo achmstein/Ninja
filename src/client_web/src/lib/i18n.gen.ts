@@ -277,6 +277,7 @@ export const messages = {
   failedToUpdateProfile: { en: "Failed to update profile. Please try again.", ar: "مقدرناش نحدث البيانات. جرب تاني." },
   callUs: { en: "Call Us", ar: "كلمنا" },
   mostPopular: { en: "Most Popular", ar: "الأكثر طلباً" },
+  yourUsuals: { en: "Your Usuals", ar: "طلباتك المعتادة" },
   fastOrder: { en: "Fast Order", ar: "طلب سريع" },
   fastOrderConfirmation: { en: "Quick order {itemName}?", ar: "طلب سريع {itemName}؟" },
   fastOrderPlaced: { en: "Order placed!", ar: "تم الطلب!" },

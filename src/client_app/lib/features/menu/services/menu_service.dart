@@ -1,5 +1,6 @@
 import 'dart:ui' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/network/api_client.dart';
 import '../models/bundle_deal.dart';
@@ -18,6 +19,7 @@ abstract class MenuRepository {
   Future<List<int>> getFavorites();
   Future<void> addFavorite(int itemId);
   Future<void> removeFavorite(int itemId);
+  Future<List<int>> getMyTopItems();
 }
 
 /// Menu repository backed by the catalog API
@@ -148,6 +150,17 @@ class ApiMenuRepository implements MenuRepository {
   Future<void> removeFavorite(int itemId) async {
     await _apiClient.delete('favorites/$itemId');
   }
+
+  /// Get the current user's most-frequently-ordered item IDs, ranked
+  @override
+  Future<List<int>> getMyTopItems() async {
+    try {
+      final response = await _apiClient.get<List<dynamic>>('top-items');
+      return (response.data ?? []).map((e) => e as int).toList();
+    } catch (e) {
+      return [];
+    }
+  }
 }
 
 /// Provider for menu repository
@@ -193,6 +206,21 @@ final userPreferenceProvider = FutureProvider.family<UserItemPreference?, int>(
 final activeBundlesProvider = FutureProvider.family<List<BundleDeal>, int>((ref, branchId) async {
   final service = ref.watch(menuRepositoryProvider);
   return service.getActiveBundles();
+});
+
+/// The signed-in user's most-ordered items ("your usuals"), ranked. Empty for
+/// a guest or a user without enough history, so the menu section hides.
+final topMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
+  if (!ref.watch(isAuthenticatedProvider)) return const [];
+  final service = ref.watch(menuRepositoryProvider);
+  final ids = await service.getMyTopItems();
+  if (ids.isEmpty) return const [];
+  final items = await service.getMenuItems();
+  final byId = {for (final item in items) item.id: item};
+  return [
+    for (final id in ids)
+      if (byId[id] != null) byId[id]!,
+  ];
 });
 
 /// Provider for grouped menu items by category with localized names.

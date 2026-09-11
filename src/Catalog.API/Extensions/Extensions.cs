@@ -25,7 +25,8 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
                .AddSubscription<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>()
                .AddSubscription<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>()
-               .AddSubscription<OrderConfirmedWithPreferencesIntegrationEvent, OrderConfirmedWithPreferencesIntegrationEventHandler>();
+               .AddSubscription<OrderConfirmedWithPreferencesIntegrationEvent, OrderConfirmedWithPreferencesIntegrationEventHandler>()
+               .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>();
 
         builder.Services.AddOptions<CatalogOptions>()
             .BindConfiguration(nameof(CatalogOptions));

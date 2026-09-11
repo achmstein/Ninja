@@ -1712,6 +1712,12 @@ abstract class AppLocalizations {
   /// **'Most Popular'**
   String get mostPopular;
 
+  /// No description provided for @yourUsuals.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Usuals'**
+  String get yourUsuals;
+
   /// No description provided for @fastOrder.
   ///
   /// In en, this message translates to:

@@ -138,6 +138,50 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     return en.isEmpty && ar.isEmpty ? null : LocalizedText(en: en, ar: ar);
   }
 
+  /// A horizontal strip of the attached customer's most-ordered items, above
+  /// the grid. Hidden for a walk-in or a customer without enough history.
+  /// Tapping reuses [_tapItem], so a customized item opens the prefilled dialog.
+  Widget _usualsStrip(BuildContext context, String? customerId, List<CatalogItem> items) {
+    if (customerId == null || customerId.isEmpty) return const SizedBox.shrink();
+    final topIds = ref.watch(customerTopItemsProvider(customerId)).value ?? const <int>[];
+    if (topIds.isEmpty) return const SizedBox.shrink();
+    final byId = {for (final i in items) i.id: i};
+    final usuals = [
+      for (final id in topIds)
+        if (byId[id]?.isAvailable ?? false) byId[id]!,
+    ].take(8).toList();
+    if (usuals.isEmpty) return const SizedBox.shrink();
+
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.usuals,
+            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: theme.colors.mutedForeground),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            // A 140-wide tile: square picture plus two text lines, matching the grid.
+            height: 202,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: usuals.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, index) => SizedBox(
+                width: 140,
+                child: ItemTile(item: usuals[index], onTap: () => _tapItem(usuals[index])),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _tapItem(CatalogItem item) async {
     if (item.customizations.isNotEmpty) {
       // Pre-fill from the attached customer's saved choices, if any.
@@ -465,6 +509,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                       ],
                     ),
                   ),
+                  _usualsStrip(context, customer?.id, itemsAsync.value ?? const <CatalogItem>[]),
                   Expanded(
                     child: itemsAsync.when(
                       loading: () => LayoutBuilder(

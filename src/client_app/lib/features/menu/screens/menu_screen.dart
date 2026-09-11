@@ -147,6 +147,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     final groupedItemsAsync = ref.watch(groupedMenuItemsProvider((locale, branchId)));
     final bundlesAsync = ref.watch(activeBundlesProvider(branchId));
     final bundles = bundlesAsync.value ?? [];
+    final topItems = ref.watch(topMenuItemsProvider).value ?? const <MenuItem>[];
     final cart = ref.watch(cartProvider);
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -232,12 +233,18 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
 
               // Compute layout state from data
               final hasDeals = bundles.isNotEmpty && _searchQuery.isEmpty;
+              // The signed-in customer's usuals — a chip like offers, shown
+              // first, and only when not searching.
+              final usualItems = _searchQuery.isEmpty ? topItems.take(8).toList() : const <MenuItem>[];
+              final hasUsuals = usualItems.isNotEmpty;
               final hasOffers = offerItems.isNotEmpty && _searchQuery.isEmpty;
               final categoryNames = [
+                if (hasUsuals) l10n.yourUsuals,
                 if (hasOffers) '${l10n.specialOffers} 🔥',
                 ...filteredItems.keys.map((c) => c.name.getText(locale)),
               ];
-              final topSectionsOffset = (hasDeals ? 1 : 0) + (hasOffers ? 1 : 0);
+              final topSectionsOffset =
+                  (hasDeals ? 1 : 0) + (hasUsuals ? 1 : 0) + (hasOffers ? 1 : 0);
 
               // Sync to fields used by scroll callbacks
               _hasDealsSection = hasDeals;
@@ -298,8 +305,18 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                               locale: locale,
                             );
                           }
-                          // Offers section right after deals
-                          if (hasOffers && index == (hasDeals ? 1 : 0)) {
+                          // "Your usuals" right after deals — a normal titled
+                          // section of the customer's most-ordered items.
+                          if (hasUsuals && index == (hasDeals ? 1 : 0)) {
+                            return _CategorySection(
+                              categoryName: l10n.yourUsuals,
+                              items: usualItems,
+                              locale: locale,
+                            );
+                          }
+                          // Offers section after deals and usuals
+                          if (hasOffers &&
+                              index == (hasDeals ? 1 : 0) + (hasUsuals ? 1 : 0)) {
                             return _OffersSection(
                               items: offerItems,
                               locale: locale,

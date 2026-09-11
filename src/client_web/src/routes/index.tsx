@@ -17,6 +17,7 @@ import { DealsSection } from '@/components/menu/deals-section'
 import { ItemRow, ItemRowSkeleton } from '@/components/menu/item-card'
 import { OffersCarousel } from '@/components/menu/offers-carousel'
 import { useFavorites } from '@/components/menu/use-favorites'
+import { useMyTopItems } from '@/components/menu/use-my-top-items'
 import { ViewCartBar } from '@/components/menu/view-cart-bar'
 
 export const Route = createFileRoute('/')({
@@ -45,6 +46,7 @@ function MenuPage() {
   const { data: categories = [] } = useQuery(listCategoriesOptions())
   const { data: items = [], isLoading } = useQuery(listItemsOptions())
   const { favorites, toggle: toggleFavorite, canToggle } = useFavorites()
+  const topItemIds = useMyTopItems()
 
   const offerItems = items.filter(
     (i) =>
@@ -53,6 +55,18 @@ function MenuPage() {
 
   const sections = useMemo(() => {
     const result: Array<MenuSection & { items: CatalogItemDto[] }> = []
+    // "Your usuals" first — the fastest reorder for a returning customer.
+    const byId = new Map(items.map((i) => [Number(i.id), i]))
+    const usualItems = topItemIds
+      .map((id) => byId.get(Number(id)))
+      .filter((i): i is CatalogItemDto => !!i && i.isAvailable !== false)
+    if (usualItems.length > 0) {
+      result.push({
+        id: 'section-usuals',
+        label: t('yourUsuals'),
+        items: usualItems,
+      })
+    }
     const favoriteItems = items.filter((i) => favorites.has(Number(i.id)))
     if (favoriteItems.length > 0) {
       result.push({
@@ -83,7 +97,7 @@ function MenuPage() {
     }
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, categories, favorites.size, t, localized])
+  }, [items, categories, favorites.size, topItemIds, t, localized])
 
   // While a click-triggered smooth scroll runs, the spy stays quiet so it
   // can't fight the selection the user just made

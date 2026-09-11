@@ -60,3 +60,10 @@ final catalogCategoriesProvider = FutureProvider<List<CatalogCategory>>((ref) as
   final categories = await ref.read(catalogRepositoryProvider).getCategories();
   return [...categories]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 });
+
+/// The attached customer's most-ordered item ids, ranked — their "usuals".
+/// Empty for a customer without enough history; the sale pad hides the row.
+final customerTopItemsProvider = FutureProvider.family<List<int>, String>((ref, userId) async {
+  ref.watch(selectedBranchIdProvider);
+  return ref.read(catalogRepositoryProvider).getCustomerTopItems(userId);
+});

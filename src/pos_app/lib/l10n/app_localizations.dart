@@ -1220,6 +1220,12 @@ abstract class AppLocalizations {
   /// **'Whose round?'**
   String get whoseRound;
 
+  /// No description provided for @usuals.
+  ///
+  /// In en, this message translates to:
+  /// **'Usuals'**
+  String get usuals;
+
   /// No description provided for @someoneElse.
   ///
   /// In en, this message translates to:
