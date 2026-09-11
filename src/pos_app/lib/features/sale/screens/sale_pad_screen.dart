@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/config/app_config.dart';
@@ -52,6 +53,19 @@ import '../widgets/item_tile.dart';
 // to the same person without re-picking. Keyed by session id; kept for the
 // life of the app run, which is a till's shift.
 final Map<int, SaleCustomer> _lastRoundBySession = {};
+
+/// A muted, rounded shimmer bar sized to a fraction of its row — the stand-in
+/// for a line of text while a skeleton loads.
+Widget _bar(FThemeData theme, {required double widthFactor, double height = 12}) => SizedBox(
+      height: height,
+      child: FractionallySizedBox(
+        alignment: AlignmentDirectional.centerStart,
+        widthFactor: widthFactor,
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(4)),
+        ),
+      ),
+    );
 
 class SalePadScreen extends ConsumerStatefulWidget {
   final int? ticketId;
@@ -451,7 +465,64 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                   ),
                   Expanded(
                     child: itemsAsync.when(
-                      loading: () => const Center(child: SizedBox.square(dimension: 28, child: CircularProgressIndicator(strokeWidth: 2))),
+                      loading: () => LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Match the real grid's geometry so the skeleton
+                          // sits exactly where the item tiles will land.
+                          const gap = 12.0;
+                          final width = constraints.maxWidth - 24;
+                          final columns = ((width + gap) ~/ (140 + gap)).clamp(1, 99);
+                          final tileWidth = (width - gap * (columns - 1)) / columns;
+                          return Shimmer.fromColors(
+                            baseColor: theme.colors.muted,
+                            highlightColor: theme.colors.background,
+                            child: GridView.builder(
+                              padding: const EdgeInsets.all(12),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                mainAxisSpacing: gap,
+                                crossAxisSpacing: gap,
+                                mainAxisExtent: tileWidth + 62,
+                              ),
+                              itemCount: columns * 3,
+                              itemBuilder: (_, _) => DecoratedBox(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: theme.colors.border),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // The square picture
+                                    AspectRatio(
+                                      aspectRatio: 1,
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: theme.colors.muted,
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          _bar(theme, widthFactor: 1),
+                                          const SizedBox(height: 6),
+                                          _bar(theme, widthFactor: 0.6),
+                                          const SizedBox(height: 8),
+                                          _bar(theme, widthFactor: 0.4, height: 10),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                       error: (_, _) => Center(child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground))),
                       data: (items) {
                         final visible = items.where((i) => i.catalogTypeId == activeCategoryId).toList()
