@@ -4,10 +4,15 @@ platform :ios do
   lane :beta do
     setup_ci if ENV['CI']
 
+    # One-off: regenerate the App Store provisioning profiles so they pick up
+    # the current App ID capabilities (the associated-domains entitlement for
+    # App Links was missing from the stored profile). Revert to
+    # `readonly: is_ci` once the profiles are regenerated and stored.
     match(
       type: "appstore",
       app_identifier: ["com.chillax.client", "com.chillax.client.ChillaxLiveActivity"],
-      readonly: is_ci,
+      readonly: false,
+      force: true,
     )
 
     update_code_signing_settings(
