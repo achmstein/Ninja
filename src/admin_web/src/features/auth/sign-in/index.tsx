@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { useAuth } from 'react-oidc-context'
-import { useTheme } from '@/context/theme-provider'
-import { useLanguage } from '@/lib/i18n'
-import { loginPageParams } from '@/config/oidc-config'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Loader2, RefreshCw } from 'lucide-react'
-import { useT } from '@/lib/i18n'
+import { loginPageParams } from '@/config/oidc-config'
+import { RefreshCw } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useLanguage, useT } from '@/lib/i18n'
+import { useTheme } from '@/context/theme-provider'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { AuthLayout } from '../auth-layout'
 
 /**
@@ -28,14 +28,23 @@ export function SignIn() {
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
-  const { redirect } = useSearch({ from: '/(auth)/sign-in' })
+  const { redirect, expired } = useSearch({ from: '/(auth)/sign-in' })
   const redirectStarted = useRef(false)
 
+  // A token the API rejected is dropped first, otherwise the local user
+  // still counts as signed in and the app would bounce straight back to the
+  // page that 401'd, forever.
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (expired && auth.isAuthenticated) {
+      auth.removeUser()
+    }
+  }, [expired, auth])
+
+  useEffect(() => {
+    if (auth.isAuthenticated && !expired) {
       navigate({ to: redirect || '/', replace: true })
     }
-  }, [auth.isAuthenticated, navigate, redirect])
+  }, [auth.isAuthenticated, expired, navigate, redirect])
 
   const beginSignIn = () => {
     if (redirect) {
@@ -94,7 +103,7 @@ export function SignIn() {
         <span className='text-2xl font-semibold tracking-tight'>Chillax</span>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-        <Loader2 className='h-4 w-4 animate-spin' />
+        <Spinner />
         {t('redirectingToSignIn')}
       </div>
     </div>

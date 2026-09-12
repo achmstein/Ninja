@@ -9,12 +9,14 @@ type MainProps = React.HTMLAttributes<HTMLElement> & {
 export function Main({ fixed, className, fluid, ...props }: MainProps) {
   return (
     <main
+      // The skip link's target
+      id='content'
       data-layout={fixed ? 'fixed' : 'auto'}
       className={cn(
         'px-4 py-6',
 
         // If layout is fixed, make the main container flex and grow
-        fixed && 'flex grow flex-col overflow-hidden',
+        fixed && 'flex min-h-0 grow flex-col overflow-hidden',
 
         // If layout is not fluid, set the max-width
         !fluid &&

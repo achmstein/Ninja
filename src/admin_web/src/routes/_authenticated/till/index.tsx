@@ -1,10 +1,21 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { TillSalesReport } from '@/features/till'
-import { rangeSearch } from '@/features/till/search'
+import { pagedSearch, rangeSearch } from '@/lib/search-schemas'
+import { TillReport } from '@/features/till'
 
-// The till back office opens on the sales report; the lists sit beside it
+const tillSearchSchema = z.object({
+  ...rangeSearch,
+  ...pagedSearch,
+  // The list opened under the report
+  view: z.enum(['tickets', 'payments', 'refunds']).optional(),
+  // Tickets: which book; Payments: one PaymentTender value
+  status: z.enum(['settled', 'open', 'voided']).optional(),
+  tender: z.string().optional(),
+  // A receipt number finds one bill and ignores the window
+  receipt: z.number().int().positive().optional(),
+})
+
 export const Route = createFileRoute('/_authenticated/till/')({
-  validateSearch: z.object(rangeSearch),
-  component: TillSalesReport,
+  validateSearch: tillSearchSchema,
+  component: TillReport,
 })

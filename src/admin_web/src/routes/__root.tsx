@@ -6,8 +6,7 @@ import { Toaster } from 'sileo'
 import { useDirection } from '@/context/direction-provider'
 import { useTheme } from '@/context/theme-provider'
 import { NavigationProgress } from '@/components/navigation-progress'
-import { GeneralError } from '@/features/errors/general-error'
-import { NotFoundError } from '@/features/errors/not-found-error'
+import { GeneralError, NotFoundError } from '@/features/errors/error-page'
 
 // Sileo only paints the pill background when it knows the theme (otherwise
 // it falls back to a white fill that vanishes on light pages), and autopilot

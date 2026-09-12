@@ -1,14 +1,17 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { ErrorState } from '@/components/error-state'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallback,
 })
 
 function AuthCallback() {
+  const t = useT()
   const auth = useAuth()
   const navigate = useNavigate()
 
@@ -22,19 +25,22 @@ function AuthCallback() {
 
   if (auth.error) {
     return (
-      <div className='flex h-svh flex-col items-center justify-center gap-4'>
-        <h1 className='text-2xl font-bold'>Sign-in failed</h1>
-        <p className='text-muted-foreground'>{auth.error.message}</p>
-        <Button onClick={() => navigate({ to: '/sign-in', replace: true })}>
-          Back to sign in
-        </Button>
-      </div>
+      <ErrorState
+        size='screen'
+        title={t('signInFailed')}
+        description={auth.error.message}
+        actions={
+          <Button onClick={() => navigate({ to: '/sign-in', replace: true })}>
+            {t('backToSignIn')}
+          </Button>
+        }
+      />
     )
   }
 
   return (
     <div className='flex h-svh items-center justify-center'>
-      <Loader2 className='h-8 w-8 animate-spin' />
+      <Spinner className='size-8' />
     </div>
   )
 }

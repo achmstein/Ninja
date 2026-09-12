@@ -1,4 +1,3 @@
-﻿import { Loader2 } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import {
   AlertDialog,
@@ -10,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Spinner } from '@/components/ui/spinner'
 
 interface DeleteConfirmDialogProps {
   open: boolean
@@ -47,9 +47,9 @@ export function DeleteConfirmDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
-            className='bg-destructive text-white hover:bg-destructive/90'
+            className='bg-destructive hover:bg-destructive/90 text-white'
           >
-            {isLoading && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+            {isLoading && <Spinner className='me-2' />}
             {t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>

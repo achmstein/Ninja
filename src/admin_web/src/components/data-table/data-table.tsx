@@ -1,6 +1,7 @@
+import { Fragment } from 'react'
 import { flexRender, type RowData } from '@tanstack/react-table'
-import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -17,6 +18,14 @@ type DataTableProps<TData extends RowData> = {
   isLoading?: boolean
   emptyMessage?: React.ReactNode
   onRowClick?: (row: AppRow<TData>) => void
+  /**
+   * A heading row wherever consecutive rows change group: a ledger by day,
+   * a list by section. Rows must already be sorted by the group.
+   */
+  groupBy?: {
+    key: (row: TData) => string
+    label: (key: string, first: TData) => React.ReactNode
+  }
   className?: string
 }
 
@@ -30,6 +39,7 @@ export function DataTable<TData extends RowData>({
   isLoading,
   emptyMessage,
   onRowClick,
+  groupBy,
   className,
 }: DataTableProps<TData>) {
   const t = useT()
@@ -77,27 +87,46 @@ export function DataTable<TData extends RowData>({
               </TableRow>
             ))
           ) : rows.length ? (
-            rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
-                className={cn('group/row', onRowClick && 'cursor-pointer')}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className={cn(
-                      'bg-background group-hover/row:bg-muted',
-                      cell.column.columnDef.meta?.className,
-                      cell.column.columnDef.meta?.tdClassName
-                    )}
+            rows.map((row, index) => {
+              const group = groupBy?.key(row.original)
+              const previous =
+                index > 0 ? groupBy?.key(rows[index - 1].original) : undefined
+              return (
+                <Fragment key={row.id}>
+                  {groupBy && group !== previous && (
+                    <TableRow className='hover:bg-transparent'>
+                      <TableCell
+                        colSpan={visibleColumns.length}
+                        className='bg-muted/40 text-muted-foreground py-1.5 text-xs font-medium'
+                      >
+                        {groupBy.label(group!, row.original)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={cn('group/row', onRowClick && 'cursor-pointer')}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          'bg-background group-hover/row:bg-muted',
+                          cell.column.columnDef.meta?.className,
+                          cell.column.columnDef.meta?.tdClassName
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </Fragment>
+              )
+            })
           ) : (
             <TableRow>
               <TableCell

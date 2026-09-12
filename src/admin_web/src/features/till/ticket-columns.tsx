@@ -2,6 +2,8 @@ import { type TicketHistoryRow, type TicketSummary } from '@/api/sales'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { createAppColumnHelper } from '@/components/data-table'
+import { urgencyFor, urgencyTextClass } from '@/components/queue-card'
+import { relativeTime } from '@/features/orders/status'
 import { ticketTitle } from './components/ticket-title'
 import { TypeBadge } from './components/ticket-type'
 
@@ -15,6 +17,10 @@ type ColumnsContext = {
   localized: Localized
   locale: string
 }
+
+// An open tab nobody has touched for a while is the one to look at
+const IDLE_WARN_MINUTES = 30
+const IDLE_DELAYED_MINUTES = 60
 
 const historyHelper = createAppColumnHelper<TicketHistoryRow>()
 const openHelper = createAppColumnHelper<TicketSummary>()
@@ -97,8 +103,13 @@ export function getHistoryColumns({
   ])
 }
 
-/** Tickets still on the floor: what is open, since when, and for how much. */
-export function getOpenColumns({ t, localized, locale }: ColumnsContext) {
+/** Tickets still on the floor: what is open, for whom, how long idle, how much. */
+export function getOpenColumns({
+  t,
+  localized,
+  locale,
+  nowMs,
+}: ColumnsContext & { nowMs: number }) {
   return openHelper.columns([
     openHelper.accessor('id', {
       id: 'id',
@@ -108,11 +119,6 @@ export function getOpenColumns({ t, localized, locale }: ColumnsContext) {
           #{toNumber(info.getValue())}
         </span>
       ),
-    }),
-    openHelper.accessor('openedAt', {
-      id: 'openedAt',
-      header: t('openedAt'),
-      cell: (info) => formatAt(info.getValue(), locale),
     }),
     openHelper.accessor((row) => ticketTitle(row, localized, t), {
       id: 'place',
@@ -124,10 +130,40 @@ export function getOpenColumns({ t, localized, locale }: ColumnsContext) {
       header: t('type'),
       cell: (info) => <TypeBadge type={info.getValue()} />,
     }),
+    openHelper.accessor((row) => row.customerIds?.length ?? 0, {
+      id: 'customers',
+      header: t('customer'),
+      cell: (info) =>
+        info.getValue() > 0 ? (
+          <span className='tabular-nums'>
+            {t('customersCount', { count: info.getValue() })}
+          </span>
+        ) : (
+          <span className='text-muted-foreground'>—</span>
+        ),
+    }),
+    openHelper.accessor('openedAt', {
+      id: 'openedAt',
+      header: t('openedAt'),
+      cell: (info) => formatAt(info.getValue(), locale),
+    }),
     openHelper.accessor('lastActivityAt', {
       id: 'lastActivity',
       header: t('lastActivity'),
-      cell: (info) => formatAt(info.getValue(), locale),
+      cell: (info) => {
+        const value = info.getValue()
+        const urgency = urgencyFor(
+          value,
+          nowMs,
+          IDLE_WARN_MINUTES,
+          IDLE_DELAYED_MINUTES
+        )
+        return (
+          <span className={urgencyTextClass(urgency)}>
+            {relativeTime(value, nowMs, t, locale) || '—'}
+          </span>
+        )
+      },
     }),
     openHelper.accessor('lineCount', {
       id: 'lines',

@@ -1,20 +1,19 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import { useLocalized, useT } from '@/lib/i18n'
 import { type BranchResponse } from '@/api/branch'
 import {
   getAllBranchesOptions,
   updateBranchSettingsMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { BranchDialog } from './components/branch-dialog'
 import { PricingDialog } from './components/pricing-dialog'
@@ -24,7 +23,9 @@ export function BranchesManagement() {
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(null)
+  const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(
+    null
+  )
   const [editingBranch, setEditingBranch] = useState<BranchResponse | null>(
     null
   )
@@ -52,8 +53,6 @@ export function BranchesManagement() {
 
   return (
     <>
-      <Header />
-
       <Main>
         <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
           <div>

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTicket, getTicketByOrder, getTicketHistory, moveTicketLines, openShift, openTicket, type Options, refundTicket, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RefundTicketData, RefundTicketError, RefundTicketResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addTicketLine, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -136,6 +136,63 @@ export const getRefundsOptions = (options: Options<GetRefundsData>) => queryOpti
         return data;
     },
     queryKey: getRefundsQueryKey(options)
+});
+
+export const getTabPaymentsQueryKey = (options: Options<GetTabPaymentsData>) => createQueryKey('getTabPayments', options);
+
+/**
+ * Tab payment slips taken in a window, newest first
+ *
+ * Money customers handed the till against their tabs. Not sales: the bills were counted when they went on account.
+ */
+export const getTabPaymentsOptions = (options: Options<GetTabPaymentsData>) => queryOptions<GetTabPaymentsResponse, AxiosError<GetTabPaymentsError>, GetTabPaymentsResponse, ReturnType<typeof getTabPaymentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTabPayments({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTabPaymentsQueryKey(options)
+});
+
+/**
+ * Take money against a customer's tab
+ *
+ * Cash into the drawer, card or InstaPay to the terminal — never Account. A numbered slip, stamped with the branch's open shift so the drawer count and the Z report include it; Accounts lowers the balance owed off the event. Slips are never voided: a mistake is reversed by a manual charge on the ledger (and a cash pay-out if cash was handed back).
+ */
+export const recordTabPaymentMutation = (options?: Partial<Options<RecordTabPaymentData>>): UseMutationOptions<RecordTabPaymentResponse, AxiosError<RecordTabPaymentError>, Options<RecordTabPaymentData>> => {
+    const mutationOptions: UseMutationOptions<RecordTabPaymentResponse, AxiosError<RecordTabPaymentError>, Options<RecordTabPaymentData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await recordTabPayment({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTabPaymentQueryKey = (options: Options<GetTabPaymentData>) => createQueryKey('getTabPayment', options);
+
+/**
+ * One tab payment slip, to reprint it
+ */
+export const getTabPaymentOptions = (options: Options<GetTabPaymentData>) => queryOptions<GetTabPaymentResponse, AxiosError<DefaultError>, GetTabPaymentResponse, ReturnType<typeof getTabPaymentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTabPayment({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTabPaymentQueryKey(options)
 });
 
 /**

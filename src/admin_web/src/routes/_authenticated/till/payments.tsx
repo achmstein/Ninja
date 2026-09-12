@@ -1,15 +1,11 @@
 import { z } from 'zod'
-import { createFileRoute } from '@tanstack/react-router'
-import { TillPayments } from '@/features/till/payments'
-import { pagedSearch, rangeSearch } from '@/features/till/search'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { rangeSearch } from '@/lib/search-schemas'
 
-const paymentsSearchSchema = z.object({
-  ...rangeSearch,
-  ...pagedSearch,
-  tender: z.array(z.string()).optional(),
-})
-
+// The list now opens under the report on the Till page
 export const Route = createFileRoute('/_authenticated/till/payments')({
-  validateSearch: paymentsSearchSchema,
-  component: TillPayments,
+  validateSearch: z.object(rangeSearch),
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: '/till', search: { ...search, view: 'payments' } })
+  },
 })

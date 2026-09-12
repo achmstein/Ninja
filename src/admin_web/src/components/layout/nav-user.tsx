@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { ChevronsUpDown, LogOut, Settings } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useT } from '@/lib/i18n'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -19,7 +20,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { SignOutDialog } from '@/components/sign-out-dialog'
-import { useT } from '@/lib/i18n'
 
 export function NavUser() {
   const t = useT()

@@ -1,50 +1,44 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import {
-  ClipboardList,
-  Gamepad2,
-  DollarSign,
-  ArrowRight,
-  Check,
-  DoorOpen,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import {
-  getAllOrdersOptions,
-  getPendingOrdersOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import {
   getActiveSessionsOptions,
   listRoomsOptions,
+  listTablesOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import {
-  formatEgp,
-  orderUrgency,
-  relativeTime,
-  urgencyTextClass,
-} from '@/features/orders/status'
-import { AnalyticsSection } from './components/analytics'
-import { PosSalesCard } from './components/pos-sales'
-import {
-  ROOM_AVAILABLE,
-  SESSION_ACTIVE,
-  sessionBilledHours,
-} from '@/features/rooms/status'
+import { cn } from '@/lib/utils'
+import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
+import { urgencyTextClass } from '@/components/queue-card'
+import { Stat, StatStrip } from '@/components/stat-strip'
+import { stockLevelsQueryOptions } from '@/features/inventory/queries'
+import { formatEgp, orderUrgency, relativeTime } from '@/features/orders/status'
+import { serviceRequestsService } from '@/features/requests/service'
+import { ROOM_MAINTENANCE, SESSION_ACTIVE } from '@/features/rooms/status'
+import { useTillWindow } from '@/features/till/use-till-window'
+import { LiveFloor } from './components/live-floor'
+import { TodaysTill } from './components/todays-till'
+import { Trends } from './components/trends'
 
+type AttentionLine = {
+  key: string
+  to: '/orders' | '/requests' | '/inventory'
+  search?: Record<string, unknown>
+  dot: string
+  text: string
+  detail?: string
+  detailClass?: string
+}
+
+/**
+ * The branch right now: what needs someone (unboxed lines), four numbers
+ * that each open the page behind them, the live floor beside today's till,
+ * and the trends below. One bordered surface on the whole page.
+ */
 export function Dashboard() {
   const t = useT()
   const locale = useLocale()
@@ -57,332 +51,202 @@ export function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // Midnight boundary; stable across renders so the query key doesn't churn
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
+  // The branch's business day (17:00 → 05:00), re-evaluated every minute
+  const { branch, dayWindow, fromIso, toIso } = useTillWindow({})
 
-  // Fetch data
-  const { data: pendingOrders = [], isLoading: loadingOrders } = useQuery({
+  const pendingQuery = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
-    // SignalR is the primary update path; this poll is only a fallback
+    // SignalR is the primary update path; polls are only a fallback
     refetchInterval: 60_000,
   })
-
-  const { data: todayOrdersData } = useQuery({
-    ...getAllOrdersOptions({
-      query: {
-        'api-version': API_VERSION,
-        pageIndex: 0,
-        pageSize: 200,
-        fromDate: todayStart.toISOString(),
-      },
-    }),
+  const requestsQuery = useQuery({
+    queryKey: ['service-requests'],
+    queryFn: () => serviceRequestsService.pending(),
     refetchInterval: 60_000,
   })
-
-  const { data: rooms = [], isLoading: loadingRooms } = useQuery({
+  const lowStockQuery = useQuery({
+    ...stockLevelsQueryOptions({ low: true }),
+    refetchInterval: 60_000,
+  })
+  const roomsQuery = useQuery({
     ...listRoomsOptions(),
     refetchInterval: 60_000,
   })
-
-  const { data: activeSessions = [] } = useQuery({
+  const sessionsQuery = useQuery({
     ...getActiveSessionsOptions(),
     refetchInterval: 60_000,
   })
+  const tablesQuery = useQuery(listTablesOptions())
+  const reportQuery = useQuery({
+    ...getRangeReportOptions({
+      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+    }),
+    enabled: dayWindow !== null,
+    refetchInterval: 60_000,
+  })
 
-  // Calculate stats (the query already returns only today's orders)
-  const todayOrders = todayOrdersData?.items ?? []
+  const pending = useMemo(
+    () =>
+      [...(pendingQuery.data ?? [])].sort(
+        (a, b) =>
+          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
+      ),
+    [pendingQuery.data]
+  )
+  const oldest = pending[0]
+  const oldestUrgency = orderUrgency(oldest?.date, nowMs)
+  const requestCount = requestsQuery.data?.length ?? 0
+  const lowCount = lowStockQuery.data?.length ?? 0
 
-  const todayRevenue = todayOrders
-    .filter((o) => o.status?.toLowerCase() !== 'cancelled')
-    .reduce((sum, o) => sum + Number(o.total ?? 0), 0)
-  const activeSessionsCount = activeSessions.filter(
+  const rooms = roomsQuery.data ?? []
+  const sessions = (sessionsQuery.data ?? []).filter(
     (s) => Number(s.status) === SESSION_ACTIVE
+  )
+  const roomsInService = rooms.filter(
+    (r) => Number(r.displayStatus) !== ROOM_MAINTENANCE
   ).length
-  const availableRoomsCount = rooms.filter(
-    (r) => Number(r.displayStatus) === ROOM_AVAILABLE
-  ).length
+  const tables = tablesQuery.data ?? []
+  const activeTables = tables.filter((table) => table.isActive).length
+  const busyTables = new Set(
+    pending
+      .map((o) => o.tableId)
+      .filter((id): id is number | string => id != null)
+      .map(Number)
+      .filter((id) => tables.some((table) => Number(table.id) === id))
+  ).size
+
+  const report = reportQuery.data
+  const dateTime = new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+  const attention: AttentionLine[] = []
+  if (pending.length > 0) {
+    attention.push({
+      key: 'orders',
+      to: '/orders',
+      dot:
+        oldestUrgency === 'delayed'
+          ? 'bg-destructive'
+          : oldestUrgency === 'warning'
+            ? 'bg-warning'
+            : 'bg-primary',
+      text: t('ordersWaitingLine', { count: pending.length }),
+      detail: oldest
+        ? t('oldestAge', { age: relativeTime(oldest.date, nowMs, t, locale) })
+        : undefined,
+      detailClass: urgencyTextClass(oldestUrgency),
+    })
+  }
+  if (requestCount > 0) {
+    attention.push({
+      key: 'requests',
+      to: '/requests',
+      dot: 'bg-destructive',
+      text: t('requestsWaitingLine', { count: requestCount }),
+    })
+  }
+  if (lowCount > 0) {
+    attention.push({
+      key: 'stock',
+      to: '/inventory',
+      search: { low: true },
+      dot: 'bg-warning',
+      text: t('lowStockLine', { count: lowCount }),
+    })
+  }
 
   return (
-    <>
-      <Header />
-
-      <Main>
-        <div className='mb-6'>
-          <h2 className='text-2xl font-bold tracking-tight'>
-            {t('welcomeBack')}
-          </h2>
-          <p className='text-muted-foreground'>{t('dashboardSubtitle')}</p>
-        </div>
-
-        {/* Stats Cards - Matching Flutter layout */}
-        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6'>
-          <Card
-            className={
-              pendingOrders.length > 0
-                ? 'border-destructive bg-destructive/5'
-                : ''
-            }
-          >
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                {t('pendingOrders')}
-              </CardTitle>
-              <ClipboardList
-                className={`h-4 w-4 ${
-                  pendingOrders.length > 0
-                    ? 'text-destructive'
-                    : 'text-muted-foreground'
-                }`}
-              />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`text-2xl font-bold ${
-                  pendingOrders.length > 0 ? 'text-destructive' : ''
-                }`}
-              >
-                {pendingOrders.length}
-              </div>
-              <p className='text-xs text-muted-foreground'>
-                {t('waitingToBeConfirmed')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={
-              activeSessionsCount > 0 ? 'border-primary bg-primary/5' : ''
-            }
-          >
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                {t('activeSessions')}
-              </CardTitle>
-              <Gamepad2
-                className={`h-4 w-4 ${
-                  activeSessionsCount > 0
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
-                }`}
-              />
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`text-2xl font-bold ${
-                  activeSessionsCount > 0 ? 'text-primary' : ''
-                }`}
-              >
-                {activeSessionsCount}
-              </div>
-              <p className='text-xs text-muted-foreground'>
-                {t('psRoomsInUse')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                {t('availableRooms')}
-              </CardTitle>
-              <DoorOpen className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>{availableRoomsCount}</div>
-              <p className='text-xs text-muted-foreground'>
-                {t('readyForCustomers')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                {t('todaysRevenue')}
-              </CardTitle>
-              <DollarSign className='h-4 w-4 text-green-500' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold text-green-600'>
-                {todayRevenue.toFixed(2)} {t('currency')}
-              </div>
-              <p className='text-xs text-muted-foreground'>
-                {t('fromConfirmedOrders')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className='grid gap-6 lg:grid-cols-2'>
-          {/* Pending Orders with Quick Actions */}
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <div>
-                  <CardTitle>{t('pendingOrders')}</CardTitle>
-                  <CardDescription>
-                    {t('ordersWaitingForConfirmation')}
-                  </CardDescription>
-                </div>
-                {pendingOrders.length > 0 && (
-                  <Badge variant='destructive'>{pendingOrders.length}</Badge>
-                )}
-              </div>
-              <Link to='/orders'>
-                <Button variant='outline' size='sm'>
-                  {t('viewAll')}
-                  <ArrowRight className='ms-2 h-4 w-4 rtl:rotate-180' />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {loadingOrders ? (
-                <div className='space-y-4'>
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className='h-16 w-full' />
-                  ))}
-                </div>
-              ) : pendingOrders.length === 0 ? (
-                <div className='text-center py-8 text-muted-foreground'>
-                  <Check className='mx-auto h-12 w-12 mb-2 opacity-50' />
-                  {t('noPendingOrders')}
-                </div>
-              ) : (
-                <div className='space-y-2'>
-                  {/* Glance rows only — confirming needs the line items, so
-                      acting on an order happens on the board this links to */}
-                  {pendingOrders.slice(0, 5).map((order) => {
-                    const urgency = orderUrgency(order.date, nowMs)
-                    return (
-                      <Link
-                        key={String(order.orderNumber)}
-                        to='/orders'
-                        className='hover:bg-accent flex items-center justify-between rounded-lg border p-3 transition-colors'
-                      >
-                        <div>
-                          <div className='font-medium'>
-                            {t('orderNumber', {
-                              id: String(order.orderNumber ?? ''),
-                            })}
-                          </div>
-                          <div
-                            className={`text-xs ${urgencyTextClass(urgency)}`}
-                          >
-                            {relativeTime(order.date, nowMs, t, locale)}
-                          </div>
-                        </div>
-                        <div className='font-semibold tabular-nums'>
-                          {formatEgp(order.total)}
-                        </div>
-                      </Link>
-                    )
-                  })}
-                  {pendingOrders.length > 5 && (
-                    <Link to='/orders'>
-                      <Button variant='ghost' className='w-full'>
-                        {t('viewAllOrdersCount', {
-                          count: pendingOrders.length,
-                        })}
-                      </Button>
-                    </Link>
+    <Main className='flex flex-col gap-8'>
+      <PageHeader
+        title={localized(branch?.name) || t('dashboard')}
+        description={
+          dayWindow
+            ? `${dateTime.format(dayWindow.from)} – ${dateTime.format(dayWindow.to)}`
+            : t('dashboardSubtitle')
+        }
+      >
+        {attention.length > 0 && (
+          <ul className='flex flex-col gap-1.5'>
+            {attention.map((line) => (
+              <li key={line.key}>
+                <Link
+                  to={line.to}
+                  search={line.search}
+                  className='hover:text-foreground inline-flex items-center gap-2 text-sm underline-offset-4 hover:underline'
+                >
+                  <span className={cn('size-2 rounded-full', line.dot)} />
+                  <span className='font-medium'>{line.text}</span>
+                  {line.detail && (
+                    <span className={cn('text-xs', line.detailClass)}>
+                      · {line.detail}
+                    </span>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </PageHeader>
 
-          {/* Active Room Sessions with End Session */}
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <div>
-                  <CardTitle>{t('activeSessions')}</CardTitle>
-                  <CardDescription>
-                    {t('currentlyRunningSessions')}
-                  </CardDescription>
-                </div>
-                {activeSessionsCount > 0 && (
-                  <Badge>{activeSessionsCount}</Badge>
-                )}
-              </div>
-              <Link to='/rooms'>
-                <Button variant='outline' size='sm'>
-                  {t('manageRooms')}
-                  <ArrowRight className='ms-2 h-4 w-4 rtl:rotate-180' />
-                </Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {loadingRooms ? (
-                <div className='space-y-4'>
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className='h-16 w-full' />
-                  ))}
-                </div>
-              ) : activeSessionsCount === 0 ? (
-                <div className='text-center py-8 text-muted-foreground'>
-                  <Gamepad2 className='mx-auto h-12 w-12 mb-2 opacity-50' />
-                  {t('noActiveSessions')}
-                </div>
-              ) : (
-                <div className='space-y-2'>
-                  {activeSessions
-                    .filter((s) => Number(s.status) === SESSION_ACTIVE)
-                    .slice(0, 5)
-                    .map((session) => {
-                      const room = rooms.find(
-                        (r) => Number(r.id) === Number(session.roomId)
-                      )
-                      return (
-                        // Compact row; managing the session happens on the
-                        // room's detail page it links to
-                        <Link
-                          key={String(session.id)}
-                          to='/rooms'
-                          search={{ room: Number(session.roomId) }}
-                          className='hover:bg-accent flex items-center justify-between rounded-lg border p-3 transition-colors'
-                        >
-                          <div>
-                            <div className='font-medium'>
-                              {localized(room?.name) ||
-                                localized(session.roomName)}
-                            </div>
-                            <div className='text-muted-foreground text-xs'>
-                              {session.customerName || t('walkIn')}
-                            </div>
-                          </div>
-                          <div className='text-end'>
-                            <div className='font-mono text-sm tabular-nums'>
-                              {t('billedHoursFormat', {
-                                hours: sessionBilledHours(session),
-                              })}
-                            </div>
-                            {session.currentPlayerMode && (
-                              <div className='text-muted-foreground text-xs'>
-                                {t(
-                                  session.currentPlayerMode === 'Multi'
-                                    ? 'playerModeMulti'
-                                    : 'playerModeSingle'
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          {/* POS sales for the branch's current business day */}
-          <PosSalesCard />
-        </div>
+      <StatStrip>
+        <Stat
+          label={t('netSales')}
+          value={formatEgp(report?.net)}
+          hint={t('posTicketsCount', {
+            count: Number(report?.ticketsSettled ?? 0),
+          })}
+          loading={dayWindow === null || reportQuery.isPending}
+          to='/till'
+        />
+        <Stat
+          label={t('pendingOrders')}
+          value={pending.length}
+          tone={pending.length > 0 ? 'warning' : 'default'}
+          loading={pendingQuery.isPending}
+          to='/orders'
+        />
+        <Stat
+          label={t('roomsInUse')}
+          value={t('ofTotal', {
+            count: sessions.length,
+            total: roomsInService,
+          })}
+          loading={roomsQuery.isPending || sessionsQuery.isPending}
+          to='/rooms'
+        />
+        <Stat
+          label={t('tablesInUse')}
+          value={t('ofTotal', { count: busyTables, total: activeTables })}
+          loading={tablesQuery.isPending}
+          to='/tables'
+        />
+      </StatStrip>
 
-        <div className='mt-6'>
-          <AnalyticsSection />
-        </div>
-      </Main>
-    </>
+      <div className='grid gap-10 lg:grid-cols-2'>
+        <LiveFloor
+          sessions={sessions}
+          rooms={rooms}
+          pending={pending}
+          nowMs={nowMs}
+          isLoading={pendingQuery.isLoading || sessionsQuery.isLoading}
+          error={pendingQuery.error ?? sessionsQuery.error}
+          onRetry={() => {
+            pendingQuery.refetch()
+            sessionsQuery.refetch()
+          }}
+        />
+        <TodaysTill
+          report={report}
+          isLoading={dayWindow === null || reportQuery.isPending}
+          error={reportQuery.error}
+          onRetry={() => reportQuery.refetch()}
+        />
+      </div>
+
+      <Trends />
+    </Main>
   )
 }

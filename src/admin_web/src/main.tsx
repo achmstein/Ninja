@@ -7,16 +7,16 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { toast } from '@/lib/toast'
+// Styles
+import 'sileo/styles.css'
 import { handleServerError } from '@/lib/handle-server-error'
+import { translate } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { AuthProvider } from './context/auth-provider'
 import { DirectionProvider } from './context/direction-provider'
-import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
-// Styles
-import 'sileo/styles.css'
 import './styles/index.css'
 
 const queryClient = new QueryClient({
@@ -40,12 +40,6 @@ const queryClient = new QueryClient({
     mutations: {
       onError: (error) => {
         handleServerError(error)
-
-        if (error instanceof AxiosError) {
-          if (error.response?.status === 304) {
-            toast.error('Content not modified!')
-          }
-        }
       },
     },
   },
@@ -53,23 +47,24 @@ const queryClient = new QueryClient({
     onError: (error) => {
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
-          // Session expired: go straight to sign-in, no toast. Every failed
-          // query fires onError, so a burst of parallel 401s would otherwise
-          // stack toasts; the guard also keeps it to a single redirect.
+          // The API no longer accepts the token (expired, or Keycloak was
+          // reset and the stored one is signed by a dead key). Sign-in drops
+          // the stored user and re-authenticates instead of bouncing back
+          // here on the strength of a token that only looks valid locally.
+          // Every failed query fires onError, so the guard keeps a burst of
+          // parallel 401s to a single redirect and no toast.
           if (router.state.location.pathname !== '/sign-in') {
             const redirect = `${router.history.location.href}`
-            router.navigate({ to: '/sign-in', search: { redirect } })
+            router.navigate({
+              to: '/sign-in',
+              search: { redirect, expired: true },
+            })
           }
         }
         if (error.response?.status === 500) {
-          toast.error('Internal Server Error!')
-          // Only navigate to error page in production to avoid disrupting HMR in development
-          if (import.meta.env.PROD) {
-            router.navigate({ to: '/500' })
-          }
-        }
-        if (error.response?.status === 403) {
-          // router.navigate("/forbidden", { replace: true });
+          // Pages render their own ErrorState; the toast is for the
+          // background queries (badges, polls) nobody is looking at
+          toast.error(translate('somethingWentWrong'))
         }
       }
     },
@@ -100,11 +95,9 @@ if (!rootElement.innerHTML) {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <FontProvider>
-              <DirectionProvider>
-                <RouterProvider router={router} />
-              </DirectionProvider>
-            </FontProvider>
+            <DirectionProvider>
+              <RouterProvider router={router} />
+            </DirectionProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </AuthProvider>

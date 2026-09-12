@@ -7,11 +7,13 @@ import type { EarnPointsRequest, AdjustPointsRequest } from '../types'
 export const loyaltyKeys = {
   all: ['loyalty'] as const,
   accounts: () => [...loyaltyKeys.all, 'accounts'] as const,
-  accountsList: (first?: number, max?: number) => [...loyaltyKeys.accounts(), { first, max }] as const,
+  accountsList: (first?: number, max?: number) =>
+    [...loyaltyKeys.accounts(), { first, max }] as const,
   account: (userId: string) => [...loyaltyKeys.all, 'account', userId] as const,
   stats: () => [...loyaltyKeys.all, 'stats'] as const,
   tiers: () => [...loyaltyKeys.all, 'tiers'] as const,
-  transactions: (userId: string) => [...loyaltyKeys.all, 'transactions', userId] as const,
+  transactions: (userId: string) =>
+    [...loyaltyKeys.all, 'transactions', userId] as const,
 }
 
 export function useLoyaltyAccounts(first?: number, max?: number) {
@@ -60,8 +62,12 @@ export function useEarnPoints() {
     mutationFn: (data: EarnPointsRequest) => loyaltyService.earnPoints(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.accounts() })
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.account(variables.userId) })
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions(variables.userId) })
+      queryClient.invalidateQueries({
+        queryKey: loyaltyKeys.account(variables.userId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: loyaltyKeys.transactions(variables.userId),
+      })
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.stats() })
       toast.success(translate('pointsAdded'))
     },
@@ -75,16 +81,37 @@ export function useAdjustPoints() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: AdjustPointsRequest) => loyaltyService.adjustPoints(data),
+    mutationFn: (data: AdjustPointsRequest) =>
+      loyaltyService.adjustPoints(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.accounts() })
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.account(variables.userId) })
-      queryClient.invalidateQueries({ queryKey: loyaltyKeys.transactions(variables.userId) })
+      queryClient.invalidateQueries({
+        queryKey: loyaltyKeys.account(variables.userId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: loyaltyKeys.transactions(variables.userId),
+      })
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.stats() })
       toast.success(translate('pointsAdjusted'))
     },
     onError: () => {
       toast.error(translate('failedToAdjustPoints'))
+    },
+  })
+}
+
+/** Opens a loyalty account for a customer who has none yet */
+export function useEnrolCustomer() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (userId: string) => loyaltyService.createAccount(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: loyaltyKeys.all })
+      toast.success(translate('customerEnrolled'))
+    },
+    onError: () => {
+      toast.error(translate('somethingWentWrong'))
     },
   })
 }

@@ -1,7 +1,6 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Package, Pencil, Plus, Trash2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { Package, Pencil, Plus, Trash2 } from 'lucide-react'
 import { type BundleDealDto } from '@/api/catalog'
 import {
   deleteBundleMutation,
@@ -10,6 +9,8 @@ import {
   toggleBundleActiveMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,18 +22,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
-import { ImageWithFallback } from '@/components/image-fallback'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { useLocalized, useT } from '@/lib/i18n'
+import { ImageWithFallback } from '@/components/image-fallback'
 import { formatEgp } from '@/features/orders/status'
-import { bundlePictureUrl } from './columns'
 import { BundleDialog } from './components/bundle-dialog'
+import { MenuPage } from './menu-page'
+import { bundlePictureUrl } from './pictures'
 
 export function BundleDeals() {
   const t = useT()
@@ -92,18 +91,10 @@ export function BundleDeals() {
 
   return (
     <>
-      <Header />
-
-      <Main fixed>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
-          <div className='flex items-center gap-2'>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                {t('bundleDeals')}
-              </h1>
-              <p className='text-muted-foreground'>{t('bundlesSubtitle')}</p>
-            </div>
-          </div>
+      <MenuPage
+        tab='bundles'
+        fixed
+        actions={
           <Button
             onClick={() => {
               setSelectedBundle(null)
@@ -113,18 +104,14 @@ export function BundleDeals() {
             <Plus className='me-2 h-4 w-4' />
             {t('createBundle')}
           </Button>
-        </div>
-
-        <div className='my-4 flex items-center sm:my-0'>
-          <Input
-            placeholder={t('filterBundlesPlaceholder')}
-            className='h-9 w-40 sm:my-4 lg:w-[250px]'
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
-
-        <Separator className='shadow-sm' />
+        }
+      >
+        <Input
+          placeholder={t('filterBundlesPlaceholder')}
+          className='h-9 w-full sm:w-80'
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
 
         {isLoading ? (
           <div className='grid gap-4 pt-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -236,7 +223,7 @@ export function BundleDeals() {
             })}
           </ul>
         )}
-      </Main>
+      </MenuPage>
 
       <BundleDialog
         open={dialogOpen}
@@ -276,11 +263,9 @@ export function BundleDeals() {
                 })
               }
               disabled={deleteBundle.isPending}
-              className='bg-destructive text-white hover:bg-destructive/90'
+              className='bg-destructive hover:bg-destructive/90 text-white'
             >
-              {deleteBundle.isPending && (
-                <Loader2 className='me-2 h-4 w-4 animate-spin' />
-              )}
+              {deleteBundle.isPending && <Spinner className='me-2' />}
               {t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>

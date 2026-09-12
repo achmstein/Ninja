@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { Loader2, Store } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { useT } from '@/lib/i18n'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { ErrorState } from '@/components/error-state'
 
 /**
  * Sits between the role gate and the pages. Narrows the active branch to
@@ -24,19 +25,19 @@ export function BranchGate({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, allowedKey, reconcile])
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Loading />
   if (allowedIds.length === 0) {
     // An owner of a café with no active branches just sees empty pages
     return isOwner ? <>{children}</> : <NoBranch />
   }
-  if (branchId === null || !allowedIds.includes(branchId)) return <Spinner />
+  if (branchId === null || !allowedIds.includes(branchId)) return <Loading />
   return <>{children}</>
 }
 
-function Spinner() {
+function Loading() {
   return (
     <div className='flex flex-1 items-center justify-center py-24'>
-      <Loader2 className='h-8 w-8 animate-spin' />
+      <Spinner className='size-8' />
     </div>
   )
 }
@@ -45,13 +46,15 @@ function NoBranch() {
   const t = useT()
   const auth = useAuth()
   return (
-    <div className='flex flex-1 flex-col items-center justify-center gap-4 p-6 py-24 text-center'>
-      <Store className='text-muted-foreground size-12' />
-      <h1 className='text-2xl font-bold'>{t('noBranchTitle')}</h1>
-      <p className='text-muted-foreground max-w-md'>{t('noBranchDescription')}</p>
-      <Button variant='outline' size='lg' onClick={() => auth.signoutRedirect()}>
-        {t('signOut')}
-      </Button>
-    </div>
+    <ErrorState
+      size='page'
+      title={t('noBranchTitle')}
+      description={t('noBranchDescription')}
+      actions={
+        <Button variant='outline' onClick={() => auth.signoutRedirect()}>
+          {t('signOut')}
+        </Button>
+      }
+    />
   )
 }

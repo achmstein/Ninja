@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ReserveRoomDialog } from './components/reserve-room-dialog'
 import { RoomDialog } from './components/room-dialog'
@@ -130,7 +129,6 @@ export function RoomsManagement() {
 
   return (
     <>
-      <Header />
 
       <Main fixed>
         <section className='relative flex h-full gap-6'>

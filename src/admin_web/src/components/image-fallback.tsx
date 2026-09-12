@@ -28,7 +28,9 @@ export function ImageWithFallback({
 
   if (!src || failed) {
     return (
-      <div className={cn('bg-muted flex items-center justify-center', className)}>
+      <div
+        className={cn('bg-muted flex items-center justify-center', className)}
+      >
         {fallbackIcon}
       </div>
     )

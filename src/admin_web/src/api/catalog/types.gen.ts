@@ -9,6 +9,7 @@ export type BranchItemOverrideDto = {
     branchId: number | string;
     catalogItemId: number | string;
     isAvailable: boolean;
+    isOutOfStock: boolean;
     priceOverride: null | number | string;
     offerPriceOverride: null | number | string;
     isOnOfferOverride: null | boolean;
@@ -64,6 +65,13 @@ export type CatalogItem = {
     customizations?: Array<ItemCustomization>;
 };
 
+export type CatalogItemBaseDto = {
+    price: number | string;
+    offerPrice: null | number | string;
+    isOnOffer: boolean;
+    isAvailable: boolean;
+};
+
 export type CatalogItemDto = {
     id?: number | string;
     name?: LocalizedText;
@@ -73,6 +81,7 @@ export type CatalogItemDto = {
     catalogTypeId?: number | string;
     catalogTypeName?: LocalizedText;
     isAvailable?: boolean;
+    isOutOfStock?: boolean;
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
     effectivePrice?: number | string;
@@ -80,6 +89,7 @@ export type CatalogItemDto = {
     preparationTimeMinutes?: null | number | string;
     displayOrder?: number | string;
     customizations?: Array<ItemCustomizationDto>;
+    base?: null | CatalogItemBaseDto;
 };
 
 export type CatalogType = {
@@ -119,6 +129,7 @@ export type CustomizationOptionDto = {
     priceAdjustment?: number | string;
     isDefault?: boolean;
     displayOrder?: number | string;
+    isOutOfStock?: boolean;
 };
 
 export type IFormFile = Blob | File;
@@ -192,6 +203,18 @@ export type SetBundleActiveRequest = {
 export type SetItemOfferRequest = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+};
+
+export type UpdateCatalogItemRequest = {
+    name?: LocalizedText;
+    description?: LocalizedText;
+    price?: number | string;
+    catalogTypeId?: number | string;
+    isAvailable?: boolean;
+    isOnOffer?: boolean;
+    offerPrice?: null | number | string;
+    isPopular?: boolean;
+    preparationTimeMinutes?: null | number | string;
 };
 
 export type UserItemPreferenceDto = {
@@ -392,7 +415,7 @@ export type GetItemResponses = {
 export type GetItemResponse = GetItemResponses[keyof GetItemResponses];
 
 export type UpdateItemData = {
-    body: CatalogItem;
+    body: UpdateCatalogItemRequest;
     path: {
         /**
          * The id of the menu item to update
@@ -1208,6 +1231,51 @@ export type GetUserPreferenceResponses = {
 
 export type GetUserPreferenceResponse = GetUserPreferenceResponses[keyof GetUserPreferenceResponses];
 
+export type GetUserPreferenceForCustomerData = {
+    body?: never;
+    path: {
+        /**
+         * The catalog item id
+         */
+        catalogItemId: number;
+        /**
+         * The customer's identity id
+         */
+        userId: string;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/preferences/{catalogItemId}/for/{userId}';
+};
+
+export type GetUserPreferenceForCustomerErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetUserPreferenceForCustomerResponses = {
+    /**
+     * OK
+     */
+    200: UserItemPreferenceDto;
+};
+
+export type GetUserPreferenceForCustomerResponse = GetUserPreferenceForCustomerResponses[keyof GetUserPreferenceForCustomerResponses];
+
 export type GetUserPreferencesData = {
     body?: never;
     path?: never;
@@ -1301,6 +1369,41 @@ export type GetUserPreferencesForItemsResponses = {
 };
 
 export type GetUserPreferencesForItemsResponse = GetUserPreferencesForItemsResponses[keyof GetUserPreferencesForItemsResponses];
+
+export type SaveUserPreferencesForCustomerData = {
+    body: SaveUserPreferencesRequest;
+    path: {
+        /**
+         * The customer's identity id
+         */
+        userId: string;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/customers/{userId}/preferences';
+};
+
+export type SaveUserPreferencesForCustomerErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveUserPreferencesForCustomerResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type GetBundlesData = {
     body?: never;
@@ -1738,6 +1841,75 @@ export type AddFavoriteResponses = {
      */
     200: unknown;
 };
+
+export type GetMyTopItemsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/top-items';
+};
+
+export type GetMyTopItemsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyTopItemsResponses = {
+    /**
+     * OK
+     */
+    200: Array<number | string>;
+};
+
+export type GetMyTopItemsResponse = GetMyTopItemsResponses[keyof GetMyTopItemsResponses];
+
+export type GetCustomerTopItemsData = {
+    body?: never;
+    path: {
+        /**
+         * The customer's identity id
+         */
+        userId: string;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/customers/{userId}/top-items';
+};
+
+export type GetCustomerTopItemsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCustomerTopItemsResponses = {
+    /**
+     * OK
+     */
+    200: Array<number | string>;
+};
+
+export type GetCustomerTopItemsResponse = GetCustomerTopItemsResponses[keyof GetCustomerTopItemsResponses];
 
 export type RemoveBranchItemOverrideData = {
     body?: never;

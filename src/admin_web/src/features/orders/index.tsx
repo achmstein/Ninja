@@ -1,34 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getRouteApi, Link } from '@tanstack/react-router'
-import { useTable } from '@tanstack/react-table'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { getRouteApi } from '@tanstack/react-router'
+import { useTable, type SortingState } from '@tanstack/react-table'
+import { Trash2 } from 'lucide-react'
 import {
   getAllOrdersOptions,
   getPendingOrdersOptions,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
+import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { type RangeSearch } from '@/lib/search-schemas'
+import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   DataTable,
   DataTableBulkActions,
@@ -36,39 +20,38 @@ import {
   DataTableToolbar,
   dataTableFeatures,
 } from '@/components/data-table'
-import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  useLanguage,
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { DateRangePicker } from '@/components/date-range-picker'
+import { ErrorState } from '@/components/error-state'
+import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
+import { useTillWindow } from '@/features/till/use-till-window'
 import { getOrdersColumns } from './columns'
 import { OrderDetailsSheet } from './components/order-details-sheet'
+import { OrdersTabs } from './components/orders-tabs'
 import { isCancelled, orderStatuses } from './status'
 import { useOrderActions } from './use-order-actions'
 
 const route = getRouteApi('/_authenticated/orders/history')
 
-type DateRange = 'today' | '7d' | '30d'
+type SortParam = 'date_desc' | 'date_asc' | 'total_desc' | 'total_asc'
 
-const dateRanges: { value: DateRange; key: TranslationKey; days: number }[] = [
-  { value: 'today', key: 'today', days: 0 },
-  { value: '7d', key: 'last7Days', days: 7 },
-  { value: '30d', key: 'last30Days', days: 30 },
-]
-
-// Midnight-based so the value is stable across renders (no query-key churn)
-function rangeToFromDate(range: DateRange | undefined): string | undefined {
-  if (!range) return undefined
-  const days = dateRanges.find((r) => r.value === range)?.days ?? 0
-  const from = new Date()
-  from.setHours(0, 0, 0, 0)
-  from.setDate(from.getDate() - days)
-  return from.toISOString()
+function toSortingState(sort: SortParam | undefined): SortingState {
+  const [id, dir] = (sort ?? 'date_desc').split('_')
+  return [{ id, desc: dir === 'desc' }]
 }
 
+function toSortParam(sorting: SortingState): SortParam | undefined {
+  const first = sorting[0]
+  if (!first) return undefined
+  const param = `${first.id}_${first.desc ? 'desc' : 'asc'}` as SortParam
+  return param === 'date_desc' ? undefined : param
+}
+
+/**
+ * Every order the branch has taken, newest first: search by number or
+ * customer, filter by status and business-day range, sort by time or
+ * total. A row opens the ticket; confirming and cancelling happen there.
+ */
 export function OrdersManagement() {
   const t = useT()
   const locale = useLocale()
@@ -85,12 +68,14 @@ export function OrdersManagement() {
     onPaginationChange,
     columnFilters,
     onColumnFiltersChange,
+    globalFilter,
+    onGlobalFilterChange,
     ensurePageInRange,
   } = useTableUrlState({
     search,
     navigate,
     pagination: { defaultPageSize: 20 },
-    globalFilter: { enabled: false },
+    globalFilter: { key: 'q' },
     columnFilters: [{ columnId: 'status', searchKey: 'status', type: 'array' }],
   })
 
@@ -98,7 +83,13 @@ export function OrdersManagement() {
     (columnFilters.find((f) => f.id === 'status')?.value as
       | string[]
       | undefined) ?? []
-  const fromDate = useMemo(() => rangeToFromDate(search.range), [search.range])
+
+  // History spans everything unless a business-day range is picked
+  const { dayWindow, isAll, ready, fromIso, toIso } = useTillWindow(search, {
+    defaultPreset: 'all',
+  })
+
+  const sorting = useMemo(() => toSortingState(search.sort), [search.sort])
 
   const ordersQuery = useQuery({
     ...getAllOrdersOptions({
@@ -107,9 +98,13 @@ export function OrdersManagement() {
         pageIndex: pagination.pageIndex,
         pageSize: pagination.pageSize,
         status: statusFilter.length > 0 ? statusFilter.join(',') : undefined,
-        fromDate,
+        fromDate: isAll ? undefined : fromIso || undefined,
+        toDate: isAll ? undefined : toIso || undefined,
+        search: globalFilter || undefined,
+        sort: search.sort,
       },
     }),
+    enabled: ready,
     placeholderData: keepPreviousData,
   })
 
@@ -131,8 +126,6 @@ export function OrdersManagement() {
     () =>
       getOrdersColumns({
         onView: setSelectedOrderId,
-        onConfirm: handleConfirm,
-        onCancel: handleCancel,
         onDelete: setOrderToDelete,
         isActing,
         t,
@@ -150,15 +143,27 @@ export function OrdersManagement() {
     data: orders,
     columns,
     getRowId: (row) => String(row.orderNumber),
-    enableSorting: false,
     // Deletion is restricted to cancelled orders, so selection is too
     enableRowSelection: (row) => isCancelled(row.original.status),
+    enableMultiSort: false,
     manualPagination: true,
     manualFiltering: true,
+    manualSorting: true,
     rowCount: Number(ordersQuery.data?.totalCount ?? 0),
-    state: { pagination, columnFilters },
+    state: { pagination, columnFilters, globalFilter, sorting },
     onPaginationChange,
     onColumnFiltersChange,
+    onGlobalFilterChange,
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater
+      navigate({
+        search: (prev) => ({
+          ...prev,
+          page: undefined,
+          sort: toSortParam(next),
+        }),
+      })
+    },
   })
 
   const pageCount = table.getPageCount()
@@ -167,35 +172,19 @@ export function OrdersManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersQuery.data, pageCount])
 
+  const filtered =
+    statusFilter.length > 0 || !!globalFilter || search.range != null
+
   return (
     <>
-      <Header />
-
       <Main className='flex flex-col gap-4'>
-        <div className='flex items-center gap-2'>
-          <Button size='icon' variant='ghost' className='-ms-2' asChild>
-            <Link to='/orders' aria-label={t('orders')}>
-              <ArrowLeft size={20} className='rtl:rotate-180' />
-            </Link>
-          </Button>
-          <div>
-            <div className='flex items-center gap-2'>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                {t('orderHistory')}
-              </h1>
-              {pendingOrders.length > 0 && (
-                <Badge variant='default' className='h-6'>
-                  {t('ordersPending', { count: pendingOrders.length })}
-                </Badge>
-              )}
-            </div>
-            <p className='text-muted-foreground'>{t('ordersSubtitle')}</p>
-          </div>
-        </div>
+        <PageHeader title={t('orders')} description={t('ordersSubtitle')}>
+          <OrdersTabs value='history' pendingCount={pendingOrders.length} />
+        </PageHeader>
 
         <DataTableToolbar
           table={table}
-          showSearch={false}
+          searchPlaceholder={t('searchOrdersPlaceholder')}
           filters={[
             {
               columnId: 'status',
@@ -208,46 +197,36 @@ export function OrdersManagement() {
             },
           ]}
         >
-          <Select
-            value={search.range ?? 'all'}
-            onValueChange={(value) =>
+          <DateRangePicker
+            search={search}
+            dayWindow={dayWindow}
+            defaultPreset='all'
+            onChange={(next: RangeSearch) =>
               navigate({
-                search: (prev) => ({
-                  ...prev,
-                  page: undefined,
-                  range: value === 'all' ? undefined : (value as DateRange),
-                }),
+                search: (prev) => ({ ...prev, page: undefined, ...next }),
               })
             }
-          >
-            <SelectTrigger size='sm' className='h-8 w-[140px]'>
-              <SelectValue placeholder={t('allTime')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{t('allTime')}</SelectItem>
-              {dateRanges.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {t(r.key)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </DataTableToolbar>
 
-        <DataTable
-          table={table}
-          isLoading={ordersQuery.isLoading}
-          emptyMessage={
-            statusFilter.length > 0 || search.range
-              ? t('noOrdersFound')
-              : t('noOrdersYet')
-          }
-          onRowClick={(row) =>
-            setSelectedOrderId(Number(row.original.orderNumber))
-          }
-        />
-
-        <DataTablePagination table={table} />
+        {ordersQuery.isError ? (
+          <ErrorState
+            error={ordersQuery.error}
+            onRetry={() => ordersQuery.refetch()}
+          />
+        ) : (
+          <>
+            <DataTable
+              table={table}
+              isLoading={ordersQuery.isLoading}
+              emptyMessage={filtered ? t('noOrdersFound') : t('noOrdersYet')}
+              onRowClick={(row) =>
+                setSelectedOrderId(Number(row.original.orderNumber))
+              }
+            />
+            <DataTablePagination table={table} />
+          </>
+        )}
 
         <DataTableBulkActions table={table} entityName={t('ordersEntity')}>
           <Button
@@ -272,62 +251,40 @@ export function OrdersManagement() {
         isActing={isActing}
       />
 
-      <AlertDialog
+      <ConfirmDialog
         open={orderToDelete != null}
         onOpenChange={(open) => {
           if (!open) setOrderToDelete(null)
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteOrderQuestion')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteOrderConfirmation', { orderNumber: orderToDelete ?? 0 })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className='bg-destructive text-white hover:bg-destructive/90'
-              onClick={() => {
-                if (orderToDelete != null) handleDelete(orderToDelete)
-                setOrderToDelete(null)
-              }}
-            >
-              {t('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={t('deleteOrderQuestion')}
+        desc={t('deleteOrderConfirmation', { orderNumber: orderToDelete ?? 0 })}
+        confirmText={t('delete')}
+        destructive
+        handleConfirm={() => {
+          if (orderToDelete != null) handleDelete(orderToDelete)
+          setOrderToDelete(null)
+        }}
+      />
 
-      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteOrdersQuestion')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteOrdersConfirmation', {
-                count: table.getSelectedRowModel().rows.length,
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className='bg-destructive text-white hover:bg-destructive/90'
-              onClick={async () => {
-                const selected = table
-                  .getSelectedRowModel()
-                  .rows.map((row) => Number(row.original.orderNumber))
-                setBulkDeleteOpen(false)
-                await handleDeleteMany(selected)
-                table.resetRowSelection()
-              }}
-            >
-              {t('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={t('deleteOrdersQuestion')}
+        desc={t('deleteOrdersConfirmation', {
+          count: table.getSelectedRowModel().rows.length,
+        })}
+        confirmText={t('delete')}
+        destructive
+        isLoading={isActing}
+        handleConfirm={async () => {
+          const selected = table
+            .getSelectedRowModel()
+            .rows.map((row) => Number(row.original.orderNumber))
+          setBulkDeleteOpen(false)
+          await handleDeleteMany(selected)
+          table.resetRowSelection()
+        }}
+      />
     </>
   )
 }

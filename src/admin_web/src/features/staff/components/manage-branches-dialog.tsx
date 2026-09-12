@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Store } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { Store } from 'lucide-react'
 import { getAllBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
@@ -54,7 +55,10 @@ export function ManageBranchesDialog({
 
   const save = useMutation({
     mutationFn: () =>
-      customersService.setBranches(user?.id ?? '', [...selected].sort((a, b) => a - b)),
+      customersService.setBranches(
+        user?.id ?? '',
+        [...selected].sort((a, b) => a - b)
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
       toast.success(t('branchesUpdated'))
@@ -137,7 +141,7 @@ export function ManageBranchesDialog({
             disabled={save.isPending || branchesQuery.isLoading}
             onClick={() => save.mutate()}
           >
-            {save.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+            {save.isPending && <Spinner className='me-2' />}
             {t('save')}
           </Button>
         </DialogFooter>

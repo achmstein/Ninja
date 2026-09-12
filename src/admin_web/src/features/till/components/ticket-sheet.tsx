@@ -87,6 +87,9 @@ function LineRow({ line }: { line: TicketLineView }) {
             </span>
           )}
           {line.addedBy && <span> · {line.addedBy}</span>}
+          {line.orderId != null && (
+            <span> · {t('orderNumber', { id: toNumber(line.orderId) })}</span>
+          )}
         </div>
       </div>
       <div
@@ -181,6 +184,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
         ticket.shiftId != null
           ? t('shiftNumber', { id: toNumber(ticket.shiftId) })
           : null,
+        ticket.guestPhone ?? null,
       ]
         .filter(Boolean)
         .join(' · ')

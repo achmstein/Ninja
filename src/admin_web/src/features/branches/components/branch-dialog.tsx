@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import { useT } from '@/lib/i18n'
 import { type BranchResponse } from '@/api/branch'
 import {
   createBranchMutation,
   updateBranchMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import {
+  fromLocalizedValue,
+  LocalizedInput,
+  toLocalizedValue,
+} from '@/components/localized-input'
 
 interface BranchDialogProps {
   open: boolean
@@ -71,8 +76,7 @@ function BranchForm({
   const isEditing = !!branch
 
   const [form, setForm] = useState({
-    nameEn: branch?.name?.en ?? '',
-    nameAr: branch?.name?.ar ?? '',
+    name: toLocalizedValue(branch?.name),
     addressEn: branch?.address?.en ?? '',
     addressAr: branch?.address?.ar ?? '',
     phone: branch?.phone ?? '',
@@ -107,13 +111,13 @@ function BranchForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.nameEn.trim()) {
+    if (!form.name.en.trim()) {
       setError(t('englishNameRequired'))
       return
     }
     setError('')
 
-    const name = { en: form.nameEn.trim(), ar: form.nameAr.trim() || null }
+    const name = fromLocalizedValue(form.name)
     const address =
       form.addressEn.trim() || form.addressAr.trim()
         ? {
@@ -155,27 +159,14 @@ function BranchForm({
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='branchNameEn'>{t('nameEnglish')}</Label>
-          <Input
-            id='branchNameEn'
-            value={form.nameEn}
-            onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
-            autoFocus
-          />
-          {error && <p className='text-destructive text-sm'>{error}</p>}
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='branchNameAr'>{t('nameArabic')}</Label>
-          <Input
-            id='branchNameAr'
-            dir='rtl'
-            value={form.nameAr}
-            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
-          />
-        </div>
-      </div>
+      <LocalizedInput
+        id='branch-name'
+        label={t('name')}
+        value={form.name}
+        onChange={(name) => setForm({ ...form, name })}
+        error={error ?? undefined}
+        autoFocus
+      />
 
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-2'>
@@ -214,9 +205,7 @@ function BranchForm({
             id='dayStart'
             type='time'
             value={form.dayStartTime}
-            onChange={(e) =>
-              setForm({ ...form, dayStartTime: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, dayStartTime: e.target.value })}
           />
         </div>
         <div className='space-y-2'>
@@ -251,7 +240,7 @@ function BranchForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isSaving}>
-          {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+          {isSaving && <Spinner className='me-2' />}
           {isEditing ? t('update') : t('create')}
         </Button>
       </DialogFooter>

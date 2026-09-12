@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { getBranchClaim, isOwner } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
-import { getBranchClaim, isOwner } from '@/config/oidc-config'
 
 /**
  * The branches this account may work in: the public branch list narrowed to

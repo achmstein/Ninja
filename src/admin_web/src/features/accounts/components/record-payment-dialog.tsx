@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { useT } from '@/lib/i18n'
 import { formatEgp } from '@/features/orders/status'
 import { accountsService } from '../services/accounts-service'
 import type { AccountSummary } from '../types'
@@ -25,7 +25,11 @@ interface RecordPaymentDialogProps {
   account: AccountSummary | null
 }
 
-export function RecordPaymentDialog({ open, onOpenChange, account }: RecordPaymentDialogProps) {
+export function RecordPaymentDialog({
+  open,
+  onOpenChange,
+  account,
+}: RecordPaymentDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState('')
@@ -79,11 +83,13 @@ export function RecordPaymentDialog({ open, onOpenChange, account }: RecordPayme
         <form onSubmit={handleSubmit}>
           <div className='space-y-4 py-4'>
             {account && (
-              <div className='rounded-lg bg-muted p-3'>
-                <p className='text-sm text-muted-foreground'>
+              <div className='bg-muted rounded-lg p-3'>
+                <p className='text-muted-foreground text-sm'>
                   {t('currentBalance')}
                 </p>
-                <p className={`text-2xl font-bold ${account.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                <p
+                  className={`text-2xl font-bold ${account.balance > 0 ? 'text-red-500' : 'text-green-500'}`}
+                >
                   {formatEgp(account.balance)}
                 </p>
               </div>
@@ -119,7 +125,7 @@ export function RecordPaymentDialog({ open, onOpenChange, account }: RecordPayme
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={recordPaymentMutation.isPending}>
-              {recordPaymentMutation.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+              {recordPaymentMutation.isPending && <Spinner className='me-2' />}
               {t('recordPayment')}
             </Button>
           </DialogFooter>

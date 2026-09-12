@@ -1,5 +1,6 @@
-import { Check, Eye, Trash2, X } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
+import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -8,12 +9,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { createAppColumnHelper } from '@/components/data-table'
 import {
-  type TranslationKey,
-  type TranslateParams,
-} from '@/lib/i18n'
-import { formatEgp, getOrderStatus, isCancelled, isSubmitted } from './status'
+  createAppColumnHelper,
+  DataTableColumnHeader,
+} from '@/components/data-table'
+import {
+  formatEgp,
+  getOrderStatus,
+  isCancelled,
+  orderSourceKeys,
+} from './status'
 
 const columnHelper = createAppColumnHelper<OrderSummary>()
 
@@ -33,19 +38,22 @@ function formatRelative(date: Date, t: Translate, locale: string): string {
 
 type OrdersColumnsCallbacks = {
   onView: (orderNumber: number) => void
-  onConfirm: (orderNumber: number) => void
-  onCancel: (orderNumber: number) => void
   onDelete: (orderNumber: number) => void
   isActing: boolean
   t: Translate
-  localized: (text: { en?: string | null; ar?: string | null } | null | undefined) => string
+  localized: (
+    text: { en?: string | null; ar?: string | null } | null | undefined
+  ) => string
   locale: string
 }
 
+/**
+ * The history table. Confirm/cancel live in the details sheet (one place to
+ * act, with the line items in view); the row only opens it or deletes a
+ * cancelled order. Placed and Total sort server-side.
+ */
 export function getOrdersColumns({
   onView,
-  onConfirm,
-  onCancel,
   onDelete,
   isActing,
   t,
@@ -64,7 +72,7 @@ export function getOrdersColumns({
             (table.getIsSomePageRowsSelected() && 'indeterminate')
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
+          aria-label={t('selectAll')}
         />
       ),
       cell: ({ row }) => (
@@ -73,7 +81,7 @@ export function getOrdersColumns({
           disabled={!row.getCanSelect()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           onClick={(e) => e.stopPropagation()}
-          aria-label='Select row'
+          aria-label={t('selectRow')}
         />
       ),
       meta: { className: 'w-[36px]' },
@@ -81,11 +89,14 @@ export function getOrdersColumns({
     columnHelper.accessor('orderNumber', {
       id: 'orderNumber',
       header: t('orderHash'),
+      enableSorting: false,
       cell: (info) => <span className='font-medium'>#{info.getValue()}</span>,
     }),
     columnHelper.accessor('date', {
       id: 'date',
-      header: t('placed'),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('placed')} />
+      ),
       cell: (info) => {
         const value = info.getValue()
         if (!value) return '—'
@@ -103,22 +114,38 @@ export function getOrdersColumns({
     columnHelper.accessor('userName', {
       id: 'customer',
       header: t('customer'),
+      enableSorting: false,
       cell: (info) => info.getValue() || '—',
     }),
-    columnHelper.accessor(
-      (row) => localized(row.roomName) || localized(row.tableName),
-      {
-        id: 'room',
-        header: t('room'),
-        cell: (info) =>
-          localized(info.row.original.roomName) ||
-          localized(info.row.original.tableName) ||
-          '—',
-      }
-    ),
+    columnHelper.accessor((row) => localized(row.roomName), {
+      id: 'room',
+      header: t('room'),
+      enableSorting: false,
+      cell: (info) => info.getValue() || '—',
+    }),
+    columnHelper.accessor((row) => localized(row.tableName), {
+      id: 'table',
+      header: t('tables'),
+      enableSorting: false,
+      cell: (info) => info.getValue() || '—',
+    }),
+    columnHelper.accessor('source', {
+      id: 'source',
+      header: t('source'),
+      enableSorting: false,
+      cell: (info) => {
+        const key = info.getValue() ? orderSourceKeys[info.getValue()!] : null
+        return key ? (
+          <Badge variant='outline'>{t(key)}</Badge>
+        ) : (
+          <span className='text-muted-foreground'>—</span>
+        )
+      },
+    }),
     columnHelper.accessor('status', {
       id: 'status',
       header: t('status'),
+      enableSorting: false,
       cell: (info) => {
         const status = getOrderStatus(info.getValue())
         if (!status) return info.getValue() ?? '—'
@@ -131,23 +158,15 @@ export function getOrdersColumns({
         )
       },
     }),
-    columnHelper.display({
-      id: 'loyalty',
-      header: t('loyalty'),
-      cell: ({ row }) => {
-        const discount = Number(row.original.loyaltyDiscount ?? 0)
-        const points = Number(row.original.pointsToRedeem ?? 0)
-        if (discount <= 0 && points <= 0) return null
-        return (
-          <span className='text-muted-foreground text-sm'>
-            −{formatEgp(discount)} · {points} {t('points')}
-          </span>
-        )
-      },
-    }),
     columnHelper.accessor('total', {
       id: 'total',
-      header: () => <div className='text-end'>{t('total')}</div>,
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t('total')}
+          className='justify-end'
+        />
+      ),
       cell: (info) => (
         <div className='text-end font-medium tabular-nums'>
           {formatEgp(info.getValue())}
@@ -157,11 +176,12 @@ export function getOrdersColumns({
     columnHelper.accessor('ratingValue', {
       id: 'rating',
       header: t('rating'),
+      enableSorting: false,
       cell: (info) => {
         const rating = info.getValue()
         if (rating == null) return null
         return (
-          <span className='text-amber-500' aria-label={`Rated ${rating} of 5`}>
+          <span className='text-warning' aria-label={`${rating}/5`}>
             {'★'.repeat(Number(rating))}
           </span>
         )
@@ -181,41 +201,17 @@ export function getOrdersColumns({
               variant='ghost'
               size='icon'
               className='size-8'
-              aria-label={`View order ${orderNumber}`}
+              aria-label={t('orderNumber', { id: orderNumber })}
               onClick={() => onView(orderNumber)}
             >
               <Eye className='h-4 w-4' />
             </Button>
-            {isSubmitted(row.original.status) && (
-              <>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='size-8'
-                  aria-label={`Confirm order ${orderNumber}`}
-                  disabled={isActing}
-                  onClick={() => onConfirm(orderNumber)}
-                >
-                  <Check className='h-4 w-4 text-green-600' />
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='size-8'
-                  aria-label={`Cancel order ${orderNumber}`}
-                  disabled={isActing}
-                  onClick={() => onCancel(orderNumber)}
-                >
-                  <X className='text-destructive h-4 w-4' />
-                </Button>
-              </>
-            )}
             {isCancelled(row.original.status) && (
               <Button
                 variant='ghost'
                 size='icon'
                 className='size-8'
-                aria-label={`Delete order ${orderNumber}`}
+                aria-label={t('delete')}
                 disabled={isActing}
                 onClick={() => onDelete(orderNumber)}
               >
@@ -225,7 +221,7 @@ export function getOrdersColumns({
           </div>
         )
       },
-      meta: { className: 'w-[120px]' },
+      meta: { className: 'w-[88px]' },
     }),
   ])
 }

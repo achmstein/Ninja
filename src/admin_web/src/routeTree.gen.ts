@@ -29,6 +29,7 @@ import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authenticated/menu/index'
 import { Route as AuthenticatedLoyaltyIndexRouteImport } from './routes/_authenticated/loyalty/index'
+import { Route as AuthenticatedInventoryIndexRouteImport } from './routes/_authenticated/inventory/index'
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
@@ -40,9 +41,13 @@ import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRoomsPrintRouteImport } from './routes/_authenticated/rooms/print'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
-import { Route as AuthenticatedMenuCategoriesRouteImport } from './routes/_authenticated/menu/categories'
 import { Route as AuthenticatedMenuBundlesRouteImport } from './routes/_authenticated/menu/bundles'
+import { Route as AuthenticatedInventoryReportsRouteImport } from './routes/_authenticated/inventory/reports'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
+import { Route as AuthenticatedInventoryHistoryIndexRouteImport } from './routes/_authenticated/inventory/history/index'
+import { Route as AuthenticatedInventoryHistoryTransfersRouteImport } from './routes/_authenticated/inventory/history/transfers'
+import { Route as AuthenticatedInventoryHistoryPurchasesRouteImport } from './routes/_authenticated/inventory/history/purchases'
+import { Route as AuthenticatedInventoryHistoryCountsRouteImport } from './routes/_authenticated/inventory/history/counts'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -149,6 +154,12 @@ const AuthenticatedLoyaltyIndexRoute =
     path: '/loyalty/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInventoryIndexRoute =
+  AuthenticatedInventoryIndexRouteImport.update({
+    id: '/inventory/',
+    path: '/inventory/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCustomersIndexRoute =
   AuthenticatedCustomersIndexRouteImport.update({
     id: '/customers/',
@@ -213,22 +224,46 @@ const AuthenticatedOrdersHistoryRoute =
     path: '/orders/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMenuCategoriesRoute =
-  AuthenticatedMenuCategoriesRouteImport.update({
-    id: '/menu/categories',
-    path: '/menu/categories',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedMenuBundlesRoute =
   AuthenticatedMenuBundlesRouteImport.update({
     id: '/menu/bundles',
     path: '/menu/bundles',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInventoryReportsRoute =
+  AuthenticatedInventoryReportsRouteImport.update({
+    id: '/inventory/reports',
+    path: '/inventory/reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
     path: '/errors/$error',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInventoryHistoryIndexRoute =
+  AuthenticatedInventoryHistoryIndexRouteImport.update({
+    id: '/inventory/history/',
+    path: '/inventory/history/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInventoryHistoryTransfersRoute =
+  AuthenticatedInventoryHistoryTransfersRouteImport.update({
+    id: '/inventory/history/transfers',
+    path: '/inventory/history/transfers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInventoryHistoryPurchasesRoute =
+  AuthenticatedInventoryHistoryPurchasesRouteImport.update({
+    id: '/inventory/history/purchases',
+    path: '/inventory/history/purchases',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInventoryHistoryCountsRoute =
+  AuthenticatedInventoryHistoryCountsRouteImport.update({
+    id: '/inventory/history/counts',
+    path: '/inventory/history/counts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -243,8 +278,8 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
-  '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
@@ -256,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
+  '/inventory': typeof AuthenticatedInventoryIndexRoute
   '/loyalty': typeof AuthenticatedLoyaltyIndexRoute
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
@@ -266,6 +302,10 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthenticatedStaffIndexRoute
   '/tables': typeof AuthenticatedTablesIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
+  '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
+  '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
+  '/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/inventory/history': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
@@ -278,8 +318,8 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
-  '/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
@@ -291,6 +331,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
+  '/inventory': typeof AuthenticatedInventoryIndexRoute
   '/loyalty': typeof AuthenticatedLoyaltyIndexRoute
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
@@ -301,6 +342,10 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthenticatedStaffIndexRoute
   '/tables': typeof AuthenticatedTablesIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
+  '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
+  '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
+  '/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/inventory/history': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -315,8 +360,8 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/_authenticated/menu/bundles': typeof AuthenticatedMenuBundlesRoute
-  '/_authenticated/menu/categories': typeof AuthenticatedMenuCategoriesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/_authenticated/rooms/print': typeof AuthenticatedRoomsPrintRoute
@@ -328,6 +373,7 @@ export interface FileRoutesById {
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
+  '/_authenticated/inventory/': typeof AuthenticatedInventoryIndexRoute
   '/_authenticated/loyalty/': typeof AuthenticatedLoyaltyIndexRoute
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
@@ -338,6 +384,10 @@ export interface FileRoutesById {
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
   '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
   '/_authenticated/till/': typeof AuthenticatedTillIndexRoute
+  '/_authenticated/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
+  '/_authenticated/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
+  '/_authenticated/inventory/history/transfers': typeof AuthenticatedInventoryHistoryTransfersRoute
+  '/_authenticated/inventory/history/': typeof AuthenticatedInventoryHistoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -352,8 +402,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/'
     | '/errors/$error'
+    | '/inventory/reports'
     | '/menu/bundles'
-    | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
     | '/rooms/print'
@@ -365,6 +415,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/branches'
     | '/customers'
+    | '/inventory'
     | '/loyalty'
     | '/menu'
     | '/notifications'
@@ -375,6 +426,10 @@ export interface FileRouteTypes {
     | '/staff'
     | '/tables'
     | '/till'
+    | '/inventory/history/counts'
+    | '/inventory/history/purchases'
+    | '/inventory/history/transfers'
+    | '/inventory/history'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -387,8 +442,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/'
     | '/errors/$error'
+    | '/inventory/reports'
     | '/menu/bundles'
-    | '/menu/categories'
     | '/orders/history'
     | '/rooms/history'
     | '/rooms/print'
@@ -400,6 +455,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/branches'
     | '/customers'
+    | '/inventory'
     | '/loyalty'
     | '/menu'
     | '/notifications'
@@ -410,6 +466,10 @@ export interface FileRouteTypes {
     | '/staff'
     | '/tables'
     | '/till'
+    | '/inventory/history/counts'
+    | '/inventory/history/purchases'
+    | '/inventory/history/transfers'
+    | '/inventory/history'
   id:
     | '__root__'
     | '/_authenticated'
@@ -423,8 +483,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/inventory/reports'
     | '/_authenticated/menu/bundles'
-    | '/_authenticated/menu/categories'
     | '/_authenticated/orders/history'
     | '/_authenticated/rooms/history'
     | '/_authenticated/rooms/print'
@@ -436,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/accounts/'
     | '/_authenticated/branches/'
     | '/_authenticated/customers/'
+    | '/_authenticated/inventory/'
     | '/_authenticated/loyalty/'
     | '/_authenticated/menu/'
     | '/_authenticated/notifications/'
@@ -446,6 +507,10 @@ export interface FileRouteTypes {
     | '/_authenticated/staff/'
     | '/_authenticated/tables/'
     | '/_authenticated/till/'
+    | '/_authenticated/inventory/history/counts'
+    | '/_authenticated/inventory/history/purchases'
+    | '/_authenticated/inventory/history/transfers'
+    | '/_authenticated/inventory/history/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -602,6 +667,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLoyaltyIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inventory/': {
+      id: '/_authenticated/inventory/'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AuthenticatedInventoryIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/customers/': {
       id: '/_authenticated/customers/'
       path: '/customers'
@@ -679,18 +751,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/menu/categories': {
-      id: '/_authenticated/menu/categories'
-      path: '/menu/categories'
-      fullPath: '/menu/categories'
-      preLoaderRoute: typeof AuthenticatedMenuCategoriesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/menu/bundles': {
       id: '/_authenticated/menu/bundles'
       path: '/menu/bundles'
       fullPath: '/menu/bundles'
       preLoaderRoute: typeof AuthenticatedMenuBundlesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inventory/reports': {
+      id: '/_authenticated/inventory/reports'
+      path: '/inventory/reports'
+      fullPath: '/inventory/reports'
+      preLoaderRoute: typeof AuthenticatedInventoryReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/errors/$error': {
@@ -700,14 +772,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inventory/history/': {
+      id: '/_authenticated/inventory/history/'
+      path: '/inventory/history'
+      fullPath: '/inventory/history'
+      preLoaderRoute: typeof AuthenticatedInventoryHistoryIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inventory/history/transfers': {
+      id: '/_authenticated/inventory/history/transfers'
+      path: '/inventory/history/transfers'
+      fullPath: '/inventory/history/transfers'
+      preLoaderRoute: typeof AuthenticatedInventoryHistoryTransfersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inventory/history/purchases': {
+      id: '/_authenticated/inventory/history/purchases'
+      path: '/inventory/history/purchases'
+      fullPath: '/inventory/history/purchases'
+      preLoaderRoute: typeof AuthenticatedInventoryHistoryPurchasesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inventory/history/counts': {
+      id: '/_authenticated/inventory/history/counts'
+      path: '/inventory/history/counts'
+      fullPath: '/inventory/history/counts'
+      preLoaderRoute: typeof AuthenticatedInventoryHistoryCountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedInventoryReportsRoute: typeof AuthenticatedInventoryReportsRoute
   AuthenticatedMenuBundlesRoute: typeof AuthenticatedMenuBundlesRoute
-  AuthenticatedMenuCategoriesRoute: typeof AuthenticatedMenuCategoriesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
   AuthenticatedRoomsPrintRoute: typeof AuthenticatedRoomsPrintRoute
@@ -719,6 +819,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
+  AuthenticatedInventoryIndexRoute: typeof AuthenticatedInventoryIndexRoute
   AuthenticatedLoyaltyIndexRoute: typeof AuthenticatedLoyaltyIndexRoute
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
@@ -729,13 +830,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
   AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
   AuthenticatedTillIndexRoute: typeof AuthenticatedTillIndexRoute
+  AuthenticatedInventoryHistoryCountsRoute: typeof AuthenticatedInventoryHistoryCountsRoute
+  AuthenticatedInventoryHistoryPurchasesRoute: typeof AuthenticatedInventoryHistoryPurchasesRoute
+  AuthenticatedInventoryHistoryTransfersRoute: typeof AuthenticatedInventoryHistoryTransfersRoute
+  AuthenticatedInventoryHistoryIndexRoute: typeof AuthenticatedInventoryHistoryIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedInventoryReportsRoute: AuthenticatedInventoryReportsRoute,
   AuthenticatedMenuBundlesRoute: AuthenticatedMenuBundlesRoute,
-  AuthenticatedMenuCategoriesRoute: AuthenticatedMenuCategoriesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
   AuthenticatedRoomsPrintRoute: AuthenticatedRoomsPrintRoute,
@@ -747,6 +852,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
+  AuthenticatedInventoryIndexRoute: AuthenticatedInventoryIndexRoute,
   AuthenticatedLoyaltyIndexRoute: AuthenticatedLoyaltyIndexRoute,
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
@@ -757,6 +863,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
   AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
   AuthenticatedTillIndexRoute: AuthenticatedTillIndexRoute,
+  AuthenticatedInventoryHistoryCountsRoute:
+    AuthenticatedInventoryHistoryCountsRoute,
+  AuthenticatedInventoryHistoryPurchasesRoute:
+    AuthenticatedInventoryHistoryPurchasesRoute,
+  AuthenticatedInventoryHistoryTransfersRoute:
+    AuthenticatedInventoryHistoryTransfersRoute,
+  AuthenticatedInventoryHistoryIndexRoute:
+    AuthenticatedInventoryHistoryIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

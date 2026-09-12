@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type CatalogTypeDto } from '@/api/catalog'
 import {
   createCategoryMutation,
@@ -9,6 +7,8 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import {
+  fromLocalizedValue,
+  LocalizedInput,
+  toLocalizedValue,
+  type LocalizedValue,
+} from '@/components/localized-input'
 
 interface CategoryDialogProps {
   open: boolean
@@ -70,8 +74,9 @@ function CategoryForm({
   const queryClient = useQueryClient()
   const isEditing = !!category
 
-  const [nameEn, setNameEn] = useState(category?.name?.en ?? '')
-  const [nameAr, setNameAr] = useState(category?.name?.ar ?? '')
+  const [name, setName] = useState<LocalizedValue>(() =>
+    toLocalizedValue(category?.name)
+  )
   const [error, setError] = useState('')
 
   const onSuccess = () => {
@@ -99,7 +104,7 @@ function CategoryForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nameEn.trim()) {
+    if (!name.en.trim()) {
       setError(t('englishNameRequired'))
       return
     }
@@ -107,7 +112,7 @@ function CategoryForm({
 
     const body = {
       id: category?.id,
-      name: { en: nameEn.trim(), ar: nameAr.trim() || null },
+      name: fromLocalizedValue(name),
       displayOrder: category?.displayOrder,
     }
 
@@ -127,27 +132,15 @@ function CategoryForm({
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
-      <div className='space-y-2'>
-        <Label htmlFor='nameEn'>{t('nameEnglish')}</Label>
-        <Input
-          id='nameEn'
-          placeholder={t('categoryNameHint')}
-          value={nameEn}
-          onChange={(e) => setNameEn(e.target.value)}
-          autoFocus
-        />
-        {error && <p className='text-destructive text-sm'>{error}</p>}
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor='nameAr'>{t('nameArabic')}</Label>
-        <Input
-          id='nameAr'
-          dir='rtl'
-          placeholder='مثال: مشروبات'
-          value={nameAr}
-          onChange={(e) => setNameAr(e.target.value)}
-        />
-      </div>
+      <LocalizedInput
+        id='category-name'
+        label={t('name')}
+        value={name}
+        onChange={setName}
+        placeholder={{ en: t('categoryNameHint'), ar: 'مثال: مشروبات' }}
+        error={error ?? undefined}
+        autoFocus
+      />
 
       <DialogFooter>
         <Button
@@ -158,7 +151,7 @@ function CategoryForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isLoading}>
-          {isLoading && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+          {isLoading && <Spinner className='me-2' />}
           {isEditing ? t('update') : t('create')}
         </Button>
       </DialogFooter>

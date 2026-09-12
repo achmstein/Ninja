@@ -1,150 +1,77 @@
 import {
   LayoutDashboard,
   Armchair,
-  Banknote,
   Coffee,
   ClipboardList,
-  Clock,
   ConciergeBell,
   Gamepad2,
+  History,
+  BarChart3,
   Building2,
   Megaphone,
   Package,
   ReceiptText,
   ShieldCheck,
-  Tag,
-  Ticket,
-  Undo2,
   Users,
-  Award,
-  Wallet,
+  Warehouse,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
-// Titles are translation keys, rendered through t() in NavGroup
+// Titles are translation keys, rendered through t() in NavGroup.
+// Every page is one click away: flat items, no nested menus (owner's call —
+// a second click to reach a page you need is one too many).
 export const sidebarData: SidebarData = {
   navGroups: [
     {
       // The day-to-day screens staff keep open
       title: 'navOperations',
       items: [
-        {
-          title: 'dashboard',
-          url: '/',
-          icon: LayoutDashboard,
-        },
-        {
-          title: 'orders',
-          url: '/orders',
-          icon: ClipboardList,
-        },
-        {
-          title: 'rooms',
-          url: '/rooms',
-          icon: Gamepad2,
-        },
-        {
-          title: 'tables',
-          url: '/tables',
-          icon: Armchair,
-        },
-        {
-          title: 'requests',
-          url: '/requests',
-          icon: ConciergeBell,
-        },
-      ],
-    },
-    {
-      // The till's books, read-only: what was sold, paid, refunded, counted
-      title: 'navTill',
-      items: [
-        {
-          title: 'tillSales',
-          url: '/till',
-          icon: ReceiptText,
-        },
-        {
-          title: 'tillTickets',
-          url: '/till/tickets',
-          icon: Ticket,
-        },
-        {
-          title: 'tillPayments',
-          url: '/till/payments',
-          icon: Banknote,
-        },
-        {
-          title: 'tillRefunds',
-          url: '/till/refunds',
-          icon: Undo2,
-        },
-        {
-          title: 'tillShifts',
-          url: '/till/shifts',
-          icon: Clock,
-        },
+        { title: 'dashboard', url: '/', icon: LayoutDashboard },
+        { title: 'orders', url: '/orders', icon: ClipboardList },
+        { title: 'rooms', url: '/rooms', icon: Gamepad2 },
+        { title: 'tables', url: '/tables', icon: Armchair },
+        { title: 'requests', url: '/requests', icon: ConciergeBell },
+        { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },
     {
       title: 'navCatalog',
       items: [
+        { title: 'menuItems', url: '/menu', icon: Coffee },
+        { title: 'bundleDeals', url: '/menu/bundles', icon: Package },
+      ],
+    },
+    {
+      // Stock: what the branch has, what the menu takes out of it, and the
+      // ledger behind it. Every posting is made from Stock.
+      title: 'navInventory',
+      items: [
+        { title: 'inventoryStock', url: '/inventory', icon: Warehouse },
         {
-          title: 'menuItems',
-          url: '/menu',
-          icon: Coffee,
+          title: 'inventoryHistory',
+          url: '/inventory/history',
+          icon: History,
         },
         {
-          title: 'categories',
-          url: '/menu/categories',
-          icon: Tag,
-        },
-        {
-          title: 'bundleDeals',
-          url: '/menu/bundles',
-          icon: Package,
+          title: 'inventoryReports',
+          url: '/inventory/reports',
+          icon: BarChart3,
         },
       ],
     },
     {
       title: 'navCustomers',
       items: [
-        {
-          title: 'customers',
-          url: '/customers',
-          icon: Users,
-        },
-        {
-          title: 'loyalty',
-          url: '/loyalty',
-          icon: Award,
-        },
-        {
-          title: 'accounts',
-          url: '/accounts',
-          icon: Wallet,
-        },
-        {
-          title: 'announcements',
-          url: '/notifications',
-          icon: Megaphone,
-        },
+        { title: 'customers', url: '/customers', icon: Users },
+        { title: 'announcements', url: '/notifications', icon: Megaphone },
       ],
     },
     {
       title: 'navAdministration',
       ownerOnly: true,
       items: [
-        {
-          title: 'branches',
-          url: '/branches',
-          icon: Building2,
-        },
-        {
-          title: 'staff',
-          url: '/staff',
-          icon: ShieldCheck,
-        },
+        { title: 'branches', url: '/branches', icon: Building2 },
+        { title: 'staff', url: '/staff', icon: ShieldCheck },
       ],
     },
   ],

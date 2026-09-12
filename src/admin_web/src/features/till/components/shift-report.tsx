@@ -3,8 +3,10 @@ import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { StatTile } from './stat-tile'
+import { Separator } from '@/components/ui/separator'
+import { Stat, StatStrip } from '@/components/stat-strip'
 import { tenderLabelKey } from './tender'
+import { TenderBadge } from './tender-badge'
 
 /**
  * Over/short verdict badge: green when the drawer is over or balanced,
@@ -17,7 +19,7 @@ export function OverShortBadge({ value }: { value: number }) {
       className={cn(
         'border-transparent tabular-nums',
         value >= 0
-          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+          ? 'bg-success/15 text-success'
           : 'bg-destructive/15 text-destructive'
       )}
     >
@@ -48,51 +50,44 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
   const tenders = shift.tenderTotals ?? []
+  const tabTenders = shift.tabPaymentTenderTotals ?? []
+  const tabPayments = shift.tabPayments ?? []
   const movements = shift.movements ?? []
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-5'>
       {closed ? (
-        <div className='bg-accent grid grid-cols-3 gap-2 rounded-xl p-4 text-center'>
-          <div>
-            <div className='text-muted-foreground text-sm'>{t('expected')}</div>
-            <div className='text-xl font-bold tabular-nums'>
-              {formatEgp(shift.expectedCash ?? shift.expectedInDrawer)}
-            </div>
-          </div>
-          <div>
-            <div className='text-muted-foreground text-sm'>{t('counted')}</div>
-            <div className='text-xl font-bold tabular-nums'>
-              {formatEgp(shift.closingCount)}
-            </div>
-          </div>
-          <div>
-            <div className='text-muted-foreground text-sm'>
-              {t('overShort')}
-            </div>
-            <div
-              className={cn(
-                'text-xl font-bold tabular-nums',
-                overShort >= 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-destructive'
-              )}
-            >
-              {overShort === 0
+        <div className='grid grid-cols-3 gap-4'>
+          <Stat
+            size='hero'
+            label={t('expected')}
+            value={formatEgp(shift.expectedCash ?? shift.expectedInDrawer)}
+            className='[&>div:nth-child(2)]:text-2xl'
+          />
+          <Stat
+            size='hero'
+            label={t('counted')}
+            value={formatEgp(shift.closingCount)}
+            className='[&>div:nth-child(2)]:text-2xl'
+          />
+          <Stat
+            size='hero'
+            label={t('overShort')}
+            value={
+              overShort === 0
                 ? t('drawerBalanced')
-                : `${t(overShort > 0 ? 'drawerOver' : 'drawerShort')} ${formatEgp(Math.abs(overShort))}`}
-            </div>
-          </div>
+                : `${overShort > 0 ? '+' : '−'}${formatEgp(Math.abs(overShort))}`
+            }
+            tone={overShort >= 0 ? 'positive' : 'negative'}
+            className='[&>div:nth-child(2)]:text-2xl'
+          />
         </div>
       ) : (
-        <div className='bg-accent rounded-xl p-4 text-center'>
-          <div className='text-muted-foreground text-sm'>
-            {t('expectedInDrawer')}
-          </div>
-          <div className='text-4xl font-bold tabular-nums'>
-            {formatEgp(shift.expectedInDrawer)}
-          </div>
-        </div>
+        <Stat
+          size='hero'
+          label={t('expectedInDrawer')}
+          value={formatEgp(shift.expectedInDrawer)}
+        />
       )}
 
       <div className='text-sm'>
@@ -121,48 +116,46 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
         )}
       </div>
 
-      <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
-        <StatTile
-          label={t('openingFloat')}
-          value={formatEgp(shift.openingFloat)}
-        />
-        <StatTile
+      <StatStrip>
+        <Stat label={t('openingFloat')} value={formatEgp(shift.openingFloat)} />
+        <Stat
           label={t('posTicketsSettled')}
           value={String(toNumber(shift.ticketsSettled))}
         />
-        <StatTile label={t('salesTotal')} value={formatEgp(shift.salesTotal)} />
-        <StatTile
-          label={t('changeGiven')}
-          value={formatEgp(shift.changeGiven)}
-        />
-        <StatTile
+        <Stat label={t('salesTotal')} value={formatEgp(shift.salesTotal)} />
+        <Stat label={t('changeGiven')} value={formatEgp(shift.changeGiven)} />
+        <Stat
           label={t('refundsTotal')}
           value={formatEgp(shift.refundsTotal)}
+          hint={`${t('cashRefunds')} ${formatEgp(shift.cashRefunds)}`}
         />
-        <StatTile
-          label={t('cashRefunds')}
-          value={formatEgp(shift.cashRefunds)}
+        <Stat
+          label={t('tabPayments')}
+          value={formatEgp(shift.tabPaymentsTotal)}
+          hint={`${t('cashTabPayments')} ${formatEgp(shift.cashTabPayments)}`}
         />
-        <StatTile
+        <Stat
           label={t('payInsTotal')}
           value={formatEgp(shift.payInsTotal)}
+          tone='positive'
         />
-        <StatTile
+        <Stat
           label={t('payOutsTotal')}
           value={formatEgp(shift.payOutsTotal)}
+          tone='negative'
         />
-      </div>
+      </StatStrip>
 
       {tenders.length > 0 && (
-        <div>
+        <section>
           <h4 className='mb-1 text-sm font-semibold'>{t('tenderSplit')}</h4>
-          <div className='divide-y rounded-xl border'>
+          <ul className='divide-y text-sm'>
             {tenders.map((total) => {
               const key = tenderLabelKey(total.tender)
               return (
-                <div
+                <li
                   key={total.tender}
-                  className='flex items-center justify-between gap-4 px-3 py-2 text-sm'
+                  className='flex items-center justify-between gap-4 py-2'
                 >
                   <span>
                     {key ? t(key) : total.tender}
@@ -174,27 +167,83 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   <span className='font-semibold tabular-nums'>
                     {formatEgp(total.amount)}
                   </span>
-                </div>
+                </li>
               )
             })}
-          </div>
-        </div>
+          </ul>
+        </section>
       )}
 
-      <div>
+      {/* Account tabs paid at the counter: part of the drawer, not of sales */}
+      {(tabTenders.length > 0 || tabPayments.length > 0) && (
+        <section>
+          <h4 className='mb-1 text-sm font-semibold'>{t('tabPayments')}</h4>
+          {tabTenders.length > 0 && (
+            <ul className='divide-y text-sm'>
+              {tabTenders.map((total) => {
+                const key = tenderLabelKey(total.tender)
+                return (
+                  <li
+                    key={total.tender}
+                    className='flex items-center justify-between gap-4 py-2'
+                  >
+                    <span>
+                      {key ? t(key) : total.tender}
+                      <span className='text-muted-foreground tabular-nums'>
+                        {' '}
+                        × {toNumber(total.count)}
+                      </span>
+                    </span>
+                    <span className='font-semibold tabular-nums'>
+                      {formatEgp(total.amount)}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          {tabPayments.length > 0 && (
+            <>
+              <Separator className='my-2' />
+              <ul className='divide-y text-sm'>
+                {tabPayments.map((payment) => (
+                  <li
+                    key={String(payment.id)}
+                    className='flex items-center justify-between gap-3 py-2'
+                  >
+                    <div className='flex min-w-0 items-center gap-2'>
+                      <TenderBadge tender={payment.tender} />
+                      <span className='text-muted-foreground truncate text-xs'>
+                        {[payment.customerName, payment.recordedBy]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    </div>
+                    <span className='font-medium tabular-nums'>
+                      {formatEgp(payment.amount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      <section>
         <h4 className='mb-1 text-sm font-semibold'>{t('drawerMovements')}</h4>
         {movements.length === 0 ? (
           <p className='text-muted-foreground py-2 text-sm'>
             {t('noMovements')}
           </p>
         ) : (
-          <div className='divide-y rounded-xl border'>
+          <ul className='divide-y text-sm'>
             {movements.map((movement, index) => {
               const isOut = movement.type === 'PayOut'
               return (
-                <div
+                <li
                   key={index}
-                  className='flex items-center justify-between gap-4 px-3 py-2 text-sm'
+                  className='flex items-center justify-between gap-4 py-2'
                 >
                   <div className='min-w-0'>
                     <div className='truncate'>{movement.reason}</div>
@@ -211,20 +260,18 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   <span
                     className={cn(
                       'shrink-0 font-semibold tabular-nums',
-                      isOut
-                        ? 'text-destructive'
-                        : 'text-emerald-600 dark:text-emerald-400'
+                      isOut ? 'text-destructive' : 'text-success'
                     )}
                   >
                     {isOut ? '−' : '+'}
                     {formatEgp(movement.amount)}
                   </span>
-                </div>
+                </li>
               )
             })}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
     </div>
   )
 }

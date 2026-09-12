@@ -1,6 +1,6 @@
 import { SearchIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { useSearch } from '@/context/search-provider'
 import { Button } from './ui/button'
 

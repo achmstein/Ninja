@@ -1,14 +1,12 @@
 import { useEffect } from 'react'
-import {
-  HubConnectionBuilder,
-  HubConnectionState,
-} from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
-import { translate } from '@/lib/i18n'
+import { getStoredUser } from '@/config/oidc-config'
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
+import { getActiveBranchId } from '@/stores/branch-store'
+import { translate, useLanguage } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
-import { getActiveBranchId } from '@/stores/branch-store'
-import { getStoredUser } from '@/config/oidc-config'
+import { unitLabel } from '@/features/inventory/format'
 
 type OrderStatusChangedEvent = {
   type?: string
@@ -17,6 +15,15 @@ type OrderStatusChangedEvent = {
   reminderCount?: number
   minutesPending?: number
   branchId?: number
+}
+
+type StockLowEvent = {
+  branchId?: number
+  stockItemId?: number
+  name?: { en?: string | null; ar?: string | null } | null
+  unit?: string
+  onHand?: number | string
+  reorderLevel?: number | string
 }
 
 // Admin SignalR events are broadcast to every admin, but the orders board is
@@ -98,11 +105,37 @@ export function useAdminNotifications() {
       invalidateRooms()
     })
 
-    connection.on('ServiceRequestCreated', () => {
+    // Inventory.API raises this when a movement takes an item to or below
+    // its reorder level at a branch. Every branch's levels are refreshed;
+    // only the active branch's warning is worth a toast.
+    connection.on('StockLow', (event: StockLowEvent) => {
+      refresh('getStockLevels')
+      if (event.branchId == null || event.branchId !== getActiveBranchId()) {
+        return
+      }
+      const language = useLanguage.getState().language
+      const name =
+        (language === 'ar' ? event.name?.ar : event.name?.en) ||
+        event.name?.en ||
+        event.name?.ar ||
+        ''
+      toast.warning(
+        translate('stockLowToast', {
+          name,
+          onHand: Number(event.onHand ?? 0),
+          unit: unitLabel(event.unit, translate),
+        })
+      )
+    })
+
+    connection.on('ServiceRequestCreated', (event: { branchId?: number }) => {
       queryClient.invalidateQueries({
         queryKey: ['service-requests'],
         refetchType: 'all',
       })
+      // A waiter call is as urgent as a new order: same chime, same branch scope
+      if (!isForActiveBranch(event)) return
+      playAlertSound()
       toast.info(translate('newServiceRequest'))
     })
 
@@ -111,16 +144,14 @@ export function useAdminNotifications() {
     // a dead connection here is otherwise invisible.
     const joinGroups = () =>
       Promise.allSettled([
-        connection
-          .invoke('JoinAdminGroup')
-          .catch((error) =>
-            console.warn('[signalr] JoinAdminGroup failed:', error)
-          ),
-        connection
-          .invoke('JoinRoomsGroup')
-          .catch((error) =>
-            console.warn('[signalr] JoinRoomsGroup failed:', error)
-          ),
+        connection.invoke('JoinAdminGroup').catch((error) =>
+          // eslint-disable-next-line no-console
+          console.warn('[signalr] JoinAdminGroup failed:', error)
+        ),
+        connection.invoke('JoinRoomsGroup').catch((error) =>
+          // eslint-disable-next-line no-console
+          console.warn('[signalr] JoinRoomsGroup failed:', error)
+        ),
       ])
 
     let disposed = false
@@ -129,6 +160,7 @@ export function useAdminNotifications() {
         await connection.start()
         await joinGroups()
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.warn('[signalr] connect failed:', error)
         // Back-off retry (backend still booting, transient network); the
         // visibility handler below also retries, and queries keep their

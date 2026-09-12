@@ -1,9 +1,11 @@
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { getRealmRoles } from '@/config/oidc-config'
 import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useT } from '@/lib/i18n'
 import { useSearch } from '@/context/search-provider'
 import { useTheme } from '@/context/theme-provider'
-import { useT } from '@/lib/i18n'
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,8 +21,10 @@ import { ScrollArea } from './ui/scroll-area'
 export function CommandMenu() {
   const t = useT()
   const navigate = useNavigate()
+  const auth = useAuth()
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
+  const isOwner = getRealmRoles(auth.user).includes('Owner')
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -30,13 +34,18 @@ export function CommandMenu() {
     [setOpen]
   )
 
+  // Same gating as the sidebar: an admin must not be offered owner pages
+  const groups = sidebarData.navGroups.filter(
+    (group) => !group.ownerOnly || isOwner
+  )
+
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>
       <CommandInput placeholder={t('commandMenuPlaceholder')} />
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
           <CommandEmpty>{t('noResultsFound')}</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+          {groups.map((group) => (
             <CommandGroup key={group.title} heading={t(group.title)}>
               {group.items.map((navItem, i) => {
                 if (navItem.url)
@@ -67,7 +76,8 @@ export function CommandMenu() {
                     <div className='flex size-4 items-center justify-center'>
                       <ArrowRight className='text-muted-foreground/80 size-2' />
                     </div>
-                    {t(navItem.title)} <ChevronRight className='rtl:rotate-180' />{' '}
+                    {t(navItem.title)}{' '}
+                    <ChevronRight className='rtl:rotate-180' />{' '}
                     {t(subItem.title)}
                   </CommandItem>
                 ))

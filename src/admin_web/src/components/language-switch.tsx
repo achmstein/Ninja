@@ -1,7 +1,7 @@
 import { Check, Languages } from 'lucide-react'
+import { useLanguage, type Language } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useDirection } from '@/context/direction-provider'
-import { useLanguage, type Language } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

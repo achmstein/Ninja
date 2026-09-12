@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import {
   createAppColumnHelper,
@@ -188,7 +187,6 @@ export function SessionsHistory() {
 
   return (
     <>
-      <Header />
 
       <Main className='flex flex-col gap-4'>
         <div className='flex items-center gap-2'>

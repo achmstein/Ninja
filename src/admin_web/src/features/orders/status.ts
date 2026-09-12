@@ -4,6 +4,9 @@ import {
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
+import { urgencyFor, type Urgency } from '@/components/queue-card'
+
+export { urgencyTextClass } from '@/components/queue-card'
 
 export type OrderStatusValue = 'submitted' | 'confirmed' | 'cancelled'
 
@@ -41,6 +44,28 @@ export function isCancelled(status: string | undefined | null): boolean {
   return status?.toLowerCase() === 'cancelled'
 }
 
+// OrderSource enum names from Ordering.Domain
+export const orderSourceKeys: Record<string, TranslationKey> = {
+  Customer: 'sourceCustomer',
+  Guest: 'sourceGuest',
+  Pos: 'sourcePos',
+}
+
+// Where an order was placed from, for grouping the live board
+export type OrderPlace = 'rooms' | 'tables' | 'counter'
+
+export function orderPlace(order: {
+  roomName?: { en?: string | null; ar?: string | null } | null
+  sessionId?: number | string | null
+  tableId?: number | string | null
+}): OrderPlace {
+  if (order.sessionId != null || order.roomName?.en || order.roomName?.ar) {
+    return 'rooms'
+  }
+  if (order.tableId != null) return 'tables'
+  return 'counter'
+}
+
 // Localized currency suffix (EGP / ج.م). Callers all live inside components
 // that re-render on language change, so reading the store here stays fresh.
 export function formatEgp(value: number | string | undefined | null): string {
@@ -69,24 +94,11 @@ export function relativeTime(
 export const WARN_AFTER_MINUTES = 2
 export const DELAYED_AFTER_MINUTES = 3
 
-export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
+export type OrderUrgency = Urgency
 
 export function orderUrgency(
   value: string | undefined,
   nowMs: number
 ): OrderUrgency {
-  if (!value) return 'fresh'
-  const minutes = (nowMs - new Date(value).getTime()) / 60_000
-  if (minutes >= DELAYED_AFTER_MINUTES) return 'delayed'
-  if (minutes >= WARN_AFTER_MINUTES) return 'warning'
-  return 'fresh'
-}
-
-/** Shared coloring for an order's age text (board cards, dashboard rows). */
-export function urgencyTextClass(urgency: OrderUrgency): string {
-  return urgency === 'delayed'
-    ? 'text-destructive font-medium'
-    : urgency === 'warning'
-      ? 'font-medium text-amber-600 dark:text-amber-500'
-      : 'text-muted-foreground'
+  return urgencyFor(value, nowMs, WARN_AFTER_MINUTES, DELAYED_AFTER_MINUTES)
 }

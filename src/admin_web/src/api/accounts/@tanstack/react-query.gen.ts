@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCharge, getAccountByCustomerId, getAllAccounts, getMyAccount, getMyTransactions, type Options, recordPayment, searchAccounts } from '../sdk.gen';
-import type { AddChargeData, AddChargeError, GetAccountByCustomerIdData, GetAccountByCustomerIdResponse, GetAllAccountsData, GetAllAccountsResponse, GetMyAccountData, GetMyAccountResponse, GetMyTransactionsData, GetMyTransactionsResponse, RecordPaymentData, RecordPaymentError, SearchAccountsData, SearchAccountsResponse } from '../types.gen';
+import { addCharge, getAccountBalance, getAccountByCustomerId, getAllAccounts, getMyAccount, getMyTransactions, type Options, recordPayment, searchAccounts } from '../sdk.gen';
+import type { AddChargeData, AddChargeError, GetAccountBalanceData, GetAccountBalanceResponse, GetAccountByCustomerIdData, GetAccountByCustomerIdResponse, GetAllAccountsData, GetAllAccountsResponse, GetMyAccountData, GetMyAccountResponse, GetMyTransactionsData, GetMyTransactionsResponse, RecordPaymentData, RecordPaymentError, SearchAccountsData, SearchAccountsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -118,6 +118,26 @@ export const searchAccountsOptions = (options?: Options<SearchAccountsData>) => 
         return data;
     },
     queryKey: searchAccountsQueryKey(options)
+});
+
+export const getAccountBalanceQueryKey = (options: Options<GetAccountBalanceData>) => createQueryKey('getAccountBalance', options);
+
+/**
+ * Get a customer's tab balance
+ *
+ * Balance alone, no transactions (till staff). 404 when the customer has no tab yet. Positive = owed.
+ */
+export const getAccountBalanceOptions = (options: Options<GetAccountBalanceData>) => queryOptions<GetAccountBalanceResponse, AxiosError<DefaultError>, GetAccountBalanceResponse, ReturnType<typeof getAccountBalanceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAccountBalance({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAccountBalanceQueryKey(options)
 });
 
 export const getAccountByCustomerIdQueryKey = (options: Options<GetAccountByCustomerIdData>) => createQueryKey('getAccountByCustomerId', options);

@@ -3,12 +3,13 @@ import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { BranchGate } from '@/components/branch-gate'
-import { SkipToMain } from '@/components/skip-to-main'
 import { useAdminNotifications } from '@/hooks/use-admin-notifications'
 import { usePageTitle } from '@/hooks/use-page-title'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { BranchGate } from '@/components/branch-gate'
+import { AppSidebar } from '@/components/layout/app-sidebar'
+import { Header } from '@/components/layout/header'
+import { SkipToMain } from '@/components/skip-to-main'
 
 type AuthenticatedLayoutProps = {
   children?: React.ReactNode
@@ -42,6 +43,8 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
             )}
           >
+            {/* One sticky header for every page; pages own their PageHeader */}
+            <Header />
             <BranchGate>{children ?? <Outlet />}</BranchGate>
           </SidebarInset>
         </SidebarProvider>

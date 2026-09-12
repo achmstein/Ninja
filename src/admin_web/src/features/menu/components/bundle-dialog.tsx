@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
-import { ImagePlus, Loader2, Plus, X } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ImagePlus, Plus, X } from 'lucide-react'
 import {
   type BundleDealDto,
   type CatalogItemDto,
@@ -15,6 +14,8 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -30,13 +33,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
+import {
+  fromLocalizedValue,
+  LocalizedFields,
+  LocalizedInput,
+  toLocalizedValue,
+  type LocalizedValue,
+} from '@/components/localized-input'
 import { formatEgp } from '@/features/orders/status'
-import { bundlePictureUrl } from '../columns'
+import { bundlePictureUrl } from '../pictures'
 
 interface BundleDialogProps {
   open: boolean
@@ -100,13 +107,11 @@ function BundleForm({
   const isEditing = !!bundle
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [nameEn, setNameEn] = useState(bundle?.name?.en ?? '')
-  const [nameAr, setNameAr] = useState(bundle?.name?.ar ?? '')
-  const [descriptionEn, setDescriptionEn] = useState(
-    bundle?.description?.en ?? ''
+  const [name, setName] = useState<LocalizedValue>(() =>
+    toLocalizedValue(bundle?.name)
   )
-  const [descriptionAr, setDescriptionAr] = useState(
-    bundle?.description?.ar ?? ''
+  const [description, setDescription] = useState<LocalizedValue>(() =>
+    toLocalizedValue(bundle?.description)
   )
   const [bundlePrice, setBundlePrice] = useState(
     Number(bundle?.bundlePrice ?? 0)
@@ -157,7 +162,7 @@ function BundleForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!nameEn.trim()) {
+    if (!name.en.trim()) {
       setError(t('englishNameRequired'))
       return
     }
@@ -176,11 +181,8 @@ function BundleForm({
     setError(null)
 
     const body: CreateOrUpdateBundleDealRequest = {
-      name: { en: nameEn.trim(), ar: nameAr.trim() || null },
-      description: {
-        en: descriptionEn.trim(),
-        ar: descriptionAr.trim() || null,
-      },
+      name: fromLocalizedValue(name),
+      description: fromLocalizedValue(description),
       bundlePrice,
       isActive,
       displayOrder: bundle?.displayOrder ?? existingCount,
@@ -276,48 +278,23 @@ function BundleForm({
         />
       </div>
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='bundleNameEn'>{t('nameEnglish')}</Label>
-          <Input
-            id='bundleNameEn'
-            placeholder='Movie Night Combo'
-            value={nameEn}
-            onChange={(e) => setNameEn(e.target.value)}
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='bundleNameAr'>{t('nameArabic')}</Label>
-          <Input
-            id='bundleNameAr'
-            dir='rtl'
-            value={nameAr}
-            onChange={(e) => setNameAr(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='bundleDescEn'>{t('descriptionEnglish')}</Label>
-          <Textarea
-            id='bundleDescEn'
-            rows={2}
-            value={descriptionEn}
-            onChange={(e) => setDescriptionEn(e.target.value)}
-          />
-        </div>
-        <div className='space-y-2'>
-          <Label htmlFor='bundleDescAr'>{t('descriptionArabic')}</Label>
-          <Textarea
-            id='bundleDescAr'
-            dir='rtl'
-            rows={2}
-            value={descriptionAr}
-            onChange={(e) => setDescriptionAr(e.target.value)}
-          />
-        </div>
-      </div>
+      <LocalizedFields>
+        <LocalizedInput
+          id='bundle-name'
+          label={t('name')}
+          value={name}
+          onChange={setName}
+          placeholder={{ en: 'Movie Night Combo' }}
+        />
+        <LocalizedInput
+          id='bundle-description'
+          label={t('description')}
+          value={description}
+          onChange={setDescription}
+          multiline
+          className='mt-4'
+        />
+      </LocalizedFields>
 
       {/* Items in the bundle */}
       <div className='space-y-2'>
@@ -378,7 +355,10 @@ function BundleForm({
           variant='outline'
           size='sm'
           onClick={() =>
-            setRows((current) => [...current, { catalogItemId: 0, quantity: 1 }])
+            setRows((current) => [
+              ...current,
+              { catalogItemId: 0, quantity: 1 },
+            ])
           }
         >
           <Plus className='me-1 h-4 w-4' />
@@ -437,7 +417,7 @@ function BundleForm({
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={isSaving}>
-          {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+          {isSaving && <Spinner className='me-2' />}
           {isEditing ? t('update') : t('create')}
         </Button>
       </DialogFooter>

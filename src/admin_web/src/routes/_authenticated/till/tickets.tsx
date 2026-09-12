@@ -1,17 +1,11 @@
 import { z } from 'zod'
-import { createFileRoute } from '@tanstack/react-router'
-import { pagedSearch, rangeSearch } from '@/features/till/search'
-import { TillTickets } from '@/features/till/tickets'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { rangeSearch } from '@/lib/search-schemas'
 
-const ticketsSearchSchema = z.object({
-  ...rangeSearch,
-  ...pagedSearch,
-  status: z.enum(['settled', 'open', 'voided']).optional(),
-  // A receipt number finds one bill and ignores the window
-  receipt: z.number().int().positive().optional(),
-})
-
+// The list now opens under the report on the Till page
 export const Route = createFileRoute('/_authenticated/till/tickets')({
-  validateSearch: ticketsSearchSchema,
-  component: TillTickets,
+  validateSearch: z.object(rangeSearch),
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: '/till', search: { ...search, view: 'tickets' } })
+  },
 })

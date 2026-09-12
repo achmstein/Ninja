@@ -1,17 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  Armchair,
-  Check,
-  Coffee,
-  Loader2,
-  MapPin,
-  MessageSquare,
-  X,
-} from 'lucide-react'
+import { Armchair, Check, Coffee, MapPin, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
-import { ImageWithFallback } from '@/components/image-fallback'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -23,7 +15,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { Spinner } from '@/components/ui/spinner'
+import { ImageWithFallback } from '@/components/image-fallback'
 import { formatEgp, getOrderStatus, isSubmitted } from '../status'
 
 type OrderDetailsSheetProps = {
@@ -71,9 +64,7 @@ export function OrderDetailsSheet({
             )}
           </div>
           <SheetDescription>
-            {order?.date
-              ? new Date(order.date).toLocaleString(locale)
-              : ' '}
+            {order?.date ? new Date(order.date).toLocaleString(locale) : ' '}
           </SheetDescription>
         </SheetHeader>
 
@@ -210,7 +201,7 @@ export function OrderDetailsSheet({
               onClick={() => onConfirm(orderId)}
             >
               {isActing ? (
-                <Loader2 className='me-1 h-4 w-4 animate-spin' />
+                <Spinner className='me-1' />
               ) : (
                 <Check className='me-1 h-4 w-4' />
               )}

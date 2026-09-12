@@ -12,12 +12,149 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // Stock workbench (inventory master-detail)
+  selectStockItem: { en: 'Pick an item', ar: 'اختار صنف' },
+  selectStockItemHint: {
+    en: 'Its level, recent movements and quick fixes show here',
+    ar: 'هتلاقي هنا الكمية وآخر الحركات والتعديلات السريعة',
+  },
+  backToStock: { en: 'Back to stock', ar: 'رجوع للمخزون' },
+  reorderAt: { en: 'Reorder at {level}', ar: 'اطلب عند {level}' },
+  noReorderLevel: { en: 'No reorder level', ar: 'مفيش حد للطلب' },
+  avgCostLine: { en: 'Avg cost {cost}', ar: 'متوسط التكلفة {cost}' },
+  worthLine: { en: 'Worth {value}', ar: 'قيمته {value}' },
+  fixTheLevel: { en: 'Fix the level', ar: 'عدّل الكمية' },
+  reasonReturnToStock: { en: 'Return to stock', ar: 'رجّع للمخزون' },
+  reasonCorrection: { en: 'Correction', ar: 'تصحيح' },
+  removeQuantityHint: {
+    en: 'How much left the shelf',
+    ar: 'الكمية اللي راحت',
+  },
+  addQuantityHint: { en: 'How much came back', ar: 'الكمية اللي رجعت' },
+  postFix: { en: 'Post', ar: 'سجّل' },
+  noMovementsYet: { en: 'Nothing moved yet', ar: 'مفيش حركات لسه' },
+  usedBy: { en: 'Used by', ar: 'بيدخل في' },
+  notUsedYet: {
+    en: 'No menu item uses this yet',
+    ar: 'مفيش صنف في المنيو بيستخدمه لسه',
+  },
+  countingProgress: {
+    en: '{done} of {total} counted',
+    ar: 'اتعدّ {done} من {total}',
+  },
+  countModeHint: {
+    en: 'Type what you see. Leave an item blank to skip it.',
+    ar: 'اكتب اللي شايفه، وسيب الصنف فاضي عشان يتعدّى.',
+  },
+  saveCount: { en: 'Save count', ar: 'حفظ الجرد' },
+  lowItems: { en: 'Low', ar: 'ناقص' },
+  newStockItem: { en: 'New item', ar: 'صنف جديد' },
+  stats: { en: 'Stats', ar: 'إحصائيات' },
+  allTypes: { en: 'All types', ar: 'كل الأنواع' },
+  result: { en: 'Result', ar: 'النتيجة' },
+  countOffSummary: {
+    en: '{off} of {total} off',
+    ar: '{off} من {total} مختلف',
+  },
+  countAllMatched: {
+    en: 'All {total} matched',
+    ar: 'كل الـ {total} مطابقين',
+  },
+  showMatchedLines: {
+    en: 'Show {count} matched lines',
+    ar: 'اعرض {count} سطر مطابق',
+  },
+  hideMatchedLines: {
+    en: 'Hide matched lines',
+    ar: 'اخفي السطور المطابقة',
+  },
+  purchaseSheetHint: {
+    en: 'As received, for checking against the supplier invoice',
+    ar: 'زي ما اتستلم، للمراجعة على فاتورة المورد',
+  },
+  print: { en: 'Print', ar: 'طباعة' },
+  tillReport: { en: 'Report', ar: 'التقرير' },
+  tillSubtitle: {
+    en: 'How the day went, any receipt, and every shift',
+    ar: 'اليوم عمل إيه، أي إيصال، وكل الورديات',
+  },
+  everySale: { en: 'Every sale', ar: 'كل بيعة' },
+  everySaleHint: {
+    en: 'Only what goes out for every variant. Anything the customer chooses between belongs under its option.',
+    ar: 'بس اللي بيخرج مع كل نسخة. أي حاجة العميل بيختار بينها مكانها تحت الخيار بتاعها.',
+  },
+  optionLinesHint: {
+    en: 'Each option lists what choosing it adds. A required group is how one choice replaces an ingredient.',
+    ar: 'كل خيار بيقول بيضيف إيه. المجموعة الإجبارية هي طريقة إن اختيار يحل محل مكوّن.',
+  },
+  addIngredient: { en: 'Add ingredient', ar: 'ضيف مكوّن' },
+  addLine: { en: 'Add line', ar: 'ضيف سطر' },
+  onlyWith: { en: 'Only with', ar: 'بس مع' },
+  owing: { en: 'Owing', ar: 'عليهم' },
+  tab: { en: 'Tab', ar: 'الحساب' },
+  enrolInLoyalty: { en: 'Enrol in loyalty', ar: 'اشتراك في الولاء' },
+  customerEnrolled: { en: 'Enrolled in the loyalty programme', ar: 'اتسجل في برنامج الولاء' },
+  usualOrder: { en: 'Usual order', ar: 'الطلب المعتاد' },
+  disableAccount: { en: 'Disable account', ar: 'تعطيل الحساب' },
+  enableAccount: { en: 'Enable account', ar: 'تفعيل الحساب' },
+  disableAccountDescription: { en: '{name} will not be able to sign in or order until the account is enabled again.', ar: '{name} مش هيقدر يسجّل دخول أو يطلب لحد ما الحساب يتفعّل تاني.' },
+  enableAccountDescription: { en: '{name} can sign in and order again.', ar: '{name} هيقدر يسجّل دخول ويطلب تاني.' },
+  accountDisabled: { en: 'Account disabled', ar: 'الحساب اتعطّل' },
+  accountEnabled: { en: 'Account enabled', ar: 'الحساب اتفعّل' },
+  viewAllOrders: { en: 'All orders', ar: 'كل الطلبات' },
+  searchCustomersPlaceholder: { en: 'Name or phone…', ar: 'الاسم أو الموبايل…' },
+  selectCustomer: { en: 'Pick a customer', ar: 'اختار عميل' },
+  selectCustomerHint: { en: 'Points, tab, usual order and recent orders show here', ar: 'هتلاقي هنا النقط والحساب والطلب المعتاد وآخر الطلبات' },
+  pointsIssued: { en: 'Points issued', ar: 'نقط اتصرفت' },
+  removePhoto: { en: 'Remove photo', ar: 'شيل الصورة' },
+  details: { en: 'Details', ar: 'التفاصيل' },
+  stock: { en: 'Stock', ar: 'المخزون' },
+  thisBranch: { en: 'This branch', ar: 'الفرع ده' },
+  customizationsSectionHint: { en: 'What customers choose when they order it', ar: 'اللي العميل بيختاره لما يطلبه' },
+  stockRuleHint: { en: 'What one sale takes out of stock', ar: 'اللي بيتخصم من المخزون مع كل بيعة' },
+  notTrackedHint: { en: 'Sales of this item do not touch stock yet', ar: 'بيع الصنف ده لسه مش بيخصم من المخزون' },
+  sellAsUnit: { en: 'Sold as a unit', ar: 'بيتباع كوحدة' },
+  usesIngredients: { en: 'Uses ingredients', ar: 'بيستخدم مكونات' },
+  usesIngredientsInstead: { en: 'Use ingredients instead', ar: 'خليه مكونات بدل كده' },
+  soldAsUnit: { en: 'Sold as a unit of', ar: 'بيتباع كوحدة من' },
+  stopTracking: { en: 'Stop tracking', ar: 'وقّف التتبع' },
+  stopTrackingQuestion: { en: 'Stop tracking stock for this item?', ar: 'توقّف تتبع المخزون للصنف ده؟' },
+  stopTrackingDescription: { en: 'Sales stop deducting from stock. Nothing already posted changes.', ar: 'البيع مش هيخصم من المخزون تاني. اللي اتسجل قبل كده مش هيتغير.' },
+  branchOverrideHint: { en: 'Only at {branch}. Leave blank to use the menu price.', ar: 'في {branch} بس. سيبه فاضي عشان ياخد سعر المنيو.' },
+  priceAtBranch: { en: 'Price here', ar: 'السعر هنا' },
+  offerAtBranch: { en: 'Offer here', ar: 'عرض هنا' },
+  clearOverride: { en: 'Use menu price', ar: 'رجّع سعر المنيو' },
+  branchPriceSaved: { en: 'Branch price saved', ar: 'اتحفظ سعر الفرع' },
+  branchPriceCleared: { en: 'Back to the menu price', ar: 'رجع لسعر المنيو' },
+  // Menu grouped by category
+  dragToReorder: { en: 'Drag to reorder', ar: 'اسحب للترتيب' },
+  uncategorized: { en: 'No category', ar: 'من غير قسم' },
+  emptyCategory: { en: 'No items here yet', ar: 'مفيش أصناف هنا لسه' },
+  noCategoriesYet: {
+    en: 'Start the menu with a category',
+    ar: 'ابدأ المنيو بقسم',
+  },
+  inventoryHistory: { en: 'History', ar: 'السجل' },
+  historySubtitle: {
+    en: 'Every purchase, count, movement and transfer at this branch',
+    ar: 'كل استلام وجرد وحركة وتحويل في الفرع ده',
+  },
+  restoreItem: { en: 'Restore item', ar: 'رجّع الصنف' },
+  retireItem: { en: 'Retire item', ar: 'وقّف الصنف' },
+  retireItemQuestion: { en: 'Retire {name}?', ar: 'توقّف {name}؟' },
+  retireItemDescription: {
+    en: 'It leaves the stock list and takes no more postings. Its history stays, and you can restore it any time from Show retired.',
+    ar: 'هيختفي من قايمة المخزون ومش هيقبل حركات تانية. حركاته القديمة هتفضل، وتقدر ترجّعه في أي وقت من "اعرض المتوقف".',
+  },
   // Staff: cashiers and branch membership
   cashierRole: { en: 'Cashier', ar: 'كاشير' },
   staffRole: { en: 'Role', ar: 'الدور' },
   addStaff: { en: 'Add staff', ar: 'ضيف موظف' },
   branchesUpdated: { en: 'Branches updated', ar: 'الفروع اتحدثت' },
-  cashierCreatedSuccess: { en: 'Cashier account created', ar: 'اتعمل حساب الكاشير' },
+  cashierCreatedSuccess: {
+    en: 'Cashier account created',
+    ar: 'اتعمل حساب الكاشير',
+  },
   cashierDescription: {
     en: 'Runs the till and the kitchen display, no back office',
     ar: 'بيشغّل الكاشير وشاشة المطبخ، من غير الإدارة',
@@ -112,7 +249,10 @@ const webExtras = {
   openOrder: { en: 'Open order', ar: 'أوردر شغال' },
   tablesWithOpenOrders: {
     plural: 'count',
-    en: { one: '1 table has an open order', other: '{count} tables have open orders' },
+    en: {
+      one: '1 table has an open order',
+      other: '{count} tables have open orders',
+    },
     ar: {
       one: 'ترابيزة واحدة عليها أوردر شغال',
       two: 'ترابيزتين عليهم أوردرات شغالة',
@@ -143,8 +283,14 @@ const webExtras = {
     en: 'No tables yet. Add your first table.',
     ar: 'مفيش ترابيزات لسه. ضيف أول ترابيزة.',
   },
-  copyTableLink: { en: 'Copy table QR link', ar: 'انسخ لينك الترابيزة' },
-  tableLinkCopied: { en: 'Table link copied', ar: 'اتنسخ لينك الترابيزة' },
+  copyTableLink: {
+    en: 'Copy table QR link',
+    ar: 'انسخ لينك الترابيزة',
+  },
+  tableLinkCopied: {
+    en: 'Table link copied',
+    ar: 'اتنسخ لينك الترابيزة',
+  },
   sessionHistorySubtitle: {
     en: 'Completed sessions across all rooms.',
     ar: 'الجلسات اللي خلصت في كل الاوض.',
@@ -153,10 +299,6 @@ const webExtras = {
     en: 'Items customers can order.',
     ar: 'الأصناف اللي العملاء يقدروا يطلبوها.',
   },
-  categoriesSubtitle: {
-    en: 'Organize the menu into sections.',
-    ar: 'قسّم المنيو لأقسام.',
-  },
   bundlesSubtitle: {
     en: 'Combos sold together at a discounted price.',
     ar: 'باكدجات بتتباع مع بعض بسعر مخفض.',
@@ -164,14 +306,6 @@ const webExtras = {
   customersSubtitle: {
     en: 'View and manage your customers',
     ar: 'شوف واِدارة عملاءك',
-  },
-  loyaltySubtitle: {
-    en: 'Manage loyalty accounts, points, and tiers',
-    ar: 'إدارة حسابات الولاء والنقط والمستويات',
-  },
-  accountsSubtitle: {
-    en: 'Track tabs, record payments, and add charges.',
-    ar: 'تابع الحسابات وسجّل المدفوعات وضيف المصاريف.',
   },
   announcementsSubtitle: {
     en: 'Broadcast push messages to customers.',
@@ -277,12 +411,18 @@ const webExtras = {
     en: 'Failed to end session',
     ar: 'معرفناش ننهي الجلسة',
   },
-  reservationCancelled: { en: 'Reservation cancelled', ar: 'الحجز اتلغى' },
+  reservationCancelled: {
+    en: 'Reservation cancelled',
+    ar: 'الحجز اتلغى',
+  },
   failedToCancelReservation: {
     en: 'Failed to cancel reservation',
     ar: 'معرفناش نلغي الحجز',
   },
-  playerModeUpdated: { en: 'Player mode updated', ar: 'اتغير وضع اللعب' },
+  playerModeUpdated: {
+    en: 'Player mode updated',
+    ar: 'اتغير وضع اللعب',
+  },
   failedToChangePlayerMode: {
     en: 'Failed to change player mode',
     ar: 'معرفناش نغير وضع اللعب',
@@ -297,7 +437,10 @@ const webExtras = {
   },
   vatRatePercent: { en: 'VAT %', ar: 'الضريبة %' },
   serviceChargePercent: { en: 'Service charge %', ar: 'الخدمة %' },
-  pricesIncludeVat: { en: 'Prices include VAT', ar: 'الأسعار شاملة الضريبة' },
+  pricesIncludeVat: {
+    en: 'Prices include VAT',
+    ar: 'الأسعار شاملة الضريبة',
+  },
   pricesIncludeVatHint: {
     en: 'On: VAT is shown out of the menu price. Off: VAT is added on top.',
     ar: 'شغال: الضريبة بتتعرض من ضمن سعر المنيو. مقفول: الضريبة بتتضاف فوق السعر.',
@@ -306,8 +449,14 @@ const webExtras = {
     en: 'Service applies to what is ordered at tables and rooms — never to counter sales or room time.',
     ar: 'الخدمة بتتحسب على اللي بيتطلب على الترابيزات والاوض — مش على بيع الكاونتر ولا وقت الاوضة.',
   },
-  pricingSaved: { en: 'Receipt pricing saved', ar: 'اتحفظ تسعير الإيصال' },
-  failedToSavePricing: { en: 'Failed to save receipt pricing', ar: 'معرفناش نحفظ تسعير الإيصال' },
+  pricingSaved: {
+    en: 'Receipt pricing saved',
+    ar: 'اتحفظ تسعير الإيصال',
+  },
+  failedToSavePricing: {
+    en: 'Failed to save receipt pricing',
+    ar: 'معرفناش نحفظ تسعير الإيصال',
+  },
   loading: { en: 'Loading…', ar: 'ثواني…' },
   noCompletedSessions: {
     en: 'No completed sessions match.',
@@ -484,7 +633,10 @@ const webExtras = {
     ar: 'ابعت لكل العملاء',
   },
   sentSection: { en: 'Sent', ar: 'المرسل' },
-  nothingSentYet: { en: 'Nothing sent yet.', ar: 'لسه مبعتناش حاجة.' },
+  nothingSentYet: {
+    en: 'Nothing sent yet.',
+    ar: 'لسه مبعتناش حاجة.',
+  },
   announcementSentTo: {
     en: 'Announcement sent to {count} devices',
     ar: 'الإعلان اتبعت لـ {count} جهاز',
@@ -538,15 +690,14 @@ const webExtras = {
   savePercent: { en: 'Save {percent}%', ar: 'وفر {percent}%' },
 
   // Menu component dialogs/sheets
-  nameEnglish: { en: 'Name (English)', ar: 'الاسم (إنجليزي)' },
-  nameArabic: { en: 'Name (Arabic)', ar: 'الاسم (عربي)' },
-  descriptionEnglish: { en: 'Description (English)', ar: 'الوصف (إنجليزي)' },
-  descriptionArabic: { en: 'Description (Arabic)', ar: 'الوصف (عربي)' },
   englishNameRequired: {
     en: 'English name is required',
     ar: 'الاسم الإنجليزي مطلوب',
   },
-  clickToAddPhoto: { en: 'Click to add a photo.', ar: 'دوس عشان تضيف صورة.' },
+  clickToAddPhoto: {
+    en: 'Click to add a photo.',
+    ar: 'دوس عشان تضيف صورة.',
+  },
   clickToReplacePhoto: {
     en: 'Click to replace the photo.',
     ar: 'دوس عشان تغيّر الصورة.',
@@ -571,10 +722,6 @@ const webExtras = {
     en: 'Name the new menu category in both languages',
     ar: 'اكتب اسم القسم الجديد باللغتين',
   },
-  editMenuItemDescription: {
-    en: 'Update the menu item details below',
-    ar: 'عدّل تفاصيل الصنف من هنا',
-  },
   addMenuItemDescription: {
     en: 'Fill in the details to add a new menu item',
     ar: 'املا التفاصيل عشان تضيف صنف جديد',
@@ -596,7 +743,10 @@ const webExtras = {
     ar: 'الصنف اتحفظ، بس معرفناش نرفع الصورة',
   },
   prepTimeShort: { en: 'Prep (min)', ar: 'التحضير (دقايق)' },
-  onOfferHint: { en: 'Sell at a discounted price', ar: 'بيع بسعر مخفّض' },
+  onOfferHint: {
+    en: 'Sell at a discounted price',
+    ar: 'بيع بسعر مخفّض',
+  },
   manage: { en: 'Manage', ar: 'إدارة' },
   pickAtLeastOneItem: {
     en: 'Pick at least one menu item.',
@@ -632,7 +782,10 @@ const webExtras = {
     en: 'A group of choices the customer picks from, like Size or Extras.',
     ar: 'مجموعة اختيارات العميل بيختار منها، زي الحجم أو الإضافات.',
   },
-  customizationSaved: { en: 'Customization saved', ar: 'التخصيص اتحفظ' },
+  customizationSaved: {
+    en: 'Customization saved',
+    ar: 'التخصيص اتحفظ',
+  },
   failedToSaveCustomization: {
     en: 'Failed to save customization',
     ar: 'معرفناش نحفظ التخصيص',
@@ -647,14 +800,12 @@ const webExtras = {
   },
   removeOption: { en: 'Remove option', ar: 'شيل الخيار' },
   included: { en: 'Included', ar: 'من غير زيادة' },
-  customizationsSheetDescription: {
-    en: 'Choices customers make when ordering {name}, like sizes and extras.',
-    ar: 'الاختيارات اللي العميل بيختارها لما يطلب {name}، زي الأحجام والإضافات.',
-  },
-  thisItem: { en: 'this item', ar: 'الصنف ده' },
   multipleChoice: { en: 'Multiple choice', ar: 'اختيار متعدد' },
   singleChoice: { en: 'Single choice', ar: 'اختيار واحد' },
-  customizationDeleted: { en: 'Customization deleted', ar: 'التخصيص اتمسح' },
+  customizationDeleted: {
+    en: 'Customization deleted',
+    ar: 'التخصيص اتمسح',
+  },
   failedToDeleteCustomization: {
     en: 'Failed to delete customization',
     ar: 'معرفناش نمسح التخصيص',
@@ -758,7 +909,10 @@ const webExtras = {
     ar: 'الموقع مش شغال دلوقتي. هنرجع تاني قريب.',
   },
   learnMore: { en: 'Learn more', ar: 'اعرف أكتر' },
-  notFoundTitle: { en: 'Oops! Page Not Found!', ar: 'أوبس! الصفحة مش موجودة!' },
+  notFoundTitle: {
+    en: 'Oops! Page Not Found!',
+    ar: 'أوبس! الصفحة مش موجودة!',
+  },
   notFoundMessage: {
     en: "It seems like the page you're looking for does not exist or might have been removed.",
     ar: 'شكلها الصفحة اللي بتدور عليها مش موجودة أو اتشالت.',
@@ -784,14 +938,20 @@ const webExtras = {
     en: 'Go to previous page',
     ar: 'روح للصفحة اللي قبلها',
   },
-  goToNextPage: { en: 'Go to next page', ar: 'روح للصفحة اللي بعدها' },
+  goToNextPage: {
+    en: 'Go to next page',
+    ar: 'روح للصفحة اللي بعدها',
+  },
   goToLastPage: { en: 'Go to last page', ar: 'روح لآخر صفحة' },
   goToPage: { en: 'Go to page {page}', ar: 'روح لصفحة {page}' },
   noResults: { en: 'No results.', ar: 'مفيش نتايج.' },
   selectedCount: { en: '{count} selected', ar: '{count} مختار' },
   clearFilters: { en: 'Clear filters', ar: 'امسح التصفية' },
   view: { en: 'View', ar: 'عرض' },
-  toggleColumns: { en: 'Toggle columns', ar: 'إظهار وإخفاء الأعمدة' },
+  toggleColumns: {
+    en: 'Toggle columns',
+    ar: 'إظهار وإخفاء الأعمدة',
+  },
   sortAscending: { en: 'Asc', ar: 'تصاعدي' },
   sortDescending: { en: 'Desc', ar: 'تنازلي' },
   hide: { en: 'Hide', ar: 'إخفاء' },
@@ -805,10 +965,6 @@ const webExtras = {
 
   // Loyalty
   totalAccounts: { en: 'Total Accounts', ar: 'إجمالي الحسابات' },
-  loyaltyProgramMembers: {
-    en: 'Loyalty program members',
-    ar: 'أعضاء برنامج الولاء',
-  },
   pointsIssuedToday: {
     en: 'Points issued today',
     ar: 'نقاط اتوزعت النهاردة',
@@ -821,7 +977,6 @@ const webExtras = {
     en: 'Points issued this month',
     ar: 'نقاط اتوزعت الشهر ده',
   },
-  startingTier: { en: 'Starting tier', ar: 'مستوى البداية' },
   tier: { en: 'Tier', ar: 'المستوى' },
   lifetimePoints: { en: 'Lifetime Points', ar: 'إجمالي النقاط' },
   tierMember: { en: '{tier} Member', ar: 'عضو {tier}' },
@@ -833,7 +988,10 @@ const webExtras = {
   eligibleForTier: { en: 'Eligible for {tier}!', ar: 'مؤهل لـ {tier}!' },
   transactionTypeEarned: { en: 'Earned', ar: 'كسب' },
   pointsAmount: { en: 'Points Amount', ar: 'عدد النقاط' },
-  enterPointsToAdd: { en: 'Enter points to add', ar: 'اكتب عدد النقاط' },
+  enterPointsToAdd: {
+    en: 'Enter points to add',
+    ar: 'اكتب عدد النقاط',
+  },
   type: { en: 'Type', ar: 'النوع' },
   selectType: { en: 'Select type', ar: 'اختار النوع' },
   other: { en: 'Other', ar: 'حاجة تانية' },
@@ -860,9 +1018,7 @@ const webExtras = {
   owes: { en: 'owes', ar: 'عليه' },
   credit: { en: 'credit', ar: 'له' },
   lastActivity: { en: 'Last activity', ar: 'آخر حركة' },
-  viewLedger: { en: 'View ledger', ar: 'شوف كشف الحساب' },
   recordPayment: { en: 'Record Payment', ar: 'تسجيل دفعة' },
-  accountLedger: { en: 'Account ledger', ar: 'كشف الحساب' },
   owedByCustomer: { en: 'owed by customer', ar: 'على العميل' },
   customerCredit: { en: 'customer credit', ar: 'رصيد للعميل' },
   settled: { en: 'settled', ar: 'خالص' },
@@ -927,12 +1083,18 @@ const webExtras = {
   },
   noResultsFound: { en: 'No results found.', ar: 'مفيش نتايج.' },
   ordersEntity: { en: 'orders', ar: 'أوردرات' },
-  deleteOrdersQuestion: { en: 'Delete Selected Orders?', ar: 'حذف الأوردرات المحددة؟' },
+  deleteOrdersQuestion: {
+    en: 'Delete Selected Orders?',
+    ar: 'حذف الأوردرات المحددة؟',
+  },
   deleteOrdersConfirmation: {
     en: 'Permanently delete {count} cancelled orders? This cannot be undone.',
     ar: 'حذف {count} أوردرات ملغية نهائي؟ مينفعش ترجع فيهم.',
   },
-  ordersDeleted: { en: '{count} orders deleted', ar: 'اتحذف {count} أوردرات' },
+  ordersDeleted: {
+    en: '{count} orders deleted',
+    ar: 'اتحذف {count} أوردرات',
+  },
   failedToDeleteOrders: {
     en: 'Could not delete some orders. Only cancelled orders can be deleted.',
     ar: 'مقدرناش نحذف بعض الأوردرات. الأوردرات الملغية بس اللي ينفع تتحذف.',
@@ -946,34 +1108,11 @@ const webExtras = {
 
   // Till back office (read-only views over Sales.API)
   navTill: { en: 'Till', ar: 'الكاشير' },
-  tillSales: { en: 'Sales report', ar: 'تقرير المبيعات' },
   tillTickets: { en: 'Tickets', ar: 'الحسابات' },
   tillPayments: { en: 'Payments', ar: 'المدفوعات' },
   tillRefunds: { en: 'Refunds', ar: 'الاسترجاعات' },
   tillShifts: { en: 'Shifts', ar: 'الورديات' },
-  tillSalesSubtitle: {
-    en: 'Settled tickets over a window of business days.',
-    ar: 'الحسابات اللي اتقفلت في فترة من أيام الشغل.',
-  },
-  tillTicketsSubtitle: {
-    en: 'Every bill: settled, still open, or voided.',
-    ar: 'كل الحسابات: المتقفلة، اللي لسه مفتوحة، والملغية.',
-  },
-  tillPaymentsSubtitle: {
-    en: 'Every payment taken on a settled ticket.',
-    ar: 'كل دفعة اتقبضت على حساب متقفل.',
-  },
-  tillRefundsSubtitle: {
-    en: 'Credit notes issued against settled tickets.',
-    ar: 'إشعارات الاسترجاع اللي اتعملت على حسابات متقفلة.',
-  },
-  tillShiftsSubtitle: {
-    en: 'The open drawer, and the Z reports of closed shifts.',
-    ar: 'الدرج المفتوح، وتقارير الورديات المقفولة.',
-  },
   rangeCustom: { en: 'Custom', ar: 'فترة مخصصة' },
-  rangeFrom: { en: 'From', ar: 'من' },
-  rangeTo: { en: 'To', ar: 'إلى' },
   serviceChargeTotal: { en: 'Service charge', ar: 'الخدمة' },
   vatTotal: { en: 'VAT', ar: 'الضريبة' },
   refundsTotal: { en: 'Refunds', ar: 'الاسترجاعات' },
@@ -1022,19 +1161,31 @@ const webExtras = {
   tender: { en: 'Tender', ar: 'طريقة الدفع' },
   byColumn: { en: 'By', ar: 'بواسطة' },
   creditNotes: { en: 'Credit notes', ar: 'إشعارات الاسترجاع' },
-  creditNote: { en: 'Credit note #{number}', ar: 'إشعار استرجاع #{number}' },
+  creditNote: {
+    en: 'Credit note #{number}',
+    ar: 'إشعار استرجاع #{number}',
+  },
   creditNoteHash: { en: 'Credit note #', ar: 'إشعار #' },
   serviceChargeRate: { en: 'Service {rate}%', ar: 'خدمة {rate}%' },
   vatRate: { en: 'VAT {rate}%', ar: 'ضريبة {rate}%' },
-  vatIncludedRate: { en: 'Includes VAT {rate}%', ar: 'شامل ضريبة {rate}%' },
+  vatIncludedRate: {
+    en: 'Includes VAT {rate}%',
+    ar: 'شامل ضريبة {rate}%',
+  },
   changeDue: { en: 'Change', ar: 'الباقي' },
   discount: { en: 'Discount', ar: 'الخصم' },
-  emptyTicket: { en: 'No items on this ticket.', ar: 'مفيش أصناف على الحساب.' },
+  emptyTicket: {
+    en: 'No items on this ticket.',
+    ar: 'مفيش أصناف على الحساب.',
+  },
   noTicketsInRange: {
     en: 'No tickets in this window.',
     ar: 'مفيش حسابات في الفترة دي.',
   },
-  noOpenTickets: { en: 'No open tickets.', ar: 'مفيش حسابات مفتوحة.' },
+  noOpenTickets: {
+    en: 'No open tickets.',
+    ar: 'مفيش حسابات مفتوحة.',
+  },
   noPaymentsInRange: {
     en: 'No payments in this window.',
     ar: 'مفيش دفعات في الفترة دي.',
@@ -1043,7 +1194,10 @@ const webExtras = {
     en: 'No refunds in this window.',
     ar: 'مفيش استرجاعات في الفترة دي.',
   },
-  noClosedShifts: { en: 'No closed shifts yet.', ar: 'مفيش ورديات مقفولة لسه.' },
+  noClosedShifts: {
+    en: 'No closed shifts yet.',
+    ar: 'مفيش ورديات مقفولة لسه.',
+  },
   shiftHash: { en: 'Shift #', ar: 'وردية #' },
   shiftNumber: { en: 'Shift #{id}', ar: 'وردية #{id}' },
   currentShift: { en: 'Current shift', ar: 'الوردية الحالية' },
@@ -1069,7 +1223,10 @@ const webExtras = {
   payInsTotal: { en: 'Pay-ins', ar: 'اللي اتحط في الدرج' },
   payOutsTotal: { en: 'Pay-outs', ar: 'اللي اتسحب من الدرج' },
   drawerMovements: { en: 'Pay-ins & pay-outs', ar: 'حركة الدرج' },
-  noMovements: { en: 'No pay-ins or pay-outs', ar: 'مفيش حركة على الدرج' },
+  noMovements: {
+    en: 'No pay-ins or pay-outs',
+    ar: 'مفيش حركة على الدرج',
+  },
   payIn: { en: 'Pay in', ar: 'حط في الدرج' },
   payOut: { en: 'Pay out', ar: 'اسحب من الدرج' },
 
@@ -1084,6 +1241,475 @@ const webExtras = {
     ar: 'في حاجة غلط حصلت!',
   },
   contentNotFound: { en: 'Content not found.', ar: 'المحتوى مش موجود.' },
+
+  // Inventory: stock levels, items, recipes, purchases, counts, movements, transfers, reports
+  navInventory: { en: 'Inventory', ar: 'المخزون' },
+  inventoryStock: { en: 'Stock', ar: 'المخزون الحالي' },
+  inventoryItems: { en: 'Items', ar: 'الأصناف' },
+  inventoryPurchases: { en: 'Purchases', ar: 'المشتريات' },
+  inventoryCounts: { en: 'Counts', ar: 'الجرد' },
+  inventoryMovements: { en: 'Movements', ar: 'الحركات' },
+  stockSubtitle: {
+    en: 'What the branch has on hand right now.',
+    ar: 'اللي موجود في الفرع دلوقتي.',
+  },
+  onHand: { en: 'On hand', ar: 'الموجود' },
+  reorderLevel: { en: 'Reorder level', ar: 'الحد الأدنى للطلب' },
+  avgCost: { en: 'Avg cost', ar: 'متوسط التكلفة' },
+  unit: { en: 'Unit', ar: 'الوحدة' },
+  pack: { en: 'Pack', ar: 'العبوة' },
+  lowBadge: { en: 'Low', ar: 'ناقص' },
+  autoSoldOut: { en: 'Auto sold-out', ar: 'نفاد تلقائي' },
+  autoSoldOutHint: {
+    en: 'When this runs out, menu items that need it are marked sold out at the branch. Leave off for ingredients.',
+    ar: 'لما ده يخلص، أصناف المنيو اللي محتاجاه بتتعلم نفدت في الفرع. سيبه مقفول للمكونات.',
+  },
+  lowOnly: { en: 'Low only', ar: 'الناقص بس' },
+  receiveStock: { en: 'Receive', ar: 'استلام بضاعة' },
+  countStock: { en: 'Count', ar: 'جرد' },
+  adjustStock: { en: 'Adjust', ar: 'تسوية' },
+  searchStockPlaceholder: { en: 'Search stock…', ar: 'دور في المخزون…' },
+  noStockLevels: {
+    en: 'No stock items yet. Add items to start tracking.',
+    ar: 'مفيش أصناف مخزون لسه. ضيف أصناف عشان تبدأ تتابع.',
+  },
+  nothingLow: { en: 'Nothing is running low', ar: 'مفيش حاجة ناقصة' },
+  setReorderLevel: { en: 'Set reorder level', ar: 'حدد الحد الأدنى' },
+  reorderLevelHint: {
+    en: 'You get a warning when on hand drops to this. Leave empty to turn it off.',
+    ar: 'هيجيلك تنبيه لما الموجود ينزل للرقم ده. سيبه فاضي عشان تقفله.',
+  },
+  reorderLevelSaved: {
+    en: 'Reorder level saved',
+    ar: 'اتحفظ الحد الأدنى',
+  },
+  failedToSaveReorderLevel: {
+    en: 'Failed to save reorder level',
+    ar: 'معرفناش نحفظ الحد الأدنى',
+  },
+  clear: { en: 'Clear', ar: 'مسح' },
+  approxPacks: { en: '≈ {packs} {packName}', ar: '≈ {packs} {packName}' },
+  packOf: {
+    en: '{packName} ({packSize} {unit})',
+    ar: '{packName} ({packSize} {unit})',
+  },
+  // Stock items
+  addStockItem: { en: 'Add item', ar: 'ضيف صنف' },
+  editStockItem: { en: 'Edit item', ar: 'تعديل الصنف' },
+  addStockItemDescription: {
+    en: 'A new ingredient or sellable unit to track.',
+    ar: 'مكون جديد أو وحدة بتتباع عشان تتابعها.',
+  },
+  editStockItemDescription: {
+    en: 'Change how this item is tracked.',
+    ar: 'غيّر طريقة متابعة الصنف ده.',
+  },
+  unitOther: { en: 'Other…', ar: 'تانية…' },
+  unitCustomPlaceholder: { en: 'e.g. bottle', ar: 'مثلاً: إزازة' },
+  unitRequired: { en: 'Unit is required', ar: 'الوحدة مطلوبة' },
+  packSize: { en: 'Pack size', ar: 'حجم العبوة' },
+  packName: { en: 'Pack name', ar: 'اسم العبوة' },
+  packNameHint: { en: 'e.g. Box, Bag', ar: 'مثلاً: كرتونة، شيكارة' },
+  packHint: {
+    en: "How much one pack holds, in the item's unit. Optional.",
+    ar: 'العبوة الواحدة فيها قد إيه بوحدة الصنف. اختياري.',
+  },
+  retired: { en: 'Retired', ar: 'متوقف' },
+  showRetired: { en: 'Show retired', ar: 'اعرض المتوقف' },
+  stockItemSaved: { en: 'Item saved', ar: 'الصنف اتحفظ' },
+  failedToSaveStockItem: {
+    en: 'Failed to save item',
+    ar: 'معرفناش نحفظ الصنف',
+  },
+  // Recipes
+  editRecipe: { en: 'Edit recipe', ar: 'تعديل الوصفة' },
+  removeRecipe: { en: 'Remove recipe', ar: 'شيل الوصفة' },
+  recipeRemoved: { en: 'Recipe removed', ar: 'الوصفة اتشالت' },
+  recipeSaved: { en: 'Recipe saved', ar: 'الوصفة اتحفظت' },
+  failedToSaveRecipe: {
+    en: 'Failed to save recipe',
+    ar: 'معرفناش نحفظ الوصفة',
+  },
+  failedToRemoveRecipe: {
+    en: 'Failed to remove recipe',
+    ar: 'معرفناش نشيل الوصفة',
+  },
+  removeLine: { en: 'Remove line', ar: 'شيل السطر' },
+  pickStockItem: { en: 'Pick a stock item', ar: 'اختار صنف مخزون' },
+  recipeNeedsLine: {
+    en: 'Add at least one ingredient',
+    ar: 'ضيف مكون واحد على الأقل',
+  },
+  recipeLineIncomplete: {
+    en: 'Every line needs an item and a quantity',
+    ar: 'كل سطر لازم يكون فيه صنف وكمية',
+  },
+  recipeDuplicateLine: {
+    en: 'The same stock item is listed twice for the same options',
+    ar: 'نفس صنف المخزون متكرر مرتين لنفس الخيارات',
+  },
+  removedOption: { en: '(removed option)', ar: '(خيار اتشال)' },
+  unknownMenuItem: { en: 'Unknown item', ar: 'صنف غير معروف' },
+  tracked: { en: 'Tracked', ar: 'متتبع' },
+  trackByUnit: {
+    en: 'Track stock by unit',
+    ar: 'تابع المخزون بالقطعة',
+  },
+  trackedByUnit: {
+    en: 'Now tracked by unit',
+    ar: 'بقى متتبع بالقطعة',
+  },
+  failedToTrack: {
+    en: 'Failed to track item',
+    ar: 'معرفناش نتابع الصنف',
+  },
+  outOfStock: { en: 'Out of stock', ar: 'نفد' },
+  // Purchases
+  supplier: { en: 'Supplier', ar: 'المورد' },
+  supplierPlaceholder: { en: 'e.g. Metro', ar: 'مثلاً: مترو' },
+  invoiceRef: { en: 'Invoice', ar: 'رقم الفاتورة' },
+  invoiceRefPlaceholder: { en: 'Invoice number', ar: 'رقم الفاتورة' },
+  receivedBy: { en: 'Received by', ar: 'استلمها' },
+  receivedAt: { en: 'Received', ar: 'تاريخ الاستلام' },
+  receiveStockDescription: {
+    en: 'Add what came in from a supplier. Quantities go into stock at this branch.',
+    ar: 'سجّل اللي وصل من المورد. الكميات هتدخل مخزون الفرع ده.',
+  },
+  packs: { en: 'Packs', ar: 'عبوات' },
+  unitCost: { en: 'Unit cost', ar: 'سعر الوحدة' },
+  grandTotal: { en: 'Grand total', ar: 'الإجمالي الكلي' },
+  purchaseReceived: {
+    en: 'Purchase received',
+    ar: 'البضاعة اتستلمت',
+  },
+  failedToReceivePurchase: {
+    en: 'Failed to receive purchase',
+    ar: 'معرفناش نسجل الاستلام',
+  },
+  purchaseNeedsLine: {
+    en: 'Add at least one line',
+    ar: 'ضيف سطر واحد على الأقل',
+  },
+  purchaseLineIncomplete: {
+    en: 'Every line needs an item, a quantity and a cost',
+    ar: 'كل سطر لازم يكون فيه صنف وكمية وسعر',
+  },
+  noPurchases: { en: 'No purchases yet', ar: 'مفيش مشتريات لسه' },
+  purchaseHash: { en: 'Purchase #{id}', ar: 'مشتريات #{id}' },
+  // Stock counts
+  countedBy: { en: 'Counted by', ar: 'عمل الجرد' },
+  countedAt: { en: 'Counted', ar: 'تاريخ الجرد' },
+  linesCounted: { en: 'Counted', ar: 'اتجردت' },
+  linesOff: { en: 'Off', ar: 'فيها فرق' },
+  variance: { en: 'Variance', ar: 'الفرق' },
+  countNotePlaceholder: {
+    en: 'e.g. End of month',
+    ar: 'مثلاً: آخر الشهر',
+  },
+  countPosted: { en: 'Count posted', ar: 'الجرد اتسجل' },
+  failedToPostCount: {
+    en: 'Failed to post count',
+    ar: 'معرفناش نسجل الجرد',
+  },
+  countNeedsLine: {
+    en: 'Count at least one item',
+    ar: 'اجرد صنف واحد على الأقل',
+  },
+  noCounts: { en: 'No counts yet', ar: 'مفيش جرد لسه' },
+  countHash: { en: 'Count #{id}', ar: 'جرد #{id}' },
+  // Movements
+  movementTypePurchase: { en: 'Purchase', ar: 'شراء' },
+  movementTypeSale: { en: 'Sale', ar: 'بيع' },
+  movementTypeWaste: { en: 'Waste', ar: 'هالك' },
+  movementTypeCount: { en: 'Count', ar: 'جرد' },
+  movementTypeAdjustment: { en: 'Adjustment', ar: 'تسوية' },
+  reference: { en: 'Reference', ar: 'المرجع' },
+  allItems: { en: 'All items', ar: 'كل الأصناف' },
+  noStockMovements: { en: 'No movements yet', ar: 'مفيش حركات لسه' },
+  adjustStockDescription: {
+    en: 'Write off waste, or correct the on-hand figure.',
+    ar: 'سجّل الهالك، أو صحّح رقم الموجود.',
+  },
+  wasteQuantityHint: {
+    en: 'Quantity thrown away (goes out)',
+    ar: 'الكمية اللي اترمت (بتخرج)',
+  },
+  adjustmentQuantityHint: {
+    en: 'Positive = in, negative = out',
+    ar: 'موجب = داخل، سالب = خارج',
+  },
+  unitCostOpening: {
+    en: 'Unit cost (opening stock)',
+    ar: 'سعر الوحدة (رصيد افتتاحي)',
+  },
+  reasonRequired: { en: 'Reason is required', ar: 'السبب مطلوب' },
+  reasonPlaceholder: {
+    en: 'e.g. Spilled, expired',
+    ar: 'مثلاً: اتدلق، انتهى',
+  },
+  adjustmentPosted: { en: 'Adjustment posted', ar: 'التسوية اتسجلت' },
+  failedToPostAdjustment: {
+    en: 'Failed to post adjustment',
+    ar: 'معرفناش نسجل التسوية',
+  },
+  quantityMustBePositive: {
+    en: 'Quantity must be greater than zero',
+    ar: 'الكمية لازم تكون أكبر من صفر',
+  },
+  quantityMustBeNonZero: {
+    en: "Quantity can't be zero",
+    ar: 'الكمية ماينفعش تكون صفر',
+  },
+  // Dashboard card + push
+  lowStockTitle: { en: 'Low stock', ar: 'مخزون ناقص' },
+  lowStockDescription: {
+    en: 'Items at or below their reorder level.',
+    ar: 'أصناف وصلت أو نزلت تحت الحد الأدنى.',
+  },
+  viewStock: { en: 'View stock', ar: 'اعرض المخزون' },
+  stockLowToast: {
+    en: '{name} is low: {onHand} {unit} left',
+    ar: '{name} ناقص: فاضل {onHand} {unit}',
+  },
+  // Stock unit codes stay as stored (pcs/g/ml/kg/l); only the label is localized
+  stockItem: { en: 'Item', ar: 'الصنف' },
+  referenceOrder: { en: 'Order #{id}', ar: 'طلب #{id}' },
+  referencePurchase: { en: 'Receipt #{id}', ar: 'استلام #{id}' },
+  referenceCount: { en: 'Count #{id}', ar: 'جرد #{id}' },
+  systemActor: { en: 'System', ar: 'النظام' },
+  unitPcs: { en: 'pcs', ar: 'قطعة' },
+  unitG: { en: 'g', ar: 'جم' },
+  unitMl: { en: 'ml', ar: 'مل' },
+  unitKg: { en: 'kg', ar: 'كجم' },
+  unitL: { en: 'L', ar: 'لتر' },
+  // Inventory: usage report, transfers between branches, level rebuild
+  inventoryReports: { en: 'Reports', ar: 'التقارير' },
+  inventoryTransfers: { en: 'Transfers', ar: 'التحويلات' },
+  reportsSubtitle: {
+    en: 'What came in, what went out, and what it cost over a period.',
+    ar: 'إيه اللي دخل وإيه اللي خرج وكلف كام في فترة.',
+  },
+  thisMonth: { en: 'This month', ar: 'الشهر ده' },
+  purchased: { en: 'Purchased', ar: 'المشتريات' },
+  sold: { en: 'Sold', ar: 'المبيعات' },
+  costOfGoodsSold: { en: 'Cost of goods sold', ar: 'تكلفة المبيعات' },
+  waste: { en: 'Waste', ar: 'الهالك' },
+  stockValue: { en: 'Stock value', ar: 'قيمة المخزون' },
+  stockValueNow: { en: 'Stock value now', ar: 'قيمة المخزون دلوقتي' },
+  countVariance: { en: 'Count variance', ar: 'فرق الجرد' },
+  inOut: { en: 'In / out', ar: 'وارد / صادر' },
+  noReportRows: {
+    en: 'Nothing moved in this period.',
+    ar: 'مفيش حاجة اتحركت في الفترة دي.',
+  },
+  searchReportPlaceholder: {
+    en: 'Search items…',
+    ar: 'دور في الأصناف…',
+  },
+  transferStock: { en: 'Transfer', ar: 'تحويل' },
+  transferStockDescription: {
+    en: 'Send stock from this branch to another. Levels move on both sides.',
+    ar: 'ابعت بضاعة من الفرع ده لفرع تاني. المخزون بيتحرك في الفرعين.',
+  },
+  toBranch: { en: 'To branch', ar: 'للفرع' },
+  pickBranch: { en: 'Pick a branch', ar: 'اختار فرع' },
+  noOtherBranches: {
+    en: 'No other branch to send to.',
+    ar: 'مفيش فرع تاني تبعت له.',
+  },
+  transferNotePlaceholder: {
+    en: 'e.g. Ran out of milk',
+    ar: 'مثلاً: اللبن خلص',
+  },
+  transferNeedsLine: {
+    en: 'Add at least one line.',
+    ar: 'ضيف سطر واحد على الأقل.',
+  },
+  transferLineIncomplete: {
+    en: 'Every line needs an item and a quantity.',
+    ar: 'كل سطر لازم يكون فيه صنف وكمية.',
+  },
+  transferSent: { en: 'Transfer sent', ar: 'التحويل اتبعت' },
+  failedToTransfer: {
+    en: 'Failed to send transfer',
+    ar: 'معرفناش نبعت التحويل',
+  },
+  noTransfers: { en: 'No transfers yet', ar: 'مفيش تحويلات لسه' },
+  transferHash: { en: 'Transfer #{id}', ar: 'تحويل #{id}' },
+  sentAt: { en: 'Sent', ar: 'تاريخ الإرسال' },
+  sentBy: { en: 'Sent by', ar: 'بعته' },
+  fromTo: { en: 'From → To', ar: 'من ← إلى' },
+  unknownBranch: { en: 'Unknown branch', ar: 'فرع غير معروف' },
+  movementTypeTransferOut: { en: 'Transfer out', ar: 'تحويل صادر' },
+  movementTypeTransferIn: { en: 'Transfer in', ar: 'تحويل وارد' },
+  referenceTransfer: { en: 'Transfer #{id}', ar: 'تحويل #{id}' },
+  moreActions: { en: 'More actions', ar: 'إجراءات تانية' },
+  rebuildLevels: {
+    en: 'Rebuild levels from ledger',
+    ar: 'إعادة حساب المخزون من الحركات',
+  },
+  rebuildLevelsQuestion: {
+    en: 'Rebuild stock levels?',
+    ar: 'تعيد حساب المخزون؟',
+  },
+  rebuildLevelsDescription: {
+    en: 'Recomputes every on-hand figure at this branch from the movement history. Use it when a level looks wrong; nothing in the ledger changes.',
+    ar: 'بيحسب كل الكميات الموجودة في الفرع ده من جديد من سجل الحركات. استخدمه لو رقم باين غلط؛ الحركات نفسها مش بتتغير.',
+  },
+  levelsCorrected: {
+    plural: 'count',
+    en: {
+      '=0': 'Levels already match the ledger',
+      '=1': '1 level corrected',
+      other: '{count} levels corrected',
+    },
+    ar: {
+      zero: 'المخزون مطابق للحركات أصلاً',
+      one: 'اتصلح رقم واحد',
+      two: 'اتصلح رقمين',
+      few: 'اتصلح {count} أرقام',
+      many: 'اتصلح {count} رقم',
+      other: 'اتصلح {count} رقم',
+    },
+  },
+  failedToRebuildLevels: {
+    en: 'Failed to rebuild levels',
+    ar: 'معرفناش نعيد حساب المخزون',
+  },
+  // Shell, gates and shared primitives (redesign 2026-09)
+  accessDenied: { en: 'Access denied', ar: 'مش مسموح بالدخول' },
+  accessDeniedDescription: {
+    en: 'Your account does not have access to the admin panel.',
+    ar: 'حسابك مش معاه صلاحية للوحة الإدارة.',
+  },
+  ownerAccessRequired: {
+    en: 'Owner access required',
+    ar: 'الصفحة دي للمالك بس',
+  },
+  ownerAccessDescription: {
+    en: 'This page is only available to owner accounts.',
+    ar: 'الصفحة دي متاحة لحسابات المالك بس.',
+  },
+  pickADate: { en: 'Pick a date', ar: 'اختار تاريخ' },
+  skipToMain: { en: 'Skip to main content', ar: 'روح للمحتوى' },
+  backToSignIn: { en: 'Back to sign in', ar: 'ارجع لتسجيل الدخول' },
+  errorStateTitle: { en: "Couldn't load this", ar: 'معرفناش نحمّل الجزء ده' },
+  errorStateDescription: {
+    en: 'Something went wrong on our side. Try again in a moment.',
+    ar: 'حصلت مشكلة عندنا. جرّب تاني بعد شوية.',
+  },
+  reloadPage: { en: 'Reload', ar: 'حمّل الصفحة تاني' },
+  // Phase 1: dashboard, orders, requests, tables, rooms
+  sourceCustomer: { en: 'App', ar: 'الأبلكيشن' },
+  sourceGuest: { en: 'QR guest', ar: 'ضيف QR' },
+  sourcePos: { en: 'Till', ar: 'الكاشير' },
+  live: { en: 'Live', ar: 'لايف' },
+  needsAttention: { en: 'Needs attention', ar: 'محتاج تدخّل' },
+  ordersWaitingLine: {
+    plural: 'count',
+    en: { one: '{count} order waiting', other: '{count} orders waiting' },
+    ar: {
+      one: 'أوردر واحد مستني',
+      two: 'أوردرين مستنيين',
+      few: '{count} أوردرات مستنية',
+      other: '{count} أوردر مستني',
+    },
+  },
+  oldestAge: { en: 'oldest {age}', ar: 'أقدمهم {age}' },
+  requestsWaitingLine: {
+    plural: 'count',
+    en: { one: '{count} service request', other: '{count} service requests' },
+    ar: {
+      one: 'طلب خدمة واحد',
+      two: 'طلبين خدمة',
+      few: '{count} طلبات خدمة',
+      other: '{count} طلب خدمة',
+    },
+  },
+  lowStockLine: {
+    plural: 'count',
+    en: { one: '{count} item running low', other: '{count} items running low' },
+    ar: {
+      one: 'صنف واحد ناقص',
+      two: 'صنفين ناقصين',
+      few: '{count} أصناف ناقصة',
+      other: '{count} صنف ناقص',
+    },
+  },
+  roomsInUse: { en: 'Rooms in use', ar: 'اوض شغالة' },
+  tablesInUse: { en: 'Tables with orders', ar: 'ترابيزات عليها أوردرات' },
+  ofTotal: { en: '{count} of {total}', ar: '{count} من {total}' },
+  todaysTill: { en: "Today's till", ar: 'كاشير النهارده' },
+  liveFloor: { en: 'Live floor', ar: 'الصالة دلوقتي' },
+  trends: { en: 'Trends', ar: 'الاتجاهات' },
+  tabPayments: { en: 'Tab payments', ar: 'دفعات الحسابات' },
+  roomsByHours: { en: 'Rooms by hours', ar: 'الاوض حسب الساعات' },
+  counter: { en: 'Counter', ar: 'الكاونتر' },
+  filterByPlace: { en: 'Filter by place', ar: 'فلترة حسب المكان' },
+  searchOrdersPlaceholder: {
+    en: 'Order # or customer…',
+    ar: 'رقم الأوردر أو اسم العميل…',
+  },
+  onIt: { en: 'On it', ar: 'جاي' },
+  keepOrder: { en: 'Keep order', ar: 'سيب الأوردر' },
+  tableOpenOrders: {
+    plural: 'count',
+    en: { one: '{count} open order', other: '{count} open orders' },
+    ar: {
+      one: 'أوردر واحد شغال',
+      two: 'أوردرين شغالين',
+      few: '{count} أوردرات شغالة',
+      other: '{count} أوردر شغال',
+    },
+  },
+  noOrdersForTable: {
+    en: 'No orders waiting on this table',
+    ar: 'مفيش أوردرات مستنية على الترابيزة دي',
+  },
+  tableAcceptingOrders: { en: 'Accepting orders', ar: 'بتستقبل أوردرات' },
+  searchTables: { en: 'Search tables…', ar: 'دوّر على ترابيزة…' },
+  notes: { en: 'Notes', ar: 'ملاحظات' },
+  session: { en: 'Session', ar: 'الجلسة' },
+  sessionDetails: { en: 'Session details', ar: 'تفاصيل الجلسة' },
+  membersCount: {
+    plural: 'count',
+    en: { one: '{count} member', other: '{count} members' },
+    ar: {
+      one: 'عضو واحد',
+      two: 'عضوين',
+      few: '{count} أعضاء',
+      other: '{count} عضو',
+    },
+  },
+  openRoom: { en: 'Open room', ar: 'افتح الاوضة' },
+  removeMemberQuestion: { en: 'Remove {name}?', ar: 'تشيل {name}؟' },
+  removeMemberDescription: {
+    en: 'They stop being billed on this session from now.',
+    ar: 'مش هيتحسب عليهم من الجلسة من دلوقتي.',
+  },
+  remove: { en: 'Remove', ar: 'شيل' },
+  sortByPlaced: { en: 'Placed', ar: 'وقت الطلب' },
+  selectAll: { en: 'Select all', ar: 'اختار الكل' },
+  selectRow: { en: 'Select row', ar: 'اختار الصف' },
+  source: { en: 'Source', ar: 'المصدر' },
+  requestFilterAll: { en: 'All requests', ar: 'كل الطلبات' },
+  noRequestsOfType: {
+    en: 'No requests of this kind right now',
+    ar: 'مفيش طلبات من النوع ده دلوقتي',
+  },
+  // Phase 2: till
+  vsPreviousPeriod: {
+    en: 'vs previous period',
+    ar: 'مقارنة بالفترة اللي قبلها',
+  },
+  findReceipt: { en: 'Find receipt #', ar: 'دوّر برقم الإيصال' },
+  receiptIgnoresRange: {
+    en: 'Looks across all dates',
+    ar: 'بيدوّر في كل التواريخ',
+  },
+  cashTabPayments: { en: 'Cash tab payments', ar: 'دفعات حسابات كاش' },
+  allTenders: { en: 'All tenders', ar: 'كل طرق الدفع' },
+  openSince: { en: 'Open {duration}', ar: 'مفتوح من {duration}' },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }
@@ -1114,6 +1740,12 @@ export const useLanguage = create<LanguageState>()(
 )
 
 export type TranslateParams = Record<string, string | number>
+
+/** The `t` function shape shared by `useT()` and `translate` */
+export type Translate = (
+  key: TranslationKey,
+  params?: TranslateParams
+) => string
 
 // CLDR plural category per language ("few" = 3–10 in Arabic, etc.), so
 // plural entries can carry proper Arabic forms (دقيقة/دقيقتين/دقائق) beyond
@@ -1177,7 +1809,13 @@ export function useLocalized() {
 }
 
 // Locale tag for date/number formatting
+/**
+ * The BCP 47 tag every Intl formatter and toLocale*() call should use.
+ * Egyptian Arabic keeps Arabic month and weekday names but, as everywhere
+ * in Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
+ * 1,250 points read the same in both languages (owner's call).
+ */
 export function useLocale(): string {
   const language = useLanguage((s) => s.language)
-  return language === 'ar' ? 'ar-EG' : 'en-US'
+  return language === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'
 }

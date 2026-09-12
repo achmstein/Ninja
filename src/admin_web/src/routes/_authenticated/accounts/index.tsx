@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { AccountsManagement } from '@/features/accounts'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
+// Tab accounts are the Owing view of Customers now
 export const Route = createFileRoute('/_authenticated/accounts/')({
-  component: AccountsManagement,
+  beforeLoad: () => {
+    throw redirect({ to: '/customers', search: { filter: 'owing' } })
+  },
 })

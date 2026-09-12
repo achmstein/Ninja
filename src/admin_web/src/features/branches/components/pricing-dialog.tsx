@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Receipt } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { Receipt } from 'lucide-react'
 import { type BranchResponse } from '@/api/branch'
 import {
   getBranchPricingOptions,
   setBranchPricingMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -17,10 +20,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
-import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
 
 interface PricingDialogProps {
   branch: BranchResponse | null
@@ -136,7 +137,9 @@ export function PricingDialog({ branch, onOpenChange }: PricingDialogProps) {
             <Switch checked={includesVat} onCheckedChange={setIncludesVat} />
           </div>
 
-          <p className='text-muted-foreground text-xs'>{t('serviceChargeHint')}</p>
+          <p className='text-muted-foreground text-xs'>
+            {t('serviceChargeHint')}
+          </p>
         </div>
 
         <DialogFooter>
@@ -151,7 +154,7 @@ export function PricingDialog({ branch, onOpenChange }: PricingDialogProps) {
             onClick={submit}
             disabled={save.isPending || pricingQuery.isLoading}
           >
-            {save.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+            {save.isPending && <Spinner className='me-2' />}
             {t('save')}
           </Button>
         </DialogFooter>

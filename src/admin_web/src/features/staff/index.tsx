@@ -1,22 +1,21 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTable } from '@tanstack/react-table'
-import { Store, UserPlus } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import { useLocale, useT } from '@/lib/i18n'
-import { useAuth } from 'react-oidc-context'
 import { getRealmRoles } from '@/config/oidc-config'
+import { Store, UserPlus } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useLocale, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
 import {
   createAppColumnHelper,
   DataTable,
   dataTableFeatures,
 } from '@/components/data-table'
+import { Main } from '@/components/layout/main'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
@@ -67,7 +66,11 @@ export function StaffManagement() {
   const currentUserId = auth.user?.profile?.sub
 
   const roleLabel = (role: string) =>
-    role === 'Owner' ? t('owner') : role === 'Admin' ? t('adminRole') : t('cashierRole')
+    role === 'Owner'
+      ? t('owner')
+      : role === 'Admin'
+        ? t('adminRole')
+        : t('cashierRole')
 
   const columns = useMemo(
     () =>
@@ -179,12 +182,14 @@ export function StaffManagement() {
     columns,
     getRowId: (row) => row.id,
     enableSorting: false,
+    // No pager on this page: TanStack v9 would otherwise cap rows at 10
+    initialState: {
+      pagination: { pageIndex: 0, pageSize: Number.MAX_SAFE_INTEGER },
+    },
   })
 
   return (
     <>
-      <Header />
-
       <Main className='flex flex-col gap-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div>

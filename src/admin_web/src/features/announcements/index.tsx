@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Send, Users } from 'lucide-react'
+import { Send, Users } from 'lucide-react'
+import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,10 +14,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { useLocale, useT } from '@/lib/i18n'
 import { announcementsService } from './service'
 
 export function AnnouncementsManagement() {
@@ -57,8 +57,6 @@ export function AnnouncementsManagement() {
 
   return (
     <>
-      <Header />
-
       <Main className='flex flex-col gap-6'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>
@@ -74,7 +72,10 @@ export function AnnouncementsManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className='flex max-w-xl flex-col gap-4'>
+            <form
+              onSubmit={handleSubmit}
+              className='flex max-w-xl flex-col gap-4'
+            >
               <div className='space-y-2'>
                 <Label htmlFor='announcementTitle'>{t('titleLabel')}</Label>
                 <Input
@@ -100,7 +101,7 @@ export function AnnouncementsManagement() {
               <div>
                 <Button type='submit' disabled={send.isPending}>
                   {send.isPending ? (
-                    <Loader2 className='me-2 h-4 w-4 animate-spin' />
+                    <Spinner className='me-2' />
                   ) : (
                     <Send className='me-2 h-4 w-4 rtl:-scale-x-100' />
                   )}
@@ -112,7 +113,7 @@ export function AnnouncementsManagement() {
         </Card>
 
         <div className='flex flex-col gap-3'>
-          <h2 className='text-sm font-semibold tracking-wide text-muted-foreground uppercase'>
+          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
             {t('sentSection')}
           </h2>
           {isLoading ? (

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type TableViewModel } from '@/api/spaces'
 import {
   createTableMutation,
   updateTableMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -14,10 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { useT } from '@/lib/i18n'
+import { Spinner } from '@/components/ui/spinner'
+import {
+  fromLocalizedValue,
+  LocalizedInput,
+  toLocalizedValue,
+  type LocalizedValue,
+} from '@/components/localized-input'
 
 interface TableDialogProps {
   /** The table being edited, or null when adding a new one. */
@@ -40,11 +44,8 @@ export function TableDialog({
   const queryClient = useQueryClient()
   const isEditing = table !== null
 
-  const [nameEn, setNameEn] = useState(
-    isEditing ? (table.name?.en ?? '') : suggestedName.en
-  )
-  const [nameAr, setNameAr] = useState(
-    isEditing ? (table.name?.ar ?? '') : suggestedName.ar
+  const [name, setName] = useState<LocalizedValue>(() =>
+    isEditing ? toLocalizedValue(table.name) : suggestedName
   )
 
   const create = useMutation(createTableMutation())
@@ -52,7 +53,7 @@ export function TableDialog({
   const isSaving = create.isPending || update.isPending
 
   const handleSave = async () => {
-    const body = { name: { en: nameEn.trim(), ar: nameAr.trim() || null } }
+    const body = { name: fromLocalizedValue(name) }
 
     try {
       if (isEditing) {
@@ -75,35 +76,20 @@ export function TableDialog({
           <DialogTitle>{t(isEditing ? 'editTable' : 'addTable')}</DialogTitle>
         </DialogHeader>
 
-        <div className='space-y-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='table-name-en'>{t('nameEnglish')}</Label>
-            <Input
-              id='table-name-en'
-              value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
-              placeholder={t('tableNameHint')}
-              dir='ltr'
-            />
-          </div>
-
-          <div className='space-y-2'>
-            <Label htmlFor='table-name-ar'>{t('nameArabic')}</Label>
-            <Input
-              id='table-name-ar'
-              value={nameAr}
-              onChange={(e) => setNameAr(e.target.value)}
-              dir='rtl'
-            />
-          </div>
-        </div>
+        <LocalizedInput
+          id='table-name'
+          label={t('name')}
+          value={name}
+          onChange={setName}
+          placeholder={{ en: t('tableNameHint') }}
+        />
 
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || !nameEn.trim()}>
-            {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+          <Button onClick={handleSave} disabled={isSaving || !name.en.trim()}>
+            {isSaving && <Spinner className='me-2' />}
             {t('save')}
           </Button>
         </DialogFooter>

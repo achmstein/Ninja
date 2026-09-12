@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { useT } from '@/lib/i18n'
 import { accountsService } from '../services/accounts-service'
 import type { KeycloakUser } from '../types'
 
@@ -24,7 +24,11 @@ interface AddChargeDialogProps {
   customer: KeycloakUser | null
 }
 
-export function AddChargeDialog({ open, onOpenChange, customer }: AddChargeDialogProps) {
+export function AddChargeDialog({
+  open,
+  onOpenChange,
+  customer,
+}: AddChargeDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState('')
@@ -33,7 +37,9 @@ export function AddChargeDialog({ open, onOpenChange, customer }: AddChargeDialo
   const addChargeMutation = useMutation({
     mutationFn: async () => {
       if (!customer) return
-      const customerName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.username
+      const customerName =
+        [customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
+        customer.username
       await accountsService.addCharge(customer.id, {
         amount: parseFloat(amount),
         description: description || undefined,
@@ -66,7 +72,8 @@ export function AddChargeDialog({ open, onOpenChange, customer }: AddChargeDialo
   }
 
   const customerName = customer
-    ? [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.username
+    ? [customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
+      customer.username
     : ''
 
   return (
@@ -111,7 +118,7 @@ export function AddChargeDialog({ open, onOpenChange, customer }: AddChargeDialo
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={addChargeMutation.isPending}>
-              {addChargeMutation.isPending && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
+              {addChargeMutation.isPending && <Spinner className='me-2' />}
               {t('addCharge')}
             </Button>
           </DialogFooter>

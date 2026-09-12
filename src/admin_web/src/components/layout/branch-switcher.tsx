@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useBranchStore } from '@/stores/branch-store'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useLocalized, useT } from '@/lib/i18n'
 
 /**
  * The sidebar header, in the shadcn-admin team-switcher shape: the cup mark

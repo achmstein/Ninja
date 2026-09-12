@@ -20,24 +20,18 @@ import {
 import { formatEgp, toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   DataTable,
   createAppColumnHelper,
   dataTableFeatures,
 } from '@/components/data-table'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
+import { ErrorState } from '@/components/error-state'
+import { Stat } from '@/components/stat-strip'
 import { OverShortBadge } from './components/shift-report'
 import { ShiftSheet } from './components/shift-sheet'
-import { StatTile } from './components/stat-tile'
+import { TillPage } from './till-page'
+import { useTillWindow } from './use-till-window'
 
 const route = getRouteApi('/_authenticated/till/shifts')
 
@@ -80,6 +74,12 @@ function getShiftColumns({ t, locale }: { t: Translate; locale: string }) {
         </span>
       ),
     }),
+    // The verdict is what a reviewer scans for: it comes right after the number
+    columnHelper.accessor('overShort', {
+      id: 'overShort',
+      header: t('overShort'),
+      cell: (info) => <OverShortBadge value={toNumber(info.getValue())} />,
+    }),
     columnHelper.accessor('openedAt', {
       id: 'openedAt',
       header: t('openedAt'),
@@ -112,18 +112,13 @@ function getShiftColumns({ t, locale }: { t: Translate; locale: string }) {
       header: () => <div className='text-end'>{t('counted')}</div>,
       cell: (info) => money(info.getValue()),
     }),
-    columnHelper.accessor('overShort', {
-      id: 'overShort',
-      header: t('overShort'),
-      cell: (info) => <OverShortBadge value={toNumber(info.getValue())} />,
-    }),
   ])
 }
 
 /**
  * The drawer as the back office reads it: the open shift as a live X report,
- * and the Z reports of every closed one. Nothing here opens, moves or
- * counts a drawer — that is the till's job.
+ * and the Z reports of every closed one in the window. Nothing here opens,
+ * moves or counts a drawer — that is the till's job.
  */
 export function TillShifts() {
   const t = useT()
@@ -133,9 +128,12 @@ export function TillShifts() {
   const navigate = route.useNavigate()
   const page = search.page ?? 1
   const [selected, setSelected] = useState<ShiftView | null>(null)
+  const { dayWindow, isAll, ready, fromIso, toIso } = useTillWindow(search, {
+    defaultPreset: 'all',
+  })
 
   // A 404 is the server's normal "no shift open" answer: never retried,
-  // never a toast, just the empty card
+  // never a toast, just the empty line
   const current = useQuery({
     ...getCurrentShiftOptions({ query: { 'api-version': API_VERSION } }),
     retry: false,
@@ -153,8 +151,11 @@ export function TillShifts() {
         'api-version': API_VERSION,
         pageIndex: page - 1,
         pageSize: PAGE_SIZE,
+        from: isAll ? undefined : fromIso || undefined,
+        to: isAll ? undefined : toIso || undefined,
       },
     }),
+    enabled: ready,
     placeholderData: keepPreviousData,
   })
 
@@ -186,100 +187,104 @@ export function TillShifts() {
 
   return (
     <>
-      <Header />
-
-      <Main className='flex flex-col gap-4'>
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            {t('tillShifts')}
-          </h1>
-          <p className='text-muted-foreground'>{t('tillShiftsSubtitle')}</p>
-        </div>
-
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between'>
-            <div>
-              <CardTitle>{t('currentShift')}</CardTitle>
-              <CardDescription>
-                {shift?.openedAt
-                  ? `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}${shift.openedBy ? ` · ${shift.openedBy}` : ''}`
-                  : t('tillShiftsSubtitle')}
-              </CardDescription>
-            </div>
+      <TillPage
+        tab='shifts'
+        search={search}
+        dayWindow={dayWindow}
+        defaultPreset='all'
+        onRangeChange={(next) =>
+          navigate({
+            search: (prev) => ({ ...prev, page: undefined, ...next }),
+          })
+        }
+      >
+        {/* The open shift, unboxed: its state, its one number, its report */}
+        <section className='flex flex-col gap-3'>
+          <div className='flex items-center gap-2'>
+            <span
+              className={`size-2 rounded-full ${shift ? 'bg-success' : 'bg-muted-foreground/40'}`}
+            />
+            <h2 className='text-sm font-semibold'>{t('currentShift')}</h2>
             {shift && <Badge>{t('shiftOpenBadge')}</Badge>}
-          </CardHeader>
-          <CardContent>
-            {current.isPending ? (
-              <Skeleton className='h-16 w-full' />
-            ) : shift ? (
-              <div className='flex flex-wrap items-end gap-3'>
-                <div className='grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4'>
-                  <StatTile
-                    label={t('expectedInDrawer')}
-                    value={formatEgp(shift.expectedInDrawer)}
-                  />
-                  <StatTile
-                    label={t('posTicketsSettled')}
-                    value={String(toNumber(shift.ticketsSettled))}
-                  />
-                  <StatTile
-                    label={t('salesTotal')}
-                    value={formatEgp(shift.salesTotal)}
-                  />
-                  <StatTile
-                    label={t('openingFloat')}
-                    value={formatEgp(shift.openingFloat)}
-                  />
-                </div>
-                <Button variant='outline' onClick={() => setSelected(shift)}>
-                  {t('viewReport')}
+          </div>
+          {current.isPending ? (
+            <Skeleton className='h-16 w-64' />
+          ) : shift ? (
+            <div className='flex flex-wrap items-end justify-between gap-4'>
+              <div className='flex flex-col gap-1'>
+                <Stat
+                  size='hero'
+                  label={t('expectedInDrawer')}
+                  value={formatEgp(shift.expectedInDrawer)}
+                />
+                <p className='text-muted-foreground text-sm'>
+                  {shift.openedAt &&
+                    `${t('openedAt')} ${dateTime.format(new Date(shift.openedAt))}`}
+                  {shift.openedBy && ` · ${shift.openedBy}`}
+                  {' · '}
+                  {t('posTicketsCount', {
+                    count: toNumber(shift.ticketsSettled),
+                  })}
+                  {' · '}
+                  {t('salesTotal')} {formatEgp(shift.salesTotal)}
+                </p>
+              </div>
+              <Button variant='outline' onClick={() => setSelected(shift)}>
+                {t('viewReport')}
+              </Button>
+            </div>
+          ) : noOpenShift ? (
+            <p className='text-muted-foreground text-sm'>
+              {t('noShiftOpen')} {t('noShiftOpenHint')}
+            </p>
+          ) : (
+            <ErrorState
+              className='py-6'
+              error={current.error}
+              onRetry={() => current.refetch()}
+            />
+          )}
+        </section>
+
+        <section className='flex flex-col gap-3'>
+          <h2 className='text-sm font-semibold'>{t('closedShifts')}</h2>
+          {closed.isError ? (
+            <ErrorState error={closed.error} onRetry={() => closed.refetch()} />
+          ) : (
+            <>
+              <DataTable
+                table={table}
+                isLoading={closed.isLoading}
+                emptyMessage={t('noClosedShifts')}
+                onRowClick={(row) => setSelected(row.original)}
+              />
+              <div className='flex items-center justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='size-8'
+                  disabled={page <= 1}
+                  onClick={() => goTo(page - 1)}
+                  aria-label={t('previousPage')}
+                >
+                  <ChevronLeft className='h-4 w-4 rtl:rotate-180' />
+                </Button>
+                <span className='text-sm tabular-nums'>{page}</span>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='size-8'
+                  disabled={rows.length < PAGE_SIZE}
+                  onClick={() => goTo(page + 1)}
+                  aria-label={t('nextPage')}
+                >
+                  <ChevronRight className='h-4 w-4 rtl:rotate-180' />
                 </Button>
               </div>
-            ) : noOpenShift ? (
-              <p className='text-muted-foreground text-sm'>
-                {t('noShiftOpen')} {t('noShiftOpenHint')}
-              </p>
-            ) : (
-              <p className='text-muted-foreground text-sm'>
-                {t('failedToLoad')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <h2 className='text-lg font-semibold'>{t('closedShifts')}</h2>
-
-        <DataTable
-          table={table}
-          isLoading={closed.isLoading}
-          emptyMessage={t('noClosedShifts')}
-          onRowClick={(row) => setSelected(row.original)}
-        />
-
-        <div className='flex items-center justify-end gap-2'>
-          <Button
-            variant='outline'
-            size='icon'
-            className='size-8'
-            disabled={page <= 1}
-            onClick={() => goTo(page - 1)}
-            aria-label={t('previousPage')}
-          >
-            <ChevronLeft className='h-4 w-4 rtl:rotate-180' />
-          </Button>
-          <span className='text-sm tabular-nums'>{page}</span>
-          <Button
-            variant='outline'
-            size='icon'
-            className='size-8'
-            disabled={rows.length < PAGE_SIZE}
-            onClick={() => goTo(page + 1)}
-            aria-label={t('nextPage')}
-          >
-            <ChevronRight className='h-4 w-4 rtl:rotate-180' />
-          </Button>
-        </div>
-      </Main>
+            </>
+          )}
+        </section>
+      </TillPage>
 
       <ShiftSheet
         shift={selected}

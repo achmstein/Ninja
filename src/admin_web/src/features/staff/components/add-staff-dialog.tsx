@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { getAllBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
   customersService,
@@ -219,9 +219,7 @@ export function AddStaffDialog({ open, onOpenChange }: AddStaffDialogProps) {
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={register.isPending}>
-              {register.isPending && (
-                <Loader2 className='me-2 h-4 w-4 animate-spin' />
-              )}
+              {register.isPending && <Spinner className='me-2' />}
               {t('create')}
             </Button>
           </DialogFooter>

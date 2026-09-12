@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,7 +27,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
-import { useT } from '@/lib/i18n'
 import {
   type NavCollapsible,
   type NavItem,
@@ -117,6 +117,8 @@ function SidebarMenuCollapsible({
 }) {
   const t = useT()
   const { setOpenMobile } = useSidebar()
+  // Sub-items defer to their siblings, so /till/tickets lights Tickets, not Sales
+  const subUrls = item.items.map((sub) => String(sub.url))
   return (
     <Collapsible
       asChild
@@ -138,7 +140,7 @@ function SidebarMenuCollapsible({
               <SidebarMenuSubItem key={subItem.title}>
                 <SidebarMenuSubButton
                   asChild
-                  isActive={checkIsActive(href, subItem)}
+                  isActive={checkIsActive(href, subItem, false, subUrls)}
                 >
                   <Link to={subItem.url} onClick={() => setOpenMobile(false)}>
                     {subItem.icon && <subItem.icon />}
@@ -163,13 +165,14 @@ function SidebarMenuCollapsedDropdown({
   href: string
 }) {
   const t = useT()
+  const subUrls = item.items.map((sub) => String(sub.url))
   return (
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton
             tooltip={t(item.title)}
-            isActive={checkIsActive(href, item)}
+            isActive={checkIsActive(href, item, true)}
           >
             {item.icon && <item.icon />}
             <span>{t(item.title)}</span>
@@ -186,7 +189,7 @@ function SidebarMenuCollapsedDropdown({
             <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
               <Link
                 to={sub.url}
-                className={`${checkIsActive(href, sub) ? 'bg-secondary' : ''}`}
+                className={`${checkIsActive(href, sub, false, subUrls) ? 'bg-secondary' : ''}`}
               >
                 {sub.icon && <sub.icon />}
                 <span className='max-w-52 text-wrap'>{t(sub.title)}</span>
@@ -214,11 +217,22 @@ function checkIsActive(
     path === item.url || // endpoint
     !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
     // child pages without their own nav item (e.g. /rooms/history → Rooms),
-    // unless a sibling item claims the path exactly (e.g. /menu/categories)
+    // unless a sibling item claims the path or a longer prefix of it
+    // (e.g. /menu/categories, /inventory/history/purchases → History)
     (typeof item.url === 'string' &&
       item.url !== '/' &&
       path.startsWith(`${item.url}/`) &&
-      !groupUrls.includes(path)) ||
+      !groupUrls.some(
+        (url) =>
+          url !== item.url && (path === url || path.startsWith(`${url}/`))
+      )) ||
+    // a collapsible section is active when any page under its first segment is
+    (mainNav &&
+      !!item.items &&
+      item.items.some((sub) => {
+        const subPath = String(sub.url)
+        return path === subPath || path.startsWith(`${subPath}/`)
+      })) ||
     (mainNav &&
       href.split('/')[1] !== '' &&
       href.split('/')[1] === item?.url?.split('/')[1])

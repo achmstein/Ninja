@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
+import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { getRealmRoles } from '@/config/oidc-config'
-import { serviceRequestsService } from '@/features/requests/service'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -12,17 +11,19 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { serviceRequestsService } from '@/features/requests/service'
 import { BranchSwitcher } from './branch-switcher'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
+import { type NavItem } from './types'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
   const auth = useAuth()
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
-  // Pending-order count badge on Live Orders, kept fresh by SignalR
+  // Pending-order count badge on Orders, kept fresh by SignalR
   const { data: pendingOrders = [] } = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
     refetchInterval: 60_000,
@@ -40,13 +41,20 @@ export function AppSidebar() {
     '/requests': serviceRequests.length,
   }
 
+  const withBadge = <T extends { url?: string }>(item: T): T => {
+    const count = item.url ? badges[String(item.url)] : undefined
+    return count ? { ...item, badge: String(count) } : item
+  }
+
   const navGroups = sidebarData.navGroups
     .filter((group) => !group.ownerOnly || isOwner)
     .map((group) => ({
       ...group,
-      items: group.items.map((item) => {
-        const count = item.url ? badges[String(item.url)] : undefined
-        return count ? { ...item, badge: String(count) } : item
+      items: group.items.map((item): NavItem => {
+        if (item.items) {
+          return { ...item, items: item.items.map(withBadge) }
+        }
+        return withBadge(item)
       }),
     }))
 
