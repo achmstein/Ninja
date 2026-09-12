@@ -129,4 +129,11 @@ public record OrderSummary
     /// <summary>Phone a guest left at checkout, so staff can reach an order with no account behind it.</summary>
     public string? GuestPhone { get; init; }
     public int? RatingValue { get; init; }
+    /// <summary>The customer's note, on the pending queue only (null on paginated lists).</summary>
+    public string? CustomerNote { get; init; }
+    /// <summary>
+    /// Line items, on the pending queue only so the admin board renders a whole
+    /// ticket from one request; null on paginated lists.
+    /// </summary>
+    public IReadOnlyList<Orderitem>? Items { get; init; }
 }

@@ -19,7 +19,7 @@ public interface IShiftQueries
     Task<ShiftView?> GetShiftAsync(int shiftId);
 
     /// <summary>Closed shifts, newest first — the Z-report history.</summary>
-    Task<IEnumerable<ShiftView>> GetClosedShiftsAsync(int branchId, int pageIndex, int pageSize);
+    Task<IEnumerable<ShiftView>> GetClosedShiftsAsync(int branchId, int pageIndex, int pageSize, DateTime? from = null, DateTime? to = null);
 
     Task<ShiftCashTotals> GetShiftCashAsync(int shiftId);
 }
@@ -44,11 +44,14 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
         return shift is null ? null : await BuildViewAsync(shift);
     }
 
-    public async Task<IEnumerable<ShiftView>> GetClosedShiftsAsync(int branchId, int pageIndex, int pageSize)
+    public async Task<IEnumerable<ShiftView>> GetClosedShiftsAsync(int branchId, int pageIndex, int pageSize, DateTime? from = null, DateTime? to = null)
     {
+        // A shift belongs to the business day it opened on
         var shifts = await context.Shifts
             .AsNoTracking()
             .Where(s => s.BranchId == branchId && s.Status == ShiftStatus.Closed)
+            .Where(s => from == null || s.OpenedAt >= from.Value)
+            .Where(s => to == null || s.OpenedAt <= to.Value)
             .OrderByDescending(s => s.OpenedAt)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)

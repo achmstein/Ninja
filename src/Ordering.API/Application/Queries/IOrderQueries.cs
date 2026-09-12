@@ -42,7 +42,9 @@ public interface IOrderQueries
         string? buyerId = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
-        int? sessionId = null);
+        int? sessionId = null,
+        string? search = null,
+        string? sort = null);
 
     /// <summary>
     /// Aggregated per-day and per-item order statistics (admin dashboard),

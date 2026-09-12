@@ -236,7 +236,7 @@ public class Order
     /// <summary>
     /// Add item to the order
     /// </summary>
-    public void AddOrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null)
+    public void AddOrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null)
     {
         // When items have customizations, treat them as unique items (don't combine)
         var existingOrderForProduct = customizationsDescription == null
@@ -256,7 +256,7 @@ public class Order
         else
         {
             // Add validated new order item
-            var orderItem = new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units, customizationsDescription, specialInstructions);
+            var orderItem = new OrderItem(productId, productName, unitPrice, discount, pictureUrl, units, customizationsDescription, specialInstructions, optionIds);
             _orderItems.Add(orderItem);
         }
     }

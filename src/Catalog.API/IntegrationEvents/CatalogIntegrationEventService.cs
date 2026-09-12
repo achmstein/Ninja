@@ -25,9 +25,13 @@ public sealed class CatalogIntegrationEventService(ILogger<CatalogIntegrationEve
         }
     }
 
-    public async Task SaveEventAndCatalogContextChangesAsync(IntegrationEvent evt)
+    public Task SaveEventAndCatalogContextChangesAsync(IntegrationEvent evt)
+        => SaveEventsAndCatalogContextChangesAsync([evt]);
+
+    public async Task SaveEventsAndCatalogContextChangesAsync(IEnumerable<IntegrationEvent> events)
     {
-        logger.LogInformation("CatalogIntegrationEventService - Saving changes and integrationEvent: {IntegrationEventId}", evt.Id);
+        var eventList = events.ToList();
+        logger.LogInformation("CatalogIntegrationEventService - Saving changes and integrationEvents: {IntegrationEventIds}", eventList.Select(e => e.Id));
 
         //Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
         //See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency            
@@ -35,7 +39,10 @@ public sealed class CatalogIntegrationEventService(ILogger<CatalogIntegrationEve
         {
             // Achieving atomicity between original catalog database operation and the IntegrationEventLog thanks to a local transaction
             await catalogContext.SaveChangesAsync();
-            await integrationEventLogService.SaveEventAsync(evt, catalogContext.Database.CurrentTransaction);
+            foreach (var evt in eventList)
+            {
+                await integrationEventLogService.SaveEventAsync(evt, catalogContext.Database.CurrentTransaction);
+            }
         });
     }
 

@@ -27,7 +27,8 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             type = "service_request",
             requestId = @event.RequestId,
             requestType = @event.RequestType.ToString(),
-            roomId = @event.RoomId
+            roomId = @event.RoomId,
+            branchId = @event.BranchId
         });
 
         // Get staff subscribed to ServiceRequests for this branch

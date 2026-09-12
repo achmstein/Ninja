@@ -188,6 +188,7 @@ internal static class Extensions
         IResourceBuilder<ProjectResource> orderingApi,
         IResourceBuilder<ProjectResource> spacesApi,
         IResourceBuilder<ProjectResource> salesApi,
+        IResourceBuilder<ProjectResource> inventoryApi,
         IResourceBuilder<ProjectResource> identityApi,
         IResourceBuilder<ProjectResource> loyaltyApi,
         IResourceBuilder<ProjectResource> notificationApi,
@@ -236,6 +237,11 @@ internal static class Extensions
 
             // Drawer shifts, the till's other Sales.API group
             yarp.AddRoute("/api/shifts/{*any}", salesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
+            // Inventory (stock items, levels, receipts, counts, recipes)
+            var inventoryCluster = yarp.AddCluster(inventoryApi);
+            yarp.AddRoute("/api/inventory/{*any}", inventoryCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
             // Identity routes (for user registration)

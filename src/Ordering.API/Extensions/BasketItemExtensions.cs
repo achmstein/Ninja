@@ -31,7 +31,12 @@ public static class BasketItemExtensions
             UnitPrice = item.TotalPrice,
             Units = item.Quantity,
             SpecialInstructions = item.SpecialInstructions,
-            CustomizationsDescription = customizationsDescription
+            CustomizationsDescription = customizationsDescription,
+            // Kept structured beside the description: Inventory deducts an
+            // option's ingredients by id, never by parsing the text
+            OptionIds = item.SelectedCustomizations.Count > 0
+                ? item.SelectedCustomizations.Select(c => c.OptionId).Where(id => id > 0).Distinct().ToList()
+                : null
         };
     }
 

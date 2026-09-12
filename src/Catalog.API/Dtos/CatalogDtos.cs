@@ -15,6 +15,12 @@ public record CatalogItemDto
     public int CatalogTypeId { get; init; }
     public LocalizedText CatalogTypeName { get; init; } = new();
     public bool IsAvailable { get; init; }
+    /// <summary>
+    /// Inventory ran out of something this item needs at the requested branch.
+    /// Already folded into <see cref="IsAvailable"/>; exposed so staff can tell
+    /// a stock-out from a manual sold-out.
+    /// </summary>
+    public bool IsOutOfStock { get; init; }
     public bool IsOnOffer { get; init; }
     public decimal? OfferPrice { get; init; }
     public decimal EffectivePrice { get; init; }
@@ -22,6 +28,32 @@ public record CatalogItemDto
     public int? PreparationTimeMinutes { get; init; }
     public int DisplayOrder { get; init; }
     public List<ItemCustomizationDto> Customizations { get; init; } = new();
+    /// <summary>
+    /// The chain-wide values when a branch override changed what this DTO
+    /// shows (price, offer, availability); null when nothing is overridden.
+    /// The admin edits the item from these, not from the branch-effective ones.
+    /// </summary>
+    public CatalogItemBaseDto? Base { get; init; }
+}
+
+/// <summary>The item as the chain defines it, before any branch override.</summary>
+public record CatalogItemBaseDto(decimal Price, decimal? OfferPrice, bool IsOnOffer, bool IsAvailable);
+
+/// <summary>
+/// What the admin may change on a menu item. Display order is owned by the
+/// reorder endpoint and the picture by the upload endpoint.
+/// </summary>
+public record UpdateCatalogItemRequest
+{
+    public LocalizedText Name { get; init; } = new();
+    public LocalizedText Description { get; init; } = new();
+    public decimal Price { get; init; }
+    public int CatalogTypeId { get; init; }
+    public bool IsAvailable { get; init; } = true;
+    public bool IsOnOffer { get; init; }
+    public decimal? OfferPrice { get; init; }
+    public bool IsPopular { get; init; }
+    public int? PreparationTimeMinutes { get; init; }
 }
 
 /// <summary>
@@ -57,6 +89,11 @@ public record CustomizationOptionDto
     public decimal PriceAdjustment { get; init; }
     public bool IsDefault { get; init; }
     public int DisplayOrder { get; init; }
+    /// <summary>
+    /// True when Inventory has marked this option sold out at the branch the
+    /// request was scoped to; always false without a branch context.
+    /// </summary>
+    public bool IsOutOfStock { get; init; }
 }
 
 /// <summary>
@@ -214,6 +251,7 @@ public record BranchItemOverrideDto(
     int BranchId,
     int CatalogItemId,
     bool IsAvailable,
+    bool IsOutOfStock,
     decimal? PriceOverride,
     decimal? OfferPriceOverride,
     bool? IsOnOfferOverride);

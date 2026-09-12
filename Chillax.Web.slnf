@@ -13,6 +13,9 @@
       "src\\EventBus\\EventBus.csproj",
       "src\\EventBusRabbitMQ\\EventBusRabbitMQ.csproj",
       "src\\Identity.API\\Identity.API.csproj",
+      "src\\Inventory.API\\Inventory.API.csproj",
+      "src\\Inventory.Domain\\Inventory.Domain.csproj",
+      "src\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
       "src\\IntegrationEventLogEF\\IntegrationEventLogEF.csproj",
       "src\\Loyalty.API\\Loyalty.API.csproj",
       "src\\Notification.API\\Notification.API.csproj",
@@ -25,6 +28,7 @@
       "tests\\Accounts.UnitTests\\Accounts.UnitTests.csproj",
       "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
       "tests\\Identity.UnitTests\\Identity.UnitTests.csproj",
+      "tests\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
       "tests\\Ordering.FunctionalTests\\Ordering.FunctionalTests.csproj",
       "tests\\Ordering.UnitTests\\Ordering.UnitTests.csproj"
     ]

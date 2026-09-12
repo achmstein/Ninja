@@ -26,7 +26,9 @@ public static class Extensions
                .AddSubscription<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>()
                .AddSubscription<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>()
                .AddSubscription<OrderConfirmedWithPreferencesIntegrationEvent, OrderConfirmedWithPreferencesIntegrationEventHandler>()
-               .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>();
+               .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
+               .AddSubscription<CatalogItemStockChangedIntegrationEvent, CatalogItemStockChangedIntegrationEventHandler>()
+               .AddSubscription<CatalogOptionStockChangedIntegrationEvent, CatalogOptionStockChangedIntegrationEventHandler>();
 
         builder.Services.AddOptions<CatalogOptions>()
             .BindConfiguration(nameof(CatalogOptions));

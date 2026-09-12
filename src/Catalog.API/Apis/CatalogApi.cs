@@ -380,7 +380,8 @@ public static class CatalogApi
             .ToListAsync();
 
         var overrides = await GetBranchOverrides(services.Context, branchId, items.Select(i => i.Id));
-        return TypedResults.Ok(items.ToDtoList(overrides, baseUrl));
+        var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId);
+        return TypedResults.Ok(items.ToDtoList(overrides, optionStockOuts, baseUrl));
     }
 
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
@@ -409,7 +410,8 @@ public static class CatalogApi
             .ToListAsync();
 
         var overrides = await GetBranchOverrides(services.Context, branchId, items.Select(i => i.Id));
-        var dtos = items.ToDtoList(overrides, baseUrl);
+        var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId);
+        var dtos = items.ToDtoList(overrides, optionStockOuts, baseUrl);
         // Filter by branch-level availability
         return TypedResults.Ok(dtos.Where(d => d.IsAvailable).ToList());
     }
@@ -696,7 +698,7 @@ public static class CatalogApi
     public static async Task<Results<Ok, NotFound<ProblemDetails>>> UpdateItem(
         [Description("The id of the menu item to update")] int id,
         [AsParameters] CatalogServices services,
-        CatalogItem productToUpdate)
+        UpdateCatalogItemRequest productToUpdate)
     {
         var catalogItem = await services.Context.CatalogItems.SingleOrDefaultAsync(i => i.Id == id);
 
@@ -718,7 +720,7 @@ public static class CatalogApi
         catalogItem.OfferPrice = productToUpdate.OfferPrice;
         catalogItem.IsPopular = productToUpdate.IsPopular;
         catalogItem.PreparationTimeMinutes = productToUpdate.PreparationTimeMinutes;
-        catalogItem.DisplayOrder = productToUpdate.DisplayOrder;
+        // DisplayOrder is owned by /items/reorder: an edit must never reshuffle the menu
 
         var priceChanged = services.Context.Entry(catalogItem).Property(i => i.Price).IsModified;
 
@@ -796,6 +798,12 @@ public static class CatalogApi
             if (existing != null)
             {
                 existing.IsAvailable = newAvailability;
+                // Marking it available by hand overrides Inventory's stock-out
+                // ("we found a box in the back"); it comes back on the next stock event
+                if (newAvailability)
+                {
+                    existing.IsOutOfStock = false;
+                }
             }
             else
             {
@@ -808,13 +816,14 @@ public static class CatalogApi
                 services.Context.BranchItemOverrides.Add(existing);
             }
 
-            // A branch can only restrict, so the event carries the effective
-            // state the branch's menus now show
+            // A branch can only restrict (by hand or by an Inventory stock-out),
+            // so the event carries the effective state the branch's menus now show
             var branchChangedEvent = new CatalogItemAvailabilityChangedIntegrationEvent(
-                id, branchId.Value, item.IsAvailable && newAvailability);
+                id, branchId.Value, item.IsAvailable && newAvailability && !existing.IsOutOfStock);
             await services.EventService.SaveEventAndCatalogContextChangesAsync(branchChangedEvent);
             await services.EventService.PublishThroughEventBusAsync(branchChangedEvent);
-            return TypedResults.Ok(item.ToDto(existing, baseUrl));
+            var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId.Value);
+            return TypedResults.Ok(item.ToDto(existing, optionStockOuts, baseUrl));
         }
 
         // No branch header: modify global availability
@@ -890,7 +899,8 @@ public static class CatalogApi
             }
 
             await services.Context.SaveChangesAsync();
-            return TypedResults.Ok(item.ToDto(existing, baseUrl));
+            var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId.Value);
+            return TypedResults.Ok(item.ToDto(existing, optionStockOuts, baseUrl));
         }
 
         // No branch header: modify global offer
@@ -903,6 +913,7 @@ public static class CatalogApi
 
     public static async Task<Results<Ok<List<ItemCustomizationDto>>, NotFound>> GetItemCustomizations(
         [AsParameters] CatalogServices services,
+        HttpContext httpContext,
         [Description("The id of the menu item")] int id)
     {
         var item = await services.Context.CatalogItems.SingleOrDefaultAsync(x => x.Id == id);
@@ -918,7 +929,17 @@ public static class CatalogApi
             .OrderBy(c => c.DisplayOrder)
             .ToListAsync();
 
-        return TypedResults.Ok(customizations.ToDtoList());
+        // Branch-optional: with the header the options carry that branch's
+        // stock-outs (what admin's customizations sheet shows); without it
+        // the flag stays false
+        var branchId = httpContext.GetBranchId();
+        if (branchId is null)
+        {
+            return TypedResults.Ok(customizations.ToDtoList());
+        }
+
+        var optionStockOuts = await GetBranchOptionStockOuts(services.Context, branchId.Value);
+        return TypedResults.Ok(customizations.ToDtoList(optionStockOuts));
     }
 
     // Upload picture handler
@@ -1707,7 +1728,7 @@ public static class CatalogApi
 
         return TypedResults.Ok(new BranchItemOverrideDto(
             existing.Id, existing.BranchId, existing.CatalogItemId,
-            existing.IsAvailable, existing.PriceOverride,
+            existing.IsAvailable, existing.IsOutOfStock, existing.PriceOverride,
             existing.OfferPriceOverride, existing.IsOnOfferOverride));
     }
 
@@ -1737,7 +1758,7 @@ public static class CatalogApi
             .Where(o => o.BranchId == branchId)
             .Select(o => new BranchItemOverrideDto(
                 o.Id, o.BranchId, o.CatalogItemId,
-                o.IsAvailable, o.PriceOverride,
+                o.IsAvailable, o.IsOutOfStock, o.PriceOverride,
                 o.OfferPriceOverride, o.IsOnOfferOverride))
             .ToListAsync();
 
@@ -1753,5 +1774,18 @@ public static class CatalogApi
         return await context.BranchItemOverrides
             .Where(o => o.BranchId == branchId && itemIds.Contains(o.CatalogItemId))
             .ToDictionaryAsync(o => o.CatalogItemId);
+    }
+
+    /// <summary>
+    /// Helper to load the ids of every customization option Inventory has
+    /// marked sold out at a branch (one small query per request).
+    /// </summary>
+    private static async Task<IReadOnlySet<int>> GetBranchOptionStockOuts(CatalogContext context, int branchId)
+    {
+        var ids = await context.BranchOptionStockOuts
+            .Where(s => s.BranchId == branchId)
+            .Select(s => s.CustomizationOptionId)
+            .ToListAsync();
+        return ids.ToHashSet();
     }
 }

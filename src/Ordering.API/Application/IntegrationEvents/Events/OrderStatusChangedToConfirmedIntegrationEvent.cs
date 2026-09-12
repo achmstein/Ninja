@@ -62,6 +62,13 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     public IReadOnlyList<OrderConfirmedItem> Items { get; }
 
+    /// <summary>
+    /// When the sale happened: now for a live order, the till's clock for an
+    /// offline replay. Inventory uses it to leave alone stock that was
+    /// counted after the sale but before the replay arrived.
+    /// </summary>
+    public DateTime PlacedAt { get; init; }
+
     public OrderStatusChangedToConfirmedIntegrationEvent(
         int orderId,
         OrderStatus orderStatus,
@@ -114,4 +121,6 @@ public record OrderConfirmedItem(
     int Units,
     decimal UnitPrice,
     decimal Discount,
-    LocalizedText? CustomizationsDescription);
+    LocalizedText? CustomizationsDescription,
+    /// <summary>The chosen customization options by id, so Inventory can charge option ingredients.</summary>
+    List<int>? OptionIds = null);

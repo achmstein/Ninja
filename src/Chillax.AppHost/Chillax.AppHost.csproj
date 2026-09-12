@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Ordering.API\Ordering.API.csproj" />
     <ProjectReference Include="..\Spaces.API\Spaces.API.csproj" />
     <ProjectReference Include="..\Sales.API\Sales.API.csproj" />
+    <ProjectReference Include="..\Inventory.API\Inventory.API.csproj" />
     <ProjectReference Include="..\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Loyalty.API\Loyalty.API.csproj" />
     <ProjectReference Include="..\Notification.API\Notification.API.csproj" />

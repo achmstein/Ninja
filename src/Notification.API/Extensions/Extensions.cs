@@ -43,7 +43,8 @@ public static class Extensions
             .AddSubscription<OrderReminderIntegrationEvent, OrderReminderIntegrationEventHandler>()
             .AddSubscription<TicketUpdatedIntegrationEvent, TicketUpdatedIntegrationEventHandler>()
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
-            .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>();
+            .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
+            .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>();
     }
 }
 
@@ -63,6 +64,7 @@ public static class Extensions
 [JsonSerializable(typeof(OrderReminderIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemAvailabilityChangedIntegrationEvent))]
+[JsonSerializable(typeof(StockLowIntegrationEvent))]
 public partial class NotificationIntegrationEventContext : JsonSerializerContext
 {
 }

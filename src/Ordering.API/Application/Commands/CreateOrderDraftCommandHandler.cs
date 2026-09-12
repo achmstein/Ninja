@@ -68,4 +68,9 @@ public record OrderItemDTO
     /// Localized description of selected customizations for display
     /// </summary>
     public LocalizedText? CustomizationsDescription { get; init; }
+
+    /// <summary>
+    /// The chosen customization options by id, for Inventory's recipes
+    /// </summary>
+    public List<int>? OptionIds { get; init; }
 }

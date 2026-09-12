@@ -637,6 +637,8 @@ public static partial class OrdersApi
         DateTime? fromDate = null,
         DateTime? toDate = null,
         int? sessionId = null,
+        string? search = null,
+        string? sort = null,
         [AsParameters] OrderServices services = default!)
     {
         var branchId = httpContext.GetRequiredBranchId();
@@ -647,7 +649,7 @@ public static partial class OrdersApi
             : status.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var orders = await services.Queries.GetAllOrdersAsync(
-            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId);
+            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId, search, sort);
         return TypedResults.Ok(orders);
     }
 

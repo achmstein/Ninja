@@ -1,0 +1,90 @@
+#nullable enable
+using Chillax.Inventory.Infrastructure.Idempotency;
+
+namespace Chillax.Inventory.API.Application.Commands;
+
+/// <summary>
+/// The one-tap way to track a menu item sold as-is (a can, a bottle, a
+/// slice): a stock item named after it, counted in pieces, selling the menu
+/// item out when it runs dry, and a recipe of one each.
+/// </summary>
+public record TrackByUnitCommand(int CatalogItemId, LocalizedText Name) : IRequest<int>;
+
+public class TrackByUnitCommandHandler(
+    IStockItemRepository stockItems,
+    IRecipeRepository recipes) : IRequestHandler<TrackByUnitCommand, int>
+{
+    public async Task<int> Handle(TrackByUnitCommand command, CancellationToken cancellationToken)
+    {
+        if (await recipes.GetAsync(command.CatalogItemId) is not null)
+            throw new InventoryDomainException("This menu item already has a recipe.");
+
+        var item = stockItems.Add(StockItem.Create(command.Name, "pcs", null, null, autoSoldOut: true));
+        await stockItems.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        recipes.Add(Recipe.ForUnit(command.CatalogItemId, item.Id));
+        await recipes.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        return item.Id;
+    }
+}
+
+public class TrackByUnitIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<TrackByUnitCommand, int>> logger)
+    : IdentifiedCommandHandler<TrackByUnitCommand, int>(mediator, requestManager, logger)
+{
+    protected override Task<int> CreateResultForDuplicateRequestAsync(TrackByUnitCommand command, CancellationToken cancellationToken)
+        => Task.FromResult(0);
+}
+
+/// <summary>A line; <paramref name="OptionIds"/> empty or omitted means the base recipe.</summary>
+public record RecipeLineInput(int StockItemId, decimal Quantity, List<int>? OptionIds = null);
+
+/// <summary>Replace a menu item's recipe (creating it if the item was untracked).</summary>
+public record SetRecipeCommand(int CatalogItemId, IReadOnlyList<RecipeLineInput> Lines) : IRequest<bool>;
+
+public class SetRecipeCommandHandler(
+    IStockItemRepository stockItems,
+    IRecipeRepository recipes) : IRequestHandler<SetRecipeCommand, bool>
+{
+    public async Task<bool> Handle(SetRecipeCommand command, CancellationToken cancellationToken)
+    {
+        var known = await stockItems.GetManyAsync(command.Lines.Select(l => l.StockItemId));
+        var missing = command.Lines.Select(l => l.StockItemId).Except(known.Select(s => s.Id)).ToList();
+
+        if (missing.Count > 0)
+            throw new InventoryDomainException("A recipe line names a stock item that does not exist.");
+
+        var lines = command.Lines.Select(l => new RecipeLine(l.StockItemId, l.Quantity, l.OptionIds));
+
+        var recipe = await recipes.GetAsync(command.CatalogItemId);
+
+        if (recipe is null)
+            recipes.Add(new Recipe(command.CatalogItemId, lines));
+        else
+            recipe.SetLines(lines);
+
+        await recipes.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        return true;
+    }
+}
+
+/// <summary>Stop tracking a menu item. Its stock items and their history stay.</summary>
+public record RemoveRecipeCommand(int CatalogItemId) : IRequest<bool>;
+
+public class RemoveRecipeCommandHandler(IRecipeRepository recipes) : IRequestHandler<RemoveRecipeCommand, bool>
+{
+    public async Task<bool> Handle(RemoveRecipeCommand command, CancellationToken cancellationToken)
+    {
+        var recipe = await recipes.GetAsync(command.CatalogItemId);
+
+        if (recipe is null)
+            return false;
+
+        recipes.Remove(recipe);
+        await recipes.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        return true;
+    }
+}

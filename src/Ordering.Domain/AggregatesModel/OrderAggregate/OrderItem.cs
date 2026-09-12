@@ -32,9 +32,17 @@ public class OrderItem
     /// </summary>
     public string? SpecialInstructions { get; private set; }
 
+    /// <summary>
+    /// The catalog customization options chosen on this line, by id. The
+    /// description above is what people read; this is what Inventory reads,
+    /// so a recipe can charge oat milk only when oat milk was picked. Null
+    /// when nothing was chosen (and on lines from before it was recorded).
+    /// </summary>
+    public List<int>? OptionIds { get; private set; }
+
     protected OrderItem() { }
 
-    public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null)
+    public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null)
     {
         if (units <= 0)
         {
@@ -55,6 +63,9 @@ public class OrderItem
         PictureUrl = pictureUrl;
         CustomizationsDescription = customizationsDescription;
         SpecialInstructions = specialInstructions;
+
+        var options = optionIds?.Where(id => id > 0).Distinct().ToList();
+        OptionIds = options is { Count: > 0 } ? options : null;
     }
     
     public void SetNewDiscount(decimal discount)

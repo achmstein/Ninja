@@ -88,11 +88,13 @@ public static class ShiftsApi
         HttpContext httpContext,
         [FromServices] IShiftQueries queries,
         int pageIndex = 0,
-        int pageSize = 20)
+        int pageSize = 20,
+        DateTime? from = null,
+        DateTime? to = null)
     {
         var branchId = httpContext.GetRequiredBranchId();
         pageSize = Math.Clamp(pageSize, 1, 50);
-        return TypedResults.Ok(await queries.GetClosedShiftsAsync(branchId, Math.Max(0, pageIndex), pageSize));
+        return TypedResults.Ok(await queries.GetClosedShiftsAsync(branchId, Math.Max(0, pageIndex), pageSize, from, to));
     }
 
     public static async Task<Results<Ok, BadRequest<string>>> AddMovement(

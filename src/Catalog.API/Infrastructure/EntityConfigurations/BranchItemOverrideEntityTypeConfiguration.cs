@@ -11,6 +11,7 @@ class BranchItemOverrideEntityTypeConfiguration : IEntityTypeConfiguration<Branc
         builder.Property(o => o.BranchId).IsRequired();
         builder.Property(o => o.CatalogItemId).IsRequired();
         builder.Property(o => o.IsAvailable).IsRequired();
+        builder.Property(o => o.IsOutOfStock).IsRequired().HasDefaultValue(false);
 
         builder.Property(o => o.PriceOverride).HasPrecision(18, 2);
         builder.Property(o => o.OfferPriceOverride).HasPrecision(18, 2);

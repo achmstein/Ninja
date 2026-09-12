@@ -91,7 +91,11 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
                 oi.Units,
                 oi.UnitPrice,
                 oi.Discount,
-                oi.CustomizationsDescription)).ToList());
+                oi.CustomizationsDescription,
+                oi.OptionIds)).ToList())
+        {
+            PlacedAt = order.OrderDate,
+        };
 
         await _orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);
     }

@@ -17,6 +17,15 @@ public class BranchItemOverride
     public bool IsAvailable { get; set; } = true;
 
     /// <summary>
+    /// Set by Inventory when a stock item this menu item needs ran out at this
+    /// branch, cleared when it is back. Separate from the manual
+    /// <see cref="IsAvailable"/> switch so the two never fight: staff can still
+    /// mark an item sold out by hand, and marking it available by hand clears
+    /// this flag ("we found a box in the back").
+    /// </summary>
+    public bool IsOutOfStock { get; set; }
+
+    /// <summary>
     /// Branch-specific price override (null = use global price)
     /// </summary>
     public decimal? PriceOverride { get; set; }

@@ -1,0 +1,16 @@
+global using Asp.Versioning;
+global using Asp.Versioning.Conventions;
+global using Chillax.IntegrationEventLogEF.Services;
+global using Chillax.Inventory.API.Application.Behaviors;
+global using Chillax.Inventory.API.Application.IntegrationEvents;
+global using Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+global using Chillax.Inventory.Domain.AggregatesModel.PurchaseAggregate;
+global using Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
+global using Chillax.Inventory.Domain.AggregatesModel.StockCountAggregate;
+global using Chillax.Inventory.Domain.AggregatesModel.StockItemAggregate;
+global using Chillax.Inventory.Domain.Exceptions;
+global using Chillax.Inventory.Domain.SeedWork;
+global using Chillax.Inventory.Domain.Services;
+global using Chillax.ServiceDefaults;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;

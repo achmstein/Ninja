@@ -188,7 +188,17 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 GuestPhone = o.GuestPhone,
-                RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
+                RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null,
+                CustomerNote = o.CustomerNote,
+                Items = o.OrderItems.Select(oi => new Orderitem
+                {
+                    ProductName = oi.ProductName,
+                    Units = oi.Units,
+                    UnitPrice = (double)oi.UnitPrice,
+                    PictureUrl = oi.PictureUrl,
+                    CustomizationsDescription = oi.CustomizationsDescription,
+                    SpecialInstructions = oi.SpecialInstructions
+                }).ToList()
             })
             .ToListAsync();
     }
@@ -201,7 +211,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         string? buyerId = null,
         DateTime? fromDate = null,
         DateTime? toDate = null,
-        int? sessionId = null)
+        int? sessionId = null,
+        string? search = null,
+        string? sort = null)
     {
         var query = context.Orders.AsNoTracking().Include(o => o.Buyer)
             .Where(o => o.BranchId == branchId);
@@ -232,10 +244,35 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         if (toDate.HasValue)
             query = query.Where(o => o.OrderDate <= toDate.Value);
 
+        // A number is an order number; anything else matches the buyer or guest name
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            if (int.TryParse(term, out var orderNumber))
+            {
+                query = query.Where(o => o.Id == orderNumber);
+            }
+            else
+            {
+                var pattern = $"%{term}%";
+                query = query.Where(o =>
+                    (o.Buyer != null && EF.Functions.ILike(o.Buyer.Name, pattern)) ||
+                    (o.GuestName != null && EF.Functions.ILike(o.GuestName, pattern)));
+            }
+        }
+
         var totalCount = await query.CountAsync();
 
-        var items = await query
-            .OrderByDescending(o => o.OrderDate)
+        // Newest first unless the admin sorts the table otherwise
+        var ordered = sort switch
+        {
+            "date_asc" => query.OrderBy(o => o.OrderDate),
+            "total_desc" => query.OrderByDescending(o => o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount)),
+            "total_asc" => query.OrderBy(o => o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount)),
+            _ => query.OrderByDescending(o => o.OrderDate)
+        };
+
+        var items = await ordered
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
             .Select(o => new OrderSummary

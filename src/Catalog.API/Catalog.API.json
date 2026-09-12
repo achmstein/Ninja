@@ -277,7 +277,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CatalogItem"
+                "$ref": "#/components/schemas/UpdateCatalogItemRequest"
               }
             }
           },
@@ -2835,6 +2835,7 @@
           "branchId",
           "catalogItemId",
           "isAvailable",
+          "isOutOfStock",
           "priceOverride",
           "offerPriceOverride",
           "isOnOfferOverride"
@@ -2866,6 +2867,9 @@
             "format": "int32"
           },
           "isAvailable": {
+            "type": "boolean"
+          },
+          "isOutOfStock": {
             "type": "boolean"
           },
           "priceOverride": {
@@ -3148,6 +3152,40 @@
           }
         }
       },
+      "CatalogItemBaseDto": {
+        "required": [
+          "price",
+          "offerPrice",
+          "isOnOffer",
+          "isAvailable"
+        ],
+        "type": "object",
+        "properties": {
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "offerPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "isOnOffer": {
+            "type": "boolean"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          }
+        }
+      },
       "CatalogItemDto": {
         "type": "object",
         "properties": {
@@ -3191,6 +3229,9 @@
             "$ref": "#/components/schemas/LocalizedText"
           },
           "isAvailable": {
+            "type": "boolean"
+          },
+          "isOutOfStock": {
             "type": "boolean"
           },
           "isOnOffer": {
@@ -3238,6 +3279,16 @@
             "items": {
               "$ref": "#/components/schemas/ItemCustomizationDto"
             }
+          },
+          "base": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CatalogItemBaseDto"
+              }
+            ]
           }
         }
       },
@@ -3416,6 +3467,9 @@
               "string"
             ],
             "format": "int32"
+          },
+          "isOutOfStock": {
+            "type": "boolean"
           }
         }
       },
@@ -3701,6 +3755,60 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "UpdateCatalogItemRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "description": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogTypeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "isOnOffer": {
+            "type": "boolean"
+          },
+          "offerPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "isPopular": {
+            "type": "boolean"
+          },
+          "preparationTimeMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

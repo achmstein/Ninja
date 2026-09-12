@@ -42,6 +42,11 @@ namespace Catalog.API.Infrastructure.Migrations
                     b.Property<bool?>("IsOnOfferOverride")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsOutOfStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<decimal?>("OfferPriceOverride")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -58,6 +63,30 @@ namespace Catalog.API.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("BranchItemOverrides", (string)null);
+                });
+
+            modelBuilder.Entity("Chillax.Catalog.API.Model.BranchOptionStockOut", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CustomizationOptionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomizationOptionId");
+
+                    b.HasIndex("BranchId", "CustomizationOptionId")
+                        .IsUnique();
+
+                    b.ToTable("BranchOptionStockOuts", (string)null);
                 });
 
             modelBuilder.Entity("Chillax.Catalog.API.Model.BundleDeal", b =>
@@ -391,6 +420,17 @@ namespace Catalog.API.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("CatalogItem");
+                });
+
+            modelBuilder.Entity("Chillax.Catalog.API.Model.BranchOptionStockOut", b =>
+                {
+                    b.HasOne("Chillax.Catalog.API.Model.CustomizationOption", "CustomizationOption")
+                        .WithMany()
+                        .HasForeignKey("CustomizationOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CustomizationOption");
                 });
 
             modelBuilder.Entity("Chillax.Catalog.API.Model.BundleDeal", b =>

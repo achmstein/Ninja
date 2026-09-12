@@ -7,6 +7,8 @@ namespace Chillax.Catalog.API.Dtos;
 /// </summary>
 public static class CatalogMappers
 {
+    private static readonly IReadOnlySet<int> NoOptionStockOuts = new HashSet<int>();
+
     public static CatalogItemDto ToDto(this CatalogItem item, string? baseUrl = null)
     {
         return new CatalogItemDto
@@ -34,10 +36,13 @@ public static class CatalogMappers
     /// <summary>
     /// Maps a catalog item to DTO with branch-specific overrides applied.
     /// </summary>
-    public static CatalogItemDto ToDto(this CatalogItem item, BranchItemOverride? branchOverride, string? baseUrl = null)
+    public static CatalogItemDto ToDto(this CatalogItem item, BranchItemOverride? branchOverride, IReadOnlySet<int> outOfStockOptionIds, string? baseUrl = null)
     {
         if (branchOverride == null)
-            return item.ToDto(baseUrl);
+            return item.ToDto(baseUrl) with
+            {
+                Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto(outOfStockOptionIds)).ToList()
+            };
 
         var isOnOffer = branchOverride.IsOnOfferOverride ?? item.IsOnOffer;
         var price = branchOverride.PriceOverride ?? item.Price;
@@ -55,15 +60,18 @@ public static class CatalogMappers
                 : $"{baseUrl}/api/catalog/items/{item.Id}/pic?v={Uri.EscapeDataString(item.PictureFileName)}",
             CatalogTypeId = item.CatalogTypeId,
             CatalogTypeName = item.CatalogType?.Name ?? new LocalizedText(),
-            // A branch can only restrict: a global sold-out always wins
-            IsAvailable = item.IsAvailable && branchOverride.IsAvailable,
+            // A branch can only restrict: a global sold-out always wins, and a
+            // stock-out is a restriction Inventory applies on top of the manual switch
+            IsAvailable = item.IsAvailable && branchOverride.IsAvailable && !branchOverride.IsOutOfStock,
+            IsOutOfStock = branchOverride.IsOutOfStock,
             IsOnOffer = isOnOffer,
             OfferPrice = offerPrice,
             EffectivePrice = effectivePrice,
             IsPopular = item.IsPopular,
             PreparationTimeMinutes = item.PreparationTimeMinutes,
             DisplayOrder = item.DisplayOrder,
-            Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto()).ToList()
+            Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto(outOfStockOptionIds)).ToList(),
+            Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable)
         };
     }
 
@@ -75,9 +83,9 @@ public static class CatalogMappers
     /// <summary>
     /// Maps items to DTOs with branch-specific overrides applied.
     /// </summary>
-    public static List<CatalogItemDto> ToDtoList(this IEnumerable<CatalogItem> items, Dictionary<int, BranchItemOverride> overrides, string? baseUrl = null)
+    public static List<CatalogItemDto> ToDtoList(this IEnumerable<CatalogItem> items, Dictionary<int, BranchItemOverride> overrides, IReadOnlySet<int> outOfStockOptionIds, string? baseUrl = null)
     {
-        return items.Select(i => i.ToDto(overrides.GetValueOrDefault(i.Id), baseUrl)).ToList();
+        return items.Select(i => i.ToDto(overrides.GetValueOrDefault(i.Id), outOfStockOptionIds, baseUrl)).ToList();
     }
 
     public static CatalogTypeDto ToDto(this CatalogType type)
@@ -97,6 +105,14 @@ public static class CatalogMappers
 
     public static ItemCustomizationDto ToDto(this ItemCustomization customization)
     {
+        return customization.ToDto(NoOptionStockOuts);
+    }
+
+    /// <summary>
+    /// Maps a customization with a branch's option stock-outs applied.
+    /// </summary>
+    public static ItemCustomizationDto ToDto(this ItemCustomization customization, IReadOnlySet<int> outOfStockOptionIds)
+    {
         return new ItemCustomizationDto
         {
             Id = customization.Id,
@@ -104,7 +120,7 @@ public static class CatalogMappers
             IsRequired = customization.IsRequired,
             AllowMultiple = customization.AllowMultiple,
             DisplayOrder = customization.DisplayOrder,
-            Options = customization.Options.OrderBy(o => o.DisplayOrder).Select(o => o.ToDto()).ToList()
+            Options = customization.Options.OrderBy(o => o.DisplayOrder).Select(o => o.ToDto(outOfStockOptionIds)).ToList()
         };
     }
 
@@ -113,7 +129,23 @@ public static class CatalogMappers
         return customizations.Select(c => c.ToDto()).ToList();
     }
 
+    /// <summary>
+    /// Maps customizations with a branch's option stock-outs applied.
+    /// </summary>
+    public static List<ItemCustomizationDto> ToDtoList(this IEnumerable<ItemCustomization> customizations, IReadOnlySet<int> outOfStockOptionIds)
+    {
+        return customizations.Select(c => c.ToDto(outOfStockOptionIds)).ToList();
+    }
+
     public static CustomizationOptionDto ToDto(this CustomizationOption option)
+    {
+        return option.ToDto(NoOptionStockOuts);
+    }
+
+    /// <summary>
+    /// Maps an option, flagging it sold out when the branch's stock-outs name it.
+    /// </summary>
+    public static CustomizationOptionDto ToDto(this CustomizationOption option, IReadOnlySet<int> outOfStockOptionIds)
     {
         return new CustomizationOptionDto
         {
@@ -121,7 +153,8 @@ public static class CatalogMappers
             Name = option.Name,
             PriceAdjustment = option.PriceAdjustment,
             IsDefault = option.IsDefault,
-            DisplayOrder = option.DisplayOrder
+            DisplayOrder = option.DisplayOrder,
+            IsOutOfStock = outOfStockOptionIds.Contains(option.Id)
         };
     }
 

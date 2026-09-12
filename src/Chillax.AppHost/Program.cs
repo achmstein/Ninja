@@ -26,6 +26,7 @@ var catalogDb = postgres.AddDatabase("catalogdb");
 var orderDb = postgres.AddDatabase("orderingdb");
 var spacesDb = postgres.AddDatabase("spacesdb");
 var salesDb = postgres.AddDatabase("salesdb");
+var inventoryDb = postgres.AddDatabase("inventorydb");
 var loyaltyDb = postgres.AddDatabase("loyaltydb");
 var branchDb = postgres.AddDatabase("branchdb");
 var notificationDb = postgres.AddDatabase("notificationdb");
@@ -104,6 +105,13 @@ var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
+var inventoryApi = builder.AddProject<Projects.Inventory_API>("inventory-api")
+    .WithReference(inventoryDb).WaitFor(inventoryDb)
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithReference(keycloak)
+    .WithEnvironment("Identity__Url", keycloakRealmUrl)
+    .WithEnvironment("Keycloak__Realm", "chillax");
+
 var identityApi = builder.AddProject<Projects.Identity_API>("identity-api")
     .WithReference(keycloak).WaitFor(keycloak)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
@@ -155,6 +163,7 @@ ConfigureApiService(catalogApi, "catalog");
 ConfigureApiService(orderingApi, "ordering");
 ConfigureApiService(spacesApi, "spaces");
 ConfigureApiService(salesApi, "sales");
+ConfigureApiService(inventoryApi, "inventory");
 ConfigureApiService(identityApi, "identity");
 ConfigureApiService(loyaltyApi, "loyalty");
 notificationApi.PublishAsDockerComposeService((resource, service) =>
@@ -189,7 +198,7 @@ var mobileBff = builder.AddYarp("mobile-bff")
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
-    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
 
 // Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
 // the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
