@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
+  // Sent by the 401 handler: the stored token was rejected, re-authenticate
+  expired: z.boolean().optional(),
 })
 
 export const Route = createFileRoute('/(auth)/sign-in')({
@@ -37,14 +39,23 @@ function SignIn() {
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
-  const { redirect } = useSearch({ from: '/(auth)/sign-in' })
+  const { redirect, expired } = useSearch({ from: '/(auth)/sign-in' })
   const redirectStarted = useRef(false)
 
+  // A token the API rejected is dropped first, otherwise the local user
+  // still counts as signed in and the app would bounce straight back to the
+  // page that 401'd, forever.
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (expired && auth.isAuthenticated) {
+      auth.removeUser()
+    }
+  }, [expired, auth])
+
+  useEffect(() => {
+    if (auth.isAuthenticated && !expired) {
       navigate({ to: redirect || '/', replace: true })
     }
-  }, [auth.isAuthenticated, navigate, redirect])
+  }, [auth.isAuthenticated, expired, navigate, redirect])
 
   const beginSignIn = () => {
     if (redirect) {

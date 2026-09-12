@@ -2066,6 +2066,12 @@ abstract class AppLocalizations {
   /// **'Sold out'**
   String get soldOut;
 
+  /// No description provided for @outOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStock;
+
   /// No description provided for @available.
   ///
   /// In en, this message translates to:

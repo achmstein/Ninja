@@ -609,6 +609,7 @@
   "noReceipts": "No receipts yet",
   "availability": "Availability",
   "soldOut": "Sold out",
+  "outOfStock": "Out of stock",
   "available": "Available",
   "searchItems": "Search items",
   "noItemsMatch": "No items match",

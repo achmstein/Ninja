@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, createBundle, createCategory, createCustomization, createItem, deleteBundle, deleteBundlePicture, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, getAvailableItems, getBranchOverrides, getBundle, getBundlePicture, getBundles, getCategory, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getUserFavorites, getUserPreference, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, type Options, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, setBranchItemOverride, setItemOffer, toggleBundleActive, toggleItemAvailability, updateBundle, updateCategory, updateCustomization, updateItem, uploadBundlePicture, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateBundleData, CreateBundleResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, DeleteBundleData, DeleteBundlePictureData, DeleteBundlePictureResponse, DeleteBundleResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetBundleData, GetBundlePictureData, GetBundleResponse, GetBundlesData, GetBundlesResponse, GetCategoryData, GetCategoryResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, ToggleBundleActiveData, ToggleBundleActiveResponse, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateBundleData, UpdateBundleResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UploadBundlePictureData, UploadBundlePictureError, UploadBundlePictureResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, createBundle, createCategory, createCustomization, createItem, deleteBundle, deleteBundlePicture, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, getAvailableItems, getBranchOverrides, getBundle, getBundlePicture, getBundles, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, type Options, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, saveUserPreferencesForCustomer, setBranchItemOverride, setItemOffer, toggleBundleActive, toggleItemAvailability, updateBundle, updateCategory, updateCustomization, updateItem, uploadBundlePicture, uploadItemPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateBundleData, CreateBundleResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, DeleteBundleData, DeleteBundlePictureData, DeleteBundlePictureResponse, DeleteBundleResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetBundleData, GetBundlePictureData, GetBundleResponse, GetBundlesData, GetBundlesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, ToggleBundleActiveData, ToggleBundleActiveResponse, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateBundleData, UpdateBundleResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UploadBundlePictureData, UploadBundlePictureError, UploadBundlePictureResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -545,6 +545,26 @@ export const getUserPreferenceOptions = (options: Options<GetUserPreferenceData>
     queryKey: getUserPreferenceQueryKey(options)
 });
 
+export const getUserPreferenceForCustomerQueryKey = (options: Options<GetUserPreferenceForCustomerData>) => createQueryKey('getUserPreferenceForCustomer', options);
+
+/**
+ * Get a specific customer's saved preferences for a menu item
+ *
+ * Staff-only: read a given customer's saved customization preferences for a menu item, so the till can pre-fill the customize dialog when that customer is attached to the sale.
+ */
+export const getUserPreferenceForCustomerOptions = (options: Options<GetUserPreferenceForCustomerData>) => queryOptions<GetUserPreferenceForCustomerResponse, AxiosError<DefaultError>, GetUserPreferenceForCustomerResponse, ReturnType<typeof getUserPreferenceForCustomerQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getUserPreferenceForCustomer({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getUserPreferenceForCustomerQueryKey(options)
+});
+
 export const getUserPreferencesQueryKey = (options?: Options<GetUserPreferencesData>) => createQueryKey('getUserPreferences', options);
 
 /**
@@ -593,6 +613,25 @@ export const getUserPreferencesForItemsMutation = (options?: Partial<Options<Get
     const mutationOptions: UseMutationOptions<GetUserPreferencesForItemsResponse, AxiosError<DefaultError>, Options<GetUserPreferencesForItemsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await getUserPreferencesForItems({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Save a specific customer's preferences
+ *
+ * Staff-only: record a given customer's customization choices after a POS order, so they pre-fill next time.
+ */
+export const saveUserPreferencesForCustomerMutation = (options?: Partial<Options<SaveUserPreferencesForCustomerData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SaveUserPreferencesForCustomerData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SaveUserPreferencesForCustomerData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveUserPreferencesForCustomer({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -834,6 +873,46 @@ export const addFavoriteMutation = (options?: Partial<Options<AddFavoriteData>>)
     };
     return mutationOptions;
 };
+
+export const getMyTopItemsQueryKey = (options?: Options<GetMyTopItemsData>) => createQueryKey('getMyTopItems', options);
+
+/**
+ * Get my most-ordered items
+ *
+ * The current user's most-frequently-ordered catalog item IDs, ranked, for the customer menu's 'your usuals' section.
+ */
+export const getMyTopItemsOptions = (options?: Options<GetMyTopItemsData>) => queryOptions<GetMyTopItemsResponse, AxiosError<DefaultError>, GetMyTopItemsResponse, ReturnType<typeof getMyTopItemsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMyTopItems({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMyTopItemsQueryKey(options)
+});
+
+export const getCustomerTopItemsQueryKey = (options: Options<GetCustomerTopItemsData>) => createQueryKey('getCustomerTopItems', options);
+
+/**
+ * Get a customer's most-ordered items
+ *
+ * Staff-only: a given customer's most-frequently-ordered catalog item IDs, ranked, for the till's usuals quick-pick.
+ */
+export const getCustomerTopItemsOptions = (options: Options<GetCustomerTopItemsData>) => queryOptions<GetCustomerTopItemsResponse, AxiosError<DefaultError>, GetCustomerTopItemsResponse, ReturnType<typeof getCustomerTopItemsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCustomerTopItems({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCustomerTopItemsQueryKey(options)
+});
 
 /**
  * Remove per-branch item override

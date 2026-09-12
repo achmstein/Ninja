@@ -63,7 +63,7 @@ export const listAccountsOptions = (options: Options<ListAccountsData>) => query
 /**
  * Create loyalty account
  *
- * Create a new loyalty account for a user
+ * Enroll a user in the program — themself, or the back office on their behalf
  */
 export const createAccountMutation = (options?: Partial<Options<CreateAccountData>>): UseMutationOptions<CreateAccountResponse, AxiosError<CreateAccountError>, Options<CreateAccountData>> => {
     const mutationOptions: UseMutationOptions<CreateAccountResponse, AxiosError<CreateAccountError>, Options<CreateAccountData>> = {
@@ -84,7 +84,7 @@ export const getAccountQueryKey = (options: Options<GetAccountData>) => createQu
 /**
  * Get loyalty account
  *
- * Get a loyalty account by user ID
+ * Get a loyalty account by user ID — the user themself, or till staff
  */
 export const getAccountOptions = (options: Options<GetAccountData>) => queryOptions<GetAccountResponse, AxiosError<DefaultError>, GetAccountResponse, ReturnType<typeof getAccountQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -104,7 +104,7 @@ export const getBalanceQueryKey = (options: Options<GetBalanceData>) => createQu
 /**
  * Get points balance
  *
- * Get the current points balance for a user
+ * Get the current points balance for a user — the user themself, or till staff
  */
 export const getBalanceOptions = (options: Options<GetBalanceData>) => queryOptions<GetBalanceResponse, AxiosError<DefaultError>, GetBalanceResponse, ReturnType<typeof getBalanceQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -124,7 +124,7 @@ export const getTransactionsQueryKey = (options: Options<GetTransactionsData>) =
 /**
  * Get transaction history
  *
- * Get all transactions for a user
+ * Get all transactions for a user — the user themself, or till staff
  */
 export const getTransactionsOptions = (options: Options<GetTransactionsData>) => queryOptions<GetTransactionsResponse, AxiosError<DefaultError>, GetTransactionsResponse, ReturnType<typeof getTransactionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -142,7 +142,7 @@ export const getTransactionsOptions = (options: Options<GetTransactionsData>) =>
 /**
  * Earn points
  *
- * Add points to a user's account
+ * Add points to a user's account (Admin only)
  */
 export const earnPointsMutation = (options?: Partial<Options<EarnPointsData>>): UseMutationOptions<EarnPointsResponse, AxiosError<EarnPointsError>, Options<EarnPointsData>> => {
     const mutationOptions: UseMutationOptions<EarnPointsResponse, AxiosError<EarnPointsError>, Options<EarnPointsData>> = {

@@ -1148,6 +1148,12 @@ abstract class AppLocalizations {
   /// **'Required'**
   String get required;
 
+  /// No description provided for @outOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStock;
+
   /// No description provided for @loyaltyRewards.
   ///
   /// In en, this message translates to:

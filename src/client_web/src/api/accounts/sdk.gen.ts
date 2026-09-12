@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddChargeData, AddChargeErrors, AddChargeResponses, GetAccountByCustomerIdData, GetAccountByCustomerIdErrors, GetAccountByCustomerIdResponses, GetAllAccountsData, GetAllAccountsErrors, GetAllAccountsResponses, GetMyAccountData, GetMyAccountErrors, GetMyAccountResponses, GetMyTransactionsData, GetMyTransactionsErrors, GetMyTransactionsResponses, RecordPaymentData, RecordPaymentErrors, RecordPaymentResponses, SearchAccountsData, SearchAccountsErrors, SearchAccountsResponses } from './types.gen';
+import type { AddChargeData, AddChargeErrors, AddChargeResponses, GetAccountBalanceData, GetAccountBalanceErrors, GetAccountBalanceResponses, GetAccountByCustomerIdData, GetAccountByCustomerIdErrors, GetAccountByCustomerIdResponses, GetAllAccountsData, GetAllAccountsErrors, GetAllAccountsResponses, GetMyAccountData, GetMyAccountErrors, GetMyAccountResponses, GetMyTransactionsData, GetMyTransactionsErrors, GetMyTransactionsResponses, RecordPaymentData, RecordPaymentErrors, RecordPaymentResponses, SearchAccountsData, SearchAccountsErrors, SearchAccountsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -59,6 +59,17 @@ export const getAllAccounts = <ThrowOnError extends boolean = false>(options?: O
 export const searchAccounts = <ThrowOnError extends boolean = false>(options?: Options<SearchAccountsData, ThrowOnError>): RequestResult<SearchAccountsResponses, SearchAccountsErrors, ThrowOnError> => (options?.client ?? client).get<SearchAccountsResponses, SearchAccountsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/accounts/search',
+    ...options
+});
+
+/**
+ * Get a customer's tab balance
+ *
+ * Balance alone, no transactions (till staff). 404 when the customer has no tab yet. Positive = owed.
+ */
+export const getAccountBalance = <ThrowOnError extends boolean = false>(options: Options<GetAccountBalanceData, ThrowOnError>): RequestResult<GetAccountBalanceResponses, GetAccountBalanceErrors, ThrowOnError> => (options.client ?? client).get<GetAccountBalanceResponses, GetAccountBalanceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/accounts/{customerId}/balance',
     ...options
 });
 

@@ -170,6 +170,42 @@ export type SearchAccountsResponses = {
 
 export type SearchAccountsResponse = SearchAccountsResponses[keyof SearchAccountsResponses];
 
+export type GetAccountBalanceData = {
+    body?: never;
+    path: {
+        /**
+         * The customer ID
+         */
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/accounts/{customerId}/balance';
+};
+
+export type GetAccountBalanceErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetAccountBalanceResponses = {
+    /**
+     * OK
+     */
+    200: AccountSummaryViewModel;
+};
+
+export type GetAccountBalanceResponse = GetAccountBalanceResponses[keyof GetAccountBalanceResponses];
+
 export type GetAccountByCustomerIdData = {
     body?: never;
     path: {

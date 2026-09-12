@@ -29,6 +29,7 @@ export type BalanceDto = {
 
 export type CreateAccountRequest = {
     userId: string;
+    userDisplayName?: null | string;
 };
 
 export type EarnPointsRequest = {

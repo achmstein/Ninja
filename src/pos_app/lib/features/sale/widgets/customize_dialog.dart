@@ -50,8 +50,10 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
   @override
   void initState() {
     super.initState();
+    // A sold-out default is never pre-selected
     _selections = {
-      for (final c in item.customizations) c.id: c.options.where((o) => o.isDefault).map((o) => o.id).toList(),
+      for (final c in item.customizations)
+        c.id: c.options.where((o) => o.isDefault && !o.isOutOfStock).map((o) => o.id).toList(),
     };
     _loadPreference();
   }
@@ -64,7 +66,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
     setState(() {
       var appliedAny = false;
       for (final c in item.customizations) {
-        final validOptionIds = c.options.map((o) => o.id).toSet();
+        final validOptionIds = c.options.where((o) => !o.isOutOfStock).map((o) => o.id).toSet();
         final chosen = (saved[c.id] ?? const <int>[]).where(validOptionIds.contains).toList();
         // Only overlay groups the customer actually has a saved choice for;
         // leave the item default in place otherwise.
@@ -185,6 +187,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                       label: option.name.localized(context),
                       adjustment: option.priceAdjustment,
                       selected: (_selections[customization.id] ?? const []).contains(option.id),
+                      outOfStockLabel: option.isOutOfStock ? l10n.outOfStock : null,
                       onTap: () => _toggle(customization, option.id),
                     ),
                 ],
@@ -246,22 +249,34 @@ class _OptionChip extends StatelessWidget {
   final String label;
   final double adjustment;
   final bool selected;
+  /// Non-null when the option is sold out: the chip is disabled and shows
+  /// this hint instead of the price adjustment.
+  final String? outOfStockLabel;
   final VoidCallback onTap;
 
-  const _OptionChip({required this.label, required this.adjustment, required this.selected, required this.onTap});
+  const _OptionChip({
+    required this.label,
+    required this.adjustment,
+    required this.selected,
+    required this.onTap,
+    this.outOfStockLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final outOfStock = outOfStockLabel != null;
     return SizedBox(
       height: 44,
       child: FButton(
         variant: selected ? null : FButtonVariant.outline,
         mainAxisSize: MainAxisSize.min,
-        onPress: onTap,
-        suffix: adjustment > 0
-            ? Opacity(opacity: 0.7, child: Text('+${adjustment.toStringAsFixed(adjustment == adjustment.roundToDouble() ? 0 : 2)}', style: theme.typography.xs.forButton))
-            : null,
+        onPress: outOfStock ? null : onTap,
+        suffix: outOfStock
+            ? Opacity(opacity: 0.7, child: Text(outOfStockLabel!, style: theme.typography.xs.forButton))
+            : adjustment > 0
+                ? Opacity(opacity: 0.7, child: Text('+${adjustment.toStringAsFixed(adjustment == adjustment.roundToDouble() ? 0 : 2)}', style: theme.typography.xs.forButton))
+                : null,
         child: Text(label, style: theme.typography.base.forButton),
       ),
     );

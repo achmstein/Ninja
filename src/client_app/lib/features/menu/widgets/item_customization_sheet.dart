@@ -40,16 +40,21 @@ class _ItemCustomizationSheetState
   void _initializeWithDefaults() {
     for (final customization in widget.item.customizations) {
       final defaults = customization.options
-          .where((o) => o.isDefault)
+          .where((o) => o.isDefault && !o.isOutOfStock)
           .map((o) => o.id)
           .toList();
       if (defaults.isNotEmpty) {
         _selectedOptions[customization.id] = defaults;
-      } else if (customization.isRequired && customization.options.isNotEmpty) {
-        _selectedOptions[customization.id] = [customization.options.first.id];
+      } else if (customization.isRequired) {
+        final first = _firstInStockOption(customization);
+        if (first != null) _selectedOptions[customization.id] = [first.id];
       }
     }
   }
+
+  /// Sold-out options are shown but never picked on the customer's behalf.
+  CustomizationOption? _firstInStockOption(ItemCustomization customization) =>
+      customization.options.where((o) => !o.isOutOfStock).firstOrNull;
 
   Future<void> _loadSavedPreferences() async {
     final service = ref.read(menuRepositoryProvider);
@@ -73,10 +78,11 @@ class _ItemCustomizationSheetState
     for (final customization in widget.item.customizations) {
       final savedOptions = savedByCustomization[customization.id];
       if (savedOptions != null && savedOptions.isNotEmpty) {
-        // Filter to only options that still exist in the catalog
+        // Filter to only options that still exist in the catalog and are
+        // not sold out right now
         final validOptions = savedOptions
-            .where((optionId) =>
-                customization.options.any((o) => o.id == optionId))
+            .where((optionId) => customization.options
+                .any((o) => o.id == optionId && !o.isOutOfStock))
             .toList();
 
         if (validOptions.isNotEmpty) {
@@ -89,8 +95,9 @@ class _ItemCustomizationSheetState
     for (final customization in widget.item.customizations) {
       if (customization.isRequired) {
         final selected = _selectedOptions[customization.id] ?? [];
-        if (selected.isEmpty && customization.options.isNotEmpty) {
-          _selectedOptions[customization.id] = [customization.options.first.id];
+        if (selected.isEmpty) {
+          final first = _firstInStockOption(customization);
+          if (first != null) _selectedOptions[customization.id] = [first.id];
         }
       }
     }
@@ -513,15 +520,17 @@ class _ItemCustomizationSheetState
                 : '';
 
         return InkWell(
-          onTap: () {
-            setState(() {
-              if (isSelected && !customization.isRequired) {
-                _selectedOptions.remove(customization.id);
-              } else {
-                _selectedOptions[customization.id] = [option.id];
-              }
-            });
-          },
+          onTap: option.isOutOfStock
+              ? null
+              : () {
+                  setState(() {
+                    if (isSelected && !customization.isRequired) {
+                      _selectedOptions.remove(customization.id);
+                    } else {
+                      _selectedOptions[customization.id] = [option.id];
+                    }
+                  });
+                },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
@@ -532,15 +541,17 @@ class _ItemCustomizationSheetState
                   child: Radio<int>(
                     value: option.id,
                     groupValue: selectedId,
-                    onChanged: (value) {
-                      setState(() {
-                        if (value != null) {
-                          _selectedOptions[customization.id] = [value];
-                        } else if (!customization.isRequired) {
-                          _selectedOptions.remove(customization.id);
-                        }
-                      });
-                    },
+                    onChanged: option.isOutOfStock
+                        ? null
+                        : (value) {
+                            setState(() {
+                              if (value != null) {
+                                _selectedOptions[customization.id] = [value];
+                              } else if (!customization.isRequired) {
+                                _selectedOptions.remove(customization.id);
+                              }
+                            });
+                          },
                     activeColor: colors.primary,
                   ),
                 ),
@@ -549,12 +560,17 @@ class _ItemCustomizationSheetState
                   child: AppText(
                     option.name.getText(locale),
                     style: TextStyle(
-                      color: colors.foreground,
+                      color: option.isOutOfStock ? colors.mutedForeground : colors.foreground,
                       fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
                     ),
                   ),
                 ),
-                if (priceText.isNotEmpty)
+                if (option.isOutOfStock)
+                  AppText(
+                    l10n.outOfStock,
+                    style: TextStyle(color: colors.mutedForeground, fontSize: 13),
+                  )
+                else if (priceText.isNotEmpty)
                   AppText(
                     priceText,
                     style: TextStyle(
@@ -585,17 +601,19 @@ class _ItemCustomizationSheetState
                 : '';
 
         return InkWell(
-          onTap: () {
-            setState(() {
-              final current = List<int>.from(selectedIds);
-              if (isSelected) {
-                current.remove(option.id);
-              } else {
-                current.add(option.id);
-              }
-              _selectedOptions[customization.id] = current;
-            });
-          },
+          onTap: option.isOutOfStock
+              ? null
+              : () {
+                  setState(() {
+                    final current = List<int>.from(selectedIds);
+                    if (isSelected) {
+                      current.remove(option.id);
+                    } else {
+                      current.add(option.id);
+                    }
+                    _selectedOptions[customization.id] = current;
+                  });
+                },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
@@ -605,17 +623,19 @@ class _ItemCustomizationSheetState
                   height: 24,
                   child: Checkbox(
                     value: isSelected,
-                    onChanged: (value) {
-                      setState(() {
-                        final current = List<int>.from(selectedIds);
-                        if (value == true) {
-                          current.add(option.id);
-                        } else {
-                          current.remove(option.id);
-                        }
-                        _selectedOptions[customization.id] = current;
-                      });
-                    },
+                    onChanged: option.isOutOfStock
+                        ? null
+                        : (value) {
+                            setState(() {
+                              final current = List<int>.from(selectedIds);
+                              if (value == true) {
+                                current.add(option.id);
+                              } else {
+                                current.remove(option.id);
+                              }
+                              _selectedOptions[customization.id] = current;
+                            });
+                          },
                     activeColor: colors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
@@ -627,12 +647,17 @@ class _ItemCustomizationSheetState
                   child: AppText(
                     option.name.getText(locale),
                     style: TextStyle(
-                      color: colors.foreground,
+                      color: option.isOutOfStock ? colors.mutedForeground : colors.foreground,
                       fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
                     ),
                   ),
                 ),
-                if (priceText.isNotEmpty)
+                if (option.isOutOfStock)
+                  AppText(
+                    l10n.outOfStock,
+                    style: TextStyle(color: colors.mutedForeground, fontSize: 13),
+                  )
+                else if (priceText.isNotEmpty)
                   AppText(
                     priceText,
                     style: TextStyle(

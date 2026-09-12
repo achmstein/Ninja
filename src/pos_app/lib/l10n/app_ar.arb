@@ -609,6 +609,7 @@
   "noReceipts": "مفيش إيصالات لسه",
   "availability": "التوفر",
   "soldOut": "خلص",
+  "outOfStock": "خلص",
   "available": "متاح",
   "searchItems": "دوّر على الأصناف",
   "noItemsMatch": "مفيش أصناف بالاسم ده",

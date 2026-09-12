@@ -657,16 +657,17 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
 
     final selectedOptions = <int, List<int>>{};
 
-    // Apply defaults first
+    // Apply defaults first (never a sold-out option)
     for (final customization in item.customizations) {
       final defaults = customization.options
-          .where((o) => o.isDefault)
+          .where((o) => o.isDefault && !o.isOutOfStock)
           .map((o) => o.id)
           .toList();
       if (defaults.isNotEmpty) {
         selectedOptions[customization.id] = defaults;
-      } else if (customization.isRequired && customization.options.isNotEmpty) {
-        selectedOptions[customization.id] = [customization.options.first.id];
+      } else if (customization.isRequired) {
+        final first = customization.options.where((o) => !o.isOutOfStock).firstOrNull;
+        if (first != null) selectedOptions[customization.id] = [first.id];
       }
     }
 
@@ -682,8 +683,8 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
         final savedOpts = savedByCustomization[customization.id];
         if (savedOpts != null && savedOpts.isNotEmpty) {
           final validOptions = savedOpts
-              .where((optionId) =>
-                  customization.options.any((o) => o.id == optionId))
+              .where((optionId) => customization.options
+                  .any((o) => o.id == optionId && !o.isOutOfStock))
               .toList();
           if (validOptions.isNotEmpty) {
             selectedOptions[customization.id] = validOptions;

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateBundleData, CreateBundleErrors, CreateBundleResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, DeleteBundleData, DeleteBundleErrors, DeleteBundlePictureData, DeleteBundlePictureErrors, DeleteBundlePictureResponses, DeleteBundleResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetBundleData, GetBundleErrors, GetBundlePictureData, GetBundlePictureErrors, GetBundleResponses, GetBundlesData, GetBundlesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, ToggleBundleActiveData, ToggleBundleActiveErrors, ToggleBundleActiveResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateBundleData, UpdateBundleErrors, UpdateBundleResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UploadBundlePictureData, UploadBundlePictureErrors, UploadBundlePictureResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
+import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateBundleData, CreateBundleErrors, CreateBundleResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, DeleteBundleData, DeleteBundleErrors, DeleteBundlePictureData, DeleteBundlePictureErrors, DeleteBundlePictureResponses, DeleteBundleResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetBundleData, GetBundleErrors, GetBundlePictureData, GetBundlePictureErrors, GetBundleResponses, GetBundlesData, GetBundlesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, ToggleBundleActiveData, ToggleBundleActiveErrors, ToggleBundleActiveResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateBundleData, UpdateBundleErrors, UpdateBundleResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UploadBundlePictureData, UploadBundlePictureErrors, UploadBundlePictureResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -331,6 +331,17 @@ export const getUserPreference = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
+ * Get a specific customer's saved preferences for a menu item
+ *
+ * Staff-only: read a given customer's saved customization preferences for a menu item, so the till can pre-fill the customize dialog when that customer is attached to the sale.
+ */
+export const getUserPreferenceForCustomer = <ThrowOnError extends boolean = false>(options: Options<GetUserPreferenceForCustomerData, ThrowOnError>): RequestResult<GetUserPreferenceForCustomerResponses, GetUserPreferenceForCustomerErrors, ThrowOnError> => (options.client ?? client).get<GetUserPreferenceForCustomerResponses, GetUserPreferenceForCustomerErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/preferences/{catalogItemId}/for/{userId}',
+    ...options
+});
+
+/**
  * Get all user preferences
  *
  * Get all saved customization preferences for the current user
@@ -363,6 +374,20 @@ export const saveUserPreferences = <ThrowOnError extends boolean = false>(option
 export const getUserPreferencesForItems = <ThrowOnError extends boolean = false>(options: Options<GetUserPreferencesForItemsData, ThrowOnError>): RequestResult<GetUserPreferencesForItemsResponses, GetUserPreferencesForItemsErrors, ThrowOnError> => (options.client ?? client).post<GetUserPreferencesForItemsResponses, GetUserPreferencesForItemsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/catalog/preferences/batch',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Save a specific customer's preferences
+ *
+ * Staff-only: record a given customer's customization choices after a POS order, so they pre-fill next time.
+ */
+export const saveUserPreferencesForCustomer = <ThrowOnError extends boolean = false>(options: Options<SaveUserPreferencesForCustomerData, ThrowOnError>): RequestResult<SaveUserPreferencesForCustomerResponses, SaveUserPreferencesForCustomerErrors, ThrowOnError> => (options.client ?? client).post<SaveUserPreferencesForCustomerResponses, SaveUserPreferencesForCustomerErrors, ThrowOnError>({
+    url: '/api/catalog/customers/{userId}/preferences',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -498,6 +523,28 @@ export const removeFavorite = <ThrowOnError extends boolean = false>(options: Op
  * Add a catalog item to the user's favorites
  */
 export const addFavorite = <ThrowOnError extends boolean = false>(options: Options<AddFavoriteData, ThrowOnError>): RequestResult<AddFavoriteResponses, AddFavoriteErrors, ThrowOnError> => (options.client ?? client).post<AddFavoriteResponses, AddFavoriteErrors, ThrowOnError>({ url: '/api/catalog/favorites/{catalogItemId}', ...options });
+
+/**
+ * Get my most-ordered items
+ *
+ * The current user's most-frequently-ordered catalog item IDs, ranked, for the customer menu's 'your usuals' section.
+ */
+export const getMyTopItems = <ThrowOnError extends boolean = false>(options?: Options<GetMyTopItemsData, ThrowOnError>): RequestResult<GetMyTopItemsResponses, GetMyTopItemsErrors, ThrowOnError> => (options?.client ?? client).get<GetMyTopItemsResponses, GetMyTopItemsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/top-items',
+    ...options
+});
+
+/**
+ * Get a customer's most-ordered items
+ *
+ * Staff-only: a given customer's most-frequently-ordered catalog item IDs, ranked, for the till's usuals quick-pick.
+ */
+export const getCustomerTopItems = <ThrowOnError extends boolean = false>(options: Options<GetCustomerTopItemsData, ThrowOnError>): RequestResult<GetCustomerTopItemsResponses, GetCustomerTopItemsErrors, ThrowOnError> => (options.client ?? client).get<GetCustomerTopItemsResponses, GetCustomerTopItemsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/customers/{userId}/top-items',
+    ...options
+});
 
 /**
  * Remove per-branch item override

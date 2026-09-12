@@ -52,6 +52,25 @@ export function preferenceSelections(
   return result
 }
 
+// A sold-out option is never selected, whatever put it there: an item
+// default, the customer's saved preference, or a pick made before the
+// option ran out and the menu refetched.
+export function withoutOutOfStock(
+  customizations: ItemCustomizationDto[] | undefined,
+  selections: Selections
+): Selections {
+  const result: Selections = {}
+  for (const customization of customizations ?? []) {
+    const key = String(customization.id)
+    result[key] = (selections[key] ?? []).filter((optionId) =>
+      (customization.options ?? []).some(
+        (o) => Number(o.id) === optionId && !o.isOutOfStock
+      )
+    )
+  }
+  return result
+}
+
 export function selectionsToCustomizations(
   item: CatalogItemDto,
   selections: Selections
@@ -130,8 +149,10 @@ export function ItemCustomizeForm({
   // null = untouched; saved preference / defaults apply until the user picks
   const [overrides, setOverrides] = useState<Selections | null>(null)
 
-  const selections =
+  const selections = withoutOutOfStock(
+    item.customizations,
     overrides ?? preferenceSelections(item.customizations, preference)
+  )
 
   const chosen = selectionsToCustomizations(item, selections)
   const unitPrice =
@@ -205,19 +226,27 @@ export function ItemCustomizeForm({
                     const optionId = Number(option.id)
                     const isSelected = selected.includes(optionId)
                     const adjustment = Number(option.priceAdjustment ?? 0)
+                    const outOfStock = option.isOutOfStock ?? false
                     return (
                       <Button
                         key={optionId}
                         size='sm'
                         variant={isSelected ? 'default' : 'outline'}
                         className='rounded-full'
+                        disabled={outOfStock}
                         onClick={() => toggleOption(customization, optionId)}
                       >
                         {localized(option.name)}
-                        {adjustment > 0 && (
-                          <span className='text-xs opacity-70'>
-                            +{adjustment}
+                        {outOfStock ? (
+                          <span className='text-muted-foreground text-xs'>
+                            {t('outOfStock')}
                           </span>
+                        ) : (
+                          adjustment > 0 && (
+                            <span className='text-xs opacity-70'>
+                              +{adjustment}
+                            </span>
+                          )
                         )}
                       </Button>
                     )

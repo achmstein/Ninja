@@ -578,6 +578,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get required => 'مطلوب';
 
   @override
+  String get outOfStock => 'خلص';
+
+  @override
   String get loyaltyRewards => 'مكافآت الولاء';
 
   @override

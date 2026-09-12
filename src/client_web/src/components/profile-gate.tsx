@@ -107,7 +107,7 @@ function ProfileGateDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onSettle(false)}>
-      <DialogContent>
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
           <DialogDescription>{t('profileRequiredMessage')}</DialogDescription>

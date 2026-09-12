@@ -24,7 +24,8 @@ import { cn } from '@/lib/utils'
  * as the sale pad — same keys — so a flip here greys the tile there at
  * once. The server ANDs the branch override with the global flag, so a row
  * shows the effective state: an item the back office pulled everywhere
- * stays off whatever the till says.
+ * stays off whatever the till says. Inventory can pull an item too, when a
+ * tracked stock item runs out; flipping it back on here clears that.
  */
 export function Availability() {
   const t = useT()
@@ -187,15 +188,23 @@ export function Availability() {
                     {money(item.effectivePrice ?? item.price)}
                   </span>
                 </span>
-                <span
-                  className={cn(
-                    'shrink-0 text-sm font-medium',
-                    available
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-destructive'
+                <span className='flex shrink-0 flex-col items-end'>
+                  <span
+                    className={cn(
+                      'text-sm font-medium',
+                      available
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-destructive'
+                    )}
+                  >
+                    {available ? t('available') : t('soldOut')}
+                  </span>
+                  {/* Inventory pulled it, not a person: flipping the switch on overrides the stock-out */}
+                  {!available && item.isOutOfStock && (
+                    <span className='text-muted-foreground text-xs'>
+                      {t('outOfStock')}
+                    </span>
                   )}
-                >
-                  {available ? t('available') : t('soldOut')}
                 </span>
                 <Switch
                   id={switchId}

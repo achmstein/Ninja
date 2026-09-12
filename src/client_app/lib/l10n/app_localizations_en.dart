@@ -587,6 +587,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get required => 'Required';
 
   @override
+  String get outOfStock => 'Out of stock';
+
+  @override
   String get loyaltyRewards => 'Loyalty Rewards';
 
   @override

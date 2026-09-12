@@ -283,6 +283,7 @@
   "specialInstructions": "Special Instructions",
   "anySpecialRequestsOptional": "Any special requests?",
   "required": "Required",
+  "outOfStock": "Out of stock",
 
   "loyaltyRewards": "Loyalty Rewards",
   "recentActivity": "Recent Activity",

@@ -197,6 +197,7 @@
   "specialInstructions": "ملاحظات",
   "anySpecialRequestsOptional": "أي طلبات خاصة؟",
   "required": "مطلوب",
+  "outOfStock": "خلص",
 
   "loyaltyRewards": "مكافآت الولاء",
   "recentActivity": "النشاط الأخير",

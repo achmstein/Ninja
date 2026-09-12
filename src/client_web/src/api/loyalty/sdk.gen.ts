@@ -32,7 +32,7 @@ export const listAccounts = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Create loyalty account
  *
- * Create a new loyalty account for a user
+ * Enroll a user in the program — themself, or the back office on their behalf
  */
 export const createAccount = <ThrowOnError extends boolean = false>(options: Options<CreateAccountData, ThrowOnError>): RequestResult<CreateAccountResponses, CreateAccountErrors, ThrowOnError> => (options.client ?? client).post<CreateAccountResponses, CreateAccountErrors, ThrowOnError>({
     responseType: 'json',
@@ -47,7 +47,7 @@ export const createAccount = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Get loyalty account
  *
- * Get a loyalty account by user ID
+ * Get a loyalty account by user ID — the user themself, or till staff
  */
 export const getAccount = <ThrowOnError extends boolean = false>(options: Options<GetAccountData, ThrowOnError>): RequestResult<GetAccountResponses, GetAccountErrors, ThrowOnError> => (options.client ?? client).get<GetAccountResponses, GetAccountErrors, ThrowOnError>({
     responseType: 'json',
@@ -58,7 +58,7 @@ export const getAccount = <ThrowOnError extends boolean = false>(options: Option
 /**
  * Get points balance
  *
- * Get the current points balance for a user
+ * Get the current points balance for a user — the user themself, or till staff
  */
 export const getBalance = <ThrowOnError extends boolean = false>(options: Options<GetBalanceData, ThrowOnError>): RequestResult<GetBalanceResponses, GetBalanceErrors, ThrowOnError> => (options.client ?? client).get<GetBalanceResponses, GetBalanceErrors, ThrowOnError>({
     responseType: 'json',
@@ -69,7 +69,7 @@ export const getBalance = <ThrowOnError extends boolean = false>(options: Option
 /**
  * Get transaction history
  *
- * Get all transactions for a user
+ * Get all transactions for a user — the user themself, or till staff
  */
 export const getTransactions = <ThrowOnError extends boolean = false>(options: Options<GetTransactionsData, ThrowOnError>): RequestResult<GetTransactionsResponses, GetTransactionsErrors, ThrowOnError> => (options.client ?? client).get<GetTransactionsResponses, GetTransactionsErrors, ThrowOnError>({
     responseType: 'json',
@@ -80,7 +80,7 @@ export const getTransactions = <ThrowOnError extends boolean = false>(options: O
 /**
  * Earn points
  *
- * Add points to a user's account
+ * Add points to a user's account (Admin only)
  */
 export const earnPoints = <ThrowOnError extends boolean = false>(options: Options<EarnPointsData, ThrowOnError>): RequestResult<EarnPointsResponses, EarnPointsErrors, ThrowOnError> => (options.client ?? client).post<EarnPointsResponses, EarnPointsErrors, ThrowOnError>({
     responseType: 'json',

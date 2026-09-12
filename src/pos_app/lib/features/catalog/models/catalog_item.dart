@@ -91,12 +91,17 @@ class CustomizationOption {
   final bool isDefault;
   final int displayOrder;
 
+  /// Inventory marked this option sold out at the till's branch; it is shown
+  /// but cannot be picked.
+  final bool isOutOfStock;
+
   const CustomizationOption({
     required this.id,
     required this.name,
     this.priceAdjustment = 0,
     this.isDefault = false,
     this.displayOrder = 0,
+    this.isOutOfStock = false,
   });
 
   factory CustomizationOption.fromJson(Map<String, dynamic> json) => CustomizationOption(
@@ -105,6 +110,7 @@ class CustomizationOption {
         priceAdjustment: toNumber(json['priceAdjustment']),
         isDefault: json['isDefault'] as bool? ?? false,
         displayOrder: toInt(json['displayOrder']),
+        isOutOfStock: json['isOutOfStock'] as bool? ?? false,
       );
 }
 

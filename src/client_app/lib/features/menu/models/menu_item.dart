@@ -107,11 +107,16 @@ class CustomizationOption {
   final double priceAdjustment;
   final bool isDefault;
 
+  /// Inventory marked this option sold out at the branch the menu was
+  /// fetched for; it is shown but cannot be picked.
+  final bool isOutOfStock;
+
   CustomizationOption({
     required this.id,
     required this.name,
     this.priceAdjustment = 0,
     this.isDefault = false,
+    this.isOutOfStock = false,
   });
 
   factory CustomizationOption.fromJson(Map<String, dynamic> json) {
@@ -120,6 +125,7 @@ class CustomizationOption {
       name: MenuItem._parseLocalizedText(json['name'], json['nameAr']),
       priceAdjustment: (json['priceAdjustment'] as num?)?.toDouble() ?? 0,
       isDefault: json['isDefault'] as bool? ?? false,
+      isOutOfStock: json['isOutOfStock'] as bool? ?? false,
     );
   }
 }

@@ -1111,6 +1111,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get soldOut => 'خلص';
 
   @override
+  String get outOfStock => 'خلص';
+
+  @override
   String get available => 'متاح';
 
   @override

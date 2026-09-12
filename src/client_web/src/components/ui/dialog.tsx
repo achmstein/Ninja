@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { XIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 
 function Dialog({
   ...props
@@ -47,17 +48,31 @@ function DialogOverlay({
 
 function DialogContent({
   className,
+  style,
   children,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  // iOS never resizes the layout viewport for the keyboard, so a sheet fixed
+  // to bottom: 0 would sit behind it; lift it by however much is covered
+  const keyboardInset = useKeyboardInset()
+
   return (
     <DialogPortal data-slot='dialog-portal'>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot='dialog-content'
+        style={
+          keyboardInset > 0
+            ? {
+                ...style,
+                bottom: keyboardInset,
+                maxHeight: `calc(100svh - ${keyboardInset}px)`,
+              }
+            : style
+        }
         className={cn(
           // Bottom sheet sliding up at every width (mobile-app parity)
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed z-50 grid w-full gap-4 border p-6 shadow-lg duration-200',

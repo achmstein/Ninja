@@ -39,12 +39,18 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
-        // Session expired: go straight to sign-in, no toast. Every failed
-        // query fires onError, so a burst of parallel 401s would otherwise
-        // stack toasts; the pathname guard also keeps it to a single redirect.
+        // The API no longer accepts the token (expired, or Keycloak was
+        // reset and the stored one is signed by a dead key). Sign-in drops
+        // the stored user and re-authenticates instead of bouncing back
+        // here on the strength of a token that only looks valid locally.
+        // Every failed query fires onError, so the guard keeps a burst of
+        // parallel 401s to a single redirect and no toast.
         if (router.state.location.pathname !== '/sign-in') {
           const redirect = `${router.history.location.href}`
-          router.navigate({ to: '/sign-in', search: { redirect } })
+          router.navigate({
+            to: '/sign-in',
+            search: { redirect, expired: true },
+          })
         }
       }
     },

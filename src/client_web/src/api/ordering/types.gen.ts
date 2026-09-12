@@ -128,6 +128,7 @@ export type OrderItemDto = {
     pictureUrl?: null | string;
     specialInstructions?: null | string;
     customizationsDescription?: null | LocalizedText;
+    optionIds?: null | Array<number | string>;
 };
 
 export type OrderRatingDto = {

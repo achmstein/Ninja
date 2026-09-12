@@ -183,6 +183,7 @@ export const messages = {
   specialInstructions: { en: "Special Instructions", ar: "ملاحظات" },
   anySpecialRequestsOptional: { en: "Any special requests?", ar: "أي طلبات خاصة؟" },
   required: { en: "Required", ar: "مطلوب" },
+  outOfStock: { en: "Out of stock", ar: "خلص" },
   loyaltyRewards: { en: "Loyalty Rewards", ar: "مكافآت الولاء" },
   recentActivity: { en: "Recent Activity", ar: "النشاط الأخير" },
   noLoyaltyAccountYet: { en: "No loyalty account yet", ar: "معندكش حساب ولاء لسه" },

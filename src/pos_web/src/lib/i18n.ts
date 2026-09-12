@@ -540,6 +540,7 @@ const dictionary = {
   // Availability screen (خلص = sold out, the word said across the counter)
   availability: { en: 'Availability', ar: 'التوفر' },
   soldOut: { en: 'Sold out', ar: 'خلص' },
+  outOfStock: { en: 'Out of stock', ar: 'خلص من المخزن' },
   available: { en: 'Available', ar: 'متاح' },
   searchItems: { en: 'Search items', ar: 'دوّر على الأصناف' },
   noItemsMatch: { en: 'No items match', ar: 'مفيش أصناف بالاسم ده' },
@@ -652,7 +653,13 @@ export function useLocalized() {
 }
 
 // Locale tag for date/number formatting
+/**
+ * The BCP 47 tag every Intl formatter and toLocale*() call should use.
+ * Egyptian Arabic keeps Arabic month and weekday names but, as everywhere
+ * in Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
+ * 1,250 points read the same in both languages (owner's call).
+ */
 export function useLocale(): string {
   const language = useLanguage((s) => s.language)
-  return language === 'ar' ? 'ar-EG' : 'en-US'
+  return language === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'
 }

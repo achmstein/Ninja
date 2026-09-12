@@ -195,7 +195,13 @@ export function useLocalized() {
 }
 
 // Locale tag for date/number formatting
+/**
+ * The BCP 47 tag every Intl formatter and toLocale*() call should use.
+ * Egyptian Arabic keeps Arabic month and weekday names but, as everywhere
+ * in Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
+ * 1,250 points read the same in both languages (owner's call).
+ */
 export function useLocale(): string {
   const language = useLanguage((s) => s.language)
-  return language === 'ar' ? 'ar-EG' : 'en-US'
+  return language === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'
 }

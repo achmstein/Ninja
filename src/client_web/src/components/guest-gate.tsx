@@ -92,7 +92,9 @@ function GuestGateDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onSettle(null)}>
-      <DialogContent>
+      {/* No auto-focus: on a phone that would raise the keyboard over the
+          sheet before the customer has read what is being asked */}
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
           <DialogDescription>{t('guestCheckoutMessage')}</DialogDescription>

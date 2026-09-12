@@ -1110,6 +1110,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soldOut => 'Sold out';
 
   @override
+  String get outOfStock => 'Out of stock';
+
+  @override
   String get available => 'Available';
 
   @override
