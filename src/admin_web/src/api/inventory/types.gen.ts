@@ -76,6 +76,7 @@ export type PurchaseRequest = {
     supplier: null | string;
     invoiceRef: null | string;
     lines: Array<PurchaseLineInput>;
+    supplierId?: null | number | string;
 };
 
 export type PurchaseView = {
@@ -87,6 +88,7 @@ export type PurchaseView = {
     receivedAt: string;
     total: number | string;
     lines: Array<PurchaseLineView>;
+    supplierId?: null | number | string;
 };
 
 export type RebuildResponse = {

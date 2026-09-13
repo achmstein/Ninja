@@ -1,0 +1,15 @@
+global using System.Data;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.Extensions.Logging;
+global using Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.PartnerAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.ProfitAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.SupplierAggregate;
+global using Chillax.Finance.Domain.Exceptions;
+global using Chillax.Finance.Domain.SeedWork;
+global using Chillax.Finance.Infrastructure.EntityConfigurations;
+global using Chillax.Finance.Infrastructure.Idempotency;

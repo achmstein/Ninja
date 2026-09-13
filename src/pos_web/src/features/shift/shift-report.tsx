@@ -45,6 +45,9 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   })
   const formatAt = (value: string | null | undefined) =>
     value ? dateTime.format(new Date(value)) : ''
+  // A movement happened inside this shift: its time is enough, the header
+  // already says which day
+  const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
 
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
@@ -212,11 +215,18 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   <div className='min-w-0'>
                     <div className='truncate'>{movement.reason}</div>
                     <div className='text-muted-foreground truncate text-sm'>
-                      {t(isOut ? 'payOut' : 'payIn')} · {movement.recordedBy}
+                      {/* A Latin name next to an Arabic time confuses the bidi
+                          algorithm ("م" drifting to the line's end); each
+                          piece is isolated */}
+                      {t(isOut ? 'payOutNoun' : 'payInNoun')} ·{' '}
+                      <bdi>{movement.recordedBy}</bdi>
                       {movement.recordedAt && (
-                        <span className='tabular-nums'>
-                          {' '}· {dateTime.format(new Date(movement.recordedAt))}
-                        </span>
+                        <>
+                          {' '}·{' '}
+                          <bdi className='tabular-nums'>
+                            {time.format(new Date(movement.recordedAt))}
+                          </bdi>
+                        </>
                       )}
                     </div>
                   </div>

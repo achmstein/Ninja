@@ -273,7 +273,7 @@ public static class InventoryApi
         try
         {
             var id = await mediator.SendIdentified<ReceivePurchaseCommand, int>(requestId, new ReceivePurchaseCommand(
-                branchId, request.Supplier, request.InvoiceRef, request.Lines, httpContext.GetActor()));
+                branchId, request.Supplier, request.InvoiceRef, request.Lines, httpContext.GetActor(), request.SupplierId));
 
             return TypedResults.Ok(new CreatedResponse(id));
         }
@@ -455,7 +455,7 @@ public record ReorderLevelRequest(decimal? ReorderLevel);
 
 public record AdjustmentRequest(int StockItemId, MovementType Type, decimal Quantity, string Reason, decimal? UnitCost = null);
 
-public record PurchaseRequest(string? Supplier, string? InvoiceRef, IReadOnlyList<PurchaseLineInput> Lines);
+public record PurchaseRequest(string? Supplier, string? InvoiceRef, IReadOnlyList<PurchaseLineInput> Lines, int? SupplierId = null);
 
 public record StockCountRequest(string? Note, IReadOnlyList<StockCountLineInput> Lines);
 

@@ -29,5 +29,18 @@ class CashMovementEntityTypeConfiguration : IEntityTypeConfiguration<CashMovemen
         builder.Property(m => m.RecordedBy)
             .HasMaxLength(64)
             .IsRequired();
+
+        builder.Ignore(m => m.IsStaffPayOut);
+
+        builder.Property(m => m.Kind)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(CashMovementKind.Other)
+            .IsRequired();
+
+        builder.Property(m => m.EmployeeName).HasMaxLength(200);
+        builder.Property(m => m.SupplierName).HasMaxLength(200);
+        builder.Property(m => m.PartnerName).HasMaxLength(200);
+        builder.Ignore(m => m.IsFinanceMovement);
     }
 }

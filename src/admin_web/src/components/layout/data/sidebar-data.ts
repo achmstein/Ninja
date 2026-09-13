@@ -1,6 +1,13 @@
 import {
   LayoutDashboard,
   Armchair,
+  Banknote,
+  CalendarCheck,
+  Contact,
+  Handshake,
+  Receipt,
+  TrendingUp,
+  Truck,
   Coffee,
   ClipboardList,
   ConciergeBell,
@@ -60,6 +67,57 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
+      // People: the register, the month's attendance, the month's payslips
+      title: 'navPayroll',
+      items: [
+        {
+          title: 'navPayrollEmployees',
+          url: '/payroll/employees',
+          icon: Contact,
+        },
+        {
+          title: 'navPayrollAttendance',
+          url: '/payroll/attendance',
+          icon: CalendarCheck,
+        },
+        {
+          title: 'navPayrollPayslips',
+          url: '/payroll/payslips',
+          icon: Banknote,
+        },
+      ],
+    },
+    {
+      // Money beyond stock and staff: bills, supplier tabs, the owners' own
+      title: 'navFinance',
+      items: [
+        {
+          title: 'navFinanceExpenses',
+          url: '/finance/expenses',
+          icon: Receipt,
+        },
+        {
+          title: 'navFinanceSuppliers',
+          url: '/finance/suppliers',
+          icon: Truck,
+        },
+        // The owners' own: who they are, what they hold, whether the
+        // month made money
+        {
+          title: 'navFinancePartners',
+          url: '/finance/partners',
+          icon: Handshake,
+          ownerOnly: true,
+        },
+        {
+          title: 'navFinanceProfit',
+          url: '/finance/profit',
+          icon: TrendingUp,
+          ownerOnly: true,
+        },
+      ],
+    },
+    {
       title: 'navCustomers',
       items: [
         { title: 'customers', url: '/customers', icon: Users },
@@ -71,7 +129,7 @@ export const sidebarData: SidebarData = {
       ownerOnly: true,
       items: [
         { title: 'branches', url: '/branches', icon: Building2 },
-        { title: 'staff', url: '/staff', icon: ShieldCheck },
+        { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
       ],
     },
   ],

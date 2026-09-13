@@ -32,6 +32,10 @@ import {
 interface AddStaffDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Opened from an employee's sheet: their name and branch, a cashier by default. */
+  defaults?: { name?: string; branchIds?: number[]; role?: StaffRole }
+  /** The new login's id, for whoever asked for it to be made. */
+  onCreated?: (userId: string) => void
 }
 
 /**
@@ -40,16 +44,23 @@ interface AddStaffDialogProps {
  * the branches it may work in. Owners hold every branch, so the branch list
  * hides for them.
  */
-export function AddStaffDialog({ open, onOpenChange }: AddStaffDialogProps) {
+export function AddStaffDialog({
+  open,
+  onOpenChange,
+  defaults,
+  onCreated,
+}: AddStaffDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
-  const [name, setName] = useState('')
+  const [name, setName] = useState(defaults?.name ?? '')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<StaffRole>('Admin')
+  const [role, setRole] = useState<StaffRole>(defaults?.role ?? 'Admin')
   const [isOwner, setIsOwner] = useState(false)
-  const [branchIds, setBranchIds] = useState<Set<number>>(new Set())
+  const [branchIds, setBranchIds] = useState<Set<number>>(
+    () => new Set(defaults?.branchIds ?? [])
+  )
   const [error, setError] = useState('')
 
   const branchesQuery = useQuery({ ...getAllBranchesOptions(), enabled: open })
@@ -57,12 +68,12 @@ export function AddStaffDialog({ open, onOpenChange }: AddStaffDialogProps) {
   const makeOwner = role === 'Admin' && isOwner
 
   const reset = () => {
-    setName('')
+    setName(defaults?.name ?? '')
     setEmail('')
     setPassword('')
-    setRole('Admin')
+    setRole(defaults?.role ?? 'Admin')
     setIsOwner(false)
-    setBranchIds(new Set())
+    setBranchIds(new Set(defaults?.branchIds ?? []))
     setError('')
   }
 
@@ -76,8 +87,9 @@ export function AddStaffDialog({ open, onOpenChange }: AddStaffDialogProps) {
         isOwner: makeOwner,
         branchIds: makeOwner ? [] : [...branchIds].sort((a, b) => a - b),
       }),
-    onSuccess: () => {
+    onSuccess: (userId) => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
+      if (userId && onCreated) onCreated(userId)
       toast.success(
         t(
           role === 'Cashier'

@@ -189,6 +189,8 @@ internal static class Extensions
         IResourceBuilder<ProjectResource> spacesApi,
         IResourceBuilder<ProjectResource> salesApi,
         IResourceBuilder<ProjectResource> inventoryApi,
+        IResourceBuilder<ProjectResource> payrollApi,
+        IResourceBuilder<ProjectResource> financeApi,
         IResourceBuilder<ProjectResource> identityApi,
         IResourceBuilder<ProjectResource> loyaltyApi,
         IResourceBuilder<ProjectResource> notificationApi,
@@ -242,6 +244,16 @@ internal static class Extensions
             // Inventory (stock items, levels, receipts, counts, recipes)
             var inventoryCluster = yarp.AddCluster(inventoryApi);
             yarp.AddRoute("/api/inventory/{*any}", inventoryCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
+            // Payroll (employees, attendance, the employee ledger, payslips)
+            var payrollCluster = yarp.AddCluster(payrollApi);
+            yarp.AddRoute("/api/payroll/{*any}", payrollCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
+            // Finance (expenses, supplier accounts, partner accounts)
+            var financeCluster = yarp.AddCluster(financeApi);
+            yarp.AddRoute("/api/finance/{*any}", financeCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
             // Identity routes (for user registration)

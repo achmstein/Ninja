@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { isOwner } from '@/config/oidc-config'
+import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import {
@@ -21,6 +23,7 @@ import { serviceRequestsService } from '@/features/requests/service'
 import { ROOM_MAINTENANCE, SESSION_ACTIVE } from '@/features/rooms/status'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { LiveFloor } from './components/live-floor'
+import { MonthMoney } from './components/month-money'
 import { TodaysTill } from './components/todays-till'
 import { Trends } from './components/trends'
 
@@ -41,6 +44,8 @@ type AttentionLine = {
  */
 export function Dashboard() {
   const t = useT()
+  const auth = useAuth()
+  const owner = isOwner(auth.user)
   const locale = useLocale()
   const localized = useLocalized()
 
@@ -245,6 +250,9 @@ export function Dashboard() {
           onRetry={() => reportQuery.refetch()}
         />
       </div>
+
+      {/* The owners' month: the profit feed is theirs alone */}
+      {owner && <MonthMoney />}
 
       <Trends />
     </Main>

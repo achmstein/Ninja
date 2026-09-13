@@ -58,7 +58,8 @@ public record TabPaymentView(
     DateTime RecordedAt,
     int? ShiftId);
 
-public record CashMovementView(string Type, decimal Amount, string Reason, string RecordedBy, DateTime RecordedAt);
+public record CashMovementView(string Type, decimal Amount, string Reason, string RecordedBy, DateTime RecordedAt, string Kind = "Other", int? EmployeeId = null, string? EmployeeName = null,
+    int? SupplierId = null, string? SupplierName = null, int? PartnerId = null, string? PartnerName = null, int? CategoryId = null);
 
 public record TenderTotal(string Tender, decimal Amount, int Count);
 

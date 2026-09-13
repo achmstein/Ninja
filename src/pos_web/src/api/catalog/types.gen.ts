@@ -65,6 +65,13 @@ export type CatalogItem = {
     customizations?: Array<ItemCustomization>;
 };
 
+export type CatalogItemBaseDto = {
+    price: number | string;
+    offerPrice: null | number | string;
+    isOnOffer: boolean;
+    isAvailable: boolean;
+};
+
 export type CatalogItemDto = {
     id?: number | string;
     name?: LocalizedText;
@@ -82,6 +89,7 @@ export type CatalogItemDto = {
     preparationTimeMinutes?: null | number | string;
     displayOrder?: number | string;
     customizations?: Array<ItemCustomizationDto>;
+    base?: null | CatalogItemBaseDto;
 };
 
 export type CatalogType = {
@@ -195,6 +203,18 @@ export type SetBundleActiveRequest = {
 export type SetItemOfferRequest = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+};
+
+export type UpdateCatalogItemRequest = {
+    name?: LocalizedText;
+    description?: LocalizedText;
+    price?: number | string;
+    catalogTypeId?: number | string;
+    isAvailable?: boolean;
+    isOnOffer?: boolean;
+    offerPrice?: null | number | string;
+    isPopular?: boolean;
+    preparationTimeMinutes?: null | number | string;
 };
 
 export type UserItemPreferenceDto = {
@@ -395,7 +415,7 @@ export type GetItemResponses = {
 export type GetItemResponse = GetItemResponses[keyof GetItemResponses];
 
 export type UpdateItemData = {
-    body: CatalogItem;
+    body: UpdateCatalogItemRequest;
     path: {
         /**
          * The id of the menu item to update

@@ -134,7 +134,8 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             ExpectedCash = shift.ExpectedCash,
             OverShort = shift.OverShort,
             Movements = shift.Movements.Select(m => new CashMovementView(
-                m.Type.ToString(), m.Amount, m.Reason, m.RecordedBy, m.RecordedAt)).ToList(),
+                m.Type.ToString(), m.Amount, m.Reason, m.RecordedBy, m.RecordedAt, m.Kind.ToString(), m.EmployeeId, m.EmployeeName,
+                m.SupplierId, m.SupplierName, m.PartnerId, m.PartnerName, m.CategoryId)).ToList(),
             TicketsSettled = tickets.Count,
             SalesTotal = tickets.Sum(t => t.Total),
             RefundsTotal = refundsTotal,

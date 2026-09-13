@@ -96,7 +96,8 @@ public record PurchaseView(
     string ReceivedBy,
     DateTime ReceivedAt,
     decimal Total,
-    IReadOnlyList<PurchaseLineView> Lines);
+    IReadOnlyList<PurchaseLineView> Lines,
+    int? SupplierId = null);
 
 public record StockCountLineView(int StockItemId, LocalizedText Name, string Unit, decimal Expected, decimal Counted, decimal Variance);
 

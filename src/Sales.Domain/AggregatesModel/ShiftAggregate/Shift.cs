@@ -22,6 +22,9 @@ public class Shift : Entity, IAggregateRoot
 
     public string OpenedBy { get; private set; } = string.Empty;
 
+    /// <summary>The cashier's subject id, so Payroll can mark their attendance; null on shifts from before it was recorded.</summary>
+    public string? OpenedByUserId { get; private set; }
+
     /// <summary>Cash counted into the drawer at open.</summary>
     public decimal OpeningFloat { get; private set; }
 
@@ -51,7 +54,7 @@ public class Shift : Entity, IAggregateRoot
 
     protected Shift() { }
 
-    public Shift(int branchId, decimal openingFloat, string openedBy)
+    public Shift(int branchId, decimal openingFloat, string openedBy, string? openedByUserId = null)
     {
         if (openingFloat < 0)
             throw new SalesDomainException("The opening float cannot be negative");
@@ -64,17 +67,30 @@ public class Shift : Entity, IAggregateRoot
         OpeningFloat = openingFloat;
         OpenedAt = DateTime.UtcNow;
         OpenedBy = openedBy;
+        OpenedByUserId = string.IsNullOrWhiteSpace(openedByUserId) ? null : openedByUserId;
 
         // The branch opens for business with the drawer: Branch.API turns
         // the ordering and reservation flags on off this event
         AddDomainEvent(new ShiftOpenedDomainEvent(this));
     }
 
-    public void AddMovement(CashMovementType type, decimal amount, string reason, string recordedBy)
+    public void AddMovement(CashMovementType type, decimal amount, string reason, string recordedBy,
+        CashMovementKind kind = CashMovementKind.Other, int? employeeId = null, string? employeeName = null,
+        int? supplierId = null, string? supplierName = null, int? partnerId = null, string? partnerName = null, int? categoryId = null)
     {
         EnsureOpen();
 
-        _movements.Add(new CashMovement(type, amount, reason, recordedBy));
+        var movement = new CashMovement(type, amount, reason, recordedBy, kind, employeeId, employeeName,
+            supplierId, supplierName, partnerId, partnerName, categoryId);
+        _movements.Add(movement);
+
+        // Money handed to staff is Payroll's to account for, money for a
+        // supplier, an expense or a partner is Finance's: either goes out
+        // through the outbox with the movement
+        if (movement.IsStaffPayOut)
+            AddDomainEvent(new CashPaidOutToStaffDomainEvent(this, movement));
+        else if (movement.IsFinanceMovement)
+            AddDomainEvent(new CashMovedDomainEvent(this, movement));
     }
 
     /// <summary>

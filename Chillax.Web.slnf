@@ -16,6 +16,12 @@
       "src\\Inventory.API\\Inventory.API.csproj",
       "src\\Inventory.Domain\\Inventory.Domain.csproj",
       "src\\Inventory.Infrastructure\\Inventory.Infrastructure.csproj",
+      "src\\Payroll.API\\Payroll.API.csproj",
+      "src\\Payroll.Domain\\Payroll.Domain.csproj",
+      "src\\Payroll.Infrastructure\\Payroll.Infrastructure.csproj",
+      "src\\Finance.API\\Finance.API.csproj",
+      "src\\Finance.Domain\\Finance.Domain.csproj",
+      "src\\Finance.Infrastructure\\Finance.Infrastructure.csproj",
       "src\\IntegrationEventLogEF\\IntegrationEventLogEF.csproj",
       "src\\Loyalty.API\\Loyalty.API.csproj",
       "src\\Notification.API\\Notification.API.csproj",
@@ -29,6 +35,8 @@
       "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
       "tests\\Identity.UnitTests\\Identity.UnitTests.csproj",
       "tests\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
+      "tests\\Payroll.UnitTests\\Payroll.UnitTests.csproj",
+      "tests\\Finance.UnitTests\\Finance.UnitTests.csproj",
       "tests\\Ordering.FunctionalTests\\Ordering.FunctionalTests.csproj",
       "tests\\Ordering.UnitTests\\Ordering.UnitTests.csproj"
     ]

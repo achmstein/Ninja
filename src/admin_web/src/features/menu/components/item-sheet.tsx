@@ -57,7 +57,8 @@ export function ItemSheet({
         if (!next) onStateChange(null)
       }}
     >
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-xl'>
+      {/* 2xl: the recipe editor needs an option set and a stock item name side by side */}
+      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
         <SheetHeader className='border-b'>
           <SheetTitle>
             {item ? localized(item.name) : t('addMenuItem')}

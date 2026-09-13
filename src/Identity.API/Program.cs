@@ -277,7 +277,8 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
         return Results.Problem($"User created but role assignment failed: {errorContent}", statusCode: 500);
     }
 
-    return Results.Ok(new { message = "Staff account registered successfully" });
+    // The id lets the caller link the login to an employee record
+    return Results.Ok(new { message = "Staff account registered successfully", userId });
 }).RequireAuthorization("Owner");
 
 // List users endpoint (admin only)

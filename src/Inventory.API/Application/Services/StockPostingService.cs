@@ -37,6 +37,7 @@ public class StockPostingService(
         await AnnounceSoldOutChangesAsync(branchId, changes, items);
         await AnnounceOptionSoldOutChangesAsync(branchId, changes, items);
         await AnnounceLowStockAsync(branchId, changes, items);
+        await AnnounceConsumptionAsync(branchId, drafts, changes);
 
         return changes;
     }
@@ -48,6 +49,30 @@ public class StockPostingService(
     /// auto-sold-out ingredient on its lines (across the item's recipe) is
     /// above zero.
     /// </summary>
+    /// <summary>
+    /// What a sale or waste posting cost, at the average the units left
+    /// at, so Finance can put the cost of goods beside the sales. Receipts,
+    /// counts, adjustments and transfers cost nothing here.
+    /// </summary>
+    private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes)
+    {
+        var avg = changes.ToDictionary(c => c.StockItemId, c => c.AvgUnitCost);
+
+        foreach (var kind in new[] { MovementType.Sale, MovementType.Waste })
+        {
+            var cost = drafts
+                .Where(d => d.Type == kind && d.Quantity < 0)
+                .Sum(d => -d.Quantity * (d.UnitCost ?? avg.GetValueOrDefault(d.StockItemId)));
+
+            if (cost <= 0)
+                continue;
+
+            var reference = drafts.FirstOrDefault(d => d.Type == kind)?.Reference;
+            await integrationEvents.AddAndSaveEventAsync(new StockConsumedIntegrationEvent(
+                branchId, kind.ToString(), reference, Math.Round(cost, 2), DateTime.UtcNow));
+        }
+    }
+
     private async Task AnnounceOptionSoldOutChangesAsync(int branchId, IReadOnlyList<LevelChange> changes, Dictionary<int, StockItem> items)
     {
         var crossed = changes

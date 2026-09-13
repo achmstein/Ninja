@@ -193,7 +193,9 @@ export function StaffManagement() {
       <Main className='flex flex-col gap-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div>
-            <h1 className='text-2xl font-bold tracking-tight'>{t('staff')}</h1>
+            <h1 className='text-2xl font-bold tracking-tight'>
+              {t('staffAccounts')}
+            </h1>
             <p className='text-muted-foreground'>{t('staffSubtitle')}</p>
           </div>
           {isOwner && (

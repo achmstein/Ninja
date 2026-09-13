@@ -35,6 +35,8 @@ type ComboboxProps = {
   disabled?: boolean
   className?: string
   size?: 'sm' | 'default'
+  /** Wrap a long label onto more lines instead of cutting it off */
+  wrap?: boolean
 }
 
 /**
@@ -51,6 +53,7 @@ export function Combobox({
   className,
   // h-9 by default, the same height as Input, so it lines up in form rows
   size = 'sm',
+  wrap = false,
 }: ComboboxProps) {
   const t = useT()
   const [open, setOpen] = useState(false)
@@ -69,10 +72,16 @@ export function Combobox({
           className={cn(
             'w-full justify-between font-normal',
             !selected && 'text-muted-foreground',
+            wrap &&
+              (size === 'sm' ? 'h-auto min-h-8 py-1' : 'h-auto min-h-9 py-1'),
             className
           )}
         >
-          <span className='truncate'>
+          <span
+            className={
+              wrap ? 'text-start break-words whitespace-normal' : 'truncate'
+            }
+          >
             {selected ? selected.label : placeholder}
             {selected?.hint && (
               <span className='text-muted-foreground'> · {selected.hint}</span>

@@ -50,12 +50,14 @@ export function AppSidebar() {
     .filter((group) => !group.ownerOnly || isOwner)
     .map((group) => ({
       ...group,
-      items: group.items.map((item): NavItem => {
-        if (item.items) {
-          return { ...item, items: item.items.map(withBadge) }
-        }
-        return withBadge(item)
-      }),
+      items: group.items
+        .filter((item) => item.items || !item.ownerOnly || isOwner)
+        .map((item): NavItem => {
+          if (item.items) {
+            return { ...item, items: item.items.map(withBadge) }
+          }
+          return withBadge(item)
+        }),
     }))
 
   return (

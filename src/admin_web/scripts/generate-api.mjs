@@ -14,6 +14,8 @@ const services = [
   ['branch', '../Branch.API/Branch.API.json'],
   ['sales', '../Sales.API/Sales.API.json'],
   ['inventory', '../Inventory.API/Inventory.API.json'],
+  ['payroll', '../Payroll.API/Payroll.API.json'],
+  ['finance', '../Finance.API/Finance.API.json'],
 ]
 
 for (const [name, input] of services) {

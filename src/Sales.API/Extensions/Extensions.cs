@@ -83,6 +83,8 @@ public static class Extensions
 [JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
+[JsonSerializable(typeof(CashPaidOutIntegrationEvent))]
+[JsonSerializable(typeof(CashMovedIntegrationEvent))]
 public partial class SalesIntegrationEventContext : JsonSerializerContext
 {
 }

@@ -1,7 +1,32 @@
 import { useId, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ChevronsUpDown, CookingPot, Package, Plus, X } from 'lucide-react'
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronsUpDown,
+  CookingPot,
+  Copy,
+  FlaskConical,
+  Package,
+  Plus,
+  X,
+} from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeView } from '@/api/inventory'
 import { getRecipesOptions } from '@/api/inventory/@tanstack/react-query.gen'
@@ -10,8 +35,14 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -21,9 +52,11 @@ import {
 } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox } from '@/components/combobox'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { unitLabel } from '@/features/inventory/format'
+import { Grip, Sortable } from '@/components/sortable'
+import { formatQuantity, unitLabel } from '@/features/inventory/format'
 import {
   stockItemsQueryOptions,
   toStockItemOptions,
@@ -37,9 +70,10 @@ type StockRuleSectionProps = {
 /**
  * What one sale of this item takes out of stock. Three states: not
  * tracked; sold as a unit (a stock item of its own, one per sale); or a
- * recipe — what every sale takes, then what each customization option adds
- * on top. A choice that replaces an ingredient (oat milk for regular) is a
- * required group whose options each add their own.
+ * recipe. A recipe is a list of sentences — "when the customer picks these
+ * options, this much of this stock item comes off the shelf" — shown as
+ * such, in one flat list, with a preview that picks options the way the
+ * cashier does and shows what would be deducted.
  */
 export function StockRuleSection({ item }: StockRuleSectionProps) {
   const t = useT()
@@ -184,9 +218,15 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
 }
 
 // ---------------------------------------------------------------------------
-// The item's customization options, in menu order, and where a line belongs
+// The item's customization options, in menu order
 
-type MenuOption = { id: string; label: string; groupIndex: number }
+type MenuOption = {
+  id: string
+  label: string
+  groupIndex: number
+  index: number
+  isDefault: boolean
+}
 type MenuGroup = {
   id: string
   label: string
@@ -213,11 +253,13 @@ function menuOptionsOf(
       id: String(group.id),
       label: localized(group.name),
       allowMultiple: group.allowMultiple === true,
-      options: [...(group.options ?? [])].sort(byOrder).map((option) => {
+      options: [...(group.options ?? [])].sort(byOrder).map((option, index) => {
         const entry = {
           id: String(option.id),
           label: localized(option.name),
           groupIndex,
+          index,
+          isDefault: option.isDefault === true,
         }
         byId.set(entry.id, entry)
         return entry
@@ -227,37 +269,62 @@ function menuOptionsOf(
   return { groups, byId }
 }
 
-/**
- * Which block a line is shown under: the first of its options in menu
- * order; the rest are its "only with" narrowing. `'removed'` when none of
- * its options is on the menu any more.
- */
-function primaryOf(
+/** A line's options in menu order (group, then option); removed ones last */
+function orderedOptions(
   optionIds: string[],
   menu: MenuOptions
-): string | 'removed' | null {
-  if (optionIds.length === 0) return null
+): (MenuOption | null)[] {
   const known = optionIds
     .map((id) => menu.byId.get(id))
     .filter((o): o is MenuOption => !!o)
-  if (known.length === 0) return 'removed'
-  known.sort((a, b) => a.groupIndex - b.groupIndex)
-  return known[0].id
+    .sort((a, b) => a.groupIndex - b.groupIndex || a.index - b.index)
+  const removed = optionIds.filter((id) => !menu.byId.has(id)).map(() => null)
+  return [...known, ...removed]
 }
 
-/** "only with Spiced" for the options beyond the primary one */
-function narrowingLabel(
-  optionIds: string[],
-  primary: string,
-  menu: MenuOptions,
-  t: ReturnType<typeof useT>
-): string | null {
-  const rest = optionIds.filter((id) => id !== primary)
-  if (rest.length === 0) return null
-  return rest
-    .map((id) => menu.byId.get(id)?.label ?? t('removedOption'))
-    .join(' + ')
+/** Mirrors the API: a line is used when every option it names was chosen */
+const appliesTo = (optionIds: string[], chosen: ReadonlySet<string>) =>
+  optionIds.every((id) => chosen.has(id))
+
+/** The subject of a sentence: "light + spiced", or "every sale" when empty */
+function OptionChips({
+  optionIds,
+  menu,
+  className,
+}: {
+  optionIds: string[]
+  menu: MenuOptions
+  className?: string
+}) {
+  const t = useT()
+  if (optionIds.length === 0) {
+    return (
+      <span className={cn('text-muted-foreground', className)}>
+        {t('everySale')}
+      </span>
+    )
+  }
+  return (
+    <span className={cn('inline-flex flex-wrap items-center gap-1', className)}>
+      {orderedOptions(optionIds, menu).map((option, i) => (
+        <span key={option?.id ?? `removed-${i}`} className='contents'>
+          {i > 0 && <span className='text-muted-foreground text-xs'>+</span>}
+          <Badge
+            variant='secondary'
+            className={cn('font-normal', !option && 'text-muted-foreground')}
+          >
+            {option?.label ?? t('removedOption')}
+          </Badge>
+        </span>
+      ))}
+    </span>
+  )
 }
+
+/** The arrow between "when they pick …" and "… comes off the shelf" */
+const Arrow = () => (
+  <ArrowRight className='text-muted-foreground h-3.5 w-3.5 shrink-0 rtl:-scale-x-100' />
+)
 
 // ---------------------------------------------------------------------------
 // Read view
@@ -272,79 +339,208 @@ function RecipeSummary({
   const t = useT()
   const localized = useLocalized()
 
-  const ingredient = (line: RecipeView['lines'][number]) => (
-    <span key={String(line.id)} className='whitespace-nowrap'>
-      <Link
-        to='/inventory'
-        search={{ item: toNumber(line.stockItemId) }}
-        className='underline-offset-4 hover:underline'
-      >
-        {localized(line.name)}
-      </Link>{' '}
-      <span className='text-muted-foreground tabular-nums'>
-        {toNumber(line.quantity)} {unitLabel(line.unit, t)}
-      </span>
-    </span>
-  )
-
-  const base = recipe.lines.filter((l) => l.optionIds.length === 0)
-  const byPrimary = new Map<string, RecipeView['lines']>()
-  for (const line of recipe.lines) {
-    const primary = primaryOf(line.optionIds.map(String), menu)
-    if (!primary) continue
-    byPrimary.set(primary, [...(byPrimary.get(primary) ?? []), line])
-  }
-
-  const row = (label: React.ReactNode, lines: RecipeView['lines']) => (
-    <div className='flex gap-3 py-1.5 text-sm'>
-      <span className='text-muted-foreground w-28 shrink-0 truncate'>
-        {label}
-      </span>
-      <span className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-        {lines.map((line) => {
-          const primary = primaryOf(line.optionIds.map(String), menu)
-          const narrowing =
-            primary && primary !== 'removed'
-              ? narrowingLabel(line.optionIds.map(String), primary, menu, t)
-              : null
-          return (
-            <span key={String(line.id)}>
-              {ingredient(line)}
-              {narrowing && (
-                <span className='text-muted-foreground text-xs'>
-                  {' '}
-                  · {t('onlyWith')} {narrowing}
-                </span>
-              )}
-            </span>
-          )
-        })}
-      </span>
-    </div>
+  // In the order the back office arranged them
+  const lines = recipe.lines
+  const stock = new Map(
+    recipe.lines.map((line) => [
+      String(line.stockItemId),
+      { label: localized(line.name), unit: line.unit ?? '' },
+    ])
   )
 
   return (
-    <div className='divide-y'>
-      {base.length > 0 && row(t('everySale'), base)}
-      {menu.groups.map((group) => {
-        const options = group.options.filter((o) => byPrimary.has(o.id))
-        if (options.length === 0) return null
-        return (
-          <div key={group.id} className='py-1'>
-            <div className='text-muted-foreground pt-1 text-xs font-medium'>
-              {group.label}
-            </div>
-            {options.map((option) => (
-              <div key={option.id}>
-                {row(option.label, byPrimary.get(option.id)!)}
-              </div>
-            ))}
+    <div className='space-y-4'>
+      <div className='divide-y text-sm'>
+        {lines.map((line) => (
+          <div
+            key={String(line.id)}
+            className='flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5'
+          >
+            <OptionChips optionIds={line.optionIds.map(String)} menu={menu} />
+            <Arrow />
+            <span className='whitespace-nowrap'>
+              <span className='text-muted-foreground tabular-nums'>
+                {formatQuantity(line.quantity, line.unit ?? '', t)}
+              </span>{' '}
+              <Link
+                to='/inventory'
+                search={{ item: toNumber(line.stockItemId) }}
+                className='underline-offset-4 hover:underline'
+              >
+                {localized(line.name)}
+              </Link>
+            </span>
           </div>
-        )
-      })}
-      {byPrimary.has('removed') &&
-        row(t('removedOption'), byPrimary.get('removed')!)}
+        ))}
+      </div>
+      <DeductionPreview
+        lines={recipe.lines.map((line) => ({
+          stockItemId: String(line.stockItemId),
+          quantity: toNumber(line.quantity),
+          optionIds: line.optionIds.map(String),
+        }))}
+        menu={menu}
+        stock={stock}
+      />
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Preview: pick like the cashier, see what comes off the shelf
+
+type PreviewLine = {
+  stockItemId: string
+  quantity: number
+  optionIds: string[]
+}
+type StockInfo = { label: string; unit: string }
+
+/**
+ * The sum the API would post for one unit sold with these options: every
+ * matching line, added per stock item. Shows the parts when more than one
+ * line contributes, which is exactly where a double count would hide.
+ * Folded away until asked for: it is a check, not part of the recipe.
+ */
+function DeductionPreview({
+  lines,
+  menu,
+  stock,
+}: {
+  lines: PreviewLine[]
+  menu: MenuOptions
+  stock: Map<string, StockInfo>
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  const [chosen, setChosen] = useState<string[]>(() =>
+    menu.groups
+      .flatMap((g) => g.options.filter((o) => o.isDefault))
+      .map((o) => o.id)
+  )
+
+  if (menu.groups.length === 0) return null
+
+  const chosenSet = new Set(chosen)
+  const totals = new Map<string, number[]>()
+  for (const line of lines) {
+    if (!appliesTo(line.optionIds, chosenSet)) continue
+    totals.set(line.stockItemId, [
+      ...(totals.get(line.stockItemId) ?? []),
+      line.quantity,
+    ])
+  }
+
+  const pickGroup = (group: MenuGroup, values: string[]) => {
+    const siblings = new Set(group.options.map((o) => o.id))
+    setChosen((prev) => [...prev.filter((id) => !siblings.has(id)), ...values])
+  }
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          className='text-muted-foreground h-7 px-2'
+        >
+          <FlaskConical className='me-1 h-3.5 w-3.5' />
+          {t('tryIt')}
+          <ChevronDown
+            className={cn(
+              'ms-1 h-3.5 w-3.5 transition-transform',
+              open && 'rotate-180'
+            )}
+          />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className='mt-2 space-y-3 rounded-lg border p-3'>
+        <p className='text-muted-foreground text-xs'>{t('tryItHint')}</p>
+        <div className='space-y-2'>
+          {menu.groups.map((group) => {
+            const inGroup = group.options
+              .map((o) => o.id)
+              .filter((id) => chosenSet.has(id))
+            const items = group.options.map((option) => (
+              <ToggleGroupItem
+                key={option.id}
+                value={option.id}
+                className='data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-2.5 text-xs'
+              >
+                {option.label}
+              </ToggleGroupItem>
+            ))
+            return (
+              <div
+                key={group.id}
+                className='flex flex-wrap items-center gap-x-3 gap-y-1'
+              >
+                <span className='text-muted-foreground w-24 shrink-0 truncate text-xs'>
+                  {group.label}
+                </span>
+                {group.allowMultiple ? (
+                  <ToggleGroup
+                    type='multiple'
+                    variant='outline'
+                    size='sm'
+                    value={inGroup}
+                    onValueChange={(values) => pickGroup(group, values)}
+                    className='flex-wrap'
+                  >
+                    {items}
+                  </ToggleGroup>
+                ) : (
+                  <ToggleGroup
+                    type='single'
+                    variant='outline'
+                    size='sm'
+                    value={inGroup[0] ?? ''}
+                    onValueChange={(value) =>
+                      pickGroup(group, value ? [value] : [])
+                    }
+                    className='flex-wrap'
+                  >
+                    {items}
+                  </ToggleGroup>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {totals.size === 0 ? (
+          <p className='text-muted-foreground text-sm'>
+            {t('nothingDeducted')}
+          </p>
+        ) : (
+          <ul className='space-y-1 text-sm'>
+            {[...totals].map(([stockItemId, parts]) => {
+              const info = stock.get(stockItemId)
+              const unit = info?.unit ?? ''
+              const total = parts.reduce((sum, q) => sum + q, 0)
+              return (
+                <li
+                  key={stockItemId}
+                  className='flex flex-wrap items-baseline gap-x-2'
+                >
+                  <span className='font-medium'>{info?.label ?? '—'}</span>
+                  <span className='tabular-nums'>
+                    {formatQuantity(total, unit, t)}
+                  </span>
+                  {parts.length > 1 && (
+                    <span className='text-muted-foreground text-xs tabular-nums'>
+                      (
+                      {parts.map((q) => formatQuantity(q, unit, t)).join(' + ')}
+                      )
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
 
@@ -389,7 +585,14 @@ function RecipeEditor({
   const { data: stockItems = [] } = useQuery(stockItemsQueryOptions())
   const stockById = new Map(stockItems.map((i) => [String(i.id), i]))
   const stockOptions = toStockItemOptions(stockItems, localized, t)
+  const stock = new Map<string, StockInfo>(
+    stockItems.map((i) => [
+      String(i.id),
+      { label: localized(i.name), unit: i.unit ?? '' },
+    ])
+  )
 
+  // Saved order; new lines go to the end and the grip moves any of them
   const [lines, setLines] = useState<Line[]>(() =>
     (recipe?.lines ?? []).map((line) =>
       newLine(
@@ -400,21 +603,50 @@ function RecipeEditor({
     )
   )
 
+  const sensors = useSensors(
+    // A few pixels of travel before a drag starts, so a click on the grip
+    // does nothing surprising
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    setLines((prev) => {
+      const from = prev.findIndex((l) => String(l.key) === active.id)
+      const to = prev.findIndex((l) => String(l.key) === over.id)
+      return from < 0 || to < 0 ? prev : arrayMove(prev, from, to)
+    })
+  }
+
   const updateLine = (key: number, patch: Partial<Line>) =>
     setLines((prev) =>
       prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
     )
   const removeLine = (key: number) =>
     setLines((prev) => prev.filter((l) => l.key !== key))
-  const addLine = (optionIds: string[]) =>
-    setLines((prev) => [...prev, newLine(null, '', optionIds)])
+  const addLine = () => setLines((prev) => [...prev, newLine()])
+  // The double-size workflow: copy the line, then add the option to it
+  const copyLine = (key: number) =>
+    setLines((prev) =>
+      prev.flatMap((line) =>
+        line.key === key
+          ? [
+              line,
+              newLine(line.stockItemId, line.quantity, [...line.optionIds]),
+            ]
+          : [line]
+      )
+    )
 
-  const base = lines.filter((l) => l.optionIds.length === 0)
-  const byPrimary = new Map<string, Line[]>()
+  // A stock item may appear once per option set, not twice for the same
+  // set — the API rejects that too. Flagged live, on the later of the two.
+  const seen = new Set<string>()
+  const duplicates = new Set<number>()
   for (const line of lines) {
-    const primary = primaryOf(line.optionIds, menu)
-    if (!primary) continue
-    byPrimary.set(primary, [...(byPrimary.get(primary) ?? []), line])
+    if (!line.stockItemId) continue
+    const pair = `${line.stockItemId}/${optionSetKey(line.optionIds)}`
+    if (seen.has(pair)) duplicates.add(line.key)
+    seen.add(pair)
   }
 
   const save = async (e: React.FormEvent) => {
@@ -429,12 +661,7 @@ function RecipeEditor({
       toast.error(t('recipeLineIncomplete'))
       return
     }
-    // A stock item may appear once per option set, not twice for the same
-    // set — the API rejects that too
-    const pairs = lines.map(
-      (line) => `${line.stockItemId}/${optionSetKey(line.optionIds)}`
-    )
-    if (new Set(pairs).size !== pairs.length) {
+    if (duplicates.size > 0) {
       toast.error(t('recipeDuplicateLine'))
       return
     }
@@ -452,132 +679,152 @@ function RecipeEditor({
     }
   }
 
-  const renderLine = (line: Line, primary: string | null) => {
-    const stockItem = line.stockItemId
-      ? stockById.get(line.stockItemId)
-      : undefined
-    return (
-      <div
-        key={line.key}
-        className='grid grid-cols-[minmax(0,1fr)_88px_auto_auto] items-center gap-2'
-      >
-        <Combobox
-          value={line.stockItemId}
-          onChange={(value) => updateLine(line.key, { stockItemId: value })}
-          options={stockOptions}
-          placeholder={t('pickStockItem')}
-          size='sm'
-        />
-        <div className='relative'>
-          <Input
-            type='number'
-            min='0'
-            step='any'
-            placeholder={t('quantity')}
-            aria-label={t('quantity')}
-            className={cn('h-8', stockItem && 'pe-9')}
-            value={line.quantity}
-            onChange={(e) => updateLine(line.key, { quantity: e.target.value })}
-          />
-          {stockItem && (
-            <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
-              {unitLabel(stockItem.unit, t)}
-            </span>
-          )}
-        </div>
-        {primary ? (
-          <OnlyWithPicker
-            primary={primary}
-            value={line.optionIds}
-            onChange={(optionIds) => updateLine(line.key, { optionIds })}
-            menu={menu}
-          />
-        ) : (
-          <span />
-        )}
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='size-8'
-          aria-label={t('removeLine')}
-          onClick={() => removeLine(line.key)}
-        >
-          <X className='h-4 w-4' />
-        </Button>
-      </div>
-    )
-  }
+  const previewLines: PreviewLine[] = lines
+    .filter((line) => line.stockItemId && parseFloat(line.quantity) > 0)
+    .map((line) => ({
+      stockItemId: line.stockItemId!,
+      quantity: parseFloat(line.quantity),
+      optionIds: line.optionIds,
+    }))
 
-  const addButton = (optionIds: string[]) => (
-    <Button
-      type='button'
-      variant='ghost'
-      size='sm'
-      className='text-muted-foreground h-7 px-2'
-      onClick={() => addLine(optionIds)}
-    >
-      <Plus className='me-1 h-3.5 w-3.5' />
-      {t('addIngredient')}
-    </Button>
-  )
+  // One row per rule, a grip first. The option set and the stock item
+  // share the width and each wraps when long, so nothing is ever cut off.
+  const columns =
+    'grid grid-cols-[auto_minmax(0,1fr)_auto_6rem_minmax(0,1fr)_auto] gap-2'
 
   return (
     <form onSubmit={save} className='space-y-5'>
-      {/* Every sale */}
       <div className='space-y-2'>
-        <div>
-          <div className='text-sm font-medium'>{t('everySale')}</div>
-          <p className='text-muted-foreground text-xs'>{t('everySaleHint')}</p>
-        </div>
-        {base.map((line) => renderLine(line, null))}
-        {addButton([])}
+        <p className='text-muted-foreground text-xs'>
+          {t('recipeSentenceHint')}
+        </p>
+
+        {lines.length > 0 && (
+          <div className={cn(columns, 'text-muted-foreground text-xs')}>
+            <span className='w-8' />
+            <span>{t('whenTheyPick')}</span>
+            <span />
+            <span>{t('quantity')}</span>
+            <span>{t('stockItem')}</span>
+            <span />
+          </div>
+        )}
+
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext
+            items={lines.map((l) => String(l.key))}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className='space-y-2'>
+              {lines.map((line) => {
+                const stockItem = line.stockItemId
+                  ? stockById.get(line.stockItemId)
+                  : undefined
+                const duplicate = duplicates.has(line.key)
+                return (
+                  <Sortable
+                    key={line.key}
+                    id={String(line.key)}
+                    as='div'
+                    className={cn(
+                      columns,
+                      'items-center',
+                      duplicate && 'ring-destructive/40 rounded-md ring-2'
+                    )}
+                  >
+                    {(activator, grip) => (
+                      <>
+                        <Grip
+                          activator={activator}
+                          grip={grip}
+                          label={t('reorder')}
+                        />
+                        <LineOptionsPicker
+                          value={line.optionIds}
+                          onChange={(optionIds) =>
+                            updateLine(line.key, { optionIds })
+                          }
+                          menu={menu}
+                        />
+                        <Arrow />
+                        <div className='relative'>
+                          <Input
+                            type='number'
+                            min='0'
+                            step='any'
+                            placeholder={t('quantity')}
+                            aria-label={t('quantity')}
+                            className={cn('h-8', stockItem && 'pe-9')}
+                            value={line.quantity}
+                            onChange={(e) =>
+                              updateLine(line.key, { quantity: e.target.value })
+                            }
+                          />
+                          {stockItem && (
+                            <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
+                              {unitLabel(stockItem.unit, t)}
+                            </span>
+                          )}
+                        </div>
+                        <Combobox
+                          value={line.stockItemId}
+                          onChange={(value) =>
+                            updateLine(line.key, { stockItemId: value })
+                          }
+                          options={stockOptions}
+                          placeholder={t('pickStockItem')}
+                          size='sm'
+                          wrap
+                        />
+                        <div className='flex'>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='text-muted-foreground size-8'
+                            aria-label={t('copyLine')}
+                            title={t('copyLine')}
+                            onClick={() => copyLine(line.key)}
+                          >
+                            <Copy className='h-4 w-4' />
+                          </Button>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                            aria-label={t('removeLine')}
+                            onClick={() => removeLine(line.key)}
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </Sortable>
+                )
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          className='text-muted-foreground h-7 px-2'
+          onClick={addLine}
+        >
+          <Plus className='me-1 h-3.5 w-3.5' />
+          {t('addIngredient')}
+        </Button>
       </div>
 
-      {/* One block per group, one row of ingredients per option */}
-      {menu.groups.length > 0 && (
-        <div className='space-y-4'>
-          <p className='text-muted-foreground text-xs'>
-            {t('optionLinesHint')}
-          </p>
-          {menu.groups.map((group) => (
-            <div key={group.id} className='space-y-2'>
-              <div className='text-sm font-medium'>{group.label}</div>
-              <div className='divide-y border-s ps-3'>
-                {group.options.map((option) => {
-                  const optionLines = byPrimary.get(option.id) ?? []
-                  return (
-                    <div key={option.id} className='space-y-2 py-2'>
-                      <div className='flex items-center justify-between gap-2'>
-                        <span
-                          className={cn(
-                            'text-sm',
-                            optionLines.length === 0 && 'text-muted-foreground'
-                          )}
-                        >
-                          {option.label}
-                        </span>
-                        {addButton([option.id])}
-                      </div>
-                      {optionLines.map((line) => renderLine(line, option.id))}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Lines whose options are gone from the menu: kept so they can be removed */}
-      {byPrimary.has('removed') && (
-        <div className='space-y-2'>
-          <div className='text-muted-foreground text-sm font-medium'>
-            {t('removedOption')}
-          </div>
-          {byPrimary.get('removed')!.map((line) => renderLine(line, null))}
-        </div>
-      )}
+      <DeductionPreview lines={previewLines} menu={menu} stock={stock} />
 
       <div className='flex justify-end gap-2'>
         <Button type='button' variant='outline' size='sm' onClick={onDone}>
@@ -593,16 +840,14 @@ function RecipeEditor({
 }
 
 /**
- * Narrows an option's line to a combination: "only with Spiced". Lists the
- * options of the other groups; one pick per single-choice group.
+ * The options a line needs, all of them: one pick per single-choice group,
+ * any number from a multi-choice one. Nothing picked means every sale.
  */
-function OnlyWithPicker({
-  primary,
+function LineOptionsPicker({
   value,
   onChange,
   menu,
 }: {
-  primary: string
   value: string[]
   onChange: (optionIds: string[]) => void
   menu: MenuOptions
@@ -610,14 +855,8 @@ function OnlyWithPicker({
   const t = useT()
   const id = useId()
   const [open, setOpen] = useState(false)
-  const ownGroup = menu.byId.get(primary)?.groupIndex
-  const others = menu.groups.filter((_, index) => index !== ownGroup)
-  const extras = value.filter((v) => v !== primary)
-  const chosen = new Set(extras)
-  const removed = extras.filter((v) => !menu.byId.has(v))
-  const label = extras
-    .map((v) => menu.byId.get(v)?.label ?? t('removedOption'))
-    .join(' + ')
+  const chosen = new Set(value)
+  const removed = value.filter((v) => !menu.byId.has(v))
 
   const toggle = (group: MenuGroup, optionId: string, checked: boolean) => {
     if (!checked) {
@@ -627,34 +866,41 @@ function OnlyWithPicker({
     const siblings = new Set(group.options.map((o) => o.id))
     const kept = group.allowMultiple
       ? value
-      : value.filter((v) => v === primary || !siblings.has(v))
+      : value.filter((v) => !siblings.has(v))
     onChange([...kept, optionId])
   }
 
-  if (others.length === 0 && removed.length === 0) return <span />
+  // An item with no customizations: every line is an every-sale line
+  if (menu.groups.length === 0 && removed.length === 0) {
+    return (
+      <span className='text-muted-foreground px-2 text-xs'>
+        {t('everySale')}
+      </span>
+    )
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           type='button'
-          variant='ghost'
+          variant='outline'
           size='sm'
           role='combobox'
           aria-expanded={open}
-          className={cn(
-            'h-8 max-w-40 px-2 text-xs font-normal',
-            extras.length === 0 && 'text-muted-foreground'
-          )}
+          // Grows with its chips: a three-option line must stay readable
+          className='h-auto min-h-8 w-full justify-between px-2 py-1 text-xs font-normal'
         >
-          <span className='truncate'>
-            {extras.length > 0 ? `${t('onlyWith')} ${label}` : t('onlyWith')}
-          </span>
+          <OptionChips
+            optionIds={value}
+            menu={menu}
+            className='min-w-0 justify-start text-start'
+          />
           <ChevronsUpDown className='ms-1 h-3.5 w-3.5 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-56 space-y-3 p-3' align='end'>
-        {others.map((group) => (
+      <PopoverContent className='w-56 space-y-3 p-3' align='start'>
+        {menu.groups.map((group) => (
           <div key={group.id} className='space-y-1.5'>
             <p className='text-muted-foreground px-1 text-xs font-medium'>
               {group.label}

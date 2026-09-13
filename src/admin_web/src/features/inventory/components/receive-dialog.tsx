@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
+import { suppliersQueryOptions } from '@/features/finance/queries'
 import { unitLabel } from '../format'
 import { stockItemsQueryOptions, toStockItemOptions } from '../queries'
 import { useInventoryActions } from '../use-inventory-actions'
@@ -139,7 +140,10 @@ function ReceiveForm({
   const { data: items = [] } = useQuery(stockItemsQueryOptions())
   const itemById = new Map(items.map((item) => [String(item.id), item]))
 
-  const [supplier, setSupplier] = useState('')
+  // The supplier comes from Finance's list, so the delivery lands on their
+  // account; a receipt without one is stock with no creditor
+  const { data: suppliers = [] } = useQuery(suppliersQueryOptions())
+  const [supplierId, setSupplierId] = useState<string | null>(null)
   const [invoiceRef, setInvoiceRef] = useState('')
   const [lines, setLines] = useState<Line[]>(() => [
     {
@@ -179,8 +183,10 @@ function ReceiveForm({
       return
     }
     try {
+      const picked = suppliers.find((s) => String(s.id) === supplierId)
       await receivePurchase({
-        supplier: supplier.trim() || null,
+        supplier: picked?.name ?? null,
+        supplierId: picked ? toNumber(picked.id) : null,
         invoiceRef: invoiceRef.trim() || null,
         lines: lines.map((line) => ({
           stockItemId: Number(line.stockItemId),
@@ -198,13 +204,17 @@ function ReceiveForm({
     <form onSubmit={handleSubmit} className='space-y-4'>
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-2'>
-          <Label htmlFor='supplier'>{t('supplier')}</Label>
-          <Input
-            id='supplier'
-            placeholder={t('supplierPlaceholder')}
-            value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            autoFocus
+          <Label>{t('supplier')}</Label>
+          <Combobox
+            value={supplierId}
+            onChange={setSupplierId}
+            options={suppliers.map((s) => ({
+              value: String(s.id),
+              label: s.name,
+              hint: s.phone ?? undefined,
+            }))}
+            placeholder={t('noSupplier')}
+            clearLabel={t('noSupplier')}
           />
         </div>
         <div className='space-y-2'>

@@ -57,7 +57,7 @@ public static class ShiftsApi
         try
         {
             var shiftId = await mediator.SendIdentified<OpenShiftCommand, int>(requestId, new OpenShiftCommand(
-                branchId, request.OpeningFloat, httpContext.GetActor()));
+                branchId, request.OpeningFloat, httpContext.GetActor(), httpContext.User.GetUserId()));
 
             return TypedResults.Ok(new OpenShiftResponse(shiftId));
         }
@@ -107,7 +107,9 @@ public static class ShiftsApi
         try
         {
             await mediator.SendIdentified<AddCashMovementCommand, bool>(requestId, new AddCashMovementCommand(
-                id, request.Type, request.Amount, request.Reason, httpContext.GetActor()));
+                id, request.Type, request.Amount, request.Reason, httpContext.GetActor(),
+                request.Kind, request.EmployeeId, request.EmployeeName,
+                request.SupplierId, request.SupplierName, request.PartnerId, request.PartnerName, request.CategoryId));
 
             return TypedResults.Ok();
         }
@@ -142,6 +144,12 @@ public record OpenShiftRequest(decimal OpeningFloat);
 
 public record OpenShiftResponse(int ShiftId);
 
-public record CashMovementRequest(CashMovementType Type, decimal Amount, string Reason);
+/// <summary>
+/// <paramref name="Kind"/> says what a pay-out was for; wage and advance
+/// name the employee (Payroll's id) so the money lands on their account.
+/// </summary>
+public record CashMovementRequest(CashMovementType Type, decimal Amount, string Reason,
+    CashMovementKind Kind = CashMovementKind.Other, int? EmployeeId = null, string? EmployeeName = null,
+    int? SupplierId = null, string? SupplierName = null, int? PartnerId = null, string? PartnerName = null, int? CategoryId = null);
 
 public record CloseShiftRequest(decimal ClosingCount);

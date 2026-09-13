@@ -1,0 +1,21 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsPublishable>false</IsPublishable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Payroll.API\Payroll.API.csproj" />
+    <ProjectReference Include="..\..\src\Payroll.Domain\Payroll.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Payroll.Infrastructure\Payroll.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

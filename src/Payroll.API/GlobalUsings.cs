@@ -1,0 +1,15 @@
+global using Asp.Versioning;
+global using Asp.Versioning.Conventions;
+global using Chillax.IntegrationEventLogEF.Services;
+global using Chillax.Payroll.API.Application.Behaviors;
+global using Chillax.Payroll.API.Application.IntegrationEvents;
+global using Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.PayslipAggregate;
+global using Chillax.Payroll.Domain.Exceptions;
+global using Chillax.Payroll.Domain.SeedWork;
+global using Chillax.Payroll.Domain.Services;
+global using Chillax.ServiceDefaults;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;

@@ -18,10 +18,20 @@ export type AssignLinesCustomerRequest = {
     customerName: string;
 };
 
+export type CashMovementKind = number;
+
 export type CashMovementRequest = {
     type: CashMovementType;
     amount: number | string;
     reason: string;
+    kind?: CashMovementKind;
+    employeeId?: null | number | string;
+    employeeName?: null | string;
+    supplierId?: null | number | string;
+    supplierName?: null | string;
+    partnerId?: null | number | string;
+    partnerName?: null | string;
+    categoryId?: null | number | string;
 };
 
 export type CashMovementType = number;
@@ -32,6 +42,14 @@ export type CashMovementView = {
     reason: string;
     recordedBy: string;
     recordedAt: string;
+    kind?: string;
+    employeeId?: null | number | string;
+    employeeName?: null | string;
+    supplierId?: null | number | string;
+    supplierName?: null | string;
+    partnerId?: null | number | string;
+    partnerName?: null | string;
+    categoryId?: null | number | string;
 };
 
 export type CloseShiftRequest = {

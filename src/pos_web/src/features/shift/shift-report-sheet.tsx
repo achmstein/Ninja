@@ -21,6 +21,10 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   })
   const formatAt = (value: string | null | undefined) =>
     value ? dateTime.format(new Date(value)) : ''
+  // Movements are inside the shift printed above: time only
+  const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
+  const formatTime = (value: string | null | undefined) =>
+    value ? time.format(new Date(value)) : ''
 
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
@@ -122,7 +126,8 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
                 `${movement.type === 'PayOut' ? '−' : '+'}${money(movement.amount)}`
               )}
               <div style={{ fontSize: 10 }}>
-                {movement.recordedBy} · {formatAt(movement.recordedAt)}
+                <bdi>{movement.recordedBy}</bdi> ·{' '}
+                <bdi>{formatTime(movement.recordedAt)}</bdi>
               </div>
             </div>
           ))}

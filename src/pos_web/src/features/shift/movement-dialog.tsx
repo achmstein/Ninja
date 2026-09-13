@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  getTillCategoriesOptions,
+  getTillPartnersOptions,
+  getTillSuppliersOptions,
+} from '@/api/finance/@tanstack/react-query.gen'
+import { getTillEmployeesOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { addCashMovementMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,13 +19,36 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { API_VERSION } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 
 // CashMovementType enum values (Sales.Domain: PayIn=0, PayOut=1)
 const MOVEMENT_TYPE = { in: 0, out: 1 } as const
 
 export type MovementDirection = keyof typeof MOVEMENT_TYPE
+
+// CashMovementKind (Sales.Domain): what a movement was for, and whom it
+// names. Wage and Advance go to Payroll; Supplier, Expense and Partner to
+// Finance; Other is just a reason.
+type Picks = 'employee' | 'supplier' | 'partner' | 'category' | null
+type Kind = { value: number; key: TranslationKey; picks: Picks }
+
+const OUT_KINDS: Kind[] = [
+  { value: 1, key: 'payOutSupplier', picks: 'supplier' },
+  { value: 2, key: 'payOutWage', picks: 'employee' },
+  { value: 3, key: 'payOutAdvance', picks: 'employee' },
+  { value: 4, key: 'payOutExpense', picks: 'category' },
+  { value: 5, key: 'payOutPartner', picks: 'partner' },
+  { value: 0, key: 'payOutOther', picks: null },
+]
+
+const IN_KINDS: Kind[] = [
+  { value: 5, key: 'payOutPartner', picks: 'partner' },
+  { value: 0, key: 'payOutOther', picks: null },
+]
+
+type Picked = { id: number; name: string }
 
 type MovementDialogProps = {
   shiftId: number
@@ -29,10 +58,12 @@ type MovementDialogProps = {
 }
 
 /**
- * Records cash put into or taken out of the drawer mid-shift (supplier
- * paid from the till, float topped up, ...). Amount comes off the keypad;
- * the reason is required — an unexplained drawer movement is exactly what
- * the Z report exists to catch.
+ * Records cash put into or taken out of the drawer mid-shift. Amount comes
+ * off the keypad; the reason is required — an unexplained drawer movement
+ * is exactly what the Z report exists to catch. A movement says what it
+ * was for and, where that names someone (an employee, a supplier, a
+ * partner) or something (an expense category), which — and the reason
+ * writes itself from that.
  */
 export function MovementDialog({
   shiftId,
@@ -41,14 +72,42 @@ export function MovementDialog({
   onOpenChange,
 }: MovementDialogProps) {
   const t = useT()
+  const localized = useLocalized()
   const queryClient = useQueryClient()
   const [amountStr, setAmountStr] = useState('')
   const [reason, setReason] = useState('')
+  const [kind, setKind] = useState<number>(0)
+  const [picked, setPicked] = useState<Picked | null>(null)
+
+  const isOut = direction === 'out'
+  const kinds = isOut ? OUT_KINDS : IN_KINDS
+  const picks = kinds.find((k) => k.value === kind)?.picks ?? null
+
+  // The lists behind the pickers, loaded only when their kind is picked
+  const version = { query: { 'api-version': API_VERSION } }
+  const employees = useQuery({
+    ...getTillEmployeesOptions(version),
+    enabled: open && picks === 'employee',
+  })
+  const suppliers = useQuery({
+    ...getTillSuppliersOptions(version),
+    enabled: open && picks === 'supplier',
+  })
+  const partners = useQuery({
+    ...getTillPartnersOptions(version),
+    enabled: open && picks === 'partner',
+  })
+  const categories = useQuery({
+    ...getTillCategoriesOptions(version),
+    enabled: open && picks === 'category',
+  })
 
   useEffect(() => {
     if (!open) {
       setAmountStr('')
       setReason('')
+      setKind(0)
+      setPicked(null)
     }
   }, [open])
 
@@ -62,11 +121,52 @@ export function MovementDialog({
     },
   })
 
+  const pickKind = (value: number) => {
+    setKind(value)
+    setPicked(null)
+    // A typed reason for the old kind is stale; a named kind writes its own
+    setReason('')
+  }
+
+  const pick = (item: Picked) => {
+    setPicked(item)
+    const label = t(kinds.find((k) => k.value === kind)!.key)
+    setReason(picks === 'category' ? item.name : `${label} ${item.name}`)
+  }
+
+  const options: { list: Picked[] | undefined; empty: TranslationKey; title: TranslationKey } | null =
+    picks === 'employee'
+      ? {
+          list: employees.data?.map((e) => ({ id: Number(e.id), name: e.name })),
+          empty: 'payOutNoEmployees',
+          title: 'payOutWho',
+        }
+      : picks === 'supplier'
+        ? {
+            list: suppliers.data?.map((s) => ({ id: Number(s.id), name: s.name })),
+            empty: 'payOutNoSuppliers',
+            title: 'payOutWhichSupplier',
+          }
+        : picks === 'partner'
+          ? {
+              list: partners.data?.map((p) => ({ id: Number(p.id), name: p.name })),
+              empty: 'payOutNoPartners',
+              title: 'payOutWhichPartner',
+            }
+          : picks === 'category'
+            ? {
+                list: categories.data?.map((c) => ({ id: Number(c.id), name: localized(c.name) })),
+                empty: 'payOutNoCategories',
+                title: 'payOutWhatFor',
+              }
+            : null
+
   const amount = Number(amountStr)
   const canSubmit =
     Number.isFinite(amount) &&
     amount > 0 &&
     reason.trim().length > 0 &&
+    (picks === null || picked !== null) &&
     !addMovement.isPending
 
   const submit = () =>
@@ -79,6 +179,14 @@ export function MovementDialog({
         type: MOVEMENT_TYPE[direction],
         amount,
         reason: reason.trim(),
+        kind,
+        employeeId: picks === 'employee' ? picked?.id : null,
+        employeeName: picks === 'employee' ? picked?.name : null,
+        supplierId: picks === 'supplier' ? picked?.id : null,
+        supplierName: picks === 'supplier' ? picked?.name : null,
+        partnerId: picks === 'partner' ? picked?.id : null,
+        partnerName: picks === 'partner' ? picked?.name : null,
+        categoryId: picks === 'category' ? picked?.id : null,
       },
     })
 
@@ -105,6 +213,52 @@ export function MovementDialog({
         </div>
 
         <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+        <div className='grid gap-1.5'>
+          <Label>{t('payOutFor')}</Label>
+          <div className={cn('grid gap-2', isOut ? 'grid-cols-3' : 'grid-cols-2')}>
+            {kinds.map((k) => (
+              <Button
+                key={k.value}
+                type='button'
+                variant={kind === k.value ? 'default' : 'outline'}
+                className='h-12 px-1 text-sm'
+                onClick={() => pickKind(k.value)}
+              >
+                {t(k.key)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {options && (
+          <div className='grid gap-1.5'>
+            <Label>{t(options.title)}</Label>
+            {options.list && options.list.length === 0 ? (
+              <p className='text-muted-foreground text-sm'>{t(options.empty)}</p>
+            ) : (
+              <div className='grid max-h-48 grid-cols-2 gap-2 overflow-y-auto'>
+                {(options.list ?? []).map((item) => {
+                  const isPicked = picked?.id === item.id
+                  return (
+                    <Button
+                      key={item.id}
+                      type='button'
+                      variant={isPicked ? 'default' : 'outline'}
+                      className={cn(
+                        'h-12 justify-start truncate',
+                        isPicked && 'font-semibold'
+                      )}
+                      onClick={() => pick(item)}
+                    >
+                      {item.name}
+                    </Button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className='grid gap-1.5'>
           <Label htmlFor='movement-reason'>{t('reason')}</Label>

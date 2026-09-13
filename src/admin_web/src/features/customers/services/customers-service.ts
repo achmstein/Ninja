@@ -43,8 +43,13 @@ export const customersService = {
     role?: StaffRole
     isOwner?: boolean
     branchIds?: number[]
-  }): Promise<void> {
-    await apiClient.post('/api/identity/register-admin', request)
+  }): Promise<string | null> {
+    // The new login's id, so the register can link it to an employee
+    const { data } = await apiClient.post<{ userId?: string }>(
+      '/api/identity/register-admin',
+      request
+    )
+    return data?.userId ?? null
   },
 
   // Replace the branches a staff account may work in (Owner). The change

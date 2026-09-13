@@ -11,6 +11,8 @@ type BaseNavItem = {
 type NavLink = BaseNavItem & {
   url: LinkProps['to'] | (string & {})
   items?: never
+  /** Only shown to users holding the Owner realm role */
+  ownerOnly?: boolean
 }
 
 type NavCollapsible = BaseNavItem & {

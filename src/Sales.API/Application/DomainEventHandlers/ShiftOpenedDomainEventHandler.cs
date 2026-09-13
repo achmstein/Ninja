@@ -21,6 +21,7 @@ public class ShiftOpenedDomainEventHandler(
             shift.Id,
             shift.BranchId,
             shift.OpenedBy,
-            shift.OpenedAt));
+            shift.OpenedAt,
+            shift.OpenedByUserId));
     }
 }

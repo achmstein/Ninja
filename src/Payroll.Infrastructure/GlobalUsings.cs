@@ -1,0 +1,15 @@
+global using System.Data;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Design;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.EntityFrameworkCore.Storage;
+global using Microsoft.Extensions.Logging;
+global using Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+global using Chillax.Payroll.Domain.AggregatesModel.PayslipAggregate;
+global using Chillax.Payroll.Domain.Exceptions;
+global using Chillax.Payroll.Domain.SeedWork;
+global using Chillax.Payroll.Infrastructure.EntityConfigurations;
+global using Chillax.Payroll.Infrastructure.Idempotency;

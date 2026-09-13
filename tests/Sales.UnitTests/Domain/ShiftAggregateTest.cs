@@ -76,6 +76,31 @@ public class ShiftAggregateTest
     }
 
     [TestMethod]
+    public void A_wage_or_an_advance_names_the_employee_leaves_the_drawer_and_is_announced()
+    {
+        var shift = new Shift(branchId: 1, openingFloat: 0, openedBy: "cashier", openedByUserId: "sub-1");
+        shift.ClearDomainEvents();
+
+        shift.AddMovement(CashMovementType.PayOut, 100, "يومية أحمد", "cashier", CashMovementKind.Wage, employeeId: 7, employeeName: "أحمد");
+
+        var movement = shift.Movements.Single();
+        Assert.IsTrue(movement.IsStaffPayOut);
+        Assert.AreEqual(7, movement.EmployeeId);
+        Assert.AreEqual("sub-1", shift.OpenedByUserId);
+        Assert.AreEqual(1, shift.DomainEvents!.OfType<CashPaidOutToStaffDomainEvent>().Count());
+
+        // A supplier pay-out says nothing to Payroll
+        shift.ClearDomainEvents();
+        shift.AddMovement(CashMovementType.PayOut, 50, "metro", "cashier", CashMovementKind.Supplier);
+        Assert.AreEqual(0, shift.DomainEvents?.Count ?? 0);
+
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            shift.AddMovement(CashMovementType.PayOut, 100, "يومية", "cashier", CashMovementKind.Wage));
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            shift.AddMovement(CashMovementType.PayIn, 100, "سلفة", "cashier", CashMovementKind.Advance, employeeId: 7));
+    }
+
+    [TestMethod]
     public void Negative_float_or_count_is_refused()
     {
         Assert.ThrowsExactly<SalesDomainException>(() =>

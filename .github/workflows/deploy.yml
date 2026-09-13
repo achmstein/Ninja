@@ -117,7 +117,7 @@ jobs:
           # names the images itself, so these are unused today; fill them with
           # the same references so the guard below passes and they are right
           # should a future Aspire start reading them.
-          for svc in catalog ordering spaces sales inventory identity loyalty notification accounts branch; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
             upper=$(echo "$svc" | tr a-z A-Z)
             sed -i "s|^${upper}_API_IMAGE=$|${upper}_API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${svc}:latest|" deploy-artifacts/.env
           done

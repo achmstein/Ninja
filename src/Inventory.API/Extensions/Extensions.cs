@@ -73,6 +73,8 @@ public static class Extensions
 [JsonSerializable(typeof(CatalogItemStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogOptionStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]
+[JsonSerializable(typeof(PurchaseReceivedIntegrationEvent))]
+[JsonSerializable(typeof(StockConsumedIntegrationEvent))]
 public partial class InventoryIntegrationEventContext : JsonSerializerContext
 {
 }

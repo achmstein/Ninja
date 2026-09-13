@@ -30,6 +30,7 @@ class ShiftEntityTypeConfiguration : IEntityTypeConfiguration<Shift>
         builder.Property(s => s.OverShort).HasPrecision(18, 2);
 
         builder.Property(s => s.OpenedBy).HasMaxLength(64).IsRequired();
+        builder.Property(s => s.OpenedByUserId).HasMaxLength(100);
         builder.Property(s => s.ClosedBy).HasMaxLength(64);
 
         builder.HasMany(s => s.Movements)

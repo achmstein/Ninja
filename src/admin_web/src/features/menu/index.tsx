@@ -14,13 +14,10 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import {
   Coffee,
-  GripVertical,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -61,6 +58,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ImageWithFallback } from '@/components/image-fallback'
+import { Grip, Sortable } from '@/components/sortable'
 import { CategoryDialog } from './components/category-dialog'
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
@@ -81,76 +79,6 @@ type Section = {
   /** `null` for items whose category no longer exists */
   category: CatalogTypeDto | null
   items: CatalogItemDto[]
-}
-
-type Activator = (node: HTMLElement | null) => void
-type GripProps = {
-  attributes: React.HTMLAttributes<HTMLElement>
-  listeners: Record<string, unknown> | undefined
-}
-
-/**
- * A sortable row or section: the element follows the pointer while dragged
- * and hands its children the grip's props, so only the handle starts a drag
- * and the rest of the row keeps its own clicks.
- */
-function Sortable({
-  id,
-  as: Tag,
-  disabled,
-  className,
-  children,
-}: {
-  id: string
-  as: 'li' | 'section'
-  disabled?: boolean
-  className?: string
-  children: (activator: Activator, grip: GripProps) => React.ReactNode
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled })
-  return (
-    <Tag
-      ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn(
-        className,
-        isDragging && 'bg-background relative z-10 shadow-md'
-      )}
-    >
-      {children(setActivatorNodeRef, { attributes, listeners })}
-    </Tag>
-  )
-}
-
-function Grip({
-  activator,
-  grip,
-  label,
-}: {
-  activator: Activator
-  grip: GripProps
-  label: string
-}) {
-  return (
-    <button
-      type='button'
-      ref={activator}
-      {...grip.attributes}
-      {...grip.listeners}
-      aria-label={label}
-      className='text-muted-foreground hover:text-foreground flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md active:cursor-grabbing'
-    >
-      <GripVertical className='h-4 w-4' />
-    </button>
-  )
 }
 
 /**

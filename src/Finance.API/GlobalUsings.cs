@@ -1,0 +1,15 @@
+global using Asp.Versioning;
+global using Asp.Versioning.Conventions;
+global using Chillax.IntegrationEventLogEF.Services;
+global using Chillax.Finance.API.Application.Behaviors;
+global using Chillax.Finance.API.Application.IntegrationEvents;
+global using Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.PartnerAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.ProfitAggregate;
+global using Chillax.Finance.Domain.AggregatesModel.SupplierAggregate;
+global using Chillax.Finance.Domain.Exceptions;
+global using Chillax.Finance.Domain.SeedWork;
+global using Chillax.Finance.Domain.Services;
+global using Chillax.ServiceDefaults;
+global using MediatR;
+global using Microsoft.EntityFrameworkCore;

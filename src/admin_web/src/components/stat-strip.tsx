@@ -100,7 +100,7 @@ type StatStripProps = {
  * From a tablet's width up the cells stay on ONE row whatever their number
  * (the strip scrolls sideways before it ever stacks — a strip that wraps
  * into rows of boxes is the card grid this replaces); phones get two
- * columns. Cell borders are drawn on the end/bottom edges and the last
+ * columns. Cell borders are drawn on the start/top edges and the first
  * ones are hidden under the frame, so it mirrors correctly in RTL.
  */
 export function StatStrip({ children, className }: StatStripProps) {
@@ -113,9 +113,20 @@ export function StatStrip({ children, className }: StatStripProps) {
         'bg-card @container overflow-x-auto rounded-lg border',
         className
       )}
-      style={{ '--cols': count } as React.CSSProperties}
+      style={
+        // A full track list: a bare count is invalid for grid-template-columns
+        // and would silently collapse the strip to one column. Each track is
+        // at least its content, so a crowded strip scrolls instead of the
+        // cells overlapping.
+        {
+          '--cols': `repeat(${count}, minmax(max-content, 1fr))`,
+        } as React.CSSProperties
+      }
     >
-      <div className='-me-px -mb-px grid grid-cols-2 @2xl:grid-cols-(--cols) [&>*]:border-e [&>*]:border-b @2xl:[&>*]:min-w-28'>
+      {/* Hairlines on the start/top edges, shifted 1px under the frame:
+          overflow before the scroll origin is clipped, so this never grows
+          scrollbars the way end/bottom negative margins do */}
+      <div className='-ms-px -mt-px grid grid-cols-2 @2xl:grid-cols-(--cols) [&>*]:border-s [&>*]:border-t'>
         {children}
       </div>
     </div>

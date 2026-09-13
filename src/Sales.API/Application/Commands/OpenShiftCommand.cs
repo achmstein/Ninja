@@ -5,7 +5,7 @@ using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 namespace Chillax.Sales.API.Application.Commands;
 
-public record OpenShiftCommand(int BranchId, decimal OpeningFloat, string OpenedBy) : IRequest<int>;
+public record OpenShiftCommand(int BranchId, decimal OpeningFloat, string OpenedBy, string? OpenedByUserId = null) : IRequest<int>;
 
 public class OpenShiftCommandHandler(
     IShiftRepository shiftRepository,
@@ -18,7 +18,7 @@ public class OpenShiftCommandHandler(
         if (open is not null)
             throw new SalesDomainException($"Branch {command.BranchId} already has an open shift (#{open.Id}). Close it first.");
 
-        var shift = shiftRepository.Add(new Shift(command.BranchId, command.OpeningFloat, command.OpenedBy));
+        var shift = shiftRepository.Add(new Shift(command.BranchId, command.OpeningFloat, command.OpenedBy, command.OpenedByUserId));
 
         await shiftRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

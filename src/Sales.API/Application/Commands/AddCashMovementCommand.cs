@@ -9,7 +9,15 @@ public record AddCashMovementCommand(
     CashMovementType Type,
     decimal Amount,
     string Reason,
-    string RecordedBy) : IRequest<bool>;
+    string RecordedBy,
+    CashMovementKind Kind = CashMovementKind.Other,
+    int? EmployeeId = null,
+    string? EmployeeName = null,
+    int? SupplierId = null,
+    string? SupplierName = null,
+    int? PartnerId = null,
+    string? PartnerName = null,
+    int? CategoryId = null) : IRequest<bool>;
 
 public class AddCashMovementCommandHandler(
     IShiftRepository shiftRepository,
@@ -20,7 +28,8 @@ public class AddCashMovementCommandHandler(
         var shift = await shiftRepository.GetAsync(command.ShiftId)
             ?? throw new SalesDomainException($"Shift {command.ShiftId} does not exist.");
 
-        shift.AddMovement(command.Type, command.Amount, command.Reason, command.RecordedBy);
+        shift.AddMovement(command.Type, command.Amount, command.Reason, command.RecordedBy, command.Kind, command.EmployeeId, command.EmployeeName,
+            command.SupplierId, command.SupplierName, command.PartnerId, command.PartnerName, command.CategoryId);
 
         await shiftRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

@@ -16,6 +16,8 @@ const services = [
   // Read-only on the till: a customer's points and tab balance on their card
   ['loyalty', '../Loyalty.API/Loyalty.API.json'],
   ['accounts', '../Accounts.API/Accounts.API.json'],
+  ['payroll', '../Payroll.API/Payroll.API.json'],
+  ['finance', '../Finance.API/Finance.API.json'],
 ]
 
 for (const [name, input] of services) {

@@ -12,6 +12,9 @@ public class Purchase : Entity, IAggregateRoot
 
     public string? Supplier { get; private set; }
 
+    /// <summary>Finance's supplier, when one was picked: the receipt then lands on their account.</summary>
+    public int? SupplierId { get; private set; }
+
     public string? InvoiceRef { get; private set; }
 
     public string ReceivedBy { get; private set; } = string.Empty;
@@ -25,7 +28,7 @@ public class Purchase : Entity, IAggregateRoot
 
     protected Purchase() { }
 
-    public static Purchase Receive(int branchId, string? supplier, string? invoiceRef, IEnumerable<PurchaseLine> lines, string receivedBy)
+    public static Purchase Receive(int branchId, string? supplier, string? invoiceRef, IEnumerable<PurchaseLine> lines, string receivedBy, int? supplierId = null)
     {
         var list = lines.ToList();
 
@@ -42,6 +45,7 @@ public class Purchase : Entity, IAggregateRoot
         {
             BranchId = branchId,
             Supplier = string.IsNullOrWhiteSpace(supplier) ? null : supplier.Trim(),
+            SupplierId = supplierId > 0 ? supplierId : null,
             InvoiceRef = string.IsNullOrWhiteSpace(invoiceRef) ? null : invoiceRef.Trim(),
             ReceivedBy = receivedBy,
             ReceivedAt = DateTime.UtcNow,

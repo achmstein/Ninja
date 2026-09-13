@@ -1,4 +1,5 @@
 #nullable enable
+using Chillax.Inventory.API.Application.IntegrationEvents.Events;
 using Chillax.Inventory.API.Application.Services;
 using Chillax.Inventory.Infrastructure.Idempotency;
 
@@ -12,12 +13,14 @@ public record ReceivePurchaseCommand(
     string? Supplier,
     string? InvoiceRef,
     IReadOnlyList<PurchaseLineInput> Lines,
-    string ReceivedBy) : IRequest<int>;
+    string ReceivedBy,
+    int? SupplierId = null) : IRequest<int>;
 
 public class ReceivePurchaseCommandHandler(
     IStockItemRepository stockItems,
     IPurchaseRepository purchases,
-    IStockPostingService posting) : IRequestHandler<ReceivePurchaseCommand, int>
+    IStockPostingService posting,
+    IInventoryIntegrationEventService integrationEvents) : IRequestHandler<ReceivePurchaseCommand, int>
 {
     public async Task<int> Handle(ReceivePurchaseCommand command, CancellationToken cancellationToken)
     {
@@ -28,7 +31,8 @@ public class ReceivePurchaseCommandHandler(
             command.Supplier,
             command.InvoiceRef,
             command.Lines.Select(l => new PurchaseLine(l.StockItemId, l.Quantity, l.UnitCost)),
-            command.ReceivedBy));
+            command.ReceivedBy,
+            command.SupplierId));
 
         // Saved first so the receipt has its number for the movements' reference
         await purchases.UnitOfWork.SaveEntitiesAsync(cancellationToken);
@@ -41,6 +45,11 @@ public class ReceivePurchaseCommandHandler(
             command.ReceivedBy);
 
         await purchases.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // Finance hears of the delivery through the outbox: who is owed for it
+        await integrationEvents.AddAndSaveEventAsync(new PurchaseReceivedIntegrationEvent(
+            purchase.Id, purchase.BranchId, purchase.SupplierId, purchase.Supplier, purchase.InvoiceRef,
+            purchase.Total, purchase.ReceivedAt, purchase.ReceivedBy));
 
         return purchase.Id;
     }

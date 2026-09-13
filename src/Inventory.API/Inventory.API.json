@@ -1865,6 +1865,15 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseLineInput"
             }
+          },
+          "supplierId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -1929,6 +1938,15 @@
             "items": {
               "$ref": "#/components/schemas/PurchaseLineView"
             }
+          },
+          "supplierId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

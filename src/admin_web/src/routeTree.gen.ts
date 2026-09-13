@@ -40,9 +40,16 @@ import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authent
 import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenticated/tables/print'
 import { Route as AuthenticatedRoomsPrintRouteImport } from './routes/_authenticated/rooms/print'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
+import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll/payslips'
+import { Route as AuthenticatedPayrollEmployeesRouteImport } from './routes/_authenticated/payroll/employees'
+import { Route as AuthenticatedPayrollAttendanceRouteImport } from './routes/_authenticated/payroll/attendance'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedMenuBundlesRouteImport } from './routes/_authenticated/menu/bundles'
 import { Route as AuthenticatedInventoryReportsRouteImport } from './routes/_authenticated/inventory/reports'
+import { Route as AuthenticatedFinanceSuppliersRouteImport } from './routes/_authenticated/finance/suppliers'
+import { Route as AuthenticatedFinanceProfitRouteImport } from './routes/_authenticated/finance/profit'
+import { Route as AuthenticatedFinancePartnersRouteImport } from './routes/_authenticated/finance/partners'
+import { Route as AuthenticatedFinanceExpensesRouteImport } from './routes/_authenticated/finance/expenses'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedInventoryHistoryIndexRouteImport } from './routes/_authenticated/inventory/history/index'
 import { Route as AuthenticatedInventoryHistoryTransfersRouteImport } from './routes/_authenticated/inventory/history/transfers'
@@ -218,6 +225,24 @@ const AuthenticatedRoomsHistoryRoute =
     path: '/rooms/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPayrollPayslipsRoute =
+  AuthenticatedPayrollPayslipsRouteImport.update({
+    id: '/payroll/payslips',
+    path: '/payroll/payslips',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollEmployeesRoute =
+  AuthenticatedPayrollEmployeesRouteImport.update({
+    id: '/payroll/employees',
+    path: '/payroll/employees',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollAttendanceRoute =
+  AuthenticatedPayrollAttendanceRouteImport.update({
+    id: '/payroll/attendance',
+    path: '/payroll/attendance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersHistoryRoute =
   AuthenticatedOrdersHistoryRouteImport.update({
     id: '/orders/history',
@@ -234,6 +259,30 @@ const AuthenticatedInventoryReportsRoute =
   AuthenticatedInventoryReportsRouteImport.update({
     id: '/inventory/reports',
     path: '/inventory/reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinanceSuppliersRoute =
+  AuthenticatedFinanceSuppliersRouteImport.update({
+    id: '/finance/suppliers',
+    path: '/finance/suppliers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinanceProfitRoute =
+  AuthenticatedFinanceProfitRouteImport.update({
+    id: '/finance/profit',
+    path: '/finance/profit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinancePartnersRoute =
+  AuthenticatedFinancePartnersRouteImport.update({
+    id: '/finance/partners',
+    path: '/finance/partners',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinanceExpensesRoute =
+  AuthenticatedFinanceExpensesRouteImport.update({
+    id: '/finance/expenses',
+    path: '/finance/expenses',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedErrorsErrorRoute =
@@ -278,9 +327,16 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/finance/expenses': typeof AuthenticatedFinanceExpensesRoute
+  '/finance/partners': typeof AuthenticatedFinancePartnersRoute
+  '/finance/profit': typeof AuthenticatedFinanceProfitRoute
+  '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
+  '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
+  '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
@@ -318,9 +374,16 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/finance/expenses': typeof AuthenticatedFinanceExpensesRoute
+  '/finance/partners': typeof AuthenticatedFinancePartnersRoute
+  '/finance/profit': typeof AuthenticatedFinanceProfitRoute
+  '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
+  '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
+  '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
@@ -360,9 +423,16 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
+  '/_authenticated/finance/expenses': typeof AuthenticatedFinanceExpensesRoute
+  '/_authenticated/finance/partners': typeof AuthenticatedFinancePartnersRoute
+  '/_authenticated/finance/profit': typeof AuthenticatedFinanceProfitRoute
+  '/_authenticated/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/_authenticated/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/_authenticated/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
+  '/_authenticated/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
+  '/_authenticated/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
+  '/_authenticated/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/_authenticated/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/_authenticated/tables/print': typeof AuthenticatedTablesPrintRoute
@@ -402,9 +472,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/'
     | '/errors/$error'
+    | '/finance/expenses'
+    | '/finance/partners'
+    | '/finance/profit'
+    | '/finance/suppliers'
     | '/inventory/reports'
     | '/menu/bundles'
     | '/orders/history'
+    | '/payroll/attendance'
+    | '/payroll/employees'
+    | '/payroll/payslips'
     | '/rooms/history'
     | '/rooms/print'
     | '/tables/print'
@@ -442,9 +519,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/'
     | '/errors/$error'
+    | '/finance/expenses'
+    | '/finance/partners'
+    | '/finance/profit'
+    | '/finance/suppliers'
     | '/inventory/reports'
     | '/menu/bundles'
     | '/orders/history'
+    | '/payroll/attendance'
+    | '/payroll/employees'
+    | '/payroll/payslips'
     | '/rooms/history'
     | '/rooms/print'
     | '/tables/print'
@@ -483,9 +567,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_authenticated/'
     | '/_authenticated/errors/$error'
+    | '/_authenticated/finance/expenses'
+    | '/_authenticated/finance/partners'
+    | '/_authenticated/finance/profit'
+    | '/_authenticated/finance/suppliers'
     | '/_authenticated/inventory/reports'
     | '/_authenticated/menu/bundles'
     | '/_authenticated/orders/history'
+    | '/_authenticated/payroll/attendance'
+    | '/_authenticated/payroll/employees'
+    | '/_authenticated/payroll/payslips'
     | '/_authenticated/rooms/history'
     | '/_authenticated/rooms/print'
     | '/_authenticated/tables/print'
@@ -744,6 +835,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRoomsHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payroll/payslips': {
+      id: '/_authenticated/payroll/payslips'
+      path: '/payroll/payslips'
+      fullPath: '/payroll/payslips'
+      preLoaderRoute: typeof AuthenticatedPayrollPayslipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll/employees': {
+      id: '/_authenticated/payroll/employees'
+      path: '/payroll/employees'
+      fullPath: '/payroll/employees'
+      preLoaderRoute: typeof AuthenticatedPayrollEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll/attendance': {
+      id: '/_authenticated/payroll/attendance'
+      path: '/payroll/attendance'
+      fullPath: '/payroll/attendance'
+      preLoaderRoute: typeof AuthenticatedPayrollAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/history': {
       id: '/_authenticated/orders/history'
       path: '/orders/history'
@@ -763,6 +875,34 @@ declare module '@tanstack/react-router' {
       path: '/inventory/reports'
       fullPath: '/inventory/reports'
       preLoaderRoute: typeof AuthenticatedInventoryReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/finance/suppliers': {
+      id: '/_authenticated/finance/suppliers'
+      path: '/finance/suppliers'
+      fullPath: '/finance/suppliers'
+      preLoaderRoute: typeof AuthenticatedFinanceSuppliersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/finance/profit': {
+      id: '/_authenticated/finance/profit'
+      path: '/finance/profit'
+      fullPath: '/finance/profit'
+      preLoaderRoute: typeof AuthenticatedFinanceProfitRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/finance/partners': {
+      id: '/_authenticated/finance/partners'
+      path: '/finance/partners'
+      fullPath: '/finance/partners'
+      preLoaderRoute: typeof AuthenticatedFinancePartnersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/finance/expenses': {
+      id: '/_authenticated/finance/expenses'
+      path: '/finance/expenses'
+      fullPath: '/finance/expenses'
+      preLoaderRoute: typeof AuthenticatedFinanceExpensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/errors/$error': {
@@ -806,9 +946,16 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
+  AuthenticatedFinanceExpensesRoute: typeof AuthenticatedFinanceExpensesRoute
+  AuthenticatedFinancePartnersRoute: typeof AuthenticatedFinancePartnersRoute
+  AuthenticatedFinanceProfitRoute: typeof AuthenticatedFinanceProfitRoute
+  AuthenticatedFinanceSuppliersRoute: typeof AuthenticatedFinanceSuppliersRoute
   AuthenticatedInventoryReportsRoute: typeof AuthenticatedInventoryReportsRoute
   AuthenticatedMenuBundlesRoute: typeof AuthenticatedMenuBundlesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
+  AuthenticatedPayrollAttendanceRoute: typeof AuthenticatedPayrollAttendanceRoute
+  AuthenticatedPayrollEmployeesRoute: typeof AuthenticatedPayrollEmployeesRoute
+  AuthenticatedPayrollPayslipsRoute: typeof AuthenticatedPayrollPayslipsRoute
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
   AuthenticatedRoomsPrintRoute: typeof AuthenticatedRoomsPrintRoute
   AuthenticatedTablesPrintRoute: typeof AuthenticatedTablesPrintRoute
@@ -839,9 +986,16 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
+  AuthenticatedFinanceExpensesRoute: AuthenticatedFinanceExpensesRoute,
+  AuthenticatedFinancePartnersRoute: AuthenticatedFinancePartnersRoute,
+  AuthenticatedFinanceProfitRoute: AuthenticatedFinanceProfitRoute,
+  AuthenticatedFinanceSuppliersRoute: AuthenticatedFinanceSuppliersRoute,
   AuthenticatedInventoryReportsRoute: AuthenticatedInventoryReportsRoute,
   AuthenticatedMenuBundlesRoute: AuthenticatedMenuBundlesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
+  AuthenticatedPayrollAttendanceRoute: AuthenticatedPayrollAttendanceRoute,
+  AuthenticatedPayrollEmployeesRoute: AuthenticatedPayrollEmployeesRoute,
+  AuthenticatedPayrollPayslipsRoute: AuthenticatedPayrollPayslipsRoute,
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
   AuthenticatedRoomsPrintRoute: AuthenticatedRoomsPrintRoute,
   AuthenticatedTablesPrintRoute: AuthenticatedTablesPrintRoute,
