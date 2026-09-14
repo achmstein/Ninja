@@ -181,6 +181,12 @@ export type LocalizeResponse = {
     warnings: Array<string>;
 };
 
+export type MenuProposal = {
+    categories: Array<ProposedCategory>;
+    warnings: Array<string>;
+    notes: null | string;
+};
+
 export type PaginatedItemsDtoOfCatalogItemDto = {
     pageIndex: number | string;
     pageSize: number | string;
@@ -196,11 +202,25 @@ export type ProblemDetails = {
     instance?: null | string;
 };
 
+export type ProposedCategory = {
+    name: LocalizedText;
+    catalogTypeId: null | number | string;
+    items: Array<ProposedItem>;
+};
+
 export type ProposedCustomization = {
     name: LocalizedText;
     isRequired: boolean;
     allowMultiple: boolean;
     options: Array<ProposedOption>;
+};
+
+export type ProposedItem = {
+    rawText: string;
+    name: LocalizedText;
+    description: LocalizedText;
+    price: number | string;
+    existingItemId: null | number | string;
 };
 
 export type ProposedOption = {
@@ -348,6 +368,46 @@ export type SuggestCustomizationsResponses = {
 };
 
 export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyof SuggestCustomizationsResponses];
+
+export type ScanMenuData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/menu/scan';
+};
+
+export type ScanMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ScanMenuError = ScanMenuErrors[keyof ScanMenuErrors];
+
+export type ScanMenuResponses = {
+    /**
+     * OK
+     */
+    200: MenuProposal;
+};
+
+export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
 
 export type ListItemsData = {
     body?: never;

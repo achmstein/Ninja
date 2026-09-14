@@ -1,8 +1,11 @@
+using Chillax.AI;
 using Chillax.AI.Agents;
 using Chillax.AI.Http;
+using Chillax.AI.Images;
 using Chillax.Catalog.API.Assist;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Chillax.Catalog.API;
 
@@ -25,6 +28,15 @@ public static class CatalogAssistApi
             .WithDescription("The assistant proposes the option groups (size, sugar, extras…) a saved menu item is ordered with, in the menu's own wording, leaving out groups the item already has. Nothing is saved: add the ones you want through the customization endpoints (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
+            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+
+        api.MapPost("/assist/menu/scan", ScanMenu)
+            .WithName("ScanMenu")
+            .WithSummary("Read a menu photo into proposed categories and items")
+            .WithDescription("The assistant transcribes a photo of a menu — sections, items, prices, both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then create what you keep (Admin only).")
+            .WithTags("Assist")
+            .RequireAuthorization("Admin")
+            .DisableAntiforgery()
             .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
 
         return api;
@@ -88,6 +100,34 @@ public static class CatalogAssistApi
         try
         {
             return TypedResults.Ok(await suggester.SuggestAsync(item, examples, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
+
+    public static async Task<Results<Ok<MenuProposal>, BadRequest<ProblemDetails>, ProblemHttpResult>> ScanMenu(
+        IFormFile file,
+        [FromServices] MenuScanner scanner,
+        [FromServices] IOptions<AIOptions> aiOptions,
+        CatalogContext context,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        if (!scanner.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        var (image, error) = await ImageValidation.ReadAsync(file, aiOptions.Value.MaxImageBytes, ct);
+        if (image is null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error ?? "The menu photo could not be read." });
+
+        var categories = await context.CatalogTypes.AsNoTracking().OrderBy(c => c.DisplayOrder).ToListAsync(ct);
+        var items = await context.CatalogItems.AsNoTracking().ToListAsync(ct);
+
+        try
+        {
+            return TypedResults.Ok(await scanner.ScanAsync(image, categories, items, ct));
         }
         catch (AIException ex)
         {

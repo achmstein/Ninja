@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import {
@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  ScanLine,
   Search,
   Tag,
   Trash2,
@@ -39,6 +40,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
+import { SCAN_ACCEPT } from '@/lib/image'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -53,6 +55,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
@@ -62,8 +65,10 @@ import { Grip, Sortable } from '@/components/sortable'
 import { CategoryDialog } from './components/category-dialog'
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
+import { MenuReviewSheet } from './components/menu-review-sheet'
 import { MenuPage } from './menu-page'
 import { itemPictureUrl } from './pictures'
+import { useMenuScan } from './use-menu-scan'
 
 const route = getRouteApi('/_authenticated/menu/')
 
@@ -102,6 +107,11 @@ export function MenuManagement() {
   const [deleteCategory, setDeleteCategory] = useState<CatalogTypeDto | null>(
     null
   )
+
+  // A photo of a menu becomes a proposal the review sheet turns into
+  // categories and items; hidden when the assistant is not set up
+  const scan = useMenuScan()
+  const scanInputRef = useRef<HTMLInputElement>(null)
 
   const itemsQuery = useQuery(
     listItemsOptions({ query: { 'api-version': API_VERSION } })
@@ -284,6 +294,35 @@ export function MenuManagement() {
         tab='menu'
         actions={
           <>
+            {scan.available && (
+              <>
+                <Button
+                  variant='outline'
+                  disabled={scan.isScanning}
+                  onClick={() => scanInputRef.current?.click()}
+                >
+                  {scan.isScanning ? (
+                    <Spinner className='me-2' />
+                  ) : (
+                    <ScanLine className='me-2 h-4 w-4' />
+                  )}
+                  {scan.isScanning ? t('readingMenu') : t('scanMenu')}
+                </Button>
+                {/* No `capture`: the native chooser offers the camera and
+                    the gallery, and a menu often arrives as a photo */}
+                <input
+                  ref={scanInputRef}
+                  type='file'
+                  accept={SCAN_ACCEPT}
+                  className='hidden'
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (file) void scan.scanFile(file)
+                  }}
+                />
+              </>
+            )}
             <Button
               variant='outline'
               onClick={() => setCategoryDialog({ category: null })}
@@ -489,6 +528,16 @@ export function MenuManagement() {
         onStateChange={setSheet}
         onDelete={setDeleteItem}
       />
+
+      {scan.proposal && (
+        <MenuReviewSheet
+          proposal={scan.proposal}
+          categories={orderedCategories}
+          onOpenChange={(open) => {
+            if (!open) scan.clearProposal()
+          }}
+        />
+      )}
 
       <DeleteConfirmDialog
         open={!!deleteItem}

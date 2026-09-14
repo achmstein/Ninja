@@ -179,6 +179,31 @@ public sealed class OwnerActor(ApiClient api)
     public Task<List<ItemCustomizationView>> CustomizationsAsync(int itemId, CancellationToken ct)
         => Api.GetAsync<List<ItemCustomizationView>>($"/api/catalog/items/{itemId}/customizations", ct);
 
+    /// <summary>menu "Scan a menu": a photo of a menu becomes proposed sections and items.</summary>
+    public Task<MenuProposal> ScanMenuAsync(byte[] image, CancellationToken ct)
+        => Api.PostFileAsync<MenuProposal>("/api/catalog/assist/menu/scan", image, "menu.png", "image/png", ct);
+
+    /// <summary>menu-review-sheet.tsx: a proposed section that matched nothing becomes a category.</summary>
+    public Task<CatalogTypeView> CreateMenuCategoryAsync(LocalizedText name, int displayOrder, CancellationToken ct)
+        => Api.PostAsync<CatalogTypeView>("/api/catalog/categories", new { name = new { en = name.En, ar = name.Ar }, displayOrder }, ct);
+
+    /// <summary>menu-review-sheet.tsx: a ticked proposed item goes up as it came back, under the chosen category.</summary>
+    public Task<CatalogItem> CreateMenuItemAsync(ProposedItem item, int catalogTypeId, CancellationToken ct)
+        => Api.PostAsync<CatalogItem>("/api/catalog/items", new
+        {
+            name = new { en = item.Name.En, ar = item.Name.Ar },
+            description = new { en = item.Description.En, ar = item.Description.Ar },
+            price = item.Price,
+            catalogTypeId,
+            isAvailable = true,
+            isOnOffer = false,
+            offerPrice = (decimal?)null,
+            isPopular = false,
+            preparationTimeMinutes = (int?)null,
+            displayOrder = 0,
+            pictureFileName = (string?)null,
+        }, ct);
+
     public async Task SetReorderLevelAsync(int stockItemId, decimal? reorderLevel, CancellationToken ct)
     {
         using var r = await Api.PutAsync($"/api/inventory/items/{stockItemId}/reorder-level", new { reorderLevel }, ct);

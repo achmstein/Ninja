@@ -18,10 +18,10 @@ public static class ImageValidation
     public static async Task<(DataContent? Image, string? Error)> ReadAsync(IFormFile? file, int maxBytes, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
-            return (null, "The receipt image is empty.");
+            return (null, "The image is empty.");
 
         if (file.Length > maxBytes)
-            return (null, $"The receipt image is too large; {maxBytes / (1024 * 1024)} MB at most.");
+            return (null, $"The image is too large; {maxBytes / (1024 * 1024)} MB at most.");
 
         await using var stream = file.OpenReadStream();
         using var buffer = new MemoryStream((int)file.Length);
@@ -30,7 +30,7 @@ public static class ImageValidation
 
         var sniffed = SniffMediaType(bytes);
         if (sniffed is null)
-            return (null, "The receipt must be a jpeg, png or webp image.");
+            return (null, "The file must be a jpeg, png or webp image.");
 
         if (!string.IsNullOrEmpty(file.ContentType)
             && AllowedMediaTypes.Contains(file.ContentType)

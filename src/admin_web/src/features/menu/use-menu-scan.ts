@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { type ReceiptProposal } from '@/api/inventory'
-import { scanReceiptMutation } from '@/api/inventory/@tanstack/react-query.gen'
+import { type MenuProposal } from '@/api/catalog'
+import { scanMenuMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
@@ -9,17 +9,17 @@ import { toast } from '@/lib/toast'
 import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
 
 /**
- * Pick a photo, shrink it, send it, keep the proposal for the review
- * sheet. The assistant is hidden (`available === false`) once the server
- * says it is not configured.
+ * Pick a photo of a menu, shrink it, send it, keep the proposal for the
+ * review sheet. The assistant is hidden (`available === false`) once the
+ * server says it is not configured.
  */
-export function useReceiptScan() {
+export function useMenuScan() {
   const t = useT()
   const available = useAssistStore((s) => !s.unavailable)
-  const [proposal, setProposal] = useState<ReceiptProposal | null>(null)
+  const [proposal, setProposal] = useState<MenuProposal | null>(null)
 
   const scan = useMutation({
-    ...scanReceiptMutation(),
+    ...scanMenuMutation(),
     onSuccess: (data) => setProposal(data),
     onError: (error) => toast.error(assistErrorMessage(error)),
   })

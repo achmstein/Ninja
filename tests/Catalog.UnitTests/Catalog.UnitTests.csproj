@@ -14,4 +14,9 @@
     <ProjectReference Include="..\..\src\Catalog.API\Catalog.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- A rendered bilingual menu for the opt-in live test of the scanner -->
+    <None Include="Assist\menu-sample.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

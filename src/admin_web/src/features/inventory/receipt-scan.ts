@@ -6,9 +6,6 @@ import {
 import { toNumber } from '@/lib/money'
 import { type Line, money, newLine, perUnit } from './lines'
 
-export const SCAN_ACCEPT = 'image/jpeg,image/png,image/webp'
-export const SCAN_MAX_BYTES = 5 * 1024 * 1024
-
 /**
  * A proposed line as the review sheet edits it: included or not, matched
  * to an item or about to be created, with the amounts as strings the same

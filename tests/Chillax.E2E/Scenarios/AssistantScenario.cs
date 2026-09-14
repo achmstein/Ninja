@@ -86,6 +86,29 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
         var missing = await Assert.ThrowsAsync<ApiException>(() => Owner.SuggestCustomizationsAsync(999_999, Ct));
         Assert.Equal(HttpStatusCode.NotFound, missing.Status);
 
+        // 3d. A photo of a menu: a section matched to an existing category (its Turkish Coffee flagged as
+        //     already there) and a section nothing matches. The review sheet creates the category, then
+        //     the ticked items under it; the flagged one stays unticked.
+        Step("Scan a menu photo into proposed categories and items");
+        var read = await Owner.ScanMenuAsync(Images.TinyPng, Ct);
+        Assert.Equal(2, read.Categories.Count);
+        Assert.Empty(read.Warnings);
+        var matched = read.Categories[0];
+        Assert.NotNull(matched.CatalogTypeId);
+        Assert.NotNull(matched.Items[0].ExistingItemId); // the seed's Turkish Coffee
+        Assert.Null(matched.Items[1].ExistingItemId);
+        var newSection = read.Categories[1];
+        Assert.Null(newSection.CatalogTypeId);
+        Assert.Equal("أصناف تجريبية", newSection.Name.Ar);
+        var special = Assert.Single(newSection.Items);
+        Assert.Equal(30m, special.Price);
+        Assert.Equal("Fresh lemon with mint, blended with ice", special.Description.En);
+
+        var category = await Owner.CreateMenuCategoryAsync(new LocalizedText($"{newSection.Name.En} {Day.RunId}", newSection.Name.Ar), 99, Ct);
+        var created = await Owner.CreateMenuItemAsync(special with { Name = new LocalizedText($"{special.Name.En} {Day.RunId}", special.Name.Ar) }, category.Id, Ct);
+        Assert.Equal(category.Id, created.CatalogTypeId);
+        Assert.Equal(30m, created.Price);
+
         // 4. A receipt photo becomes a proposal: two lines matched to what is on the shelf, one new item.
         var scan = Step("Scan a receipt");
         var shelf = await Owner.StockItemsAsync(Ct);

@@ -123,6 +123,76 @@
         ]
       }
     },
+    "/api/catalog/assist/menu/scan": {
+      "post": {
+        "tags": [
+          "Assist"
+        ],
+        "summary": "Read a menu photo into proposed categories and items",
+        "description": "The assistant transcribes a photo of a menu — sections, items, prices, both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then create what you keep (Admin only).",
+        "operationId": "ScanMenu",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuProposal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/catalog/items": {
       "get": {
         "tags": [
@@ -3793,6 +3863,34 @@
           }
         }
       },
+      "MenuProposal": {
+        "required": [
+          "categories",
+          "warnings",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedCategory"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PaginatedItemsDtoOfCatalogItemDto": {
         "required": [
           "pageIndex",
@@ -3872,6 +3970,34 @@
           }
         }
       },
+      "ProposedCategory": {
+        "required": [
+          "name",
+          "catalogTypeId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "catalogTypeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposedItem"
+            }
+          }
+        }
+      },
       "ProposedCustomization": {
         "required": [
           "name",
@@ -3895,6 +4021,44 @@
             "items": {
               "$ref": "#/components/schemas/ProposedOption"
             }
+          }
+        }
+      },
+      "ProposedItem": {
+        "required": [
+          "rawText",
+          "name",
+          "description",
+          "price",
+          "existingItemId"
+        ],
+        "type": "object",
+        "properties": {
+          "rawText": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "description": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "existingItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

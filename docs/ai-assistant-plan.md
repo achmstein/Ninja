@@ -1,8 +1,8 @@
 # Chillax AI assistant — Design & Plan
 
-**Goal:** take two chores off the back office — typing every menu text twice (English and Egyptian Arabic) and keying a supplier receipt line by line into "Receive stock" — with an assistant that proposes and a person who confirms.
+**Goal:** take the menu chores off the back office — typing every menu text twice (English and Egyptian Arabic), writing descriptions, setting up the same size / sugar / extras groups item after item, keying a printed menu in from scratch, keying a supplier receipt line by line into "Receive stock" — with an assistant that proposes and a person who confirms.
 
-**Status:** decided 2026-09-14; built the same day on the pattern dotnet/eShop uses for its AI.
+**Status:** decided 2026-09-14; built the same day on the pattern dotnet/eShop uses for its AI. Extended the same day: descriptions written from the name, customization groups proposed per item, a menu photo read into categories and items.
 
 ---
 
@@ -27,12 +27,13 @@ The **Google Gemini API free tier** through its OpenAI-compatible endpoint (`gem
 
 ### D3 — Ownership stays where it is; the AI only proposes
 
-Catalog owns `POST /api/catalog/assist/localize` and `POST /api/catalog/assist/customizations`; Inventory owns `POST /api/inventory/purchases/scan`. None of them writes: localize returns the filled text for the form, customizations returns proposed option groups for the item's sheet, scan returns a proposal for the review sheet, and the user creates items, adds groups and receives the purchase through the endpoints that already exist. No service calls another; the review sheet joins Finance's suppliers itself. One model round-trip per action (plus one repair round if the JSON does not parse).
+Catalog owns `POST /api/catalog/assist/localize`, `POST /api/catalog/assist/customizations` and `POST /api/catalog/assist/menu/scan`; Inventory owns `POST /api/inventory/purchases/scan`. None of them writes: localize returns the filled text for the form, customizations returns proposed option groups for the item's sheet, the scans return proposals for their review sheets, and the user creates categories and items, adds groups and receives the purchase through the endpoints that already exist. No service calls another; the review sheet joins Finance's suppliers itself. One model round-trip per action (plus one repair round if the JSON does not parse).
 
 ### D4 — Voice and numbers are checked, not trusted
 
 - **Localize**: the prompt carries a `fill` list — exactly the fields the model must produce (`name.ar`, `description.en`, `description.ar`, `categoryId`) — and only those are taken from the answer; everything the user typed is copied back from the request, never from the model. A description is *written* (both languages, from the name and category) only when `suggestDescription` is set and there is none; a half-typed one is translated, never rewritten. Each side taken is cleaned and capped; price wording is stripped and flagged; Arabic with no Arabic letters is flagged; a category is accepted only from the list and only when asked for. `Filled` names what the assistant filled so the form overwrites nothing the user typed. One sparkle on a new item's name asks for all of it; the description's own sparkle asks for the description alone, so it also works on a saved item whose name is already bilingual.
 - **Customizations**: the item goes up with its price, category and the names of the groups it already has, plus up to 12 of the menu's existing groups as examples (one per distinct shape, the same category first) so the proposals speak the house's words and prices. The answer is capped at 5 groups of 8 options; a group the item already has (by either language) is dropped with a warning, options are deduplicated, a single-choice group keeps one default and needs two options, a price that would take the item below free or above double its price is zeroed with a warning, missing Arabic is flagged. The sheet shows the proposals as drafts to add, edit or discard; "Add" posts each through the existing create endpoint.
+- **Menu scan**: the model is given the existing categories (id + names) and the photo, and transcribes sections and items in both languages with the printed prices; it matches a section to an existing category by id, the validator also matches by folded name (case, spacing, Arabic diacritics and tatweel) and flags items whose name is already on the menu so the review sheet starts them unticked. Ids not in the list, unreadable names, missing or absurd prices, duplicates within the photo and empty sections each become a "Section, line N: …" warning; the proposal is capped at 20 sections / 150 items. The review sheet creates the new categories first, then the items, remembering what was created so a retry after a failure never makes the same thing twice.
 - **Scan**: ids are checked against the shelf; quantities are recomputed from packs × pack size in the item's base unit; money is reconciled from whichever two numbers agree, the printed total winning over qty × cost; every doubt becomes a `line N: …` warning; unmatched lines carry look-alike suggestions (`StockItemMatcher`, Arabic-aware) and a proposed new item with an allow-listed unit.
 
 ### D5 — The free tier is shared, so the services throttle first
@@ -45,17 +46,19 @@ Catalog owns `POST /api/catalog/assist/localize` and `POST /api/catalog/assist/c
 src/Chillax.AI/                    shared: options, AddAIServices, agent factory, fake, image checks, problems, rate limiting
 src/Catalog.API/Assist/            LocalizeContracts, MenuLocalizer (agent), LocalizerPostProcessor (pure), MenuLocalizerFake
                                    CustomizationContracts, CustomizationSuggester (agent), CustomizationsPostProcessor (pure), CustomizationSuggesterFake
+                                   MenuScanContracts, MenuScanner (vision agent), MenuProposalValidator (pure), MenuScannerFake
 src/Catalog.API/Apis/CatalogAssistApi.cs
 src/Inventory.API/Application/Assist/
                                    ReceiptContracts, ReceiptScanner (vision agent), ReceiptProposalValidator (pure),
                                    StockItemMatcher (pure), ReceiptScannerFake
 src/admin_web/src/features/assist/ errors (429/503/400 → messages, unavailable flag), use-localize-assist, use-name-assist, use-customizations-assist
 src/admin_web/src/components/localized-input.tsx   sparkle button, tinted "suggested" side, controlled language
+src/admin_web/src/features/menu/{menu-scan,use-menu-scan}.ts, components/menu-review-sheet.tsx
 src/admin_web/src/features/inventory/{lines,receipt-scan,use-receipt-scan}.ts
 src/admin_web/src/features/inventory/components/{line-amounts,receipt-review-sheet}.tsx
 ```
 
-The fake answers are deterministic (localize: `"{en} (تجريبي)"` / `"{ar} (fake)"`, `"{name} description (fake)"` / `"وصف {name} (تجريبي)"` when a description is asked for, first category when asked; customizations: a required "Size" Single / Double +10 and an "Extras" add-on group, whatever the item; scan: the first two shelf items matched, one unmatched "مياه معدنية 1.5 لتر" proposing a new item) so `tests/Chillax.E2E/Scenarios/AssistantScenario.cs` can drive the whole path — fill in a new item from its name, save it, take its proposed groups, add one and see the next proposal leave it out, scan, create the proposed stock item, receive the purchase, see `PurchaseReceived` and the supplier invoice — without a key.
+The fake answers are deterministic (localize: `"{en} (تجريبي)"` / `"{ar} (fake)"`, `"{name} description (fake)"` / `"وصف {name} (تجريبي)"` when a description is asked for, first category when asked; customizations: a required "Size" Single / Double +10 and an "Extras" add-on group, whatever the item; menu scan: a section under the first existing category with the seed's Turkish Coffee and a "Fake Hibiscus", plus a new "Fake Specials" section with one described item; receipt scan: the first two shelf items matched, one unmatched "مياه معدنية 1.5 لتر" proposing a new item) so `tests/Chillax.E2E/Scenarios/AssistantScenario.cs` can drive the whole path — fill in a new item from its name, save it, take its proposed groups, add one and see the next proposal leave it out, scan a menu photo and create its new section and item, scan a receipt, create the proposed stock item, receive the purchase, see `PurchaseReceived` and the supplier invoice — without a key.
 
 ## 4. Running it
 
@@ -66,6 +69,7 @@ The fake answers are deterministic (localize: `"{en} (تجريبي)"` / `"{ar} (
 
 ## 5. Not done / later
 
-- Live checks against the provider: `MenuLocalizerLiveTest`, `CustomizationSuggesterLiveTest` and `ReceiptScannerLiveTest` run only when `GEMINI_API_KEY` is set (inconclusive otherwise) and print what the model answered; they are the place to look when a provider or model changes.
+- Live checks against the provider: `MenuLocalizerLiveTest`, `CustomizationSuggesterLiveTest`, `MenuScannerLiveTest` (on a rendered bilingual menu, `tests/Catalog.UnitTests/Assist/menu-sample.png`) and `ReceiptScannerLiveTest` run only when `GEMINI_API_KEY` is set (inconclusive otherwise) and print what the model answered; they are the place to look when a provider or model changes.
+- A menu photo yields items and categories only; customizations for them are a second step, item by item, with "Suggest" on each.
 - The mobile admin app has none of this; the endpoints are there if it wants them.
 - A receipt that lists an item the shelf knows under a different name still needs the user to pick it; the look-alikes are offered first, that is all.

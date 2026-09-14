@@ -2287,6 +2287,74 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // AI assistant: menu photo scanning
+  scanMenu: { en: 'Scan a menu', ar: 'صوّر المنيو' },
+  readingMenu: { en: 'Reading the menu…', ar: 'بنقرا المنيو…' },
+  reviewMenuScan: { en: 'Check the menu', ar: 'راجع المنيو' },
+  reviewMenuScanDescription: {
+    en: 'The assistant read these sections and items. Fix any name or price, pick where each section goes, untick what you do not want, then create the rest.',
+    ar: 'المساعد قرا الأقسام والأصناف دي. صلّح أي اسم أو سعر، اختار كل قسم يروح فين، شيل العلامة من اللي مش عايزه، وبعدين اعمل الباقي.',
+  },
+  onThePhoto: { en: 'On the photo: {text}', ar: 'على الصورة: {text}' },
+  alreadyOnMenu: { en: 'Already on the menu', ar: 'موجود في المنيو' },
+  created: { en: 'Created', ar: 'اتعمل' },
+  newCategoryFromScan: { en: 'New category', ar: 'قسم جديد' },
+  noItemsSelected: {
+    en: 'Tick at least one item',
+    ar: 'علّم على صنف واحد على الأقل',
+  },
+  itemNeedsNameAndPrice: {
+    en: 'Every ticked item needs an English name and a price',
+    ar: 'كل صنف متعلّم لازم له اسم إنجليزي وسعر',
+  },
+  sectionNeedsCategory: {
+    en: 'A new category needs an English name',
+    ar: 'القسم الجديد لازم له اسم إنجليزي',
+  },
+  itemsSelected: {
+    plural: 'count',
+    en: {
+      '=0': 'Nothing ticked',
+      '=1': '1 item ticked',
+      other: '{count} items ticked',
+    },
+    ar: {
+      zero: 'مفيش حاجة متعلّمة',
+      one: 'صنف واحد متعلّم',
+      two: 'صنفين متعلّمين',
+      few: '{count} أصناف متعلّمة',
+      many: '{count} صنف متعلّم',
+      other: '{count} صنف متعلّم',
+    },
+  },
+  createScannedItems: {
+    plural: 'count',
+    en: {
+      '=1': 'Create 1 item',
+      other: 'Create {count} items',
+    },
+    ar: {
+      one: 'اعمل صنف واحد',
+      two: 'اعمل صنفين',
+      few: 'اعمل {count} أصناف',
+      many: 'اعمل {count} صنف',
+      other: 'اعمل {count} صنف',
+    },
+  },
+  menuScanCreated: {
+    plural: 'count',
+    en: {
+      '=1': '1 item added to the menu',
+      other: '{count} items added to the menu',
+    },
+    ar: {
+      one: 'اتضاف صنف واحد للمنيو',
+      two: 'اتضاف صنفين للمنيو',
+      few: 'اتضافت {count} أصناف للمنيو',
+      many: 'اتضاف {count} صنف للمنيو',
+      other: 'اتضاف {count} صنف للمنيو',
+    },
+  },
   scannedLinesAdded: {
     en: 'Lines added; check them and press Receive',
     ar: 'السطور اتضافت؛ راجعها ودوس استلام',

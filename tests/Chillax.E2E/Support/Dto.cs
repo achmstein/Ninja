@@ -146,6 +146,15 @@ public sealed record ProposedOption(LocalizedText Name, decimal PriceAdjustment,
 
 public sealed record ItemCustomizationView(int Id, LocalizedText Name, bool IsRequired, bool AllowMultiple, int DisplayOrder, List<CustomizationOptionView> Options);
 
+// The assistant's menu-photo proposal (Catalog.API Assist/MenuScanContracts.cs)
+public sealed record MenuProposal(List<ProposedCategory> Categories, List<string> Warnings, string? Notes);
+
+public sealed record ProposedCategory(LocalizedText Name, int? CatalogTypeId, List<ProposedItem> Items);
+
+public sealed record ProposedItem(string RawText, LocalizedText Name, LocalizedText Description, decimal Price, int? ExistingItemId);
+
+public sealed record CatalogTypeView(int Id, LocalizedText Name, int DisplayOrder);
+
 public sealed record CustomizationOptionView(int Id, LocalizedText Name, decimal PriceAdjustment, bool IsDefault, int DisplayOrder);
 
 public sealed record StockLevelView(int StockItemId, LocalizedText Name, string Unit, bool AutoSoldOut, bool IsActive, decimal OnHand,

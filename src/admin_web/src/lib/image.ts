@@ -6,6 +6,10 @@
 const LONGEST_SIDE = 1600
 const JPEG_QUALITY = 0.85
 
+/** What the assistant's scan endpoints take, and the server's cap on it */
+export const SCAN_ACCEPT = 'image/jpeg,image/png,image/webp'
+export const SCAN_MAX_BYTES = 5 * 1024 * 1024
+
 export async function downscaleImage(file: File): Promise<File> {
   if (typeof createImageBitmap !== 'function') return file
 

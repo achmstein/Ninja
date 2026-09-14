@@ -53,7 +53,7 @@ public class MenuLocalizerLiveTest
 
         Assert.AreEqual("Iced Caramel Latte", response.Name.En);
         Assert.IsTrue(Regex.IsMatch(response.Name.Ar ?? "", @"\p{IsArabic}"), $"Arabic name expected, got '{response.Name.Ar}'");
-        Assert.IsTrue((response.Description?.En ?? "").Length > 10, $"English description expected, got '{response.Description?.En}'");
+        Assert.IsGreaterThan(10, (response.Description?.En ?? "").Length, $"English description expected, got '{response.Description?.En}'");
         Assert.IsTrue(Regex.IsMatch(response.Description?.Ar ?? "", @"\p{IsArabic}"), $"Arabic description expected, got '{response.Description?.Ar}'");
         CollectionAssert.IsSubsetOf(new[] { "name.ar", "description.en", "description.ar" }, response.Filled.ToList());
     }
