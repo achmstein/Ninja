@@ -171,6 +171,7 @@ export type TillEmployeeView = {
     name: string;
     jobTitle: null | string;
     scheme: PayScheme;
+    balance: null | number | string;
 };
 
 export type UpdateEmployeeRequest = {

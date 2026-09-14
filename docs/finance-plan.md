@@ -36,7 +36,7 @@ Three facts from the owner (2026-09-13) shaped the design: most non-stock expens
 
 ### D4 — The till says what money was for
 
-The POS pay-out already names staff. It gains three more kinds and their pickers: **مورد** (a supplier, from Finance's list — the payment goes on their account), **مصروف** (a category — an expense paid from the drawer) and **شريك** (a partner — a drawing). A pay-in gains **شريك** (a contribution). Sales publishes `CashMovedIntegrationEvent` for these, through the outbox, keyed on shift and movement; Finance posts the right line idempotently on `shift:{id}:movement:{id}`.
+The POS pay-out already names staff. It gains three more kinds and their pickers: **مورد** (a supplier, from Finance's list — the payment goes on their account), **مصروف** (a category — an expense paid from the drawer) and **شريك** (a partner — a drawing). A pay-in gains **شريك** (a contribution). Sales publishes `CashMovedIntegrationEvent` for these, through the outbox, keyed on shift and movement; Finance posts the right line idempotently on `shift:{id}:movement:{id}`. The supplier picker shows **what the branch owes them** beside the name *(2026-09-14, `GET /till/suppliers` is branch-scoped for it)*, so a delivery man's "you owe us 3,400" can be checked on the spot; partners and categories carry no balance. Both tills have the dialog, `pos_web` and the Flutter `pos_app`.
 
 ### D5 — Suppliers come from Finance; Inventory keeps the id
 

@@ -83,8 +83,11 @@ public record PartnerEntryView(
 
 public record PartnerLedgerView(int PartnerId, decimal Balance, IReadOnlyList<PartnerEntryView> Entries);
 
-/// <summary>The till's pickers: who can be paid, who can draw, what a pay-out can be for.</summary>
+/// <summary>The till's pickers: who can draw, what a pay-out can be for.</summary>
 public record TillPickView(int Id, string Name);
+
+/// <summary>A supplier as the till pays them, with what the branch owes them right now.</summary>
+public record TillSupplierView(int Id, string Name, decimal Balance);
 
 public record TillCategoryView(int Id, LocalizedText Name);
 

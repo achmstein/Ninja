@@ -256,6 +256,12 @@ export type TillPickView = {
     name: string;
 };
 
+export type TillSupplierView = {
+    id: number | string;
+    name: string;
+    balance: number | string;
+};
+
 export type VoidRequest = {
     reason: string;
 };
@@ -1017,7 +1023,7 @@ export type GetTillSuppliersResponses = {
     /**
      * OK
      */
-    200: Array<TillPickView>;
+    200: Array<TillSupplierView>;
 };
 
 export type GetTillSuppliersResponse = GetTillSuppliersResponses[keyof GetTillSuppliersResponses];

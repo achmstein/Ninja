@@ -107,8 +107,19 @@ public class PayrollQueries(PayrollContext context) : IPayrollQueries
             .OrderBy(e => e.Name)
             .ToListAsync();
 
+        // A daily worker's balance is what the evening's pay-out hands over,
+        // so the cashier sees it. A monthly employee's is their salary and
+        // advances — the back office's business, not the counter's.
+        var daily = employees.Where(e => (e.CurrentTerms?.Scheme ?? PayScheme.Daily) == PayScheme.Daily).ToList();
+        var balances = await BalancesAsync(daily.Select(e => e.Id));
+
         return employees
-            .Select(e => new TillEmployeeView(e.Id, e.Name, e.JobTitle, e.CurrentTerms?.Scheme ?? PayScheme.Daily))
+            .Select(e =>
+            {
+                var scheme = e.CurrentTerms?.Scheme ?? PayScheme.Daily;
+                decimal? balance = scheme == PayScheme.Daily ? balances.GetValueOrDefault(e.Id) : null;
+                return new TillEmployeeView(e.Id, e.Name, e.JobTitle, scheme, balance);
+            })
             .ToList();
     }
 

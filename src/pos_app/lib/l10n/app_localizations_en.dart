@@ -1032,6 +1032,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get movementRecorded => 'Movement recorded';
 
   @override
+  String get payOutFor => 'For';
+
+  @override
+  String get payOutSupplier => 'Supplier';
+
+  @override
+  String get payOutWage => 'Wage / salary';
+
+  @override
+  String get payOutAdvance => 'Advance';
+
+  @override
+  String get payOutOther => 'Other';
+
+  @override
+  String get payOutExpense => 'Expense';
+
+  @override
+  String get payOutPartner => 'Partner';
+
+  @override
+  String get payOutWho => 'Who?';
+
+  @override
+  String get payOutWhichSupplier => 'Which supplier?';
+
+  @override
+  String get payOutWhichPartner => 'Which partner?';
+
+  @override
+  String get payOutWhatFor => 'What for?';
+
+  @override
+  String get payOutNoEmployees =>
+      'Nobody on the register for this branch yet — add employees in the admin app.';
+
+  @override
+  String get payOutNoSuppliers =>
+      'No suppliers yet — add them in the admin app.';
+
+  @override
+  String get payOutNoPartners =>
+      'No partners set for this branch — add them in the admin app.';
+
+  @override
+  String get payOutNoCategories => 'No categories set up yet.';
+
+  @override
   String get closeShiftTitle => 'Close shift';
 
   @override

@@ -138,6 +138,17 @@ final salesApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.salesApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
+/// Payroll and Finance: the till reads only their pickers, both branch-scoped
+final payrollApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.payrollApiUrl, branchIdGetter: _branchIdGetter(ref));
+});
+
+final financeApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.financeApiUrl, branchIdGetter: _branchIdGetter(ref));
+});
+
 /// Global services — no branch header needed
 final identityApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);

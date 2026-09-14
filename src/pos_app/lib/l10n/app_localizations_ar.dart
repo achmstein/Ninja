@@ -1033,6 +1033,53 @@ class AppLocalizationsAr extends AppLocalizations {
   String get movementRecorded => 'الحركة اتسجلت';
 
   @override
+  String get payOutFor => 'عشان';
+
+  @override
+  String get payOutSupplier => 'مورد';
+
+  @override
+  String get payOutWage => 'يومية / مرتب';
+
+  @override
+  String get payOutAdvance => 'سلفة';
+
+  @override
+  String get payOutOther => 'حاجة تانية';
+
+  @override
+  String get payOutExpense => 'مصروف';
+
+  @override
+  String get payOutPartner => 'شريك';
+
+  @override
+  String get payOutWho => 'لمين؟';
+
+  @override
+  String get payOutWhichSupplier => 'أي مورد؟';
+
+  @override
+  String get payOutWhichPartner => 'أي شريك؟';
+
+  @override
+  String get payOutWhatFor => 'مصروف إيه؟';
+
+  @override
+  String get payOutNoEmployees =>
+      'مفيش موظفين مسجلين للفرع ده لسه — ضيفهم من الأدمن.';
+
+  @override
+  String get payOutNoSuppliers => 'مفيش موردين لسه — ضيفهم من الأدمن.';
+
+  @override
+  String get payOutNoPartners =>
+      'مفيش شركاء متسجلين للفرع ده — ضيفهم من الأدمن.';
+
+  @override
+  String get payOutNoCategories => 'مفيش تصنيفات متسجلة لسه.';
+
+  @override
   String get closeShiftTitle => 'قفل الوردية';
 
   @override

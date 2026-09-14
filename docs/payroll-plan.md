@@ -49,6 +49,8 @@ One allowance serves the whole period, used up in date order, at the rate of the
 
 Everything staff are handed comes out of the drawer (Q1): a daily worker takes lunch money at noon and the rest of the day's wage in the evening; a monthly employee takes a سلفة mid-month and the salary at month end. `Shift.ExpectedCash` already subtracts pay-outs, so the drawer count stays right. The POS pay-out names what it was for — **Supplier / Wage / Advance / Other** (`CashMovementKind`) — and, for the two staff kinds, whom (Payroll's `EmployeeId`, picked from `GET /api/payroll/till/employees`, the one Payroll endpoint under the Pos policy). Sales raises `CashPaidOutIntegrationEvent` through the outbox; Payroll posts a **Payment** for a wage and an **Advance** for an advance, dated to the shift's business day, idempotent on `shift:{id}:movement:{id}` — the same reference-index guard Inventory uses. Payments made outside the drawer are entered on the payroll page as `Manual`.
 
+The picker shows **what a daily worker is owed** beside their name *(2026-09-14)*: the live draft (D9) makes that the evening's wage less the noon advance, so the cashier need not ask. It is a hint, never the amount — the cashier keys what changes hands. A monthly employee's balance is their salary and advances, the back office's business, and stays off the till (`TillEmployeeView.Balance` is null for them). Both tills carry the dialog: `pos_web` and the Flutter `pos_app` (`TillPicksRepository`, with a demo twin).
+
 Two consequences shaped the payslip:
 
 - A payslip breaks out **Payments** (wages paid in the period) beside advances, so a daily worker paid every evening ends the month at zero rather than with a puzzling negative "carried over".

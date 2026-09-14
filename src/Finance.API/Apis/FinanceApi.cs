@@ -344,8 +344,8 @@ public static class FinanceApi
 
     // The till
 
-    public static async Task<Ok<IReadOnlyList<TillPickView>>> GetTillSuppliers([FromServices] IFinanceQueries queries)
-        => TypedResults.Ok(await queries.GetTillSuppliersAsync());
+    public static async Task<Ok<IReadOnlyList<TillSupplierView>>> GetTillSuppliers(HttpContext httpContext, [FromServices] IFinanceQueries queries)
+        => TypedResults.Ok(await queries.GetTillSuppliersAsync(httpContext.GetRequiredBranchId()));
 
     public static async Task<Ok<IReadOnlyList<TillPickView>>> GetTillPartners(HttpContext httpContext, [FromServices] IFinanceQueries queries)
         => TypedResults.Ok(await queries.GetTillPartnersAsync(httpContext.GetRequiredBranchId()));

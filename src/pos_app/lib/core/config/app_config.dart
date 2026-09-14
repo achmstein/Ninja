@@ -25,6 +25,10 @@ class AppConfig {
   // Read-only on the till: a customer's points and tab balance on their card
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
   static String get accountsApiUrl => '$bffBaseUrl/api/accounts/';
+  // The pay-out pickers: whom to hand a wage, which supplier or partner,
+  // what an expense is for. The till reads nothing else from either.
+  static String get payrollApiUrl => '$bffBaseUrl/api/payroll/';
+  static String get financeApiUrl => '$bffBaseUrl/api/finance/';
 
   // Keycloak configuration
   // Release: dedicated auth subdomain (Caddy proxies straight to Keycloak).

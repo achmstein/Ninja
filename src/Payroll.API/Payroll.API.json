@@ -1955,7 +1955,8 @@
           "id",
           "name",
           "jobTitle",
-          "scheme"
+          "scheme",
+          "balance"
         ],
         "type": "object",
         "properties": {
@@ -1978,6 +1979,15 @@
           },
           "scheme": {
             "$ref": "#/components/schemas/PayScheme"
+          },
+          "balance": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

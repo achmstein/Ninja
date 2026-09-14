@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
+import { toNumber, useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
@@ -48,7 +49,12 @@ const IN_KINDS: Kind[] = [
   { value: 0, key: 'payOutOther', picks: null },
 ]
 
-type Picked = { id: number; name: string }
+// `balance` is what the café owes the person or supplier right now — the
+// evening's wage, the tab a delivery is settling. A hint beside the name,
+// never the amount itself: the cashier still keys what actually changes
+// hands. Absent where it is nobody's business at the counter (a monthly
+// employee's salary) or meaningless (a partner, a category).
+type Picked = { id: number; name: string; balance?: number }
 
 type MovementDialogProps = {
   shiftId: number
@@ -73,6 +79,7 @@ export function MovementDialog({
 }: MovementDialogProps) {
   const t = useT()
   const localized = useLocalized()
+  const money = useMoney()
   const queryClient = useQueryClient()
   const [amountStr, setAmountStr] = useState('')
   const [reason, setReason] = useState('')
@@ -137,13 +144,21 @@ export function MovementDialog({
   const options: { list: Picked[] | undefined; empty: TranslationKey; title: TranslationKey } | null =
     picks === 'employee'
       ? {
-          list: employees.data?.map((e) => ({ id: Number(e.id), name: e.name })),
+          list: employees.data?.map((e) => ({
+            id: Number(e.id),
+            name: e.name,
+            balance: e.balance == null ? undefined : toNumber(e.balance),
+          })),
           empty: 'payOutNoEmployees',
           title: 'payOutWho',
         }
       : picks === 'supplier'
         ? {
-            list: suppliers.data?.map((s) => ({ id: Number(s.id), name: s.name })),
+            list: suppliers.data?.map((s) => ({
+              id: Number(s.id),
+              name: s.name,
+              balance: toNumber(s.balance),
+            })),
             empty: 'payOutNoSuppliers',
             title: 'payOutWhichSupplier',
           }
@@ -240,18 +255,35 @@ export function MovementDialog({
               <div className='grid max-h-48 grid-cols-2 gap-2 overflow-y-auto'>
                 {(options.list ?? []).map((item) => {
                   const isPicked = picked?.id === item.id
+                  const balance = item.balance ?? 0
                   return (
                     <Button
                       key={item.id}
                       type='button'
                       variant={isPicked ? 'default' : 'outline'}
                       className={cn(
-                        'h-12 justify-start truncate',
+                        'h-12 justify-between gap-2',
                         isPicked && 'font-semibold'
                       )}
                       onClick={() => pick(item)}
                     >
-                      {item.name}
+                      <span className='truncate'>{item.name}</span>
+                      {balance !== 0 && (
+                        <span
+                          className={cn(
+                            'shrink-0 text-xs font-normal tabular-nums',
+                            isPicked
+                              ? 'text-primary-foreground/80'
+                              : balance < 0
+                                ? 'text-destructive'
+                                : 'text-muted-foreground'
+                          )}
+                        >
+                          {balance < 0
+                            ? t('owesAmount', { amount: money(-balance) })
+                            : money(balance)}
+                        </span>
+                      )}
                     </Button>
                   )
                 })}

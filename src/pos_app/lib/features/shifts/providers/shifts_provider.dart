@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../models/shift.dart';
 import '../services/shifts_service.dart';
+import '../services/till_picks_service.dart';
 
 /// The shift screen watches the drawer closely; the header chip only needs
 /// the day's state, and shares this one query so a single refresh after
@@ -38,6 +39,20 @@ final currentShiftProvider = AsyncNotifierProvider<CurrentShiftNotifier, ShiftVi
 final shiftProvider = FutureProvider.autoDispose.family<ShiftView, int>((ref, id) async {
   ref.watch(selectedBranchIdProvider);
   return ref.read(shiftsRepositoryProvider).getShift(id);
+});
+
+/// The list behind one of the pay-out dialog's pickers, fetched when its
+/// kind is tapped and dropped with the dialog, so the next pay-out sees
+/// balances the last one changed
+final tillPicksProvider = FutureProvider.autoDispose.family<List<TillPick>, MovementPick>((ref, pick) {
+  ref.watch(selectedBranchIdProvider);
+  final picks = ref.read(tillPicksRepositoryProvider);
+  return switch (pick) {
+    MovementPick.employee => picks.employees(),
+    MovementPick.supplier => picks.suppliers(),
+    MovementPick.partner => picks.partners(),
+    MovementPick.category => picks.categories(),
+  };
 });
 
 const closedShiftsPageSize = 20;

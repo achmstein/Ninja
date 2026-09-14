@@ -12,7 +12,7 @@ public interface IFinanceQueries
     Task<SupplierLedgerView?> GetSupplierLedgerAsync(int supplierId, int branchId);
     Task<IReadOnlyList<PartnerView>> GetPartnersAsync(int branchId, bool includeInactive);
     Task<PartnerLedgerView?> GetPartnerLedgerAsync(int partnerId, int branchId);
-    Task<IReadOnlyList<TillPickView>> GetTillSuppliersAsync();
+    Task<IReadOnlyList<TillSupplierView>> GetTillSuppliersAsync(int branchId);
     Task<IReadOnlyList<TillPickView>> GetTillPartnersAsync(int branchId);
     Task<IReadOnlyList<TillCategoryView>> GetTillCategoriesAsync();
     Task<ProfitView> GetProfitAsync(int branchId, int year, int month);
@@ -83,15 +83,18 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
         var query = context.Suppliers.AsNoTracking();
         if (!includeInactive) query = query.Where(s => s.IsActive);
         var suppliers = await query.OrderBy(s => s.Name).ToListAsync();
+        var balances = await SupplierBalancesAsync(branchId);
 
-        var balances = await context.SupplierEntries.AsNoTracking()
+        return suppliers.Select(s => new SupplierView(s.Id, s.Name, s.Phone, s.Notes, s.IsActive, balances.GetValueOrDefault(s.Id))).ToList();
+    }
+
+    /// <summary>What the branch owes each supplier: invoices less payments and credits.</summary>
+    private Task<Dictionary<int, decimal>> SupplierBalancesAsync(int branchId)
+        => context.SupplierEntries.AsNoTracking()
             .Where(e => e.BranchId == branchId)
             .GroupBy(e => e.SupplierId)
             .Select(g => new { g.Key, Balance = g.Sum(e => e.Type == SupplierEntryType.Invoice ? e.Amount : -e.Amount) })
             .ToDictionaryAsync(x => x.Key, x => x.Balance);
-
-        return suppliers.Select(s => new SupplierView(s.Id, s.Name, s.Phone, s.Notes, s.IsActive, balances.GetValueOrDefault(s.Id))).ToList();
-    }
 
     public async Task<SupplierLedgerView?> GetSupplierLedgerAsync(int supplierId, int branchId)
     {
@@ -137,9 +140,12 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
             entries.Select(e => new PartnerEntryView(e.Id, e.PartnerId, e.BranchId, e.Type, e.Amount, e.Signed, e.Date, e.Note, e.Reference, e.Source, e.RecordedBy, e.RecordedAt)).ToList());
     }
 
-    public async Task<IReadOnlyList<TillPickView>> GetTillSuppliersAsync()
-        => await context.Suppliers.AsNoTracking().Where(s => s.IsActive).OrderBy(s => s.Name)
-            .Select(s => new TillPickView(s.Id, s.Name)).ToListAsync();
+    public async Task<IReadOnlyList<TillSupplierView>> GetTillSuppliersAsync(int branchId)
+    {
+        var suppliers = await context.Suppliers.AsNoTracking().Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync();
+        var balances = await SupplierBalancesAsync(branchId);
+        return suppliers.Select(s => new TillSupplierView(s.Id, s.Name, balances.GetValueOrDefault(s.Id))).ToList();
+    }
 
     public async Task<IReadOnlyList<TillPickView>> GetTillPartnersAsync(int branchId)
         => await context.Partners.AsNoTracking().Where(p => p.IsActive && p.Shares.Any(s => s.BranchId == branchId)).OrderBy(p => p.Name)

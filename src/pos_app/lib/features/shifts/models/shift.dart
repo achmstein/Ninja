@@ -15,6 +15,38 @@ enum CashMovementType {
       name == CashMovementType.payOut.name_ ? CashMovementType.payOut : CashMovementType.payIn;
 }
 
+/// What a movement was for, as Sales.Domain numbers it. Wage and Advance
+/// name an employee and reach Payroll; Supplier, Expense and Partner reach
+/// Finance; Other is just a reason.
+enum CashMovementKind {
+  other(0),
+  supplier(1),
+  wage(2),
+  advance(3),
+  expense(4),
+  partner(5);
+
+  final int value;
+
+  const CashMovementKind(this.value);
+
+  /// What this kind needs the cashier to pick, if anything
+  MovementPick? get picks => switch (this) {
+        CashMovementKind.wage || CashMovementKind.advance => MovementPick.employee,
+        CashMovementKind.supplier => MovementPick.supplier,
+        CashMovementKind.partner => MovementPick.partner,
+        CashMovementKind.expense => MovementPick.category,
+        CashMovementKind.other => null,
+      };
+
+  /// The kinds a pay-out offers, and the kinds a pay-in offers
+  static const List<CashMovementKind> forPayOut = [supplier, wage, advance, expense, partner, other];
+  static const List<CashMovementKind> forPayIn = [partner, other];
+}
+
+/// The list a kind's picker shows
+enum MovementPick { employee, supplier, partner, category }
+
 /// Cash put into or taken out of the drawer mid-shift, with its reason
 /// (Sales `CashMovementView`).
 class CashMovementView {
@@ -151,13 +183,48 @@ class ShiftView {
   }
 }
 
-/// `POST /api/shifts/{id}/movements`
+/// `POST /api/shifts/{id}/movements`. The kind says what the money was
+/// for; the id and name that go with it are whichever the kind picks
+/// (see [CashMovementKind.picks]) — the name travels too so the Z report
+/// reads without a lookup.
 class CashMovementRequest {
   final CashMovementType type;
   final double amount;
   final String reason;
+  final CashMovementKind kind;
+  final int? employeeId;
+  final String? employeeName;
+  final int? supplierId;
+  final String? supplierName;
+  final int? partnerId;
+  final String? partnerName;
+  final int? categoryId;
 
-  const CashMovementRequest({required this.type, required this.amount, required this.reason});
+  const CashMovementRequest({
+    required this.type,
+    required this.amount,
+    required this.reason,
+    this.kind = CashMovementKind.other,
+    this.employeeId,
+    this.employeeName,
+    this.supplierId,
+    this.supplierName,
+    this.partnerId,
+    this.partnerName,
+    this.categoryId,
+  });
 
-  Map<String, dynamic> toJson() => {'type': type.value, 'amount': amount, 'reason': reason};
+  Map<String, dynamic> toJson() => {
+        'type': type.value,
+        'amount': amount,
+        'reason': reason,
+        'kind': kind.value,
+        'employeeId': employeeId,
+        'employeeName': employeeName,
+        'supplierId': supplierId,
+        'supplierName': supplierName,
+        'partnerId': partnerId,
+        'partnerName': partnerName,
+        'categoryId': categoryId,
+      };
 }

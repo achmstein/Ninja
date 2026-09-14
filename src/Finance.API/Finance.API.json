@@ -1219,7 +1219,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TillPickView"
+                    "$ref": "#/components/schemas/TillSupplierView"
                   }
                 }
               }
@@ -2709,6 +2709,35 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "TillSupplierView": {
+        "required": [
+          "id",
+          "name",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balance": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

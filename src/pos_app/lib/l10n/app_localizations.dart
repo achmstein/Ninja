@@ -1910,6 +1910,96 @@ abstract class AppLocalizations {
   /// **'Movement recorded'**
   String get movementRecorded;
 
+  /// No description provided for @payOutFor.
+  ///
+  /// In en, this message translates to:
+  /// **'For'**
+  String get payOutFor;
+
+  /// No description provided for @payOutSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get payOutSupplier;
+
+  /// No description provided for @payOutWage.
+  ///
+  /// In en, this message translates to:
+  /// **'Wage / salary'**
+  String get payOutWage;
+
+  /// No description provided for @payOutAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get payOutAdvance;
+
+  /// No description provided for @payOutOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get payOutOther;
+
+  /// No description provided for @payOutExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get payOutExpense;
+
+  /// No description provided for @payOutPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get payOutPartner;
+
+  /// No description provided for @payOutWho.
+  ///
+  /// In en, this message translates to:
+  /// **'Who?'**
+  String get payOutWho;
+
+  /// No description provided for @payOutWhichSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Which supplier?'**
+  String get payOutWhichSupplier;
+
+  /// No description provided for @payOutWhichPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Which partner?'**
+  String get payOutWhichPartner;
+
+  /// No description provided for @payOutWhatFor.
+  ///
+  /// In en, this message translates to:
+  /// **'What for?'**
+  String get payOutWhatFor;
+
+  /// No description provided for @payOutNoEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody on the register for this branch yet — add employees in the admin app.'**
+  String get payOutNoEmployees;
+
+  /// No description provided for @payOutNoSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'No suppliers yet — add them in the admin app.'**
+  String get payOutNoSuppliers;
+
+  /// No description provided for @payOutNoPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'No partners set for this branch — add them in the admin app.'**
+  String get payOutNoPartners;
+
+  /// No description provided for @payOutNoCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories set up yet.'**
+  String get payOutNoCategories;
+
   /// No description provided for @closeShiftTitle.
   ///
   /// In en, this message translates to:

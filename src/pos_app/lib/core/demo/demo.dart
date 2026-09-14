@@ -11,6 +11,7 @@ import '../../features/service_requests/models/service_request.dart';
 import '../../features/service_requests/services/service_requests_service.dart';
 import '../../features/shifts/models/shift.dart';
 import '../../features/shifts/services/shifts_service.dart';
+import '../../features/shifts/services/till_picks_service.dart';
 import '../../features/tables/models/cafe_table.dart';
 import '../../features/tables/services/tables_service.dart';
 import '../../features/tickets/models/enums.dart';
@@ -58,6 +59,7 @@ final demoOverrides = [
   orderRepositoryProvider.overrideWithValue(_DemoOrderRepository(_demoTickets)),
   tablesRepositoryProvider.overrideWithValue(_DemoTablesRepository()),
   shiftsRepositoryProvider.overrideWithValue(_DemoShiftsRepository()),
+  tillPicksRepositoryProvider.overrideWithValue(_DemoTillPicksRepository()),
   serviceRequestsRepositoryProvider.overrideWithValue(_DemoServiceRequestsRepository()),
   roomRepositoryProvider.overrideWithValue(_DemoRoomRepository()),
   customerSearchServiceProvider.overrideWithValue(_DemoCustomerSearchService()),
@@ -1019,6 +1021,35 @@ final List<TicketDetail> _sampleTickets = [
 
 /// Four accounts for the customer pickers. Ahmed is in Room 3, so the
 /// new-tab dialog leaves him out; the others are free.
+/// The pay-out pickers: a daily worker owed the day's wage, one who took
+/// lunch money past it, a monthly employee (no balance at the counter), a
+/// supplier on a tab and one paid up
+class _DemoTillPicksRepository implements TillPicksRepository {
+  @override
+  Future<List<TillPick>> employees() async => [
+        TillPick.named(1, 'أحمد سعيد', balance: 320),
+        TillPick.named(2, 'كريم مصطفى', balance: -50),
+        TillPick.named(3, 'منى عادل'),
+      ];
+
+  @override
+  Future<List<TillPick>> suppliers() async => [
+        TillPick.named(1, 'Beanery Coffee', balance: 3400),
+        TillPick.named(2, 'Juhayna', balance: 0),
+      ];
+
+  @override
+  Future<List<TillPick>> partners() async => [TillPick.named(1, 'Omar'), TillPick.named(2, 'Hany')];
+
+  @override
+  Future<List<TillPick>> categories() async => [
+        const TillPick(id: 1, name: LocalizedText(en: 'Electricity', ar: 'كهرباء')),
+        const TillPick(id: 2, name: LocalizedText(en: 'Gas', ar: 'غاز')),
+        const TillPick(id: 3, name: LocalizedText(en: 'Maintenance', ar: 'صيانة')),
+        const TillPick(id: 4, name: LocalizedText(en: 'Other', ar: 'أخرى')),
+      ];
+}
+
 class _DemoCustomerSearchService implements CustomerSearchService {
   static const _users = [
     IdentityUser(id: 'u1', firstName: 'Ahmed', lastName: 'Hassan', phoneNumber: '01001234567'),
