@@ -96,13 +96,13 @@ The key never lives in the repository: locally it is a user secret or an environ
 ```json
   "AI": {
     "Endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
-    "ChatModel": "gemini-2.5-flash"
+    "ChatModel": "gemini-3.8-flash"
   }
 ```
 
 Any provider with an OpenAI-compatible endpoint is a matter of changing those two values and the key. For deployment the key comes from the `GEMINI_API_KEY` repository secret (see *.github/workflows/deploy.yml*).
 
-Good to know about the Gemini free tier: it allows roughly ten requests a minute and a few hundred a day on `gemini-2.5-flash` (the services keep their own limiter under that, `AI:RequestsPerMinute` / `AI:PerUserRequestsPerMinute`), and Google may use free-tier prompts to improve its models, so do not scan anything you would not want leaving the building. Under test the AppHost runs the services with `AI:UseFake=true`, a scripted stand-in that needs no key and no network.
+Good to know about the Gemini free tier: it allows roughly ten requests a minute and a few hundred a day on `gemini-3.8-flash` (the services keep their own limiter under that, `AI:RequestsPerMinute` / `AI:PerUserRequestsPerMinute`), and Google may use free-tier prompts to improve its models, so do not scan anything you would not want leaving the building. Under test the AppHost runs the services with `AI:UseFake=true`, a scripted stand-in that needs no key and no network.
 
 ### Use Azure Developer CLI
 

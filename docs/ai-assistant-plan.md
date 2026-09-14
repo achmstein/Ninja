@@ -16,7 +16,7 @@ The repo already carried the bones of an AI integration inherited from eShop —
 
 ### D1 — Free provider, swappable; Microsoft Agent Framework on top
 
-The **Google Gemini API free tier** through its OpenAI-compatible endpoint (`gemini-2.5-flash`: text and vision in one model, about ten requests a minute and a few hundred a day). The provider is two settings and a key, so any OpenAI-compatible endpoint takes its place. The agents are **Microsoft Agent Framework** `ChatClientAgent`s over `Microsoft.Extensions.AI`'s `IChatClient`, one definition per feature, typed JSON answers.
+The **Google Gemini API free tier** through its OpenAI-compatible endpoint (`gemini-3.8-flash`: text and vision in one model, about ten requests a minute and a few hundred a day). The provider is two settings and a key, so any OpenAI-compatible endpoint takes its place. The agents are **Microsoft Agent Framework** `ChatClientAgent`s over `Microsoft.Extensions.AI`'s `IChatClient`, one definition per feature, typed JSON answers.
 
 ### D2 — Follow eShop, exactly
 

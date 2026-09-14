@@ -77,7 +77,7 @@ public class ChatModelConfigurationTests
         var connectionString = await model.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
 
         Assert.Contains("Key=AIza-from-env", connectionString!);
-        Assert.Contains("Model=gemini-2.5-flash", connectionString);
+        Assert.Contains("Model=gemini-3.8-flash", connectionString);
         Assert.Contains($"Endpoint={Extensions.GeminiEndpoint}", connectionString);
     }
 
@@ -86,7 +86,7 @@ public class ChatModelConfigurationTests
     {
         var defaults = CreateBuilder();
         defaults.AddChatModel();
-        Assert.AreEqual("gemini-2.5-flash", ModelName(defaults));
+        Assert.AreEqual("gemini-3.8-flash", ModelName(defaults));
         Assert.AreEqual(Extensions.GeminiEndpoint, Endpoint(defaults));
 
         var custom = CreateBuilder();

@@ -21,7 +21,7 @@ internal static class LiveProvider
             Assert.Inconclusive("Set GEMINI_API_KEY to run the live provider tests.");
 
         var endpoint = Environment.GetEnvironmentVariable("AI_ENDPOINT") ?? "https://generativelanguage.googleapis.com/v1beta/openai/";
-        var model = Environment.GetEnvironmentVariable("AI_CHAT_MODEL") ?? "gemini-2.5-flash";
+        var model = Environment.GetEnvironmentVariable("AI_CHAT_MODEL") ?? "gemini-3.8-flash";
 
         var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>

@@ -109,7 +109,7 @@ internal static class Extensions
             .WithApiKey(apiKey);
 
         // No WithHealthCheck(): it calls the provider on every check and spends the free tier's quota
-        var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? "gemini-2.5-flash");
+        var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? "gemini-3.8-flash");
 
         foreach (var project in projects)
         {
