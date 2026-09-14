@@ -18,4 +18,8 @@
     <ProjectReference Include="..\..\src\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Application\receipt-sample.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

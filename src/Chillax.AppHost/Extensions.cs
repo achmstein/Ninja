@@ -47,16 +47,33 @@ internal static class Extensions
     /// </summary>
     public const string GeminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
+    /// <summary>The Aspire parameter the chat model's key travels as; never in the repo.</summary>
+    public const string ApiKeyParameter = "Parameters:openai-openai-apikey";
+
     /// <summary>
-    /// Whether to wire the chat model: when a key is configured for it
-    /// (Parameters:openai-openai-apikey in the AppHost's user secrets, or the
-    /// OPENAI_API_KEY variable) or when publishing, where the key is filled in
-    /// on the box. A dev without a key runs with the assistant off.
+    /// The provider key, from wherever the developer keeps it: the AppHost's
+    /// user secrets, or GEMINI_API_KEY (Google's convention) / OPENAI_API_KEY
+    /// in the environment. Null when there is none.
+    /// </summary>
+    public static string? ChatModelKey(IConfiguration configuration)
+    {
+        foreach (var key in new[] { ApiKeyParameter, "GEMINI_API_KEY", "OPENAI_API_KEY" })
+        {
+            var value = configuration[key];
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Whether to wire the chat model: when a key is configured for it, or
+    /// when publishing, where the key is filled in on the box. A dev without
+    /// a key runs with the assistant off.
     /// </summary>
     public static bool IsChatModelEnabled(IConfiguration configuration, bool isPublishMode) =>
-        isPublishMode
-        || !string.IsNullOrWhiteSpace(configuration["Parameters:openai-openai-apikey"])
-        || !string.IsNullOrWhiteSpace(configuration["OPENAI_API_KEY"]);
+        isPublishMode || ChatModelKey(configuration) is not null;
 
     /// <summary>
     /// Configures the projects that own an AI feature to use one
@@ -69,6 +86,16 @@ internal static class Extensions
     public static IDistributedApplicationBuilder AddChatModel(this IDistributedApplicationBuilder builder,
         params IResourceBuilder<ProjectResource>[] projects)
     {
+        // AddOpenAI reads the key parameter from configuration (or OPENAI_API_KEY)
+        // when it is first needed; a GEMINI_API_KEY is handed over the same way.
+        // Publishing leaves it alone so the key stays a placeholder in the artifacts.
+        if (!builder.ExecutionContext.IsPublishMode
+            && string.IsNullOrWhiteSpace(builder.Configuration[ApiKeyParameter])
+            && ChatModelKey(builder.Configuration) is { } key)
+        {
+            builder.Configuration[ApiKeyParameter] = key;
+        }
+
         var openai = builder.AddOpenAI("openai")
             .WithEndpoint(builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint);
 

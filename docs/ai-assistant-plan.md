@@ -20,7 +20,7 @@ The **Google Gemini API free tier** through its OpenAI-compatible endpoint (`gem
 
 ### D2 — Follow eShop, exactly
 
-- **AppHost** declares the model as an Aspire resource: `AddOpenAI("openai").WithEndpoint(…)` + `AddModel("chatModel", …)`; the projects that own a feature `.WithReference(chatModel)` and receive `ConnectionStrings__chatModel = Endpoint=…;Key=…;Model=…`. `IsChatModelEnabled` gates it: on when a key is configured (`Parameters:openai-openai-apikey` in user-secrets, or `OPENAI_API_KEY`) or when publishing; off otherwise, so a checkout without a key still runs.
+- **AppHost** declares the model as an Aspire resource: `AddOpenAI("openai").WithEndpoint(…)` + `AddModel("chatModel", …)`; the projects that own a feature `.WithReference(chatModel)` and receive `ConnectionStrings__chatModel = Endpoint=…;Key=…;Model=…`. `IsChatModelEnabled` gates it: on when a key is configured (`GEMINI_API_KEY` or `OPENAI_API_KEY` in the environment, or `Parameters:openai-openai-apikey` in user-secrets) or when publishing; off otherwise, so a checkout without a key still runs.
 - **Services** call `AddAIServices()`: `Aspire.OpenAI`'s `AddOpenAIClient("chatModel").AddChatClient()` when the connection string exists, a scripted `FakeChatClient` when `AI:UseFake` is set (the AppHost sets it under test), nothing at all otherwise.
 - **Feature classes** take the chat client as an *optional* dependency and expose `IsEnabled` (eShop's `CatalogAI` idiom). Endpoints answer `503` when it is off; the admin app hides the buttons for the session on the first `503`.
 - **AppHost unit tests** (`tests/Chillax.AppHost.UnitTests`, `IsAspireProjectResource="false"`) pin the gate and the resources.
@@ -57,13 +57,13 @@ The fake answers are deterministic (localize: `"{en} (تجريبي)"` / `"{ar} (
 
 ## 4. Running it
 
-- Local: `dotnet user-secrets set "Parameters:openai-openai-apikey" "AIza…" --project src/Chillax.AppHost`, then `aspire run`; the dashboard shows `openai` and `chatModel`. Provider and model: `AI` section of `src/Chillax.AppHost/appsettings.json`.
+- Local: set `GEMINI_API_KEY` in the environment (or `dotnet user-secrets set "Parameters:openai-openai-apikey" "AIza…" --project src/Chillax.AppHost`), then `aspire run`; the dashboard shows `openai` and `chatModel`. Provider and model: `AI` section of `src/Chillax.AppHost/appsettings.json`. The key is never committed.
 - Deploy: `aspire publish` emits `OPENAI_OPENAI_APIKEY=` in `.env`; `deploy.yml` fills it from the `GEMINI_API_KEY` repository secret. An empty secret trips the empty-placeholder guard on purpose.
 - If a provider rejects the JSON schema, `AI:StructuredOutput=JsonObject` puts the schema in the prompt and enforces only "answer in JSON".
 - Free-tier prompts may be used by Google to improve its models: do not scan anything that must not leave the building.
 
 ## 5. Not done / later
 
-- Real-key smoke of both endpoints against Gemini (needs a key on the machine; the fake path is covered by unit tests and E2E).
+- Live checks against the provider: `MenuLocalizerLiveTest` and `ReceiptScannerLiveTest` run only when `GEMINI_API_KEY` is set (inconclusive otherwise) and print what the model answered; they are the place to look when a provider or model changes.
 - The mobile admin app has none of this; the endpoints are there if it wants them.
 - A receipt that lists an item the shelf knows under a different name still needs the user to pick it; the look-alikes are offered first, that is all.

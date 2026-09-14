@@ -17,10 +17,26 @@ public class ChatModelConfigurationTests
     }
 
     [TestMethod]
-    public void A_user_secret_or_the_environment_variable_turns_it_on()
+    public void A_user_secret_or_an_environment_variable_turns_it_on()
     {
         Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("Parameters:openai-openai-apikey", "AIza-test")), isPublishMode: false));
+        Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("GEMINI_API_KEY", "AIza-test")), isPublishMode: false));
         Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("OPENAI_API_KEY", "sk-test")), isPublishMode: false));
+    }
+
+    [TestMethod]
+    public async Task A_GEMINI_API_KEY_reaches_the_connection_string_as_the_key()
+    {
+        var builder = CreateBuilder();
+        builder.Configuration["GEMINI_API_KEY"] = "AIza-from-env";
+        builder.AddChatModel();
+
+        var model = (OpenAIModelResource)builder.Resources.Single(resource => resource.Name == "chatModel");
+        var connectionString = await model.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
+
+        Assert.Contains("Key=AIza-from-env", connectionString!);
+        Assert.Contains("Model=gemini-2.5-flash", connectionString);
+        Assert.Contains($"Endpoint={Extensions.GeminiEndpoint}", connectionString);
     }
 
     [TestMethod]

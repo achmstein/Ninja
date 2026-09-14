@@ -15,6 +15,7 @@ dotnet test --project tests/Chillax.Contracts.Tests              # 2 s
 dotnet test --project tests/Chillax.E2E                          # ~2-3 min; boots the whole system
 dotnet run --project tests/Chillax.E2E -- --filter-class Chillax.E2E.Scenarios.CounterSaleScenario   # one scenario
 dotnet run --project tests/Chillax.E2E -- --filter-trait Category=Slow                                 # the 8-minute room-time test
+dotnet test --project tests/Catalog.UnitTests; dotnet test --project tests/Inventory.UnitTests           # with GEMINI_API_KEY set: the *LiveTest classes call the real model (skipped otherwise)
 ```
 
 ## How the E2E suite works
