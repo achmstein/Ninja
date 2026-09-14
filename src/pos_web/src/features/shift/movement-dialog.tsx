@@ -8,13 +8,7 @@ import {
 import { getTillEmployeesOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { addCashMovementMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
@@ -71,12 +65,7 @@ type MovementDialogProps = {
  * partner) or something (an expense category), which — and the reason
  * writes itself from that.
  */
-export function MovementDialog({
-  shiftId,
-  direction,
-  open,
-  onOpenChange,
-}: MovementDialogProps) {
+export function MovementDialog({ shiftId, direction, open, onOpenChange }: MovementDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -141,7 +130,11 @@ export function MovementDialog({
     setReason(picks === 'category' ? item.name : `${label} ${item.name}`)
   }
 
-  const options: { list: Picked[] | undefined; empty: TranslationKey; title: TranslationKey } | null =
+  const options: {
+    list: Picked[] | undefined
+    empty: TranslationKey
+    title: TranslationKey
+  } | null =
     picks === 'employee'
       ? {
           list: employees.data?.map((e) => ({
@@ -164,13 +157,19 @@ export function MovementDialog({
           }
         : picks === 'partner'
           ? {
-              list: partners.data?.map((p) => ({ id: Number(p.id), name: p.name })),
+              list: partners.data?.map((p) => ({
+                id: Number(p.id),
+                name: p.name,
+              })),
               empty: 'payOutNoPartners',
               title: 'payOutWhichPartner',
             }
           : picks === 'category'
             ? {
-                list: categories.data?.map((c) => ({ id: Number(c.id), name: localized(c.name) })),
+                list: categories.data?.map((c) => ({
+                  id: Number(c.id),
+                  name: localized(c.name),
+                })),
                 empty: 'payOutNoCategories',
                 title: 'payOutWhatFor',
               }
@@ -205,122 +204,124 @@ export function MovementDialog({
       },
     })
 
+  const title = t(direction === 'in' ? 'payIn' : 'payOut')
+
+  // Two columns, like the settle dialog: what the money is for on the
+  // start side (kind, whom, the reason it writes), how much on the end
+  // side (keypad and the confirm under it). Read in that order, nothing
+  // scrolls off a landscape tablet; a phone stacks them.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle className='text-xl'>
-            {t(direction === 'in' ? 'payIn' : 'payOut')}
-          </DialogTitle>
+      <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
+        <DialogHeader className='border-b px-5 py-3 pe-14'>
+          <DialogTitle className='text-lg'>{title}</DialogTitle>
         </DialogHeader>
 
-        <div className='grid gap-1.5'>
-          <Label htmlFor='movement-amount'>{t('amount')}</Label>
-          <Input
-            id='movement-amount'
-            readOnly
-            inputMode='none'
-            value={amountStr}
-            placeholder='0'
-            dir='ltr'
-            className='h-14 text-end text-2xl font-bold tabular-nums'
-          />
-        </div>
+        <div className='grid gap-4 p-4 sm:grid-cols-2'>
+          <div className='flex flex-col gap-4'>
+            <div className='grid gap-1.5'>
+              <Label>{t('payOutFor')}</Label>
+              <div className={cn('grid gap-2', isOut ? 'grid-cols-3' : 'grid-cols-2')}>
+                {kinds.map((k) => (
+                  <Button
+                    key={k.value}
+                    type='button'
+                    variant={kind === k.value ? 'default' : 'outline'}
+                    className='h-11 px-1 text-sm'
+                    onClick={() => pickKind(k.value)}
+                  >
+                    <span className='truncate'>{t(k.key)}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
 
-        <NumericKeypad value={amountStr} onChange={setAmountStr} />
-
-        <div className='grid gap-1.5'>
-          <Label>{t('payOutFor')}</Label>
-          <div className={cn('grid gap-2', isOut ? 'grid-cols-3' : 'grid-cols-2')}>
-            {kinds.map((k) => (
-              <Button
-                key={k.value}
-                type='button'
-                variant={kind === k.value ? 'default' : 'outline'}
-                className='h-12 px-1 text-sm'
-                onClick={() => pickKind(k.value)}
-              >
-                {t(k.key)}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {options && (
-          <div className='grid gap-1.5'>
-            <Label>{t(options.title)}</Label>
-            {options.list && options.list.length === 0 ? (
-              <p className='text-muted-foreground text-sm'>{t(options.empty)}</p>
-            ) : (
-              <div className='grid max-h-48 grid-cols-2 gap-2 overflow-y-auto'>
-                {(options.list ?? []).map((item) => {
-                  const isPicked = picked?.id === item.id
-                  const balance = item.balance ?? 0
-                  return (
-                    <Button
-                      key={item.id}
-                      type='button'
-                      variant={isPicked ? 'default' : 'outline'}
-                      className={cn(
-                        'h-12 justify-between gap-2',
-                        isPicked && 'font-semibold'
-                      )}
-                      onClick={() => pick(item)}
-                    >
-                      <span className='truncate'>{item.name}</span>
-                      {balance !== 0 && (
-                        <span
-                          className={cn(
-                            'shrink-0 text-xs font-normal tabular-nums',
-                            isPicked
-                              ? 'text-primary-foreground/80'
-                              : balance < 0
-                                ? 'text-destructive'
-                                : 'text-muted-foreground'
-                          )}
+            {options && (
+              <div className='grid gap-1.5'>
+                <Label>{t(options.title)}</Label>
+                {options.list && options.list.length === 0 ? (
+                  <p className='text-muted-foreground text-sm'>{t(options.empty)}</p>
+                ) : (
+                  <div className='grid max-h-52 gap-1.5 overflow-y-auto'>
+                    {(options.list ?? []).map((item) => {
+                      const isPicked = picked?.id === item.id
+                      const balance = item.balance ?? 0
+                      return (
+                        <Button
+                          key={item.id}
+                          type='button'
+                          variant={isPicked ? 'default' : 'outline'}
+                          className={cn('h-11 justify-between gap-3', isPicked && 'font-semibold')}
+                          onClick={() => pick(item)}
                         >
-                          {balance < 0
-                            ? t('owesAmount', { amount: money(-balance) })
-                            : money(balance)}
-                        </span>
-                      )}
-                    </Button>
-                  )
-                })}
+                          <span className='truncate'>{item.name}</span>
+                          {balance !== 0 && (
+                            <span
+                              className={cn(
+                                'shrink-0 text-xs font-normal tabular-nums',
+                                isPicked
+                                  ? 'text-primary-foreground/80'
+                                  : balance < 0
+                                    ? 'text-destructive'
+                                    : 'text-muted-foreground'
+                              )}
+                            >
+                              {balance < 0
+                                ? t('owesAmount', { amount: money(-balance) })
+                                : money(balance)}
+                            </span>
+                          )}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
+
+            <div className='grid gap-1.5'>
+              <Label htmlFor='movement-reason'>{t('reason')}</Label>
+              <Input
+                id='movement-reason'
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className='h-11 text-base'
+                autoComplete='off'
+              />
+            </div>
           </div>
-        )}
 
-        <div className='grid gap-1.5'>
-          <Label htmlFor='movement-reason'>{t('reason')}</Label>
-          <Input
-            id='movement-reason'
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className='h-12 text-base'
-            autoComplete='off'
-          />
+          <div className='flex flex-col gap-4'>
+            <div className='grid gap-1.5'>
+              <Label htmlFor='movement-amount'>{t('amount')}</Label>
+              <Input
+                id='movement-amount'
+                readOnly
+                inputMode='none'
+                value={amountStr}
+                placeholder='0'
+                dir='ltr'
+                className='h-14 text-end text-2xl font-bold tabular-nums'
+              />
+            </div>
+
+            <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+            <div className='mt-auto flex justify-end gap-2'>
+              <Button
+                variant='outline'
+                size='lg'
+                className='h-12'
+                onClick={() => onOpenChange(false)}
+              >
+                {t('cancel')}
+              </Button>
+              <Button size='lg' className='h-12' disabled={!canSubmit} onClick={submit}>
+                {title}
+              </Button>
+            </div>
+          </div>
         </div>
-
-        <DialogFooter className='gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
-            {t('cancel')}
-          </Button>
-          <Button
-            size='lg'
-            className='h-12'
-            disabled={!canSubmit}
-            onClick={submit}
-          >
-            {t(direction === 'in' ? 'payIn' : 'payOut')}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

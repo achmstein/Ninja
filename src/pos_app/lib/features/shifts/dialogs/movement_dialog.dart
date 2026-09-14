@@ -24,6 +24,7 @@ import '../widgets/amount_entry.dart';
 Future<bool> showMovementDialog(BuildContext context, int shiftId, CashMovementType type) async {
   final recorded = await showPosDialog<bool>(
     context,
+    maxWidth: 672,
     builder: (context) => _MovementDialog(shiftId: shiftId, type: type),
   );
   return recorded ?? false;
@@ -67,20 +68,20 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
       _value > 0 && _reason.text.trim().isNotEmpty && (_picks == null || _picked != null) && !_pending;
 
   String _kindLabel(AppLocalizations l10n, CashMovementKind kind) => switch (kind) {
-        CashMovementKind.supplier => l10n.payOutSupplier,
-        CashMovementKind.wage => l10n.payOutWage,
-        CashMovementKind.advance => l10n.payOutAdvance,
-        CashMovementKind.expense => l10n.payOutExpense,
-        CashMovementKind.partner => l10n.payOutPartner,
-        CashMovementKind.other => l10n.payOutOther,
-      };
+    CashMovementKind.supplier => l10n.payOutSupplier,
+    CashMovementKind.wage => l10n.payOutWage,
+    CashMovementKind.advance => l10n.payOutAdvance,
+    CashMovementKind.expense => l10n.payOutExpense,
+    CashMovementKind.partner => l10n.payOutPartner,
+    CashMovementKind.other => l10n.payOutOther,
+  };
 
   void _pickKind(CashMovementKind kind) => setState(() {
-        _kind = kind;
-        _picked = null;
-        // A typed reason for the old kind is stale; a named kind writes its own
-        _reason.text = '';
-      });
+    _kind = kind;
+    _picked = null;
+    // A typed reason for the old kind is stale; a named kind writes its own
+    _reason.text = '';
+  });
 
   void _pick(TillPick item) {
     final l10n = AppLocalizations.of(context)!;
@@ -99,7 +100,9 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
     final pickedName = picked?.name.localized(context);
     setState(() => _pending = true);
     try {
-      await ref.read(shiftsRepositoryProvider).addMovement(
+      await ref
+          .read(shiftsRepositoryProvider)
+          .addMovement(
             widget.shiftId,
             CashMovementRequest(
               type: widget.type,
@@ -134,6 +137,10 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
     final l10n = AppLocalizations.of(context)!;
     final title = _isOut ? l10n.payOut : l10n.payIn;
     final picks = _picks;
+    // Two columns, like the settle dialog: what the money is for on the
+    // start side (kind, whom, the reason it writes), how much on the end
+    // side (the keypad). Read in that order, nothing scrolls off a
+    // landscape tablet; the actions run under both.
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
       child: DialogScroll(
@@ -143,51 +150,61 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
           children: [
             Text(title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            AmountEntry(label: l10n.amount, value: _amount, onChange: (v) => setState(() => _amount = v)),
-            const SizedBox(height: 16),
-            _Label(l10n.payOutFor),
-            const SizedBox(height: 6),
-            _ButtonGrid(
-              columns: _isOut ? 3 : 2,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final kind in _kinds)
-                  _CellButton(
-                    selected: _kind == kind,
-                    onPress: _pending ? null : () => _pickKind(kind),
-                    child: Center(
-                      child: Text(
-                        _kindLabel(l10n, kind),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.sm.forButton,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Label(l10n.payOutFor),
+                      const SizedBox(height: 6),
+                      _ButtonGrid(
+                        columns: _isOut ? 3 : 2,
+                        height: 44,
+                        children: [
+                          for (final kind in _kinds)
+                            _CellButton(
+                              selected: _kind == kind,
+                              onPress: _pending ? null : () => _pickKind(kind),
+                              child: Center(
+                                child: Text(
+                                  _kindLabel(l10n, kind),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.typography.sm.forButton,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                      if (picks != null) ...[
+                        const SizedBox(height: 16),
+                        _Label(switch (picks) {
+                          MovementPick.employee => l10n.payOutWho,
+                          MovementPick.supplier => l10n.payOutWhichSupplier,
+                          MovementPick.partner => l10n.payOutWhichPartner,
+                          MovementPick.category => l10n.payOutWhatFor,
+                        }),
+                        const SizedBox(height: 6),
+                        _PickList(pick: picks, picked: _picked, disabled: _pending, onPick: _pick),
+                      ],
+                      const SizedBox(height: 16),
+                      FTextField(
+                        control: FTextFieldControl.managed(controller: _reason),
+                        label: Text(l10n.reason),
+                        maxLines: 1,
+                        textInputAction: TextInputAction.done,
+                        onSubmit: (_) => _submit(),
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AmountEntry(label: l10n.amount, value: _amount, onChange: (v) => setState(() => _amount = v)),
+                ),
               ],
-            ),
-            if (picks != null) ...[
-              const SizedBox(height: 16),
-              _Label(switch (picks) {
-                MovementPick.employee => l10n.payOutWho,
-                MovementPick.supplier => l10n.payOutWhichSupplier,
-                MovementPick.partner => l10n.payOutWhichPartner,
-                MovementPick.category => l10n.payOutWhatFor,
-              }),
-              const SizedBox(height: 6),
-              _PickList(
-                pick: picks,
-                picked: _picked,
-                disabled: _pending,
-                onPick: _pick,
-              ),
-            ],
-            const SizedBox(height: 16),
-            FTextField(
-              control: FTextFieldControl.managed(controller: _reason),
-              label: Text(l10n.reason),
-              maxLines: 1,
-              textInputAction: TextInputAction.done,
-              onSubmit: (_) => _submit(),
             ),
             const SizedBox(height: 16),
             Row(
@@ -234,11 +251,12 @@ class _Label extends StatelessWidget {
   }
 }
 
-/// Equal-width buttons in rows of [columns], each a thumb high
+/// Equal-width buttons in rows of [columns], each [height] high
 class _ButtonGrid extends StatelessWidget {
   final int columns;
+  final double height;
   final List<Widget> children;
-  const _ButtonGrid({required this.columns, required this.children});
+  const _ButtonGrid({required this.columns, required this.children, this.height = 48});
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +272,9 @@ class _ButtonGrid extends StatelessWidget {
             children: [
               for (var c = 0; c < columns; c++) ...[
                 if (c > 0) const SizedBox(width: 8),
-                Expanded(child: c < row.length ? SizedBox(height: 48, child: row[c]) : const SizedBox.shrink()),
+                Expanded(
+                  child: c < row.length ? SizedBox(height: height, child: row[c]) : const SizedBox.shrink(),
+                ),
               ],
             ],
           ),
@@ -264,8 +284,8 @@ class _ButtonGrid extends StatelessWidget {
   }
 }
 
-/// The list behind a kind: two columns of names, scrolling past a few rows,
-/// with what the café owes beside a name where that is the counter's
+/// The list behind a kind: one name a row, scrolling past a few rows, with
+/// what the café owes at the end of the row where that is the counter's
 /// business (a daily worker's wage, a supplier's tab).
 class _PickList extends ConsumerWidget {
   final MovementPick pick;
@@ -290,21 +310,20 @@ class _PickList extends ConsumerWidget {
       error: (e, _) => Text(describeError(e, l10n), style: muted.copyWith(color: theme.colors.destructive)),
       data: (items) {
         if (items.isEmpty) {
-          return Text(
-            switch (pick) {
-              MovementPick.employee => l10n.payOutNoEmployees,
-              MovementPick.supplier => l10n.payOutNoSuppliers,
-              MovementPick.partner => l10n.payOutNoPartners,
-              MovementPick.category => l10n.payOutNoCategories,
-            },
-            style: muted,
-          );
+          return Text(switch (pick) {
+            MovementPick.employee => l10n.payOutNoEmployees,
+            MovementPick.supplier => l10n.payOutNoSuppliers,
+            MovementPick.partner => l10n.payOutNoPartners,
+            MovementPick.category => l10n.payOutNoCategories,
+          }, style: muted);
         }
+        // Four and a half rows: the cut row says there is more to scroll
         return ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
+          constraints: const BoxConstraints(maxHeight: 4.5 * 44 + 4 * 8),
           child: SingleChildScrollView(
             child: _ButtonGrid(
-              columns: 2,
+              columns: 1,
+              height: 44,
               children: [
                 for (final item in items)
                   _PickButton(
@@ -338,13 +357,13 @@ class _PickButton extends StatelessWidget {
     final hint = balance == 0
         ? null
         : balance < 0
-            ? l10n.owesAmount(money(context, -balance))
-            : money(context, balance);
+        ? l10n.owesAmount(money(context, -balance))
+        : money(context, balance);
     final hintColor = selected
         ? theme.colors.primaryForeground.withValues(alpha: 0.8)
         : balance < 0
-            ? theme.colors.destructive
-            : theme.colors.mutedForeground;
+        ? theme.colors.destructive
+        : theme.colors.mutedForeground;
     return _CellButton(
       selected: selected,
       onPress: onPress,

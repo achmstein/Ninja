@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:pos_app/core/models/localized_text.dart';
 import 'package:pos_app/core/providers/branch_provider.dart';
+import 'package:pos_app/core/theme/app_theme.dart';
 import 'package:pos_app/features/shifts/dialogs/movement_dialog.dart';
 import 'package:pos_app/features/shifts/models/shift.dart';
 import 'package:pos_app/features/shifts/services/shifts_service.dart';
@@ -69,7 +71,10 @@ Widget _app(_Shifts shifts, CashMovementType type) => ProviderScope(
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        builder: (context, child) => FTheme(data: FThemes.slate.light, child: FToaster(child: child!)),
+        builder: (context, child) => FTheme(
+          data: const ThemeState(themeMode: AppThemeMode.light).getForuiTheme(context, locale: const Locale('ar')),
+          child: FToaster(child: child!),
+        ),
         home: Builder(
           builder: (context) => Center(
             child: TextButton(
@@ -81,7 +86,21 @@ Widget _app(_Shifts shifts, CashMovementType type) => ProviderScope(
       ),
     );
 
+/// The bundled fonts, so widths are the tablet's and not the test font's
+/// (which draws every glyph a full em wide and overflows narrow cells)
+Future<void> loadFonts() async {
+  for (final family in ['Inter', 'Cairo']) {
+    final loader = FontLoader(family);
+    for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+      loader.addFont(rootBundle.load('assets/fonts/$family-$weight.ttf'));
+    }
+    await loader.load();
+  }
+}
+
 void main() {
+  setUpAll(loadFonts);
+
   testWidgets('a wage pay-out names the employee, shows what they are owed and sends the kind', (tester) async {
     tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1;
