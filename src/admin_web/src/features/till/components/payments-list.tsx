@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type PaymentRow } from '@/api/sales'
-import { getPaymentsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  getPaymentsOptions,
+  getRangeReportOptions,
+} from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import {
   useLanguage,
@@ -133,6 +136,20 @@ export function PaymentsList() {
 
   const tender = TENDERS.find((item) => String(item.value) === search.tender)
 
+  // The report's own query, already in the cache: how many tab payments
+  // the filtered tender also took, since the bar above counts both
+  const report = useQuery({
+    ...getRangeReportOptions({
+      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+    }),
+    enabled: dayWindow !== null && tender != null,
+  })
+  const tabPaymentsByTender =
+    tender &&
+    report.data?.tabPaymentTenderTotals?.find(
+      (row) => row.tender === tender.name
+    )
+
   const paymentsQuery = useQuery({
     ...getPaymentsOptions({
       query: {
@@ -207,6 +224,24 @@ export function PaymentsList() {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+
+        {tabPaymentsByTender && toNumber(tabPaymentsByTender.count) > 0 && (
+          <Link
+            to='/till'
+            search={{
+              ...search,
+              view: 'tab-payments',
+              tender: undefined,
+              page: undefined,
+            }}
+            className='text-muted-foreground hover:text-foreground -mt-2 text-sm underline-offset-4 hover:underline'
+          >
+            {t('plusTabPaymentsByTender', {
+              count: toNumber(tabPaymentsByTender.count),
+              amount: formatEgp(tabPaymentsByTender.amount),
+            })}
+          </Link>
+        )}
 
         {paymentsQuery.isError ? (
           <ErrorState

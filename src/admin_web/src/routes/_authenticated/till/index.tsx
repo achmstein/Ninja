@@ -7,7 +7,7 @@ const tillSearchSchema = z.object({
   ...rangeSearch,
   ...pagedSearch,
   // The list opened under the report
-  view: z.enum(['tickets', 'payments', 'refunds']).optional(),
+  view: z.enum(['tickets', 'payments', 'refunds', 'tab-payments']).optional(),
   // Tickets: which book; Payments: one PaymentTender value
   status: z.enum(['settled', 'open', 'voided']).optional(),
   tender: z.string().optional(),

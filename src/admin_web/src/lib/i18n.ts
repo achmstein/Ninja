@@ -1231,6 +1231,35 @@ const webExtras = {
     en: 'No payments in this window.',
     ar: 'مفيش دفعات في الفترة دي.',
   },
+  noTabPaymentsInRange: {
+    en: 'No tab payments in this window.',
+    ar: 'مفيش دفعات حسابات في الفترة دي.',
+  },
+  slipHash: { en: 'Slip #', ar: 'إيصال #' },
+  tabPaymentsCount: {
+    plural: 'count',
+    en: { '=1': '1 tab payment', other: '{count} tab payments' },
+    ar: {
+      zero: '{count} دفعات حسابات',
+      one: 'دفعة حساب واحدة',
+      two: 'دفعتين حسابات',
+      few: '{count} دفعات حسابات',
+      other: '{count} دفعة حسابات',
+    },
+  },
+  plusTabPaymentsByTender: {
+    plural: 'count',
+    en: {
+      '=1': '+ 1 tab payment by this tender, {amount} — open it',
+      other: '+ {count} tab payments by this tender, {amount} — open them',
+    },
+    ar: {
+      one: '+ دفعة حساب واحدة بنفس طريقة الدفع، {amount} — افتحها',
+      two: '+ دفعتين حسابات بنفس طريقة الدفع، {amount} — افتحهم',
+      few: '+ {count} دفعات حسابات بنفس طريقة الدفع، {amount} — افتحهم',
+      other: '+ {count} دفعة حسابات بنفس طريقة الدفع، {amount} — افتحهم',
+    },
+  },
   noRefundsInRange: {
     en: 'No refunds in this window.',
     ar: 'مفيش استرجاعات في الفترة دي.',

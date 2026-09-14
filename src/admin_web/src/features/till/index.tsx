@@ -15,6 +15,7 @@ import { SegmentedBar } from '@/components/segmented-bar'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { PaymentsList } from './components/payments-list'
 import { RefundsList } from './components/refunds-list'
+import { TabPaymentsList } from './components/tab-payments-list'
 import { TENDERS, TICKET_TYPES } from './components/tender'
 import { TicketsList } from './components/tickets-list'
 import { TillPage } from './till-page'
@@ -22,13 +23,18 @@ import { useTillWindow } from './use-till-window'
 
 const route = getRouteApi('/_authenticated/till/')
 
-export type TillView = 'tickets' | 'payments' | 'refunds'
+export type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
 
 /**
  * Settled sales over a window of business days. Net is the one big number,
  * compared with the period before; the strip carries the lines that make it
  * up; the tender split and the per-type counts sit side by side. Every
  * number opens the list behind it right under the report, on this page.
+ *
+ * A tender's segment counts everything that went through it — payments on
+ * tickets plus tab payments — so InstaPay reads what the InstaPay app will
+ * show, not just what settled a bill. "On account" is what was charged to
+ * customers' accounts, and is paid off later through those tab payments.
  */
 export function TillReport() {
   const t = useT()
@@ -79,6 +85,9 @@ export function TillReport() {
   const tenderTotals = new Map(
     (data?.tenderTotals ?? []).map((row) => [row.tender, row])
   )
+  const tabTenderTotals = new Map(
+    (data?.tabPaymentTenderTotals ?? []).map((row) => [row.tender, row])
+  )
   const typeTotals = new Map((data?.byType ?? []).map((row) => [row.type, row]))
   const range = { range: search.range, from: search.from, to: search.to }
   const loading = !dayWindow || report.isPending
@@ -121,6 +130,7 @@ export function TillReport() {
     tickets: t('tillTickets'),
     payments: t('tillPayments'),
     refunds: t('tillRefunds'),
+    'tab-payments': t('tabPayments'),
   }
 
   return (
@@ -246,8 +256,8 @@ export function TillReport() {
               })}
               loading={loading}
               to='/till'
-              search={open('payments', { tender: '3' })}
-              className={active('payments', '3')}
+              search={open('tab-payments')}
+              className={active('tab-payments')}
             />
           </StatStrip>
 
@@ -259,13 +269,25 @@ export function TillReport() {
               ) : (
                 <SegmentedBar
                   segments={TENDERS.map(({ name, value, labelKey }) => {
-                    const row = tenderTotals.get(name)
+                    const payments = toNumber(tenderTotals.get(name)?.count)
+                    const slips = toNumber(tabTenderTotals.get(name)?.count)
+                    const amount =
+                      toNumber(tenderTotals.get(name)?.amount) +
+                      toNumber(tabTenderTotals.get(name)?.amount)
+                    // "3 payments · 1 tab payment": each kind only when there is one
+                    const hint =
+                      [
+                        payments > 0 && t('paymentsCount', { count: payments }),
+                        slips > 0 && t('tabPaymentsCount', { count: slips }),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ') || t('paymentsCount', { count: 0 })
                     return {
                       key: name,
                       label: t(labelKey),
-                      value: toNumber(row?.amount),
-                      display: formatEgp(row?.amount),
-                      hint: t('paymentsCount', { count: toNumber(row?.count) }),
+                      value: amount,
+                      display: formatEgp(amount),
+                      hint,
                       to: '/till' as const,
                       search: open('payments', { tender: String(value) }),
                     }
@@ -324,6 +346,7 @@ export function TillReport() {
               {view === 'tickets' && <TicketsList />}
               {view === 'payments' && <PaymentsList />}
               {view === 'refunds' && <RefundsList />}
+              {view === 'tab-payments' && <TabPaymentsList />}
             </section>
           )}
         </>
