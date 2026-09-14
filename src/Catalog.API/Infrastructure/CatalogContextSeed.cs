@@ -30,6 +30,9 @@ public partial class CatalogContextSeed(
             await context.CatalogTypes.AddRangeAsync(types);
             logger.LogInformation("Seeded catalog with {NumTypes} types", types.Count);
             await context.SaveChangesAsync();
+            // Explicit ids leave the identity sequence at 1; the next category created through the API must not collide
+            await context.Database.ExecuteSqlRawAsync(
+                """SELECT setval(pg_get_serial_sequence('"CatalogType"', 'Id'), (SELECT MAX("Id") FROM "CatalogType"))""");
 
             // Seed menu items based on Loyverse export
             var menuItems = new List<CatalogItem>
