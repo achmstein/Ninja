@@ -58,6 +58,17 @@ public sealed class ApiClient : IDisposable
     public Task<HttpResponseMessage> PostAsync(string path, object? body, CancellationToken ct, Guid? requestId = null, bool ensureSuccess = true)
         => SendAsync(HttpMethod.Post, path, body, ct, requestId, ensureSuccess);
 
+    /// <summary>A file upload the way the SPAs send one: one multipart field named "file".</summary>
+    public async Task<T> PostFileAsync<T>(string path, byte[] bytes, string fileName, string contentType, CancellationToken ct)
+    {
+        using var content = new MultipartFormDataContent();
+        var file = new ByteArrayContent(bytes);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        content.Add(file, "file", fileName);
+        using var response = await SendAsync(HttpMethod.Post, path, content, ct);
+        return await ReadAsync<T>(response, ct);
+    }
+
     public Task<HttpResponseMessage> PutAsync(string path, object? body, CancellationToken ct, Guid? requestId = null, bool ensureSuccess = true)
         => SendAsync(HttpMethod.Put, path, body, ct, requestId, ensureSuccess);
 
@@ -77,7 +88,9 @@ public sealed class ApiClient : IDisposable
             request.Headers.Add("X-Branch-Id", branch.ToString(System.Globalization.CultureInfo.InvariantCulture));
         if (method != HttpMethod.Get)
             request.Headers.Add("x-requestid", (requestId ?? Guid.NewGuid()).ToString());
-        if (body is not null)
+        if (body is HttpContent content)
+            request.Content = content;
+        else if (body is not null)
             request.Content = JsonContent.Create(body, options: Json);
 
         var response = await _http.SendAsync(request, ct);

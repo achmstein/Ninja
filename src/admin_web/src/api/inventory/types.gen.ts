@@ -16,6 +16,8 @@ export type CreatedResponse = {
     id: number | string;
 };
 
+export type IFormFile = Blob | File;
+
 export type LocalizedText = {
     en?: string;
     ar?: null | string;
@@ -57,6 +59,26 @@ export type PagedResultOfTransferView = {
     totalCount: number | string;
 };
 
+export type ProposedLine = {
+    index: number | string;
+    rawText: string;
+    quantity: number | string;
+    packs: null | number | string;
+    unitCost: number | string;
+    lineTotal: number | string;
+    stockItemId: null | number | string;
+    confidence: number | string;
+    suggestions: Array<number | string>;
+    newItem: null | ProposedNewItem;
+};
+
+export type ProposedNewItem = {
+    name: LocalizedText;
+    unit: string;
+    packSize: null | number | string;
+    packName: null | string;
+};
+
 export type PurchaseLineInput = {
     stockItemId: number | string;
     quantity: number | string;
@@ -93,6 +115,18 @@ export type PurchaseView = {
 
 export type RebuildResponse = {
     changed: number | string;
+};
+
+export type ReceiptProposal = {
+    supplier: null | string;
+    invoiceRef: null | string;
+    date: null | string;
+    currency: string;
+    printedTotal: null | number | string;
+    computedTotal: number | string;
+    lines: Array<ProposedLine>;
+    warnings: Array<string>;
+    notes: null | string;
 };
 
 export type RecipeLineInput = {
@@ -660,6 +694,46 @@ export type GetPurchaseResponses = {
 };
 
 export type GetPurchaseResponse = GetPurchaseResponses[keyof GetPurchaseResponses];
+
+export type ScanReceiptData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/purchases/scan';
+};
+
+export type ScanReceiptErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ScanReceiptError = ScanReceiptErrors[keyof ScanReceiptErrors];
+
+export type ScanReceiptResponses = {
+    /**
+     * OK
+     */
+    200: ReceiptProposal;
+};
+
+export type ScanReceiptResponse = ScanReceiptResponses[keyof ScanReceiptResponses];
 
 export type GetStockCountsData = {
     body?: never;

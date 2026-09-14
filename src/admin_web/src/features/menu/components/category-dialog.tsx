@@ -20,10 +20,13 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import {
   fromLocalizedValue,
+  LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { LOCALIZE_CATEGORY } from '@/features/assist/use-localize-assist'
+import { useNameAssist } from '@/features/assist/use-name-assist'
 
 interface CategoryDialogProps {
   open: boolean
@@ -78,6 +81,7 @@ function CategoryForm({
     toLocalizedValue(category?.name)
   )
   const [error, setError] = useState('')
+  const nameAssist = useNameAssist(LOCALIZE_CATEGORY, name, setName)
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
@@ -131,30 +135,34 @@ function CategoryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <LocalizedInput
-        id='category-name'
-        label={t('name')}
-        value={name}
-        onChange={setName}
-        placeholder={{ en: t('categoryNameHint'), ar: 'مثال: مشروبات' }}
-        error={error ?? undefined}
-        autoFocus
-      />
+    <LocalizedFields lang={nameAssist.lang} onLangChange={nameAssist.setLang}>
+      <form onSubmit={handleSubmit} className='space-y-4'>
+        <LocalizedInput
+          id='category-name'
+          label={t('name')}
+          value={name}
+          onChange={nameAssist.onChange}
+          placeholder={{ en: t('categoryNameHint'), ar: 'مثال: مشروبات' }}
+          error={error ?? undefined}
+          autoFocus
+          assist={nameAssist.slot}
+          suggested={nameAssist.suggested}
+        />
 
-      <DialogFooter>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
-          {t('cancel')}
-        </Button>
-        <Button type='submit' disabled={isLoading}>
-          {isLoading && <Spinner className='me-2' />}
-          {isEditing ? t('update') : t('create')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => onOpenChange(false)}
+          >
+            {t('cancel')}
+          </Button>
+          <Button type='submit' disabled={isLoading}>
+            {isLoading && <Spinner className='me-2' />}
+            {isEditing ? t('update') : t('create')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </LocalizedFields>
   )
 }

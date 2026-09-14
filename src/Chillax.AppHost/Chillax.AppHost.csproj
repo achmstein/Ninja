@@ -11,11 +11,10 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.RabbitMQ" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
-    <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" />
     <PackageReference Include="Aspire.Hosting.Yarp" />
     <PackageReference Include="Aspire.Hosting.JavaScript" />
     <PackageReference Include="Aspire.Hosting.Keycloak" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" />
+    <PackageReference Include="Aspire.Hosting.OpenAI" />
     <PackageReference Include="Aspire.Hosting.Docker" />
   </ItemGroup>
 
@@ -32,6 +31,10 @@
     <ProjectReference Include="..\Loyalty.API\Loyalty.API.csproj" />
     <ProjectReference Include="..\Notification.API\Notification.API.csproj" />
     <ProjectReference Include="..\Branch.API\Branch.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chillax.AppHost.UnitTests" />
   </ItemGroup>
 
 </Project>

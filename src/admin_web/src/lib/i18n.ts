@@ -2167,6 +2167,113 @@ const webExtras = {
     en: 'Make a staff account for this person and link it',
     ar: 'اعمل حساب دخول للشخص ده واربطه بيه',
   },
+  // AI assistant: fill in the other language
+  assistFillOtherLanguage: {
+    en: 'Fill in the other language',
+    ar: 'كمّل اللغة التانية',
+  },
+  assistFillItem: {
+    en: 'Fill in Arabic, English and the category from what is typed',
+    ar: 'كمّل العربي والإنجليزي والقسم من اللي مكتوب',
+  },
+  assistNeedsOneSide: {
+    en: 'Type the name in one language first',
+    ar: 'اكتب الاسم بلغة واحدة الأول',
+  },
+  assistBothFilled: {
+    en: 'Both languages are already filled in',
+    ar: 'اللغتين متكتّبين خلاص',
+  },
+  assistSuggested: { en: 'Suggested by the assistant', ar: 'اقتراح المساعد' },
+  assistCategorySuggested: {
+    en: 'Suggested category; change it if it is wrong',
+    ar: 'قسم مقترح؛ غيّره لو مش مظبوط',
+  },
+  assistBusy: {
+    en: 'The assistant is busy; try again in a minute',
+    ar: 'المساعد مشغول؛ جرّب تاني بعد دقيقة',
+  },
+  assistUnavailable: {
+    en: 'The assistant is not set up on this server',
+    ar: 'المساعد مش متظبط على السيرفر ده',
+  },
+  assistFailed: {
+    en: 'The assistant could not answer; try again',
+    ar: 'المساعد مقدرش يرد؛ جرّب تاني',
+  },
+  // AI assistant: receipt scanning
+  scanReceipt: { en: 'Scan receipt', ar: 'صوّر الفاتورة' },
+  readingReceipt: { en: 'Reading the receipt…', ar: 'بنقرا الفاتورة…' },
+  readingReceiptHint: {
+    en: 'Usually 5–20 seconds',
+    ar: 'غالباً من 5 لـ 20 ثانية',
+  },
+  failedToScanReceipt: {
+    en: 'The receipt could not be read',
+    ar: 'مقدرناش نقرا الفاتورة',
+  },
+  scanImageOnly: {
+    en: 'Pick a photo (JPEG, PNG or WebP)',
+    ar: 'اختار صورة (JPEG أو PNG أو WebP)',
+  },
+  reviewScan: { en: 'Check the receipt', ar: 'راجع الفاتورة' },
+  reviewScanDescription: {
+    en: 'The assistant read these lines. Match each one to a stock item or create it, fix any number, then add the lines to the delivery.',
+    ar: 'المساعد قرا السطور دي. اربط كل سطر بصنف أو اعمله جديد، صلّح أي رقم، وبعدين ضيف السطور للتوريد.',
+  },
+  onTheReceipt: { en: 'On the receipt: {text}', ar: 'على الفاتورة: {text}' },
+  supplierNotFound: {
+    en: 'No supplier by that name; pick one or leave it empty',
+    ar: 'مفيش مورد بالاسم ده؛ اختار واحد أو سيبه فاضي',
+  },
+  printedTotal: { en: 'Printed total', ar: 'الإجمالي المطبوع' },
+  totalsDiffer: {
+    en: 'The lines add up to {computed}; the receipt says {printed}',
+    ar: 'السطور مجموعها {computed} والفاتورة بتقول {printed}',
+  },
+  matchHigh: { en: 'Sure', ar: 'متأكد' },
+  matchMedium: { en: 'Likely', ar: 'غالباً' },
+  matchLow: { en: 'Unsure', ar: 'مش متأكد' },
+  matchNone: { en: 'No match', ar: 'مفيش صنف' },
+  suggestedMatch: { en: 'Suggested', ar: 'مقترح' },
+  includeLine: { en: 'Include this line', ar: 'ضيف السطر ده' },
+  createAsNewItem: { en: 'Create as a new item', ar: 'اعمله صنف جديد' },
+  pickExistingItem: { en: 'Pick an existing item', ar: 'اختار صنف موجود' },
+  newItemName: { en: 'New item', ar: 'صنف جديد' },
+  itemCreatedFromReceipt: {
+    en: '{name} created',
+    ar: 'اتعمل {name}',
+  },
+  creatingItems: {
+    en: 'Creating {done} of {total}…',
+    ar: 'بنعمل {done} من {total}…',
+  },
+  addScannedLines: {
+    plural: 'count',
+    en: {
+      '=1': 'Add 1 line',
+      other: 'Add {count} lines',
+    },
+    ar: {
+      one: 'ضيف سطر واحد',
+      two: 'ضيف سطرين',
+      few: 'ضيف {count} سطور',
+      many: 'ضيف {count} سطر',
+      other: 'ضيف {count} سطر',
+    },
+  },
+  scannedLinesAdded: {
+    en: 'Lines added; check them and press Receive',
+    ar: 'السطور اتضافت؛ راجعها ودوس استلام',
+  },
+  noLinesSelected: {
+    en: 'Tick at least one line',
+    ar: 'علّم على سطر واحد على الأقل',
+  },
+  lineNeedsItem: {
+    en: 'Every ticked line needs an item or a new item name',
+    ar: 'كل سطر متعلّم لازم له صنف أو اسم صنف جديد',
+  },
 } satisfies Record<string, Message>
 
 const dictionary = { ...messages, ...webExtras }

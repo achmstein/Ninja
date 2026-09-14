@@ -119,16 +119,39 @@ public sealed class OwnerActor(ApiClient api)
 
     // --- Inventory -------------------------------------------------------------
 
-    public async Task<int> CreateStockItemAsync(string nameEn, string unit, bool autoSoldOut, CancellationToken ct)
+    public Task<int> CreateStockItemAsync(string nameEn, string unit, bool autoSoldOut, CancellationToken ct)
+        => CreateStockItemAsync(new LocalizedText(nameEn, nameEn), unit, null, null, autoSoldOut, ct);
+
+    /// <summary>stock-item-dialog.tsx / the receipt review sheet: the whole item.</summary>
+    public async Task<int> CreateStockItemAsync(LocalizedText name, string unit, decimal? packSize, string? packName, bool autoSoldOut, CancellationToken ct)
         => (await Api.PostAsync<CreatedResponse>("/api/inventory/items", new
         {
-            name = new { en = nameEn, ar = nameEn },
+            name = new { en = name.En, ar = name.Ar },
             unit,
-            packSize = (decimal?)null,
-            packName = (string?)null,
+            packSize,
+            packName,
             autoSoldOut,
             isActive = (bool?)null,
         }, ct)).Id;
+
+    public Task<List<StockItemView>> StockItemsAsync(CancellationToken ct)
+        => Api.GetAsync<List<StockItemView>>("/api/inventory/items", ct);
+
+    /// <summary>receive-dialog.tsx "Scan receipt": a photo in, a proposal out, nothing posted.</summary>
+    public Task<ReceiptProposal> ScanReceiptAsync(byte[] image, CancellationToken ct)
+        => Api.PostFileAsync<ReceiptProposal>("/api/inventory/purchases/scan", image, "receipt.png", "image/png", ct);
+
+    /// <summary>The sparkle on a bilingual field: the assistant fills in the other language.</summary>
+    public Task<LocalizeResponse> LocalizeAsync(int kind, LocalizedText name, CancellationToken ct,
+        LocalizedText? description = null, int? catalogTypeId = null, bool suggestCategory = false)
+        => Api.PostAsync<LocalizeResponse>("/api/catalog/assist/localize", new
+        {
+            kind,
+            name = new { en = name.En, ar = name.Ar },
+            description = description is null ? null : new { en = description.En, ar = description.Ar },
+            catalogTypeId,
+            suggestCategory,
+        }, ct);
 
     public async Task SetReorderLevelAsync(int stockItemId, decimal? reorderLevel, CancellationToken ct)
     {

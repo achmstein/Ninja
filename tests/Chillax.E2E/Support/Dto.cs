@@ -123,6 +123,20 @@ public sealed record TableView(int Id, LocalizedText Name, bool IsActive);
 
 public sealed record CreatedResponse(int Id);
 
+public sealed record StockItemView(int Id, LocalizedText Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut, bool IsActive);
+
+// The assistant's receipt proposal (Inventory.API Application/Assist/ReceiptContracts.cs)
+public sealed record ReceiptProposal(string? Supplier, string? InvoiceRef, string? Date, string Currency, decimal? PrintedTotal,
+    decimal ComputedTotal, List<ProposedLine> Lines, List<string> Warnings, string? Notes);
+
+public sealed record ProposedLine(int Index, string RawText, decimal Quantity, decimal? Packs, decimal UnitCost, decimal LineTotal,
+    int? StockItemId, double Confidence, List<int> Suggestions, ProposedNewItem? NewItem);
+
+public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? PackSize, string? PackName);
+
+// The assistant's localize answer (Catalog.API Assist/LocalizeContracts.cs)
+public sealed record LocalizeResponse(LocalizedText Name, LocalizedText? Description, int? SuggestedCatalogTypeId, List<string> Filled, List<string> Warnings);
+
 public sealed record StockLevelView(int StockItemId, LocalizedText Name, string Unit, bool AutoSoldOut, bool IsActive, decimal OnHand,
     decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value);
 

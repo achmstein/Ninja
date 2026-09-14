@@ -159,6 +159,27 @@ export type LocalizedText = {
     ar?: null | string;
 };
 
+export type LocalizeKind = number;
+
+export type LocalizeRequest = {
+    kind: LocalizeKind;
+    name: LocalizedText;
+    description?: null | LocalizedText;
+    /**
+     * The menu item's category, as context
+     */
+    catalogTypeId?: null | number | string;
+    suggestCategory?: boolean;
+};
+
+export type LocalizeResponse = {
+    name: LocalizedText;
+    description: null | LocalizedText;
+    suggestedCatalogTypeId: null | number | string;
+    filled: Array<string>;
+    warnings: Array<string>;
+};
+
 export type PaginatedItemsDtoOfCatalogItemDto = {
     pageIndex: number | string;
     pageSize: number | string;
@@ -227,6 +248,44 @@ export type UserPreferenceOptionDto = {
     customizationId?: number | string;
     optionId?: number | string;
 };
+
+export type LocalizeMenuTextData = {
+    body: LocalizeRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/localize';
+};
+
+export type LocalizeMenuTextErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type LocalizeMenuTextError = LocalizeMenuTextErrors[keyof LocalizeMenuTextErrors];
+
+export type LocalizeMenuTextResponses = {
+    /**
+     * OK
+     */
+    200: LocalizeResponse;
+};
+
+export type LocalizeMenuTextResponse = LocalizeMenuTextResponses[keyof LocalizeMenuTextResponses];
 
 export type ListItemsData = {
     body?: never;

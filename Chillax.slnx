@@ -9,6 +9,7 @@
     </Project>
     <Project Path="src/Branch.API/Branch.API.csproj" />
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
+    <Project Path="src/Chillax.AI/Chillax.AI.csproj" />
     <Project Path="src/Chillax.AppHost/Chillax.AppHost.csproj" />
     <Project Path="src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj" />
     <Project Path="src/client_web/client_web.esproj">
@@ -49,9 +50,12 @@
     <Project Path="src/Spaces.Infrastructure/Spaces.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Chillax.AI.UnitTests/Chillax.AI.UnitTests.csproj" />
+    <Project Path="tests/Chillax.AppHost.UnitTests/Chillax.AppHost.UnitTests.csproj" />
     <Project Path="tests/Chillax.Contracts.Tests/Chillax.Contracts.Tests.csproj" />
     <Project Path="tests/Chillax.E2E/Chillax.E2E.csproj" />
     <Project Path="tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" />
+    <Project Path="tests/Catalog.UnitTests/Catalog.UnitTests.csproj" />
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Accounts.UnitTests/Accounts.UnitTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />

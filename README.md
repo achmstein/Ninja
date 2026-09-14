@@ -81,23 +81,28 @@ Login to the dashboard at: http://localhost:19888/login?t=uniquelogincodeforyou
 
 > You may need to install ASP.NET Core HTTPS development certificates first, and then close all browser tabs. Learn more at https://aka.ms/aspnet/https-trust-dev-cert
 
-### Azure Open AI
+### AI assistant (Gemini, or any OpenAI-compatible provider)
 
-When using Azure OpenAI, inside *eShop.AppHost/appsettings.json*, add the following section:
+The back office has an assistant for two chores: filling in the other language of a menu item, category or stock item (English ↔ Egyptian Arabic), and reading a photo of a supplier receipt into purchase lines you review before receiving them. It runs on [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) over one chat model that the AppHost declares as an Aspire resource, the way [eShop](https://github.com/dotnet/eShop) wires its models. Nothing is written by the assistant; every answer is a proposal the form or the review sheet shows you first.
+
+It is **off until a key is configured**: without one the `openai`/`chatModel` resources are not added, the endpoints answer `503` and the admin app hides the buttons. To turn it on locally, get a free key from [Google AI Studio](https://aistudio.google.com/apikey) and store it as a user secret of the AppHost:
+
+```powershell
+dotnet user-secrets set "Parameters:openai-openai-apikey" "AIza..." --project src/Chillax.AppHost
+```
+
+(`OPENAI_API_KEY` in the environment works too.) The provider and model live in *src/Chillax.AppHost/appsettings.json*:
 
 ```json
-  "ConnectionStrings": {
-    "OpenAi": "Endpoint=xxx;Key=xxx;"
+  "AI": {
+    "Endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "ChatModel": "gemini-2.5-flash"
   }
 ```
 
-Replace the values with your own. Then, in the eShop.AppHost *Program.cs*, set this value to **true**
+Any provider with an OpenAI-compatible endpoint is a matter of changing those two values and the key. For deployment the key comes from the `GEMINI_API_KEY` repository secret (see *.github/workflows/deploy.yml*).
 
-```csharp
-bool useOpenAI = false;
-```
-
-Here's additional guidance on the [.NET Aspire OpenAI component](https://learn.microsoft.com/dotnet/aspire/azureai/azureai-openai-component?tabs=dotnet-cli). 
+Good to know about the Gemini free tier: it allows roughly ten requests a minute and a few hundred a day on `gemini-2.5-flash` (the services keep their own limiter under that, `AI:RequestsPerMinute` / `AI:PerUserRequestsPerMinute`), and Google may use free-tier prompts to improve its models, so do not scan anything you would not want leaving the building. Under test the AppHost runs the services with `AI:UseFake=true`, a scripted stand-in that needs no key and no network.
 
 ### Use Azure Developer CLI
 

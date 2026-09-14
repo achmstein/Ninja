@@ -150,8 +150,8 @@ public sealed class RoomSessionScenario(ChillaxApp app, DaySetup day) : Scenario
     }
 
     /// <summary>
-    /// The real time line needs a session of at least a quarter hour. Opt in
-    /// with --filter-trait Category=Slow.
+    /// The real time line needs a session long enough to round up to a
+    /// quarter hour. Opt in with --filter-trait Category=Slow.
     /// </summary>
     [Fact]
     [Trait("Category", "Slow")]
@@ -163,17 +163,20 @@ public sealed class RoomSessionScenario(ChillaxApp app, DaySetup day) : Scenario
         var roomTicket = await ExpectValueAsync("Sales opened the room's bill", async () =>
             (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.SessionId == sessionId));
 
-        await Task.Delay(TimeSpan.FromMinutes(4), Ct);
+        // Spaces rounds each mode's total to the NEAREST quarter hour, so a
+        // mode needs 7.5+ minutes before it bills at all: 8 minutes of Single
+        // is one quarter, and the seconds of Multi at the end are nothing.
+        await Task.Delay(TimeSpan.FromMinutes(8), Ct);
         await Cashier.SetPlayerModeAsync(sessionId, Codes.PlayerMode.Multi, Ct);
-        await Task.Delay(TimeSpan.FromMinutes(4), Ct);
 
-        var end = Step("End after ~8 minutes: 4 single + 4 multi, each rounded to a quarter hour");
+        var end = Step("End after ~8 minutes of Single: one quarter hour billed, the Multi seconds not");
         await Cashier.EndSessionAsync(sessionId, Ct);
         var completed = await ExpectEventAsync(end, "SessionCompleted", e => e.Int("ReservationId") == sessionId);
-        var singleCost = Money.Round(completed.Dec("SingleDuration") * room1.SingleRate);
-        var multiCost = Money.Round(completed.Dec("MultiDuration") * room1.MultiRate);
-        Assert.Equal(singleCost, completed.Dec("SingleCost"));
-        Assert.Equal(multiCost, completed.Dec("MultiCost"));
+        Assert.Equal(0.25m, completed.Dec("SingleDuration"));
+        Assert.Equal(0m, completed.Dec("MultiDuration"));
+        Assert.Equal(Money.Round(0.25m * room1.SingleRate), completed.Dec("SingleCost"));
+        Assert.Equal(0m, completed.Dec("MultiCost"));
+        Assert.Equal(completed.Dec("SingleCost"), completed.Dec("TotalCost"));
         Assert.True(completed.Dec("TotalCost") > 0m, "some time was billed");
 
         await ExpectAsync("Sales put the time on the bill", async () =>

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, type Options, postStockAdjustment, postStockCount, rebuildStockLevels, receivePurchase, removeRecipe, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
-import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
+import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, type Options, postStockAdjustment, postStockCount, rebuildStockLevels, receivePurchase, removeRecipe, scanReceipt, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
+import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, ScanReceiptData, ScanReceiptError, ScanReceiptResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -228,6 +228,25 @@ export const getPurchaseOptions = (options: Options<GetPurchaseData>) => queryOp
     },
     queryKey: getPurchaseQueryKey(options)
 });
+
+/**
+ * Read a receipt photo into proposed purchase lines
+ *
+ * The assistant matches each line to a stock item or proposes a new one. Nothing is posted: review the proposal, create the new items, then receive the purchase.
+ */
+export const scanReceiptMutation = (options?: Partial<Options<ScanReceiptData>>): UseMutationOptions<ScanReceiptResponse, AxiosError<ScanReceiptError>, Options<ScanReceiptData>> => {
+    const mutationOptions: UseMutationOptions<ScanReceiptResponse, AxiosError<ScanReceiptError>, Options<ScanReceiptData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await scanReceipt({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getStockCountsQueryKey = (options: Options<GetStockCountsData>) => createQueryKey('getStockCounts', options);
 

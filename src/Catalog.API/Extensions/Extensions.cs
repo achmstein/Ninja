@@ -1,8 +1,19 @@
+using Chillax.AI;
+using Chillax.Catalog.API.Assist;
+
 public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
         builder.AddDefaultAuthentication();
+
+        // The assistant: on when the AppHost handed out a chat model, scripted
+        // under test, off otherwise. Before the build-time guard because the
+        // rate limiter middleware needs its services even when only the
+        // OpenAPI document is being generated.
+        builder.AddAIServices();
+        builder.Services.AddSingleton<MenuLocalizer>();
+        builder.Services.AddFakeAgentScript(MenuLocalizer.AgentKey, MenuLocalizerFake.Respond);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ImagePlus, X } from 'lucide-react'
+import { ImagePlus, Sparkles, X } from 'lucide-react'
 import {
   type CatalogItemDto,
   type CatalogTypeDto,
@@ -16,6 +16,7 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,9 +34,29 @@ import {
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
+  type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { halfFilled, hasText } from '@/features/assist/helpers'
+import {
+  LOCALIZE_MENU_ITEM,
+  localizeBlocker,
+  useLocalizeAssist,
+} from '@/features/assist/use-localize-assist'
 import { itemPictureUrl } from '../pictures'
+
+/** What the assistant filled in and the user has not edited since */
+type Suggested = {
+  name: Partial<Record<Lang, boolean>>
+  description: Partial<Record<Lang, boolean>>
+  category: boolean
+}
+
+const nothingSuggested: Suggested = {
+  name: {},
+  description: {},
+  category: false,
+}
 
 type FormState = {
   name: LocalizedValue
@@ -101,6 +122,70 @@ export function ItemDetailsForm({
     | { kind: 'file'; file: File; url: string }
     | { kind: 'remove' }
   >({ kind: 'keep' })
+
+  // The assistant fills in whichever language is missing; the form then
+  // flips to that language so what came back is in view. A category is
+  // only suggested on a new item whose category nobody has picked yet.
+  const assist = useLocalizeAssist()
+  const [lang, setLang] = useState<Lang>('en')
+  const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
+  const [categoryTouched, setCategoryTouched] = useState(false)
+  const assistBlocker = localizeBlocker(form.name)
+  const wantCategory =
+    !isEditing && defaultCategoryId == null && !categoryTouched
+
+  const askAssistant = async () => {
+    const source = halfFilled(form.name)
+    if (!source) return
+    const target: Lang = source === 'en' ? 'ar' : 'en'
+    // The description rides along only when it is in the same language as
+    // the name and the other side is still empty
+    const description =
+      halfFilled(form.description) === source ? form.description : undefined
+    try {
+      const result = await assist.localize({
+        kind: LOCALIZE_MENU_ITEM,
+        name: form.name,
+        description,
+        catalogTypeId: form.catalogTypeId || null,
+        suggestCategory: wantCategory,
+      })
+      const filled = new Set(result.filled)
+      setForm((prev) => {
+        const next = { ...prev }
+        // Only what is still empty: the user may have typed meanwhile
+        if (filled.has(`name.${target}`) && !hasText(prev.name[target])) {
+          next.name = { ...prev.name, [target]: result.name[target] ?? '' }
+        }
+        if (
+          filled.has(`description.${target}`) &&
+          !hasText(prev.description[target])
+        ) {
+          next.description = {
+            ...prev.description,
+            [target]: result.description?.[target] ?? '',
+          }
+        }
+        if (
+          filled.has('catalogTypeId') &&
+          result.suggestedCatalogTypeId != null &&
+          wantCategory
+        ) {
+          next.catalogTypeId = Number(result.suggestedCatalogTypeId)
+        }
+        return next
+      })
+      setSuggested({
+        name: { [target]: filled.has(`name.${target}`) },
+        description: { [target]: filled.has(`description.${target}`) },
+        category: filled.has('catalogTypeId') && wantCategory,
+      })
+      setLang(target)
+      for (const warning of result.warnings) toast.warning(warning)
+    } catch {
+      // toasted by the hook
+    }
+  }
 
   const uploadPicture = useMutation(uploadItemPictureMutation())
   const deletePicture = useMutation(deleteItemPictureMutation())
@@ -223,7 +308,7 @@ export function ItemDetailsForm({
   }
 
   return (
-    <LocalizedFields>
+    <LocalizedFields lang={lang} onLangChange={setLang}>
       <form onSubmit={handleSubmit} className='space-y-4'>
         <div className='flex items-center gap-4'>
           <button
@@ -290,16 +375,40 @@ export function ItemDetailsForm({
           id='item-name'
           label={t('name')}
           value={form.name}
-          onChange={(name) => set('name', name)}
+          onChange={(name, typed) => {
+            set('name', name)
+            setSuggested((prev) => ({
+              ...prev,
+              name: { ...prev.name, [typed]: false },
+            }))
+          }}
           placeholder={{ en: 'Cappuccino', ar: 'كابتشينو' }}
           error={errors.name}
+          suggested={suggested.name}
+          assist={
+            assist.available
+              ? {
+                  onClick: askAssistant,
+                  pending: assist.isPending,
+                  disabled: !!assistBlocker,
+                  label: assistBlocker ? t(assistBlocker) : t('assistFillItem'),
+                }
+              : undefined
+          }
         />
 
         <LocalizedInput
           id='item-description'
           label={t('description')}
           value={form.description}
-          onChange={(description) => set('description', description)}
+          onChange={(description, typed) => {
+            set('description', description)
+            setSuggested((prev) => ({
+              ...prev,
+              description: { ...prev.description, [typed]: false },
+            }))
+          }}
+          suggested={suggested.description}
           multiline
         />
 
@@ -324,9 +433,21 @@ export function ItemDetailsForm({
             <Label htmlFor='item-category'>{t('category')}</Label>
             <Select
               value={String(form.catalogTypeId)}
-              onValueChange={(value) => set('catalogTypeId', parseInt(value))}
+              onValueChange={(value) => {
+                set('catalogTypeId', parseInt(value))
+                setCategoryTouched(true)
+                setSuggested((prev) => ({ ...prev, category: false }))
+              }}
             >
-              <SelectTrigger id='item-category'>
+              <SelectTrigger
+                id='item-category'
+                className={cn(
+                  suggested.category && 'border-primary ring-primary/20 ring-2'
+                )}
+                title={
+                  suggested.category ? t('assistCategorySuggested') : undefined
+                }
+              >
                 <SelectValue placeholder={t('selectCategory')} />
               </SelectTrigger>
               <SelectContent>
@@ -337,6 +458,12 @@ export function ItemDetailsForm({
                 ))}
               </SelectContent>
             </Select>
+            {suggested.category && (
+              <p className='text-primary flex items-center gap-1 text-xs'>
+                <Sparkles className='size-3' aria-hidden />
+                {t('assistCategorySuggested')}
+              </p>
+            )}
           </div>
           <div className='space-y-2'>
             <Label htmlFor='item-prep'>{t('prepTimeShort')}</Label>

@@ -1,8 +1,14 @@
 #nullable enable
+using Chillax.AI;
+using Chillax.AI.Agents;
+using Chillax.AI.Http;
+using Chillax.AI.Images;
+using Chillax.Inventory.API.Application.Assist;
 using Chillax.Inventory.API.Application.Commands;
 using Chillax.Inventory.API.Application.Queries;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Chillax.Inventory.API.Apis;
 
@@ -63,6 +69,13 @@ public static class InventoryApi
             .WithName("ReceivePurchase")
             .WithSummary("Receive stock into the branch")
             .WithDescription("Quantities are in each item's base unit; the unit cost sets the branch's moving average.");
+
+        api.MapPost("/purchases/scan", ScanReceipt)
+            .WithName("ScanReceipt")
+            .WithSummary("Read a receipt photo into proposed purchase lines")
+            .WithDescription("The assistant matches each line to a stock item or proposes a new one. Nothing is posted: review the proposal, create the new items, then receive the purchase.")
+            .DisableAntiforgery()
+            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
 
         // Counts
         api.MapGet("/counts", GetStockCounts)
@@ -280,6 +293,35 @@ public static class InventoryApi
         catch (InventoryDomainException ex)
         {
             return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Results<Ok<ReceiptProposal>, BadRequest<string>, ProblemHttpResult>> ScanReceipt(
+        IFormFile file,
+        HttpContext httpContext,
+        [FromServices] ReceiptScanner scanner,
+        [FromServices] IInventoryQueries queries,
+        [FromServices] IOptions<AIOptions> aiOptions,
+        CancellationToken ct)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+
+        if (!scanner.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        var (image, error) = await ImageValidation.ReadAsync(file, aiOptions.Value.MaxImageBytes, ct);
+        if (image is null)
+            return TypedResults.BadRequest(error ?? "The receipt image could not be read.");
+
+        var stockItems = await queries.GetStockItemsAsync(includeInactive: false);
+
+        try
+        {
+            return TypedResults.Ok(await scanner.ScanAsync(branchId, image, stockItems, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
         }
     }
 

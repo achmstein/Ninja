@@ -2,18 +2,11 @@
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Yarp;
 using Aspire.Hosting.Yarp.Transforms;
+using Microsoft.Extensions.Configuration;
 using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
 
 namespace Chillax.AppHost;
-
-internal enum OpenAITarget
-{
-    OpenAI,
-    AzureOpenAI,
-    AzureOpenAIExisting,
-    AzureOpenAIExistingWithKey
-}
 
 internal static class Extensions
 {
@@ -48,140 +41,48 @@ internal static class Extensions
     }
 
     /// <summary>
-    /// Configures eShop projects to use OpenAI for text embedding and chat.
+    /// Endpoint of Google's Gemini API in OpenAI-compatible form — the free
+    /// tier the assistant runs on unless AI:Endpoint in the AppHost settings
+    /// points somewhere else.
     /// </summary>
-    public static IDistributedApplicationBuilder AddOpenAI(this IDistributedApplicationBuilder builder,
-        IResourceBuilder<ProjectResource> catalogApi,
-        IResourceBuilder<ProjectResource> webApp,
-        OpenAITarget openAITarget)
-    {
-        const string openAIName = "openai";
-
-        const string textEmbeddingName = "textEmbeddingModel";
-        const string textEmbeddingModelName = "text-embedding-3-small";
-
-        const string chatName = "chatModel";
-        const string chatModelName = "gpt-4.1-mini";
-
-        if (openAITarget != OpenAITarget.AzureOpenAI)
-        {
-#pragma warning disable ASPIREINTERACTION001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            IResourceBuilder<ParameterResource>? endpoint = null;
-            if (openAITarget != OpenAITarget.OpenAI)
-            {
-                endpoint = builder.AddParameter("OpenAIEndpointParameter")
-                    .WithDescription("The Azure OpenAI endpoint to use, e.g. https://<name>.openai.azure.com/")
-                    .WithCustomInput(p => new()
-                    {
-                        Name = "OpenAIEndpointParameter",
-                        Label = "Azure OpenAI Endpoint",
-                        InputType = InputType.Text,
-                        Value = "https://<name>.openai.azure.com/",
-                    });
-            }
-
-            IResourceBuilder<ParameterResource>? key = null;
-            if (openAITarget is OpenAITarget.OpenAI or OpenAITarget.AzureOpenAIExistingWithKey)
-            {
-                key = builder.AddParameter("OpenAIKeyParameter", secret: true)
-                    .WithDescription("The OpenAI API key to use.")
-                    .WithCustomInput(p => new()
-                    {
-                        Name = "OpenAIKeyParameter",
-                        Label = "API Key",
-                        InputType = InputType.SecretText
-                    });
-            }
-
-            var chatModel = builder.AddParameter("ChatModelParameter")
-                .WithDescription("The chat model to use.")
-                .WithCustomInput(p => new()
-                {
-                    Name = "ChatModelParameter",
-                    Label = "Chat Model",
-                    InputType = InputType.Text,
-                    Value = chatModelName,
-                });
-
-            var embeddingModel = builder.AddParameter("EmbeddingModelParameter")
-                .WithDescription("The embedding model to use.")
-                .WithCustomInput(p => new()
-                {
-                    Name = "EmbeddingModelParameter",
-                    Label = "Text Embedding Model",
-                    InputType = InputType.Text,
-                    Value = textEmbeddingModelName,
-                });
-#pragma warning restore ASPIREINTERACTION001
-
-            var openAIConnectionBuilder = new ReferenceExpressionBuilder();
-            if (endpoint is not null)
-            {
-                openAIConnectionBuilder.Append($"Endpoint={endpoint}");
-            }
-            if (key is not null)
-            {
-                openAIConnectionBuilder.Append($";Key={key}");
-            }
-            var openAIConnectionString = openAIConnectionBuilder.Build();
-
-            catalogApi.WithReference(builder.AddConnectionString(textEmbeddingName, cs =>
-            {
-                cs.Append($"{openAIConnectionString};Deployment={embeddingModel}");
-            }));
-            webApp.WithReference(builder.AddConnectionString(chatName, cs =>
-            {
-                cs.Append($"{openAIConnectionString};Deployment={chatModel}");
-            }));
-        }
-        else
-        {
-            var openAI = builder.AddAzureOpenAI(openAIName);
-
-            var chat = openAI.AddDeployment(chatName, chatModelName, "2025-04-14")
-                .WithProperties(d =>
-                {
-                    d.DeploymentName = chatModelName;
-                    d.SkuName = "GlobalStandard";
-                    d.SkuCapacity = 50;
-                });
-            var textEmbedding = openAI.AddDeployment(textEmbeddingName, textEmbeddingModelName, "1")
-                .WithProperties(d =>
-                {
-                    d.DeploymentName = textEmbeddingModelName;
-                    d.SkuCapacity = 20; // 20k tokens per minute are needed to seed the initial embeddings
-                });
-
-            catalogApi.WithReference(textEmbedding);
-            webApp.WithReference(chat);
-        }
-
-        return builder;
-    }
+    public const string GeminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
     /// <summary>
-    /// Configures eShop projects to use Ollama for text embedding and chat.
+    /// Whether to wire the chat model: when a key is configured for it
+    /// (Parameters:openai-openai-apikey in the AppHost's user secrets, or the
+    /// OPENAI_API_KEY variable) or when publishing, where the key is filled in
+    /// on the box. A dev without a key runs with the assistant off.
     /// </summary>
-    public static IDistributedApplicationBuilder AddOllama(this IDistributedApplicationBuilder builder,
-        IResourceBuilder<ProjectResource> catalogApi,
-        IResourceBuilder<ProjectResource> webApp)
-    {
-        var ollama = builder.AddOllama("ollama")
-            .WithDataVolume()
-            .WithGPUSupport()
-            .WithOpenWebUI();
-        var embeddings = ollama.AddModel("embedding", "all-minilm");
-        var chat = ollama.AddModel("chat", "llama3.1");
+    public static bool IsChatModelEnabled(IConfiguration configuration, bool isPublishMode) =>
+        isPublishMode
+        || !string.IsNullOrWhiteSpace(configuration["Parameters:openai-openai-apikey"])
+        || !string.IsNullOrWhiteSpace(configuration["OPENAI_API_KEY"]);
 
-        catalogApi.WithReference(embeddings)
-            .WithEnvironment("OllamaEnabled", "true")
-            .WaitFor(embeddings);
-        webApp.WithReference(chat)
-            .WithEnvironment("OllamaEnabled", "true")
-            .WaitFor(chat);
+    /// <summary>
+    /// Configures the projects that own an AI feature to use one
+    /// OpenAI-compatible chat model, the way eShop hands its chat deployment
+    /// to the projects that need it: the model is a resource, and each project
+    /// receives it as the "chatModel" connection string
+    /// (Endpoint=…;Key=…;Model=…). Gemini by default; any OpenAI-compatible
+    /// provider by changing AI:Endpoint and AI:ChatModel.
+    /// </summary>
+    public static IDistributedApplicationBuilder AddChatModel(this IDistributedApplicationBuilder builder,
+        params IResourceBuilder<ProjectResource>[] projects)
+    {
+        var openai = builder.AddOpenAI("openai")
+            .WithEndpoint(builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint);
+
+        // No WithHealthCheck(): it calls the provider on every check and spends the free tier's quota
+        var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? "gemini-2.5-flash");
+
+        foreach (var project in projects)
+        {
+            project.WithReference(chat);
+        }
 
         return builder;
     }
+
 
     public static IResourceBuilder<YarpResource> ConfigureMobileBffRoutes<TKeycloak>(this IResourceBuilder<YarpResource> builder,
         IResourceBuilder<ProjectResource> catalogApi,

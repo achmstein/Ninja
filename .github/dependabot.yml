@@ -50,9 +50,6 @@ updates:
       Grpc:
         patterns:
           - "Grpc.*"
-      Pgvector:
-        patterns:
-          - "Pgvector.*"
       Duende:
         patterns:
           - "Duende.*"

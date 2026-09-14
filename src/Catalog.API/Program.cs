@@ -23,6 +23,7 @@ app.UseStatusCodePages();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapCatalogApi();
 

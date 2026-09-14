@@ -1,14 +1,17 @@
 import { createContext, useContext, useId, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { type LocalizedText } from '@/api/catalog'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
   InputGroupTextarea,
 } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export type Lang = 'en' | 'ar'
@@ -42,12 +45,22 @@ const LangContext = createContext<{
  */
 export function LocalizedFields({
   defaultLang = 'en',
+  lang: controlled,
+  onLangChange,
   children,
 }: {
   defaultLang?: Lang
+  /** Drive the language from outside (a form that flips to what was just filled in) */
+  lang?: Lang
+  onLangChange?: (lang: Lang) => void
   children: React.ReactNode
 }) {
-  const [lang, setLang] = useState<Lang>(defaultLang)
+  const [own, setOwn] = useState<Lang>(defaultLang)
+  const lang = controlled ?? own
+  const setLang = (next: Lang) => {
+    setOwn(next)
+    onLangChange?.(next)
+  }
   return (
     <LangContext.Provider value={{ lang, setLang }}>
       {children}
@@ -61,12 +74,26 @@ function useLang(): [Lang, (lang: Lang) => void] {
   return shared ? [shared.lang, shared.setLang] : [local, setLocal]
 }
 
+/** The assistant's button at the end of the field */
+export type AssistSlot = {
+  onClick: () => void
+  pending?: boolean
+  disabled?: boolean
+  /** Tooltip and accessible name; also the reason when disabled */
+  label: string
+}
+
 type LocalizedInputProps = {
   /** Visible label; give `ariaLabel` instead inside a labelled grid */
   label?: React.ReactNode
   ariaLabel?: string
   value: LocalizedValue
-  onChange: (value: LocalizedValue) => void
+  /** The whole value, plus which language was just typed */
+  onChange: (value: LocalizedValue, lang: Lang) => void
+  /** Sparkle button before the language switch */
+  assist?: AssistSlot
+  /** Languages the assistant filled in and the user has not touched yet */
+  suggested?: Partial<Record<Lang, boolean>>
   id?: string
   /** A textarea instead of a single line */
   multiline?: boolean
@@ -84,12 +111,16 @@ type LocalizedInputProps = {
  * One field for a bilingual text. The switch at its end picks which
  * language is being typed; the other language's item shows a dot while it
  * is still empty, so nothing gets published half-translated by accident.
+ * With `assist`, a sparkle button asks the assistant to fill in the other
+ * language; what it filled shows tinted until the user edits it.
  */
 export function LocalizedInput({
   label,
   ariaLabel,
   value,
   onChange,
+  assist,
+  suggested,
   id,
   multiline,
   rows = 2,
@@ -113,8 +144,9 @@ export function LocalizedInput({
     autoFocus,
     'aria-invalid': !!error || undefined,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      onChange({ ...value, [lang]: e.target.value }),
+      onChange({ ...value, [lang]: e.target.value }, lang),
   }
+  const isSuggested = !!suggested?.[lang]
 
   const languageSwitch = (
     <ToggleGroup
@@ -125,19 +157,42 @@ export function LocalizedInput({
       aria-label={t('language')}
       className={compact ? 'h-6' : 'h-7'}
     >
-      <LangItem lang='en' filled={value.en.trim() !== ''} />
-      <LangItem lang='ar' filled={value.ar.trim() !== ''} />
+      <LangItem
+        lang='en'
+        filled={value.en.trim() !== ''}
+        suggested={!!suggested?.en}
+      />
+      <LangItem
+        lang='ar'
+        filled={value.ar.trim() !== ''}
+        suggested={!!suggested?.ar}
+      />
     </ToggleGroup>
+  )
+
+  const assistButton = assist && (
+    <InputGroupButton
+      aria-label={assist.label}
+      title={assist.label}
+      disabled={assist.disabled || assist.pending}
+      onClick={assist.onClick}
+      className='text-primary'
+    >
+      {assist.pending ? <Spinner /> : <Sparkles />}
+    </InputGroupButton>
   )
 
   return (
     <div className={cn(label && 'space-y-2', className)}>
       {label && <Label htmlFor={fieldId}>{label}</Label>}
-      <InputGroup className={cn(compact && 'h-8')}>
+      <InputGroup
+        className={cn(compact && 'h-8', isSuggested && 'bg-primary/5')}
+      >
         {multiline ? (
           <>
             <InputGroupTextarea rows={rows} {...control} />
             <InputGroupAddon align='block-end' className='justify-end'>
+              {assistButton}
               {languageSwitch}
             </InputGroupAddon>
           </>
@@ -145,17 +200,32 @@ export function LocalizedInput({
           <>
             <InputGroupInput className={cn(compact && 'h-8')} {...control} />
             <InputGroupAddon align='inline-end'>
+              {assistButton}
               {languageSwitch}
             </InputGroupAddon>
           </>
         )}
       </InputGroup>
+      {isSuggested && !error && (
+        <p className='text-primary flex items-center gap-1 text-xs'>
+          <Sparkles className='size-3' aria-hidden />
+          {t('assistSuggested')}
+        </p>
+      )}
       {error && <p className='text-destructive text-sm'>{error}</p>}
     </div>
   )
 }
 
-function LangItem({ lang, filled }: { lang: Lang; filled: boolean }) {
+function LangItem({
+  lang,
+  filled,
+  suggested,
+}: {
+  lang: Lang
+  filled: boolean
+  suggested: boolean
+}) {
   const t = useT()
   return (
     <ToggleGroupItem
@@ -164,12 +234,16 @@ function LangItem({ lang, filled }: { lang: Lang; filled: boolean }) {
       aria-label={lang === 'en' ? t('english') : t('arabic')}
     >
       {lang === 'en' ? 'EN' : 'ع'}
-      {!filled && (
-        <span
-          className='bg-warning size-1.5 rounded-full'
-          aria-hidden
-          title={lang === 'en' ? t('english') : t('arabic')}
-        />
+      {suggested ? (
+        <Sparkles className='text-primary size-3' aria-hidden />
+      ) : (
+        !filled && (
+          <span
+            className='bg-warning size-1.5 rounded-full'
+            aria-hidden
+            title={lang === 'en' ? t('english') : t('arabic')}
+          />
+        )
       )}
     </ToggleGroupItem>
   )

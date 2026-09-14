@@ -100,6 +100,12 @@ jobs:
           sed -i 's/^EVENTBUS_PASSWORD=$/EVENTBUS_PASSWORD=guest/' deploy-artifacts/.env
           sed -i 's/^KEYCLOAK_PASSWORD=$/KEYCLOAK_PASSWORD=admin/' deploy-artifacts/.env
 
+          # The AI assistant's key (Gemini, or any OpenAI-compatible provider
+          # named in src/Chillax.AppHost/appsettings.json). An empty secret
+          # trips the guard below on purpose: ship without AI by choice, not by
+          # accident.
+          sed -i 's|^OPENAI_OPENAI_APIKEY=$|OPENAI_OPENAI_APIKEY=${{ secrets.GEMINI_API_KEY }}|' deploy-artifacts/.env
+
           # Fill port values for service discovery
           sed -i 's/^CATALOG_API_PORT=$/CATALOG_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^ORDERING_API_PORT=$/ORDERING_API_PORT=8080/' deploy-artifacts/.env

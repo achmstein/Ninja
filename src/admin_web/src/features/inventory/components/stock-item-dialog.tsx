@@ -24,16 +24,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
   fromLocalizedValue,
+  LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { unitLabel } from '../format'
+import { LOCALIZE_STOCK_ITEM } from '@/features/assist/use-localize-assist'
+import { useNameAssist } from '@/features/assist/use-name-assist'
+import { CUSTOM_UNIT, UNITS, unitLabel } from '../format'
 import { useInventoryActions } from '../use-inventory-actions'
-
-// The units a café actually stocks in; anything else is typed in
-const UNITS = ['pcs', 'g', 'ml', 'kg', 'l'] as const
-const CUSTOM_UNIT = 'custom'
 
 interface StockItemDialogProps {
   open: boolean
@@ -102,6 +101,9 @@ function StockItemForm({
     autoSoldOut: item?.autoSoldOut ?? false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const nameAssist = useNameAssist(LOCALIZE_STOCK_ITEM, form.name, (update) =>
+    setForm((prev) => ({ ...prev, name: update(prev.name) }))
+  )
 
   const unit =
     form.unitChoice === CUSTOM_UNIT ? form.customUnit.trim() : form.unitChoice
@@ -138,108 +140,114 @@ function StockItemForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-4'>
-      <LocalizedInput
-        id='stock-item-name'
-        label={t('name')}
-        value={form.name}
-        onChange={(name) => setForm({ ...form, name })}
-        error={errors.name}
-        autoFocus
-      />
+    <LocalizedFields lang={nameAssist.lang} onLangChange={nameAssist.setLang}>
+      <form onSubmit={handleSubmit} className='space-y-4'>
+        <LocalizedInput
+          id='stock-item-name'
+          label={t('name')}
+          value={form.name}
+          onChange={nameAssist.onChange}
+          error={errors.name}
+          autoFocus
+          assist={nameAssist.slot}
+          suggested={nameAssist.suggested}
+        />
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-2'>
-          <Label htmlFor='unit'>{t('unit')}</Label>
-          <Select
-            value={form.unitChoice}
-            onValueChange={(value) => setForm({ ...form, unitChoice: value })}
-          >
-            <SelectTrigger id='unit'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {UNITS.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {unitLabel(value, t)}
-                </SelectItem>
-              ))}
-              <SelectItem value={CUSTOM_UNIT}>{t('unitOther')}</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.unit && (
-            <p className='text-destructive text-sm'>{errors.unit}</p>
-          )}
-        </div>
-        {form.unitChoice === CUSTOM_UNIT && (
-          <div className='space-y-2'>
-            <Label htmlFor='customUnit'>{t('unitOther')}</Label>
-            <Input
-              id='customUnit'
-              placeholder={t('unitCustomPlaceholder')}
-              value={form.customUnit}
-              onChange={(e) => setForm({ ...form, customUnit: e.target.value })}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className='space-y-3 rounded-lg border p-3'>
         <div className='grid grid-cols-2 gap-4'>
           <div className='space-y-2'>
-            <Label htmlFor='packSize'>{t('packSize')}</Label>
-            <Input
-              id='packSize'
-              type='number'
-              min='0'
-              step='any'
-              placeholder={t('optional')}
-              value={form.packSize}
-              onChange={(e) => setForm({ ...form, packSize: e.target.value })}
-            />
+            <Label htmlFor='unit'>{t('unit')}</Label>
+            <Select
+              value={form.unitChoice}
+              onValueChange={(value) => setForm({ ...form, unitChoice: value })}
+            >
+              <SelectTrigger id='unit'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UNITS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {unitLabel(value, t)}
+                  </SelectItem>
+                ))}
+                <SelectItem value={CUSTOM_UNIT}>{t('unitOther')}</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.unit && (
+              <p className='text-destructive text-sm'>{errors.unit}</p>
+            )}
           </div>
-          <div className='space-y-2'>
-            <Label htmlFor='packName'>{t('packName')}</Label>
-            <Input
-              id='packName'
-              placeholder={t('packNameHint')}
-              value={form.packName}
-              disabled={!form.packSize}
-              onChange={(e) => setForm({ ...form, packName: e.target.value })}
-            />
+          {form.unitChoice === CUSTOM_UNIT && (
+            <div className='space-y-2'>
+              <Label htmlFor='customUnit'>{t('unitOther')}</Label>
+              <Input
+                id='customUnit'
+                placeholder={t('unitCustomPlaceholder')}
+                value={form.customUnit}
+                onChange={(e) =>
+                  setForm({ ...form, customUnit: e.target.value })
+                }
+              />
+            </div>
+          )}
+        </div>
+
+        <div className='space-y-3 rounded-lg border p-3'>
+          <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='packSize'>{t('packSize')}</Label>
+              <Input
+                id='packSize'
+                type='number'
+                min='0'
+                step='any'
+                placeholder={t('optional')}
+                value={form.packSize}
+                onChange={(e) => setForm({ ...form, packSize: e.target.value })}
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='packName'>{t('packName')}</Label>
+              <Input
+                id='packName'
+                placeholder={t('packNameHint')}
+                value={form.packName}
+                disabled={!form.packSize}
+                onChange={(e) => setForm({ ...form, packName: e.target.value })}
+              />
+            </div>
           </div>
+          <p className='text-muted-foreground text-xs'>{t('packHint')}</p>
         </div>
-        <p className='text-muted-foreground text-xs'>{t('packHint')}</p>
-      </div>
 
-      <div className='flex items-center justify-between rounded-lg border p-3'>
-        <div className='space-y-0.5 pe-4'>
-          <Label className='text-sm'>{t('autoSoldOut')}</Label>
-          <p className='text-muted-foreground text-xs'>
-            {t('autoSoldOutHint')}
-          </p>
+        <div className='flex items-center justify-between rounded-lg border p-3'>
+          <div className='space-y-0.5 pe-4'>
+            <Label className='text-sm'>{t('autoSoldOut')}</Label>
+            <p className='text-muted-foreground text-xs'>
+              {t('autoSoldOutHint')}
+            </p>
+          </div>
+          <Switch
+            checked={form.autoSoldOut}
+            onCheckedChange={(checked) =>
+              setForm({ ...form, autoSoldOut: checked })
+            }
+          />
         </div>
-        <Switch
-          checked={form.autoSoldOut}
-          onCheckedChange={(checked) =>
-            setForm({ ...form, autoSoldOut: checked })
-          }
-        />
-      </div>
 
-      <DialogFooter>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
-          {t('cancel')}
-        </Button>
-        <Button type='submit' disabled={isPending}>
-          {isPending && <Spinner className='me-2' />}
-          {t('save')}
-        </Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => onOpenChange(false)}
+          >
+            {t('cancel')}
+          </Button>
+          <Button type='submit' disabled={isPending}>
+            {isPending && <Spinner className='me-2' />}
+            {t('save')}
+          </Button>
+        </DialogFooter>
+      </form>
+    </LocalizedFields>
   )
 }
