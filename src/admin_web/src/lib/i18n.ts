@@ -2172,21 +2172,35 @@ const webExtras = {
     en: 'Fill in the other language',
     ar: 'كمّل اللغة التانية',
   },
-  assistFillItem: {
-    en: 'Fill in the other language, the description and the category from the name',
-    ar: 'كمّل اللغة التانية والوصف والقسم من الاسم',
-  },
-  assistWriteDescription: {
-    en: 'Write the description from the name',
-    ar: 'اكتب الوصف من الاسم',
-  },
   assistNeedsOneSide: {
     en: 'Type the name in one language first',
     ar: 'اكتب الاسم بلغة واحدة الأول',
   },
+  // AI assistant: the one button on the item form
+  assistFillIn: { en: 'Fill in with AI', ar: 'كمّل بالمساعد' },
+  assistFillItemHint: {
+    en: 'The other language, a description, the category and the option groups — from the name',
+    ar: 'اللغة التانية والوصف والقسم وخيارات الصنف — من الاسم',
+  },
+  assistFillMissingHint: {
+    en: 'Fills in what is still missing: the other language, the description',
+    ar: 'بيكمّل اللي لسه ناقص: اللغة التانية والوصف',
+  },
   assistNeedsName: {
     en: 'Type the name first',
     ar: 'اكتب الاسم الأول',
+  },
+  assistNothingMissing: {
+    en: 'Nothing is missing',
+    ar: 'مفيش حاجة ناقصة',
+  },
+  assistProposedCustomizations: {
+    en: 'Option groups the assistant proposes — saved with the item; remove any you do not want',
+    ar: 'خيارات المساعد بيقترحها — هتتحفظ مع الصنف؛ شيل اللي مش عايزه',
+  },
+  itemSavedCustomizationsFailed: {
+    en: 'Item saved, but its option groups could not be added; ask the assistant again',
+    ar: 'الصنف اتحفظ، بس خياراته متضافتش؛ اطلب من المساعد تاني',
   },
   // AI assistant: customization groups
   assistSuggest: { en: 'Suggest', ar: 'اقترح' },
@@ -2199,8 +2213,8 @@ const webExtras = {
     ar: 'اقتراحات المساعد — ضيف اللي يناسبك',
   },
   assistNothingToSuggest: {
-    en: 'The assistant has nothing to suggest for this item',
-    ar: 'المساعد ملقاش حاجة يقترحها للصنف ده',
+    en: 'The assistant has no option groups to suggest for this item',
+    ar: 'المساعد ملقاش خيارات يقترحها للصنف ده',
   },
   addAll: { en: 'Add all', ar: 'ضيف الكل' },
   discard: { en: 'Discard', ar: 'شيل' },

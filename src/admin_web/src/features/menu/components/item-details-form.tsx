@@ -5,9 +5,11 @@ import { ImagePlus, Sparkles, X } from 'lucide-react'
 import {
   type CatalogItemDto,
   type CatalogTypeDto,
+  type LocalizeResponse,
   type UpdateCatalogItemRequest,
 } from '@/api/catalog'
 import {
+  createCustomizationMutation,
   createItemMutation,
   deleteItemPictureMutation,
   updateItemMutation,
@@ -38,12 +40,18 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { halfFilled, hasText } from '@/features/assist/helpers'
+import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
 import {
   LOCALIZE_MENU_ITEM,
-  localizeBlocker,
   useLocalizeAssist,
 } from '@/features/assist/use-localize-assist'
 import { itemPictureUrl } from '../pictures'
+import {
+  bodyFromDraft,
+  DraftCard,
+  fromProposal,
+  type DraftGroup,
+} from './customization-draft'
 
 /** What the assistant filled in and the user has not edited since */
 type Suggested = {
@@ -67,6 +75,42 @@ type FormState = {
   isOnOffer: boolean
   offerPrice: string
   preparationTimeMinutes: string
+}
+
+const languages: Lang[] = ['en', 'ar']
+
+/**
+ * The form with what the assistant filled in — only into fields still
+ * empty, since the user may have typed meanwhile — and the category when
+ * one was wanted.
+ */
+function withLocalized(
+  prev: FormState,
+  result: LocalizeResponse,
+  wantCategory: boolean
+): FormState {
+  const filled = new Set(result.filled)
+  const next = {
+    ...prev,
+    name: { ...prev.name },
+    description: { ...prev.description },
+  }
+  for (const l of languages) {
+    if (filled.has(`name.${l}`) && !hasText(prev.name[l])) {
+      next.name[l] = result.name[l] ?? ''
+    }
+    if (filled.has(`description.${l}`) && !hasText(prev.description[l])) {
+      next.description[l] = result.description?.[l] ?? ''
+    }
+  }
+  if (
+    wantCategory &&
+    filled.has('catalogTypeId') &&
+    result.suggestedCatalogTypeId != null
+  ) {
+    next.catalogTypeId = Number(result.suggestedCatalogTypeId)
+  }
+  return next
 }
 
 type ItemDetailsFormProps = {
@@ -123,79 +167,75 @@ export function ItemDetailsForm({
     | { kind: 'remove' }
   >({ kind: 'keep' })
 
-  // The assistant fills in what is missing — the other language of the
-  // name, a description (translated when half there, written when absent),
-  // a category — and the form flips to the language it filled so what came
-  // back is in view. The name's sparkle asks for all of it; the
-  // description's only for the description, so it also works on a saved
-  // item whose name is already bilingual. A category is only suggested on
-  // a new item whose category nobody has picked yet.
+  // One button asks the assistant for everything the item is missing: the
+  // other language of the name, a description (translated when half there,
+  // written when absent), a category on a new item nobody has picked one
+  // for — and, still on a new item, the option groups it is ordered with,
+  // which wait below the form and are saved with it. The form flips to the
+  // language it filled so what came back is in view.
   const assist = useLocalizeAssist()
+  const customizations = useCustomizationsAssist()
   const [lang, setLang] = useState<Lang>('en')
   const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
   const [categoryTouched, setCategoryTouched] = useState(false)
-  const nameBlocker = localizeBlocker(form.name)
-  const descriptionBlocker =
-    !hasText(form.name.en) && !hasText(form.name.ar)
-      ? 'assistNeedsName'
-      : hasText(form.description.en) && hasText(form.description.ar)
-        ? 'assistBothFilled'
-        : null
+  const [proposals, setProposals] = useState<DraftGroup[]>([])
   const wantCategory =
     !isEditing && defaultCategoryId == null && !categoryTouched
+  const nameTyped = hasText(form.name.en) || hasText(form.name.ar)
+  const wantsLocalize =
+    !!halfFilled(form.name) ||
+    !(hasText(form.description.en) && hasText(form.description.ar)) ||
+    wantCategory
+  const fillBlocker: 'assistNeedsName' | 'assistNothingMissing' | null =
+    !nameTyped
+      ? 'assistNeedsName'
+      : isEditing && !wantsLocalize
+        ? 'assistNothingMissing'
+        : null
+  const filling = assist.isPending || customizations.isPending
 
-  const askAssistant = async (scope: 'item' | 'description') => {
-    const source = halfFilled(form.name)
-    if (scope === 'item' && !source) return
+  const fillWithAssistant = async () => {
+    let next = form
     try {
-      const result = await assist.localize({
-        kind: LOCALIZE_MENU_ITEM,
-        name: form.name,
-        description: form.description,
-        catalogTypeId: form.catalogTypeId || null,
-        suggestCategory: scope === 'item' && wantCategory,
-        suggestDescription: true,
-      })
-      const filled = new Set(result.filled)
-      const languages: Lang[] = ['en', 'ar']
-      setForm((prev) => {
-        const next = {
-          ...prev,
-          name: { ...prev.name },
-          description: { ...prev.description },
-        }
-        // Only what is still empty: the user may have typed meanwhile
-        for (const l of languages) {
-          if (filled.has(`name.${l}`) && !hasText(prev.name[l])) {
-            next.name[l] = result.name[l] ?? ''
-          }
-          if (filled.has(`description.${l}`) && !hasText(prev.description[l])) {
-            next.description[l] = result.description?.[l] ?? ''
-          }
-        }
-        if (
-          filled.has('catalogTypeId') &&
-          result.suggestedCatalogTypeId != null &&
-          wantCategory
-        ) {
-          next.catalogTypeId = Number(result.suggestedCatalogTypeId)
-        }
-        return next
-      })
-      setSuggested({
-        name: { en: filled.has('name.en'), ar: filled.has('name.ar') },
-        description: {
-          en: filled.has('description.en'),
-          ar: filled.has('description.ar'),
-        },
-        category: filled.has('catalogTypeId') && wantCategory,
-      })
-      // Show the language that was just filled in; a description written
-      // in both stays on the one the user is typing in
-      if (source) setLang(source === 'en' ? 'ar' : 'en')
-      for (const warning of result.warnings) toast.warning(warning)
+      if (wantsLocalize) {
+        const result = await assist.localize({
+          kind: LOCALIZE_MENU_ITEM,
+          name: form.name,
+          description: form.description,
+          catalogTypeId: form.catalogTypeId || null,
+          suggestCategory: wantCategory,
+          suggestDescription: true,
+        })
+        const filled = new Set(result.filled)
+        next = withLocalized(form, result, wantCategory)
+        setForm((prev) => withLocalized(prev, result, wantCategory))
+        setSuggested({
+          name: { en: filled.has('name.en'), ar: filled.has('name.ar') },
+          description: {
+            en: filled.has('description.en'),
+            ar: filled.has('description.ar'),
+          },
+          category: filled.has('catalogTypeId') && wantCategory,
+        })
+        // Show the language that was just filled in; a description written
+        // in both stays on the one the user is typing in
+        const source = halfFilled(form.name)
+        if (source) setLang(source === 'en' ? 'ar' : 'en')
+        for (const warning of result.warnings) toast.warning(warning)
+      }
+      if (!isEditing) {
+        const result = await customizations.suggest({
+          name: next.name,
+          description: next.description,
+          catalogTypeId: next.catalogTypeId || null,
+          price: parseFloat(next.price) || 0,
+        })
+        setProposals(result.groups.map(fromProposal))
+        if (result.groups.length === 0) toast.info(t('assistNothingToSuggest'))
+        for (const warning of result.warnings) toast.warning(warning)
+      }
     } catch {
-      // toasted by the hook
+      // toasted by the hooks
     }
   }
 
@@ -203,9 +243,11 @@ export function ItemDetailsForm({
   const deletePicture = useMutation(deleteItemPictureMutation())
   const createItem = useMutation(createItemMutation())
   const updateItem = useMutation(updateItemMutation())
+  const createGroup = useMutation(createCustomizationMutation())
   const isSaving =
     createItem.isPending ||
     updateItem.isPending ||
+    createGroup.isPending ||
     uploadPicture.isPending ||
     deletePicture.isPending
 
@@ -274,10 +316,30 @@ export function ItemDetailsForm({
       return
     }
 
-    // The item is saved at this point — a photo problem must not read as a
-    // failed save.
+    // The item is saved at this point — a problem with its option groups or
+    // its photo must not read as a failed save.
     const invalidate = () =>
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+    if (proposals.length > 0) {
+      try {
+        if (!itemId) throw new Error('no item id')
+        for (const [index, draft] of proposals.entries()) {
+          await createGroup.mutateAsync({
+            path: { id: itemId },
+            body: bodyFromDraft(itemId, draft, index),
+            query: { 'api-version': API_VERSION },
+          })
+        }
+        queryClient.invalidateQueries({
+          queryKey: [{ _id: 'getItemCustomizations' }],
+        })
+      } catch {
+        invalidate()
+        toast.error(t('itemSavedCustomizationsFailed'))
+        onSaved(itemId)
+        return
+      }
+    }
     if (picture.kind !== 'keep') {
       if (!itemId) {
         invalidate()
@@ -397,17 +459,32 @@ export function ItemDetailsForm({
           placeholder={{ en: 'Cappuccino', ar: 'كابتشينو' }}
           error={errors.name}
           suggested={suggested.name}
-          assist={
-            assist.available
-              ? {
-                  onClick: () => askAssistant('item'),
-                  pending: assist.isPending,
-                  disabled: !!nameBlocker,
-                  label: nameBlocker ? t(nameBlocker) : t('assistFillItem'),
-                }
-              : undefined
-          }
         />
+
+        {assist.available && (
+          <div className='flex flex-wrap items-center gap-x-3 gap-y-1'>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              className='text-primary hover:text-primary'
+              disabled={!!fillBlocker || filling}
+              onClick={fillWithAssistant}
+            >
+              {filling ? (
+                <Spinner className='me-2 size-4' />
+              ) : (
+                <Sparkles className='me-2 size-4' />
+              )}
+              {t('assistFillIn')}
+            </Button>
+            <p className='text-muted-foreground text-xs'>
+              {fillBlocker
+                ? t(fillBlocker)
+                : t(isEditing ? 'assistFillMissingHint' : 'assistFillItemHint')}
+            </p>
+          </div>
+        )}
 
         <LocalizedInput
           id='item-description'
@@ -422,18 +499,6 @@ export function ItemDetailsForm({
           }}
           suggested={suggested.description}
           multiline
-          assist={
-            assist.available
-              ? {
-                  onClick: () => askAssistant('description'),
-                  pending: assist.isPending,
-                  disabled: !!descriptionBlocker,
-                  label: descriptionBlocker
-                    ? t(descriptionBlocker)
-                    : t('assistWriteDescription'),
-                }
-              : undefined
-          }
         />
 
         <div className='grid grid-cols-3 gap-4'>
@@ -549,6 +614,46 @@ export function ItemDetailsForm({
             </div>
           )}
         </div>
+
+        {proposals.length > 0 && (
+          <div className='border-primary/30 bg-primary/5 space-y-3 rounded-lg border p-3'>
+            <div className='flex items-center justify-between gap-2'>
+              <p className='text-primary flex items-center gap-1 text-xs'>
+                <Sparkles className='size-3 shrink-0' aria-hidden />
+                {t('assistProposedCustomizations')}
+              </p>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                className='text-muted-foreground h-7 shrink-0'
+                onClick={() => setProposals([])}
+              >
+                {t('discardAll')}
+              </Button>
+            </div>
+            {proposals.map((draft, index) => (
+              <DraftCard
+                key={index}
+                draft={draft}
+                actions={
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='hover:text-destructive size-7'
+                    aria-label={`${t('discard')} ${localized(draft.name)}`}
+                    onClick={() =>
+                      setProposals((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X className='h-3.5 w-3.5' />
+                  </Button>
+                }
+              />
+            ))}
+          </div>
+        )}
 
         <div className='flex justify-end gap-2'>
           {onCancel && (

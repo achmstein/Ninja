@@ -36,7 +36,7 @@ export const localizeMenuText = <ThrowOnError extends boolean = false>(options: 
 /**
  * Propose customization groups for a menu item
  *
- * The assistant proposes the option groups (size, sugar, extras…) a saved menu item is ordered with, in the menu's own wording, leaving out groups the item already has. Nothing is saved: add the ones you want through the customization endpoints (Admin only).
+ * The assistant proposes the option groups (size, sugar, extras…) a menu item is ordered with, in the menu's own wording. The item is sent as the form has it, saved or not; groups it already has are left out. Nothing is saved: add the ones you want through the customization endpoints (Admin only).
  */
 export const suggestCustomizations = <ThrowOnError extends boolean = false>(options: Options<SuggestCustomizationsData, ThrowOnError>): RequestResult<SuggestCustomizationsResponses, SuggestCustomizationsErrors, ThrowOnError> => (options.client ?? client).post<SuggestCustomizationsResponses, SuggestCustomizationsErrors, ThrowOnError>({
     responseType: 'json',

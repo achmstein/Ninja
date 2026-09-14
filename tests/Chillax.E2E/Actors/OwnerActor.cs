@@ -154,9 +154,19 @@ public sealed class OwnerActor(ApiClient api)
             suggestDescription,
         }, ct);
 
-    /// <summary>menu customizations-section.tsx "Suggest": the assistant proposes the item's option groups.</summary>
-    public Task<SuggestCustomizationsResponse> SuggestCustomizationsAsync(int itemId, CancellationToken ct)
-        => Api.PostAsync<SuggestCustomizationsResponse>("/api/catalog/assist/customizations", new { itemId }, ct);
+    /// <summary>
+    /// "Fill in with AI" on a new item, and "Suggest" in a saved item's customizations section: the
+    /// assistant proposes the option groups for the item as the form has it.
+    /// </summary>
+    public Task<SuggestCustomizationsResponse> SuggestCustomizationsAsync(LocalizedText name, decimal price, int? catalogTypeId, CancellationToken ct,
+        IEnumerable<LocalizedText>? existingGroups = null)
+        => Api.PostAsync<SuggestCustomizationsResponse>("/api/catalog/assist/customizations", new
+        {
+            name = new { en = name.En, ar = name.Ar },
+            price,
+            catalogTypeId,
+            existingGroups = (existingGroups ?? []).Select(g => new { en = g.En, ar = g.Ar }),
+        }, ct);
 
     /// <summary>menu customizations-section.tsx "Add" on a proposal: the group goes up as it came back.</summary>
     public Task<ItemCustomizationView> AddCustomizationAsync(int itemId, ProposedCustomization group, int displayOrder, CancellationToken ct)

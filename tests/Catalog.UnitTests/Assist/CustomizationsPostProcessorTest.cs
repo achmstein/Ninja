@@ -6,12 +6,9 @@ namespace Catalog.UnitTests.Assist;
 [TestClass]
 public class CustomizationsPostProcessorTest
 {
-    private static CatalogItem Latte(params ItemCustomization[] existing)
-    {
-        var item = new CatalogItem(new LocalizedText("Latte", "لاتيه")) { Id = 7, Price = 60m };
-        foreach (var group in existing) item.Customizations.Add(group);
-        return item;
-    }
+    /// <summary>The item as the form sends it, with the names of the groups it already has.</summary>
+    private static SuggestCustomizationsRequest Latte(params LocalizedText[] existing) =>
+        new(new LocalizedText("Latte", "لاتيه"), Price: 60m, ExistingGroups: existing);
 
     private static CustomizationGroupResult Size(decimal doublePrice = 10m) => new(
         new LocalizedPair("Size", "الحجم"), IsRequired: true, AllowMultiple: false,
@@ -48,7 +45,7 @@ public class CustomizationsPostProcessorTest
     [TestMethod]
     public void A_group_the_item_already_has_is_dropped_by_either_language()
     {
-        var existing = new ItemCustomization(new LocalizedText("Serving Size", "الحجم"));
+        var existing = new LocalizedText("Serving Size", "الحجم");
         var response = CustomizationsPostProcessor.Apply(new CustomizationsResult([Size(), Extras()], ""), Latte(existing));
 
         Assert.HasCount(1, response.Groups);

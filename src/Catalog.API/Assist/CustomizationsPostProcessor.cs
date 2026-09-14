@@ -16,12 +16,24 @@ public static partial class CustomizationsPostProcessor
     public const int MaxOptions = 8;
     public const int MaxNameLength = 60;
 
-    public static SuggestCustomizationsResponse Apply(CustomizationsResult result, CatalogItem item)
+    /// <summary>The name has text and is within the cap; the reason when not.</summary>
+    public static string? Validate(SuggestCustomizationsRequest request)
+    {
+        if (!LocalizerPostProcessor.HasText(request.Name))
+            return "Type the name in English or Arabic first.";
+
+        if ((request.Name.En?.Length ?? 0) > LocalizerPostProcessor.MaxNameLength || (request.Name.Ar?.Length ?? 0) > LocalizerPostProcessor.MaxNameLength)
+            return $"The name is longer than {LocalizerPostProcessor.MaxNameLength} characters.";
+
+        return null;
+    }
+
+    public static SuggestCustomizationsResponse Apply(CustomizationsResult result, SuggestCustomizationsRequest request)
     {
         var warnings = new List<string>();
         var groups = new List<ProposedCustomization>();
         var taken = new HashSet<string>(
-            item.Customizations.SelectMany(c => Names(c.Name.En, c.Name.Ar)),
+            (request.ExistingGroups ?? []).SelectMany(name => Names(name.En, name.Ar)),
             StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in result.Groups ?? [])
@@ -45,7 +57,7 @@ public static partial class CustomizationsPostProcessor
                 continue;
             }
 
-            var options = CleanOptions(group, name.En, item.Price, warnings);
+            var options = CleanOptions(group, name.En, request.Price, warnings);
             var needed = group.AllowMultiple ? 1 : 2;
             if (options.Count < needed)
             {

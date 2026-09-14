@@ -25,7 +25,7 @@ public static class CatalogAssistApi
         api.MapPost("/assist/customizations", SuggestCustomizations)
             .WithName("SuggestCustomizations")
             .WithSummary("Propose customization groups for a menu item")
-            .WithDescription("The assistant proposes the option groups (size, sugar, extras…) a saved menu item is ordered with, in the menu's own wording, leaving out groups the item already has. Nothing is saved: add the ones you want through the customization endpoints (Admin only).")
+            .WithDescription("The assistant proposes the option groups (size, sugar, extras…) a menu item is ordered with, in the menu's own wording. The item is sent as the form has it, saved or not; groups it already has are left out. Nothing is saved: add the ones you want through the customization endpoints (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
@@ -67,7 +67,7 @@ public static class CatalogAssistApi
         }
     }
 
-    public static async Task<Results<Ok<SuggestCustomizationsResponse>, NotFound, ProblemHttpResult>> SuggestCustomizations(
+    public static async Task<Results<Ok<SuggestCustomizationsResponse>, BadRequest<ProblemDetails>, ProblemHttpResult>> SuggestCustomizations(
         SuggestCustomizationsRequest request,
         [FromServices] CustomizationSuggester suggester,
         CatalogContext context,
@@ -77,20 +77,19 @@ public static class CatalogAssistApi
         if (!suggester.IsEnabled)
             return AIProblems.NotConfigured();
 
-        var item = await context.CatalogItems.AsNoTracking()
-            .Include(i => i.CatalogType)
-            .Include(i => i.Customizations).ThenInclude(c => c.Options)
-            .FirstOrDefaultAsync(i => i.Id == request.ItemId, ct);
-        if (item is null)
-            return TypedResults.NotFound();
+        if (CustomizationsPostProcessor.Validate(request) is { } error)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
 
-        // The rest of the menu's groups, the same category first, as examples of the house's wording;
-        // the suggester keeps one per distinct shape so one item's five groups do not crowd the rest out.
+        var category = request.CatalogTypeId is { } typeId
+            ? await context.CatalogTypes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == typeId, ct)
+            : null;
+
+        // The menu's groups, the same category first, as examples of the house's wording; the suggester
+        // keeps one per distinct shape so one item's five groups do not crowd the rest out.
         var examples = await context.ItemCustomizations.AsNoTracking()
             .Include(c => c.Options)
             .Include(c => c.CatalogItem)
-            .Where(c => c.CatalogItemId != item.Id)
-            .OrderByDescending(c => c.CatalogItem!.CatalogTypeId == item.CatalogTypeId)
+            .OrderByDescending(c => c.CatalogItem!.CatalogTypeId == request.CatalogTypeId)
             .ThenBy(c => c.CatalogItem!.DisplayOrder)
             .ThenBy(c => c.CatalogItemId)
             .ThenBy(c => c.DisplayOrder)
@@ -99,7 +98,7 @@ public static class CatalogAssistApi
 
         try
         {
-            return TypedResults.Ok(await suggester.SuggestAsync(item, examples, ct));
+            return TypedResults.Ok(await suggester.SuggestAsync(request, category, examples, ct));
         }
         catch (AIException ex)
         {

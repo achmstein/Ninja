@@ -6,13 +6,14 @@ using Chillax.E2E.Support;
 namespace Chillax.E2E.Scenarios;
 
 /// <summary>
-/// The back-office assistant, the way the admin app drives it: the sparkle
-/// on a new menu item's name fills in the other language, writes the
-/// description and picks a category (and works the other way round on a
-/// stock item); "Suggest" on a saved item proposes its option groups, which
-/// go up through the customization endpoint as they came back; and "Scan
-/// receipt" turns a photo into proposed lines that the review sheet then
-/// turns into a real delivery — a new stock item created, the purchase
+/// The back-office assistant, the way the admin app drives it: "Fill in
+/// with AI" on a new menu item fills in the other language, writes the
+/// description, picks a category and proposes the item's option groups
+/// before it is even saved (the sparkle works the other way round on a
+/// stock item); the kept groups go up through the customization endpoint
+/// as they came back, and "Suggest" on the saved item leaves them out; and
+/// "Scan receipt" turns a photo into proposed lines that the review sheet
+/// then turns into a real delivery — a new stock item created, the purchase
 /// received, Finance invoiced. The AppHost runs the services with the
 /// scripted fake under test, so the answers are deterministic and no key or
 /// network is needed.
@@ -58,10 +59,10 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
             Owner.LocalizeAsync(StockItem, new LocalizedText("Sugar", "سكر"), Ct));
         Assert.Equal(HttpStatusCode.BadRequest, refused.Status);
 
-        // 3b. The item is saved with what came back; "Suggest" proposes its option groups.
-        Step("Save the item and ask the assistant for its customizations");
-        var item = await Owner.CreateMenuItemAsync($"{localized.Name.En} {Day.RunId}", 35m, localized.SuggestedCatalogTypeId!.Value, Ct);
-        var proposals = await Owner.SuggestCustomizationsAsync(item.Id, Ct);
+        // 3b. Same click, before the item exists: its option groups are proposed from the name as typed.
+        Step("Ask the assistant for the new item's customizations before it is saved");
+        var newName = new LocalizedText($"{localized.Name.En} {Day.RunId}", localized.Name.Ar);
+        var proposals = await Owner.SuggestCustomizationsAsync(newName, 35m, localized.SuggestedCatalogTypeId, Ct);
         Assert.Equal(["Size", "Extras"], proposals.Groups.Select(g => g.Name.En));
         Assert.Empty(proposals.Warnings);
         var size = proposals.Groups[0];
@@ -71,20 +72,23 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
         Assert.Equal(10m, size.Options[1].PriceAdjustment);
         Assert.True(size.Options[0].IsDefault);
         Assert.True(proposals.Groups[1].AllowMultiple);
-        Assert.Empty(await Owner.CustomizationsAsync(item.Id, Ct)); // a proposal saves nothing
 
-        // 3c. "Add" on the Size proposal creates it as it came back; asking again leaves Size out.
+        // 3c. "Add item" saves the item, then the kept proposal as it came back; "Suggest" on the saved
+        //     item then leaves Size out.
+        Step("Save the item with the Size proposal and ask again");
+        var item = await Owner.CreateMenuItemAsync(newName.En, 35m, localized.SuggestedCatalogTypeId!.Value, Ct);
+        Assert.Empty(await Owner.CustomizationsAsync(item.Id, Ct)); // a proposal saves nothing by itself
         await Owner.AddCustomizationAsync(item.Id, size, 0, Ct);
         var saved = Assert.Single(await Owner.CustomizationsAsync(item.Id, Ct));
         Assert.Equal("الحجم", saved.Name.Ar);
         Assert.Equal(["سنجل", "دبل"], saved.Options.OrderBy(o => o.DisplayOrder).Select(o => o.Name.Ar));
 
-        var again = await Owner.SuggestCustomizationsAsync(item.Id, Ct);
+        var again = await Owner.SuggestCustomizationsAsync(newName, 35m, item.CatalogTypeId, Ct, existingGroups: [saved.Name]);
         Assert.Equal(["Extras"], again.Groups.Select(g => g.Name.En));
         Assert.Contains(again.Warnings, w => w.Contains("\"Size\"") && w.Contains("already has"));
 
-        var missing = await Assert.ThrowsAsync<ApiException>(() => Owner.SuggestCustomizationsAsync(999_999, Ct));
-        Assert.Equal(HttpStatusCode.NotFound, missing.Status);
+        var nameless = await Assert.ThrowsAsync<ApiException>(() => Owner.SuggestCustomizationsAsync(new LocalizedText(string.Empty), 0m, null, Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, nameless.Status);
 
         // 3d. A photo of a menu: a section matched to an existing category (its Turkish Coffee flagged as
         //     already there) and a section nothing matches. The review sheet creates the category, then

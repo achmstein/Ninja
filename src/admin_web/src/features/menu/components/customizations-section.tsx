@@ -13,7 +13,6 @@ import {
   type CatalogItemDto,
   type ItemCustomization,
   type ItemCustomizationDto,
-  type ProposedCustomization,
 } from '@/api/catalog'
 import {
   createCustomizationMutation,
@@ -23,6 +22,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -33,100 +33,26 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import {
-  fromLocalizedValue,
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
+import {
+  bodyFromDraft,
+  ChoiceGlyph,
+  DraftCard,
+  emptyOption,
+  formatAdjustment,
+  fromProposal,
+  type DraftGroup,
+  type OptionRow,
+} from './customization-draft'
 import { DeleteConfirmDialog } from './delete-confirm-dialog'
 
 type CustomizationsSectionProps = {
   item: CatalogItemDto
-}
-
-type OptionRow = {
-  name: LocalizedValue
-  priceAdjustment: number
-  isDefault: boolean
-}
-
-const emptyOption: OptionRow = {
-  name: { en: '', ar: '' },
-  priceAdjustment: 0,
-  isDefault: false,
-}
-
-/** A group as the editor holds it: what the assistant proposes, or what is typed */
-type DraftGroup = {
-  name: LocalizedValue
-  isRequired: boolean
-  allowMultiple: boolean
-  options: OptionRow[]
-}
-
-function fromProposal(group: ProposedCustomization): DraftGroup {
-  return {
-    name: toLocalizedValue(group.name),
-    isRequired: group.isRequired,
-    allowMultiple: group.allowMultiple,
-    options: group.options.map((option) => ({
-      name: toLocalizedValue(option.name),
-      priceAdjustment: Number(option.priceAdjustment),
-      isDefault: option.isDefault,
-    })),
-  }
-}
-
-/** The create/update body from a draft; options without an English name are left out. */
-function bodyFromDraft(
-  itemId: number,
-  draft: DraftGroup,
-  displayOrder: number
-): ItemCustomization {
-  return {
-    catalogItemId: itemId,
-    name: fromLocalizedValue(draft.name),
-    isRequired: draft.isRequired,
-    allowMultiple: draft.allowMultiple,
-    displayOrder,
-    options: draft.options
-      .filter((option) => option.name.en.trim())
-      .map((option, index) => ({
-        name: fromLocalizedValue(option.name),
-        priceAdjustment: option.priceAdjustment,
-        isDefault: option.isDefault,
-        displayOrder: index,
-      })),
-  }
-}
-
-// Free options show nothing — pricing only appears where it differs
-function formatAdjustment(value: number, t: ReturnType<typeof useT>): string {
-  if (!value) return ''
-  return `${value > 0 ? '+' : '−'}${Math.abs(value)} ${t('currency')}`
-}
-
-/** Tiny radio/checkbox glyph: shape mirrors what the customer will see
- *  (circle = pick one, square = pick several); filled = default choice. */
-function ChoiceGlyph({
-  multiple,
-  selected,
-}: {
-  multiple: boolean
-  selected: boolean
-}) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'h-3 w-3 shrink-0 border transition-colors',
-        multiple ? 'rounded-[3px]' : 'rounded-full',
-        selected ? 'border-primary bg-primary' : 'border-muted-foreground/40'
-      )}
-    />
-  )
 }
 
 /** Rebuilds the full replace-all-options body the update endpoint expects. */
@@ -224,7 +150,14 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
 
   const askAssistant = async () => {
     try {
-      const result = await assist.suggest(itemId)
+      const base = item.base ?? item
+      const result = await assist.suggest({
+        name: toLocalizedValue(item.name),
+        description: toLocalizedValue(item.description),
+        catalogTypeId: toNumber(item.catalogTypeId),
+        price: toNumber(base.price),
+        existingGroups: groups.map((group) => group.name),
+      })
       setDrafts(result.groups.map(fromProposal))
       setEditing(null)
       if (result.groups.length === 0) toast.info(t('assistNothingToSuggest'))
@@ -522,11 +455,18 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                     <DraftCard
                       key={index}
                       draft={draft}
-                      adding={addingDraft === index || addingDraft === 'all'}
-                      disabled={addingDraft != null}
-                      onAdd={() => addDrafts([index])}
-                      onEdit={() => setEditing({ draft: index })}
-                      onDiscard={() => discardDraft(index)}
+                      actions={
+                        <DraftActions
+                          name={localized(draft.name)}
+                          adding={
+                            addingDraft === index || addingDraft === 'all'
+                          }
+                          disabled={addingDraft != null}
+                          onAdd={() => addDrafts([index])}
+                          onEdit={() => setEditing({ draft: index })}
+                          onDiscard={() => discardDraft(index)}
+                        />
+                      }
                     />
                   )
                 )}
@@ -592,16 +532,16 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   )
 }
 
-/** One of the assistant's proposals, read-only, with what to do with it. */
-function DraftCard({
-  draft,
+/** Add / edit / discard, on one of the assistant's proposals. */
+function DraftActions({
+  name,
   adding,
   disabled,
   onAdd,
   onEdit,
   onDiscard,
 }: {
-  draft: DraftGroup
+  name: string
   adding: boolean
   disabled: boolean
   onAdd: () => void
@@ -609,72 +549,41 @@ function DraftCard({
   onDiscard: () => void
 }) {
   const t = useT()
-  const localized = useLocalized()
-  const name = localized(draft.name)
-
   return (
-    <div className='bg-background rounded-md border p-2.5'>
-      <div className='flex items-start justify-between gap-2'>
-        <div className='min-w-0'>
-          <h4 className='truncate text-sm font-semibold'>{name}</h4>
-          <p className='text-muted-foreground text-xs'>
-            {draft.isRequired ? t('required') : t('optional')}
-            {' · '}
-            {draft.allowMultiple ? t('multipleChoice') : t('singleChoice')}
-          </p>
-        </div>
-        <div className='flex shrink-0 items-center gap-0.5'>
-          <Button
-            type='button'
-            size='sm'
-            className='h-7'
-            disabled={disabled}
-            onClick={onAdd}
-          >
-            {adding && <Spinner className='me-1.5 size-3.5' />}
-            {t('add')}
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='size-7'
-            aria-label={`${t('edit')} ${name}`}
-            disabled={disabled}
-            onClick={onEdit}
-          >
-            <Pencil className='h-3.5 w-3.5' />
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='hover:text-destructive size-7'
-            aria-label={`${t('discard')} ${name}`}
-            disabled={disabled}
-            onClick={onDiscard}
-          >
-            <X className='h-3.5 w-3.5' />
-          </Button>
-        </div>
-      </div>
-      <div className='mt-2 flex flex-col gap-1.5'>
-        {draft.options.map((option, index) => (
-          <div key={index} className='flex items-center gap-2.5 text-sm'>
-            <ChoiceGlyph
-              multiple={draft.allowMultiple}
-              selected={option.isDefault}
-            />
-            <span className='min-w-0 flex-1 truncate'>
-              {localized(option.name)}
-            </span>
-            <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
-              {formatAdjustment(option.priceAdjustment, t)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      <Button
+        type='button'
+        size='sm'
+        className='h-7'
+        disabled={disabled}
+        onClick={onAdd}
+      >
+        {adding && <Spinner className='me-1.5 size-3.5' />}
+        {t('add')}
+      </Button>
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className='size-7'
+        aria-label={`${t('edit')} ${name}`}
+        disabled={disabled}
+        onClick={onEdit}
+      >
+        <Pencil className='h-3.5 w-3.5' />
+      </Button>
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className='hover:text-destructive size-7'
+        aria-label={`${t('discard')} ${name}`}
+        disabled={disabled}
+        onClick={onDiscard}
+      >
+        <X className='h-3.5 w-3.5' />
+      </Button>
+    </>
   )
 }
 

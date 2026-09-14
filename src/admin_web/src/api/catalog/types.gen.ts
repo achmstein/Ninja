@@ -261,10 +261,11 @@ export type SetItemOfferRequest = {
 };
 
 export type SuggestCustomizationsRequest = {
-    /**
-     * The saved menu item id
-     */
-    itemId: number | string;
+    name: LocalizedText;
+    description?: null | LocalizedText;
+    catalogTypeId?: null | number | string;
+    price?: number | string;
+    existingGroups?: null | Array<LocalizedText>;
 };
 
 export type SuggestCustomizationsResponse = {
@@ -347,6 +348,10 @@ export type SuggestCustomizationsData = {
 
 export type SuggestCustomizationsErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -354,11 +359,9 @@ export type SuggestCustomizationsErrors = {
      * Forbidden
      */
     403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
 };
+
+export type SuggestCustomizationsError = SuggestCustomizationsErrors[keyof SuggestCustomizationsErrors];
 
 export type SuggestCustomizationsResponses = {
     /**

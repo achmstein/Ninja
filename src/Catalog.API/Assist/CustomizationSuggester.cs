@@ -6,9 +6,9 @@ using Microsoft.Extensions.AI;
 namespace Chillax.Catalog.API.Assist;
 
 /// <summary>
-/// Proposes the customization groups for one menu item, in the house's own
-/// wording: the rest of the menu's groups go along as examples. One agent
-/// call per request; the answer is checked by
+/// Proposes the customization groups for one menu item — saved or still
+/// being added — in the house's own wording: the menu's groups go along as
+/// examples. One agent call per request; the answer is checked by
 /// <see cref="CustomizationsPostProcessor"/> before it leaves.
 /// </summary>
 public sealed class CustomizationSuggester(IChillaxAgentFactory factory)
@@ -30,17 +30,18 @@ public sealed class CustomizationSuggester(IChillaxAgentFactory factory)
     /// <summary>False when no chat model is configured; the endpoint answers 503.</summary>
     public bool IsEnabled => factory.IsEnabled;
 
-    /// <param name="item">With its category and its current customizations loaded.</param>
+    /// <param name="request">The item as the form has it.</param>
+    /// <param name="category">The item's category, when one is picked.</param>
     /// <param name="examples">Groups from other items, each with the item it belongs to loaded.</param>
-    public async Task<SuggestCustomizationsResponse> SuggestAsync(CatalogItem item, IReadOnlyList<ItemCustomization> examples, CancellationToken ct)
+    public async Task<SuggestCustomizationsResponse> SuggestAsync(SuggestCustomizationsRequest request, CatalogType? category, IReadOnlyList<ItemCustomization> examples, CancellationToken ct)
     {
         var prompt = new CustomizationsPrompt(
             Item: new CustomizationsItem(
-                Pair(item.Name),
-                Pair(item.Description),
-                item.CatalogType is null ? string.Empty : $"{item.CatalogType.Name.En} / {item.CatalogType.Name.Ar}",
-                item.Price),
-            ExistingGroups: item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => Label(c.Name)).ToList(),
+                Pair(request.Name),
+                Pair(request.Description ?? new LocalizedText()),
+                category is null ? string.Empty : $"{category.Name.En} / {category.Name.Ar}",
+                request.Price),
+            ExistingGroups: (request.ExistingGroups ?? []).Select(Label).ToList(),
             Examples: PickExamples(examples).Select(c => new CustomizationExample(Label(c.CatalogItem?.Name ?? new LocalizedText()), ToResult(c))).ToList());
 
         var agent = factory.Create(Definition);
@@ -50,7 +51,7 @@ public sealed class CustomizationSuggester(IChillaxAgentFactory factory)
         };
 
         var run = await agent.RunAsync<CustomizationsResult>(messages, ct);
-        return CustomizationsPostProcessor.Apply(run.Result, item);
+        return CustomizationsPostProcessor.Apply(run.Result, request);
     }
 
     /// <summary>

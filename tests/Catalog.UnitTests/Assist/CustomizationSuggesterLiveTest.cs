@@ -19,12 +19,12 @@ public class CustomizationSuggesterLiveTest
     {
         var suggester = new CustomizationSuggester(LiveProvider.FactoryOrInconclusive());
 
-        var latte = new CatalogItem(new LocalizedText("Caramel Latte", "كراميل لاتيه"), new LocalizedText("Espresso, steamed milk and caramel", "إسبريسو ولبن وكراميل"))
-        {
-            Id = 42,
-            Price = 65m,
-            CatalogType = new CatalogType(new LocalizedText("Coffee", "قهوة")) { Id = 1 },
-        };
+        var coffee = new CatalogType(new LocalizedText("Coffee", "قهوة")) { Id = 1 };
+        var latte = new SuggestCustomizationsRequest(
+            new LocalizedText("Caramel Latte", "كراميل لاتيه"),
+            new LocalizedText("Espresso, steamed milk and caramel", "إسبريسو ولبن وكراميل"),
+            CatalogTypeId: coffee.Id,
+            Price: 65m);
 
         // The seed's habits: Single / Double sizes, an Egyptian sugar scale
         var size = new ItemCustomization(new LocalizedText("Size", "الحجم")) { IsRequired = true, CatalogItem = new CatalogItem(new LocalizedText("Espresso", "إسبريسو")) };
@@ -35,7 +35,7 @@ public class CustomizationSuggesterLiveTest
         sugar.Options.Add(new CustomizationOption(new LocalizedText("Medium Sugar", "مضبوط")) { IsDefault = true, DisplayOrder = 2 });
         sugar.Options.Add(new CustomizationOption(new LocalizedText("Sweet", "زيادة")) { DisplayOrder = 3 });
 
-        var response = await suggester.SuggestAsync(latte, [size, sugar], CancellationToken.None);
+        var response = await suggester.SuggestAsync(latte, coffee, [size, sugar], CancellationToken.None);
         Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
 
         Assert.IsNotEmpty(response.Groups, "a latte should get at least a size");

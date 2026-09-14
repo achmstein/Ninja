@@ -21,22 +21,16 @@ public class CustomizationSuggesterTest
         return new CustomizationSuggester(factory);
     }
 
-    private static CatalogItem Item(params ItemCustomization[] existing)
-    {
-        var item = new CatalogItem(new LocalizedText("Hazelnut Coffee", "قهوة بندق"))
-        {
-            Id = 3,
-            Price = 45m,
-            CatalogType = new CatalogType(new LocalizedText("Coffee", "قهوة")) { Id = 1 },
-        };
-        foreach (var group in existing) item.Customizations.Add(group);
-        return item;
-    }
+    private static readonly CatalogType Coffee = new(new LocalizedText("Coffee", "قهوة")) { Id = 1 };
+
+    /// <summary>The item as the form has it — no id: it need not be saved yet.</summary>
+    private static SuggestCustomizationsRequest Request(params LocalizedText[] existing) =>
+        new(new LocalizedText("Hazelnut Coffee", "قهوة بندق"), CatalogTypeId: Coffee.Id, Price: 45m, ExistingGroups: existing);
 
     [TestMethod]
     public async Task Proposes_size_and_extras_for_a_bare_item()
     {
-        var response = await Suggester().SuggestAsync(Item(), [], CancellationToken.None);
+        var response = await Suggester().SuggestAsync(Request(), Coffee, [], CancellationToken.None);
 
         Assert.HasCount(2, response.Groups);
         Assert.AreEqual("Size", response.Groups[0].Name.En);
@@ -47,8 +41,8 @@ public class CustomizationSuggesterTest
     [TestMethod]
     public async Task Leaves_out_what_the_item_already_has()
     {
-        var size = new ItemCustomization(new LocalizedText("Size", "الحجم"));
-        var response = await Suggester().SuggestAsync(Item(size), [], CancellationToken.None);
+        var size = new LocalizedText("Size", "الحجم");
+        var response = await Suggester().SuggestAsync(Request(size), Coffee, [], CancellationToken.None);
 
         var extras = Assert.ContainsSingle(response.Groups);
         Assert.AreEqual("Extras", extras.Name.En);
@@ -80,6 +74,15 @@ public class CustomizationSuggesterTest
         Assert.HasCount(CustomizationSuggester.MaxExamples, picked);
         Assert.AreEqual(2, picked.Count(g => g.Name.En == "Size"), "the same Size twice is one example; the three-size one another");
         Assert.AreEqual("Sugar Level", picked[2].Name.En);
+    }
+
+    [TestMethod]
+    public void A_name_is_all_the_request_needs()
+    {
+        Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText("Espresso"))));
+        Assert.IsNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(string.Empty, "إسبريسو"))));
+        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(" "))));
+        Assert.IsNotNull(CustomizationsPostProcessor.Validate(new SuggestCustomizationsRequest(new LocalizedText(new string('x', LocalizerPostProcessor.MaxNameLength + 1)))));
     }
 
     [TestMethod]
