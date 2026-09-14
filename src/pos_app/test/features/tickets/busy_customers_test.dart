@@ -3,6 +3,7 @@ import 'package:pos_app/core/models/localized_text.dart';
 import 'package:pos_app/features/rooms/models/room.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
 import 'package:pos_app/features/tickets/busy_customers.dart';
+import 'package:pos_app/features/tickets/models/enums.dart';
 import 'package:pos_app/features/tickets/models/ticket_summary.dart';
 
 RoomSession _session(int id, SessionStatus status, List<String> members) => RoomSession(
@@ -17,12 +18,12 @@ RoomSession _session(int id, SessionStatus status, List<String> members) => Room
     );
 
 void main() {
-  test('collects the accounts on open bills, in active rooms, and on tabs just opened here', () {
+  test('collects the accounts on open bills, in active rooms, and on tabs just opened here, with where', () {
     final busy = customersOnOpenBills(
       openTickets: [
-        const TicketSummary(id: 1, customerIds: ['a', 'b']),
+        const TicketSummary(id: 1, customerIds: ['a', 'b'], type: TicketType.table, locationName: LocalizedText(en: 'Table 3', ar: 'ترابيزة 3')),
         const TicketSummary(id: 2, customerIds: ['b']),
-        const TicketSummary(id: 3),
+        const TicketSummary(id: 3, type: TicketType.counter, label: 'E'),
       ],
       activeSessions: [
         _session(10, SessionStatus.active, ['c']),
@@ -36,7 +37,11 @@ void main() {
         1: const SaleCustomer(name: 'walk-in'),
       },
     );
-    expect(busy, {'a', 'b', 'c', 'e'});
+    expect(busy.keys, unorderedEquals(['a', 'b', 'c', 'e']));
+    expect(busy['a']!.name!.en, 'Table 3');
+    expect(busy['c']!.type, TicketType.room);
+    expect(busy['c']!.name!.en, 'Room');
+    expect(busy['e']!.label, 'E');
   });
 
   test('nothing open means nobody is busy', () {

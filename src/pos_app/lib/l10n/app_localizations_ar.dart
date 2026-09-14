@@ -588,6 +588,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String alreadyOnBill(String where) {
+    return 'عليه حساب مفتوح · $where';
+  }
+
+  @override
   String get findCustomer => 'دور على عميل';
 
   @override

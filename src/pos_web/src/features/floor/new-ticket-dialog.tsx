@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { API_VERSION, apiClient } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
@@ -77,11 +77,13 @@ function readPendingCustomerId(ticketId: number | string): string | null {
  * Typing looks up accounts — pick one to open the tab for them so the round
  * goes on their tab, or just use the typed name for a walk-in. The name is
  * optional; leave it blank for an unnamed tab. Accounts that already have a
- * bill running (on a tab, at a table, in a room) are left out of the matches:
- * one person, one bill.
+ * bill running (on a tab, at a table, in a room) show greyed out with the
+ * bill they are on, so the cashier sees they exist but cannot open a second
+ * one: one person, one bill.
  */
 export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   const t = useT()
+  const localized = useLocalized()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [label, setLabel] = useState('')
@@ -103,31 +105,35 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     return () => clearTimeout(id)
   }, [label])
 
-  // Who already has a bill: whoever is on an open bill's lines, whoever is
-  // in a room right now, and whoever a tab was just opened for on this till
+  // Who already has a bill, and where: whoever is on an open bill's lines,
+  // whoever is in a room right now, and whoever a tab was just opened for on
+  // this till
   const { data: openTickets = [] } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     enabled: open,
   })
   const { sessions } = useRooms({ enabled: open })
-  const busy = new Set<string>()
+  const busy = new Map<string, string>()
   for (const ticket of openTickets) {
-    for (const id of ticket.customerIds ?? []) busy.add(id)
+    const where =
+      localized(ticket.locationName) || ticket.label || t('counter')
+    for (const id of ticket.customerIds ?? []) busy.set(id, where)
     if (ticket.id !== undefined) {
       const pendingId = readPendingCustomerId(ticket.id)
-      if (pendingId) busy.add(pendingId)
+      if (pendingId) busy.set(pendingId, where)
     }
   }
   for (const session of sessions) {
     if (Number(session.status) !== SESSION_ACTIVE) continue
+    const where = localized(session.roomName) || t('room')
     for (const member of session.members ?? []) {
-      if (member.customerId) busy.add(member.customerId)
+      if (member.customerId) busy.set(member.customerId, where)
     }
   }
 
   const search =
     !picked && debounced.length >= MIN_SEARCH_LENGTH ? debounced : ''
-  const { data: matches = [] } = useQuery({
+  const { data: users = [] } = useQuery({
     queryKey: ['identityUserSearch', search],
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
@@ -141,7 +147,6 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     placeholderData: keepPreviousData,
     enabled: open && search.length > 0,
   })
-  const users = matches.filter((user) => !busy.has(user.id))
 
   const openTicket = useMutation({
     ...openTicketMutation(),
@@ -248,36 +253,47 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
             search.length > 0 &&
             users.length > 0 && (
               <div className='mt-1 flex max-h-64 flex-col gap-1 overflow-y-auto'>
-                {users.map((user) => (
-                  <button
-                    key={user.id}
-                    type='button'
-                    onClick={() => pick(user)}
-                    className={cn(
-                      'hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-2 text-start'
-                    )}
-                  >
-                    <UserPlus className='text-muted-foreground size-4 shrink-0' />
-                    <span className='min-w-0 flex-1'>
-                      {/* The matched letters marked, so the eye lands on the
-                          right person without reading every row */}
-                      <span className='block truncate font-medium'>
-                        <Highlight
-                          text={displayName(user)}
-                          ranges={matchRanges(displayName(user), label)}
-                        />
-                      </span>
-                      {user.phoneNumber && (
-                        <span className='text-muted-foreground block truncate text-xs'>
+                {users.map((user) => {
+                  const onBill = busy.get(user.id)
+                  return (
+                    <button
+                      key={user.id}
+                      type='button'
+                      disabled={!!onBill}
+                      onClick={() => pick(user)}
+                      className={cn(
+                        'hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-2 text-start',
+                        'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent'
+                      )}
+                    >
+                      <UserPlus className='text-muted-foreground size-4 shrink-0' />
+                      <span className='min-w-0 flex-1'>
+                        {/* The matched letters marked, so the eye lands on the
+                            right person without reading every row */}
+                        <span className='block truncate font-medium'>
                           <Highlight
-                            text={user.phoneNumber}
-                            ranges={phoneRanges(user.phoneNumber, label)}
+                            text={displayName(user)}
+                            ranges={matchRanges(displayName(user), label)}
                           />
                         </span>
-                      )}
-                    </span>
-                  </button>
-                ))}
+                        {onBill ? (
+                          <span className='text-muted-foreground block truncate text-xs'>
+                            {t('alreadyOnBill', { where: onBill })}
+                          </span>
+                        ) : (
+                          user.phoneNumber && (
+                            <span className='text-muted-foreground block truncate text-xs'>
+                              <Highlight
+                                text={user.phoneNumber}
+                                ranges={phoneRanges(user.phoneNumber, label)}
+                              />
+                            </span>
+                          )
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             )
           )}

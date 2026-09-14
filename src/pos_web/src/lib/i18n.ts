@@ -395,6 +395,10 @@ const dictionary = {
     ar: 'اتحط على حساب العميل',
   },
   onCustomerTabHint: { en: "On {name}'s tab", ar: 'على حساب {name}' },
+  alreadyOnBill: {
+    en: 'Already has a bill open · {where}',
+    ar: 'عليه حساب مفتوح · {where}',
+  },
   amount: { en: 'Amount', ar: 'المبلغ' },
   addPayment: { en: 'Add payment', ar: 'ضيف دفعة' },
   remaining: { en: 'Remaining', ar: 'الناقص' },

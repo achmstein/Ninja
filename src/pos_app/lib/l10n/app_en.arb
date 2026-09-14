@@ -362,6 +362,10 @@
   "@onCustomerTabHint": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "alreadyOnBill": "Already has a bill open · {where}",
+  "@alreadyOnBill": {
+    "placeholders": { "where": { "type": "String" } }
+  },
   "findCustomer": "Find customer",
   "newTabHint": "A counter bill with no table, for someone who will order in a moment.",
   "ticketNumber": "Ticket #{id}",

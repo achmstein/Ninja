@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/models/localized_text.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
+import '../widgets/bill_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../../rooms/providers/rooms_provider.dart';
@@ -26,8 +28,9 @@ const _minSearchLength = 2;
 /// for. Typing looks up accounts — pick one to open the tab for them so the
 /// round goes on their tab, or just use the typed name for a walk-in. The
 /// name is optional; leave it blank for an unnamed tab. Accounts that already
-/// have a bill running (on a tab, at a table, in a room) are left out of the
-/// matches: one person, one bill.
+/// have a bill running (on a tab, at a table, in a room) show greyed out with
+/// the bill they are on, so the cashier sees they exist but cannot open a
+/// second one: one person, one bill.
 ///
 /// Resolves to the new ticket's id; the caller goes there.
 Future<int?> showNewTicketDialog(BuildContext context) {
@@ -54,6 +57,8 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
   Timer? _debounce;
   String _search = '';
   List<IdentityUser> _users = const [];
+  // Who already has a bill, and where, as of the last search
+  Map<String, BillPlace> _busy = const {};
 
   @override
   void initState() {
@@ -93,7 +98,10 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
         activeSessions: ref.read(roomsProvider).activeSessions,
         pending: pendingTicketCustomer,
       );
-      setState(() => _users = [for (final user in users) if (!busy.contains(user.id)) user]);
+      setState(() {
+        _users = users;
+        _busy = busy;
+      });
     } catch (_) {
       if (mounted) setState(() => _users = const []);
     }
@@ -214,16 +222,25 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                 itemBuilder: (context, index) {
                   final user = _users[index];
                   final contact = user.contact;
+                  final onBill = _busy[user.id];
+                  final where = onBill == null
+                      ? null
+                      : onBill.name?.localized(context).isNotEmpty == true
+                          ? onBill.name!.localized(context)
+                          : (onBill.label?.isNotEmpty == true ? onBill.label! : ticketTypeLabel(l10n, onBill.type));
                   return FTappable(
-                    onPress: () => _pickAccount(user),
-                    builder: (context, states, child) => Container(
-                      constraints: const BoxConstraints(minHeight: 52),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                        borderRadius: BorderRadius.circular(10),
+                    onPress: onBill == null ? () => _pickAccount(user) : null,
+                    builder: (context, states, child) => Opacity(
+                      opacity: onBill == null ? 1 : 0.6,
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 52),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: child,
                       ),
-                      child: child,
                     ),
                     child: Row(
                       children: [
@@ -240,7 +257,14 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
                               ),
-                              if (contact != null)
+                              if (where != null)
+                                Text(
+                                  l10n.alreadyOnBill(where),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: muted,
+                                )
+                              else if (contact != null)
                                 Text.rich(
                                   TextSpan(
                                     children: highlightSpans(

@@ -584,6 +584,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String alreadyOnBill(String where) {
+    return 'Already has a bill open · $where';
+  }
+
+  @override
   String get findCustomer => 'Find customer';
 
   @override

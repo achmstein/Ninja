@@ -1088,6 +1088,12 @@ abstract class AppLocalizations {
   /// **'On {name}\'s tab'**
   String onCustomerTabHint(String name);
 
+  /// No description provided for @alreadyOnBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Already has a bill open · {where}'**
+  String alreadyOnBill(String where);
+
   /// No description provided for @findCustomer.
   ///
   /// In en, this message translates to:
