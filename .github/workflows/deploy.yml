@@ -62,6 +62,8 @@ jobs:
           Parameters__postgres_password: postgres
           Parameters__eventbus_password: guest
           Parameters__keycloak_password: admin
+          # Resolved so publish never waits on a prompt; the .env still gets an empty placeholder, filled below
+          Parameters__gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd src/Chillax.AppHost
           aspire publish -o ../../deploy-artifacts
@@ -100,11 +102,11 @@ jobs:
           sed -i 's/^EVENTBUS_PASSWORD=$/EVENTBUS_PASSWORD=guest/' deploy-artifacts/.env
           sed -i 's/^KEYCLOAK_PASSWORD=$/KEYCLOAK_PASSWORD=admin/' deploy-artifacts/.env
 
-          # The AI assistant's key (Gemini, or any OpenAI-compatible provider
-          # named in src/Chillax.AppHost/appsettings.json). An empty secret
-          # trips the guard below on purpose: ship without AI by choice, not by
-          # accident.
-          sed -i 's|^OPENAI_OPENAI_APIKEY=$|OPENAI_OPENAI_APIKEY=${{ secrets.GEMINI_API_KEY }}|' deploy-artifacts/.env
+          # The AI assistant's key: the AppHost's gemini-api-key parameter
+          # (Gemini, or any OpenAI-compatible provider named in
+          # src/Chillax.AppHost/appsettings.json). An empty secret trips the
+          # guard below on purpose: ship without AI by choice, not by accident.
+          sed -i 's|^GEMINI_API_KEY=$|GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}|' deploy-artifacts/.env
 
           # Fill port values for service discovery
           sed -i 's/^CATALOG_API_PORT=$/CATALOG_API_PORT=8080/' deploy-artifacts/.env

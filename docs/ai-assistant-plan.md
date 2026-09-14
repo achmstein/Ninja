@@ -20,7 +20,7 @@ The **Google Gemini API free tier** through its OpenAI-compatible endpoint (`gem
 
 ### D2 — Follow eShop, exactly
 
-- **AppHost** declares the model as an Aspire resource: `AddOpenAI("openai").WithEndpoint(…)` + `AddModel("chatModel", …)`; the projects that own a feature `.WithReference(chatModel)` and receive `ConnectionStrings__chatModel = Endpoint=…;Key=…;Model=…`. `IsChatModelEnabled` gates it: on when a key is configured (`GEMINI_API_KEY` or `OPENAI_API_KEY` in the environment, or `Parameters:openai-openai-apikey` in user-secrets) or when publishing; off otherwise, so a checkout without a key still runs.
+- **AppHost** declares the model as an Aspire resource: `AddOpenAI("openai").WithEndpoint(…)` + `AddModel("chatModel", …)`; the projects that own a feature `.WithReference(chatModel)` and receive `ConnectionStrings__chatModel = Endpoint=…;Key=…;Model=…`. The key is the `gemini-api-key` secret parameter (the old `OpenAIKeyParameter` idea): its value comes from user secrets or `GEMINI_API_KEY` / `OPENAI_API_KEY` in the environment, and when nothing supplies it the dashboard prompts for it and can remember it — the dependent projects wait. `AI:Enabled=false` leaves the whole thing out for a checkout that does not want the prompt.
 - **Services** call `AddAIServices()`: `Aspire.OpenAI`'s `AddOpenAIClient("chatModel").AddChatClient()` when the connection string exists, a scripted `FakeChatClient` when `AI:UseFake` is set (the AppHost sets it under test), nothing at all otherwise.
 - **Feature classes** take the chat client as an *optional* dependency and expose `IsEnabled` (eShop's `CatalogAI` idiom). Endpoints answer `503` when it is off; the admin app hides the buttons for the session on the first `503`.
 - **AppHost unit tests** (`tests/Chillax.AppHost.UnitTests`, `IsAspireProjectResource="false"`) pin the gate and the resources.
@@ -57,8 +57,8 @@ The fake answers are deterministic (localize: `"{en} (تجريبي)"` / `"{ar} (
 
 ## 4. Running it
 
-- Local: set `GEMINI_API_KEY` in the environment (or `dotnet user-secrets set "Parameters:openai-openai-apikey" "AIza…" --project src/Chillax.AppHost`), then `aspire run`; the dashboard shows `openai` and `chatModel`. Provider and model: `AI` section of `src/Chillax.AppHost/appsettings.json`. The key is never committed.
-- Deploy: `aspire publish` emits `OPENAI_OPENAI_APIKEY=` in `.env`; `deploy.yml` fills it from the `GEMINI_API_KEY` repository secret. An empty secret trips the empty-placeholder guard on purpose.
+- Local: `aspire run`; the dashboard asks for `gemini-api-key` once and remembers it in user secrets (or set `GEMINI_API_KEY` in the environment beforehand). The dashboard shows `gemini-api-key`, `openai` and `chatModel`. Provider and model: `AI` section of `src/Chillax.AppHost/appsettings.json`. The key is never committed.
+- Deploy: `aspire publish` emits `GEMINI_API_KEY=` in `.env`; `deploy.yml` fills it from the repository secret of the same name. An empty secret trips the empty-placeholder guard on purpose.
 - If a provider rejects the JSON schema, `AI:StructuredOutput=JsonObject` puts the schema in the prompt and enforces only "answer in JSON".
 - Free-tier prompts may be used by Google to improve its models: do not scan anything that must not leave the building.
 

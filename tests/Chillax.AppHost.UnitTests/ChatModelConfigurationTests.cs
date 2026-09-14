@@ -10,22 +10,64 @@ namespace Chillax.AppHost.UnitTests;
 public class ChatModelConfigurationTests
 {
     [TestMethod]
-    public void The_chat_model_is_off_until_a_key_is_configured()
+    public void The_assistant_is_on_unless_switched_off_in_configuration()
     {
-        Assert.IsFalse(Extensions.IsChatModelEnabled(Config(), isPublishMode: false));
-        Assert.IsFalse(Extensions.IsChatModelEnabled(Config(("Parameters:openai-openai-apikey", "  ")), isPublishMode: false));
+        Assert.IsTrue(Extensions.IsAssistantEnabled(Config()));
+        Assert.IsTrue(Extensions.IsAssistantEnabled(Config(("AI:Enabled", "true"))));
+        Assert.IsFalse(Extensions.IsAssistantEnabled(Config(("AI:Enabled", "false"))));
     }
 
     [TestMethod]
-    public void A_user_secret_or_an_environment_variable_turns_it_on()
+    public void The_key_comes_from_user_secrets_or_the_environment()
     {
-        Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("Parameters:openai-openai-apikey", "AIza-test")), isPublishMode: false));
-        Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("GEMINI_API_KEY", "AIza-test")), isPublishMode: false));
-        Assert.IsTrue(Extensions.IsChatModelEnabled(Config(("OPENAI_API_KEY", "sk-test")), isPublishMode: false));
+        Assert.IsNull(Extensions.ChatModelKey(Config()));
+        Assert.IsNull(Extensions.ChatModelKey(Config(("Parameters:gemini-api-key", "  "))));
+        Assert.AreEqual("AIza-secret", Extensions.ChatModelKey(Config(("Parameters:gemini-api-key", "AIza-secret"))));
+        Assert.AreEqual("AIza-env-style", Extensions.ChatModelKey(Config(("Parameters:gemini_api_key", "AIza-env-style"))), "the spelling an environment variable gives the parameter");
+        Assert.AreEqual("AIza-env", Extensions.ChatModelKey(Config(("GEMINI_API_KEY", "AIza-env"))));
+        Assert.AreEqual("sk-env", Extensions.ChatModelKey(Config(("OPENAI_API_KEY", "sk-env"))));
     }
 
     [TestMethod]
-    public async Task A_GEMINI_API_KEY_reaches_the_connection_string_as_the_key()
+    public void AddChatModel_declares_the_key_parameter_the_provider_and_the_model_and_hands_the_model_to_the_projects()
+    {
+        var builder = CreateBuilder();
+        var catalog = builder.AddProject("catalog-api", ProjectPath("Catalog.API", "Catalog.API.csproj"));
+        var inventory = builder.AddProject("inventory-api", ProjectPath("Inventory.API", "Inventory.API.csproj"));
+
+        builder.AddChatModel(catalog, inventory);
+
+        var names = builder.Resources.Select(resource => resource.Name).ToArray();
+        CollectionAssert.IsSubsetOf(new[] { Extensions.ApiKeyParameterName, "openai", "chatModel" }, names);
+        Assert.DoesNotContain("openai-openai-apikey", names, "the provider's default key parameter gives way to ours");
+
+        var parameter = (ParameterResource)builder.Resources.Single(resource => resource.Name == Extensions.ApiKeyParameterName);
+        Assert.IsTrue(parameter.Secret);
+        Assert.AreSame(parameter, ((OpenAIResource)builder.Resources.Single(resource => resource.Name == "openai")).Key);
+
+        var model = builder.Resources.Single(resource => resource.Name == "chatModel");
+        foreach (var project in new[] { catalog.Resource, inventory.Resource })
+        {
+            var referenced = project.Annotations.OfType<ResourceRelationshipAnnotation>()
+                .Any(relationship => ReferenceEquals(relationship.Resource, model) && relationship.Type == "Reference");
+            Assert.IsTrue(referenced, $"{project.Name} should reference chatModel");
+        }
+    }
+
+    [TestMethod]
+    public void Without_a_key_the_parameter_is_unresolved_so_the_dashboard_asks_for_it()
+    {
+        var builder = CreateBuilder();
+        builder.AddChatModel();
+
+        var parameter = (ParameterResource)builder.Resources.Single(resource => resource.Name == Extensions.ApiKeyParameterName);
+
+        // MissingParameterValueException is what Aspire's parameter processor turns into the dashboard prompt
+        Assert.ThrowsExactly<MissingParameterValueException>(() => _ = parameter.Value);
+    }
+
+    [TestMethod]
+    public async Task A_key_from_the_environment_reaches_the_connection_string()
     {
         var builder = CreateBuilder();
         builder.Configuration["GEMINI_API_KEY"] = "AIza-from-env";
@@ -40,44 +82,14 @@ public class ChatModelConfigurationTests
     }
 
     [TestMethod]
-    public void Publishing_always_declares_the_model_so_the_key_becomes_a_deploy_parameter()
-    {
-        Assert.IsTrue(Extensions.IsChatModelEnabled(Config(), isPublishMode: true));
-    }
-
-    [TestMethod]
-    public void AddChatModel_declares_the_provider_and_the_model_and_hands_the_model_to_the_projects()
-    {
-        var builder = CreateBuilder();
-        builder.Configuration["Parameters:openai-openai-apikey"] = "AIza-test";
-        var catalog = builder.AddProject("catalog-api", ProjectPath("Catalog.API", "Catalog.API.csproj"));
-        var inventory = builder.AddProject("inventory-api", ProjectPath("Inventory.API", "Inventory.API.csproj"));
-
-        builder.AddChatModel(catalog, inventory);
-
-        var names = builder.Resources.Select(resource => resource.Name).ToArray();
-        CollectionAssert.IsSubsetOf(new[] { "openai", "chatModel" }, names);
-
-        var model = builder.Resources.Single(resource => resource.Name == "chatModel");
-        foreach (var project in new[] { catalog.Resource, inventory.Resource })
-        {
-            var referenced = project.Annotations.OfType<ResourceRelationshipAnnotation>()
-                .Any(relationship => ReferenceEquals(relationship.Resource, model) && relationship.Type == "Reference");
-            Assert.IsTrue(referenced, $"{project.Name} should reference chatModel");
-        }
-    }
-
-    [TestMethod]
     public void The_endpoint_and_model_come_from_the_AI_section_and_default_to_Gemini()
     {
         var defaults = CreateBuilder();
-        defaults.Configuration["Parameters:openai-openai-apikey"] = "AIza-test";
         defaults.AddChatModel();
         Assert.AreEqual("gemini-2.5-flash", ModelName(defaults));
         Assert.AreEqual(Extensions.GeminiEndpoint, Endpoint(defaults));
 
         var custom = CreateBuilder();
-        custom.Configuration["Parameters:openai-openai-apikey"] = "sk-test";
         custom.Configuration["AI:Endpoint"] = "https://example.test/v1/";
         custom.Configuration["AI:ChatModel"] = "my-model";
         custom.AddChatModel();

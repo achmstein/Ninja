@@ -187,8 +187,9 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithEnvironment("Keycloak__Realm", "chillax");
 
 // AI assistant (Catalog localizes menu text, Inventory reads receipts). Under
-// test the services run a scripted fake; otherwise the chat model is wired in
-// only when a key is configured, so a checkout without one still runs.
+// test the services run a scripted fake; otherwise the chat model is a
+// resource whose key is a secret parameter — the dashboard asks for it when
+// nothing supplies it. AI:Enabled=false leaves the assistant out altogether.
 if (isTestMode)
 {
     foreach (var api in new[] { catalogApi, inventoryApi })
@@ -198,7 +199,7 @@ if (isTestMode)
            .WithEnvironment("AI__PerUserRequestsPerMinute", "100");
     }
 }
-else if (Extensions.IsChatModelEnabled(builder.Configuration, builder.ExecutionContext.IsPublishMode))
+else if (Extensions.IsAssistantEnabled(builder.Configuration))
 {
     builder.AddChatModel(catalogApi, inventoryApi);
 }

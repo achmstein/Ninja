@@ -47,17 +47,29 @@ internal static class Extensions
     /// </summary>
     public const string GeminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/";
 
-    /// <summary>The Aspire parameter the chat model's key travels as; never in the repo.</summary>
-    public const string ApiKeyParameter = "Parameters:openai-openai-apikey";
+    /// <summary>
+    /// The Aspire secret parameter the chat model's key travels as. Its value
+    /// is never in the repo: user secrets (the dashboard's "remember" writes
+    /// there), the environment, or the deploy .env.
+    /// </summary>
+    public const string ApiKeyParameterName = "gemini-api-key";
 
     /// <summary>
-    /// The provider key, from wherever the developer keeps it: the AppHost's
-    /// user secrets, or GEMINI_API_KEY (Google's convention) / OPENAI_API_KEY
-    /// in the environment. Null when there is none.
+    /// The assistant is on unless AI:Enabled=false says otherwise (a dev who
+    /// never wants the key prompt); the services then answer 503 for it.
+    /// </summary>
+    public static bool IsAssistantEnabled(IConfiguration configuration) =>
+        configuration.GetValue("AI:Enabled", true);
+
+    /// <summary>
+    /// The provider key, from wherever the developer keeps it: the parameter
+    /// in the AppHost's user secrets (either spelling Aspire accepts), or
+    /// GEMINI_API_KEY (Google's convention) / OPENAI_API_KEY in the
+    /// environment. Null when there is none.
     /// </summary>
     public static string? ChatModelKey(IConfiguration configuration)
     {
-        foreach (var key in new[] { ApiKeyParameter, "GEMINI_API_KEY", "OPENAI_API_KEY" })
+        foreach (var key in new[] { $"Parameters:{ApiKeyParameterName}", $"Parameters:{ApiKeyParameterName.Replace('-', '_')}", "GEMINI_API_KEY", "OPENAI_API_KEY" })
         {
             var value = configuration[key];
             if (!string.IsNullOrWhiteSpace(value))
@@ -66,14 +78,6 @@ internal static class Extensions
 
         return null;
     }
-
-    /// <summary>
-    /// Whether to wire the chat model: when a key is configured for it, or
-    /// when publishing, where the key is filled in on the box. A dev without
-    /// a key runs with the assistant off.
-    /// </summary>
-    public static bool IsChatModelEnabled(IConfiguration configuration, bool isPublishMode) =>
-        isPublishMode || ChatModelKey(configuration) is not null;
 
     /// <summary>
     /// Configures the projects that own an AI feature to use one
@@ -86,18 +90,23 @@ internal static class Extensions
     public static IDistributedApplicationBuilder AddChatModel(this IDistributedApplicationBuilder builder,
         params IResourceBuilder<ProjectResource>[] projects)
     {
-        // AddOpenAI reads the key parameter from configuration (or OPENAI_API_KEY)
-        // when it is first needed; a GEMINI_API_KEY is handed over the same way.
-        // Publishing leaves it alone so the key stays a placeholder in the artifacts.
-        if (!builder.ExecutionContext.IsPublishMode
-            && string.IsNullOrWhiteSpace(builder.Configuration[ApiKeyParameter])
-            && ChatModelKey(builder.Configuration) is { } key)
-        {
-            builder.Configuration[ApiKeyParameter] = key;
-        }
+        // The key is a secret parameter like any other (eShop's OpenAIKeyParameter):
+        // when nothing supplies it, the dashboard asks for it and can remember it
+        // in user secrets; the projects wait for it. When publishing it becomes a
+        // placeholder in the artifacts that the deploy fills in.
+        var apiKey = builder.AddParameter(ApiKeyParameterName, () =>
+                ChatModelKey(builder.Configuration)
+                ?? throw new MissingParameterValueException(
+                    $"Parameter '{ApiKeyParameterName}' is missing: enter it in the dashboard, or set GEMINI_API_KEY."),
+                secret: true)
+            .WithDescription(
+                "API key for the assistant's chat model: a free key from [Google AI Studio](https://aistudio.google.com/apikey), " +
+                "or any OpenAI-compatible provider's key when AI:Endpoint in the AppHost settings points elsewhere.",
+                enableMarkdown: true);
 
         var openai = builder.AddOpenAI("openai")
-            .WithEndpoint(builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint);
+            .WithEndpoint(builder.Configuration["AI:Endpoint"] ?? GeminiEndpoint)
+            .WithApiKey(apiKey);
 
         // No WithHealthCheck(): it calls the provider on every check and spends the free tier's quota
         var chat = openai.AddModel("chatModel", builder.Configuration["AI:ChatModel"] ?? "gemini-2.5-flash");

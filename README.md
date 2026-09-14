@@ -85,13 +85,13 @@ Login to the dashboard at: http://localhost:19888/login?t=uniquelogincodeforyou
 
 The back office has an assistant for two chores: filling in the other language of a menu item, category or stock item (English ↔ Egyptian Arabic), and reading a photo of a supplier receipt into purchase lines you review before receiving them. It runs on [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) over one chat model that the AppHost declares as an Aspire resource, the way [eShop](https://github.com/dotnet/eShop) wires its models. Nothing is written by the assistant; every answer is a proposal the form or the review sheet shows you first.
 
-It is **off until a key is configured**: without one the `openai`/`chatModel` resources are not added, the endpoints answer `503` and the admin app hides the buttons. To turn it on locally, get a free key from [Google AI Studio](https://aistudio.google.com/apikey) and set it as the `GEMINI_API_KEY` environment variable (Google's own convention — on Windows: *Edit environment variables for your account* → New → `GEMINI_API_KEY`, then open a new terminal). The AppHost's user secrets work too:
+The key is the AppHost's **`gemini-api-key` secret parameter**. On the first `aspire run` the dashboard shows *Unresolved parameters*: paste a free key from [Google AI Studio](https://aistudio.google.com/apikey), tick *remember*, and it is saved to the AppHost's user secrets — `catalog-api` and `inventory-api` wait for it and then start. Setting `GEMINI_API_KEY` in the environment (Google's own convention) or the user secret by hand works too:
 
 ```powershell
-dotnet user-secrets set "Parameters:openai-openai-apikey" "AIza..." --project src/Chillax.AppHost
+dotnet user-secrets set "Parameters:gemini-api-key" "AIza..." --project src/Chillax.AppHost
 ```
 
-The key never lives in the repository: locally it is an environment variable or a user secret, in deployment it is a GitHub secret. The provider and model live in *src/Chillax.AppHost/appsettings.json*:
+The key never lives in the repository: locally it is a user secret or an environment variable, in deployment it is a GitHub secret. A checkout that does not want the assistant at all sets `"AI": { "Enabled": false }` in the AppHost's *appsettings.Development.json* or user secrets; the endpoints then answer `503` and the admin app hides the buttons. The provider and model live in *src/Chillax.AppHost/appsettings.json*:
 
 ```json
   "AI": {
