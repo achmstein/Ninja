@@ -18,6 +18,8 @@ type LocalizeArgs = {
   description?: LocalizedValue
   catalogTypeId?: number | null
   suggestCategory?: boolean
+  /** Write the description in both languages when there is none yet */
+  suggestDescription?: boolean
 }
 
 /**
@@ -44,6 +46,7 @@ export function useLocalizeAssist() {
       description,
       catalogTypeId: args.catalogTypeId ?? null,
       suggestCategory: args.suggestCategory ?? false,
+      suggestDescription: args.suggestDescription ?? false,
     }
     return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
   }

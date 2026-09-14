@@ -14,6 +14,8 @@ public static class Extensions
         builder.AddAIServices();
         builder.Services.AddSingleton<MenuLocalizer>();
         builder.Services.AddFakeAgentScript(MenuLocalizer.AgentKey, MenuLocalizerFake.Respond);
+        builder.Services.AddSingleton<CustomizationSuggester>();
+        builder.Services.AddFakeAgentScript(CustomizationSuggester.AgentKey, CustomizationSuggesterFake.Respond);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

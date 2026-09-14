@@ -141,9 +141,9 @@ public sealed class OwnerActor(ApiClient api)
     public Task<ReceiptProposal> ScanReceiptAsync(byte[] image, CancellationToken ct)
         => Api.PostFileAsync<ReceiptProposal>("/api/inventory/purchases/scan", image, "receipt.png", "image/png", ct);
 
-    /// <summary>The sparkle on a bilingual field: the assistant fills in the other language.</summary>
+    /// <summary>The sparkle on a bilingual field: the assistant fills in what is missing.</summary>
     public Task<LocalizeResponse> LocalizeAsync(int kind, LocalizedText name, CancellationToken ct,
-        LocalizedText? description = null, int? catalogTypeId = null, bool suggestCategory = false)
+        LocalizedText? description = null, int? catalogTypeId = null, bool suggestCategory = false, bool suggestDescription = false)
         => Api.PostAsync<LocalizeResponse>("/api/catalog/assist/localize", new
         {
             kind,
@@ -151,7 +151,33 @@ public sealed class OwnerActor(ApiClient api)
             description = description is null ? null : new { en = description.En, ar = description.Ar },
             catalogTypeId,
             suggestCategory,
+            suggestDescription,
         }, ct);
+
+    /// <summary>menu customizations-section.tsx "Suggest": the assistant proposes the item's option groups.</summary>
+    public Task<SuggestCustomizationsResponse> SuggestCustomizationsAsync(int itemId, CancellationToken ct)
+        => Api.PostAsync<SuggestCustomizationsResponse>("/api/catalog/assist/customizations", new { itemId }, ct);
+
+    /// <summary>menu customizations-section.tsx "Add" on a proposal: the group goes up as it came back.</summary>
+    public Task<ItemCustomizationView> AddCustomizationAsync(int itemId, ProposedCustomization group, int displayOrder, CancellationToken ct)
+        => Api.PostAsync<ItemCustomizationView>($"/api/catalog/items/{itemId}/customizations", new
+        {
+            catalogItemId = itemId,
+            name = new { en = group.Name.En, ar = group.Name.Ar },
+            isRequired = group.IsRequired,
+            allowMultiple = group.AllowMultiple,
+            displayOrder,
+            options = group.Options.Select((o, i) => new
+            {
+                name = new { en = o.Name.En, ar = o.Name.Ar },
+                priceAdjustment = o.PriceAdjustment,
+                isDefault = o.IsDefault,
+                displayOrder = i,
+            }).ToList(),
+        }, ct);
+
+    public Task<List<ItemCustomizationView>> CustomizationsAsync(int itemId, CancellationToken ct)
+        => Api.GetAsync<List<ItemCustomizationView>>($"/api/catalog/items/{itemId}/customizations", ct);
 
     public async Task SetReorderLevelAsync(int stockItemId, decimal? reorderLevel, CancellationToken ct)
     {

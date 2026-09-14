@@ -6,9 +6,10 @@ using Microsoft.Extensions.AI;
 namespace Chillax.Catalog.API.Assist;
 
 /// <summary>
-/// Fills in the missing language of a menu text in the voice the seed menu
-/// already speaks. One agent call per request; the answer is cleaned and
-/// checked by <see cref="LocalizerPostProcessor"/> before it leaves.
+/// Fills in what a menu text is missing — the other language, a description
+/// written from the name, a category — in the voice the seed menu already
+/// speaks. One agent call per request; the answer is cleaned and checked by
+/// <see cref="LocalizerPostProcessor"/> before it leaves.
 /// </summary>
 public sealed class MenuLocalizer(IChillaxAgentFactory factory)
 {
@@ -17,7 +18,7 @@ public sealed class MenuLocalizer(IChillaxAgentFactory factory)
     public static readonly AgentDefinition Definition = new(
         AgentKey,
         "Menu localizer",
-        "Fills in the English or Arabic side of a café menu text",
+        "Fills in the English or Arabic side of a café menu text, writes a description, picks a category",
         Instructions,
         Temperature: 0.3f,
         MaxOutputTokens: 512,
@@ -28,20 +29,17 @@ public sealed class MenuLocalizer(IChillaxAgentFactory factory)
 
     public async Task<LocalizeResponse> LocalizeAsync(LocalizeRequest request, IReadOnlyList<CatalogType> categories, CancellationToken ct)
     {
-        var sourceIsEnglish = !string.IsNullOrWhiteSpace(request.Name.En);
         var category = request.CatalogTypeId is { } typeId ? categories.FirstOrDefault(c => c.Id == typeId) : null;
 
         var prompt = new LocalizePrompt(
             Kind: request.Kind.ToString(),
-            SourceLanguage: sourceIsEnglish ? "en" : "ar",
-            TargetLanguage: sourceIsEnglish ? "ar" : "en",
+            Fill: LocalizerPostProcessor.FieldsToFill(request),
             Name: Pair(request.Name),
             Description: request.Description is null ? new LocalizedPair(string.Empty, string.Empty) : Pair(request.Description),
             Category: category is null ? string.Empty : $"{category.Name.En} / {category.Name.Ar}",
             Categories: request.SuggestCategory
                 ? categories.Select(c => new CategoryOption(c.Id, c.Name.En, c.Name.Ar ?? string.Empty)).ToList()
-                : [],
-            SuggestCategory: request.SuggestCategory);
+                : []);
 
         var agent = factory.Create(Definition);
         var messages = new List<ChatMessage>
@@ -57,22 +55,28 @@ public sealed class MenuLocalizer(IChillaxAgentFactory factory)
 
     private const string Instructions = $"""
         #agent: {AgentKey}
-        You localize texts for the menu of a café in Egypt. The user message is a JSON object with the kind of text
-        (MenuItem, Category or StockItem), the source language, the target language, the name and description
-        (one language filled in, the other empty), the item's category as context, and optionally a list of
-        categories to choose from.
+        You complete texts for the menu of a café in Egypt. The user message is a JSON object with the kind of text
+        (MenuItem, Category or StockItem), a "fill" list naming exactly the fields you must produce, the name and
+        description as typed so far (some sides empty), the item's category as context, and, when a category is
+        wanted, a list of categories to choose from.
 
         Rules:
-        - Fill in the target language of name and description. Copy the source language back UNCHANGED, character for character.
+        - Produce exactly the fields in "fill". Copy every other field back UNCHANGED, character for character;
+          a field that is empty and not in "fill" stays empty.
+        - "name.ar" / "name.en": the name in the other language. "description.ar" / "description.en" alone: the
+          description in the other language, saying the same thing.
+        - Both "description.en" and "description.ar" together: there is no description yet, write one from the name
+          and category — what it is and how it is made or served, one plain sentence, at most 15 words, the same
+          meaning in both languages. Nothing the name does not imply: no origins, no health claims, no "best".
         - Arabic is Egyptian café Arabic, the way the menu already reads: "قهوة تركي", "شاي مصري تقليدي، زي ما بتحبه",
           "قهوتنا التركي المميزة، محمصة طازة كل يوم", "مشروبات مثلجة", "مقرمشات". Prefer everyday words
           (زي، بتحبه، طازة) over formal ones (مثل، تفضله، طازجة).
         - English is Title Case for names ("Turkish Coffee", "Iced Latte") and a plain short sentence for descriptions.
         - Brand and drink names are transliterated, not translated: Nescafe → نسكافيه, Red Bull → ريد بول, Latte → لاتيه.
         - Never add prices, sizes, calories or promotions. Never invent ingredients that are not in the source.
-        - Names are at most 5 words; descriptions at most 15 words. An empty description stays empty on both sides.
-        - The category is context for the wording only. Set suggestedCategoryId to the id of the most fitting category
-          from the list when suggestCategory is true, otherwise 0. Never pick an id that is not in the list.
+        - Names are at most 5 words; descriptions at most 15 words.
+        - "categoryId": set suggestedCategoryId to the id of the most fitting category from the list, otherwise 0.
+          Never pick an id that is not in the list.
         - notes is normally an empty string; use it only when the source is gibberish or not a menu text.
         - Answer with the JSON object only.
         """;

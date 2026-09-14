@@ -137,6 +137,17 @@ public sealed record ProposedNewItem(LocalizedText Name, string Unit, decimal? P
 // The assistant's localize answer (Catalog.API Assist/LocalizeContracts.cs)
 public sealed record LocalizeResponse(LocalizedText Name, LocalizedText? Description, int? SuggestedCatalogTypeId, List<string> Filled, List<string> Warnings);
 
+// The assistant's customization proposals (Catalog.API Assist/CustomizationContracts.cs)
+public sealed record SuggestCustomizationsResponse(List<ProposedCustomization> Groups, List<string> Warnings);
+
+public sealed record ProposedCustomization(LocalizedText Name, bool IsRequired, bool AllowMultiple, List<ProposedOption> Options);
+
+public sealed record ProposedOption(LocalizedText Name, decimal PriceAdjustment, bool IsDefault);
+
+public sealed record ItemCustomizationView(int Id, LocalizedText Name, bool IsRequired, bool AllowMultiple, int DisplayOrder, List<CustomizationOptionView> Options);
+
+public sealed record CustomizationOptionView(int Id, LocalizedText Name, decimal PriceAdjustment, bool IsDefault, int DisplayOrder);
+
 public sealed record StockLevelView(int StockItemId, LocalizedText Name, string Unit, bool AutoSoldOut, bool IsActive, decimal OnHand,
     decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value);
 

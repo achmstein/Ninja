@@ -170,6 +170,7 @@ export type LocalizeRequest = {
      */
     catalogTypeId?: null | number | string;
     suggestCategory?: boolean;
+    suggestDescription?: boolean;
 };
 
 export type LocalizeResponse = {
@@ -193,6 +194,19 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type ProposedCustomization = {
+    name: LocalizedText;
+    isRequired: boolean;
+    allowMultiple: boolean;
+    options: Array<ProposedOption>;
+};
+
+export type ProposedOption = {
+    name: LocalizedText;
+    priceAdjustment: number | string;
+    isDefault: boolean;
 };
 
 export type ReorderItemDto = {
@@ -224,6 +238,18 @@ export type SetBundleActiveRequest = {
 export type SetItemOfferRequest = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+};
+
+export type SuggestCustomizationsRequest = {
+    /**
+     * The saved menu item id
+     */
+    itemId: number | string;
+};
+
+export type SuggestCustomizationsResponse = {
+    groups: Array<ProposedCustomization>;
+    warnings: Array<string>;
 };
 
 export type UpdateCatalogItemRequest = {
@@ -286,6 +312,42 @@ export type LocalizeMenuTextResponses = {
 };
 
 export type LocalizeMenuTextResponse = LocalizeMenuTextResponses[keyof LocalizeMenuTextResponses];
+
+export type SuggestCustomizationsData = {
+    body: SuggestCustomizationsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/customizations';
+};
+
+export type SuggestCustomizationsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SuggestCustomizationsResponses = {
+    /**
+     * OK
+     */
+    200: SuggestCustomizationsResponse;
+};
+
+export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyof SuggestCustomizationsResponses];
 
 export type ListItemsData = {
     body?: never;

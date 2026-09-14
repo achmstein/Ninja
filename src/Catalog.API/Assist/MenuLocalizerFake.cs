@@ -6,8 +6,9 @@ namespace Chillax.Catalog.API.Assist;
 
 /// <summary>
 /// What the localizer answers under test: the source text marked as fake
-/// in the other language, and the first category when one is asked for.
-/// Deterministic, so the E2E suite can assert on it.
+/// in the other language, a description written as "{name} description"
+/// in both languages when one is asked for, and the first category when
+/// one is asked for. Deterministic, so the E2E suite can assert on it.
 /// </summary>
 public static class MenuLocalizerFake
 {
@@ -16,21 +17,31 @@ public static class MenuLocalizerFake
         var prompt = JsonSerializer.Deserialize<LocalizePrompt>(request.UserText, AIJson.Options)
             ?? throw new InvalidOperationException("The localizer prompt is not the expected JSON");
 
+        var fill = prompt.Fill.ToHashSet(StringComparer.Ordinal);
+        var name = Fill(prompt.Name, fill.Contains(LocalizerPostProcessor.NameEn), fill.Contains(LocalizerPostProcessor.NameAr));
+        var description = fill.Contains(LocalizerPostProcessor.DescriptionEn) && fill.Contains(LocalizerPostProcessor.DescriptionAr)
+            ? Write(prompt.Name)
+            : Fill(prompt.Description, fill.Contains(LocalizerPostProcessor.DescriptionEn), fill.Contains(LocalizerPostProcessor.DescriptionAr));
+
         var result = new LocalizeResult(
-            Fill(prompt.Name),
-            Fill(prompt.Description),
-            prompt.SuggestCategory ? prompt.Categories.Select(c => c.Id).FirstOrDefault() : 0,
+            name,
+            description,
+            fill.Contains(LocalizerPostProcessor.CategoryId) ? prompt.Categories.Select(c => c.Id).FirstOrDefault() : 0,
             string.Empty);
 
         return JsonSerializer.Serialize(result, AIJson.Options);
     }
 
-    private static LocalizedPair Fill(LocalizedPair pair)
+    /// <summary>The other language is the source text with a marker.</summary>
+    private static LocalizedPair Fill(LocalizedPair pair, bool en, bool ar)
+        => new(
+            en ? $"{pair.Ar} (fake)" : pair.En,
+            ar ? $"{pair.En} (تجريبي)" : pair.Ar);
+
+    /// <summary>A description from nothing but the name.</summary>
+    private static LocalizedPair Write(LocalizedPair name)
     {
-        if (pair.En.Length == 0 && pair.Ar.Length == 0)
-            return pair;
-        return pair.En.Length > 0
-            ? new LocalizedPair(pair.En, $"{pair.En} (تجريبي)")
-            : new LocalizedPair($"{pair.Ar} (fake)", pair.Ar);
+        var source = name.En.Length > 0 ? name.En : name.Ar;
+        return new LocalizedPair($"{source} description (fake)", $"وصف {source} (تجريبي)");
     }
 }

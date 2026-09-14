@@ -55,6 +55,20 @@ public class MenuLocalizerTest
     }
 
     [TestMethod]
+    public async Task A_name_alone_gets_the_other_language_a_description_and_a_category()
+    {
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Mango Juice"), null, null, SuggestCategory: true, SuggestDescription: true);
+
+        var response = await Localizer().LocalizeAsync(request, Categories, CancellationToken.None);
+
+        Assert.AreEqual("Mango Juice (تجريبي)", response.Name.Ar);
+        Assert.AreEqual("Mango Juice description (fake)", response.Description!.En);
+        Assert.AreEqual("وصف Mango Juice (تجريبي)", response.Description.Ar);
+        Assert.AreEqual(1, response.SuggestedCatalogTypeId);
+        CollectionAssert.AreEqual(new[] { "name.ar", "description.en", "description.ar", "catalogTypeId" }, response.Filled.ToList());
+    }
+
+    [TestMethod]
     public void Off_without_a_chat_client()
     {
         var services = new ServiceCollection().BuildServiceProvider();

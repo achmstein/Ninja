@@ -123,47 +123,54 @@ export function ItemDetailsForm({
     | { kind: 'remove' }
   >({ kind: 'keep' })
 
-  // The assistant fills in whichever language is missing; the form then
-  // flips to that language so what came back is in view. A category is
-  // only suggested on a new item whose category nobody has picked yet.
+  // The assistant fills in what is missing — the other language of the
+  // name, a description (translated when half there, written when absent),
+  // a category — and the form flips to the language it filled so what came
+  // back is in view. The name's sparkle asks for all of it; the
+  // description's only for the description, so it also works on a saved
+  // item whose name is already bilingual. A category is only suggested on
+  // a new item whose category nobody has picked yet.
   const assist = useLocalizeAssist()
   const [lang, setLang] = useState<Lang>('en')
   const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
   const [categoryTouched, setCategoryTouched] = useState(false)
-  const assistBlocker = localizeBlocker(form.name)
+  const nameBlocker = localizeBlocker(form.name)
+  const descriptionBlocker =
+    !hasText(form.name.en) && !hasText(form.name.ar)
+      ? 'assistNeedsName'
+      : hasText(form.description.en) && hasText(form.description.ar)
+        ? 'assistBothFilled'
+        : null
   const wantCategory =
     !isEditing && defaultCategoryId == null && !categoryTouched
 
-  const askAssistant = async () => {
+  const askAssistant = async (scope: 'item' | 'description') => {
     const source = halfFilled(form.name)
-    if (!source) return
-    const target: Lang = source === 'en' ? 'ar' : 'en'
-    // The description rides along only when it is in the same language as
-    // the name and the other side is still empty
-    const description =
-      halfFilled(form.description) === source ? form.description : undefined
+    if (scope === 'item' && !source) return
     try {
       const result = await assist.localize({
         kind: LOCALIZE_MENU_ITEM,
         name: form.name,
-        description,
+        description: form.description,
         catalogTypeId: form.catalogTypeId || null,
-        suggestCategory: wantCategory,
+        suggestCategory: scope === 'item' && wantCategory,
+        suggestDescription: true,
       })
       const filled = new Set(result.filled)
+      const languages: Lang[] = ['en', 'ar']
       setForm((prev) => {
-        const next = { ...prev }
-        // Only what is still empty: the user may have typed meanwhile
-        if (filled.has(`name.${target}`) && !hasText(prev.name[target])) {
-          next.name = { ...prev.name, [target]: result.name[target] ?? '' }
+        const next = {
+          ...prev,
+          name: { ...prev.name },
+          description: { ...prev.description },
         }
-        if (
-          filled.has(`description.${target}`) &&
-          !hasText(prev.description[target])
-        ) {
-          next.description = {
-            ...prev.description,
-            [target]: result.description?.[target] ?? '',
+        // Only what is still empty: the user may have typed meanwhile
+        for (const l of languages) {
+          if (filled.has(`name.${l}`) && !hasText(prev.name[l])) {
+            next.name[l] = result.name[l] ?? ''
+          }
+          if (filled.has(`description.${l}`) && !hasText(prev.description[l])) {
+            next.description[l] = result.description?.[l] ?? ''
           }
         }
         if (
@@ -176,11 +183,16 @@ export function ItemDetailsForm({
         return next
       })
       setSuggested({
-        name: { [target]: filled.has(`name.${target}`) },
-        description: { [target]: filled.has(`description.${target}`) },
+        name: { en: filled.has('name.en'), ar: filled.has('name.ar') },
+        description: {
+          en: filled.has('description.en'),
+          ar: filled.has('description.ar'),
+        },
         category: filled.has('catalogTypeId') && wantCategory,
       })
-      setLang(target)
+      // Show the language that was just filled in; a description written
+      // in both stays on the one the user is typing in
+      if (source) setLang(source === 'en' ? 'ar' : 'en')
       for (const warning of result.warnings) toast.warning(warning)
     } catch {
       // toasted by the hook
@@ -388,10 +400,10 @@ export function ItemDetailsForm({
           assist={
             assist.available
               ? {
-                  onClick: askAssistant,
+                  onClick: () => askAssistant('item'),
                   pending: assist.isPending,
-                  disabled: !!assistBlocker,
-                  label: assistBlocker ? t(assistBlocker) : t('assistFillItem'),
+                  disabled: !!nameBlocker,
+                  label: nameBlocker ? t(nameBlocker) : t('assistFillItem'),
                 }
               : undefined
           }
@@ -410,6 +422,18 @@ export function ItemDetailsForm({
           }}
           suggested={suggested.description}
           multiline
+          assist={
+            assist.available
+              ? {
+                  onClick: () => askAssistant('description'),
+                  pending: assist.isPending,
+                  disabled: !!descriptionBlocker,
+                  label: descriptionBlocker
+                    ? t(descriptionBlocker)
+                    : t('assistWriteDescription'),
+                }
+              : undefined
+          }
         />
 
         <div className='grid grid-cols-3 gap-4'>

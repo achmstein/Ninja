@@ -5,6 +5,7 @@ import {
   Pencil,
   Plus,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
@@ -12,6 +13,7 @@ import {
   type CatalogItemDto,
   type ItemCustomization,
   type ItemCustomizationDto,
+  type ProposedCustomization,
 } from '@/api/catalog'
 import {
   createCustomizationMutation,
@@ -37,10 +39,67 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
+import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
 import { DeleteConfirmDialog } from './delete-confirm-dialog'
 
 type CustomizationsSectionProps = {
   item: CatalogItemDto
+}
+
+type OptionRow = {
+  name: LocalizedValue
+  priceAdjustment: number
+  isDefault: boolean
+}
+
+const emptyOption: OptionRow = {
+  name: { en: '', ar: '' },
+  priceAdjustment: 0,
+  isDefault: false,
+}
+
+/** A group as the editor holds it: what the assistant proposes, or what is typed */
+type DraftGroup = {
+  name: LocalizedValue
+  isRequired: boolean
+  allowMultiple: boolean
+  options: OptionRow[]
+}
+
+function fromProposal(group: ProposedCustomization): DraftGroup {
+  return {
+    name: toLocalizedValue(group.name),
+    isRequired: group.isRequired,
+    allowMultiple: group.allowMultiple,
+    options: group.options.map((option) => ({
+      name: toLocalizedValue(option.name),
+      priceAdjustment: Number(option.priceAdjustment),
+      isDefault: option.isDefault,
+    })),
+  }
+}
+
+/** The create/update body from a draft; options without an English name are left out. */
+function bodyFromDraft(
+  itemId: number,
+  draft: DraftGroup,
+  displayOrder: number
+): ItemCustomization {
+  return {
+    catalogItemId: itemId,
+    name: fromLocalizedValue(draft.name),
+    isRequired: draft.isRequired,
+    allowMultiple: draft.allowMultiple,
+    displayOrder,
+    options: draft.options
+      .filter((option) => option.name.en.trim())
+      .map((option, index) => ({
+        name: fromLocalizedValue(option.name),
+        priceAdjustment: option.priceAdjustment,
+        isDefault: option.isDefault,
+        displayOrder: index,
+      })),
+  }
 }
 
 // Free options show nothing — pricing only appears where it differs
@@ -104,10 +163,21 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   const queryClient = useQueryClient()
   const itemId = Number(item.id)
 
-  // null = browsing, 'new' = creating, number = editing that group id
-  const [editing, setEditing] = useState<number | 'new' | null>(null)
+  // null = browsing, 'new' = creating, number = editing that group id,
+  // { draft } = editing one of the assistant's proposals before adding it
+  const [editing, setEditing] = useState<
+    number | 'new' | { draft: number } | null
+  >(null)
   const [deletingGroup, setDeletingGroup] =
     useState<ItemCustomizationDto | null>(null)
+
+  // The assistant's proposals wait here until each is added or discarded;
+  // asking again replaces them
+  const assist = useCustomizationsAssist()
+  const [drafts, setDrafts] = useState<DraftGroup[]>([])
+  const [addingDraft, setAddingDraft] = useState<number | 'all' | null>(null)
+  const editingDraft =
+    editing !== null && typeof editing === 'object' ? editing.draft : null
 
   // Drag-to-reorder: grip arms the drag, drop persists the new order
   const [dragArmedId, setDragArmedId] = useState<number | null>(null)
@@ -150,6 +220,47 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   })
 
   const reorderGroup = useMutation(updateCustomizationMutation())
+  const createGroup = useMutation(createCustomizationMutation())
+
+  const askAssistant = async () => {
+    try {
+      const result = await assist.suggest(itemId)
+      setDrafts(result.groups.map(fromProposal))
+      setEditing(null)
+      if (result.groups.length === 0) toast.info(t('assistNothingToSuggest'))
+      for (const warning of result.warnings) toast.warning(warning)
+    } catch {
+      // toasted by the hook
+    }
+  }
+
+  const discardDraft = (index: number) =>
+    setDrafts((prev) => prev.filter((_, i) => i !== index))
+
+  /** Saves the proposals at these positions, in order, after the groups the item has */
+  const addDrafts = async (indexes: number[]) => {
+    setAddingDraft(indexes.length === 1 ? indexes[0] : 'all')
+    const added: number[] = []
+    try {
+      for (const [k, index] of indexes.entries()) {
+        await createGroup.mutateAsync({
+          path: { id: itemId },
+          body: bodyFromDraft(itemId, drafts[index], groups.length + k),
+          query: { 'api-version': API_VERSION },
+        })
+        added.push(index)
+      }
+      toast.success(t('customizationSaved'))
+    } catch {
+      toast.error(t('failedToSaveCustomization'))
+    } finally {
+      setAddingDraft(null)
+      if (added.length > 0) {
+        setDrafts((prev) => prev.filter((_, i) => !added.includes(i)))
+        invalidate()
+      }
+    }
+  }
 
   const handleDrop = async (targetId: number) => {
     const fromId = draggingId
@@ -192,7 +303,9 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
           <div className='flex justify-center py-6'>
             <Spinner className='text-muted-foreground size-5' />
           </div>
-        ) : sortedGroups.length === 0 && editing !== 'new' ? (
+        ) : sortedGroups.length === 0 &&
+          editing !== 'new' &&
+          drafts.length === 0 ? (
           <div className='text-muted-foreground flex flex-col items-center gap-2 py-6 text-center'>
             <SlidersHorizontal className='h-8 w-8 opacity-30' />
             <p className='text-sm font-medium'>{t('noCustomizations')}</p>
@@ -353,21 +466,111 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                 />
               </div>
             )}
+
+            {drafts.length > 0 && (
+              <div
+                className={cn(
+                  'border-primary/30 bg-primary/5 space-y-3 rounded-lg border p-3',
+                  (sortedGroups.length > 0 || editing === 'new') && 'mt-4'
+                )}
+              >
+                <div className='flex items-center justify-between gap-2'>
+                  <p className='text-primary flex items-center gap-1 text-xs'>
+                    <Sparkles className='size-3 shrink-0' aria-hidden />
+                    {t('assistSuggestedCustomizations')}
+                  </p>
+                  <div className='flex shrink-0 gap-1'>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='text-muted-foreground h-7'
+                      disabled={addingDraft != null}
+                      onClick={() => setDrafts([])}
+                    >
+                      {t('discardAll')}
+                    </Button>
+                    <Button
+                      type='button'
+                      size='sm'
+                      className='h-7'
+                      disabled={addingDraft != null || editingDraft != null}
+                      onClick={() => addDrafts(drafts.map((_, i) => i))}
+                    >
+                      {addingDraft === 'all' && (
+                        <Spinner className='me-1.5 size-3.5' />
+                      )}
+                      {t('addAll')}
+                    </Button>
+                  </div>
+                </div>
+                {drafts.map((draft, index) =>
+                  editingDraft === index ? (
+                    <GroupEditor
+                      key={index}
+                      itemId={itemId}
+                      group={null}
+                      initial={draft}
+                      existingCount={groups.length}
+                      onDone={() => setEditing(null)}
+                      onSaved={() => {
+                        discardDraft(index)
+                        invalidate()
+                      }}
+                    />
+                  ) : (
+                    <DraftCard
+                      key={index}
+                      draft={draft}
+                      adding={addingDraft === index || addingDraft === 'all'}
+                      disabled={addingDraft != null}
+                      onAdd={() => addDrafts([index])}
+                      onEdit={() => setEditing({ draft: index })}
+                      onDiscard={() => discardDraft(index)}
+                    />
+                  )
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {editing !== 'new' && (
-          <Button
-            variant='outline'
+          <div
             className={cn(
-              'text-muted-foreground hover:text-foreground w-full border-dashed',
-              (sortedGroups.length > 0 || editing != null) && 'mt-6'
+              'flex gap-2',
+              (sortedGroups.length > 0 ||
+                editing != null ||
+                drafts.length > 0) &&
+                'mt-6'
             )}
-            onClick={() => setEditing('new')}
           >
-            <Plus className='me-2 h-4 w-4' />
-            {t('addCustomization')}
-          </Button>
+            <Button
+              variant='outline'
+              className='text-muted-foreground hover:text-foreground flex-1 border-dashed'
+              onClick={() => setEditing('new')}
+            >
+              <Plus className='me-2 h-4 w-4' />
+              {t('addCustomization')}
+            </Button>
+            {assist.available && (
+              <Button
+                type='button'
+                variant='outline'
+                className='text-primary hover:text-primary border-dashed'
+                title={t('assistSuggestCustomizations')}
+                disabled={assist.isPending || addingDraft != null}
+                onClick={askAssistant}
+              >
+                {assist.isPending ? (
+                  <Spinner className='me-2 size-4' />
+                ) : (
+                  <Sparkles className='me-2 h-4 w-4' />
+                )}
+                {t('assistSuggest')}
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -389,28 +592,105 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   )
 }
 
-type OptionRow = {
-  name: LocalizedValue
-  priceAdjustment: number
-  isDefault: boolean
-}
+/** One of the assistant's proposals, read-only, with what to do with it. */
+function DraftCard({
+  draft,
+  adding,
+  disabled,
+  onAdd,
+  onEdit,
+  onDiscard,
+}: {
+  draft: DraftGroup
+  adding: boolean
+  disabled: boolean
+  onAdd: () => void
+  onEdit: () => void
+  onDiscard: () => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const name = localized(draft.name)
 
-const emptyOption: OptionRow = {
-  name: { en: '', ar: '' },
-  priceAdjustment: 0,
-  isDefault: false,
+  return (
+    <div className='bg-background rounded-md border p-2.5'>
+      <div className='flex items-start justify-between gap-2'>
+        <div className='min-w-0'>
+          <h4 className='truncate text-sm font-semibold'>{name}</h4>
+          <p className='text-muted-foreground text-xs'>
+            {draft.isRequired ? t('required') : t('optional')}
+            {' · '}
+            {draft.allowMultiple ? t('multipleChoice') : t('singleChoice')}
+          </p>
+        </div>
+        <div className='flex shrink-0 items-center gap-0.5'>
+          <Button
+            type='button'
+            size='sm'
+            className='h-7'
+            disabled={disabled}
+            onClick={onAdd}
+          >
+            {adding && <Spinner className='me-1.5 size-3.5' />}
+            {t('add')}
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='size-7'
+            aria-label={`${t('edit')} ${name}`}
+            disabled={disabled}
+            onClick={onEdit}
+          >
+            <Pencil className='h-3.5 w-3.5' />
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='hover:text-destructive size-7'
+            aria-label={`${t('discard')} ${name}`}
+            disabled={disabled}
+            onClick={onDiscard}
+          >
+            <X className='h-3.5 w-3.5' />
+          </Button>
+        </div>
+      </div>
+      <div className='mt-2 flex flex-col gap-1.5'>
+        {draft.options.map((option, index) => (
+          <div key={index} className='flex items-center gap-2.5 text-sm'>
+            <ChoiceGlyph
+              multiple={draft.allowMultiple}
+              selected={option.isDefault}
+            />
+            <span className='min-w-0 flex-1 truncate'>
+              {localized(option.name)}
+            </span>
+            <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
+              {formatAdjustment(option.priceAdjustment, t)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /** The group form, inline in the sheet where the group's card was. */
 function GroupEditor({
   itemId,
   group,
+  initial,
   existingCount,
   onDone,
   onSaved,
 }: {
   itemId: number
   group: ItemCustomizationDto | null
+  /** A new group's starting values (one of the assistant's proposals) */
+  initial?: DraftGroup
   existingCount: number
   onDone: () => void
   onSaved: () => void
@@ -418,26 +698,31 @@ function GroupEditor({
   const t = useT()
   const isEditing = !!group
 
-  const [name, setName] = useState<LocalizedValue>(() =>
-    toLocalizedValue(group?.name)
+  const [name, setName] = useState<LocalizedValue>(
+    () => initial?.name ?? toLocalizedValue(group?.name)
   )
-  const [isRequired, setIsRequired] = useState(group?.isRequired ?? false)
+  const [isRequired, setIsRequired] = useState(
+    initial?.isRequired ?? group?.isRequired ?? false
+  )
   const [allowMultiple, setAllowMultiple] = useState(
-    group?.allowMultiple ?? false
+    initial?.allowMultiple ?? group?.allowMultiple ?? false
   )
   const [options, setOptions] = useState<OptionRow[]>(
-    group?.options?.length
-      ? group.options
-          .slice()
-          .sort(
-            (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-          )
-          .map((option) => ({
-            name: toLocalizedValue(option.name),
-            priceAdjustment: Number(option.priceAdjustment ?? 0),
-            isDefault: option.isDefault ?? false,
-          }))
-      : [{ ...emptyOption }]
+    initial?.options.length
+      ? initial.options
+      : group?.options?.length
+        ? group.options
+            .slice()
+            .sort(
+              (a, b) =>
+                Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
+            )
+            .map((option) => ({
+              name: toLocalizedValue(option.name),
+              priceAdjustment: Number(option.priceAdjustment ?? 0),
+              isDefault: option.isDefault ?? false,
+            }))
+        : [{ ...emptyOption }]
   )
   const [error, setError] = useState<string | null>(null)
 
@@ -467,26 +752,17 @@ function GroupEditor({
       setError(t('englishNameRequired'))
       return
     }
-    const validOptions = options.filter((option) => option.name.en.trim())
-    if (validOptions.length === 0) {
+    if (!options.some((option) => option.name.en.trim())) {
       setError(t('optionRequired'))
       return
     }
     setError(null)
 
-    const body: ItemCustomization = {
-      catalogItemId: itemId,
-      name: fromLocalizedValue(name),
-      isRequired,
-      allowMultiple,
-      displayOrder: group?.displayOrder ?? existingCount,
-      options: validOptions.map((option, index) => ({
-        name: fromLocalizedValue(option.name),
-        priceAdjustment: option.priceAdjustment,
-        isDefault: option.isDefault,
-        displayOrder: index,
-      })),
-    }
+    const body = bodyFromDraft(
+      itemId,
+      { name, isRequired, allowMultiple, options },
+      Number(group?.displayOrder ?? existingCount)
+    )
 
     try {
       if (isEditing) {

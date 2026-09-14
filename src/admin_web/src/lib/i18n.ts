@@ -2173,13 +2173,38 @@ const webExtras = {
     ar: 'كمّل اللغة التانية',
   },
   assistFillItem: {
-    en: 'Fill in Arabic, English and the category from what is typed',
-    ar: 'كمّل العربي والإنجليزي والقسم من اللي مكتوب',
+    en: 'Fill in the other language, the description and the category from the name',
+    ar: 'كمّل اللغة التانية والوصف والقسم من الاسم',
+  },
+  assistWriteDescription: {
+    en: 'Write the description from the name',
+    ar: 'اكتب الوصف من الاسم',
   },
   assistNeedsOneSide: {
     en: 'Type the name in one language first',
     ar: 'اكتب الاسم بلغة واحدة الأول',
   },
+  assistNeedsName: {
+    en: 'Type the name first',
+    ar: 'اكتب الاسم الأول',
+  },
+  // AI assistant: customization groups
+  assistSuggest: { en: 'Suggest', ar: 'اقترح' },
+  assistSuggestCustomizations: {
+    en: 'Let the assistant propose the size, sugar and extras groups for this item',
+    ar: 'خلّي المساعد يقترح خيارات الحجم والسكر والإضافات للصنف ده',
+  },
+  assistSuggestedCustomizations: {
+    en: 'Suggested by the assistant — add the ones you want',
+    ar: 'اقتراحات المساعد — ضيف اللي يناسبك',
+  },
+  assistNothingToSuggest: {
+    en: 'The assistant has nothing to suggest for this item',
+    ar: 'المساعد ملقاش حاجة يقترحها للصنف ده',
+  },
+  addAll: { en: 'Add all', ar: 'ضيف الكل' },
+  discard: { en: 'Discard', ar: 'شيل' },
+  discardAll: { en: 'Discard all', ar: 'شيل الكل' },
   assistBothFilled: {
     en: 'Both languages are already filled in',
     ar: 'اللغتين متكتّبين خلاص',

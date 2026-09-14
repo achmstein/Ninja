@@ -43,6 +43,22 @@ public class MenuLocalizerLiveTest
     }
 
     [TestMethod]
+    public async Task A_name_alone_gets_a_description_written_in_both_languages()
+    {
+        var localizer = new MenuLocalizer(LiveProvider.FactoryOrInconclusive());
+        var request = new LocalizeRequest(LocalizeKind.MenuItem, new LocalizedText("Iced Caramel Latte"), null, 4, SuggestDescription: true);
+
+        var response = await localizer.LocalizeAsync(request, Categories, CancellationToken.None);
+        Console.WriteLine(JsonSerializer.Serialize(response, AIJson.Options));
+
+        Assert.AreEqual("Iced Caramel Latte", response.Name.En);
+        Assert.IsTrue(Regex.IsMatch(response.Name.Ar ?? "", @"\p{IsArabic}"), $"Arabic name expected, got '{response.Name.Ar}'");
+        Assert.IsTrue((response.Description?.En ?? "").Length > 10, $"English description expected, got '{response.Description?.En}'");
+        Assert.IsTrue(Regex.IsMatch(response.Description?.Ar ?? "", @"\p{IsArabic}"), $"Arabic description expected, got '{response.Description?.Ar}'");
+        CollectionAssert.IsSubsetOf(new[] { "name.ar", "description.en", "description.ar" }, response.Filled.ToList());
+    }
+
+    [TestMethod]
     public async Task Arabic_stock_item_gets_english()
     {
         var localizer = new MenuLocalizer(LiveProvider.FactoryOrInconclusive());
