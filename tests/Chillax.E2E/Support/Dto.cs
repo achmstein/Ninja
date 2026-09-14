@@ -1,0 +1,245 @@
+namespace Chillax.E2E.Support;
+
+// Minimal mirrors of the services' response models: only what the scenarios
+// read. Deserialised case-insensitively (JsonSerializerDefaults.Web).
+
+public sealed record LocalizedText(string En, string? Ar = null);
+
+// --- Sales -----------------------------------------------------------------
+
+public sealed record ShiftView(
+    int Id,
+    int BranchId,
+    string Status,
+    DateTime OpenedAt,
+    string OpenedBy,
+    decimal OpeningFloat,
+    DateTime? ClosedAt,
+    decimal? ClosingCount,
+    decimal? ExpectedCash,
+    decimal? OverShort,
+    List<CashMovementView> Movements,
+    int TicketsSettled,
+    decimal SalesTotal,
+    List<TenderTotal> TenderTotals,
+    decimal ChangeGiven,
+    decimal RefundsTotal,
+    decimal CashRefunds,
+    decimal PayInsTotal,
+    decimal PayOutsTotal,
+    decimal TabPaymentsTotal,
+    decimal CashTabPayments,
+    List<TabPaymentView> TabPayments,
+    decimal ExpectedInDrawer);
+
+public sealed record CashMovementView(string Type, decimal Amount, string Reason, string RecordedBy, DateTime RecordedAt, string Kind,
+    int? EmployeeId, string? EmployeeName, int? SupplierId, string? SupplierName, int? PartnerId, string? PartnerName, int? CategoryId);
+
+public sealed record TenderTotal(string Tender, decimal Amount, int Count);
+
+public sealed record TabPaymentView(int Id, int Number, int BranchId, string CustomerId, string? CustomerName, string Tender, decimal Amount, int? ShiftId);
+
+public sealed record TicketSummary(int Id, string Type, string Status, LocalizedText? LocationName, int? SessionId, int? RoomId, int? TableId,
+    string? Label, int LineCount, decimal Total, List<string> CustomerIds);
+
+public sealed record TicketDetail(
+    int Id,
+    string Type,
+    string Status,
+    int BranchId,
+    LocalizedText? LocationName,
+    int? SessionId,
+    DateTime? SessionEndedAt,
+    int? RoomId,
+    int? TableId,
+    string? Label,
+    DateTime? SettledAt,
+    int? ShiftId,
+    decimal ChangeGiven,
+    DateTime? VoidedAt,
+    string? VoidReason,
+    List<TicketLineView> Lines,
+    List<PaymentView> Payments,
+    decimal Total,
+    int? ReceiptNumber,
+    decimal Subtotal,
+    decimal ServiceCharge,
+    decimal Vat,
+    List<RefundView> Refunds,
+    decimal RefundedTotal);
+
+public sealed record TicketLineView(int Id, string Source, int? OrderId, LocalizedText Description, decimal Qty, decimal UnitPrice,
+    decimal Discount, decimal Total, string? CustomerName, string? CustomerId);
+
+public sealed record PaymentView(string Tender, decimal Amount, string? CustomerName, string? CustomerId);
+
+public sealed record RefundView(int Id, int Number, decimal Amount, string Reason, string Tender, string? CustomerName, List<RefundLineView> Lines);
+
+public sealed record RefundLineView(int TicketLineId, LocalizedText Description, decimal Qty, decimal Amount);
+
+public sealed record PagedResult<T>(List<T> Items, int TotalCount);
+
+public sealed record TicketHistoryRow(int Id, string Type, string Status, int? ReceiptNumber, decimal Total);
+
+public sealed record SettledTicketSummary(int Id, int ReceiptNumber, string Type, decimal Total, decimal RefundedTotal);
+
+public sealed record OpenShiftResponse(int ShiftId);
+public sealed record OpenTicketResponse(int TicketId);
+public sealed record SettleResult(int ReceiptNumber, decimal Change);
+public sealed record RefundResult(int Number, decimal Amount);
+public sealed record TabPaymentResult(int Id, int Number);
+public sealed record PricingView(int BranchId, decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate);
+
+// --- Ordering ----------------------------------------------------------------
+
+public sealed record PosOrderResponse(int OrderId);
+
+public sealed record OrderSummary(int OrderNumber, DateTime Date, string Status, double Total, string Source, int? TableId, int? SessionId,
+    string? UserName, string? UserId, List<OrderItemView>? Items);
+
+public sealed record OrderItemView(LocalizedText ProductName, int Units, double UnitPrice);
+
+public sealed record OrderView(int OrderNumber, string Status, string Source, int? TableId, int? SessionId, List<OrderItemView> OrderItems, decimal Total);
+
+public sealed record KitchenOrder(int OrderNumber, DateTime? ConfirmedAt, DateTime? ReadyAt, string Source, string? CustomerName, List<KitchenOrderItem> Items);
+
+public sealed record KitchenOrderItem(LocalizedText ProductName, int Units);
+
+// --- Spaces ------------------------------------------------------------------
+
+public sealed record StartWalkInSessionResult(int ReservationId);
+
+public sealed record RoomView(int Id, LocalizedText Name, decimal SingleRate, decimal MultiRate, int Status);
+
+public sealed record ReservationView(int Id, int RoomId, LocalizedText RoomName, string? CustomerId, string? CustomerName,
+    DateTime? ActualStartTime, DateTime? EndTime, decimal? TotalCost, string? CurrentPlayerMode, decimal SingleCost, decimal MultiCost,
+    int Status, List<SessionMemberView> Members);
+
+public sealed record SessionMemberView(string CustomerId, string? CustomerName, string Role);
+
+public sealed record TableView(int Id, LocalizedText Name, bool IsActive);
+
+// --- Inventory ---------------------------------------------------------------
+
+public sealed record CreatedResponse(int Id);
+
+public sealed record StockLevelView(int StockItemId, LocalizedText Name, string Unit, bool AutoSoldOut, bool IsActive, decimal OnHand,
+    decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value);
+
+public sealed record MovementView(int Id, int StockItemId, string Type, decimal Quantity, decimal UnitCost, string? Reference, string? Reason);
+
+public sealed record UsageReportRow(int StockItemId, decimal Purchased, decimal PurchasedValue, decimal Sold, decimal SoldValue,
+    decimal Wasted, decimal WastedValue, decimal Adjusted, decimal AdjustedValue, decimal CountVariance, decimal CountVarianceValue);
+
+public sealed record UsageReport(List<UsageReportRow> Rows, decimal PurchasedValue, decimal SoldValue, decimal WastedValue, decimal CountVarianceValue);
+
+public sealed record RebuildResponse(int Changed);
+
+// --- Finance -----------------------------------------------------------------
+
+public sealed record ExpenseCategoryView(int Id, LocalizedText Name, int DisplayOrder, bool IsActive);
+
+public sealed record ExpenseView(int Id, DateOnly Date, int CategoryId, decimal Amount, int PaidFrom, int? PartnerId, string? Vendor,
+    string? Note, string? Reference, int Source, DateTime? VoidedAt);
+
+public sealed record CategoryTotal(int CategoryId, LocalizedText CategoryName, decimal Total);
+
+public sealed record ExpensesView(decimal Total, List<CategoryTotal> ByCategory, List<ExpenseView> Expenses);
+
+public sealed record SupplierView(int Id, string Name, bool IsActive, decimal Balance);
+
+public sealed record SupplierEntryView(int Id, int SupplierId, int Type, decimal Amount, decimal Signed, DateOnly Date, string? Note, string? Reference, int Source);
+
+public sealed record SupplierLedgerView(int SupplierId, decimal Balance, List<SupplierEntryView> Entries);
+
+public sealed record PartnerEntryView(int Id, int PartnerId, int Type, decimal Amount, decimal Signed, DateOnly Date, string? Note, string? Reference, int Source);
+
+public sealed record PartnerLedgerView(int PartnerId, decimal Balance, List<PartnerEntryView> Entries);
+
+public sealed record TillSupplierView(int Id, string Name, decimal Balance);
+
+public sealed record TillPickView(int Id, string Name);
+
+public sealed record TillCategoryView(int Id, LocalizedText Name);
+
+public sealed record PartnerProfitShareView(int PartnerId, string Name, decimal Percent, decimal Amount);
+
+public sealed record ProfitView(
+    int Year,
+    int Month,
+    decimal Sales,
+    decimal Refunds,
+    decimal NetSales,
+    decimal Vat,
+    decimal Goods,
+    decimal Waste,
+    decimal Labour,
+    List<CategoryTotal> ExpensesByCategory,
+    decimal Expenses,
+    decimal Profit,
+    List<PartnerProfitShareView>? PartnerShares)
+{
+    public decimal ByCategory(int categoryId) => ExpensesByCategory.FirstOrDefault(c => c.CategoryId == categoryId)?.Total ?? 0m;
+
+    /// <summary>Component-wise change between two readings of the same month.</summary>
+    public ProfitDelta Since(ProfitView before) => new(
+        Sales - before.Sales,
+        Refunds - before.Refunds,
+        NetSales - before.NetSales,
+        Vat - before.Vat,
+        Goods - before.Goods,
+        Waste - before.Waste,
+        Labour - before.Labour,
+        Expenses - before.Expenses,
+        Profit - before.Profit,
+        ExpensesByCategory.Select(c => c.CategoryId).Union(before.ExpensesByCategory.Select(c => c.CategoryId))
+            .ToDictionary(id => id, id => ByCategory(id) - before.ByCategory(id)));
+}
+
+public sealed record ProfitDelta(decimal Sales, decimal Refunds, decimal NetSales, decimal Vat, decimal Goods, decimal Waste, decimal Labour,
+    decimal Expenses, decimal Profit, Dictionary<int, decimal> ByCategory)
+{
+    public decimal Category(int id) => ByCategory.GetValueOrDefault(id);
+}
+
+// --- Payroll -----------------------------------------------------------------
+
+public sealed record GeneratedResponse(List<int> Ids);
+
+public sealed record EmployeeView(int Id, string Name, int BranchId, string? UserId, DateOnly StartedOn, bool IsActive, decimal Balance);
+
+public sealed record AttendanceView(int EmployeeId, DateOnly Date, int BranchId, int Status, decimal OvertimeHours, string? Note, string MarkedBy);
+
+public sealed record LedgerEntryView(int Id, int EmployeeId, int Type, decimal Amount, decimal Signed, DateOnly Date, string? Note, string? Reference, int Source);
+
+public sealed record LedgerView(int EmployeeId, decimal Balance, List<LedgerEntryView> Entries);
+
+public sealed record PayslipView(int Id, int EmployeeId, DateOnly PeriodStart, DateOnly PeriodEnd, int Scheme, decimal Rate, decimal DaysWorked,
+    decimal Earned, decimal Advances, decimal Payments, decimal AmountDue, decimal Remaining, int Status, decimal? PaidAmount);
+
+public sealed record TillEmployeeView(int Id, string Name, int Scheme, decimal? Balance);
+
+// --- Loyalty -----------------------------------------------------------------
+
+public sealed record LoyaltyAccount(int Id, string UserId, string? UserDisplayName, int PointsBalance, int LifetimePoints, string CurrentTier);
+
+public sealed record LoyaltyTransaction(int Id, int Points, string Type, string? ReferenceId, string? Description, DateTime CreatedAt);
+
+// --- Accounts ----------------------------------------------------------------
+
+public sealed record AccountSummary(int Id, string CustomerId, string? CustomerName, decimal Balance);
+
+public sealed record AccountView(int Id, string CustomerId, string? CustomerName, decimal Balance, List<AccountTransaction> Transactions);
+
+public sealed record AccountTransaction(int Id, string Type, decimal Amount, string? Description, string Source, int? SourceNumber);
+
+// --- Catalog -----------------------------------------------------------------
+
+public sealed record CatalogItem(int Id, LocalizedText Name, decimal Price, int CatalogTypeId, bool IsAvailable, bool IsOutOfStock, bool IsOnOffer,
+    decimal? OfferPrice, decimal EffectivePrice, int DisplayOrder);
+
+// --- Branch / Notification --------------------------------------------------
+
+public sealed record BranchView(int Id, LocalizedText Name, bool IsActive, bool IsOrderingEnabled, bool IsReservationsEnabled);
+
+public sealed record ServiceRequestResponse(int Id, int RoomId, int RequestType, int Status);

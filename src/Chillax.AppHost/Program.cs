@@ -1,6 +1,14 @@
 ﻿using Chillax.AppHost;
+using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
+
+// tests/Chillax.E2E boots this AppHost in-process (Aspire.Hosting.Testing)
+// with Chillax:TestMode=true: ephemeral containers without volumes, no fixed
+// host ports, no pgAdmin, no Vite apps and an HTTP health check on every API.
+// Dev runs and publish are untouched.
+var isTestMode = builder.Configuration.GetValue<bool>("Chillax:TestMode");
+var containerLifetime = isTestMode ? ContainerLifetime.Session : ContainerLifetime.Persistent;
 
 builder.AddForwardedHeaders();
 
@@ -11,15 +19,20 @@ builder.AddDockerComposeEnvironment("chillax");
 const string ImageRegistry = "ghcr.io/achmstein/chillax";
 
 var rabbitMq = builder.AddRabbitMQ("eventbus")
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithLifetime(containerLifetime);
 var postgres = builder.AddPostgres("postgres")
     .WithImage("ankane/pgvector")
     .WithImageTag("latest")
+    .WithLifetime(containerLifetime);
+
+if (!isTestMode)
+{
     // A named volume, like Keycloak's: without one the data lives in the
     // container's own layer and a recreated container (Docker restart,
-    // changed resource config) comes back empty
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent);
+    // changed resource config) comes back empty. Tests want the opposite:
+    // a fresh database every run.
+    postgres.WithDataVolume();
+}
 
 var accountsDb = postgres.AddDatabase("accountsdb");
 var catalogDb = postgres.AddDatabase("catalogdb");
@@ -33,21 +46,24 @@ var loyaltyDb = postgres.AddDatabase("loyaltydb");
 var branchDb = postgres.AddDatabase("branchdb");
 var notificationDb = postgres.AddDatabase("notificationdb");
 
-// pgAdmin for database management
-builder.AddContainer("pgadmin", "dpage/pgadmin4", "9.7.0")
-    .WithHttpEndpoint(port: 5050, targetPort: 80)
-    .WithEnvironment("PGADMIN_DEFAULT_EMAIL", "admin@chillax.site")
-    .WithEnvironment("PGADMIN_DEFAULT_PASSWORD", "admin")
-    .WithEnvironment("PGADMIN_CONFIG_SERVER_MODE", "False")
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WaitFor(postgres);
+if (!isTestMode)
+{
+    // pgAdmin for database management
+    builder.AddContainer("pgadmin", "dpage/pgadmin4", "9.7.0")
+        .WithHttpEndpoint(port: 5050, targetPort: 80)
+        .WithEnvironment("PGADMIN_DEFAULT_EMAIL", "admin@chillax.site")
+        .WithEnvironment("PGADMIN_DEFAULT_PASSWORD", "admin")
+        .WithEnvironment("PGADMIN_CONFIG_SERVER_MODE", "False")
+        .WithLifetime(ContainerLifetime.Persistent)
+        .WaitFor(postgres);
+}
 
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
 
-// Keycloak for identity
-var keycloak = builder.AddKeycloak("keycloak", port: 8080)
-    .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
+// Keycloak for identity. A fixed port in dev (the SPA clients whitelist it);
+// under test a random one, and no volume so the realm is imported fresh.
+var keycloak = builder.AddKeycloak("keycloak", port: isTestMode ? null : 8080)
+    .WithLifetime(containerLifetime)
     .WithRealmImport("./KeycloakConfiguration/chillax-realm.json")
     .WithBindMount("./KeycloakConfiguration/themes/chillax", "/opt/keycloak/themes/chillax", isReadOnly: true)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
@@ -55,6 +71,11 @@ var keycloak = builder.AddKeycloak("keycloak", port: 8080)
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
     .WithEnvironment("KC_FEATURES", "token-exchange,admin-fine-grained-authz:v1")
     .WithExternalHttpEndpoints();
+
+if (!isTestMode)
+{
+    keycloak.WithDataVolume();
+}
 
 if (builder.ExecutionContext.IsPublishMode)
 {
@@ -165,6 +186,26 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
+if (isTestMode)
+{
+    // ordering-api and identity-api declare their /health check above; the
+    // rest get one here. /health is mapped in Development and only answers
+    // once the migration hosted service has migrated and seeded (Kestrel is
+    // the last hosted service to start), so "healthy" means "ready to use".
+    foreach (var api in new[] { catalogApi, spacesApi, salesApi, inventoryApi, payrollApi,
+                                financeApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+    {
+        api.WithHttpHealthCheck("/health", endpointName: "http");
+    }
+
+    // The dashboard is off under test; keep the OTLP exporters off too.
+    foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
+                                financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+    {
+        api.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "");
+    }
+}
+
 // Configure services for Docker Compose deployment with GHCR images
 void ConfigureApiService(IResourceBuilder<ProjectResource> api, string imageSuffix)
 {
@@ -205,82 +246,89 @@ ConfigureApiService(branchApi, "branch");
 var mobileBff = builder.AddYarp("mobile-bff")
     .WithEndpoint("http", endpoint =>
     {
-        // Port 5000 to avoid conflict with Caddy on port 80 in production.
-        // Caddy handles TLS on 443 and proxies to mobile-bff:5000 inside Docker.
-        endpoint.Port = 5000;
         endpoint.UriScheme = "http";
         endpoint.IsExternal = true;
-        // Bypass Aspire's DCP proxy which forces HTTP/2.
-        // Connect directly to the container for HTTP/1.1 (Flutter/Dio).
-        endpoint.IsProxied = false;
+
+        if (!isTestMode)
+        {
+            // Port 5000 to avoid conflict with Caddy on port 80 in production.
+            // Caddy handles TLS on 443 and proxies to mobile-bff:5000 inside Docker.
+            endpoint.Port = 5000;
+            // Bypass Aspire's DCP proxy which forces HTTP/2.
+            // Connect directly to the container for HTTP/1.1 (Flutter/Dio).
+            endpoint.IsProxied = false;
+        }
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
     .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
 
-// Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
-// the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
-// directly to Keycloak (the admin-panel realm client allows the 5173 origin).
-builder.AddViteApp("admin-web", "../admin_web")
-    .WithNpm()
-    .WithEndpoint("http", endpoint =>
-    {
-        // Fixed port: the Keycloak admin-panel client whitelists
-        // http://localhost:5173 redirect URIs.
-        endpoint.Port = 5173;
-        endpoint.IsProxied = false;
-    })
-    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
-    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
-    .WaitFor(mobileBff)
-    // Not part of the Docker Compose publish yet; deployment gets its own
-    // static build + Caddy route once the app is ready to ship.
-    .ExcludeFromManifest();
+if (!isTestMode)
+{
+    // Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
+    // the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
+    // directly to Keycloak (the admin-panel realm client allows the 5173 origin).
+    builder.AddViteApp("admin-web", "../admin_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            // Fixed port: the Keycloak admin-panel client whitelists
+            // http://localhost:5173 redirect URIs.
+            endpoint.Port = 5173;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(mobileBff)
+        // Not part of the Docker Compose publish yet; deployment gets its own
+        // static build + Caddy route once the app is ready to ship.
+        .ExcludeFromManifest();
 
-// POS web app (React + Vite), same wiring as admin-web.
-builder.AddViteApp("pos-web", "../pos_web")
-    .WithNpm()
-    .WithEndpoint("http", endpoint =>
-    {
-        // Fixed port: the Keycloak pos-web realm client whitelists
-        // http://localhost:5175 redirect URIs.
-        endpoint.Port = 5175;
-        endpoint.IsProxied = false;
-    })
-    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
-    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
-    .WaitFor(mobileBff)
-    .ExcludeFromManifest();
+    // POS web app (React + Vite), same wiring as admin-web.
+    builder.AddViteApp("pos-web", "../pos_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            // Fixed port: the Keycloak pos-web realm client whitelists
+            // http://localhost:5175 redirect URIs.
+            endpoint.Port = 5175;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(mobileBff)
+        .ExcludeFromManifest();
 
-// Kitchen display (React + Vite), same wiring as admin-web.
-builder.AddViteApp("kds-web", "../kds_web")
-    .WithNpm()
-    .WithEndpoint("http", endpoint =>
-    {
-        // Fixed port: the Keycloak kds-web realm client whitelists
-        // http://localhost:5176 redirect URIs.
-        endpoint.Port = 5176;
-        endpoint.IsProxied = false;
-    })
-    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
-    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
-    .WaitFor(mobileBff)
-    .ExcludeFromManifest();
+    // Kitchen display (React + Vite), same wiring as admin-web.
+    builder.AddViteApp("kds-web", "../kds_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            // Fixed port: the Keycloak kds-web realm client whitelists
+            // http://localhost:5176 redirect URIs.
+            endpoint.Port = 5176;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(mobileBff)
+        .ExcludeFromManifest();
 
-// Customer web app (React + Vite), same wiring as admin-web.
-builder.AddViteApp("client-web", "../client_web")
-    .WithNpm()
-    .WithEndpoint("http", endpoint =>
-    {
-        // Fixed port: the Keycloak client-web realm client whitelists
-        // http://localhost:5174 redirect URIs.
-        endpoint.Port = 5174;
-        endpoint.IsProxied = false;
-    })
-    .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
-    .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
-    .WaitFor(mobileBff)
-    .ExcludeFromManifest();
+    // Customer web app (React + Vite), same wiring as admin-web.
+    builder.AddViteApp("client-web", "../client_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            // Fixed port: the Keycloak client-web realm client whitelists
+            // http://localhost:5174 redirect URIs.
+            endpoint.Port = 5174;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(mobileBff)
+        .ExcludeFromManifest();
+}
 
 builder.Build().Run();
 

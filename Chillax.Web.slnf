@@ -33,6 +33,7 @@
       "src\\Spaces.Infrastructure\\Spaces.Infrastructure.csproj",
       "tests\\Accounts.UnitTests\\Accounts.UnitTests.csproj",
       "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
+      "tests\\Chillax.Contracts.Tests\\Chillax.Contracts.Tests.csproj",
       "tests\\Identity.UnitTests\\Identity.UnitTests.csproj",
       "tests\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
       "tests\\Payroll.UnitTests\\Payroll.UnitTests.csproj",

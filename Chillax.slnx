@@ -49,6 +49,8 @@
     <Project Path="src/Spaces.Infrastructure/Spaces.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Chillax.Contracts.Tests/Chillax.Contracts.Tests.csproj" />
+    <Project Path="tests/Chillax.E2E/Chillax.E2E.csproj" />
     <Project Path="tests/Catalog.FunctionalTests/Catalog.FunctionalTests.csproj" />
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Accounts.UnitTests/Accounts.UnitTests.csproj" />
