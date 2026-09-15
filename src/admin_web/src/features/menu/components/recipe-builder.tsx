@@ -874,18 +874,13 @@ export function reconstruct(
       custom.push(slot)
       continue
     }
-    const size = groups.reduce((n, g) => n * g.options.length, 1)
-    const full = overrides.filter(
+    const full = slot.overrides.filter(
       (o) =>
         o.optionIds.length === groups.length &&
         groups.every((g) =>
           o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
         )
     )
-    if (full.length !== size) {
-      custom.push(slot)
-      continue
-    }
 
     type Cell = { item: string | null; quantity: number; present: boolean }
     const cellOf = (o: OverrideDraft): Cell => ({
@@ -895,10 +890,28 @@ export function reconstruct(
         : parseFloat(o.quantity !== '' ? o.quantity : slot.quantity),
       present: !o.none,
     })
-    const at = (choice: Map<string, string>) =>
-      full.find((o) =>
-        groups.every((g) => o.optionIds.includes(choice.get(g.id)!))
-      )!
+    // A combination with no rule of its own is the default, when there is one
+    const defaultCell: Cell | null = slot.hasDefault
+      ? {
+          item: slot.stockItemId,
+          quantity: parseFloat(slot.quantity),
+          present: true,
+        }
+      : null
+    const at = (choice: Map<string, string>): Cell | null => {
+      const o = full.find((x) =>
+        groups.every((g) => x.optionIds.includes(choice.get(g.id)!))
+      )
+      return o ? cellOf(o) : defaultCell
+    }
+    const covered = combos(groups).every((combo) => {
+      const choice = new Map(groups.map((g, i) => [g.id, combo[i].id]))
+      return at(choice) !== null
+    })
+    if (!covered) {
+      custom.push(slot)
+      continue
+    }
     const baseChoice = new Map(groups.map((g) => [g.id, assumed(g).id]))
 
     const varies = (g: MenuGroup, read: (c: Cell) => unknown) => {
@@ -909,7 +922,7 @@ export function reconstruct(
         const seen = new Set<unknown>()
         for (const o of g.options) {
           choice.set(g.id, o.id)
-          seen.add(read(cellOf(at(choice))))
+          seen.add(read(at(choice)!))
         }
         return seen.size > 1
       })
@@ -937,21 +950,21 @@ export function reconstruct(
     for (const combo of combos(itemGroups)) {
       const choice = new Map(baseChoice)
       itemGroups.forEach((g, i) => choice.set(g.id, combo[i].id))
-      cells[optionSetKey(combo.map((o) => o.id))] = cellOf(at(choice)).item
+      cells[optionSetKey(combo.map((o) => o.id))] = at(choice)!.item
     }
     const values: Record<string, string> = {}
     for (const o of amountGroups[0]?.options ?? []) {
       const choice = new Map(baseChoice)
       choice.set(amountGroups[0].id, o.id)
-      values[o.id] = String(cellOf(at(choice)).quantity)
+      values[o.id] = String(at(choice)!.quantity)
     }
     const only: string[] = []
     for (const o of whenGroups[0]?.options ?? []) {
       const choice = new Map(baseChoice)
       choice.set(whenGroups[0].id, o.id)
-      if (cellOf(at(choice)).present) only.push(o.id)
+      if (at(choice)!.present) only.push(o.id)
     }
-    const baseCell = cellOf(at(baseChoice))
+    const baseCell = at(baseChoice)!
     ingredients.push({
       key: slot.key,
       item: {

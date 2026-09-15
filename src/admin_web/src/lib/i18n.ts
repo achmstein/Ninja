@@ -2359,6 +2359,7 @@ const webExtras = {
     },
   },
   dropCustomRules: { en: 'Drop them', ar: 'شيلها' },
+  anyChoice: { en: 'any', ar: 'أي' },
   // Recipe builder: one question per option group
   standardChoiceTakes: {
     en: 'The standard choice takes',

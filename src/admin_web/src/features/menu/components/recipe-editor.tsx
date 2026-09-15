@@ -534,7 +534,7 @@ function OverrideEditor({
               {groups.map((g) => (
                 <td key={g.id} className='py-1 pe-2 align-middle'>
                   {g.options.find((x) => o.optionIds.includes(x.id))?.label ??
-                    '?'}
+                    t('anyChoice')}
                 </td>
               ))}
               <td className='py-1 pe-2 align-middle'>
