@@ -18,6 +18,8 @@ export type MenuCostRow = {
   foodCost: number | null
   /** Ingredients never received at the branch: the cost is a lower bound */
   uncosted: number
+  /** Their names, so the owner knows what to receive */
+  uncostedNames: RecipeCostView['lines'][number]['name'][]
   optionExtras: number
   status: 'ok' | 'over' | 'incomplete' | 'unpriced'
 }
@@ -42,6 +44,10 @@ export function toMenuCostRows(
     const cost = standardCost(c, item)
     const foodCost = price > 0 ? Math.round((cost / price) * 100) : null
     const uncosted = c.uncosted.length
+    const uncostedNames = c.uncosted.flatMap((id) => {
+      const line = c.lines.find((l) => toNumber(l.stockItemId) === toNumber(id))
+      return line ? [line.name] : []
+    })
     rows.push({
       catalogItemId: toNumber(c.catalogItemId),
       name: item.name,
@@ -51,6 +57,7 @@ export function toMenuCostRows(
       margin: price - cost,
       foodCost,
       uncosted,
+      uncostedNames,
       optionExtras:
         c.lines.filter((l) => l.optionIds.length > 0).length + c.scales.length,
       status:

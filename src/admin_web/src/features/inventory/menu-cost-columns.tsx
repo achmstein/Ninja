@@ -100,11 +100,15 @@ export function getMenuCostColumns({
       id: 'foodCost',
       header: endHeader('foodCostPercent'),
       cell: ({ row }) => {
-        const { foodCost, status, uncosted } = row.original
+        const { foodCost, status, uncosted, uncostedNames } = row.original
         return (
           <div className='flex items-center justify-end gap-2'>
             {status === 'incomplete' && (
-              <Badge variant='outline' className='text-warning border-warning'>
+              <Badge
+                variant='outline'
+                className='text-warning border-warning'
+                title={uncostedNames.map(localized).join(' · ')}
+              >
                 {t('costIncomplete', { count: uncosted })}
               </Badge>
             )}

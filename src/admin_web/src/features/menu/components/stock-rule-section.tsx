@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { AlertTriangle, CookingPot, Package, Sparkles, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  CookingPot,
+  Info,
+  Package,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import {
   type RecipesProposal,
@@ -19,6 +26,11 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -385,6 +397,16 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
   const foodCost = price > 0 ? Math.round((standard / price) * 100) : null
   const over = foodCost !== null && foodCost > FOOD_COST_TARGET
   const incomplete = cost.uncosted.length > 0
+  // The ingredients priced at nothing, by name, so the owner knows what to receive
+  const uncostedNames = Array.from(
+    new Set(
+      cost.uncosted.map((id) =>
+        localized(
+          cost.lines.find((l) => toNumber(l.stockItemId) === toNumber(id))?.name
+        )
+      )
+    )
+  ).filter(Boolean)
   const choices = standardChoiceNames(item, localized)
   const groups = choiceDeltas(cost, item)
 
@@ -449,12 +471,38 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
       </dl>
 
       {incomplete && (
-        <p className='text-warning flex items-start gap-1.5 border-t px-3 py-1.5 text-xs'>
+        <div className='text-warning flex items-start gap-1.5 border-t px-3 py-1.5 text-xs'>
           <AlertTriangle className='mt-0.5 size-3 shrink-0' aria-hidden />
-          <span>
+          <span className='min-w-0 flex-1'>
             {t('costIncompleteHint', { count: cost.uncosted.length })}
           </span>
-        </p>
+          {uncostedNames.length > 0 && (
+            // The names behind an icon: the drawer is crowded enough
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type='button'
+                  className='hover:bg-warning/10 -m-1 shrink-0 rounded p-1'
+                  aria-label={t('costIncomplete', {
+                    count: uncostedNames.length,
+                  })}
+                >
+                  <Info className='size-3.5' aria-hidden />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align='end' className='w-64 p-3 text-sm'>
+                <div className='text-muted-foreground mb-1.5 text-xs'>
+                  {t('costIncomplete', { count: uncostedNames.length })}
+                </div>
+                <ul className='space-y-1'>
+                  {uncostedNames.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ul>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
       )}
 
       {groups.length > 0 && (
