@@ -2326,6 +2326,35 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // Recipe builder: per ingredient, which item, how much, when
+  builderHint: {
+    en: 'One card per ingredient. For each: which item (fixed, or decided by choices), how much (fixed, or per choice), and when it is deducted.',
+    ar: 'كارت لكل مكوّن. لكل واحد: أنهي صنف (ثابت أو حسب الاختيارات)، الكمية (ثابتة أو لكل اختيار)، وبيتخصم إمتى.',
+  },
+  whichItem: { en: 'Item', ar: 'الصنف' },
+  howMuch: { en: 'Amount', ar: 'الكمية' },
+  whenDeducted: { en: 'When', ar: 'إمتى' },
+  fixed: { en: 'Fixed', ar: 'ثابت' },
+  dependsOnWhich: { en: 'or decided by…', ar: 'أو حسب…' },
+  always: { en: 'Always', ar: 'دايمًا' },
+  onlyWith: { en: 'Only with {group}', ar: 'بس مع {group}' },
+  baseBagHint: {
+    en: 'Any one of the bags: the rest are guessed from its name',
+    ar: 'أي كيس منهم: الباقي بيتخمّن من اسمه',
+  },
+  zeroMeansNothing: { en: '0 = nothing', ar: '0 = مفيش' },
+  customRulesCount: {
+    plural: 'count',
+    en: { '=1': '1 custom rule', other: '{count} custom rules' },
+    ar: {
+      one: 'قاعدة خاصة واحدة',
+      two: 'قاعدتين خاصتين',
+      few: '{count} قواعد خاصة',
+      many: '{count} قاعدة خاصة',
+      other: '{count} قاعدة خاصة',
+    },
+  },
+  dropCustomRules: { en: 'Drop them', ar: 'شيلها' },
   // Recipe builder: one question per option group
   standardChoiceTakes: {
     en: 'The standard choice takes',

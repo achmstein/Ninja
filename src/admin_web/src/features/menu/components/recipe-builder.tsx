@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Ban, Maximize2, Plus, SlidersHorizontal, X } from 'lucide-react'
+import { ChevronsUpDown, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -7,18 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
 import { unitLabel } from '@/features/inventory/format'
 import {
   draftKey,
-  newSlot,
   optionSetKey,
   overrideHasContent,
   type OverrideDraft,
@@ -33,13 +29,15 @@ import {
 import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
 
 /**
- * The recipe the way the admin thinks: first what a plain sale takes,
- * then one question per option group — does الحجم multiply it? does
- * التحميص change which bag? does السكر change an amount? is the cup
- * only for some choices? Every answer is written straight into the slot
- * draft, so what the till deducts is exactly what the card says. Bags are
- * guessed from their names (the default bag with وسط swapped for فاتح);
- * anything this page cannot express is left to the advanced editor.
+ * The recipe the way the admin describes it: for each ingredient, which
+ * item (fixed, or a table by the choices that decide it — the bag by
+ * roast × spice), how much (fixed, or a number per choice — the grams by
+ * size, the sugar by sugar level), and when (always, or only with some
+ * choices — the paper cup). No defaults to think about: every cell of a
+ * table is asked for, bags are guessed from their names, and the slot
+ * draft the till reads is compiled from the answers, with the fallback
+ * for an unchosen optional group worked out here. What the cards cannot
+ * express is kept as custom rules for the advanced editor.
  */
 type Props = {
   draft: RecipeDraft
@@ -48,40 +46,67 @@ type Props = {
   ingredients: IngredientOption[]
 }
 
-type Mode =
-  | 'none'
-  | 'multiply'
-  | 'amount'
-  | 'item'
-  | 'only'
-  | 'addon'
-  | 'advanced'
+type ItemSpec = {
+  /** The item when nothing decides it; also the bag the table is guessed from */
+  fixed: string | null
+  /** The groups that decide the item (at most two); empty = fixed */
+  groupIds: string[]
+  /** Per combination of those groups' options (optionSetKey) */
+  cells: Record<string, string | null>
+}
 
-type Usage =
-  | { mode: 'none' | 'multiply' | 'advanced' }
-  | { mode: 'amount' | 'only'; slot: SlotDraft }
-  | { mode: 'item'; slot: SlotDraft; partner?: MenuGroup }
-  | { mode: 'addon'; slots: SlotDraft[] }
+type AmountSpec = {
+  fixed: string
+  /** The one group that decides the amount; null = fixed */
+  groupId: string | null
+  /** Per option of that group; '0' = nothing for that choice */
+  values: Record<string, string>
+}
+
+type WhenSpec = {
+  /** The one group whose choices decide whether the ingredient is deducted; null = always */
+  groupId: string | null
+  /** The options it is deducted for */
+  only: string[]
+}
+
+type IngredientSpec = {
+  key: number
+  item: ItemSpec
+  amount: AmountSpec
+  when: WhenSpec
+}
+
+type BuilderState = {
+  ingredients: IngredientSpec[]
+  /** Slots the cards could not express, kept verbatim */
+  custom: SlotDraft[]
+}
 
 export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
   const t = useT()
   const [advanced, setAdvanced] = useState(false)
+  const [state, setState] = useState<BuilderState>(() =>
+    reconstruct(draft, menu)
+  )
   const byValue = new Map(ingredients.map((i) => [i.value, i]))
   const options: ComboboxOption[] = ingredients.map((i) => ({
     value: i.value,
     label: i.label,
     hint: unitLabel(i.unit, t),
   }))
-  const rows = draft.slots.filter((s) => s.hasDefault)
-  // The sale the rows describe: the default option of every single-choice group
-  const standardNames = menu.groups
-    .filter((g) => !g.allowMultiple)
-    .map((g) => g.options.find((o) => o.isDefault)?.label)
-    .filter((l): l is string => !!l)
-  const rowLabel = (slot: SlotDraft) =>
-    slot.stockItemId
-      ? (byValue.get(slot.stockItemId)?.label ?? '?')
-      : t('pickStockItem')
+
+  const commit = (next: BuilderState) => {
+    setState(next)
+    onChange(compile(next, menu))
+  }
+  const update = (key: number, patch: Partial<IngredientSpec>) =>
+    commit({
+      ...state,
+      ingredients: state.ingredients.map((i) =>
+        i.key === key ? { ...i, ...patch } : i
+      ),
+    })
 
   if (advanced) {
     return (
@@ -97,7 +122,10 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
           variant='link'
           size='sm'
           className='h-auto p-0 text-xs'
-          onClick={() => setAdvanced(false)}
+          onClick={() => {
+            setState(reconstruct(draft, menu))
+            setAdvanced(false)
+          }}
         >
           {t('simpleEditor')}
         </Button>
@@ -105,303 +133,510 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
     )
   }
 
-  const updateSlot = (key: number, patch: Partial<SlotDraft>) =>
-    onChange({
-      ...draft,
-      slots: draft.slots.map((s) => (s.key === key ? { ...s, ...patch } : s)),
-    })
-
-  // The partner of a pair grid is drawn inside the first group's card
-  const usages = new Map(
-    menu.groups.map((g) => [g.id, usageOf(draft, g, menu)])
-  )
-  const drawnAsPartner = new Set<string>()
-  for (const group of menu.groups) {
-    const usage = usages.get(group.id)
-    if (
-      usage?.mode === 'item' &&
-      usage.partner &&
-      !drawnAsPartner.has(group.id)
-    ) {
-      drawnAsPartner.add(usage.partner.id)
-    }
-  }
-
   return (
-    <div className='space-y-4'>
-      <section className='space-y-2'>
-        <h4 className='text-sm font-medium'>{t('standardChoiceTakes')}</h4>
-        <p className='text-muted-foreground text-xs'>
-          {standardNames.length > 0
-            ? t('standardChoiceIs', { choices: standardNames.join(' · ') })
-            : t('plainSaleHint')}
-        </p>
-        <div className='space-y-2'>
-          {rows.map((slot) => (
-            <div
-              key={slot.key}
-              className='grid gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_auto] sm:items-center'
-            >
-              <Combobox
-                value={slot.stockItemId}
-                onChange={(value) =>
-                  updateSlot(slot.key, { stockItemId: value })
-                }
-                options={options}
-                placeholder={t('pickStockItem')}
-                size='sm'
-                wrap
-              />
-              <Quantity
-                value={slot.quantity}
-                unit={
-                  slot.stockItemId
-                    ? (byValue.get(slot.stockItemId)?.unit ?? '')
-                    : ''
-                }
-                onChange={(quantity) => updateSlot(slot.key, { quantity })}
-              />
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon'
-                className='size-8 justify-self-end'
-                aria-label={t('removeLine')}
-                onClick={() =>
-                  onChange({
-                    ...draft,
-                    slots: draft.slots.filter((s) => s.key !== slot.key),
-                  })
-                }
-              >
-                <X className='h-4 w-4' />
-              </Button>
-            </div>
-          ))}
+    <div className='space-y-3'>
+      <p className='text-muted-foreground text-xs'>{t('builderHint')}</p>
+
+      {state.ingredients.map((spec) => (
+        <IngredientCard
+          key={spec.key}
+          spec={spec}
+          menu={menu}
+          options={options}
+          byValue={byValue}
+          ingredients={ingredients}
+          onChange={(patch) => update(spec.key, patch)}
+          onRemove={() =>
+            commit({
+              ...state,
+              ingredients: state.ingredients.filter((i) => i.key !== spec.key),
+            })
+          }
+        />
+      ))}
+
+      {state.custom.length > 0 && (
+        <div className='flex flex-wrap items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs'>
+          <Badge variant='outline' className='font-normal'>
+            {t('customRulesCount', { count: state.custom.length })}
+          </Badge>
+          <button
+            type='button'
+            className='underline'
+            onClick={() => setAdvanced(true)}
+          >
+            {t('advancedEditor')}
+          </button>
+          <button
+            type='button'
+            className='text-muted-foreground underline'
+            onClick={() => commit({ ...state, custom: [] })}
+          >
+            {t('dropCustomRules')}
+          </button>
         </div>
+      )}
+
+      <div className='flex flex-wrap items-center gap-3'>
         <Button
           type='button'
           variant='outline'
           size='sm'
           onClick={() =>
-            onChange({ ...draft, slots: [...draft.slots, newSlot()] })
+            commit({
+              ...state,
+              ingredients: [...state.ingredients, newIngredient()],
+            })
           }
         >
           <Plus className='me-1 h-3.5 w-3.5' />
           {t('addIngredient')}
         </Button>
-      </section>
+        <Button
+          type='button'
+          variant='link'
+          size='sm'
+          className='text-muted-foreground h-auto p-0 text-xs'
+          onClick={() => setAdvanced(true)}
+        >
+          <SlidersHorizontal className='me-1 size-3' />
+          {t('advancedEditor')}
+        </Button>
+      </div>
+    </div>
+  )
+}
 
-      {menu.groups.length > 0 && rows.length > 0 && (
-        <section className='space-y-2'>
-          <h4 className='text-sm font-medium'>{t('choicesThatChangeIt')}</h4>
-          <p className='text-muted-foreground text-xs'>{t('choicesHint')}</p>
-          {menu.groups.map((group) => {
-            const usage = usages.get(group.id) ?? { mode: 'none' }
-            const partnerOf = menu.groups.find((g) => {
-              const u = usages.get(g.id)
-              return (
-                u?.mode === 'item' &&
-                u.partner?.id === group.id &&
-                !drawnAsPartner.has(g.id)
-              )
+const newIngredient = (): IngredientSpec => ({
+  key: draftKey(),
+  item: { fixed: null, groupIds: [], cells: {} },
+  amount: { fixed: '', groupId: null, values: {} },
+  when: { groupId: null, only: [] },
+})
+
+// ---------------------------------------------------------------------------
+// One card per ingredient: which item, how much, when
+
+function IngredientCard({
+  spec,
+  menu,
+  options,
+  byValue,
+  ingredients,
+  onChange,
+  onRemove,
+}: {
+  spec: IngredientSpec
+  menu: MenuOptions
+  options: ComboboxOption[]
+  byValue: Map<string, IngredientOption>
+  ingredients: IngredientOption[]
+  onChange: (patch: Partial<IngredientSpec>) => void
+  onRemove: () => void
+}) {
+  const t = useT()
+  const single = menu.groups.filter((g) => !g.allowMultiple)
+  const base = spec.item.fixed ? byValue.get(spec.item.fixed) : undefined
+  const unit = base?.unit ?? ''
+  const itemGroups = spec.item.groupIds
+    .map((id) => menu.groups.find((g) => g.id === id))
+    .filter((g): g is MenuGroup => !!g)
+  const amountGroup = menu.groups.find((g) => g.id === spec.amount.groupId)
+  const whenGroup = menu.groups.find((g) => g.id === spec.when.groupId)
+
+  // Switching the item to "depends on": every cell guessed from the base bag's name
+  const setItemGroups = (groupIds: string[]) => {
+    const groups = groupIds
+      .map((id) => menu.groups.find((g) => g.id === id))
+      .filter((g): g is MenuGroup => !!g)
+    const cells: Record<string, string | null> = {}
+    for (const combo of combos(groups)) {
+      const key = optionSetKey(combo.map((o) => o.id))
+      cells[key] =
+        spec.item.cells[key] ??
+        (base ? guessCell(base, combo, groups, ingredients) : null)
+    }
+    onChange({ item: { ...spec.item, groupIds, cells } })
+  }
+
+  const setAmountGroup = (groupId: string | null) => {
+    const group = menu.groups.find((g) => g.id === groupId)
+    const values: Record<string, string> = {}
+    for (const o of group?.options ?? []) {
+      values[o.id] = spec.amount.values[o.id] ?? spec.amount.fixed
+    }
+    onChange({ amount: { ...spec.amount, groupId, values } })
+  }
+
+  const setWhenGroup = (groupId: string | null) => {
+    const group = menu.groups.find((g) => g.id === groupId)
+    onChange({
+      when: { groupId, only: group ? group.options.map((o) => o.id) : [] },
+    })
+  }
+
+  return (
+    <div className='rounded-lg border'>
+      <div className='flex items-center gap-2 border-b px-3 py-2'>
+        <span className='text-muted-foreground w-14 shrink-0 text-xs'>
+          {t('whichItem')}
+        </span>
+        <div className='min-w-0 flex-1'>
+          <Combobox
+            value={spec.item.fixed}
+            onChange={(value) =>
+              onChange({ item: { ...spec.item, fixed: value } })
+            }
+            options={options}
+            placeholder={
+              itemGroups.length > 0 ? t('baseBagHint') : t('pickStockItem')
+            }
+            size='sm'
+            wrap
+          />
+        </div>
+        {single.length > 0 && (
+          <GroupPicker
+            groups={single}
+            value={spec.item.groupIds}
+            max={2}
+            label={
+              itemGroups.length > 0
+                ? t('dependsOn', {
+                    groups: itemGroups.map((g) => g.label).join(' × '),
+                  })
+                : t('fixed')
+            }
+            onChange={setItemGroups}
+          />
+        )}
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon'
+          className='size-8 shrink-0'
+          aria-label={t('removeLine')}
+          onClick={onRemove}
+        >
+          <X className='h-4 w-4' />
+        </Button>
+      </div>
+
+      {itemGroups.length > 0 && (
+        <ItemTable
+          groups={itemGroups}
+          cells={spec.item.cells}
+          options={options}
+          onCell={(key, value) =>
+            onChange({
+              item: {
+                ...spec.item,
+                cells: { ...spec.item.cells, [key]: value },
+              },
             })
-            return (
-              <GroupCard
-                key={group.id}
-                group={group}
-                usage={usage}
-                drawnInside={partnerOf}
-                draft={draft}
-                rows={rows}
-                rowLabel={rowLabel}
-                menu={menu}
-                options={options}
-                byValue={byValue}
-                ingredients={ingredients}
-                onChange={onChange}
-                onAdvanced={() => setAdvanced(true)}
-              />
-            )
-          })}
-        </section>
+          }
+        />
       )}
 
-      <Button
-        type='button'
-        variant='link'
-        size='sm'
-        className='text-muted-foreground h-auto p-0 text-xs'
-        onClick={() => setAdvanced(true)}
-      >
-        <SlidersHorizontal className='me-1 size-3' />
-        {t('advancedEditor')}
-      </Button>
+      <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>
+        <span className='text-muted-foreground w-14 shrink-0 text-xs'>
+          {t('howMuch')}
+        </span>
+        {amountGroup ? (
+          <div className='flex flex-wrap gap-x-4 gap-y-1'>
+            {amountGroup.options.map((o) => (
+              <label key={o.id} className='flex items-center gap-1.5 text-xs'>
+                <span className='max-w-32 truncate'>{o.label}</span>
+                <Quantity
+                  value={spec.amount.values[o.id] ?? ''}
+                  unit={unit}
+                  compact
+                  onChange={(v) =>
+                    onChange({
+                      amount: {
+                        ...spec.amount,
+                        values: { ...spec.amount.values, [o.id]: v },
+                      },
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        ) : (
+          <Quantity
+            value={spec.amount.fixed}
+            unit={unit}
+            onChange={(fixed) =>
+              onChange({ amount: { ...spec.amount, fixed } })
+            }
+          />
+        )}
+        {single.length > 0 && (
+          <GroupPicker
+            groups={single}
+            value={spec.amount.groupId ? [spec.amount.groupId] : []}
+            max={1}
+            label={
+              amountGroup
+                ? t('dependsOn', { groups: amountGroup.label })
+                : t('fixed')
+            }
+            onChange={(ids) => setAmountGroup(ids[0] ?? null)}
+          />
+        )}
+        {amountGroup && (
+          <span className='text-muted-foreground text-xs'>
+            {t('zeroMeansNothing')}
+          </span>
+        )}
+      </div>
+
+      {menu.groups.length > 0 && (
+        <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>
+          <span className='text-muted-foreground w-14 shrink-0 text-xs'>
+            {t('whenDeducted')}
+          </span>
+          {whenGroup ? (
+            <div className='flex flex-wrap gap-x-4 gap-y-1'>
+              {whenGroup.options.map((o) => (
+                <label
+                  key={o.id}
+                  className='flex cursor-pointer items-center gap-1.5 text-xs'
+                >
+                  <Checkbox
+                    checked={spec.when.only.includes(o.id)}
+                    onCheckedChange={(on) =>
+                      onChange({
+                        when: {
+                          ...spec.when,
+                          only:
+                            on === true
+                              ? [...spec.when.only, o.id]
+                              : spec.when.only.filter((id) => id !== o.id),
+                        },
+                      })
+                    }
+                  />
+                  {o.label}
+                </label>
+              ))}
+            </div>
+          ) : (
+            <span className='text-xs'>{t('always')}</span>
+          )}
+          <GroupPicker
+            groups={menu.groups}
+            value={spec.when.groupId ? [spec.when.groupId] : []}
+            max={1}
+            label={
+              whenGroup
+                ? t('onlyWith', { group: whenGroup.label })
+                : t('always')
+            }
+            onChange={(ids) => setWhenGroup(ids[0] ?? null)}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** "Fixed" or "depends on …": a popover of group checkboxes, at most `max` ticked */
+function GroupPicker({
+  groups,
+  value,
+  max,
+  label,
+  onChange,
+}: {
+  groups: MenuGroup[]
+  value: string[]
+  max: number
+  label: string
+  onChange: (groupIds: string[]) => void
+}) {
+  const t = useT()
+  const [open, setOpen] = useState(false)
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          role='combobox'
+          aria-expanded={open}
+          className='h-7 max-w-52 text-xs font-normal'
+        >
+          <span className='truncate'>{label}</span>
+          <ChevronsUpDown className='ms-1 h-3 w-3 shrink-0 opacity-50' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='w-56 space-y-2 p-3' align='start'>
+        <label className='flex cursor-pointer items-center gap-2 text-sm'>
+          <Checkbox
+            checked={value.length === 0}
+            onCheckedChange={(on) => on === true && onChange([])}
+          />
+          {t('fixed')}
+        </label>
+        <p className='text-muted-foreground text-xs'>{t('dependsOnWhich')}</p>
+        {groups.map((group) => {
+          const on = value.includes(group.id)
+          const full = !on && value.length >= max
+          return (
+            <label
+              key={group.id}
+              className={cn(
+                'flex items-center gap-2 text-sm',
+                full ? 'text-muted-foreground' : 'cursor-pointer'
+              )}
+            >
+              <Checkbox
+                checked={on}
+                disabled={full}
+                onCheckedChange={(checked) =>
+                  onChange(
+                    checked === true
+                      ? groups
+                          .map((g) => g.id)
+                          .filter((id) => id === group.id || value.includes(id))
+                      : value.filter((id) => id !== group.id)
+                  )
+                }
+              />
+              {group.label}
+            </label>
+          )
+        })}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+/** One picker per choice (one group) or per pair (two groups) */
+function ItemTable({
+  groups,
+  cells,
+  options,
+  onCell,
+}: {
+  groups: MenuGroup[]
+  cells: Record<string, string | null>
+  options: ComboboxOption[]
+  onCell: (key: string, value: string | null) => void
+}) {
+  const t = useT()
+  if (groups.length === 1) {
+    const [group] = groups
+    return (
+      <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
+        {group.options.map((o) => {
+          const key = optionSetKey([o.id])
+          return (
+            <div
+              key={o.id}
+              className='grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-xs'
+            >
+              <span className='truncate'>{o.label}</span>
+              <Combobox
+                value={cells[key] ?? null}
+                onChange={(v) => onCell(key, v)}
+                options={options}
+                placeholder={t('pickStockItem')}
+                size='sm'
+                wrap
+              />
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+  const [rows, cols] = groups
+  return (
+    <div className='overflow-x-auto border-t p-2'>
+      <table className='w-full text-xs'>
+        <thead>
+          <tr>
+            <th className='text-muted-foreground w-24 pb-1 text-start font-normal'>
+              {rows.label} ↓ {cols.label} →
+            </th>
+            {cols.options.map((c) => (
+              <th key={c.id} className='min-w-40 pb-1 text-start font-medium'>
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.options.map((r) => (
+            <tr key={r.id} className='border-t'>
+              <td className='py-1.5 pe-2 align-middle font-medium'>
+                {r.label}
+              </td>
+              {cols.options.map((c) => {
+                const key = optionSetKey([r.id, c.id])
+                return (
+                  <td key={c.id} className='py-1.5 pe-2 align-middle'>
+                    <Combobox
+                      value={cells[key] ?? null}
+                      onChange={(v) => onCell(key, v)}
+                      options={options}
+                      placeholder={t('pickStockItem')}
+                      size='sm'
+                      wrap
+                    />
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function Quantity({
+  value,
+  unit,
+  compact,
+  onChange,
+}: {
+  value: string
+  unit: string
+  compact?: boolean
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  return (
+    <div className='relative'>
+      <Input
+        type='number'
+        min='0'
+        step='any'
+        placeholder={t('quantity')}
+        aria-label={t('quantity')}
+        className={cn(
+          compact ? 'h-7 w-24 text-xs' : 'h-8 w-32',
+          unit && 'pe-8'
+        )}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {unit && (
+        <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
+          {unitLabel(unit, t)}
+        </span>
+      )}
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Reading the draft per group
-
-function usageOf(
-  draft: RecipeDraft,
-  group: MenuGroup,
-  menu: MenuOptions
-): Usage {
-  const ids = new Set(group.options.map((o) => o.id))
-  if (draft.scales.some((s) => ids.has(s.optionId))) return { mode: 'multiply' }
-
-  const involved = draft.slots.filter((s) =>
-    s.overrides.some(
-      (o) => overrideHasContent(o) && o.optionIds.some((id) => ids.has(id))
-    )
-  )
-  if (involved.length === 0) return { mode: 'none' }
-
-  if (group.allowMultiple) {
-    // Each add-on is a slot of its own with no default and one override on that option
-    const ok = involved.every(
-      (s) =>
-        !s.hasDefault &&
-        s.overrides.filter(overrideHasContent).length === 1 &&
-        s.overrides[0].optionIds.length === 1 &&
-        ids.has(s.overrides[0].optionIds[0]) &&
-        !s.overrides[0].none
-    )
-    return ok ? { mode: 'addon', slots: involved } : { mode: 'advanced' }
-  }
-
-  if (involved.length > 1) return { mode: 'advanced' }
-  const slot = involved[0]
-  if (!slot.hasDefault) return { mode: 'advanced' }
-  const overs = slot.overrides.filter(
-    (o) => overrideHasContent(o) && o.optionIds.some((id) => ids.has(id))
-  )
-  const singles = overs.filter((o) => o.optionIds.length === 1)
-  const pairs = overs.filter((o) => o.optionIds.length === 2)
-  if (singles.length + pairs.length !== overs.length)
-    return { mode: 'advanced' }
-
-  if (pairs.length > 0 && singles.length === 0) {
-    const others = new Set(
-      pairs.flatMap((o) => o.optionIds.filter((id) => !ids.has(id)))
-    )
-    const partners = menu.groups.filter(
-      (g) => g.id !== group.id && g.options.some((o) => others.has(o.id))
-    )
-    if (partners.length !== 1) return { mode: 'advanced' }
-    if (!pairs.every((o) => o.stockItemId !== null && !o.none))
-      return { mode: 'advanced' }
-    return { mode: 'item', slot, partner: partners[0] }
-  }
-  if (pairs.length > 0) return { mode: 'advanced' }
-
-  if (singles.every((o) => o.none)) return { mode: 'only', slot }
-  if (
-    singles.every(
-      (o) => o.none || (o.stockItemId === null && o.quantity.trim() !== '')
-    )
-  ) {
-    return { mode: 'amount', slot }
-  }
-  if (
-    singles.every(
-      (o) => o.stockItemId !== null && o.quantity.trim() === '' && !o.none
-    )
-  ) {
-    return { mode: 'item', slot }
-  }
-  return { mode: 'advanced' }
-}
-
-// ---------------------------------------------------------------------------
-// Writing the draft per group
-
-/** The group's marks taken out of the draft: overrides, factors, add-on slots; a pair grid collapses to the partner's singles */
-function clearGroup(draft: RecipeDraft, group: MenuGroup): RecipeDraft {
-  const ids = new Set(group.options.map((o) => o.id))
-  const slots = draft.slots
-    .map((slot) => {
-      const kept: OverrideDraft[] = []
-      const pairs: OverrideDraft[] = []
-      for (const o of slot.overrides) {
-        if (!o.optionIds.some((id) => ids.has(id))) kept.push(o)
-        else if (o.optionIds.length === 2) pairs.push(o)
-      }
-      if (pairs.length > 0) {
-        // Keep the partner's own column: the cells on this group's default option
-        const defaultId = group.options.find((o) => o.isDefault)?.id
-        for (const pair of pairs) {
-          if (defaultId && !pair.optionIds.includes(defaultId)) continue
-          const other = pair.optionIds.find((id) => !ids.has(id))
-          if (!other || kept.some((k) => optionSetKey(k.optionIds) === other))
-            continue
-          kept.push({ ...pair, key: draftKey(), optionIds: [other] })
-        }
-      }
-      return {
-        ...slot,
-        overrides: kept,
-        groupIds: slot.groupIds.filter((g) => g !== group.id),
-      }
-    })
-    .filter(
-      (slot) => slot.hasDefault || slot.overrides.some(overrideHasContent)
-    )
-  return {
-    slots,
-    scales: draft.scales.filter((s) => !ids.has(s.optionId)),
-  }
-}
-
-function setOverride(
-  draft: RecipeDraft,
-  slotKey: number,
-  optionIds: string[],
-  patch: Partial<OverrideDraft> | null,
-  groupIds: string[]
-): RecipeDraft {
-  return {
-    ...draft,
-    slots: draft.slots.map((slot) => {
-      if (slot.key !== slotKey) return slot
-      const key = optionSetKey(optionIds)
-      const existing = slot.overrides.find(
-        (o) => optionSetKey(o.optionIds) === key
-      )
-      const rest = slot.overrides.filter(
-        (o) => optionSetKey(o.optionIds) !== key
-      )
-      const next: OverrideDraft | null = patch
-        ? {
-            ...(existing ?? {
-              key: draftKey(),
-              optionIds: [...optionIds],
-              stockItemId: null,
-              quantity: '',
-              none: false,
-            }),
-            ...patch,
-          }
-        : null
-      return {
-        ...slot,
-        groupIds: Array.from(new Set([...slot.groupIds, ...groupIds])),
-        overrides: next && overrideHasContent(next) ? [...rest, next] : rest,
-      }
-    }),
-  }
-}
-
-/** What "large" or "double" probably means, from the option's name */
-function guessFactor(option: MenuOption): string {
-  const names = option.names.map((n) => n.toLowerCase())
-  if (names.some((n) => /double|دبل|دوبل/.test(n))) return '2'
-  if (names.some((n) => /triple|تريبل/.test(n))) return '3'
-  if (names.some((n) => /large|كبير|لارج/.test(n))) return '1.5'
-  return '1'
-}
+// Guessing a bag from its name
 
 /** Arabic and Latin names folded to one spelling for matching */
 function fold(text: string): string {
@@ -415,739 +650,338 @@ function fold(text: string): string {
     .trim()
 }
 
+/** Every combination of one option per group, in menu order */
+function combos(groups: MenuGroup[]): MenuOption[][] {
+  return groups.reduce<MenuOption[][]>(
+    (acc, group) =>
+      acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
+    [[]]
+  )
+}
+
 /**
- * The bag for a choice, guessed from the default bag's name: "بن تركي وسط
- * سادة" with وسط swapped for فاتح is "بن تركي فاتح سادة" — if that is on
- * the shelf, it is the answer. Several swaps at once for a pair grid.
+ * The bag for a combination, from the base bag's name: for each group, the
+ * option whose name is in the base name is swapped for the wanted one
+ * ("بن تركي وسط سادة" → "بن تركي فاتح محوج"); when that exact name is not
+ * on the shelf, an item carrying every wanted word and the base's first
+ * word will do.
  */
-export function guessItem(
+function guessCell(
   base: IngredientOption,
-  swaps: Array<{ from: MenuOption; to: MenuOption }>,
+  combo: MenuOption[],
+  groups: MenuGroup[],
   ingredients: IngredientOption[]
 ): string | null {
   const byName = new Map<string, string>()
   for (const i of ingredients)
     for (const n of i.names) byName.set(fold(n), i.value)
 
-  const expand = (name: string, index: number): string[] => {
-    if (index >= swaps.length) return [name]
-    const { from, to } = swaps[index]
-    const out: string[] = []
-    for (const f of from.names) {
-      if (!name.includes(f)) continue
-      for (const toName of to.names)
-        out.push(...expand(name.replace(f, toName), index + 1))
+  for (const baseName of base.names) {
+    let candidates = [baseName]
+    for (const [index, group] of groups.entries()) {
+      const wanted = combo[index]
+      const present = group.options.find((o) =>
+        o.names.some((n) => baseName.includes(n))
+      )
+      if (!present || present.id === wanted.id) continue
+      candidates = candidates.flatMap((c) =>
+        present.names
+          .filter((f) => c.includes(f))
+          .flatMap((f) => wanted.names.map((w) => c.replace(f, w)))
+      )
     }
-    return out
-  }
-  for (const name of base.names) {
-    for (const candidate of expand(name, 0)) {
-      const hit = byName.get(fold(candidate))
-      if (hit && hit !== base.value) return hit
+    for (const c of candidates) {
+      const hit = byName.get(fold(c))
+      if (hit) return hit
     }
   }
-  // Fallback: an item whose name carries every wanted word and the base's first word
+
   const first = fold(base.names[0] ?? '').split(' ')[0]
-  const wanted = swaps.map((s) => s.to.names.map(fold))
-  const fallback = ingredients.find(
-    (i) =>
-      i.value !== base.value &&
-      i.names.some((n) => {
-        const f = fold(n)
-        return (
-          (!first || f.includes(first)) &&
-          wanted.every((names) => names.some((w) => w && f.includes(w)))
-        )
-      })
+  const wanted = combo.map((o) => o.names.map(fold))
+  const fallback = ingredients.find((i) =>
+    i.names.some((n) => {
+      const f = fold(n)
+      return (
+        (!first || f.includes(first)) &&
+        wanted.every((names) => names.some((w) => w && f.includes(w)))
+      )
+    })
   )
   return fallback?.value ?? null
 }
 
 // ---------------------------------------------------------------------------
-// One card per option group
+// Between the cards and the slot draft
 
-function GroupCard({
-  group,
-  usage,
-  drawnInside,
-  draft,
-  rows,
-  rowLabel,
-  menu,
-  options,
-  byValue,
-  ingredients,
-  onChange,
-  onAdvanced,
-}: {
-  group: MenuGroup
-  usage: Usage
-  /** Set when this group's pair grid is drawn inside that group's card */
-  drawnInside: MenuGroup | undefined
-  draft: RecipeDraft
-  rows: SlotDraft[]
-  rowLabel: (slot: SlotDraft) => string
-  menu: MenuOptions
-  options: ComboboxOption[]
-  byValue: Map<string, IngredientOption>
-  ingredients: IngredientOption[]
-  onChange: (draft: RecipeDraft) => void
-  onAdvanced: () => void
-}) {
-  const t = useT()
-  const defaultOption = group.options.find((o) => o.isDefault)
-  const mode: Mode = usage.mode
-  const targetSlot = 'slot' in usage ? usage.slot : undefined
+/** The option a group counts as when the customer did not pick one */
+const assumed = (group: MenuGroup): MenuOption =>
+  group.options.find((o) => o.isDefault) ?? group.options[0]
 
-  const preferredRow = (want: 'weight' | 'pieces'): SlotDraft =>
-    rows.find((r) => {
-      const unit = r.stockItemId ? byValue.get(r.stockItemId)?.unit : ''
-      return want === 'pieces' ? unit === 'pcs' : unit !== 'pcs'
-    }) ?? rows[0]
+/**
+ * The answers compiled into slots. An ingredient decided by groups K gets
+ * an override for every combination over K; so that an unchosen optional
+ * group never deducts nothing, every partial combination is written too,
+ * with the missing groups taken as their assumed option — the empty
+ * combination is the slot's default.
+ */
+export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
+  const slots: SlotDraft[] = []
+  for (const spec of state.ingredients) {
+    const keyGroupIds = Array.from(
+      new Set(
+        [...spec.item.groupIds, spec.amount.groupId, spec.when.groupId].filter(
+          (id): id is string => !!id
+        )
+      )
+    )
+    const keyGroups = menu.groups.filter((g) => keyGroupIds.includes(g.id))
 
-  const setMode = (next: Mode) => {
-    let d = clearGroup(draft, group)
-    if (next === 'multiply') {
-      d = {
-        ...d,
-        scales: [
-          ...d.scales,
-          ...group.options.map((o) => ({
-            optionId: o.id,
-            factor: o.isDefault ? '1' : guessFactor(o),
-          })),
-        ],
+    const resolveCell = (choice: Map<string, MenuOption>) => {
+      let item = spec.item.fixed
+      if (spec.item.groupIds.length > 0) {
+        const key = optionSetKey(
+          spec.item.groupIds.map((id) => choice.get(id)!.id)
+        )
+        item = spec.item.cells[key] ?? null
       }
-    } else if (next === 'item') {
-      d = withItemMode(d, preferredRow('weight'))
-    } else if (next === 'amount') {
-      const row = preferredRow('weight')
-      d = {
-        ...d,
-        slots: d.slots.map((s) =>
-          s.key === row.key ? { ...s, groupIds: [...s.groupIds, group.id] } : s
-        ),
+      let quantity = parseFloat(spec.amount.fixed)
+      if (spec.amount.groupId) {
+        quantity = parseFloat(
+          spec.amount.values[choice.get(spec.amount.groupId)!.id] ?? ''
+        )
       }
-    } else if (next === 'only') {
-      const row = preferredRow('pieces')
-      d = {
-        ...d,
-        slots: d.slots.map((s) =>
-          s.key === row.key ? { ...s, groupIds: [...s.groupIds, group.id] } : s
-        ),
+      let present = true
+      if (spec.when.groupId)
+        present = spec.when.only.includes(choice.get(spec.when.groupId)!.id)
+      return {
+        item,
+        quantity: Number.isFinite(quantity) ? quantity : 0,
+        present,
       }
     }
-    onChange(d)
+
+    if (keyGroups.length === 0) {
+      slots.push({
+        key: spec.key,
+        stockItemId: spec.item.fixed,
+        quantity: spec.amount.fixed,
+        hasDefault: true,
+        scalable: false,
+        groupIds: [],
+        overrides: [],
+      })
+      continue
+    }
+
+    const overrides: OverrideDraft[] = []
+    let base: { stockItemId: string | null; quantity: string } | null = null
+    const anchor =
+      spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
+    // Every subset of the key groups: the chosen part is the key, the rest is assumed
+    const subsets = keyGroups.reduce<MenuGroup[][]>(
+      (acc, g) => acc.concat(acc.map((s) => [...s, g])),
+      [[]]
+    )
+    for (const subset of subsets) {
+      for (const combo of combos(subset)) {
+        const choice = new Map<string, MenuOption>()
+        for (const g of keyGroups) choice.set(g.id, assumed(g))
+        subset.forEach((g, i) => choice.set(g.id, combo[i]))
+        const cell = resolveCell(choice)
+        const nothing = !cell.present || cell.quantity <= 0 || !cell.item
+        if (subset.length === 0) {
+          base = nothing
+            ? null
+            : { stockItemId: cell.item, quantity: String(cell.quantity) }
+          continue
+        }
+        overrides.push({
+          key: draftKey(),
+          optionIds: combo.map((o) => o.id),
+          stockItemId: nothing ? null : cell.item,
+          quantity: nothing ? '' : String(cell.quantity),
+          none: nothing,
+        })
+      }
+    }
+    if (!base && !anchor) continue
+    slots.push({
+      key: spec.key,
+      stockItemId: base?.stockItemId ?? anchor,
+      quantity: base?.quantity ?? '',
+      hasDefault: base !== null,
+      scalable: false,
+      groupIds: keyGroups.map((g) => g.id),
+      overrides,
+    })
+  }
+  return { slots: [...slots, ...state.custom], scales: [] }
+}
+
+/**
+ * The cards read back from a saved draft: a slot's overrides are complete
+ * over some groups K; per group, whether the item, the amount or the
+ * presence varies with it says which question it answers. A slot the
+ * cards cannot express is kept as a custom rule.
+ */
+function reconstruct(draft: RecipeDraft, menu: MenuOptions): BuilderState {
+  const ingredients: IngredientSpec[] = []
+  const custom: SlotDraft[] = []
+  const groupOf = new Map<string, MenuGroup>()
+  for (const g of menu.groups) for (const o of g.options) groupOf.set(o.id, g)
+
+  for (const slot of draft.slots) {
+    const overrides = slot.overrides.filter(overrideHasContent)
+    if (overrides.length === 0) {
+      if (slot.hasDefault) {
+        ingredients.push({
+          key: slot.key,
+          item: { fixed: slot.stockItemId, groupIds: [], cells: {} },
+          amount: { fixed: slot.quantity, groupId: null, values: {} },
+          when: { groupId: null, only: [] },
+        })
+      } else custom.push(slot)
+      continue
+    }
+
+    const groups = menu.groups.filter((g) =>
+      overrides.some((o) =>
+        o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
+      )
+    )
+    if (
+      groups.length === 0 ||
+      groups.length > 3 ||
+      groups.some((g) => g.allowMultiple)
+    ) {
+      custom.push(slot)
+      continue
+    }
+    const size = groups.reduce((n, g) => n * g.options.length, 1)
+    const full = overrides.filter(
+      (o) =>
+        o.optionIds.length === groups.length &&
+        groups.every((g) =>
+          o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
+        )
+    )
+    if (full.length !== size) {
+      custom.push(slot)
+      continue
+    }
+
+    type Cell = { item: string | null; quantity: number; present: boolean }
+    const cellOf = (o: OverrideDraft): Cell => ({
+      item: o.none ? null : (o.stockItemId ?? slot.stockItemId),
+      quantity: o.none
+        ? 0
+        : parseFloat(o.quantity !== '' ? o.quantity : slot.quantity),
+      present: !o.none,
+    })
+    const at = (choice: Map<string, string>) =>
+      full.find((o) =>
+        groups.every((g) => o.optionIds.includes(choice.get(g.id)!))
+      )!
+    const baseChoice = new Map(groups.map((g) => [g.id, assumed(g).id]))
+
+    const varies = (g: MenuGroup, read: (c: Cell) => unknown) => {
+      const others = groups.filter((x) => x.id !== g.id)
+      return combos(others).some((othersCombo) => {
+        const choice = new Map(baseChoice)
+        others.forEach((x, i) => choice.set(x.id, othersCombo[i].id))
+        const seen = new Set<unknown>()
+        for (const o of g.options) {
+          choice.set(g.id, o.id)
+          seen.add(read(cellOf(at(choice))))
+        }
+        return seen.size > 1
+      })
+    }
+    const itemGroups = groups.filter((g) => varies(g, (c) => c.item))
+    const amountGroups = groups.filter(
+      (g) => !itemGroups.includes(g) && varies(g, (c) => c.quantity)
+    )
+    const whenGroups = groups.filter(
+      (g) =>
+        !itemGroups.includes(g) &&
+        !amountGroups.includes(g) &&
+        varies(g, (c) => c.present)
+    )
+    if (
+      itemGroups.length > 2 ||
+      amountGroups.length > 1 ||
+      whenGroups.length > 1
+    ) {
+      custom.push(slot)
+      continue
+    }
+
+    const cells: Record<string, string | null> = {}
+    for (const combo of combos(itemGroups)) {
+      const choice = new Map(baseChoice)
+      itemGroups.forEach((g, i) => choice.set(g.id, combo[i].id))
+      cells[optionSetKey(combo.map((o) => o.id))] = cellOf(at(choice)).item
+    }
+    const values: Record<string, string> = {}
+    for (const o of amountGroups[0]?.options ?? []) {
+      const choice = new Map(baseChoice)
+      choice.set(amountGroups[0].id, o.id)
+      values[o.id] = String(cellOf(at(choice)).quantity)
+    }
+    const only: string[] = []
+    for (const o of whenGroups[0]?.options ?? []) {
+      const choice = new Map(baseChoice)
+      choice.set(whenGroups[0].id, o.id)
+      if (cellOf(at(choice)).present) only.push(o.id)
+    }
+    const baseCell = cellOf(at(baseChoice))
+    ingredients.push({
+      key: slot.key,
+      item: {
+        fixed:
+          itemGroups.length > 0
+            ? (slot.stockItemId ?? baseCell.item)
+            : baseCell.item,
+        groupIds: itemGroups.map((g) => g.id),
+        cells,
+      },
+      amount: {
+        fixed: String(baseCell.quantity || ''),
+        groupId: amountGroups[0]?.id ?? null,
+        values,
+      },
+      when: { groupId: whenGroups[0]?.id ?? null, only },
+    })
   }
 
-  /** Item mode on a row: guess each choice's item; with a partner already there, a pair grid */
-  const withItemMode = (d: RecipeDraft, row: SlotDraft): RecipeDraft => {
-    const base = row.stockItemId ? byValue.get(row.stockItemId) : undefined
-    const partnerUsage = menu.groups
-      .map((g) => ({ g, u: usageOf(d, g, menu) }))
-      .find(
-        ({ g, u }) =>
-          g.id !== group.id &&
-          u.mode === 'item' &&
-          u.slot.key === row.key &&
-          !u.partner
-      )
-    let next = {
-      ...d,
-      slots: d.slots.map((s) =>
-        s.key === row.key ? { ...s, groupIds: [...s.groupIds, group.id] } : s
-      ),
-    }
-    if (!defaultOption) return next
-    if (partnerUsage) {
-      // The partner's singles become a grid keyed on both groups
-      const partner = partnerUsage.g
-      const partnerDefault = partner.options.find((o) => o.isDefault)
-      const singles = new Map(
-        row.overrides
-          .filter((o) => o.optionIds.length === 1)
-          .map((o) => [o.optionIds[0], o.stockItemId])
-      )
-      for (const p of partner.options) {
-        next = setOverride(next, row.key, [p.id], null, [])
-      }
-      for (const g of group.options) {
-        for (const p of partner.options) {
-          if (g.isDefault && p.isDefault) continue
-          let item: string | null = null
-          if (g.isDefault) item = singles.get(p.id) ?? null
-          else if (base && partnerDefault) {
-            item = guessItem(
-              base,
-              p.isDefault
-                ? [{ from: defaultOption, to: g }]
-                : [
-                    { from: defaultOption, to: g },
-                    { from: partnerDefault, to: p },
-                  ],
-              ingredients
-            )
-          }
-          if (item)
-            next = setOverride(
-              next,
-              row.key,
-              [g.id, p.id],
-              { stockItemId: item },
-              [group.id, partner.id]
-            )
+  // Size factors from an older recipe become amounts per size on the scalable rows
+  if (draft.scales.length > 0) {
+    const sizeGroup = menu.groups.find((g) =>
+      g.options.some((o) => draft.scales.some((s) => s.optionId === o.id))
+    )
+    if (sizeGroup) {
+      for (const spec of ingredients) {
+        const slot = draft.slots.find((s) => s.key === spec.key)
+        if (!slot?.scalable || spec.amount.groupId) continue
+        const baseQty = parseFloat(spec.amount.fixed)
+        if (!(baseQty > 0)) continue
+        const values: Record<string, string> = {}
+        for (const o of sizeGroup.options) {
+          const factor = parseFloat(
+            draft.scales.find((s) => s.optionId === o.id)?.factor ?? '1'
+          )
+          values[o.id] = String(
+            Math.round(baseQty * (factor > 0 ? factor : 1) * 1000) / 1000
+          )
+        }
+        spec.amount = {
+          fixed: spec.amount.fixed,
+          groupId: sizeGroup.id,
+          values,
         }
       }
-      return next
     }
-    for (const o of group.options) {
-      if (o.isDefault || !base) continue
-      const item = guessItem(
-        base,
-        [{ from: defaultOption, to: o }],
-        ingredients
-      )
-      if (item)
-        next = setOverride(next, row.key, [o.id], { stockItemId: item }, [
-          group.id,
-        ])
-    }
-    return next
   }
 
-  const retarget = (slotKey: string) => {
-    const row = rows.find((r) => String(r.key) === slotKey)
-    if (!row || !targetSlot) return
-    let d = clearGroup(draft, group)
-    if (mode === 'item') d = withItemMode(d, row)
-    else
-      d = {
-        ...d,
-        slots: d.slots.map((s) =>
-          s.key === row.key ? { ...s, groupIds: [...s.groupIds, group.id] } : s
-        ),
-      }
-    onChange(d)
-  }
-
-  const modes: Array<{ value: Mode; label: string }> = group.allowMultiple
-    ? [
-        { value: 'none', label: t('modeNone') },
-        { value: 'addon', label: t('modeAddon') },
-      ]
-    : [
-        { value: 'none', label: t('modeNone') },
-        { value: 'multiply', label: t('modeMultiply') },
-        { value: 'amount', label: t('modeAmount') },
-        { value: 'item', label: t('modeItem') },
-        { value: 'only', label: t('modeOnly') },
-      ]
-
-  return (
-    <div className='rounded-lg border'>
-      <div className='flex flex-wrap items-center gap-2 border-b px-3 py-2'>
-        <span className='min-w-24 text-sm font-medium'>{group.label}</span>
-        {mode === 'advanced' ? (
-          <Badge variant='outline' className='gap-1 font-normal'>
-            {t('customRules')}
-            <button type='button' className='underline' onClick={onAdvanced}>
-              {t('advancedEditor')}
-            </button>
-          </Badge>
-        ) : (
-          <ToggleGroup
-            type='single'
-            size='sm'
-            variant='outline'
-            value={mode}
-            onValueChange={(value) => value && setMode(value as Mode)}
-            className='flex-wrap'
-          >
-            {modes.map((m) => (
-              <ToggleGroupItem
-                key={m.value}
-                value={m.value}
-                className='h-7 px-2 text-xs'
-              >
-                {m.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        )}
-      </div>
-
-      {mode === 'multiply' && (
-        <div className='space-y-2 px-3 py-2'>
-          <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
-            {group.options.map((o) => {
-              const scale = draft.scales.find((s) => s.optionId === o.id)
-              return (
-                <label key={o.id} className='flex items-center gap-1.5 text-xs'>
-                  <span className='max-w-32 truncate'>{o.label}</span>
-                  <span className='text-muted-foreground'>×</span>
-                  <Input
-                    type='number'
-                    min='0'
-                    step='any'
-                    className='h-7 w-16 text-xs tabular-nums'
-                    value={scale?.factor ?? '1'}
-                    onChange={(e) =>
-                      onChange({
-                        ...draft,
-                        scales: draft.scales.map((s) =>
-                          s.optionId === o.id
-                            ? { ...s, factor: e.target.value }
-                            : s
-                        ),
-                      })
-                    }
-                  />
-                </label>
-              )
-            })}
-          </div>
-          <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
-            <Maximize2 className='size-3' aria-hidden />
-            <span>{t('growsWith')}:</span>
-            {rows.map((row) => (
-              <label
-                key={row.key}
-                className='flex cursor-pointer items-center gap-1'
-              >
-                <Checkbox
-                  checked={row.scalable}
-                  onCheckedChange={(on) =>
-                    onChange({
-                      ...draft,
-                      slots: draft.slots.map((s) =>
-                        s.key === row.key ? { ...s, scalable: on === true } : s
-                      ),
-                    })
-                  }
-                />
-                {rowLabel(row)}
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {(mode === 'amount' || mode === 'item' || mode === 'only') &&
-        targetSlot && (
-          <div className='space-y-2 px-3 py-2'>
-            <div className='flex flex-wrap items-center gap-2 text-xs'>
-              <span className='text-muted-foreground'>
-                {mode === 'amount'
-                  ? t('amountOf')
-                  : mode === 'item'
-                    ? t('itemOf')
-                    : t('onlyFor')}
-              </span>
-              <Select value={String(targetSlot.key)} onValueChange={retarget}>
-                <SelectTrigger className='h-7 w-48 text-xs'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {rows.map((row) => (
-                    <SelectItem key={row.key} value={String(row.key)}>
-                      {rowLabel(row)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {mode === 'item' &&
-                'partner' in usage &&
-                usage.partner &&
-                drawnInside === undefined && (
-                  <span className='text-muted-foreground'>
-                    {t('withGroup', { group: usage.partner.label })}
-                  </span>
-                )}
-            </div>
-
-            {mode === 'amount' && (
-              <div className='flex flex-wrap gap-x-4 gap-y-2'>
-                {group.options.map((o) => {
-                  const override = targetSlot.overrides.find(
-                    (x) => optionSetKey(x.optionIds) === o.id
-                  )
-                  const value = override?.none
-                    ? '0'
-                    : (override?.quantity ?? '')
-                  const unit = targetSlot.stockItemId
-                    ? (byValue.get(targetSlot.stockItemId)?.unit ?? '')
-                    : ''
-                  return (
-                    <label
-                      key={o.id}
-                      className='flex items-center gap-1.5 text-xs'
-                    >
-                      <span className='max-w-32 truncate'>{o.label}</span>
-                      <Quantity
-                        value={o.isDefault ? targetSlot.quantity : value}
-                        unit={unit}
-                        placeholder={targetSlot.quantity}
-                        disabled={o.isDefault}
-                        compact
-                        onChange={(v) =>
-                          onChange(
-                            setOverride(
-                              draft,
-                              targetSlot.key,
-                              [o.id],
-                              v.trim() === ''
-                                ? null
-                                : parseFloat(v) === 0
-                                  ? {
-                                      none: true,
-                                      quantity: '',
-                                      stockItemId: null,
-                                    }
-                                  : {
-                                      none: false,
-                                      quantity: v,
-                                      stockItemId: null,
-                                    },
-                              [group.id]
-                            )
-                          )
-                        }
-                      />
-                      {value === '0' && (
-                        <Ban
-                          className='text-muted-foreground size-3'
-                          aria-hidden
-                        />
-                      )}
-                    </label>
-                  )
-                })}
-              </div>
-            )}
-
-            {mode === 'item' && !('partner' in usage && usage.partner) && (
-              <div className='grid gap-2 sm:grid-cols-2'>
-                {group.options.map((o) => {
-                  const override = targetSlot.overrides.find(
-                    (x) => optionSetKey(x.optionIds) === o.id
-                  )
-                  return (
-                    <div
-                      key={o.id}
-                      className='grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-xs'
-                    >
-                      <span className='truncate'>
-                        {o.label}
-                        {o.isDefault && (
-                          <span className='text-muted-foreground'>
-                            {' '}
-                            ({t('standardChoice')})
-                          </span>
-                        )}
-                      </span>
-                      {o.isDefault ? (
-                        <span className='text-muted-foreground truncate'>
-                          {rowLabel(targetSlot)}
-                        </span>
-                      ) : (
-                        <Combobox
-                          value={override?.stockItemId ?? null}
-                          onChange={(value) =>
-                            onChange(
-                              setOverride(
-                                draft,
-                                targetSlot.key,
-                                [o.id],
-                                value
-                                  ? {
-                                      stockItemId: value,
-                                      quantity: '',
-                                      none: false,
-                                    }
-                                  : null,
-                                [group.id]
-                              )
-                            )
-                          }
-                          options={options}
-                          placeholder={rowLabel(targetSlot)}
-                          size='sm'
-                          wrap
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {mode === 'item' &&
-              'partner' in usage &&
-              usage.partner &&
-              drawnInside === undefined && (
-                <PairGrid
-                  rowsGroup={group}
-                  colsGroup={usage.partner}
-                  slot={targetSlot}
-                  options={options}
-                  rowLabel={rowLabel}
-                  onCell={(combo, value) =>
-                    onChange(
-                      setOverride(
-                        draft,
-                        targetSlot.key,
-                        combo,
-                        value
-                          ? { stockItemId: value, quantity: '', none: false }
-                          : null,
-                        [group.id, usage.partner!.id]
-                      )
-                    )
-                  }
-                />
-              )}
-
-            {mode === 'only' && (
-              <div className='flex flex-wrap gap-x-4 gap-y-2'>
-                {group.options.map((o) => {
-                  const override = targetSlot.overrides.find(
-                    (x) => optionSetKey(x.optionIds) === o.id
-                  )
-                  const present = !override?.none
-                  return (
-                    <label
-                      key={o.id}
-                      className='flex cursor-pointer items-center gap-1.5 text-xs'
-                    >
-                      <Checkbox
-                        checked={present}
-                        onCheckedChange={(on) =>
-                          onChange(
-                            setOverride(
-                              draft,
-                              targetSlot.key,
-                              [o.id],
-                              on === true
-                                ? null
-                                : {
-                                    none: true,
-                                    stockItemId: null,
-                                    quantity: '',
-                                  },
-                              [group.id]
-                            )
-                          )
-                        }
-                      />
-                      {o.label}
-                    </label>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-      {mode === 'item' && drawnInside && (
-        <p className='text-muted-foreground px-3 py-2 text-xs'>
-          {t('drawnWithGroup', { group: drawnInside.label })}
-        </p>
-      )}
-
-      {mode === 'addon' && (
-        <div className='space-y-2 px-3 py-2'>
-          <p className='text-muted-foreground text-xs'>{t('addonHint')}</p>
-          {group.options.map((o) => {
-            const slot =
-              'slots' in usage
-                ? usage.slots.find((s) => s.overrides[0]?.optionIds[0] === o.id)
-                : undefined
-            const override = slot?.overrides[0]
-            const unit = override?.stockItemId
-              ? (byValue.get(override.stockItemId)?.unit ?? '')
-              : ''
-            const write = (patch: {
-              stockItemId?: string | null
-              quantity?: string
-            }) => {
-              const stockItemId =
-                patch.stockItemId !== undefined
-                  ? patch.stockItemId
-                  : (override?.stockItemId ?? null)
-              const quantity =
-                patch.quantity !== undefined
-                  ? patch.quantity
-                  : (override?.quantity ?? '')
-              const others = draft.slots.filter((s) => s.key !== slot?.key)
-              if (!stockItemId && quantity.trim() === '') {
-                onChange({ ...draft, slots: others })
-                return
-              }
-              const next: SlotDraft = {
-                ...(slot ?? { ...newSlot(), hasDefault: false }),
-                stockItemId: null,
-                quantity: '',
-                hasDefault: false,
-                groupIds: [group.id],
-                overrides: [
-                  {
-                    key: override?.key ?? draftKey(),
-                    optionIds: [o.id],
-                    stockItemId,
-                    quantity,
-                    none: false,
-                  },
-                ],
-              }
-              onChange({
-                ...draft,
-                slots: slot
-                  ? draft.slots.map((s) => (s.key === slot.key ? next : s))
-                  : [...draft.slots, next],
-              })
-            }
-            return (
-              <div
-                key={o.id}
-                className='grid items-center gap-2 text-xs sm:grid-cols-[7rem_minmax(0,1fr)_6rem]'
-              >
-                <span className='truncate'>{o.label}</span>
-                <Combobox
-                  value={override?.stockItemId ?? null}
-                  onChange={(value) => write({ stockItemId: value })}
-                  options={options}
-                  placeholder={t('addsNothing')}
-                  size='sm'
-                  wrap
-                />
-                <Quantity
-                  value={override?.quantity ?? ''}
-                  unit={unit}
-                  compact
-                  onChange={(quantity) => write({ quantity })}
-                />
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function PairGrid({
-  rowsGroup,
-  colsGroup,
-  slot,
-  options,
-  rowLabel,
-  onCell,
-}: {
-  rowsGroup: MenuGroup
-  colsGroup: MenuGroup
-  slot: SlotDraft
-  options: ComboboxOption[]
-  rowLabel: (slot: SlotDraft) => string
-  onCell: (combo: string[], value: string | null) => void
-}) {
-  const t = useT()
-  const cell = (combo: string[]) =>
-    slot.overrides.find(
-      (o) => optionSetKey(o.optionIds) === optionSetKey(combo)
-    )
-  return (
-    <div className='overflow-x-auto'>
-      <table className='w-full text-xs'>
-        <thead>
-          <tr>
-            <th className='text-muted-foreground w-24 pb-1 text-start font-normal'>
-              {rowsGroup.label} ↓ {colsGroup.label} →
-            </th>
-            {colsGroup.options.map((c) => (
-              <th key={c.id} className='min-w-40 pb-1 text-start font-medium'>
-                {c.label}
-                {c.isDefault && (
-                  <span className='text-muted-foreground font-normal'>
-                    {' '}
-                    ({t('standardChoice')})
-                  </span>
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rowsGroup.options.map((r) => (
-            <tr key={r.id} className='border-t'>
-              <td className='py-1.5 pe-2 align-middle font-medium'>
-                {r.label}
-                {r.isDefault && (
-                  <span className='text-muted-foreground font-normal'>
-                    {' '}
-                    ({t('standardChoice')})
-                  </span>
-                )}
-              </td>
-              {colsGroup.options.map((c) => (
-                <td key={c.id} className='py-1.5 pe-2 align-middle'>
-                  {r.isDefault && c.isDefault ? (
-                    <span className='text-muted-foreground'>
-                      {rowLabel(slot)}
-                    </span>
-                  ) : (
-                    <Combobox
-                      value={cell([r.id, c.id])?.stockItemId ?? null}
-                      onChange={(value) => onCell([r.id, c.id], value)}
-                      options={options}
-                      placeholder={rowLabel(slot)}
-                      size='sm'
-                      wrap
-                    />
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function Quantity({
-  value,
-  unit,
-  placeholder,
-  disabled,
-  compact,
-  onChange,
-}: {
-  value: string
-  unit: string
-  placeholder?: string
-  disabled?: boolean
-  compact?: boolean
-  onChange: (value: string) => void
-}) {
-  const t = useT()
-  return (
-    <div className='relative'>
-      <Input
-        type='number'
-        min='0'
-        step='any'
-        placeholder={placeholder ?? t('quantity')}
-        aria-label={t('quantity')}
-        className={cn(compact ? 'h-7 w-24 text-xs' : 'h-8', unit && 'pe-8')}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      {unit && (
-        <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
-          {unitLabel(unit, t)}
-        </span>
-      )}
-    </div>
-  )
+  return { ingredients, custom }
 }
