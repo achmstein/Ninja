@@ -29,6 +29,8 @@ public static class Extensions
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ReceiptScanner>();
         services.AddFakeAgentScript(ReceiptScanner.AgentKey, ReceiptScannerFake.Respond);
+        services.AddSingleton<RecipeProposer>();
+        services.AddFakeAgentScript(RecipeProposer.AgentKey, RecipeProposerFake.Respond);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

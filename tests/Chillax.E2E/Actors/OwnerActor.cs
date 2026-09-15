@@ -231,13 +231,38 @@ public sealed class OwnerActor(ApiClient api)
     }
 
     /// <summary>menu stock-rule-section.tsx: what a menu item consumes per unit sold.</summary>
-    public async Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity)[] lines, CancellationToken ct)
+    public Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity)[] lines, CancellationToken ct)
+        => SetRecipeAsync(catalogItemId, lines.Select(l => (l.StockItemId, l.Quantity, (int[]?)null)).ToArray(), ct);
+
+    /// <summary>The recipe editor's save: base lines and lines tied to options.</summary>
+    public async Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity, int[]? OptionIds)[] lines, CancellationToken ct)
     {
         using var r = await Api.PutAsync($"/api/inventory/recipes/{catalogItemId}", new
         {
-            lines = lines.Select(l => new { stockItemId = l.StockItemId, quantity = l.Quantity, optionIds = (int[]?)null }).ToArray(),
+            lines = lines.Select(l => new { stockItemId = l.StockItemId, quantity = l.Quantity, optionIds = l.OptionIds }).ToArray(),
         }, ct);
     }
+
+    /// <summary>The menu's "Sell as a unit": a pcs stock item named after the menu item, one per sale.</summary>
+    public async Task<int> TrackByUnitAsync(int catalogItemId, LocalizedText name, CancellationToken ct)
+        => (await Api.PostAsync<CreatedResponse>("/api/inventory/recipes/track-by-unit", new { catalogItemId, name = new { en = name.En, ar = name.Ar } }, ct, requestId: Guid.NewGuid())).Id;
+
+    /// <summary>track-items-sheet.tsx: the assistant proposes a stock rule for each picked menu item.</summary>
+    public Task<RecipesProposal> ProposeRecipesAsync(IEnumerable<CatalogItem> items, CancellationToken ct, Dictionary<int, List<ItemCustomizationView>>? options = null)
+        => Api.PostAsync<RecipesProposal>("/api/inventory/recipes/assist/propose", new
+        {
+            items = items.Select(i => new
+            {
+                catalogItemId = i.Id,
+                name = new { en = i.Name.En, ar = i.Name.Ar },
+                description = (object?)null,
+                category = (string?)null,
+                price = i.Price,
+                options = options is not null && options.TryGetValue(i.Id, out var groups)
+                    ? groups.SelectMany(g => g.Options.Select(o => new { id = o.Id, group = g.Name.En, name = new { en = o.Name.En, ar = o.Name.Ar } })).ToArray()
+                    : null,
+            }).ToArray(),
+        }, ct);
 
     public Task<RecipeView> RecipeAsync(int catalogItemId, CancellationToken ct)
         => Api.GetAsync<RecipeView>($"/api/inventory/recipes/{catalogItemId}", ct);

@@ -166,6 +166,15 @@ public sealed record RecipeLineView(int Id, int StockItemId, decimal Quantity, L
 
 public sealed record RecipeView(int CatalogItemId, List<RecipeLineView> Lines);
 
+// The assistant's stock rules for a batch of menu items (Inventory.API Application/Assist/RecipeContracts.cs)
+public sealed record RecipesProposal(List<ProposedIngredient> NewItems, List<ProposedRecipe> Recipes, List<string> Warnings, string? Notes);
+
+public sealed record ProposedIngredient(string Key, LocalizedText Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut);
+
+public sealed record ProposedRecipe(int CatalogItemId, string Kind, List<ProposedRecipeLine> Lines, List<string> Warnings);
+
+public sealed record ProposedRecipeLine(int? StockItemId, string? NewItemKey, decimal Quantity, List<int> OptionIds);
+
 // What one sale costs (Inventory.API RecipeCostView); the SPA joins Catalog's price for the margin
 public sealed record RecipeOptionCostView(List<int> OptionIds, decimal Cost);
 

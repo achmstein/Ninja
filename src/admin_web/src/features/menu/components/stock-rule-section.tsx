@@ -71,6 +71,12 @@ import {
 } from '@/features/inventory/recipe-cost'
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
+import {
+  menuOptionsOf,
+  type MenuGroup,
+  type MenuOption,
+  type MenuOptions,
+} from '../menu-options'
 
 type StockRuleSectionProps = {
   item: CatalogItemDto
@@ -221,57 +227,6 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
 }
 
 // ---------------------------------------------------------------------------
-// The item's customization options, in menu order
-
-type MenuOption = {
-  id: string
-  label: string
-  groupIndex: number
-  index: number
-  isDefault: boolean
-}
-type MenuGroup = {
-  id: string
-  label: string
-  allowMultiple: boolean
-  options: MenuOption[]
-}
-type MenuOptions = {
-  groups: MenuGroup[]
-  byId: Map<string, MenuOption>
-}
-
-function menuOptionsOf(
-  item: CatalogItemDto,
-  localized: (
-    t: { en?: string | null; ar?: string | null } | null | undefined
-  ) => string
-): MenuOptions {
-  const byOrder = <T extends { displayOrder?: number | string }>(a: T, b: T) =>
-    toNumber(a.displayOrder) - toNumber(b.displayOrder)
-  const byId = new Map<string, MenuOption>()
-  const groups: MenuGroup[] = [...(item.customizations ?? [])]
-    .sort(byOrder)
-    .map((group, groupIndex) => ({
-      id: String(group.id),
-      label: localized(group.name),
-      allowMultiple: group.allowMultiple === true,
-      options: [...(group.options ?? [])].sort(byOrder).map((option, index) => {
-        const entry = {
-          id: String(option.id),
-          label: localized(option.name),
-          groupIndex,
-          index,
-          isDefault: option.isDefault === true,
-        }
-        byId.set(entry.id, entry)
-        return entry
-      }),
-    }))
-    .filter((group) => group.options.length > 0)
-  return { groups, byId }
-}
-
 /** A line's options in menu order (group, then option); removed ones last */
 function orderedOptions(
   optionIds: string[],

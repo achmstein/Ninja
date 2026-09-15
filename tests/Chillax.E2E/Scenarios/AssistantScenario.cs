@@ -91,6 +91,47 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
         var nameless = await Assert.ThrowsAsync<ApiException>(() => Owner.SuggestCustomizationsAsync(new LocalizedText(string.Empty), 0m, null, Ct));
         Assert.Equal(HttpStatusCode.BadRequest, nameless.Status);
 
+        // 3c. "Track items" on the menu: the saved item (it has a Size group) and a new cola go up together.
+        //     The fake sells the first as a unit and makes the second a recipe of the shelf's first item plus a
+        //     new syrup, with a line tied to the first option; the review sheet then creates the syrup, tracks
+        //     the unit and sets the recipe through the endpoints that already exist.
+        Step("Ask the assistant for stock rules for two menu items at once");
+        var cola = await Owner.CreateMenuItemAsync($"E2E Cola {Day.RunId}", 20m, item.CatalogTypeId, Ct);
+        var shelfBefore = await Owner.StockItemsAsync(Ct);
+        var rules = await Owner.ProposeRecipesAsync([cola, item], Ct, new() { [item.Id] = [saved] });
+        Assert.Empty(rules.Warnings);
+        var syrup = Assert.Single(rules.NewItems);
+        Assert.Equal("fake-syrup", syrup.Key);
+        Assert.Equal("ml", syrup.Unit);
+        Assert.Equal(2, rules.Recipes.Count);
+        Assert.Equal("unit", rules.Recipes[0].Kind);
+        Assert.Equal(cola.Id, rules.Recipes[0].CatalogItemId);
+        var proposedLatte = rules.Recipes[1];
+        Assert.Equal("recipe", proposedLatte.Kind);
+        Assert.Equal(3, proposedLatte.Lines.Count);
+        Assert.Equal(shelfBefore[0].Id, proposedLatte.Lines[0].StockItemId);
+        Assert.Equal("fake-syrup", proposedLatte.Lines[1].NewItemKey);
+        Assert.Equal([saved.Options.OrderBy(o => o.DisplayOrder).First().Id], proposedLatte.Lines[2].OptionIds);
+        Assert.Equal(shelfBefore.Count, (await Owner.StockItemsAsync(Ct)).Count); // a proposal creates nothing
+
+        var syrupId = await Owner.CreateStockItemAsync(new LocalizedText($"{syrup.Name.En} {Day.RunId}", syrup.Name.Ar), syrup.Unit, syrup.PackSize, syrup.PackName, syrup.AutoSoldOut, Ct);
+        var colaStockId = await Owner.TrackByUnitAsync(cola.Id, cola.Name, Ct);
+        Assert.True(colaStockId > 0);
+        await Owner.SetRecipeAsync(item.Id, proposedLatte.Lines
+            .Select(l => (l.StockItemId ?? syrupId, l.Quantity, l.OptionIds.Count > 0 ? l.OptionIds.ToArray() : null))
+            .ToArray(), Ct);
+        var latteRecipe = await Owner.RecipeAsync(item.Id, Ct);
+        Assert.Equal(3, latteRecipe.Lines.Count);
+        Assert.Equal(2, latteRecipe.Lines.Count(l => l.StockItemId == syrupId));
+        Assert.Contains(latteRecipe.Lines, l => l.OptionIds.Count == 1);
+        var costs = await Owner.RecipeCostsAsync(Ct);
+        Assert.Contains(costs, c => c.CatalogItemId == cola.Id);
+        Assert.Contains(costs, c => c.CatalogItemId == item.Id && c.Uncosted.Contains(syrupId)); // never received: uncosted
+
+        var tooMany = await Assert.ThrowsAsync<ApiException>(() =>
+            Owner.ProposeRecipesAsync(Enumerable.Range(1, 31).Select(i => cola with { Id = cola.Id + i }), Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, tooMany.Status);
+
         // 3d. A photo of a menu: a section matched to an existing category (its Turkish Coffee flagged as
         //     already there) and a section nothing matches. The review sheet creates the category, then
         //     the ticked items under it; the flagged one stays unticked.

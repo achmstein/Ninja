@@ -2329,6 +2329,111 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // Menu page: start tracking many items at once
+  trackItems: { en: 'Track items', ar: 'تتبّع الأصناف' },
+  trackItemsDescription: {
+    en: 'Pick the menu items the storeroom should track, then sell them as units or let the assistant propose a recipe for each.',
+    ar: 'اختار أصناف المنيو اللي المخزن يتابعها، وبعدين بيعها كوحدات أو خلي المساعد يقترح وصفة لكل واحد.',
+  },
+  everythingTracked: {
+    en: 'Every menu item is tracked already',
+    ar: 'كل أصناف المنيو متتبعة خلاص',
+  },
+  itemsPicked: {
+    plural: 'count',
+    en: {
+      '=0': 'Nothing picked',
+      '=1': '1 item picked',
+      other: '{count} items picked',
+    },
+    ar: {
+      zero: 'مفيش حاجة مختارة',
+      one: 'صنف واحد مختار',
+      two: 'صنفين مختارين',
+      few: '{count} أصناف مختارة',
+      many: '{count} صنف مختار',
+      other: '{count} صنف مختار',
+    },
+  },
+  trackingProgress: { en: '{done} of {total}…', ar: '{done} من {total}…' },
+  sellAsUnits: { en: 'Sell as units', ar: 'بيعها كوحدات' },
+  sellAsUnitsHint: {
+    en: 'Each picked item becomes a stock item of its own; one comes off the shelf per sale. Right for cans, bottles and packaged snacks.',
+    ar: 'كل صنف مختار يبقى صنف مخزون لوحده؛ واحد بينزل من الرف مع كل بيعة. مناسب للكانز والزجاجات والسناكس المغلفة.',
+  },
+  proposeRecipes: { en: 'Propose recipes', ar: 'اقترح الوصفات' },
+  proposeRecipesHint: {
+    en: 'The assistant proposes what one sale of each item takes, with any ingredients the shelf is missing; you review before anything is saved.',
+    ar: 'المساعد يقترح كل بيعة بتاخد إيه من كل صنف، مع الخامات اللي ناقصة على الرف؛ بتراجع قبل ما أي حاجة تتحفظ.',
+  },
+  trackedAsUnits: {
+    plural: 'count',
+    en: {
+      '=1': '1 item is now sold as a unit',
+      other: '{count} items are now sold as units',
+    },
+    ar: {
+      one: 'صنف واحد بقى بيتباع كوحدة',
+      two: 'صنفين بقوا بيتباعوا كوحدات',
+      few: '{count} أصناف بقوا بيتباعوا كوحدات',
+      many: '{count} صنف بقوا بيتباعوا كوحدات',
+      other: '{count} صنف بقوا بيتباعوا كوحدات',
+    },
+  },
+  reviewRecipes: { en: 'Check the recipes', ar: 'راجع الوصفات' },
+  reviewRecipesDescription: {
+    en: 'The assistant proposed these. Fix an ingredient or a quantity, switch an item to sold-as-unit, untick what you do not want, then track the rest.',
+    ar: 'المساعد اقترح دول. صلّح خامة أو كمية، حوّل صنف لبيع كوحدة، شيل العلامة من اللي مش عايزه، وبعدين تتبّع الباقي.',
+  },
+  newIngredients: { en: 'New ingredients', ar: 'خامات جديدة' },
+  newIngredientsHint: {
+    en: 'Not on the shelf yet; created before the recipes that need them. A greyed one is not used by any ticked recipe.',
+    ar: 'مش على الرف لسه؛ بتتعمل قبل الوصفات اللي محتاجاها. اللي باهتة مفيش وصفة مختارة بتستخدمها.',
+  },
+  newIngredient: { en: 'New', ar: 'جديد' },
+  stockItemName: { en: 'Name', ar: 'الاسم' },
+  autoSoldOutShort: { en: 'Auto sold-out', ar: 'نفاد تلقائي' },
+  includeItem: { en: 'Include this item', ar: 'ضيف الصنف ده' },
+  sellAsUnitExplained: {
+    en: '"{name}" becomes a stock item of its own; one comes off the shelf per sale.',
+    ar: '"{name}" هيبقى صنف مخزون لوحده؛ واحد بينزل من الرف مع كل بيعة.',
+  },
+  appliesTo: { en: 'Applies to', ar: 'بينطبق على' },
+  back: { en: 'Back', ar: 'رجوع' },
+  recipeNeedsLines: {
+    en: 'Every ticked recipe needs at least one line with an ingredient and a quantity',
+    ar: 'كل وصفة مختارة محتاجة سطر واحد على الأقل فيه خامة وكمية',
+  },
+  ingredientNeedsName: {
+    en: 'Every new ingredient needs an English name',
+    ar: 'كل خامة جديدة محتاجة اسم بالإنجليزي',
+  },
+  itemsTracked: {
+    plural: 'count',
+    en: {
+      '=1': '1 item is now tracked',
+      other: '{count} items are now tracked',
+    },
+    ar: {
+      one: 'صنف واحد بقى متتبع',
+      two: 'صنفين بقوا متتبعين',
+      few: '{count} أصناف بقوا متتبعين',
+      many: '{count} صنف بقوا متتبعين',
+      other: '{count} صنف بقوا متتبعين',
+    },
+  },
+  trackCount: {
+    plural: 'count',
+    en: { '=0': 'Track', '=1': 'Track 1 item', other: 'Track {count} items' },
+    ar: {
+      zero: 'تتبّع',
+      one: 'تتبّع صنف واحد',
+      two: 'تتبّع صنفين',
+      few: 'تتبّع {count} أصناف',
+      many: 'تتبّع {count} صنف',
+      other: 'تتبّع {count} صنف',
+    },
+  },
   // Menu list: which items the storeroom tracks
   soldAsUnitBadge: {
     en: 'Sold as a unit: one stock item comes off the shelf per sale',

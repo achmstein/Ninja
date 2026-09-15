@@ -72,6 +72,7 @@ import { CategoryDialog } from './components/category-dialog'
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
 import { MenuReviewSheet } from './components/menu-review-sheet'
+import { TrackItemsSheet } from './components/track-items-sheet'
 import { MenuPage } from './menu-page'
 import { itemPictureUrl } from './pictures'
 import { useMenuScan } from './use-menu-scan'
@@ -125,6 +126,11 @@ export function MenuManagement() {
   const items = itemsQuery.data ?? NO_ITEMS
   // Which items the storeroom tracks, and what a sale of each costs here
   const stockRules = useStockRuleBadges(items)
+  const [trackOpen, setTrackOpen] = useState(false)
+  const untracked = useMemo(
+    () => items.filter((item) => !stockRules.has(toNumber(item.id))),
+    [items, stockRules]
+  )
   const categoriesQuery = useQuery(
     listCategoriesOptions({ query: { 'api-version': API_VERSION } })
   )
@@ -333,6 +339,19 @@ export function MenuManagement() {
             )}
             <Button
               variant='outline'
+              onClick={() => setTrackOpen(true)}
+              title={t('trackItemsDescription')}
+            >
+              <CookingPot className='me-2 h-4 w-4' />
+              {t('trackItems')}
+              {untracked.length > 0 && (
+                <Badge variant='secondary' className='ms-2 tabular-nums'>
+                  {untracked.length}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant='outline'
               onClick={() => setCategoryDialog({ category: null })}
             >
               <Tag className='me-2 h-4 w-4' />
@@ -539,6 +558,10 @@ export function MenuManagement() {
         onStateChange={setSheet}
         onDelete={setDeleteItem}
       />
+
+      {trackOpen && (
+        <TrackItemsSheet untracked={untracked} onOpenChange={setTrackOpen} />
+      )}
 
       {scan.proposal && (
         <MenuReviewSheet

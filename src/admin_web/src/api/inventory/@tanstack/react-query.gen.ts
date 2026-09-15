@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipeCosts, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItemCosts, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, getVarianceReport, type Options, postStockAdjustment, postStockCount, rebuildStockLevels, receivePurchase, removeRecipe, scanReceipt, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
-import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeCostsData, GetRecipeCostsResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemCostsData, GetStockItemCostsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, GetVarianceReportData, GetVarianceReportError, GetVarianceReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, ScanReceiptData, ScanReceiptError, ScanReceiptResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
+import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipeCosts, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItemCosts, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, getVarianceReport, type Options, postStockAdjustment, postStockCount, proposeRecipes, rebuildStockLevels, receivePurchase, removeRecipe, scanReceipt, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
+import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeCostsData, GetRecipeCostsResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemCostsData, GetStockItemCostsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, GetVarianceReportData, GetVarianceReportError, GetVarianceReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, ProposeRecipesData, ProposeRecipesError, ProposeRecipesResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, ScanReceiptData, ScanReceiptError, ScanReceiptResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -454,6 +454,25 @@ export const getRecipeCostsOptions = (options: Options<GetRecipeCostsData>) => q
     },
     queryKey: getRecipeCostsQueryKey(options)
 });
+
+/**
+ * Propose the stock rule for a batch of menu items: sold as a unit, or a recipe with the ingredients the shelf is missing
+ *
+ * Nothing is saved: the review sheet creates the ingredients it agrees with, then sets each recipe or tracks the item by unit through the endpoints that already exist.
+ */
+export const proposeRecipesMutation = (options?: Partial<Options<ProposeRecipesData>>): UseMutationOptions<ProposeRecipesResponse, AxiosError<ProposeRecipesError>, Options<ProposeRecipesData>> => {
+    const mutationOptions: UseMutationOptions<ProposeRecipesResponse, AxiosError<ProposeRecipesError>, Options<ProposeRecipesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await proposeRecipes({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 /**
  * Stop tracking a menu item

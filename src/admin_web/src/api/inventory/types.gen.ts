@@ -31,6 +31,21 @@ export type LocalizedText = {
     ar?: null | string;
 };
 
+export type MenuItemToTrack = {
+    catalogItemId: number | string;
+    name: LocalizedText;
+    description: null | LocalizedText;
+    category: null | string;
+    price: number | string;
+    options: null | Array<MenuOptionToTrack>;
+};
+
+export type MenuOptionToTrack = {
+    id: number | string;
+    group: string;
+    name: LocalizedText;
+};
+
 export type MovementType = number;
 
 export type MovementView = {
@@ -67,6 +82,15 @@ export type PagedResultOfTransferView = {
     totalCount: number | string;
 };
 
+export type ProposedIngredient = {
+    key: string;
+    name: LocalizedText;
+    unit: string;
+    packSize: null | number | string;
+    packName: null | string;
+    autoSoldOut: boolean;
+};
+
 export type ProposedLine = {
     index: number | string;
     rawText: string;
@@ -85,6 +109,24 @@ export type ProposedNewItem = {
     unit: string;
     packSize: null | number | string;
     packName: null | string;
+};
+
+export type ProposedRecipe = {
+    catalogItemId: number | string;
+    kind: string;
+    lines: Array<ProposedRecipeLine>;
+    warnings: Array<string>;
+};
+
+export type ProposedRecipeLine = {
+    stockItemId: null | number | string;
+    newItemKey: null | string;
+    quantity: number | string;
+    optionIds: Array<number | string>;
+};
+
+export type ProposeRecipesRequest = {
+    items: Array<MenuItemToTrack>;
 };
 
 export type PurchaseLineInput = {
@@ -177,6 +219,13 @@ export type RecipeOptionCostView = {
 
 export type RecipeRequest = {
     lines: Array<RecipeLineInput>;
+};
+
+export type RecipesProposal = {
+    newItems: Array<ProposedIngredient>;
+    recipes: Array<ProposedRecipe>;
+    warnings: Array<string>;
+    notes: null | string;
 };
 
 export type RecipeView = {
@@ -1242,6 +1291,44 @@ export type GetRecipeCostsResponses = {
 };
 
 export type GetRecipeCostsResponse = GetRecipeCostsResponses[keyof GetRecipeCostsResponses];
+
+export type ProposeRecipesData = {
+    body: ProposeRecipesRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/recipes/assist/propose';
+};
+
+export type ProposeRecipesErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ProposeRecipesError = ProposeRecipesErrors[keyof ProposeRecipesErrors];
+
+export type ProposeRecipesResponses = {
+    /**
+     * OK
+     */
+    200: RecipesProposal;
+};
+
+export type ProposeRecipesResponse = ProposeRecipesResponses[keyof ProposeRecipesResponses];
 
 export type RemoveRecipeData = {
     body?: never;

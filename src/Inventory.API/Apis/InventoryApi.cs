@@ -130,6 +130,12 @@ public static class InventoryApi
             .WithName("GetRecipeCosts")
             .WithSummary("What one sale of each tracked menu item costs at the branch's average ingredient costs");
 
+        api.MapPost("/recipes/assist/propose", ProposeRecipes)
+            .WithName("ProposeRecipes")
+            .WithSummary("Propose the stock rule for a batch of menu items: sold as a unit, or a recipe with the ingredients the shelf is missing")
+            .WithDescription("Nothing is saved: the review sheet creates the ingredients it agrees with, then sets each recipe or tracks the item by unit through the endpoints that already exist.")
+            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+
         api.MapGet("/recipes/{catalogItemId:int}", GetRecipe)
             .WithName("GetRecipe");
 
@@ -475,6 +481,36 @@ public static class InventoryApi
     public static async Task<Ok<IReadOnlyList<RecipeView>>> GetRecipes(
         [FromServices] IInventoryQueries queries)
         => TypedResults.Ok(await queries.GetRecipesAsync());
+
+    public static async Task<Results<Ok<RecipesProposal>, BadRequest<string>, ProblemHttpResult>> ProposeRecipes(
+        ProposeRecipesRequest request,
+        HttpContext httpContext,
+        [FromServices] RecipeProposer proposer,
+        [FromServices] IInventoryQueries queries,
+        CancellationToken ct)
+    {
+        if (!proposer.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        var items = request.Items ?? [];
+        if (items.Count == 0)
+            return TypedResults.BadRequest("Pick at least one menu item.");
+        if (items.Count > RecipeProposer.MaxItems)
+            return TypedResults.BadRequest($"At most {RecipeProposer.MaxItems} menu items per call.");
+        if (items.Any(i => i.CatalogItemId <= 0 || string.IsNullOrWhiteSpace(i.Name.En)))
+            return TypedResults.BadRequest("Every menu item needs its id and an English name.");
+
+        var shelf = await queries.GetStockItemsAsync(includeInactive: false);
+
+        try
+        {
+            return TypedResults.Ok(await proposer.ProposeAsync(items, shelf, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
 
     public static async Task<Ok<IReadOnlyList<RecipeCostView>>> GetRecipeCosts(
         HttpContext httpContext,

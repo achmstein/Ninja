@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateStockItemData, CreateStockItemErrors, CreateStockItemResponses, GetPurchaseData, GetPurchaseErrors, GetPurchaseResponses, GetPurchasesData, GetPurchasesErrors, GetPurchasesResponses, GetRecipeCostsData, GetRecipeCostsErrors, GetRecipeCostsResponses, GetRecipeData, GetRecipeErrors, GetRecipeResponses, GetRecipesData, GetRecipesErrors, GetRecipesResponses, GetStockCountData, GetStockCountErrors, GetStockCountResponses, GetStockCountsData, GetStockCountsErrors, GetStockCountsResponses, GetStockItemCostsData, GetStockItemCostsErrors, GetStockItemCostsResponses, GetStockItemData, GetStockItemErrors, GetStockItemResponses, GetStockItemsData, GetStockItemsErrors, GetStockItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsData, GetStockMovementsErrors, GetStockMovementsResponses, GetTransferData, GetTransferErrors, GetTransferResponses, GetTransfersData, GetTransfersErrors, GetTransfersResponses, GetUsageReportData, GetUsageReportErrors, GetUsageReportResponses, GetVarianceReportData, GetVarianceReportErrors, GetVarianceReportResponses, PostStockAdjustmentData, PostStockAdjustmentErrors, PostStockAdjustmentResponses, PostStockCountData, PostStockCountErrors, PostStockCountResponses, RebuildStockLevelsData, RebuildStockLevelsErrors, RebuildStockLevelsResponses, ReceivePurchaseData, ReceivePurchaseErrors, ReceivePurchaseResponses, RemoveRecipeData, RemoveRecipeErrors, RemoveRecipeResponses, ScanReceiptData, ScanReceiptErrors, ScanReceiptResponses, SetRecipeData, SetRecipeErrors, SetRecipeResponses, SetReorderLevelData, SetReorderLevelErrors, SetReorderLevelResponses, TrackByUnitData, TrackByUnitErrors, TrackByUnitResponses, TransferStockData, TransferStockErrors, TransferStockResponses, UpdateStockItemData, UpdateStockItemErrors, UpdateStockItemResponses } from './types.gen';
+import type { CreateStockItemData, CreateStockItemErrors, CreateStockItemResponses, GetPurchaseData, GetPurchaseErrors, GetPurchaseResponses, GetPurchasesData, GetPurchasesErrors, GetPurchasesResponses, GetRecipeCostsData, GetRecipeCostsErrors, GetRecipeCostsResponses, GetRecipeData, GetRecipeErrors, GetRecipeResponses, GetRecipesData, GetRecipesErrors, GetRecipesResponses, GetStockCountData, GetStockCountErrors, GetStockCountResponses, GetStockCountsData, GetStockCountsErrors, GetStockCountsResponses, GetStockItemCostsData, GetStockItemCostsErrors, GetStockItemCostsResponses, GetStockItemData, GetStockItemErrors, GetStockItemResponses, GetStockItemsData, GetStockItemsErrors, GetStockItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsData, GetStockMovementsErrors, GetStockMovementsResponses, GetTransferData, GetTransferErrors, GetTransferResponses, GetTransfersData, GetTransfersErrors, GetTransfersResponses, GetUsageReportData, GetUsageReportErrors, GetUsageReportResponses, GetVarianceReportData, GetVarianceReportErrors, GetVarianceReportResponses, PostStockAdjustmentData, PostStockAdjustmentErrors, PostStockAdjustmentResponses, PostStockCountData, PostStockCountErrors, PostStockCountResponses, ProposeRecipesData, ProposeRecipesErrors, ProposeRecipesResponses, RebuildStockLevelsData, RebuildStockLevelsErrors, RebuildStockLevelsResponses, ReceivePurchaseData, ReceivePurchaseErrors, ReceivePurchaseResponses, RemoveRecipeData, RemoveRecipeErrors, RemoveRecipeResponses, ScanReceiptData, ScanReceiptErrors, ScanReceiptResponses, SetRecipeData, SetRecipeErrors, SetRecipeResponses, SetReorderLevelData, SetReorderLevelErrors, SetReorderLevelResponses, TrackByUnitData, TrackByUnitErrors, TrackByUnitResponses, TransferStockData, TransferStockErrors, TransferStockResponses, UpdateStockItemData, UpdateStockItemErrors, UpdateStockItemResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -254,6 +254,21 @@ export const getRecipeCosts = <ThrowOnError extends boolean = false>(options: Op
     responseType: 'json',
     url: '/api/inventory/recipes/costs',
     ...options
+});
+
+/**
+ * Propose the stock rule for a batch of menu items: sold as a unit, or a recipe with the ingredients the shelf is missing
+ *
+ * Nothing is saved: the review sheet creates the ingredients it agrees with, then sets each recipe or tracks the item by unit through the endpoints that already exist.
+ */
+export const proposeRecipes = <ThrowOnError extends boolean = false>(options: Options<ProposeRecipesData, ThrowOnError>): RequestResult<ProposeRecipesResponses, ProposeRecipesErrors, ThrowOnError> => (options.client ?? client).post<ProposeRecipesResponses, ProposeRecipesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/inventory/recipes/assist/propose',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
