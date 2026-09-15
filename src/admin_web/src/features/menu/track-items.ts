@@ -107,7 +107,6 @@ function draftOf(
       stockItemId: base ? ingredientOf(base) : null,
       quantity: base ? String(toNumber(base.quantity)) : '',
       hasDefault: !!base,
-      scalable: (base ?? lines[0]).scalable,
       groupIds: groupOrder.filter((g) => groups.has(g)),
       overrides: overrides.map((line) => ({
         key: draftKey(),
@@ -119,13 +118,7 @@ function draftOf(
     })
   }
 
-  return {
-    slots: drafts,
-    scales: recipe.scales.map((s) => ({
-      optionId: String(toNumber(s.optionId)),
-      factor: String(toNumber(s.factor)),
-    })),
-  }
+  return { slots: drafts }
 }
 
 /** Several batches' answers become one review: ingredients merged by key, recipes in menu order */

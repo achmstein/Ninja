@@ -45,13 +45,10 @@ public class TrackByUnitIdentifiedCommandHandler(
 /// plain list of ingredients); <paramref name="None"/> is an override that
 /// deducts nothing for its options.
 /// </summary>
-public record RecipeLineInput(int StockItemId, decimal Quantity, List<int>? OptionIds = null, int Slot = 0, bool Scalable = true, bool None = false);
-
-/// <summary>A size factor on an option: the scalable slots are multiplied by it when the option is chosen.</summary>
-public record RecipeScaleInput(int OptionId, decimal Factor);
+public record RecipeLineInput(int StockItemId, decimal Quantity, List<int>? OptionIds = null, int Slot = 0, bool None = false);
 
 /// <summary>Replace a menu item's recipe (creating it if the item was untracked).</summary>
-public record SetRecipeCommand(int CatalogItemId, IReadOnlyList<RecipeLineInput> Lines, IReadOnlyList<RecipeScaleInput>? Scales = null) : IRequest<bool>;
+public record SetRecipeCommand(int CatalogItemId, IReadOnlyList<RecipeLineInput> Lines) : IRequest<bool>;
 
 public class SetRecipeCommandHandler(
     IStockItemRepository stockItems,
@@ -67,15 +64,14 @@ public class SetRecipeCommandHandler(
 
         var lines = command.Lines.Select(l => l.None
             ? RecipeLine.None(l.Slot, l.StockItemId, l.OptionIds ?? [])
-            : new RecipeLine(l.StockItemId, l.Quantity, l.OptionIds, l.Slot, l.Scalable)).ToList();
-        var scales = (command.Scales ?? []).Select(s => new RecipeScale(s.OptionId, s.Factor)).ToList();
+            : new RecipeLine(l.StockItemId, l.Quantity, l.OptionIds, l.Slot)).ToList();
 
         var recipe = await recipes.GetAsync(command.CatalogItemId);
 
         if (recipe is null)
-            recipes.Add(new Recipe(command.CatalogItemId, lines, scales));
+            recipes.Add(new Recipe(command.CatalogItemId, lines));
         else
-            recipe.SetLines(lines, scales);
+            recipe.SetLines(lines);
 
         await recipes.UnitOfWork.SaveEntitiesAsync(cancellationToken);
         return true;

@@ -6,9 +6,9 @@ namespace Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
 /// one thing a sale takes — the coffee, the sugar, the cup — and how the
 /// customer's choices change it: the line with no options is the slot's
 /// default, the others are overrides keyed on one option or a combination
-/// (a bag that exists only for medium roast + spiced). An override replaces
-/// the default within its slot; a <see cref="IsNone"/> override removes the
-/// slot for that choice ("سادة": no sugar).
+/// (a bag that exists only for medium roast + spiced; 14 g for a double).
+/// An override replaces the default within its slot; a <see cref="IsNone"/>
+/// override removes the slot for that choice ("سادة": no sugar).
 /// </summary>
 public class RecipeLine : Entity
 {
@@ -23,15 +23,12 @@ public class RecipeLine : Entity
     /// <summary>The catalog customization options this line needs, all of them; empty for the slot's default.</summary>
     public List<int> OptionIds { get; private set; } = new();
 
-    /// <summary>Whether the recipe's size factors multiply this line (coffee yes, the cup no).</summary>
-    public bool Scalable { get; private set; } = true;
-
     /// <summary>An override that deducts nothing for its options.</summary>
     public bool IsNone { get; private set; }
 
     protected RecipeLine() { }
 
-    public RecipeLine(int stockItemId, decimal quantity, IEnumerable<int>? optionIds = null, int slot = 0, bool scalable = true)
+    public RecipeLine(int stockItemId, decimal quantity, IEnumerable<int>? optionIds = null, int slot = 0)
     {
         if (stockItemId <= 0)
             throw new InventoryDomainException("A recipe line needs a stock item.");
@@ -46,7 +43,6 @@ public class RecipeLine : Entity
         Quantity = quantity;
         OptionIds = Normalize(optionIds);
         Slot = slot;
-        Scalable = scalable;
     }
 
     /// <summary>For these options the slot deducts nothing; the stock item names the slot it belongs to.</summary>

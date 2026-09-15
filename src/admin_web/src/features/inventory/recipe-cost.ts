@@ -32,11 +32,7 @@ function costOfSelection(
     unitCost.set(String(line.stockItemId), toNumber(line.unitCost))
   }
   let sum = 0
-  for (const [stockItemId, quantity] of resolve(
-    cost.lines,
-    cost.scales,
-    selection
-  )) {
+  for (const [stockItemId, quantity] of resolve(cost.lines, selection)) {
     sum += quantity * (unitCost.get(stockItemId) ?? 0)
   }
   return Math.round(sum * 100) / 100
@@ -67,7 +63,7 @@ type GroupDeltas = {
 
 /**
  * For each option group the recipe reacts to (an override names one of
- * its options, or a size factor sits on one), what every option adds to
+ * its options), what every option adds to
  * the standard cost: a single-choice option replaces the group's default,
  * an add-on stacks on top.
  */
@@ -80,9 +76,6 @@ export function choiceDeltas(
   const referenced = new Set<string>()
   for (const line of cost.lines) {
     for (const id of line.optionIds) referenced.add(String(toNumber(id)))
-  }
-  for (const scale of cost.scales) {
-    referenced.add(String(toNumber(scale.optionId)))
   }
 
   const groups: GroupDeltas[] = []

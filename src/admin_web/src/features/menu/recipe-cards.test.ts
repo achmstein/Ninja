@@ -3,7 +3,6 @@ import {
   draftLines,
   resolve,
   type RecipeDraft,
-  type ScaleDraft,
   type SlotDraft,
 } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from './menu-options'
@@ -65,14 +64,13 @@ function ingredient(patch: {
 
 const state = (
   ingredients: IngredientSpec[],
-  custom: SlotDraft[] = [],
-  scales: ScaleDraft[] = []
-): BuilderState => ({ ingredients, custom, scales })
+  custom: SlotDraft[] = []
+): BuilderState => ({ ingredients, custom })
 
 /** What one sale with these options takes off the shelf, per stock item */
 function deducts(draft: RecipeDraft, chosen: string[]): Record<string, number> {
-  const { lines, scales } = draftLines(draft)
-  return Object.fromEntries(resolve(lines, scales, new Set(chosen)))
+  const lines = draftLines(draft)
+  return Object.fromEntries(resolve(lines, new Set(chosen)))
 }
 
 const size = group('size', 'Size', [
@@ -314,7 +312,6 @@ describe('reconstruct', () => {
       stockItemId: WHIPPED,
       quantity: '10',
       hasDefault: true,
-      scalable: false,
       groupIds: ['extras'],
       overrides: [
         {
@@ -333,7 +330,7 @@ describe('reconstruct', () => {
         },
       ],
     }
-    const saved: RecipeDraft = { slots: [legacy], scales: [] }
+    const saved: RecipeDraft = { slots: [legacy] }
     expect(deducts(saved, [])).toEqual({ [WHIPPED]: 10 })
 
     const read = reconstruct(saved, menu)
@@ -357,7 +354,6 @@ describe('reconstruct', () => {
       stockItemId: COFFEE,
       quantity: '7',
       hasDefault: true,
-      scalable: false,
       groupIds: ['shot'],
       overrides: [
         {
@@ -369,7 +365,7 @@ describe('reconstruct', () => {
         },
       ],
     }
-    const read = reconstruct({ slots: [legacy], scales: [] }, menuOf(shot))
+    const read = reconstruct({ slots: [legacy] }, menuOf(shot))
 
     expect(read.ingredients[0].when).toEqual({ groupId: 'shot', only: ['61'] })
     const repaired = compile(read, menuOf(shot))
@@ -383,7 +379,6 @@ describe('reconstruct', () => {
       stockItemId: '110',
       quantity: '1',
       hasDefault: true,
-      scalable: false,
       groupIds: ['extras'],
       overrides: [
         {
@@ -395,117 +390,10 @@ describe('reconstruct', () => {
         },
       ],
     }
-    const read = reconstruct({ slots: [cup], scales: [] }, menu)
+    const read = reconstruct({ slots: [cup] }, menu)
 
     expect(read.ingredients).toEqual([])
     expect(read.custom).toEqual([cup])
-  })
-})
-
-describe('size factors from before the cards', () => {
-  const menu = menuOf(size, sugar)
-  const large: ScaleDraft = { optionId: '12', factor: '1.5' }
-
-  it('become amounts per size on a row that grew with them', () => {
-    const coffee: SlotDraft = {
-      key: 1,
-      stockItemId: COFFEE,
-      quantity: '7',
-      hasDefault: true,
-      scalable: true,
-      groupIds: [],
-      overrides: [],
-    }
-    const read = reconstruct({ slots: [coffee], scales: [large] }, menu)
-
-    expect(read.ingredients[0].amount).toEqual({
-      fixed: '7',
-      groupId: 'size',
-      values: { '11': '7', '12': '10.5' },
-    })
-    const compiled = compile(read, menu)
-    expect(compiled.scales).toEqual([])
-    expect(deducts(compiled, ['12'])).toEqual({ [COFFEE]: 10.5 })
-  })
-
-  it('fold into amounts that are already per size', () => {
-    const coffee: SlotDraft = {
-      key: 1,
-      stockItemId: COFFEE,
-      quantity: '7',
-      hasDefault: true,
-      scalable: true,
-      groupIds: ['size'],
-      overrides: [
-        {
-          key: 2,
-          optionIds: ['12'],
-          stockItemId: null,
-          quantity: '10.5',
-          none: false,
-        },
-      ],
-    }
-    const saved: RecipeDraft = { slots: [coffee], scales: [large] }
-    const read = reconstruct(saved, menu)
-
-    expect(read.ingredients[0].amount.values).toEqual({
-      '11': '7',
-      '12': '15.75',
-    })
-    expect(deducts(compile(read, menu), ['12'])).toEqual(deducts(saved, ['12']))
-  })
-
-  it('keep a row whose amount hangs on another group as a custom rule that still grows', () => {
-    const coffee: SlotDraft = {
-      key: 1,
-      stockItemId: COFFEE,
-      quantity: '7',
-      hasDefault: true,
-      scalable: true,
-      groupIds: ['sugar'],
-      overrides: [
-        {
-          key: 2,
-          optionIds: ['32'],
-          stockItemId: null,
-          quantity: '9',
-          none: false,
-        },
-      ],
-    }
-    const saved: RecipeDraft = { slots: [coffee], scales: [large] }
-    const read = reconstruct(saved, menu)
-
-    expect(read.ingredients).toEqual([])
-    expect(read.custom).toEqual([coffee])
-    const compiled = compile(read, menu)
-    expect(compiled.scales).toEqual([large])
-    expect(deducts(compiled, ['12', '31'])).toEqual({ [COFFEE]: 10.5 })
-    expect(deducts(compiled, ['12', '32'])).toEqual({ [COFFEE]: 13.5 })
-  })
-
-  it('go when the custom rules are dropped', () => {
-    const coffee: SlotDraft = {
-      key: 1,
-      stockItemId: COFFEE,
-      quantity: '7',
-      hasDefault: true,
-      scalable: true,
-      groupIds: ['sugar'],
-      overrides: [
-        {
-          key: 2,
-          optionIds: ['32'],
-          stockItemId: null,
-          quantity: '9',
-          none: false,
-        },
-      ],
-    }
-    const read = reconstruct({ slots: [coffee], scales: [large] }, menu)
-
-    expect(compile({ ...read, custom: [] }, menu).scales).toEqual([])
   })
 })
 

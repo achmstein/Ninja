@@ -3,10 +3,10 @@ import { toNumber } from '@/lib/money'
 
 /**
  * A recipe as slots (inventory-plan.md D6): the things one sale takes,
- * each with a default, overrides the customer's choices trigger, and
- * whether the size factors apply. `resolve` is the TypeScript mirror of
- * Recipe.Explode on the server; the preview and the cost card use it so
- * what they show is what the till will deduct.
+ * each with a default and the overrides the customer's choices trigger.
+ * `resolve` is the TypeScript mirror of Recipe.Explode on the server; the
+ * preview and the cost card use it so what they show is what the till
+ * will deduct.
  */
 
 /** The line shape a recipe and its costing share */
@@ -15,19 +15,7 @@ export type SlotLine = {
   quantity: number | string
   optionIds: Array<number | string>
   slot: number | string
-  scalable: boolean
   isNone: boolean
-}
-
-export type SlotScale = { optionId: number | string; factor: number | string }
-
-/** The product of the chosen options' factors; 1 when none applies */
-function scaleFactor(scales: SlotScale[], chosen: ReadonlySet<string>): number {
-  let factor = 1
-  for (const scale of scales) {
-    if (chosen.has(String(scale.optionId))) factor *= toNumber(scale.factor)
-  }
-  return factor
 }
 
 /** The line a slot resolves to: the most specific applicable override, else the default, else nothing */
@@ -59,22 +47,19 @@ function bySlot(lines: SlotLine[]): Map<string, SlotLine[]> {
 
 /**
  * What a sale with these options deducts, per stock item — every slot
- * resolved, none overrides skipped, scalable slots multiplied.
+ * resolved, none overrides skipped.
  */
 export function resolve(
   lines: SlotLine[],
-  scales: SlotScale[],
   chosen: ReadonlySet<string>,
   units = 1
 ): Map<string, number> {
-  const factor = scaleFactor(scales, chosen)
   const totals = new Map<string, number>()
   for (const slot of bySlot(lines).values()) {
     const line = resolveSlot(slot, chosen)
     if (!line || line.isNone) continue
     const id = String(line.stockItemId)
-    const quantity =
-      toNumber(line.quantity) * units * (line.scalable ? factor : 1)
+    const quantity = toNumber(line.quantity) * units
     totals.set(id, (totals.get(id) ?? 0) + quantity)
   }
   return totals
@@ -101,36 +86,31 @@ export type SlotDraft = {
   quantity: string
   /** False: the slot only appears for the choices its overrides name (an add-on) */
   hasDefault: boolean
-  scalable: boolean
   /** The option groups the slot depends on, in menu order */
   groupIds: string[]
   overrides: OverrideDraft[]
 }
 
-export type ScaleDraft = { optionId: string; factor: string }
-
-export type RecipeDraft = { slots: SlotDraft[]; scales: ScaleDraft[] }
+export type RecipeDraft = { slots: SlotDraft[] }
 
 let nextKey = 1
 export const draftKey = () => nextKey++
 
 export function newSlot(
   stockItemId: string | null = null,
-  quantity = '',
-  scalable = true
+  quantity = ''
 ): SlotDraft {
   return {
     key: draftKey(),
     stockItemId,
     quantity,
     hasDefault: true,
-    scalable,
     groupIds: [],
     overrides: [],
   }
 }
 
-const emptyDraft = (): RecipeDraft => ({ slots: [], scales: [] })
+const emptyDraft = (): RecipeDraft => ({ slots: [] })
 
 /** Order-independent identity of an option set */
 export const optionSetKey = (optionIds: readonly string[]) =>
@@ -163,7 +143,6 @@ export function fromApi(
       stockItemId: base ? String(base.stockItemId) : null,
       quantity: base ? String(toNumber(base.quantity)) : '',
       hasDefault: !!base,
-      scalable: (base ?? lines[0]).scalable,
       groupIds: groupOrder.filter((g) => groups.has(g)),
       overrides: overrides.map((line) => ({
         key: draftKey(),
@@ -182,13 +161,7 @@ export function fromApi(
       })),
     })
   }
-  return {
-    slots,
-    scales: recipe.scales.map((s) => ({
-      optionId: String(s.optionId),
-      factor: String(toNumber(s.factor)),
-    })),
-  }
+  return { slots }
 }
 
 /** Whether an override cell says anything at all */
@@ -214,7 +187,6 @@ type DraftProblem =
   | 'recipeLineIncomplete'
   | 'recipeOverrideIncomplete'
   | 'recipeSlotEmpty'
-  | 'recipeScaleInvalid'
   | null
 
 /** The first thing wrong with a draft, as a message key; null when it can be saved */
@@ -237,14 +209,10 @@ export function validateDraft(draft: RecipeDraft): DraftProblem {
       }
     }
   }
-  for (const scale of draft.scales) {
-    const factor = parseFloat(scale.factor)
-    if (!(factor > 0) || factor > 20) return 'recipeScaleInvalid'
-  }
   return null
 }
 
-/** The draft as the API takes it: slots numbered 1.., only cells that say something, factors other than 1 */
+/** The draft as the API takes it: slots numbered 1.., only cells that say something */
 export function toApi(draft: RecipeDraft): RecipeRequest {
   const lines: RecipeRequest['lines'] = []
   draft.slots.forEach((slot, index) => {
@@ -255,7 +223,6 @@ export function toApi(draft: RecipeDraft): RecipeRequest {
         quantity: parseFloat(slot.quantity),
         optionIds: [],
         slot: number,
-        scalable: slot.scalable,
         none: false,
       })
     }
@@ -272,7 +239,6 @@ export function toApi(draft: RecipeDraft): RecipeRequest {
           quantity: 0,
           optionIds: o.optionIds.map(Number),
           slot: number,
-          scalable: slot.scalable,
           none: true,
         })
         continue
@@ -283,37 +249,20 @@ export function toApi(draft: RecipeDraft): RecipeRequest {
         quantity: line.quantity,
         optionIds: o.optionIds.map(Number),
         slot: number,
-        scalable: slot.scalable,
         none: false,
       })
     }
   })
-  return {
-    lines,
-    scales: draft.scales
-      .filter((s) => parseFloat(s.factor) > 0 && parseFloat(s.factor) !== 1)
-      .map((s) => ({
-        optionId: Number(s.optionId),
-        factor: parseFloat(s.factor),
-      })),
-  }
+  return { lines }
 }
 
 /** The draft as resolvable lines, for the preview while editing */
-export function draftLines(draft: RecipeDraft): {
-  lines: SlotLine[]
-  scales: SlotScale[]
-} {
-  const request = toApi(draft)
-  return {
-    lines: request.lines.map((l) => ({
-      stockItemId: l.stockItemId,
-      quantity: l.quantity,
-      optionIds: l.optionIds ?? [],
-      slot: l.slot ?? 0,
-      scalable: l.scalable ?? true,
-      isNone: l.none ?? false,
-    })),
-    scales: request.scales ?? [],
-  }
+export function draftLines(draft: RecipeDraft): SlotLine[] {
+  return toApi(draft).lines.map((l) => ({
+    stockItemId: l.stockItemId,
+    quantity: l.quantity,
+    optionIds: l.optionIds ?? [],
+    slot: l.slot ?? 0,
+    isNone: l.none ?? false,
+  }))
 }

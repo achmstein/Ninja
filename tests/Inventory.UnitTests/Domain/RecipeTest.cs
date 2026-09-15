@@ -124,28 +124,6 @@ public class RecipeTest
     }
 
     [TestMethod]
-    public void A_size_factor_multiplies_the_scalable_slots_only()
-    {
-        var recipe = new Recipe(20,
-        [
-            new RecipeLine(Coffee, 7, slot: 1),
-            new RecipeLine(Sugar, 4, slot: 2),
-            new RecipeLine(Cup, 1, slot: 3, scalable: false),
-        ], [new RecipeScale(Double, 2)]);
-
-        var single = recipe.Explode(3).ToDictionary(x => x.StockItemId, x => x.Quantity);
-        Assert.AreEqual(21m, single[Coffee]);
-        Assert.AreEqual(3m, single[Cup]);
-
-        var doubled = recipe.Explode(3, [Double]).ToDictionary(x => x.StockItemId, x => x.Quantity);
-        Assert.AreEqual(42m, doubled[Coffee]);
-        Assert.AreEqual(24m, doubled[Sugar]);
-        Assert.AreEqual(3m, doubled[Cup], "the cup does not grow with the coffee");
-        Assert.AreEqual(2m, recipe.ScaleFactor([Double]));
-        Assert.AreEqual(1m, recipe.ScaleFactor([Light]));
-    }
-
-    [TestMethod]
     public void Plain_lines_are_slots_of_their_own_and_slot_numbers_are_renumbered_in_order()
     {
         var recipe = new Recipe(20,
@@ -179,12 +157,6 @@ public class RecipeTest
         Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20, [RecipeLine.None(1, Sugar, [NoSugar])]), "a none override alone");
 
         Assert.ThrowsExactly<InventoryDomainException>(() => RecipeLine.None(1, Sugar, []), "a none override needs options");
-
-        Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20,
-            [new RecipeLine(Coffee, 7, slot: 1)],
-            [new RecipeScale(Double, 2), new RecipeScale(Double, 3)]), "one factor per option");
-
-        Assert.ThrowsExactly<InventoryDomainException>(() => new RecipeScale(Double, 0));
     }
 
     [TestMethod]

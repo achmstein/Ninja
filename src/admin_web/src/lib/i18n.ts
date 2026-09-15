@@ -2163,7 +2163,6 @@ const webExtras = {
     ar: 'سطر لكل حاجة البيعة بتاخدها. اختار الاختيارات اللي السطر بيعتمد عليها وقول كل اختيار بيعمل فيه إيه؛ الخانة الفاضية يعني زي الأساسي.',
   },
   nothingByDefault: { en: 'Nothing unless chosen', ar: 'مفيش غير لو اتختار' },
-  growsWithSize: { en: 'Grows with the size', ar: 'بيكبر مع الحجم' },
   onlyForSomeChoices: {
     en: 'Only for some choices',
     ar: 'لاختيارات معيّنة بس',
@@ -2184,12 +2183,6 @@ const webExtras = {
     ar: 'مش بيخصم حاجة؛ دوس عشان يخصم تاني',
   },
   addRule: { en: 'Add rule', ar: 'ضيف قاعدة' },
-  sizeFactors: { en: 'Size', ar: 'الحجم' },
-  noSizeGroup: { en: 'No size', ar: 'مفيش حجم' },
-  sizeFactorsHint: {
-    en: 'Pick the group that is the size; each of its options multiplies the rows that grow with it (double ×2, large ×1.5).',
-    ar: 'اختار المجموعة اللي هي الحجم؛ كل اختيار فيها بيضرب السطور اللي بتكبر معاه (دبل ×2، كبير ×1.5).',
-  },
   nothing: { en: 'nothing', ar: 'مفيش' },
   recipeOverrideIncomplete: {
     en: 'A choice needs an ingredient and a quantity, or nothing at all',
@@ -2198,10 +2191,6 @@ const webExtras = {
   recipeSlotEmpty: {
     en: 'A row that is only for some choices needs at least one choice with something to deduct',
     ar: 'السطر اللي لاختيارات معيّنة محتاج اختيار واحد على الأقل بيخصم حاجة',
-  },
-  recipeScaleInvalid: {
-    en: 'A size factor is a number above 0 and up to 20',
-    ar: 'معامل الحجم رقم أكبر من 0 ولحد 20',
   },
   // Menu page: start tracking many items at once
   trackItems: { en: 'Track items', ar: 'تتبّع الأصناف' },

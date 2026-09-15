@@ -4,7 +4,6 @@ import {
   overrideHasContent,
   type OverrideDraft,
   type RecipeDraft,
-  type ScaleDraft,
   type SlotDraft,
 } from '@/features/inventory/recipe-model'
 import {
@@ -57,8 +56,6 @@ export type BuilderState = {
   ingredients: IngredientSpec[]
   /** Slots the cards could not express, kept verbatim */
   custom: SlotDraft[]
-  /** Size factors from before the cards, kept while a custom slot still grows with them */
-  scales: ScaleDraft[]
 }
 
 /** What a card picks an item from: the shelf, or an ingredient about to be created */
@@ -230,7 +227,6 @@ export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
         stockItemId: spec.item.fixed,
         quantity: spec.amount.fixed,
         hasDefault: true,
-        scalable: false,
         groupIds: [],
         overrides: [],
       })
@@ -263,14 +259,11 @@ export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
       stockItemId: base.item ?? anchor,
       quantity: base.present ? String(base.quantity) : '',
       hasDefault: base.present,
-      scalable: false,
       groupIds: keyGroups.map((g) => g.id),
       overrides,
     })
   }
-  // The factors from before the cards stay only while a custom slot grows with them
-  const scales = state.custom.some((s) => s.scalable) ? state.scales : []
-  return { slots: [...slots, ...state.custom], scales }
+  return { slots: [...slots, ...state.custom] }
 }
 
 /**
@@ -286,70 +279,15 @@ export function reconstruct(
   const groupOf = new Map<string, MenuGroup>()
   for (const g of menu.groups) for (const o of g.options) groupOf.set(o.id, g)
 
-  let ingredients: IngredientSpec[] = []
+  const ingredients: IngredientSpec[] = []
   const custom: SlotDraft[] = []
   for (const slot of draft.slots) {
     const card = readCard(slot, menu, groupOf)
     if (card) ingredients.push(card)
     else custom.push(slot)
   }
-
-  // Size factors from an older recipe become amounts per size on the rows
-  // that grew with them
-  const sizeGroup =
-    draft.scales.length > 0
-      ? menu.groups.find((g) =>
-          g.options.some((o) => draft.scales.some((s) => s.optionId === o.id))
-        )
-      : undefined
-  if (sizeGroup) {
-    const factorOf = (o: MenuOption) => {
-      const factor = parseFloat(
-        draft.scales.find((s) => s.optionId === o.id)?.factor ?? '1'
-      )
-      return factor > 0 ? factor : 1
-    }
-    const kept: IngredientSpec[] = []
-    for (const spec of ingredients) {
-      const slot = draft.slots.find((s) => s.key === spec.key)
-      if (!slot?.scalable) {
-        kept.push(spec)
-        continue
-      }
-      if (spec.amount.groupId === sizeGroup.id) {
-        // Already a number per size: the factor folds into each
-        const values = { ...spec.amount.values }
-        for (const o of sizeGroup.options) {
-          const quantity = parseFloat(values[o.id] ?? '')
-          if (quantity > 0) values[o.id] = String(scaled(quantity, factorOf(o)))
-        }
-        kept.push({ ...spec, amount: { ...spec.amount, values } })
-        continue
-      }
-      const baseQty = parseFloat(spec.amount.fixed)
-      if (spec.amount.groupId || !(baseQty > 0)) {
-        // The amount hangs on another group; the cards cannot also grow it
-        // with the size, so the row stays a custom rule and keeps its factor
-        custom.push(slot)
-        continue
-      }
-      const values: Record<string, string> = {}
-      for (const o of sizeGroup.options) {
-        values[o.id] = String(scaled(baseQty, factorOf(o)))
-      }
-      kept.push({
-        ...spec,
-        amount: { fixed: spec.amount.fixed, groupId: sizeGroup.id, values },
-      })
-    }
-    ingredients = kept
-  }
-
-  return { ingredients, custom, scales: draft.scales }
+  return { ingredients, custom }
 }
-
-const scaled = (quantity: number, factor: number) =>
-  Math.round(quantity * factor * 1000) / 1000
 
 /** One card from a slot, or null when the cards cannot say what it says */
 function readCard(

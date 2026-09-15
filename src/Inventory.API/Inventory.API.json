@@ -2380,7 +2380,6 @@
           "catalogItemId",
           "kind",
           "lines",
-          "scales",
           "warnings"
         ],
         "type": "object",
@@ -2402,12 +2401,6 @@
               "$ref": "#/components/schemas/ProposedRecipeLine"
             }
           },
-          "scales": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProposedScale"
-            }
-          },
           "warnings": {
             "type": "array",
             "items": {
@@ -2422,8 +2415,7 @@
           "newItemKey",
           "quantity",
           "optionIds",
-          "slot",
-          "scalable"
+          "slot"
         ],
         "type": "object",
         "properties": {
@@ -2468,34 +2460,6 @@
               "string"
             ],
             "format": "int32"
-          },
-          "scalable": {
-            "type": "boolean"
-          }
-        }
-      },
-      "ProposedScale": {
-        "required": [
-          "optionId",
-          "factor"
-        ],
-        "type": "object",
-        "properties": {
-          "optionId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "factor": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
           }
         }
       },
@@ -2806,7 +2770,6 @@
           "unitCost",
           "cost",
           "slot",
-          "scalable",
           "isNone"
         ],
         "type": "object",
@@ -2868,9 +2831,6 @@
             ],
             "format": "int32"
           },
-          "scalable": {
-            "type": "boolean"
-          },
           "isNone": {
             "type": "boolean"
           }
@@ -2881,7 +2841,6 @@
           "catalogItemId",
           "baseCost",
           "lines",
-          "scales",
           "uncosted"
         ],
         "type": "object",
@@ -2906,12 +2865,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RecipeCostLineView"
-            }
-          },
-          "scales": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecipeScaleView"
             }
           },
           "uncosted": {
@@ -2973,10 +2926,6 @@
             "format": "int32",
             "default": 0
           },
-          "scalable": {
-            "type": "boolean",
-            "default": true
-          },
           "none": {
             "type": "boolean",
             "default": false
@@ -2992,7 +2941,6 @@
           "quantity",
           "optionIds",
           "slot",
-          "scalable",
           "isNone"
         ],
         "type": "object",
@@ -3046,9 +2994,6 @@
             ],
             "format": "int32"
           },
-          "scalable": {
-            "type": "boolean"
-          },
           "isNone": {
             "type": "boolean"
           }
@@ -3065,65 +3010,6 @@
             "items": {
               "$ref": "#/components/schemas/RecipeLineInput"
             }
-          },
-          "scales": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/RecipeScaleInput"
-            }
-          }
-        }
-      },
-      "RecipeScaleInput": {
-        "required": [
-          "optionId",
-          "factor"
-        ],
-        "type": "object",
-        "properties": {
-          "optionId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "factor": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          }
-        }
-      },
-      "RecipeScaleView": {
-        "required": [
-          "optionId",
-          "factor"
-        ],
-        "type": "object",
-        "properties": {
-          "optionId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "factor": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
           }
         }
       },
@@ -3165,8 +3051,7 @@
       "RecipeView": {
         "required": [
           "catalogItemId",
-          "lines",
-          "scales"
+          "lines"
         ],
         "type": "object",
         "properties": {
@@ -3182,12 +3067,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RecipeLineView"
-            }
-          },
-          "scales": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RecipeScaleView"
             }
           }
         }

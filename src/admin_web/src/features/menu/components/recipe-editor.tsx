@@ -4,12 +4,12 @@ import {
   ChevronDown,
   ChevronsUpDown,
   FlaskConical,
-  Maximize2,
   Plus,
   X,
 } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useDirection } from '@/context/direction-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -44,7 +44,6 @@ import {
   type RecipeDraft,
   type SlotDraft,
   type SlotLine,
-  type SlotScale,
 } from '@/features/inventory/recipe-model'
 import {
   type MenuGroup,
@@ -139,9 +138,6 @@ export function RecipeSlotsEditor({
     hint: unitLabel(i.unit, t),
   }))
   const hasChoices = menu.groups.length > 0
-  // Size is "the amount depends on الحجم" in the builder; factors only show
-  // for a recipe that still carries them from before
-  const sizeable = draft.scales.length > 0
 
   const updateSlot = (key: number, patch: Partial<SlotDraft>) =>
     onChange({
@@ -161,7 +157,6 @@ export function RecipeSlotsEditor({
           options={options}
           byValue={byValue}
           hasChoices={hasChoices}
-          sizeable={sizeable}
           onChange={(patch) => updateSlot(slot.key, patch)}
           onRemove={() =>
             onChange({
@@ -183,10 +178,6 @@ export function RecipeSlotsEditor({
         <Plus className='me-1 h-3.5 w-3.5' />
         {t('addIngredient')}
       </Button>
-
-      {sizeable && (
-        <ScaleEditor draft={draft} onChange={onChange} menu={menu} />
-      )}
     </div>
   )
 }
@@ -197,7 +188,6 @@ function SlotEditor({
   options,
   byValue,
   hasChoices,
-  sizeable,
   onChange,
   onRemove,
 }: {
@@ -206,7 +196,6 @@ function SlotEditor({
   options: ComboboxOption[]
   byValue: Map<string, IngredientOption>
   hasChoices: boolean
-  sizeable: boolean
   onChange: (patch: Partial<SlotDraft>) => void
   onRemove: () => void
 }) {
@@ -258,16 +247,6 @@ function SlotEditor({
 
       {hasChoices && (
         <div className='text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 px-2 pb-2 text-xs'>
-          {sizeable && (
-            <label className='flex cursor-pointer items-center gap-1.5'>
-              <Checkbox
-                checked={slot.scalable}
-                onCheckedChange={(on) => onChange({ scalable: on === true })}
-              />
-              <Maximize2 className='size-3' aria-hidden />
-              {t('growsWithSize')}
-            </label>
-          )}
           {slot.groupIds.length > 0 && (
             <label className='flex cursor-pointer items-center gap-1.5'>
               <Checkbox
@@ -477,7 +456,7 @@ function OverrideEditor({
           <thead>
             <tr>
               <th className='text-muted-foreground w-28 pb-1 text-start font-normal'>
-                {rows.label} ↓ {cols.label} →
+                {rows.label} ↓ {cols.label} <Arrow />
               </th>
               {cols.options.map((c) => (
                 <th key={c.id} className='min-w-40 pb-1 text-start font-medium'>
@@ -688,90 +667,6 @@ function RuleAdder({
   )
 }
 
-/** The size row: pick the group that is the size, give each of its options a factor */
-function ScaleEditor({
-  draft,
-  onChange,
-  menu,
-}: {
-  draft: RecipeDraft
-  onChange: (draft: RecipeDraft) => void
-  menu: MenuOptions
-}) {
-  const t = useT()
-  const single = menu.groups.filter((g) => !g.allowMultiple)
-  const current = single.find((g) =>
-    g.options.some((o) => draft.scales.some((s) => s.optionId === o.id))
-  )
-
-  const pickGroup = (groupId: string) => {
-    const group = single.find((g) => g.id === groupId)
-    onChange({
-      ...draft,
-      scales: group
-        ? group.options.map((o) => ({ optionId: o.id, factor: '1' }))
-        : [],
-    })
-  }
-
-  return (
-    <div className='space-y-2 rounded-lg border p-2'>
-      <div className='flex flex-wrap items-center gap-2 text-sm'>
-        <Maximize2 className='text-muted-foreground size-4' aria-hidden />
-        <span className='font-medium'>{t('sizeFactors')}</span>
-        <Select value={current?.id ?? 'none'} onValueChange={pickGroup}>
-          <SelectTrigger
-            className='h-8 w-44 text-xs'
-            aria-label={t('sizeFactors')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='none'>{t('noSizeGroup')}</SelectItem>
-            {single.map((g) => (
-              <SelectItem key={g.id} value={g.id}>
-                {g.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {current ? (
-        <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
-          {current.options.map((o) => {
-            const scale = draft.scales.find((s) => s.optionId === o.id)
-            return (
-              <label key={o.id} className='flex items-center gap-1.5 text-xs'>
-                <span className='max-w-28 truncate'>{o.label}</span>
-                <span className='text-muted-foreground'>×</span>
-                <Input
-                  type='number'
-                  min='0'
-                  step='any'
-                  className='h-7 w-16 text-xs tabular-nums'
-                  value={scale?.factor ?? '1'}
-                  onChange={(e) =>
-                    onChange({
-                      ...draft,
-                      scales: draft.scales.map((s) =>
-                        s.optionId === o.id
-                          ? { ...s, factor: e.target.value }
-                          : s
-                      ),
-                    })
-                  }
-                />
-              </label>
-            )
-          })}
-        </div>
-      ) : (
-        <p className='text-muted-foreground text-xs'>{t('sizeFactorsHint')}</p>
-      )}
-    </div>
-  )
-}
-
 // ---------------------------------------------------------------------------
 // Try it: pick like the cashier, see what comes off the shelf
 
@@ -784,12 +679,10 @@ export type StockInfo = { label: string; unit: string }
  */
 export function DeductionPreview({
   lines,
-  scales,
   menu,
   stock,
 }: {
   lines: SlotLine[]
-  scales: SlotScale[]
   menu: MenuOptions
   stock: Map<string, StockInfo>
 }) {
@@ -804,7 +697,7 @@ export function DeductionPreview({
   if (menu.groups.length === 0) return null
 
   const chosenSet = new Set(chosen)
-  const totals = resolve(lines, scales, chosenSet)
+  const totals = resolve(lines, chosenSet)
 
   const pickGroup = (group: MenuGroup, values: string[]) => {
     const siblings = new Set(group.options.map((o) => o.id))
@@ -907,5 +800,15 @@ export function DeductionPreview({
         )}
       </CollapsibleContent>
     </Collapsible>
+  )
+}
+
+/** An arrow that points the way the text runs */
+export function Arrow({ className }: { className?: string }) {
+  const { dir } = useDirection()
+  return (
+    <span className={className} aria-hidden>
+      {dir === 'rtl' ? '←' : '→'}
+    </span>
   )
 }

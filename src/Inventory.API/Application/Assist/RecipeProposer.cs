@@ -86,9 +86,9 @@ public sealed class RecipeProposer(IChillaxAgentFactory factory)
           the same slot with the new quantity. An add-on (extra shot) is a slot of its own with no default: one line
           with the add-on's option id. An ingredient that differs by a combination (a coffee bag per roast + spice)
           is one override per combination, all in the coffee slot. Never invent option ids.
-        - Sizes are NOT lines: a size option that makes the sale bigger goes in "scales" as an entry with optionId and factor
-          (double 2, large 1.5); the scalable lines are multiplied. Set scalable false on lines that do not grow
-          with size (a cup, a lid, a tea bag); true otherwise. A "unit" recipe has no scales.
+        - Sizes are lines too: a size option that makes the sale bigger is an override in the same slot with the bigger
+          quantity (a double: 14 g in the coffee slot with the double option; a large latte: 300 ml in the milk slot
+          with the large option). Ingredients that do not grow with the size (a cup, a lid, a tea bag) get no size line.
         - "newItems": every ingredient not on the shelf, once, with a short lowercase key ("whole-milk"), nameEn
           (Title Case), nameAr (Egyptian Arabic), unit (g for anything weighed, ml for poured, pcs for counted),
           packSize (base units per pack as bought: a 1 l carton of milk is 1000, a 250 g bag of beans 250; 0 when

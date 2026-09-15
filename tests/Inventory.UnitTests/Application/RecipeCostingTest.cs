@@ -41,7 +41,6 @@ public class RecipeCostingTest
         Assert.AreEqual(7, cost.CatalogItemId);
         Assert.AreEqual(18 * 0.6m + 200 * 0.03m + 1.5m, cost.BaseCost, "10.80 + 6.00 + 1.50: the defaults, nothing chosen");
         Assert.IsEmpty(cost.Uncosted);
-        Assert.IsEmpty(cost.Scales);
 
         Assert.HasCount(6, cost.Lines);
         Assert.AreEqual("Beans", cost.Lines[0].Name.En);
@@ -54,24 +53,24 @@ public class RecipeCostingTest
     }
 
     [TestMethod]
-    public void Slots_and_size_factors_ride_along_and_the_base_cost_is_the_standard_sale()
+    public void Slots_ride_along_and_the_base_cost_is_the_standard_sale()
     {
         var costs = new Dictionary<int, decimal> { [Beans] = 0.6m, [Milk] = 0.03m, [OatMilk] = 0.09m, [Cup] = 1.5m };
         var recipe = new Recipe(7,
         [
             new RecipeLine(Beans, 18, slot: 1),
+            new RecipeLine(Beans, 27, [LargeOption], slot: 1),
             new RecipeLine(Milk, 200, slot: 2),
             new RecipeLine(OatMilk, 200, [OatOption], slot: 2),
-            new RecipeLine(Cup, 1, slot: 3, scalable: false),
-        ], [new RecipeScale(LargeOption, 1.5m)]);
+            new RecipeLine(Cup, 1, slot: 3),
+        ]);
 
         var cost = RecipeCosting.Cost(recipe, costs, Items);
 
-        Assert.AreEqual(10.8m + 6m + 1.5m, cost.BaseCost, "the defaults at factor 1");
-        var scale = Assert.ContainsSingle(cost.Scales);
-        Assert.AreEqual(LargeOption, scale.OptionId);
-        Assert.AreEqual(1.5m, scale.Factor);
-        Assert.IsFalse(cost.Lines.Single(l => l.StockItemId == Cup).Scalable);
+        Assert.AreEqual(10.8m + 6m + 1.5m, cost.BaseCost, "the defaults: a large is an override, not a factor");
+        var large = cost.Lines.Single(l => l.OptionIds.SequenceEqual([LargeOption]));
+        Assert.AreEqual(1, large.Slot, "the large sits in the beans slot");
+        Assert.AreEqual(16.2m, large.Cost);
         Assert.AreEqual(2, cost.Lines.Single(l => l.StockItemId == OatMilk).Slot, "the oat override sits in the milk slot");
     }
 

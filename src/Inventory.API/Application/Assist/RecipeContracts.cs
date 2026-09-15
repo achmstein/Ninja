@@ -43,13 +43,11 @@ public sealed record ProposedIngredient(
     bool AutoSoldOut);
 
 /// <param name="Kind">"unit": the item is a stock item of its own, one per sale; "recipe": the lines below.</param>
-/// <param name="Scales">Size factors on the item's options (دبل ×2).</param>
 /// <param name="Warnings">What to look at on this item before accepting.</param>
 public sealed record ProposedRecipe(
     int CatalogItemId,
     string Kind,
     IReadOnlyList<ProposedRecipeLine> Lines,
-    IReadOnlyList<ProposedScale> Scales,
     IReadOnlyList<string> Warnings);
 
 /// <param name="StockItemId">An item on the shelf, or the shelf item a new ingredient matched.</param>
@@ -57,10 +55,7 @@ public sealed record ProposedRecipe(
 /// <param name="Quantity">Per unit sold, in the ingredient's base unit.</param>
 /// <param name="OptionIds">Empty for the slot's default; else every option the override needs chosen.</param>
 /// <param name="Slot">Lines sharing a slot are one thing a sale takes: the default and its overrides.</param>
-/// <param name="Scalable">Whether the size factors multiply this line.</param>
-public sealed record ProposedRecipeLine(int? StockItemId, string? NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool Scalable);
-
-public sealed record ProposedScale(int OptionId, decimal Factor);
+public sealed record ProposedRecipeLine(int? StockItemId, string? NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot);
 
 public static class RecipeKinds
 {
@@ -76,11 +71,9 @@ public sealed record RecipesExtraction(IReadOnlyList<ExtractedIngredient> NewIte
 
 public sealed record ExtractedIngredient(string Key, string NameEn, string NameAr, string Unit, decimal PackSize, string PackName, bool AutoSoldOut);
 
-public sealed record ExtractedRecipe(int CatalogItemId, string Kind, IReadOnlyList<ExtractedRecipeLine> Lines, IReadOnlyList<ExtractedScale> Scales);
+public sealed record ExtractedRecipe(int CatalogItemId, string Kind, IReadOnlyList<ExtractedRecipeLine> Lines);
 
-public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool Scalable);
-
-public sealed record ExtractedScale(int OptionId, decimal Factor);
+public sealed record ExtractedRecipeLine(int StockItemId, string NewItemKey, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot);
 
 /// <summary>The prompt: the menu items to track and what is already on the shelf.</summary>
 internal sealed record RecipesPrompt(IReadOnlyList<PromptMenuItem> Items, IReadOnlyList<CandidateItem> Shelf);

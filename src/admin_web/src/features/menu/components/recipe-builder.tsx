@@ -27,7 +27,11 @@ import {
   type BuilderState,
   type IngredientSpec,
 } from '../recipe-cards'
-import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
+import {
+  Arrow,
+  RecipeSlotsEditor,
+  type IngredientOption,
+} from './recipe-editor'
 
 /**
  * The recipe the way the admin describes it: for each ingredient, which
@@ -558,7 +562,7 @@ function ItemTable({
         <thead>
           <tr>
             <th className='text-muted-foreground w-24 pb-1 text-start font-normal'>
-              {rows.label} ↓ {cols.label} →
+              {rows.label} ↓ {cols.label} <Arrow />
             </th>
             {cols.options.map((c) => (
               <th key={c.id} className='min-w-40 pb-1 text-start font-medium'>

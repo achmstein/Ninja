@@ -63,7 +63,6 @@ public sealed class InventoryFlowScenario(ChillaxApp app, DaySetup day) : Scenar
         Assert.Equal(LemonCost, receipt.UnitCost);
         var recipeCost = Assert.Single(await Owner.RecipeCostsAsync(Ct), c => c.CatalogItemId == lemonade.Id);
         Assert.Equal(LemonCost, recipeCost.BaseCost); // one lemon per lemonade, at the branch's average
-        Assert.Empty(recipeCost.Scales);
         Assert.Empty(recipeCost.Uncosted);
         await ExpectAsync("Finance put the invoice on the supplier's account", async () =>
         {

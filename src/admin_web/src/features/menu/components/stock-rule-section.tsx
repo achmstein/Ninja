@@ -239,12 +239,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       ) : (
         <>
           <RecipeSummary recipe={recipe} menu={menu} stock={stock} />
-          <DeductionPreview
-            lines={recipe.lines}
-            scales={recipe.scales}
-            menu={menu}
-            stock={stock}
-          />
+          <DeductionPreview lines={recipe.lines} menu={menu} stock={stock} />
         </>
       )}
       <CostAndMargin item={item} />
@@ -353,12 +348,7 @@ function RecipeEditorForm({
         ingredients={ingredients}
       />
 
-      <DeductionPreview
-        lines={preview.lines}
-        scales={preview.scales}
-        menu={menu}
-        stock={stock}
-      />
+      <DeductionPreview lines={preview} menu={menu} stock={stock} />
 
       <div className='flex justify-end gap-2'>
         <Button type='button' variant='outline' size='sm' onClick={onDone}>

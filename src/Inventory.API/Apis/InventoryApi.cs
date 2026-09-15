@@ -532,7 +532,7 @@ public static class InventoryApi
     {
         try
         {
-            await mediator.Send(new SetRecipeCommand(catalogItemId, request.Lines, request.Scales));
+            await mediator.Send(new SetRecipeCommand(catalogItemId, request.Lines));
             return TypedResults.Ok();
         }
         catch (InventoryDomainException ex)
@@ -579,7 +579,7 @@ public record PurchaseRequest(string? Supplier, string? InvoiceRef, IReadOnlyLis
 
 public record StockCountRequest(string? Note, IReadOnlyList<StockCountLineInput> Lines);
 
-public record RecipeRequest(IReadOnlyList<RecipeLineInput> Lines, IReadOnlyList<RecipeScaleInput>? Scales = null);
+public record RecipeRequest(IReadOnlyList<RecipeLineInput> Lines);
 
 public record TrackByUnitRequest(int CatalogItemId, LocalizedText Name);
 

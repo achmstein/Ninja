@@ -168,15 +168,12 @@ public record StockCountView(
 /// deducts nothing). Lines sharing a <paramref name="Slot"/> are one thing
 /// a sale takes.
 /// </summary>
-public record RecipeLineView(int Id, int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool Scalable, bool IsNone);
+public record RecipeLineView(int Id, int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool IsNone);
 
-/// <summary>A size factor: the scalable slots are multiplied by it when the option is chosen.</summary>
-public record RecipeScaleView(int OptionId, decimal Factor);
-
-public record RecipeView(int CatalogItemId, IReadOnlyList<RecipeLineView> Lines, IReadOnlyList<RecipeScaleView> Scales);
+public record RecipeView(int CatalogItemId, IReadOnlyList<RecipeLineView> Lines);
 
 /// <summary>A recipe line with what it costs at the branch's average (0 for a none override).</summary>
-public record RecipeCostLineView(int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, decimal UnitCost, decimal Cost, int Slot, bool Scalable, bool IsNone);
+public record RecipeCostLineView(int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, decimal UnitCost, decimal Cost, int Slot, bool IsNone);
 
 /// <summary>
 /// What one sale of a menu item costs at the branch: every line priced,
@@ -186,4 +183,4 @@ public record RecipeCostLineView(int StockItemId, LocalizedText Name, string Uni
 /// </summary>
 /// <param name="BaseCost">A sale with nothing chosen: the defaults at the branch's average costs.</param>
 /// <param name="Uncosted">Ingredients with no cost at this branch yet (never received); the figures are lower bounds.</param>
-public record RecipeCostView(int CatalogItemId, decimal BaseCost, IReadOnlyList<RecipeCostLineView> Lines, IReadOnlyList<RecipeScaleView> Scales, IReadOnlyList<int> Uncosted);
+public record RecipeCostView(int CatalogItemId, decimal BaseCost, IReadOnlyList<RecipeCostLineView> Lines, IReadOnlyList<int> Uncosted);

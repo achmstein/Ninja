@@ -54,19 +54,17 @@ public class RecipeProposerTest
 
         var latte = proposal.Recipes[1];
         Assert.AreEqual(RecipeKinds.Recipe, latte.Kind);
-        Assert.HasCount(3, latte.Lines);
+        Assert.HasCount(4, latte.Lines);
         Assert.AreEqual(1, latte.Lines[0].StockItemId);
         Assert.AreEqual(RecipeProposerFake.ShelfQuantity, latte.Lines[0].Quantity);
         Assert.AreEqual(RecipeProposerFake.SyrupKey, latte.Lines[1].NewItemKey);
         CollectionAssert.AreEqual(new[] { 40 }, latte.Lines[2].OptionIds.ToList());
-        CollectionAssert.AreEqual(new[] { 1, 2, 2 }, latte.Lines.Select(l => l.Slot).ToList(), "the syrup override sits in the syrup's slot");
-        var scale = Assert.ContainsSingle(latte.Scales);
-        Assert.AreEqual(41, scale.OptionId);
-        Assert.AreEqual(RecipeProposerFake.ScaleFactor, scale.Factor);
+        CollectionAssert.AreEqual(new[] { 1, 2, 2, 1 }, latte.Lines.Select(l => l.Slot).ToList(), "the syrup override sits in the syrup's slot, the large in the beans'");
+        CollectionAssert.AreEqual(new[] { 41 }, latte.Lines[3].OptionIds.ToList());
+        Assert.AreEqual(RecipeProposerFake.ShelfQuantity * RecipeProposerFake.SizeMultiplier, latte.Lines[3].Quantity, "the large is the beans line with twice the amount");
 
         var tea = proposal.Recipes[2];
         Assert.HasCount(2, tea.Lines, "no options, no option line");
-        Assert.IsEmpty(tea.Scales);
     }
 
     [TestMethod]

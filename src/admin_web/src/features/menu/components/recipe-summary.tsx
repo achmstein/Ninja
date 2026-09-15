@@ -5,7 +5,7 @@ import { formatQuantity } from '@/features/inventory/format'
 import { fromApi, type SlotDraft } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from '../menu-options'
 import { combos, reconstruct, type IngredientSpec } from '../recipe-cards'
-import { OptionChips, type StockInfo } from './recipe-editor'
+import { Arrow, OptionChips, type StockInfo } from './recipe-editor'
 
 /**
  * A saved recipe read the way it was written: one card per ingredient —
@@ -213,7 +213,7 @@ function CustomSlot({
         {slot.overrides.map((o) => (
           <li key={o.key} className='flex flex-wrap items-center gap-x-1.5'>
             <OptionChips optionIds={o.optionIds} menu={menu} />
-            <span className='text-muted-foreground'>→</span>
+            <Arrow className='text-muted-foreground' />
             {o.none ? (
               <span className='text-muted-foreground'>{t('nothing')}</span>
             ) : (
