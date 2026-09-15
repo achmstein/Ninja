@@ -162,6 +162,10 @@ public sealed record StockLevelView(int StockItemId, LocalizedText Name, string 
 
 public sealed record CostHistoryView(DateTime At, int? PurchaseId, string? Supplier, decimal Quantity, decimal UnitCost);
 
+public sealed record RecipeLineView(int Id, int StockItemId, decimal Quantity, List<int> OptionIds);
+
+public sealed record RecipeView(int CatalogItemId, List<RecipeLineView> Lines);
+
 // What one sale costs (Inventory.API RecipeCostView); the SPA joins Catalog's price for the margin
 public sealed record RecipeOptionCostView(List<int> OptionIds, decimal Cost);
 

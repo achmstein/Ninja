@@ -33,6 +33,10 @@ public sealed class InventoryFlowScenario(ChillaxApp app, DaySetup day) : Scenar
         var lemons = await Owner.CreateStockItemAsync($"E2E Lemons {Day.RunId}", "pcs", autoSoldOut: true, Ct);
         await Owner.SetReorderLevelAsync(lemons, 2m, Ct);
         await Owner.SetRecipeAsync(lemonade.Id, [(lemons, 1m)], Ct);
+        // Saved again, as the editor does: the replaced line must be gone, not left behind
+        // with no recipe (an orphan used to break the next receipt's sold-out lookup)
+        await Owner.SetRecipeAsync(lemonade.Id, [(lemons, 1m)], Ct);
+        Assert.Single((await Owner.RecipeAsync(lemonade.Id, Ct)).Lines);
         await Menu.RefreshAsync(Ct);
         Assert.True(Menu.Item(lemonadeName).IsAvailable);
         Assert.False(Menu.Item(lemonadeName).IsOutOfStock);

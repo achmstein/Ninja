@@ -239,6 +239,9 @@ public sealed class OwnerActor(ApiClient api)
         }, ct);
     }
 
+    public Task<RecipeView> RecipeAsync(int catalogItemId, CancellationToken ct)
+        => Api.GetAsync<RecipeView>($"/api/inventory/recipes/{catalogItemId}", ct);
+
     /// <summary>inventory purchases: stock received from a supplier.</summary>
     public async Task<int> ReceivePurchaseAsync((int StockItemId, decimal Quantity, decimal UnitCost)[] lines, CancellationToken ct,
         int? supplierId = null, string? supplier = null, string? invoiceRef = null)

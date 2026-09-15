@@ -13,9 +13,12 @@ class RecipeEntityTypeConfiguration : IEntityTypeConfiguration<Recipe>
         // A filtered view over Lines, not a second collection
         builder.Ignore(r => r.BaseLines);
 
+        // Required, so a line taken out of the recipe is deleted, not left
+        // behind with a null recipe (an orphan the sold-out lookup trips on)
         builder.HasMany(r => r.Lines)
             .WithOne()
             .HasForeignKey("CatalogItemId")
+            .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(r => r.Lines).AutoInclude();
