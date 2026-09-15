@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
+import { LocalizedInput } from '@/components/localized-input'
 import { UNITS, unitLabel } from '../format'
 import { type Amounts, type Line, reprice } from '../lines'
 import { toStockItemOptions } from '../queries'
@@ -510,21 +511,12 @@ function NewItemFields({
   return (
     <div className='bg-muted/40 space-y-2 rounded-md border p-2'>
       <p className='text-muted-foreground text-xs'>{t('newItemName')}</p>
-      <div className='grid gap-2 sm:grid-cols-2'>
-        <Input
-          aria-label={t('english')}
-          placeholder={t('english')}
-          value={draft.nameEn}
-          onChange={(e) => set({ nameEn: e.target.value })}
-        />
-        <Input
-          aria-label={t('arabic')}
-          placeholder={t('arabic')}
-          dir='rtl'
-          value={draft.nameAr}
-          onChange={(e) => set({ nameAr: e.target.value })}
-        />
-      </div>
+      <LocalizedInput
+        ariaLabel={t('newItemName')}
+        value={{ en: draft.nameEn, ar: draft.nameAr }}
+        onChange={(value) => set({ nameEn: value.en, nameAr: value.ar })}
+        compact
+      />
       <div className='grid grid-cols-3 gap-2'>
         <Select value={draft.unit} onValueChange={(unit) => set({ unit })}>
           <SelectTrigger aria-label={t('unit')}>

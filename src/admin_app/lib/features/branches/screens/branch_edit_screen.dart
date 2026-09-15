@@ -152,8 +152,6 @@ class _BranchEditScreenState extends ConsumerState<BranchEditScreen> {
                   label: l10n.branchName,
                   enController: _nameEnController,
                   arController: _nameArController,
-                  enHint: 'Branch name in English',
-                  arHint: 'اسم الفرع بالعربي',
                   isRequired: true,
                 ),
 
@@ -164,8 +162,6 @@ class _BranchEditScreenState extends ConsumerState<BranchEditScreen> {
                   label: l10n.branchAddress,
                   enController: _addressEnController,
                   arController: _addressArController,
-                  enHint: 'Address in English',
-                  arHint: 'العنوان بالعربي',
                 ),
 
                 const SizedBox(height: 20),

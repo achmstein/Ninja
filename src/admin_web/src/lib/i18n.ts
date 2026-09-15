@@ -692,10 +692,7 @@ const webExtras = {
   // Menu extras
   category: { en: 'Category', ar: 'القسم' },
   availability: { en: 'Availability', ar: 'التوفر' },
-  searchItemsPlaceholder: {
-    en: 'Search items (English or Arabic)...',
-    ar: 'دوّر على الأصناف (عربي أو إنجليزي)...',
-  },
+  searchItemsPlaceholder: { en: 'Search items…', ar: 'دوّر على الأصناف…' },
   markedAvailable: {
     en: 'Marked {count} available',
     ar: '{count} بقوا متاحين',
