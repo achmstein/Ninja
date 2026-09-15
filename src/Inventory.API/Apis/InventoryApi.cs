@@ -44,6 +44,10 @@ public static class InventoryApi
             .WithName("SetReorderLevel")
             .WithSummary("Set where the low-stock warning fires for this item at the branch (null clears it)");
 
+        api.MapGet("/items/{id:int}/costs", GetCostHistory)
+            .WithName("GetStockItemCosts")
+            .WithSummary("What the branch paid for this item, receipt by receipt, newest first");
+
         // Levels and the ledger
         api.MapGet("/levels", GetLevels)
             .WithName("GetStockLevels")
@@ -108,6 +112,10 @@ public static class InventoryApi
             .WithName("GetUsageReport")
             .WithSummary("What each stock item did over a period, valued at posting cost, plus the stock value now");
 
+        api.MapGet("/reports/variance", GetVarianceReport)
+            .WithName("GetVarianceReport")
+            .WithSummary("The period as opening, received, theoretical usage, waste, count variance and closing, per item and in money");
+
         api.MapPost("/levels/rebuild", RebuildLevels)
             .WithName("RebuildStockLevels")
             .WithSummary("Recompute the branch's levels from its ledger")
@@ -117,6 +125,10 @@ public static class InventoryApi
         api.MapGet("/recipes", GetRecipes)
             .WithName("GetRecipes")
             .WithSummary("Every tracked menu item and what one unit takes");
+
+        api.MapGet("/recipes/costs", GetRecipeCosts)
+            .WithName("GetRecipeCosts")
+            .WithSummary("What one sale of each tracked menu item costs at the branch's average ingredient costs");
 
         api.MapGet("/recipes/{catalogItemId:int}", GetRecipe)
             .WithName("GetRecipe");
@@ -207,6 +219,16 @@ public static class InventoryApi
     }
 
     // Levels and the ledger
+
+    public static async Task<Ok<IReadOnlyList<CostHistoryView>>> GetCostHistory(
+        int id,
+        HttpContext httpContext,
+        [FromServices] IInventoryQueries queries,
+        int take = 30)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetCostHistoryAsync(branchId, id, Math.Clamp(take, 1, 200)));
+    }
 
     public static async Task<Ok<IReadOnlyList<StockLevelView>>> GetLevels(
         HttpContext httpContext,
@@ -314,10 +336,11 @@ public static class InventoryApi
             return TypedResults.BadRequest(error ?? "The receipt image could not be read.");
 
         var stockItems = await queries.GetStockItemsAsync(includeInactive: false);
+        var lastCosts = (await queries.GetLastCostsAsync(branchId)).ToDictionary(kv => kv.Key, kv => kv.Value.UnitCost);
 
         try
         {
-            return TypedResults.Ok(await scanner.ScanAsync(branchId, image, stockItems, ct));
+            return TypedResults.Ok(await scanner.ScanAsync(branchId, image, stockItems, ct, lastCosts));
         }
         catch (AIException ex)
         {
@@ -424,6 +447,20 @@ public static class InventoryApi
         return TypedResults.Ok(await queries.GetUsageReportAsync(branchId, from, to));
     }
 
+    public static async Task<Results<Ok<VarianceReport>, BadRequest<string>>> GetVarianceReport(
+        HttpContext httpContext,
+        [FromServices] IInventoryQueries queries,
+        DateTime from,
+        DateTime to)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+
+        if (to <= from)
+            return TypedResults.BadRequest("The period must end after it starts.");
+
+        return TypedResults.Ok(await queries.GetVarianceReportAsync(branchId, from, to));
+    }
+
     public static async Task<Ok<RebuildResponse>> RebuildLevels(
         HttpContext httpContext,
         [FromServices] IMediator mediator)
@@ -438,6 +475,11 @@ public static class InventoryApi
     public static async Task<Ok<IReadOnlyList<RecipeView>>> GetRecipes(
         [FromServices] IInventoryQueries queries)
         => TypedResults.Ok(await queries.GetRecipesAsync());
+
+    public static async Task<Ok<IReadOnlyList<RecipeCostView>>> GetRecipeCosts(
+        HttpContext httpContext,
+        [FromServices] IInventoryQueries queries)
+        => TypedResults.Ok(await queries.GetRecipeCostsAsync(httpContext.GetRequiredBranchId()));
 
     public static async Task<Results<Ok<RecipeView>, NotFound>> GetRecipe(
         int catalogItemId,

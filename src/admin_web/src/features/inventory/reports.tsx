@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
+import { getRealmRoles } from '@/config/oidc-config'
 import {
   ClipboardCheck,
   PackagePlus,
@@ -9,12 +10,16 @@ import {
   Trash2,
   Warehouse,
 } from 'lucide-react'
-import { getUsageReportOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { useAuth } from 'react-oidc-context'
+import { getProfitOptions } from '@/api/finance/@tanstack/react-query.gen'
+import { getVarianceReportOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { formatDay } from '@/lib/business-day'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -31,11 +36,13 @@ import { getReportColumns } from './report-columns'
 const route = getRouteApi('/_authenticated/inventory/reports')
 
 /**
- * Stock usage over a range of business days at the active branch: what was
- * bought, what selling consumed, what was thrown away, what the counts
- * found, and what is on the shelf now — in money on top, per item below.
- * The range in the URL resolves to the branch's DayStart/DayEnd bounds,
- * the same way the till reports do.
+ * Stock over a range of business days at the active branch, read the way
+ * the field reads it: what was there, what came in, what selling should
+ * have used (through the recipes), what was thrown away, what the counts
+ * found, what is left — in money on top, per item below. When the range is
+ * one calendar month and the viewer is an owner, the cost of goods is also
+ * shown against the month's net sales from Finance. The range in the URL
+ * resolves to the branch's DayStart/DayEnd bounds, like the till reports.
  */
 export function Reports() {
   const t = useT()
@@ -44,9 +51,11 @@ export function Reports() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { dayWindow, ready, fromIso, toIso } = useTillWindow(search)
+  const auth = useAuth()
+  const isOwner = getRealmRoles(auth.user).includes('Owner')
 
   const report = useQuery({
-    ...getUsageReportOptions({
+    ...getVarianceReportOptions({
       query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
     }),
     enabled: ready,
@@ -54,6 +63,24 @@ export function Reports() {
   })
   const data = report.data
   const rows = useMemo(() => data?.rows ?? [], [data])
+
+  // The month the custom range covers exactly, if it does
+  const month = useMemo(() => calendarMonthOf(search), [search])
+  const profit = useQuery({
+    ...getProfitOptions({
+      query: {
+        'api-version': API_VERSION,
+        year: month?.year ?? 0,
+        month: month?.month ?? 0,
+      },
+    }),
+    enabled: isOwner && month !== null,
+  })
+  const netSales = toNumber(profit.data?.netSales)
+  const cogsPercent =
+    month && isOwner && netSales > 0
+      ? Math.round((toNumber(data?.theoreticalValue) / netSales) * 100)
+      : null
 
   const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } =
     useTableUrlState({
@@ -93,15 +120,38 @@ export function Reports() {
           <p className='text-muted-foreground'>{t('reportsSubtitle')}</p>
         </div>
 
-        <DateRangePicker
-          search={search}
-          dayWindow={dayWindow}
-          onChange={(next) =>
-            navigate({
-              search: (prev) => ({ ...prev, page: undefined, ...next }),
-            })
-          }
-        />
+        <div className='flex flex-wrap items-center gap-2'>
+          <DateRangePicker
+            search={search}
+            dayWindow={dayWindow}
+            onChange={(next) =>
+              navigate({
+                search: (prev) => ({ ...prev, page: undefined, ...next }),
+              })
+            }
+          />
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={() => {
+              const now = new Date()
+              const first = new Date(now.getFullYear(), now.getMonth(), 1)
+              const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  page: undefined,
+                  range: 'custom',
+                  from: formatDay(first),
+                  to: formatDay(last),
+                }),
+              })
+            }}
+          >
+            {t('thisMonth')}
+          </Button>
+        </div>
 
         {!dayWindow || report.isPending ? (
           <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
@@ -111,16 +161,28 @@ export function Reports() {
           </div>
         ) : (
           <>
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-5'>
+              <StatCard
+                label={t('openingStock')}
+                value={formatEgp(data?.openingValue)}
+                icon={Warehouse}
+              />
               <StatCard
                 label={t('purchased')}
-                value={formatEgp(data?.purchasedValue)}
+                value={formatEgp(data?.receivedValue)}
                 icon={PackagePlus}
               />
               <StatCard
                 label={t('costOfGoodsSold')}
-                value={formatEgp(data?.soldValue)}
+                value={formatEgp(data?.theoreticalValue)}
                 icon={ReceiptText}
+                hint={
+                  cogsPercent !== null
+                    ? t('percentOfNetSales', { percent: cogsPercent })
+                    : isOwner && !month
+                      ? t('pickAMonthForSalesShare')
+                      : undefined
+                }
               />
               <StatCard
                 label={t('waste')}
@@ -131,8 +193,8 @@ export function Reports() {
                 }
               />
               <StatCard
-                label={t('stockValueNow')}
-                value={formatEgp(data?.stockValue)}
+                label={t('closingStock')}
+                value={formatEgp(data?.closingValue)}
                 icon={Warehouse}
               />
             </div>
@@ -147,6 +209,7 @@ export function Reports() {
               >
                 {formatEgp(countVariance)}
               </span>
+              <span>· {t('countVarianceHint')}</span>
             </p>
           </>
         )}
@@ -168,16 +231,39 @@ export function Reports() {
   )
 }
 
+/** The calendar month a custom range covers from its first to its last day, else null */
+function calendarMonthOf(search: {
+  range?: string
+  from?: string
+  to?: string
+}): { year: number; month: number } | null {
+  if (search.range !== 'custom' || !search.from || !search.to) return null
+  const from = new Date(search.from + 'T00:00:00')
+  const to = new Date(search.to + 'T00:00:00')
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null
+  const lastDay = new Date(from.getFullYear(), from.getMonth() + 1, 0)
+  const isMonth =
+    from.getDate() === 1 &&
+    to.getFullYear() === from.getFullYear() &&
+    to.getMonth() === from.getMonth() &&
+    to.getDate() === lastDay.getDate()
+  return isMonth
+    ? { year: from.getFullYear(), month: from.getMonth() + 1 }
+    : null
+}
+
 function StatCard({
   label,
   value,
   icon: Icon,
   className,
+  hint,
 }: {
   label: string
   value: string
   icon: React.ComponentType<{ className?: string }>
   className?: string
+  hint?: string
 }) {
   return (
     <Card>
@@ -189,6 +275,7 @@ function StatCard({
         <div className={cn('text-2xl font-bold tabular-nums', className)}>
           {value}
         </div>
+        {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
       </CardContent>
     </Card>
   )

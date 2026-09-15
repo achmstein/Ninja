@@ -42,7 +42,8 @@ import {
   toReviewLines,
 } from '../receipt-scan'
 import { useInventoryActions } from '../use-inventory-actions'
-import { LineAmounts, PackHint } from './line-amounts'
+import { useLastCosts } from '../use-last-costs'
+import { CostHint, LineAmounts, PackHint } from './line-amounts'
 
 type ReviewResult = {
   supplierId: string | null
@@ -76,6 +77,7 @@ export function ReceiptReviewSheet({
   const t = useT()
   const { createItem } = useInventoryActions()
   const itemById = new Map(items.map((item) => [String(item.id), item]))
+  const lastCosts = useLastCosts()
 
   const matchedSupplier = bestMatch(proposal.supplier, suppliers, (s) => s.name)
   const [supplierId, setSupplierId] = useState<string | null>(
@@ -246,6 +248,11 @@ export function ReceiptReviewSheet({
                 item={matchedItem(line, itemById)}
                 items={items}
                 itemById={itemById}
+                lastCost={
+                  line.stockItemId
+                    ? (lastCosts.get(toNumber(line.stockItemId)) ?? null)
+                    : null
+                }
                 onChange={(patch) => updateLine(line.key, patch)}
                 onAmounts={(patch) => updateAmounts(line.key, patch)}
               />
@@ -318,6 +325,7 @@ function ReviewLineCard({
   item,
   items,
   itemById,
+  lastCost,
   onChange,
   onAmounts,
 }: {
@@ -325,6 +333,7 @@ function ReviewLineCard({
   item: StockItemView | undefined
   items: StockItemView[]
   itemById: Map<string, StockItemView>
+  lastCost: number | null
   onChange: (patch: Partial<ReviewLine>) => void
   onAmounts: (patch: Partial<Amounts>) => void
 }) {
@@ -471,12 +480,15 @@ function ReviewLineCard({
             />
           </div>
           {unit && (
-            <PackHint
-              line={line}
-              unit={unit}
-              packSize={packSize}
-              packName={item?.packName ?? line.newItem?.packName}
-            />
+            <>
+              <PackHint
+                line={line}
+                unit={unit}
+                packSize={packSize}
+                packName={item?.packName ?? line.newItem?.packName}
+              />
+              <CostHint line={line} unit={unit} lastCost={lastCost} />
+            </>
           )}
         </div>
       )}

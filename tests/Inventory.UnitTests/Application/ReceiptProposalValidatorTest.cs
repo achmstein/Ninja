@@ -137,6 +137,30 @@ public class ReceiptProposalValidatorTest
     }
 
     [TestMethod]
+    public void A_matched_line_that_moved_a_tenth_from_the_last_receipt_is_flagged()
+    {
+        var lastCosts = new Dictionary<int, decimal> { [1] = 0.05m, [3] = 30m };
+
+        var proposal = ReceiptProposalValidator.Validate(Receipt(
+            new ExtractedLine("Sugar 1kg x2", 2000, 2, 0.055m, 110, 1, 0.95, NoItem),   // +10%: flagged
+            new ExtractedLine("Red Bull x6", 6, 0, 31, 186, 3, 0.9, NoItem),           // +3%: not
+            new ExtractedLine("Milk 1L x3", 3000, 3, 0.02m, 60, 2, 0.9, NoItem)),       // never received: not
+            Items, [], lastCosts);
+
+        var flagged = proposal.Warnings.Where(w => w.Contains("last time")).ToList();
+        Assert.HasCount(1, flagged, string.Join("; ", proposal.Warnings));
+        Assert.AreEqual("line 1: \"Sugar\" is 0.055 per g, up 10% from 0.05 last time.", flagged[0]);
+
+        var cheaper = ReceiptProposalValidator.Validate(Receipt(
+            new ExtractedLine("Red Bull x6", 6, 0, 24, 144, 3, 0.9, NoItem)), Items, [], lastCosts);
+        Assert.IsTrue(cheaper.Warnings.Any(w => w.Contains("down 20%")), string.Join("; ", cheaper.Warnings));
+
+        var without = ReceiptProposalValidator.Validate(Receipt(
+            new ExtractedLine("Sugar 1kg x2", 2000, 2, 0.055m, 110, 1, 0.95, NoItem)), Items, []);
+        Assert.IsEmpty(without.Warnings, "no last costs, nothing to compare");
+    }
+
+    [TestMethod]
     public void Empty_lines_are_skipped_and_an_empty_receipt_says_so()
     {
         var proposal = ReceiptProposalValidator.Validate(Receipt(new ExtractedLine("", 0, 0, 0, 0, 0, 0, NoItem)), Items, []);

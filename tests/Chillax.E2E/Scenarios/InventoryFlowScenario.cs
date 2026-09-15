@@ -50,7 +50,17 @@ public sealed class InventoryFlowScenario(ChillaxApp app, DaySetup day) : Scenar
         var level = await Owner.LevelAsync(lemons, Ct);
         Assert.Equal(3m, level.OnHand);
         Assert.Equal(LemonCost, level.AvgUnitCost);
+        Assert.Equal(LemonCost, level.LastCost); // what the branch last paid, for the next receipt to compare against
         Assert.False(level.IsLow);
+        var history = await Owner.CostHistoryAsync(lemons, Ct);
+        var receipt = Assert.Single(history);
+        Assert.Equal(purchaseId, receipt.PurchaseId);
+        Assert.Equal(3m, receipt.Quantity);
+        Assert.Equal(LemonCost, receipt.UnitCost);
+        var recipeCost = Assert.Single(await Owner.RecipeCostsAsync(Ct), c => c.CatalogItemId == lemonade.Id);
+        Assert.Equal(LemonCost, recipeCost.BaseCost); // one lemon per lemonade, at the branch's average
+        Assert.Empty(recipeCost.Options);
+        Assert.Empty(recipeCost.Uncosted);
         await ExpectAsync("Finance put the invoice on the supplier's account", async () =>
         {
             var entry = Assert.Single((await Owner.SupplierLedgerAsync(Day.SupplierId, Ct)).Entries, x => x.Reference == $"purchase:{purchaseId}");
@@ -142,6 +152,20 @@ public sealed class InventoryFlowScenario(ChillaxApp app, DaySetup day) : Scenar
         Assert.Equal(4m, row.WastedValue);
         Assert.Equal(5m, row.CountVariance);
         Assert.Equal(20m, row.CountVarianceValue);
+
+        // 7b. The same period as the field reads it: nothing before, three in, two used, one wasted, five found, five left.
+        var variance = await Owner.VarianceAsync(runStart, DateTime.UtcNow.AddMinutes(1), Ct);
+        var period = Assert.Single(variance.Rows, r => r.StockItemId == lemons);
+        Assert.Equal(0m, period.Opening);
+        Assert.Equal(3m, period.Received);
+        Assert.Equal(12m, period.ReceivedValue);
+        Assert.Equal(2m, period.Theoretical);
+        Assert.Equal(8m, period.TheoreticalValue);
+        Assert.Equal(1m, period.Wasted);
+        Assert.Equal(5m, period.CountVariance);
+        Assert.Equal(5m, period.Closing); // 0 + 3 − 2 − 1 + 5
+        Assert.Equal(20m, period.ClosingValue);
+        Assert.Equal(250m, period.VariancePercent); // five found over two used
 
         // 8. Rebuilding the levels from the ledger changes nothing.
         Assert.Equal(0, (await Owner.RebuildLevelsAsync(Ct)).Changed);

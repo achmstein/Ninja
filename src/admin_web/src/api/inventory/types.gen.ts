@@ -12,6 +12,14 @@ export type AdjustmentRequest = {
     unitCost?: null | number | string;
 };
 
+export type CostHistoryView = {
+    at: string;
+    purchaseId: null | number | string;
+    supplier: null | string;
+    quantity: number | string;
+    unitCost: number | string;
+};
+
 export type CreatedResponse = {
     id: number | string;
 };
@@ -129,6 +137,24 @@ export type ReceiptProposal = {
     notes: null | string;
 };
 
+export type RecipeCostLineView = {
+    stockItemId: number | string;
+    name: LocalizedText;
+    unit: string;
+    quantity: number | string;
+    optionIds: Array<number | string>;
+    unitCost: number | string;
+    cost: number | string;
+};
+
+export type RecipeCostView = {
+    catalogItemId: number | string;
+    baseCost: number | string;
+    options: Array<RecipeOptionCostView>;
+    lines: Array<RecipeCostLineView>;
+    uncosted: Array<number | string>;
+};
+
 export type RecipeLineInput = {
     stockItemId: number | string;
     quantity: number | string;
@@ -142,6 +168,11 @@ export type RecipeLineView = {
     unit: string;
     quantity: number | string;
     optionIds: Array<number | string>;
+};
+
+export type RecipeOptionCostView = {
+    optionIds: Array<number | string>;
+    cost: number | string;
 };
 
 export type RecipeRequest = {
@@ -219,6 +250,8 @@ export type StockLevelView = {
     avgUnitCost: number | string;
     isLow: boolean;
     value: number | string;
+    lastCost?: null | number | string;
+    lastCostAt?: null | string;
 };
 
 export type TrackByUnitRequest = {
@@ -281,6 +314,42 @@ export type UsageReportRow = {
     transferredIn: number | string;
     transferredOut: number | string;
     transferredValue: number | string;
+};
+
+export type VarianceReport = {
+    from: string;
+    to: string;
+    rows: Array<VarianceRow>;
+    openingValue: number | string;
+    receivedValue: number | string;
+    theoreticalValue: number | string;
+    wastedValue: number | string;
+    countVarianceValue: number | string;
+    closingValue: number | string;
+};
+
+export type VarianceRow = {
+    stockItemId: number | string;
+    name: LocalizedText;
+    unit: string;
+    opening: number | string;
+    openingValue: number | string;
+    received: number | string;
+    receivedValue: number | string;
+    transferredIn: number | string;
+    transferredOut: number | string;
+    transferredValue: number | string;
+    theoretical: number | string;
+    theoreticalValue: number | string;
+    wasted: number | string;
+    wastedValue: number | string;
+    adjusted: number | string;
+    adjustedValue: number | string;
+    countVariance: number | string;
+    countVarianceValue: number | string;
+    closing: number | string;
+    closingValue: number | string;
+    variancePercent: null | number | string;
 };
 
 export type GetStockItemsData = {
@@ -470,6 +539,41 @@ export type SetReorderLevelResponses = {
      */
     200: unknown;
 };
+
+export type GetStockItemCostsData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        take?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/items/{id}/costs';
+};
+
+export type GetStockItemCostsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetStockItemCostsResponses = {
+    /**
+     * OK
+     */
+    200: Array<CostHistoryView>;
+};
+
+export type GetStockItemCostsResponse = GetStockItemCostsResponses[keyof GetStockItemCostsResponses];
 
 export type GetStockLevelsData = {
     body?: never;
@@ -1003,6 +1107,46 @@ export type GetUsageReportResponses = {
 
 export type GetUsageReportResponse = GetUsageReportResponses[keyof GetUsageReportResponses];
 
+export type GetVarianceReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/reports/variance';
+};
+
+export type GetVarianceReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetVarianceReportError = GetVarianceReportErrors[keyof GetVarianceReportErrors];
+
+export type GetVarianceReportResponses = {
+    /**
+     * OK
+     */
+    200: VarianceReport;
+};
+
+export type GetVarianceReportResponse = GetVarianceReportResponses[keyof GetVarianceReportResponses];
+
 export type RebuildStockLevelsData = {
     body?: never;
     path?: never;
@@ -1066,6 +1210,38 @@ export type GetRecipesResponses = {
 };
 
 export type GetRecipesResponse = GetRecipesResponses[keyof GetRecipesResponses];
+
+export type GetRecipeCostsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/inventory/recipes/costs';
+};
+
+export type GetRecipeCostsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRecipeCostsResponses = {
+    /**
+     * OK
+     */
+    200: Array<RecipeCostView>;
+};
+
+export type GetRecipeCostsResponse = GetRecipeCostsResponses[keyof GetRecipeCostsResponses];
 
 export type RemoveRecipeData = {
     body?: never;

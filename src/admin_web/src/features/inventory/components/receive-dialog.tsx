@@ -23,8 +23,9 @@ import { suppliersQueryOptions } from '@/features/finance/queries'
 import { isComplete, type Line, newLine, reprice } from '../lines'
 import { stockItemsQueryOptions, toStockItemOptions } from '../queries'
 import { useInventoryActions } from '../use-inventory-actions'
+import { useLastCosts } from '../use-last-costs'
 import { useReceiptScan } from '../use-receipt-scan'
-import { LineAmounts, PackHint } from './line-amounts'
+import { CostHint, LineAmounts, PackHint } from './line-amounts'
 import { ReceiptReviewSheet } from './receipt-review-sheet'
 
 interface ReceiveDialogProps {
@@ -74,6 +75,7 @@ function ReceiveForm({
   const { receivePurchase, isPending } = useInventoryActions()
   const { data: items = [] } = useQuery(stockItemsQueryOptions())
   const itemById = new Map(items.map((item) => [String(item.id), item]))
+  const lastCosts = useLastCosts()
 
   // The supplier comes from Finance's list, so the delivery lands on their
   // account; a receipt without one is stock with no creditor
@@ -188,6 +190,7 @@ function ReceiveForm({
                 onRemove={() =>
                   setLines((prev) => prev.filter((l) => l.key !== line.key))
                 }
+                lastCost={lastCosts.get(toNumber(line.stockItemId)) ?? null}
               />
             ))}
           </div>
@@ -298,12 +301,14 @@ function ReceiveLine({
   items,
   onChange,
   onRemove,
+  lastCost,
 }: {
   line: Line
   item: StockItemView | undefined
   items: StockItemView[]
   onChange: (patch: Partial<Line>) => void
   onRemove: () => void
+  lastCost: number | null
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -345,12 +350,15 @@ function ReceiveLine({
         />
       </div>
       {item && (
-        <PackHint
-          line={line}
-          unit={item.unit}
-          packSize={packSize}
-          packName={item.packName}
-        />
+        <>
+          <PackHint
+            line={line}
+            unit={item.unit}
+            packSize={packSize}
+            packName={item.packName}
+          />
+          <CostHint line={line} unit={item.unit} lastCost={lastCost} />
+        </>
       )}
     </div>
   )

@@ -29,10 +29,13 @@ import {
 } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeView } from '@/api/inventory'
-import { getRecipesOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import {
+  getRecipeCostsOptions,
+  getRecipesOptions,
+} from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
+import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -181,6 +184,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       ) : (
         <RecipeSummary recipe={recipe} menu={menu} />
       )}
+      <CostAndMargin item={item} menu={menu} />
       <div className='flex flex-wrap gap-2'>
         <Button
           type='button'
@@ -385,6 +389,82 @@ function RecipeSummary({
     </div>
   )
 }
+
+/**
+ * What one sale costs at the active branch against the item's price: the
+ * margin and the food-cost share, plus what each option adds. Inventory
+ * prices nothing; the join with Catalog's price happens here.
+ */
+function CostAndMargin({
+  item,
+  menu,
+}: {
+  item: CatalogItemDto
+  menu: MenuOptions
+}) {
+  const t = useT()
+  const costs = useQuery(
+    getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
+  )
+  const cost = costs.data?.find(
+    (c) => toNumber(c.catalogItemId) === toNumber(item.id)
+  )
+  if (costs.isLoading) return <Skeleton className='h-4 w-56' />
+  if (!cost) return null
+
+  const price = toNumber(item.price)
+  const base = toNumber(cost.baseCost)
+  const margin = price - base
+  const foodCost = price > 0 ? Math.round((base / price) * 100) : null
+  const incomplete = cost.uncosted.length > 0
+
+  return (
+    <div className='space-y-1 text-sm'>
+      <p className='flex flex-wrap items-center gap-x-1.5 tabular-nums'>
+        <span>{t('costPerSale', { cost: formatEgp(base) })}</span>
+        {price > 0 && (
+          <>
+            <span className='text-muted-foreground'>·</span>
+            <span className={cn(margin < 0 && 'text-destructive')}>
+              {t('marginLine', { margin: formatEgp(margin) })}
+            </span>
+            <span className='text-muted-foreground'>·</span>
+            <span
+              className={cn(
+                foodCost !== null &&
+                  foodCost > FOOD_COST_TARGET &&
+                  'text-destructive'
+              )}
+            >
+              {t('foodCostLine', { percent: foodCost ?? 0 })}
+            </span>
+          </>
+        )}
+        {incomplete && (
+          <Badge variant='outline' className='text-warning border-warning'>
+            {t('costIncomplete', { count: cost.uncosted.length })}
+          </Badge>
+        )}
+      </p>
+      {cost.options.length > 0 && (
+        <p className='text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs'>
+          {cost.options.map((o) => (
+            <span
+              key={o.optionIds.map(String).join(',')}
+              className='inline-flex items-center gap-1'
+            >
+              <OptionChips optionIds={o.optionIds.map(String)} menu={menu} />
+              <span className='tabular-nums'>+{formatEgp(o.cost)}</span>
+            </span>
+          ))}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Food cost above this share of the price is flagged; the menu-cost report lets the owner change it */
+const FOOD_COST_TARGET = 35
 
 // ---------------------------------------------------------------------------
 // Preview: pick like the cashier, see what comes off the shelf

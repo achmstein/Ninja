@@ -1,8 +1,8 @@
 import { useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
+import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import { unitLabel } from '../format'
+import { costChange, unitLabel } from '../format'
 import { type Amounts } from '../lines'
 
 type LineAmountsProps = {
@@ -122,6 +122,45 @@ export function PackHint({
         unit: unitLabel(unit, t),
       })}
       {line.quantity && ` = ${toNumber(line.quantity)} ${unitLabel(unit, t)}`}
+    </p>
+  )
+}
+
+/**
+ * "Last 0.048 / g" under a line's unit cost, with the change against it once
+ * a cost is typed; red or green when it moved a tenth or more, so a price
+ * creep is seen before it moves the average.
+ */
+export function CostHint({
+  line,
+  unit,
+  lastCost,
+}: {
+  line: Amounts
+  unit: string
+  lastCost: number | null | undefined
+}) {
+  const t = useT()
+  if (!lastCost || lastCost <= 0) return null
+  const change = costChange(parseFloat(line.unitCost), lastCost)
+  return (
+    <p className='text-muted-foreground text-xs tabular-nums'>
+      {t('lastCostLine', {
+        cost: formatEgp(lastCost),
+        unit: unitLabel(unit, t),
+      })}
+      {change !== null && (
+        <span
+          className={cn(
+            'ms-1 font-medium',
+            change.flagged &&
+              (change.percent > 0 ? 'text-destructive' : 'text-success')
+          )}
+        >
+          ({change.percent > 0 ? '+' : ''}
+          {change.percent}%)
+        </span>
+      )}
     </p>
   )
 }

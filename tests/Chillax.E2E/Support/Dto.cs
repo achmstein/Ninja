@@ -158,7 +158,14 @@ public sealed record CatalogTypeView(int Id, LocalizedText Name, int DisplayOrde
 public sealed record CustomizationOptionView(int Id, LocalizedText Name, decimal PriceAdjustment, bool IsDefault, int DisplayOrder);
 
 public sealed record StockLevelView(int StockItemId, LocalizedText Name, string Unit, bool AutoSoldOut, bool IsActive, decimal OnHand,
-    decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value);
+    decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value, decimal? LastCost = null, DateTime? LastCostAt = null);
+
+public sealed record CostHistoryView(DateTime At, int? PurchaseId, string? Supplier, decimal Quantity, decimal UnitCost);
+
+// What one sale costs (Inventory.API RecipeCostView); the SPA joins Catalog's price for the margin
+public sealed record RecipeOptionCostView(List<int> OptionIds, decimal Cost);
+
+public sealed record RecipeCostView(int CatalogItemId, decimal BaseCost, List<RecipeOptionCostView> Options, List<int> Uncosted);
 
 public sealed record MovementView(int Id, int StockItemId, string Type, decimal Quantity, decimal UnitCost, string? Reference, string? Reason);
 
@@ -166,6 +173,13 @@ public sealed record UsageReportRow(int StockItemId, decimal Purchased, decimal 
     decimal Wasted, decimal WastedValue, decimal Adjusted, decimal AdjustedValue, decimal CountVariance, decimal CountVarianceValue);
 
 public sealed record UsageReport(List<UsageReportRow> Rows, decimal PurchasedValue, decimal SoldValue, decimal WastedValue, decimal CountVarianceValue);
+
+public sealed record VarianceRow(int StockItemId, decimal Opening, decimal OpeningValue, decimal Received, decimal ReceivedValue,
+    decimal Theoretical, decimal TheoreticalValue, decimal Wasted, decimal WastedValue, decimal CountVariance, decimal CountVarianceValue,
+    decimal Closing, decimal ClosingValue, decimal? VariancePercent);
+
+public sealed record VarianceReport(List<VarianceRow> Rows, decimal OpeningValue, decimal ReceivedValue, decimal TheoreticalValue,
+    decimal WastedValue, decimal CountVarianceValue, decimal ClosingValue);
 
 public sealed record RebuildResponse(int Changed);
 

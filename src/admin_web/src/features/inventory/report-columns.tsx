@@ -1,4 +1,4 @@
-import { type UsageReportRow } from '@/api/inventory'
+import { type VarianceRow } from '@/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -15,7 +15,7 @@ type ReportColumnsContext = {
   localized: Localized
 }
 
-const columnHelper = createAppColumnHelper<UsageReportRow>()
+const columnHelper = createAppColumnHelper<VarianceRow>()
 
 // A quantity over its value, right-aligned; a dash when nothing moved. A plain
 // render helper, not a component, so the file stays a non-component module.
@@ -52,7 +52,11 @@ function quantityValue(
   )
 }
 
-/** Per item over the period: what came in, what went out, and the gaps the counts found. */
+/**
+ * Per item over the period, the way the field reads it: what was there,
+ * what came in, what selling should have used, what was thrown away, what
+ * the counts found, what is left.
+ */
 export function getReportColumns({ t, localized }: ReportColumnsContext) {
   const endHeader = (key: TranslationKey) => () => (
     <div className='text-end'>{t(key)}</div>
@@ -80,25 +84,36 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
         </span>
       ),
     }),
-    columnHelper.accessor((row) => toNumber(row.purchased), {
-      id: 'purchased',
+    columnHelper.accessor((row) => toNumber(row.opening), {
+      id: 'opening',
+      header: endHeader('openingStock'),
+      cell: ({ row }) =>
+        quantityValue(
+          t,
+          row.original.opening,
+          row.original.openingValue,
+          row.original.unit
+        ),
+    }),
+    columnHelper.accessor((row) => toNumber(row.received), {
+      id: 'received',
       header: endHeader('purchased'),
       cell: ({ row }) =>
         quantityValue(
           t,
-          row.original.purchased,
-          row.original.purchasedValue,
+          row.original.received,
+          row.original.receivedValue,
           row.original.unit
         ),
     }),
-    columnHelper.accessor((row) => toNumber(row.sold), {
-      id: 'sold',
-      header: endHeader('sold'),
+    columnHelper.accessor((row) => toNumber(row.theoretical), {
+      id: 'theoretical',
+      header: endHeader('theoreticalUsage'),
       cell: ({ row }) =>
         quantityValue(
           t,
-          row.original.sold,
-          row.original.soldValue,
+          row.original.theoretical,
+          row.original.theoreticalValue,
           row.original.unit
         ),
     }),
@@ -115,15 +130,40 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
     }),
     columnHelper.accessor((row) => toNumber(row.countVariance), {
       id: 'countVariance',
-      header: endHeader('countVariance'),
-      cell: ({ row }) =>
-        quantityValue(
-          t,
-          row.original.countVariance,
-          row.original.countVarianceValue,
-          row.original.unit,
-          true
-        ),
+      header: () => (
+        <div className='text-end'>
+          <div>{t('countVariance')}</div>
+          <div className='text-muted-foreground text-xs font-normal'>
+            {t('ofTheoretical')}
+          </div>
+        </div>
+      ),
+      cell: ({ row }) => {
+        const { countVariance, countVarianceValue, unit, variancePercent } =
+          row.original
+        const n = toNumber(countVariance)
+        if (n === 0 && toNumber(countVarianceValue) === 0) {
+          return <div className='text-muted-foreground text-end'>—</div>
+        }
+        const percent =
+          variancePercent == null ? null : toNumber(variancePercent)
+        return (
+          <div
+            className={cn('text-end tabular-nums', n < 0 && 'text-destructive')}
+          >
+            <div>{formatSignedQuantity(n, unit, t)}</div>
+            <div
+              className={cn(
+                'text-xs',
+                n < 0 ? 'text-destructive/80' : 'text-muted-foreground'
+              )}
+            >
+              {formatEgp(countVarianceValue)}
+              {percent !== null && ` · ${percent > 0 ? '+' : ''}${percent}%`}
+            </div>
+          </div>
+        )
+      },
     }),
     columnHelper.accessor(
       (row) => toNumber(row.transferredIn) + toNumber(row.transferredOut),
@@ -157,5 +197,16 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
         },
       }
     ),
+    columnHelper.accessor((row) => toNumber(row.closing), {
+      id: 'closing',
+      header: endHeader('closingStock'),
+      cell: ({ row }) =>
+        quantityValue(
+          t,
+          row.original.closing,
+          row.original.closingValue,
+          row.original.unit
+        ),
+    }),
   ])
 }

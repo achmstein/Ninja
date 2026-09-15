@@ -16,7 +16,11 @@ public static class ReceiptProposalValidator
 
     private const decimal MoneyTolerance = 0.05m;
 
-    public static ReceiptProposal Validate(ReceiptExtraction extraction, IReadOnlyList<StockItemView> candidates, IReadOnlyList<string> extraWarnings)
+    /// <summary>A unit cost this far from the last receipt's is worth a look before it moves the average.</summary>
+    public const decimal PriceChangeThreshold = 0.10m;
+
+    public static ReceiptProposal Validate(ReceiptExtraction extraction, IReadOnlyList<StockItemView> candidates, IReadOnlyList<string> extraWarnings,
+        IReadOnlyDictionary<int, decimal>? lastCosts = null)
     {
         var byId = candidates.ToDictionary(c => c.Id);
         var warnings = new List<string>(extraWarnings);
@@ -85,6 +89,15 @@ public static class ReceiptProposalValidator
 
             if (lineTotal == 0 && unitCost == 0)
                 warnings.Add($"{tag}: no price could be read; enter it.");
+
+            // A matched item that costs noticeably more or less than last time
+            if (item is not null && unitCost > 0 && lastCosts is not null
+                && lastCosts.TryGetValue(item.Id, out var last) && last > 0)
+            {
+                var change = (unitCost - last) / last;
+                if (Math.Abs(change) >= PriceChangeThreshold)
+                    warnings.Add($"{tag}: \"{item.Name.En}\" is {unitCost:0.####} per {item.Unit}, {(change > 0 ? "up" : "down")} {Math.Abs(change) * 100:0}% from {last:0.####} last time.");
+            }
 
             // A new item only when nothing matched
             ProposedNewItem? newItem = null;

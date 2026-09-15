@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, type Options, postStockAdjustment, postStockCount, rebuildStockLevels, receivePurchase, removeRecipe, scanReceipt, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
-import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, ScanReceiptData, ScanReceiptError, ScanReceiptResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
+import { createStockItem, getPurchase, getPurchases, getRecipe, getRecipeCosts, getRecipes, getStockCount, getStockCounts, getStockItem, getStockItemCosts, getStockItems, getStockLevels, getStockMovements, getTransfer, getTransfers, getUsageReport, getVarianceReport, type Options, postStockAdjustment, postStockCount, rebuildStockLevels, receivePurchase, removeRecipe, scanReceipt, setRecipe, setReorderLevel, trackByUnit, transferStock, updateStockItem } from '../sdk.gen';
+import type { CreateStockItemData, CreateStockItemError, CreateStockItemResponse, GetPurchaseData, GetPurchaseResponse, GetPurchasesData, GetPurchasesResponse, GetRecipeCostsData, GetRecipeCostsResponse, GetRecipeData, GetRecipeResponse, GetRecipesData, GetRecipesResponse, GetStockCountData, GetStockCountResponse, GetStockCountsData, GetStockCountsResponse, GetStockItemCostsData, GetStockItemCostsResponse, GetStockItemData, GetStockItemResponse, GetStockItemsData, GetStockItemsResponse, GetStockLevelsData, GetStockLevelsResponse, GetStockMovementsData, GetStockMovementsResponse, GetTransferData, GetTransferResponse, GetTransfersData, GetTransfersResponse, GetUsageReportData, GetUsageReportError, GetUsageReportResponse, GetVarianceReportData, GetVarianceReportError, GetVarianceReportResponse, PostStockAdjustmentData, PostStockAdjustmentError, PostStockCountData, PostStockCountError, PostStockCountResponse, RebuildStockLevelsData, RebuildStockLevelsResponse, ReceivePurchaseData, ReceivePurchaseError, ReceivePurchaseResponse, RemoveRecipeData, RemoveRecipeResponse, ScanReceiptData, ScanReceiptError, ScanReceiptResponse, SetRecipeData, SetRecipeError, SetReorderLevelData, SetReorderLevelError, TrackByUnitData, TrackByUnitError, TrackByUnitResponse, TransferStockData, TransferStockError, TransferStockResponse, UpdateStockItemData, UpdateStockItemError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -123,6 +123,24 @@ export const setReorderLevelMutation = (options?: Partial<Options<SetReorderLeve
     };
     return mutationOptions;
 };
+
+export const getStockItemCostsQueryKey = (options: Options<GetStockItemCostsData>) => createQueryKey('getStockItemCosts', options);
+
+/**
+ * What the branch paid for this item, receipt by receipt, newest first
+ */
+export const getStockItemCostsOptions = (options: Options<GetStockItemCostsData>) => queryOptions<GetStockItemCostsResponse, AxiosError<DefaultError>, GetStockItemCostsResponse, ReturnType<typeof getStockItemCostsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStockItemCosts({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStockItemCostsQueryKey(options)
+});
 
 export const getStockLevelsQueryKey = (options: Options<GetStockLevelsData>) => createQueryKey('getStockLevels', options);
 
@@ -366,6 +384,24 @@ export const getUsageReportOptions = (options: Options<GetUsageReportData>) => q
     queryKey: getUsageReportQueryKey(options)
 });
 
+export const getVarianceReportQueryKey = (options: Options<GetVarianceReportData>) => createQueryKey('getVarianceReport', options);
+
+/**
+ * The period as opening, received, theoretical usage, waste, count variance and closing, per item and in money
+ */
+export const getVarianceReportOptions = (options: Options<GetVarianceReportData>) => queryOptions<GetVarianceReportResponse, AxiosError<GetVarianceReportError>, GetVarianceReportResponse, ReturnType<typeof getVarianceReportQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getVarianceReport({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getVarianceReportQueryKey(options)
+});
+
 /**
  * Recompute the branch's levels from its ledger
  */
@@ -399,6 +435,24 @@ export const getRecipesOptions = (options: Options<GetRecipesData>) => queryOpti
         return data;
     },
     queryKey: getRecipesQueryKey(options)
+});
+
+export const getRecipeCostsQueryKey = (options: Options<GetRecipeCostsData>) => createQueryKey('getRecipeCosts', options);
+
+/**
+ * What one sale of each tracked menu item costs at the branch's average ingredient costs
+ */
+export const getRecipeCostsOptions = (options: Options<GetRecipeCostsData>) => queryOptions<GetRecipeCostsResponse, AxiosError<DefaultError>, GetRecipeCostsResponse, ReturnType<typeof getRecipeCostsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getRecipeCosts({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getRecipeCostsQueryKey(options)
 });
 
 /**

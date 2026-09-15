@@ -32,7 +32,9 @@ public sealed class ReceiptScanner(IChillaxAgentFactory factory, TimeProvider ti
     /// <summary>False when no chat model is configured; the endpoint answers 503.</summary>
     public bool IsEnabled => factory.IsEnabled;
 
-    public async Task<ReceiptProposal> ScanAsync(int branchId, DataContent image, IReadOnlyList<StockItemView> stockItems, CancellationToken ct)
+    /// <param name="lastCosts">What the branch last paid per base unit, by stock item, so a line that moved is flagged.</param>
+    public async Task<ReceiptProposal> ScanAsync(int branchId, DataContent image, IReadOnlyList<StockItemView> stockItems, CancellationToken ct,
+        IReadOnlyDictionary<int, decimal>? lastCosts = null)
     {
         var warnings = new List<string>();
         var candidates = stockItems;
@@ -58,7 +60,7 @@ public sealed class ReceiptScanner(IChillaxAgentFactory factory, TimeProvider ti
         };
 
         var run = await agent.RunAsync<ReceiptExtraction>(messages, ct);
-        return ReceiptProposalValidator.Validate(run.Result, candidates, warnings);
+        return ReceiptProposalValidator.Validate(run.Result, candidates, warnings, lastCosts);
     }
 
     private const string Instructions = $"""

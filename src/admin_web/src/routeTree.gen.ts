@@ -46,6 +46,7 @@ import { Route as AuthenticatedPayrollAttendanceRouteImport } from './routes/_au
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
 import { Route as AuthenticatedMenuBundlesRouteImport } from './routes/_authenticated/menu/bundles'
 import { Route as AuthenticatedInventoryReportsRouteImport } from './routes/_authenticated/inventory/reports'
+import { Route as AuthenticatedInventoryMenuCostRouteImport } from './routes/_authenticated/inventory/menu-cost'
 import { Route as AuthenticatedFinanceSuppliersRouteImport } from './routes/_authenticated/finance/suppliers'
 import { Route as AuthenticatedFinanceProfitRouteImport } from './routes/_authenticated/finance/profit'
 import { Route as AuthenticatedFinancePartnersRouteImport } from './routes/_authenticated/finance/partners'
@@ -261,6 +262,12 @@ const AuthenticatedInventoryReportsRoute =
     path: '/inventory/reports',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInventoryMenuCostRoute =
+  AuthenticatedInventoryMenuCostRouteImport.update({
+    id: '/inventory/menu-cost',
+    path: '/inventory/menu-cost',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFinanceSuppliersRoute =
   AuthenticatedFinanceSuppliersRouteImport.update({
     id: '/finance/suppliers',
@@ -331,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/finance/partners': typeof AuthenticatedFinancePartnersRoute
   '/finance/profit': typeof AuthenticatedFinanceProfitRoute
   '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
+  '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
@@ -378,6 +386,7 @@ export interface FileRoutesByTo {
   '/finance/partners': typeof AuthenticatedFinancePartnersRoute
   '/finance/profit': typeof AuthenticatedFinanceProfitRoute
   '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
+  '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
@@ -427,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/finance/partners': typeof AuthenticatedFinancePartnersRoute
   '/_authenticated/finance/profit': typeof AuthenticatedFinanceProfitRoute
   '/_authenticated/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
+  '/_authenticated/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/_authenticated/inventory/reports': typeof AuthenticatedInventoryReportsRoute
   '/_authenticated/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/finance/partners'
     | '/finance/profit'
     | '/finance/suppliers'
+    | '/inventory/menu-cost'
     | '/inventory/reports'
     | '/menu/bundles'
     | '/orders/history'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/finance/partners'
     | '/finance/profit'
     | '/finance/suppliers'
+    | '/inventory/menu-cost'
     | '/inventory/reports'
     | '/menu/bundles'
     | '/orders/history'
@@ -571,6 +583,7 @@ export interface FileRouteTypes {
     | '/_authenticated/finance/partners'
     | '/_authenticated/finance/profit'
     | '/_authenticated/finance/suppliers'
+    | '/_authenticated/inventory/menu-cost'
     | '/_authenticated/inventory/reports'
     | '/_authenticated/menu/bundles'
     | '/_authenticated/orders/history'
@@ -877,6 +890,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInventoryReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inventory/menu-cost': {
+      id: '/_authenticated/inventory/menu-cost'
+      path: '/inventory/menu-cost'
+      fullPath: '/inventory/menu-cost'
+      preLoaderRoute: typeof AuthenticatedInventoryMenuCostRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/finance/suppliers': {
       id: '/_authenticated/finance/suppliers'
       path: '/finance/suppliers'
@@ -950,6 +970,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinancePartnersRoute: typeof AuthenticatedFinancePartnersRoute
   AuthenticatedFinanceProfitRoute: typeof AuthenticatedFinanceProfitRoute
   AuthenticatedFinanceSuppliersRoute: typeof AuthenticatedFinanceSuppliersRoute
+  AuthenticatedInventoryMenuCostRoute: typeof AuthenticatedInventoryMenuCostRoute
   AuthenticatedInventoryReportsRoute: typeof AuthenticatedInventoryReportsRoute
   AuthenticatedMenuBundlesRoute: typeof AuthenticatedMenuBundlesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
@@ -990,6 +1011,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinancePartnersRoute: AuthenticatedFinancePartnersRoute,
   AuthenticatedFinanceProfitRoute: AuthenticatedFinanceProfitRoute,
   AuthenticatedFinanceSuppliersRoute: AuthenticatedFinanceSuppliersRoute,
+  AuthenticatedInventoryMenuCostRoute: AuthenticatedInventoryMenuCostRoute,
   AuthenticatedInventoryReportsRoute: AuthenticatedInventoryReportsRoute,
   AuthenticatedMenuBundlesRoute: AuthenticatedMenuBundlesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,

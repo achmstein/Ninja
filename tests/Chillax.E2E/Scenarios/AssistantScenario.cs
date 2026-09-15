@@ -123,7 +123,10 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
         Assert.Equal("FAKE-0001", proposal.InvoiceRef);
         Assert.Equal("EGP", proposal.Currency);
         Assert.Equal(3, proposal.Lines.Count);
-        Assert.Empty(proposal.Warnings);
+        // The fake prices the two matched items at its own figures, not what the day received
+        // them at: each is flagged against the last receipt, and nothing else is wrong
+        Assert.All(proposal.Warnings, w => Assert.Contains("last time", w));
+        Assert.True(proposal.Warnings.Count <= 2, string.Join("; ", proposal.Warnings));
         Assert.Equal(proposal.PrintedTotal, proposal.ComputedTotal);
 
         var first = proposal.Lines[0];

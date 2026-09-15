@@ -1,5 +1,6 @@
 #nullable enable
 using Chillax.Inventory.Domain.AggregatesModel.TransferAggregate;
+using Chillax.Inventory.API.Application.Services;
 using Chillax.Inventory.Infrastructure;
 
 namespace Chillax.Inventory.API.Application.Queries;
@@ -28,6 +29,12 @@ public interface IInventoryQueries
     Task<TransferView?> GetTransferAsync(int id);
 
     Task<UsageReport> GetUsageReportAsync(int branchId, DateTime from, DateTime to);
+    Task<VarianceReport> GetVarianceReportAsync(int branchId, DateTime from, DateTime to);
+
+    /// <summary>What the branch last paid per base unit, by stock item: the newest receipt on the ledger.</summary>
+    Task<Dictionary<int, (decimal UnitCost, DateTime At)>> GetLastCostsAsync(int branchId);
+    Task<IReadOnlyList<CostHistoryView>> GetCostHistoryAsync(int branchId, int stockItemId, int take);
+    Task<IReadOnlyList<RecipeCostView>> GetRecipeCostsAsync(int branchId);
 }
 
 public class InventoryQueries(InventoryContext context) : IInventoryQueries
@@ -54,6 +61,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             .OrderBy(s => s.Name.En)
             .ToListAsync();
         var levels = await context.StockLevels.AsNoTracking().Where(l => l.BranchId == branchId).ToDictionaryAsync(l => l.StockItemId);
+        var lastCosts = await GetLastCostsAsync(branchId);
 
         var views = items.Select(s =>
         {
@@ -61,11 +69,14 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             var onHand = level?.OnHand ?? 0;
             var reorder = level?.ReorderLevel;
             var avg = level?.AvgUnitCost ?? 0;
+            var last = lastCosts.TryGetValue(s.Id, out var l) ? l : default((decimal UnitCost, DateTime At)?);
             return new StockLevelView(
                 s.Id, s.Name, s.Unit, s.PackSize, s.PackName, s.AutoSoldOut, s.IsActive,
                 onHand, reorder, avg,
                 IsLow: reorder is { } r && onHand <= r,
-                Value: StockValue(onHand, avg));
+                Value: StockValue(onHand, avg),
+                LastCost: last?.UnitCost,
+                LastCostAt: last?.At);
         });
 
         return (lowOnly ? views.Where(v => v.IsLow) : views).ToList();
@@ -214,6 +225,145 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             CountVarianceValue: rows.Sum(r => r.CountVarianceValue),
             StockValue: stockValue.Sum(l => StockValue(l.OnHand, l.AvgUnitCost)));
     }
+
+    public async Task<VarianceReport> GetVarianceReportAsync(int branchId, DateTime from, DateTime to)
+    {
+        // The period's movements by item and type, valued as posted (the
+        // usage report's principle); what was there before the period is
+        // the ledger summed up to it
+        var within = await context.StockMovements
+            .AsNoTracking()
+            .Where(m => m.BranchId == branchId && m.RecordedAt >= from && m.RecordedAt < to)
+            .GroupBy(m => new { m.StockItemId, m.Type })
+            .Select(g => new
+            {
+                g.Key.StockItemId,
+                g.Key.Type,
+                Quantity = g.Sum(m => m.Quantity),
+                Value = g.Sum(m => m.Quantity * m.UnitCost),
+            })
+            .ToListAsync();
+
+        var opening = await context.StockMovements
+            .AsNoTracking()
+            .Where(m => m.BranchId == branchId && m.RecordedAt < from)
+            .GroupBy(m => m.StockItemId)
+            .Select(g => new { StockItemId = g.Key, Quantity = g.Sum(m => m.Quantity) })
+            .ToDictionaryAsync(x => x.StockItemId, x => x.Quantity);
+
+        var ids = within.Select(s => s.StockItemId).Concat(opening.Keys).Distinct().ToList();
+        var names = await NamesAsync(ids);
+        var averages = await context.StockLevels
+            .AsNoTracking()
+            .Where(l => l.BranchId == branchId && ids.Contains(l.StockItemId))
+            .ToDictionaryAsync(l => l.StockItemId, l => l.AvgUnitCost);
+        var byItem = within.GroupBy(s => s.StockItemId).ToDictionary(g => g.Key, g => g.ToList());
+
+        var rows = ids
+            .Select(id =>
+            {
+                byItem.TryGetValue(id, out var sums);
+                sums ??= [];
+                decimal Qty(MovementType type) => sums.Where(s => s.Type == type).Sum(s => s.Quantity);
+                decimal Val(MovementType type) => Money(sums.Where(s => s.Type == type).Sum(s => s.Value));
+
+                var open = opening.GetValueOrDefault(id);
+                var close = open + sums.Sum(s => s.Quantity);
+                var avg = averages.GetValueOrDefault(id);
+                var theoretical = -Qty(MovementType.Sale);
+                var countVariance = Qty(MovementType.Count);
+
+                return new VarianceRow(
+                    id, Name(names, id), Unit(names, id),
+                    Opening: open, OpeningValue: StockValue(open, avg),
+                    Received: Qty(MovementType.Purchase), ReceivedValue: Val(MovementType.Purchase),
+                    TransferredIn: Qty(MovementType.TransferIn), TransferredOut: -Qty(MovementType.TransferOut),
+                    TransferredValue: Val(MovementType.TransferIn) + Val(MovementType.TransferOut),
+                    Theoretical: theoretical, TheoreticalValue: -Val(MovementType.Sale),
+                    Wasted: -Qty(MovementType.Waste), WastedValue: -Val(MovementType.Waste),
+                    Adjusted: Qty(MovementType.Adjustment), AdjustedValue: Val(MovementType.Adjustment),
+                    CountVariance: countVariance, CountVarianceValue: Val(MovementType.Count),
+                    Closing: close, ClosingValue: StockValue(close, avg),
+                    VariancePercent: theoretical > 0 ? Math.Round(countVariance / theoretical * 100, 1, MidpointRounding.AwayFromZero) : null);
+            })
+            .Where(r => r.Opening != 0 || r.Closing != 0 || byItem.ContainsKey(r.StockItemId))
+            .OrderBy(r => r.Name.En)
+            .ToList();
+
+        return new VarianceReport(
+            from, to, rows,
+            OpeningValue: rows.Sum(r => r.OpeningValue),
+            ReceivedValue: rows.Sum(r => r.ReceivedValue),
+            TheoreticalValue: rows.Sum(r => r.TheoreticalValue),
+            WastedValue: rows.Sum(r => r.WastedValue),
+            CountVarianceValue: rows.Sum(r => r.CountVarianceValue),
+            ClosingValue: rows.Sum(r => r.ClosingValue));
+    }
+
+    public async Task<Dictionary<int, (decimal UnitCost, DateTime At)>> GetLastCostsAsync(int branchId)
+    {
+        // The newest receipt per item; Postgres' DISTINCT ON does it in one pass
+        var newest = await context.StockMovements
+            .FromSqlInterpolated($"""
+                SELECT DISTINCT ON ("StockItemId") *
+                FROM inventory.stock_movements
+                WHERE "BranchId" = {branchId} AND "Type" = {nameof(MovementType.Purchase)}
+                ORDER BY "StockItemId", "RecordedAt" DESC, "Id" DESC
+                """)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return newest.ToDictionary(m => m.StockItemId, m => (m.UnitCost, m.RecordedAt));
+    }
+
+    public async Task<IReadOnlyList<CostHistoryView>> GetCostHistoryAsync(int branchId, int stockItemId, int take)
+    {
+        var receipts = await context.StockMovements
+            .AsNoTracking()
+            .Where(m => m.BranchId == branchId && m.StockItemId == stockItemId && m.Type == MovementType.Purchase)
+            .OrderByDescending(m => m.RecordedAt).ThenByDescending(m => m.Id)
+            .Take(take)
+            .Select(m => new { m.RecordedAt, m.Reference, m.Quantity, m.UnitCost })
+            .ToListAsync();
+
+        // A receipt's reference is purchase:{id}; the purchase names the supplier
+        var purchaseIds = receipts
+            .Select(r => PurchaseIdOf(r.Reference))
+            .Where(id => id is not null)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+        var suppliers = await context.Purchases
+            .AsNoTracking()
+            .Where(p => purchaseIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Supplier);
+
+        return receipts.Select(r =>
+        {
+            var purchaseId = PurchaseIdOf(r.Reference);
+            return new CostHistoryView(r.RecordedAt, purchaseId, purchaseId is { } id ? suppliers.GetValueOrDefault(id) : null, r.Quantity, r.UnitCost);
+        }).ToList();
+    }
+
+    public async Task<IReadOnlyList<RecipeCostView>> GetRecipeCostsAsync(int branchId)
+    {
+        var recipes = await context.Recipes.AsNoTracking().OrderBy(r => r.CatalogItemId).ToListAsync();
+        var items = await NamesAsync(recipes.SelectMany(r => r.Lines).Select(l => l.StockItemId));
+        var averages = await context.StockLevels
+            .AsNoTracking()
+            .Where(l => l.BranchId == branchId)
+            .ToDictionaryAsync(l => l.StockItemId, l => l.AvgUnitCost);
+
+        return recipes.Select(r => RecipeCosting.Cost(r, averages, items)).ToList();
+    }
+
+    private static int? PurchaseIdOf(string? reference)
+        => reference is not null && reference.StartsWith("purchase:", StringComparison.Ordinal)
+            && int.TryParse(reference.AsSpan("purchase:".Length), out var id)
+            ? id
+            : null;
+
+    private static decimal Money(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
     private static decimal StockValue(decimal onHand, decimal avgUnitCost)
         => onHand <= 0 ? 0 : Math.Round(onHand * avgUnitCost, 2, MidpointRounding.AwayFromZero);

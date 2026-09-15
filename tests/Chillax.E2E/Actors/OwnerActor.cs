@@ -285,6 +285,18 @@ public sealed class OwnerActor(ApiClient api)
     public Task<UsageReport> UsageAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct)
         => Api.GetAsync<UsageReport>($"/api/inventory/reports/usage?from={fromUtc:O}&to={toUtc:O}", ct);
 
+    /// <summary>reports.tsx: the period as opening, received, used by sales, waste, count variance, closing.</summary>
+    public Task<VarianceReport> VarianceAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct)
+        => Api.GetAsync<VarianceReport>($"/api/inventory/reports/variance?from={fromUtc:O}&to={toUtc:O}", ct);
+
+    /// <summary>stock-item-panel.tsx: what the branch paid, receipt by receipt.</summary>
+    public Task<List<CostHistoryView>> CostHistoryAsync(int stockItemId, CancellationToken ct)
+        => Api.GetAsync<List<CostHistoryView>>($"/api/inventory/items/{stockItemId}/costs", ct);
+
+    /// <summary>menu-cost.tsx and the item sheet: what one sale of each tracked item costs at the branch.</summary>
+    public Task<List<RecipeCostView>> RecipeCostsAsync(CancellationToken ct)
+        => Api.GetAsync<List<RecipeCostView>>("/api/inventory/recipes/costs", ct);
+
     public Task<RebuildResponse> RebuildLevelsAsync(CancellationToken ct)
         => Api.PostAsync<RebuildResponse>("/api/inventory/levels/rebuild", null, ct);
 

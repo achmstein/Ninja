@@ -15,7 +15,10 @@ import {
   type StockItemView,
   type StockLevelView,
 } from '@/api/inventory'
-import { getRecipesOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import {
+  getRecipesOptions,
+  getStockItemCostsOptions,
+} from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -37,6 +40,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import {
   actorLabel,
+  costChange,
   formatQuantity,
   formatSignedQuantity,
   MOVEMENT_ADJUSTMENT,
@@ -216,6 +220,8 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
 
         {level.isActive && <QuickFix key={stockItemId} level={level} />}
 
+        <CostHistory stockItemId={stockItemId} unit={level.unit} />
+
         <Movements stockItemId={stockItemId} />
       </div>
 
@@ -383,6 +389,84 @@ const PAGE_SIZE = 30
  * panel is scrolled to the bottom. Keyed under the generated query id so
  * the postings' invalidation refreshes it too.
  */
+/**
+ * What the branch paid for the item, receipt by receipt, newest first, each
+ * against the one before it so a creeping price is a column of red.
+ */
+function CostHistory({
+  stockItemId,
+  unit,
+}: {
+  stockItemId: number
+  unit: string
+}) {
+  const t = useT()
+  const locale = useLocale()
+  const query = useQuery(
+    getStockItemCostsOptions({
+      path: { id: stockItemId },
+      query: { 'api-version': API_VERSION, take: 12 },
+    })
+  )
+  const day = useMemo(
+    () => new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }),
+    [locale]
+  )
+  const rows = query.data ?? []
+  if (query.isLoading) return null
+  if (rows.length === 0) return null
+
+  return (
+    <section className='space-y-2 border-t p-4'>
+      <h3 className='text-sm font-medium'>{t('costHistory')}</h3>
+      <ul className='divide-y text-sm'>
+        {rows.map((r, i) => {
+          const previous = rows[i + 1]
+          const change = previous
+            ? costChange(toNumber(r.unitCost), toNumber(previous.unitCost))
+            : null
+          return (
+            <li
+              key={`${r.at}-${String(r.purchaseId ?? i)}`}
+              className='flex items-center gap-3 py-1.5'
+            >
+              <span className='text-muted-foreground w-16 shrink-0 text-xs tabular-nums'>
+                {day.format(new Date(r.at))}
+              </span>
+              <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
+                {r.supplier || t('noSupplier')}
+                {' · '}
+                {formatQuantity(r.quantity, unit, t)}
+              </span>
+              <span className='tabular-nums'>
+                {formatEgp(r.unitCost)}
+                <span className='text-muted-foreground text-xs'>
+                  {' / '}
+                  {unitLabel(unit, t)}
+                </span>
+              </span>
+              <span
+                className={cn(
+                  'w-12 text-end text-xs tabular-nums',
+                  change?.flagged
+                    ? change.percent > 0
+                      ? 'text-destructive'
+                      : 'text-success'
+                    : 'text-muted-foreground'
+                )}
+              >
+                {change
+                  ? `${change.percent > 0 ? '+' : ''}${change.percent}%`
+                  : ''}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
+
 function Movements({ stockItemId }: { stockItemId: number }) {
   const t = useT()
   const locale = useLocale()

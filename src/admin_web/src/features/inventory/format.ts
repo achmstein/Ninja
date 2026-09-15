@@ -128,3 +128,19 @@ export function actorLabel(
 ): string {
   return actor === 'system' ? t('systemActor') : (actor ?? '')
 }
+
+/** A cost this far from the last receipt's is worth a look (the server's ReceiptProposalValidator uses the same) */
+export const PRICE_CHANGE_THRESHOLD = 10
+
+/**
+ * How a unit cost moved against the last one, as a rounded percent, and
+ * whether it moved enough to flag; null until both numbers are there.
+ */
+export function costChange(
+  unitCost: number,
+  lastCost: number | null | undefined
+): { percent: number; flagged: boolean } | null {
+  if (!lastCost || lastCost <= 0 || !(unitCost > 0)) return null
+  const percent = Math.round(((unitCost - lastCost) / lastCost) * 100)
+  return { percent, flagged: Math.abs(percent) >= PRICE_CHANGE_THRESHOLD }
+}

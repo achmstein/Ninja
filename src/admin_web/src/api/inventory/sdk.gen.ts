@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateStockItemData, CreateStockItemErrors, CreateStockItemResponses, GetPurchaseData, GetPurchaseErrors, GetPurchaseResponses, GetPurchasesData, GetPurchasesErrors, GetPurchasesResponses, GetRecipeData, GetRecipeErrors, GetRecipeResponses, GetRecipesData, GetRecipesErrors, GetRecipesResponses, GetStockCountData, GetStockCountErrors, GetStockCountResponses, GetStockCountsData, GetStockCountsErrors, GetStockCountsResponses, GetStockItemData, GetStockItemErrors, GetStockItemResponses, GetStockItemsData, GetStockItemsErrors, GetStockItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsData, GetStockMovementsErrors, GetStockMovementsResponses, GetTransferData, GetTransferErrors, GetTransferResponses, GetTransfersData, GetTransfersErrors, GetTransfersResponses, GetUsageReportData, GetUsageReportErrors, GetUsageReportResponses, PostStockAdjustmentData, PostStockAdjustmentErrors, PostStockAdjustmentResponses, PostStockCountData, PostStockCountErrors, PostStockCountResponses, RebuildStockLevelsData, RebuildStockLevelsErrors, RebuildStockLevelsResponses, ReceivePurchaseData, ReceivePurchaseErrors, ReceivePurchaseResponses, RemoveRecipeData, RemoveRecipeErrors, RemoveRecipeResponses, ScanReceiptData, ScanReceiptErrors, ScanReceiptResponses, SetRecipeData, SetRecipeErrors, SetRecipeResponses, SetReorderLevelData, SetReorderLevelErrors, SetReorderLevelResponses, TrackByUnitData, TrackByUnitErrors, TrackByUnitResponses, TransferStockData, TransferStockErrors, TransferStockResponses, UpdateStockItemData, UpdateStockItemErrors, UpdateStockItemResponses } from './types.gen';
+import type { CreateStockItemData, CreateStockItemErrors, CreateStockItemResponses, GetPurchaseData, GetPurchaseErrors, GetPurchaseResponses, GetPurchasesData, GetPurchasesErrors, GetPurchasesResponses, GetRecipeCostsData, GetRecipeCostsErrors, GetRecipeCostsResponses, GetRecipeData, GetRecipeErrors, GetRecipeResponses, GetRecipesData, GetRecipesErrors, GetRecipesResponses, GetStockCountData, GetStockCountErrors, GetStockCountResponses, GetStockCountsData, GetStockCountsErrors, GetStockCountsResponses, GetStockItemCostsData, GetStockItemCostsErrors, GetStockItemCostsResponses, GetStockItemData, GetStockItemErrors, GetStockItemResponses, GetStockItemsData, GetStockItemsErrors, GetStockItemsResponses, GetStockLevelsData, GetStockLevelsErrors, GetStockLevelsResponses, GetStockMovementsData, GetStockMovementsErrors, GetStockMovementsResponses, GetTransferData, GetTransferErrors, GetTransferResponses, GetTransfersData, GetTransfersErrors, GetTransfersResponses, GetUsageReportData, GetUsageReportErrors, GetUsageReportResponses, GetVarianceReportData, GetVarianceReportErrors, GetVarianceReportResponses, PostStockAdjustmentData, PostStockAdjustmentErrors, PostStockAdjustmentResponses, PostStockCountData, PostStockCountErrors, PostStockCountResponses, RebuildStockLevelsData, RebuildStockLevelsErrors, RebuildStockLevelsResponses, ReceivePurchaseData, ReceivePurchaseErrors, ReceivePurchaseResponses, RemoveRecipeData, RemoveRecipeErrors, RemoveRecipeResponses, ScanReceiptData, ScanReceiptErrors, ScanReceiptResponses, SetRecipeData, SetRecipeErrors, SetRecipeResponses, SetReorderLevelData, SetReorderLevelErrors, SetReorderLevelResponses, TrackByUnitData, TrackByUnitErrors, TrackByUnitResponses, TransferStockData, TransferStockErrors, TransferStockResponses, UpdateStockItemData, UpdateStockItemErrors, UpdateStockItemResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -68,6 +68,15 @@ export const setReorderLevel = <ThrowOnError extends boolean = false>(options: O
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * What the branch paid for this item, receipt by receipt, newest first
+ */
+export const getStockItemCosts = <ThrowOnError extends boolean = false>(options: Options<GetStockItemCostsData, ThrowOnError>): RequestResult<GetStockItemCostsResponses, GetStockItemCostsErrors, ThrowOnError> => (options.client ?? client).get<GetStockItemCostsResponses, GetStockItemCostsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/inventory/items/{id}/costs',
+    ...options
 });
 
 /**
@@ -212,6 +221,15 @@ export const getUsageReport = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
+ * The period as opening, received, theoretical usage, waste, count variance and closing, per item and in money
+ */
+export const getVarianceReport = <ThrowOnError extends boolean = false>(options: Options<GetVarianceReportData, ThrowOnError>): RequestResult<GetVarianceReportResponses, GetVarianceReportErrors, ThrowOnError> => (options.client ?? client).get<GetVarianceReportResponses, GetVarianceReportErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/inventory/reports/variance',
+    ...options
+});
+
+/**
  * Recompute the branch's levels from its ledger
  */
 export const rebuildStockLevels = <ThrowOnError extends boolean = false>(options: Options<RebuildStockLevelsData, ThrowOnError>): RequestResult<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError> => (options.client ?? client).post<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError>({
@@ -226,6 +244,15 @@ export const rebuildStockLevels = <ThrowOnError extends boolean = false>(options
 export const getRecipes = <ThrowOnError extends boolean = false>(options: Options<GetRecipesData, ThrowOnError>): RequestResult<GetRecipesResponses, GetRecipesErrors, ThrowOnError> => (options.client ?? client).get<GetRecipesResponses, GetRecipesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/recipes',
+    ...options
+});
+
+/**
+ * What one sale of each tracked menu item costs at the branch's average ingredient costs
+ */
+export const getRecipeCosts = <ThrowOnError extends boolean = false>(options: Options<GetRecipeCostsData, ThrowOnError>): RequestResult<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError> => (options.client ?? client).get<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/inventory/recipes/costs',
     ...options
 });
 
