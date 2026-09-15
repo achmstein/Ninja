@@ -142,7 +142,6 @@ function CategoryForm({
           label={t('name')}
           value={name}
           onChange={nameAssist.onChange}
-          placeholder={{ en: t('categoryNameHint'), ar: 'مثال: مشروبات' }}
           error={error ?? undefined}
           autoFocus
           assist={nameAssist.slot}

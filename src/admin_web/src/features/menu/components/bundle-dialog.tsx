@@ -284,7 +284,6 @@ function BundleForm({
           label={t('name')}
           value={name}
           onChange={setName}
-          placeholder={{ en: 'Movie Night Combo' }}
         />
         <LocalizedInput
           id='bundle-description'

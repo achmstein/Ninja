@@ -702,7 +702,6 @@ function GroupEditor({
           label={t('name')}
           value={name}
           onChange={setName}
-          placeholder={{ en: 'Size', ar: 'الحجم' }}
           compact
           autoFocus
         />
@@ -749,7 +748,6 @@ function GroupEditor({
                 ariaLabel={t('name')}
                 value={option.name}
                 onChange={(name) => updateOption(index, { name })}
-                placeholder={{ en: 'Small', ar: 'صغير' }}
                 compact
               />
               <Input

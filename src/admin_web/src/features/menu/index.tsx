@@ -124,12 +124,7 @@ export function MenuManagement() {
   )
   const items = itemsQuery.data ?? NO_ITEMS
   // Which items the storeroom tracks, and what a sale of each costs here
-  const prices = useMemo(
-    () =>
-      new Map(items.map((item) => [toNumber(item.id), toNumber(item.price)])),
-    [items]
-  )
-  const stockRules = useStockRuleBadges(prices)
+  const stockRules = useStockRuleBadges(items)
   const categoriesQuery = useQuery(
     listCategoriesOptions({ query: { 'api-version': API_VERSION } })
   )

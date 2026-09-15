@@ -269,7 +269,6 @@ const webExtras = {
   },
   addTable: { en: 'Add table', ar: 'ضيف ترابيزة' },
   editTable: { en: 'Edit table', ar: 'تعديل الترابيزة' },
-  tableNameHint: { en: 'e.g. Table 1', ar: 'مثلاً: ترابيزة 1' },
   printQrSheet: { en: 'Print QR sheet', ar: 'اطبع ورقة الأكواد' },
   qrSheetSubtitle: {
     en: 'Cut along the cards and put one on each table.',
@@ -2377,9 +2376,34 @@ const webExtras = {
   margin: { en: 'Margin', ar: 'الهامش' },
   foodCostPercent: { en: 'Food cost', ar: 'نسبة التكلفة' },
   overTarget: { en: 'Over target', ar: 'فوق الحد' },
-  costPerSale: { en: 'Cost per sale {cost}', ar: 'تكلفة البيعة {cost}' },
-  marginLine: { en: 'Margin {margin}', ar: 'الهامش {margin}' },
-  foodCostLine: { en: 'Food cost {percent}%', ar: 'نسبة التكلفة {percent}%' },
+  costOfOneSale: { en: 'What one sale costs', ar: 'تكلفة البيعة الواحدة' },
+  withStandardChoices: {
+    en: 'standard choice: {choices}',
+    ar: 'الاختيار الأساسي: {choices}',
+  },
+  noChoicesAffectCost: {
+    en: 'the same whatever the customer picks',
+    ar: 'نفس التكلفة مهما اختار العميل',
+  },
+  costLabel: { en: 'Cost', ar: 'التكلفة' },
+  byChoice: { en: 'By choice', ar: 'حسب الاختيار' },
+  standardChoice: { en: 'standard', ar: 'أساسي' },
+  costIncompleteHint: {
+    plural: 'count',
+    en: {
+      '=1': '1 ingredient has never been received at this branch, so it counts as free until it is; the figures are a lower bound.',
+      other:
+        '{count} ingredients have never been received at this branch, so they count as free until they are; the figures are a lower bound.',
+    },
+    ar: {
+      one: 'خامة واحدة ماتستلمتش في الفرع ده لسه، فبتتحسب ببلاش لحد ما تتستلم؛ الأرقام حد أدنى.',
+      two: 'خامتين ماتستلموش في الفرع ده لسه، فبيتحسبوا ببلاش لحد ما يتستلموا؛ الأرقام حد أدنى.',
+      few: '{count} خامات ماتستلموش في الفرع ده لسه، فبيتحسبوا ببلاش لحد ما يتستلموا؛ الأرقام حد أدنى.',
+      many: '{count} خامة ماتستلموش في الفرع ده لسه، فبيتحسبوا ببلاش لحد ما يتستلموا؛ الأرقام حد أدنى.',
+      other:
+        '{count} خامة ماتستلموش في الفرع ده لسه، فبيتحسبوا ببلاش لحد ما يتستلموا؛ الأرقام حد أدنى.',
+    },
+  },
   costIncomplete: {
     plural: 'count',
     en: {

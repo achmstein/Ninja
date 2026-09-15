@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeCostView, type RecipeView } from '@/api/inventory'
 import {
   getRecipeCostsOptions,
@@ -8,6 +9,7 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
 import { DEFAULT_FOOD_COST_TARGET } from './menu-cost-rows'
+import { standardCost } from './recipe-cost'
 
 /** How a menu item is tracked: a stock item of its own, or a recipe of ingredients */
 export type StockRuleKind = 'unit' | 'recipe'
@@ -38,7 +40,7 @@ export type StockRuleBadge = {
  * are global, costs follow X-Branch-Id.
  */
 export function useStockRuleBadges(
-  prices: Map<number, number>
+  items: CatalogItemDto[]
 ): Map<number, StockRuleBadge> {
   const recipes = useQuery(
     getRecipesOptions({ query: { 'api-version': API_VERSION } })
@@ -50,14 +52,16 @@ export function useStockRuleBadges(
     const costById = new Map<number, RecipeCostView>(
       (costs.data ?? []).map((c) => [toNumber(c.catalogItemId), c])
     )
+    const itemById = new Map(items.map((item) => [toNumber(item.id), item]))
     const badges = new Map<number, StockRuleBadge>()
     for (const recipe of recipes.data ?? []) {
       const id = toNumber(recipe.catalogItemId)
       const cost = costById.get(id)
-      const price = prices.get(id) ?? 0
+      const item = itemById.get(id)
+      const price = toNumber(item?.price)
       const foodCost =
-        cost && price > 0
-          ? Math.round((toNumber(cost.baseCost) / price) * 100)
+        cost && item && price > 0
+          ? Math.round((standardCost(cost, item) / price) * 100)
           : null
       badges.set(id, {
         kind: isUnitRecipe(recipe) ? 'unit' : 'recipe',
@@ -67,5 +71,5 @@ export function useStockRuleBadges(
       })
     }
     return badges
-  }, [recipes.data, costs.data, prices])
+  }, [recipes.data, costs.data, items])
 }

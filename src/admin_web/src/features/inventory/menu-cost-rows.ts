@@ -1,6 +1,7 @@
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeCostView } from '@/api/inventory'
 import { toNumber } from '@/lib/money'
+import { standardCost } from './recipe-cost'
 
 /** Food cost above this share of the price is flagged unless the page says otherwise */
 export const DEFAULT_FOOD_COST_TARGET = 35
@@ -37,7 +38,8 @@ export function toMenuCostRows(
     const item = byId.get(toNumber(c.catalogItemId))
     if (!item) continue
     const price = toNumber(item.price)
-    const cost = toNumber(c.baseCost)
+    // What the standard choice costs: base lines plus what the defaults trigger
+    const cost = standardCost(c, item)
     const foodCost = price > 0 ? Math.round((cost / price) * 100) : null
     const uncosted = c.uncosted.length
     rows.push({

@@ -64,6 +64,11 @@ import {
   stockItemsQueryOptions,
   toStockItemOptions,
 } from '@/features/inventory/queries'
+import {
+  choiceDeltas,
+  standardChoiceNames,
+  standardCost,
+} from '@/features/inventory/recipe-cost'
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
 
@@ -178,7 +183,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       ) : (
         <RecipeSummary recipe={recipe} menu={menu} />
       )}
-      <CostAndMargin item={item} menu={menu} />
+      <CostAndMargin item={item} />
       <div className='flex flex-wrap gap-2'>
         <Button
           type='button'
@@ -385,73 +390,140 @@ function RecipeSummary({
 }
 
 /**
- * What one sale costs at the active branch against the item's price: the
- * margin and the food-cost share, plus what each option adds. Inventory
- * prices nothing; the join with Catalog's price happens here.
+ * What one sale costs at the active branch against the item's price, for
+ * the standard choice (the default of each option group), then what every
+ * other choice adds. Inventory prices nothing; the join with Catalog's
+ * price and defaults happens here.
  */
-function CostAndMargin({
-  item,
-  menu,
-}: {
-  item: CatalogItemDto
-  menu: MenuOptions
-}) {
+function CostAndMargin({ item }: { item: CatalogItemDto }) {
   const t = useT()
+  const localized = useLocalized()
   const costs = useQuery(
     getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
   )
   const cost = costs.data?.find(
     (c) => toNumber(c.catalogItemId) === toNumber(item.id)
   )
-  if (costs.isLoading) return <Skeleton className='h-4 w-56' />
+  if (costs.isLoading) return <Skeleton className='h-24' />
   if (!cost) return null
 
   const price = toNumber(item.price)
-  const base = toNumber(cost.baseCost)
-  const margin = price - base
-  const foodCost = price > 0 ? Math.round((base / price) * 100) : null
+  const standard = standardCost(cost, item)
+  const margin = price - standard
+  const foodCost = price > 0 ? Math.round((standard / price) * 100) : null
+  const over = foodCost !== null && foodCost > FOOD_COST_TARGET
   const incomplete = cost.uncosted.length > 0
+  const choices = standardChoiceNames(item, localized)
+  const groups = choiceDeltas(cost, item)
 
   return (
-    <div className='space-y-1 text-sm'>
-      <p className='flex flex-wrap items-center gap-x-1.5 tabular-nums'>
-        <span>{t('costPerSale', { cost: formatEgp(base) })}</span>
-        {price > 0 && (
-          <>
-            <span className='text-muted-foreground'>·</span>
-            <span className={cn(margin < 0 && 'text-destructive')}>
-              {t('marginLine', { margin: formatEgp(margin) })}
-            </span>
-            <span className='text-muted-foreground'>·</span>
-            <span
-              className={cn(
-                foodCost !== null &&
-                  foodCost > FOOD_COST_TARGET &&
-                  'text-destructive'
-              )}
-            >
-              {t('foodCostLine', { percent: foodCost ?? 0 })}
-            </span>
-          </>
-        )}
-        {incomplete && (
-          <Badge variant='outline' className='text-warning border-warning'>
-            {t('costIncomplete', { count: cost.uncosted.length })}
-          </Badge>
-        )}
-      </p>
-      {cost.options.length > 0 && (
-        <p className='text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs'>
-          {cost.options.map((o) => (
-            <span
-              key={o.optionIds.map(String).join(',')}
-              className='inline-flex items-center gap-1'
-            >
-              <OptionChips optionIds={o.optionIds.map(String)} menu={menu} />
-              <span className='tabular-nums'>+{formatEgp(o.cost)}</span>
-            </span>
-          ))}
+    <div className='rounded-lg border'>
+      <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b px-3 py-2'>
+        <span className='text-sm font-medium'>{t('costOfOneSale')}</span>
+        <span className='text-muted-foreground text-xs'>
+          {choices.length > 0
+            ? t('withStandardChoices', { choices: choices.join(' · ') })
+            : t('noChoicesAffectCost')}
+        </span>
+      </div>
+
+      <dl className='grid grid-cols-3 divide-x px-1 py-2 text-center rtl:divide-x-reverse'>
+        <div className='px-2'>
+          <dt className='text-muted-foreground text-xs'>{t('costLabel')}</dt>
+          <dd className='text-lg font-semibold tabular-nums'>
+            {formatEgp(standard)}
+            {incomplete && (
+              <span
+                className='text-warning ms-0.5 text-sm'
+                title={t('costIncomplete', { count: cost.uncosted.length })}
+              >
+                +
+              </span>
+            )}
+          </dd>
+        </div>
+        <div className='px-2'>
+          <dt className='text-muted-foreground text-xs'>{t('margin')}</dt>
+          <dd
+            className={cn(
+              'text-lg font-semibold tabular-nums',
+              margin < 0 && 'text-destructive'
+            )}
+          >
+            {price > 0 ? formatEgp(margin) : '—'}
+          </dd>
+        </div>
+        <div className='px-2'>
+          <dt className='text-muted-foreground text-xs'>
+            {t('foodCostPercent')}
+          </dt>
+          <dd
+            className={cn(
+              'text-lg font-semibold tabular-nums',
+              over && 'text-destructive'
+            )}
+          >
+            {foodCost === null ? '—' : `${foodCost}%`}
+          </dd>
+          {foodCost !== null && (
+            <div className='bg-muted mx-auto mt-1 h-1 w-24 overflow-hidden rounded-full'>
+              <div
+                className={cn('h-full', over ? 'bg-destructive' : 'bg-primary')}
+                style={{ width: `${Math.min(100, foodCost)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      </dl>
+
+      {incomplete && (
+        <p className='text-warning border-t px-3 py-1.5 text-xs'>
+          {t('costIncompleteHint', { count: cost.uncosted.length })}
         </p>
+      )}
+
+      {groups.length > 0 && (
+        <div className='space-y-1.5 border-t px-3 py-2'>
+          <div className='text-muted-foreground text-xs'>{t('byChoice')}</div>
+          {groups.map((group) => (
+            <div
+              key={group.id}
+              className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'
+            >
+              <span className='text-muted-foreground min-w-16'>
+                {localized(group.name)}
+              </span>
+              {group.options.map((option) => (
+                <span
+                  key={option.id}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums',
+                    option.isDefault
+                      ? 'bg-muted/60'
+                      : option.delta === 0 && 'text-muted-foreground'
+                  )}
+                >
+                  {localized(option.name)}
+                  {option.isDefault ? (
+                    <span className='text-muted-foreground'>
+                      · {t('standardChoice')}
+                    </span>
+                  ) : (
+                    <span
+                      className={cn(
+                        option.delta > 0 && 'text-destructive/80',
+                        option.delta < 0 && 'text-success'
+                      )}
+                    >
+                      {option.delta > 0 ? '+' : ''}
+                      {formatEgp(option.delta)}
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )

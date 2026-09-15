@@ -457,7 +457,6 @@ export function ItemDetailsForm({
               name: { ...prev.name, [typed]: false },
             }))
           }}
-          placeholder={{ en: 'Cappuccino', ar: 'كابتشينو' }}
           error={errors.name}
           suggested={suggested.name}
         />

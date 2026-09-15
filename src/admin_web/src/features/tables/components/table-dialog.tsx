@@ -81,7 +81,6 @@ export function TableDialog({
           label={t('name')}
           value={name}
           onChange={setName}
-          placeholder={{ en: t('tableNameHint') }}
         />
 
         <DialogFooter>
