@@ -43,11 +43,11 @@ import { toMenuItemToTrack } from '../track-items'
 import { RecipeBuilder } from './recipe-builder'
 import {
   DeductionPreview,
-  RecipeSummary,
   type IngredientOption,
   type StockInfo,
 } from './recipe-editor'
 import { RecipeReviewSheet } from './recipe-review-sheet'
+import { RecipeSummary } from './recipe-summary'
 
 type StockRuleSectionProps = {
   item: CatalogItemDto
@@ -78,6 +78,16 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
     (r) => toNumber(r.catalogItemId) === catalogItemId
   )
   const menu = useMemo(() => menuOptionsOf(item, localized), [item, localized])
+  const stock = useMemo(
+    () =>
+      new Map<string, StockInfo>(
+        (stockItems.data ?? []).map((i) => [
+          String(i.id),
+          { label: localized(i.name), unit: i.unit ?? '' },
+        ])
+      ),
+    [stockItems.data, localized]
+  )
 
   const queryClient = useQueryClient()
 
@@ -215,7 +225,15 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
           </Link>
         </p>
       ) : (
-        <RecipeSummary recipe={recipe} menu={menu} />
+        <>
+          <RecipeSummary recipe={recipe} menu={menu} stock={stock} />
+          <DeductionPreview
+            lines={recipe.lines}
+            scales={recipe.scales}
+            menu={menu}
+            stock={stock}
+          />
+        </>
       )}
       <CostAndMargin item={item} />
       <div className='flex flex-wrap gap-2'>

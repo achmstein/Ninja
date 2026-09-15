@@ -8,9 +8,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { type RecipeView } from '@/api/inventory'
-import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -505,37 +503,72 @@ function OverrideEditor({
     )
   }
 
-  // Three groups or more: a list of rules, each naming its options
+  // Three groups or more: one row per rule, a column per group
+  const sorted = [...slot.overrides].sort((a, b) => {
+    for (const g of groups) {
+      const ia = g.options.findIndex((o) => a.optionIds.includes(o.id))
+      const ib = g.options.findIndex((o) => b.optionIds.includes(o.id))
+      if (ia !== ib) return ia - ib
+    }
+    return 0
+  })
   return (
-    <div className='space-y-2 border-t p-2'>
-      {slot.overrides.map((o) => (
-        <div
-          key={o.key}
-          className='grid items-start gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'
-        >
-          <OptionChips optionIds={o.optionIds} menu={menu} />
-          <OverrideCell
-            slot={slot}
-            override={o}
-            options={options}
-            byValue={byValue}
-            onChange={(patch) => set(o.optionIds, patch)}
-          />
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='size-7'
-            aria-label={t('removeLine')}
-            onClick={() =>
-              onChange(slot.overrides.filter((x) => x.key !== o.key))
-            }
-          >
-            <X className='h-3.5 w-3.5' />
-          </Button>
-        </div>
-      ))}
-      <RuleAdder groups={groups} onAdd={(combo) => set(combo, {})} />
+    <div className='overflow-x-auto border-t p-2'>
+      <table className='w-full text-xs'>
+        <thead>
+          <tr>
+            {groups.map((g) => (
+              <th key={g.id} className='pe-2 pb-1 text-start font-medium'>
+                {g.label}
+              </th>
+            ))}
+            <th className='min-w-40 pe-2 pb-1 text-start font-medium'>
+              {t('stockItem')}
+            </th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((o) => (
+            <tr key={o.key} className='border-t'>
+              {groups.map((g) => (
+                <td key={g.id} className='py-1 pe-2 align-middle'>
+                  {g.options.find((x) => o.optionIds.includes(x.id))?.label ??
+                    '?'}
+                </td>
+              ))}
+              <td className='py-1 pe-2 align-middle'>
+                <OverrideCell
+                  slot={slot}
+                  override={o}
+                  options={options}
+                  byValue={byValue}
+                  onChange={(patch) => set(o.optionIds, patch)}
+                />
+              </td>
+              <td className='py-1 align-middle'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon'
+                  className='size-7'
+                  aria-label={t('removeLine')}
+                  onClick={() =>
+                    onChange(slot.overrides.filter((x) => x.key !== o.key))
+                  }
+                >
+                  <X className='h-3.5 w-3.5' />
+                </Button>
+              </td>
+            </tr>
+          ))}
+          <tr className='border-t'>
+            <td colSpan={groups.length + 2} className='pt-2'>
+              <RuleAdder groups={groups} onAdd={(combo) => set(combo, {})} />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -732,106 +765,6 @@ function ScaleEditor({
         </div>
       ) : (
         <p className='text-muted-foreground text-xs'>{t('sizeFactorsHint')}</p>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Read-only summary of a saved recipe
-
-/** A saved recipe, one row per slot: the default, how it grows, what the choices make of it */
-export function RecipeSummary({
-  recipe,
-  menu,
-}: {
-  recipe: RecipeView
-  menu: MenuOptions
-}) {
-  const t = useT()
-  const localized = useLocalized()
-  const slots = new Map<string, RecipeView['lines']>()
-  for (const line of recipe.lines) {
-    const key = String(line.slot)
-    slots.set(key, [...(slots.get(key) ?? []), line])
-  }
-  const sizeGroup = menu.groups.find((g) =>
-    g.options.some((o) =>
-      recipe.scales.some((s) => String(s.optionId) === o.id)
-    )
-  )
-
-  return (
-    <div className='space-y-2 text-sm'>
-      {[...slots.values()].map((lines, i) => {
-        const base = lines.find((l) => l.optionIds.length === 0 && !l.isNone)
-        const overrides = lines.filter((l) => l !== base)
-        return (
-          <div key={i} className='rounded-md border px-2 py-1.5'>
-            <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
-              {base ? (
-                <span>
-                  <span className='text-muted-foreground tabular-nums'>
-                    {formatQuantity(base.quantity, base.unit ?? '', t)}
-                  </span>{' '}
-                  <span className='font-medium'>{localized(base.name)}</span>
-                </span>
-              ) : (
-                <span className='text-muted-foreground'>
-                  {t('onlyForSomeChoices')}
-                </span>
-              )}
-              {recipe.scales.length > 0 && (base ?? lines[0]).scalable && (
-                <Badge variant='outline' className='gap-1 font-normal'>
-                  <Maximize2 className='size-3' aria-hidden />
-                  {t('growsWithSize')}
-                </Badge>
-              )}
-            </div>
-            {overrides.length > 0 && (
-              <ul className='mt-1 space-y-0.5 text-xs'>
-                {overrides.map((line) => (
-                  <li
-                    key={String(line.id)}
-                    className='flex flex-wrap items-center gap-x-1.5'
-                  >
-                    <OptionChips
-                      optionIds={line.optionIds.map(String)}
-                      menu={menu}
-                    />
-                    <span className='text-muted-foreground'>→</span>
-                    {line.isNone ? (
-                      <span className='text-muted-foreground'>
-                        {t('nothing')}
-                      </span>
-                    ) : (
-                      <span>
-                        <span className='text-muted-foreground tabular-nums'>
-                          {formatQuantity(line.quantity, line.unit ?? '', t)}
-                        </span>{' '}
-                        {localized(line.name)}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )
-      })}
-      {sizeGroup && (
-        <div className='text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs'>
-          <Maximize2 className='size-3' aria-hidden />
-          <span>{sizeGroup.label}:</span>
-          {sizeGroup.options.map((o) => {
-            const scale = recipe.scales.find((s) => String(s.optionId) === o.id)
-            return (
-              <span key={o.id} className='tabular-nums'>
-                {o.label} ×{scale ? toNumber(scale.factor) : 1}
-              </span>
-            )
-          })}
-        </div>
       )}
     </div>
   )

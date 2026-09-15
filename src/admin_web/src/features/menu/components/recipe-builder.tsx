@@ -70,7 +70,7 @@ type WhenSpec = {
   only: string[]
 }
 
-type IngredientSpec = {
+export type IngredientSpec = {
   key: number
   item: ItemSpec
   amount: AmountSpec
@@ -671,7 +671,7 @@ function fold(text: string): string {
 }
 
 /** Every combination of one option per group, in menu order */
-function combos(groups: MenuGroup[]): MenuOption[][] {
+export function combos(groups: MenuGroup[]): MenuOption[][] {
   return groups.reduce<MenuOption[][]>(
     (acc, group) =>
       acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
@@ -739,10 +739,8 @@ const assumed = (group: MenuGroup): MenuOption =>
 
 /**
  * The answers compiled into slots. An ingredient decided by groups K gets
- * an override for every combination over K; so that an unchosen optional
- * group never deducts nothing, every partial combination is written too,
- * with the missing groups taken as their assumed option — the empty
- * combination is the slot's default.
+ * an override for every combination over K, and the combination of the
+ * assumed options as the slot's default.
  */
 export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
   const slots: SlotDraft[] = []
@@ -794,35 +792,31 @@ export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
     }
 
     const overrides: OverrideDraft[] = []
-    let base: { stockItemId: string | null; quantity: string } | null = null
     const anchor =
       spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
-    // Every subset of the key groups: the chosen part is the key, the rest is assumed
-    const subsets = keyGroups.reduce<MenuGroup[][]>(
-      (acc, g) => acc.concat(acc.map((s) => [...s, g])),
-      [[]]
-    )
-    for (const subset of subsets) {
-      for (const combo of combos(subset)) {
-        const choice = new Map<string, MenuOption>()
-        for (const g of keyGroups) choice.set(g.id, assumed(g))
-        subset.forEach((g, i) => choice.set(g.id, combo[i]))
-        const cell = resolveCell(choice)
-        const nothing = !cell.present || cell.quantity <= 0 || !cell.item
-        if (subset.length === 0) {
-          base = nothing
-            ? null
-            : { stockItemId: cell.item, quantity: String(cell.quantity) }
-          continue
-        }
-        overrides.push({
-          key: draftKey(),
-          optionIds: combo.map((o) => o.id),
-          stockItemId: nothing ? null : cell.item,
-          quantity: nothing ? '' : String(cell.quantity),
-          none: nothing,
-        })
-      }
+    // The empty combination (every group at its assumed option) is the
+    // slot's default; every full combination is an override. The tills
+    // pre-select each group's default, so a sale always carries one option
+    // per group and no partial keys are needed.
+    const assumedChoice = new Map<string, MenuOption>()
+    for (const g of keyGroups) assumedChoice.set(g.id, assumed(g))
+    const baseCell = resolveCell(assumedChoice)
+    const base =
+      !baseCell.present || baseCell.quantity <= 0 || !baseCell.item
+        ? null
+        : { stockItemId: baseCell.item, quantity: String(baseCell.quantity) }
+    for (const combo of combos(keyGroups)) {
+      const choice = new Map<string, MenuOption>()
+      keyGroups.forEach((g, i) => choice.set(g.id, combo[i]))
+      const cell = resolveCell(choice)
+      const nothing = !cell.present || cell.quantity <= 0 || !cell.item
+      overrides.push({
+        key: draftKey(),
+        optionIds: combo.map((o) => o.id),
+        stockItemId: nothing ? null : cell.item,
+        quantity: nothing ? '' : String(cell.quantity),
+        none: nothing,
+      })
     }
     if (!base && !anchor) continue
     slots.push({
@@ -844,7 +838,10 @@ export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
  * presence varies with it says which question it answers. A slot the
  * cards cannot express is kept as a custom rule.
  */
-function reconstruct(draft: RecipeDraft, menu: MenuOptions): BuilderState {
+export function reconstruct(
+  draft: RecipeDraft,
+  menu: MenuOptions
+): BuilderState {
   const ingredients: IngredientSpec[] = []
   const custom: SlotDraft[] = []
   const groupOf = new Map<string, MenuGroup>()
