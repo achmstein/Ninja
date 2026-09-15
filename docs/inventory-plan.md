@@ -2,7 +2,7 @@
 
 **Goal:** know what is on the shelf, get warned before it runs out, take items off the menu when it does, and see where stock goes: easy for a café to run day to day, powerful enough to price a latte's ingredients.
 
-**Status:** decided and built 2026-09-12 (Phase 1). Phases 2–3 listed at the end.
+**Status:** decided and built 2026-09-12 (Phases 1–3). 2026-09-15: measured against the field (section 7); Phase 4 (cost control) built, Phases 5–6 planned.
 
 ---
 
@@ -71,3 +71,41 @@ Known, accepted: an offline replay that syncs *after* a count double-deducts (th
 **Phase 2 — option-level ingredients: built 2026-09-12 (local).** Ordering keeps `OrderItem.OptionIds` (JSON list, additive migration) filled from `BasketItemCustomization.OptionId`, and `OrderConfirmedItem.OptionIds` rides the confirmed event; Inventory's partial copy declares the field and `Recipe.Explode` honours it (`SaleDeduction` passes each line's option ids); the recipe editor has an "Applies to" control per line (base, or one of the item's customization options) and preserves option lines on save. Option-level sold-out ("oat milk out") stays out: `CustomizationOption` has no availability today.
 
 **Phase 3 — built 2026-09-12 (local).** (1) Usage report `GET /api/inventory/reports/usage?from&to`: per stock item and period, purchased / sold (cost of goods sold) / waste / adjustments / count variance / transfers, each valued at the cost the movement was posted with, plus the current stock value (`StockLevelView.Value` = on hand × average, never below zero). (2) **Per-option sold-out**: option recipe lines whose auto-sold-out ingredient crosses zero drive `MenuOptionStockStatus` and `CatalogOptionStockChangedIntegrationEvent(BranchId, OptionIds, InStock)`; Catalog keeps `BranchOptionStockOut` rows, exposes `CustomizationOptionDto.IsOutOfStock` per branch and republishes the parent item's availability event so every menu refreshes; the web and Flutter customize dialogs disable such options. Order validation does not check options (client-side gate, like tables). (3) **Replay guard**: the confirmed event carries `PlacedAt` (= `Order.OrderDate`); Inventory drops a replayed sale's lines for items counted after the sale (`SaleDeduction.DropCountedAfter`). (4) **Transfers**: `Transfer` document, `TransferOut` at the source and `TransferIn` at the destination in one transaction, the destination receiving at the source's average cost (`POST /api/inventory/transfers/to/{branchId}`, the route value so branch access covers both sides). (5) **Rebuild**: `POST /api/inventory/levels/rebuild` (Owner) recomputes the branch's on-hand figures from the ledger. Migration `TransfersAndOptionStatuses`. Not built: FCM to the owner for low stock (SignalR toast + dashboard card only).
+
+## 7. Where the field is ahead, and the phases that close it *(owner, 2026-09-15)*
+
+Measured against the restaurant inventory tools (MarketMan, xtraCHEF/Toast, Restaurant365, Lightspeed, Apicbase) and the general ones the café used before (Loyverse, Odoo). What is already here — event-driven depletion with idempotency and a replay guard, **option-level** depletion and per-option 86 (most tools only 86 whole items), transfers at cost, a moving average that feeds the P&L by itself, a full ledger, AI receipt reading — is not rebuilt. What they have and Phases 1–3 do not:
+
+| Capability | Chillax today | Value for two branches | Phase |
+|---|---|---|---|
+| **Menu item cost & margin** — recipe × current cost vs price, food-cost %, items over target flagged; menu engineering (popularity × margin) later | Recipes and averages exist; nothing computes plate cost | Very high: the report an owner opens daily | 4 |
+| **Price change at receiving + cost history** — a line ±10 % against the last receipt is flagged; the cost trend per item | Cost snapshotted per line, never compared | High: cost creep is where margin goes | 4 |
+| **Actual vs theoretical (AvT) period report** — opening + received − closing = actual; sales × recipes = theoretical; the gap per item, valued; cost of goods as % of sales | Usage report and count variance carry the parts, not framed as a period | High | 4 |
+| **Par levels → suggested order** — what to buy today per branch (and supplier) = par − on hand | `ReorderLevel` alert only | High: the low-stock toast becomes a shopping list | 5 |
+| **Item categories & storage areas** — dairy / dry / packaging; fridge / dry store / bar; count sheets in shelf order | Flat list | High: counts three times faster, reports readable | 5 |
+| **Counts by area, partial, in packs, blind, on a schedule** | Full count, base units, expected shown | Medium-high: the count is where drift dies | 5 |
+| **Waste reason codes + waste by reason** | Free-text reason | Medium-high, trivial | 5 |
+| **Storekeeper role** — count and receive without admin rights | Admin only | Medium | 5 |
+| **Low stock pushed to the manager's phone** | SignalR toast + dashboard card | Medium-high | 5 (needs the manager app, `docs/system-map.md`) |
+| **Sub-recipes / prep batches with yield** — cold brew concentrate, syrups, sauces made from items, then used as items | Menu-item recipes only | Medium, depends on how much is prepped | 6 |
+| **Supplier item catalog** — item ↔ supplier(s), last cost per supplier | Supplier on the purchase only | Medium | 6 |
+| **Period close** — no back-dated movements once the month is closed | None | Medium (accounting hygiene) | 6 |
+| **Purchase orders** — order → send → receive against it, partials, discrepancies | Receive only | Medium; a suggested-order list shared to WhatsApp covers most of it | 6, if the list is not enough |
+| Slow-moving / dead stock | None | Low-medium, trivial | 6 |
+| Expiry / lots (FEFO), barcodes, forecasting, offline counting | None | Low for a café | not planned |
+
+### Phase 4 — cost control *(decided 2026-09-15)*
+
+Everything here is a query over data the ledger already holds; no new movement type, no new aggregate.
+
+1. **Recipe cost** — `GET /api/inventory/recipes/costs` (branch from `X-Branch-Id`): for every tracked menu item, the base cost (base lines × the branch's average cost), the extra cost of each option line set, the ingredient breakdown, and which ingredients have no cost yet (never received at this branch) so a margin is shown as incomplete rather than wrong. Inventory does not know prices: the admin SPA joins Catalog's items (the house pattern) and shows **cost, margin and food-cost %** in the item sheet's stock section and on a **Menu cost** report (`/inventory/menu-cost`), items over a target food-cost % (35 % by default, a UI setting) flagged first. Popularity × margin (menu engineering) waits for a per-item sales count from Ordering.
+2. **Cost changes** — the branch's **last purchase cost** per item (the newest `Purchase` movement, `DISTINCT ON` over the ledger; no new column) rides `StockLevelView.LastCost`/`LastCostAt`. The receive dialog and the receipt review sheet show it beside the unit cost and flag a line that moved more than 10 % either way; the receipt scanner's validator adds the same as a `line N:` warning so the proposal already says "milk is up 8 %". `GET /api/inventory/items/{id}/costs` lists the item's receipts at the branch (date, supplier, quantity, unit cost), shown as a cost history on the stock item panel.
+3. **Variance report** — `GET /api/inventory/reports/variance?from&to`, the usage report reframed as the period the field expects, per item: **opening** (the ledger summed before `from`), received, transferred in/out, **theoretical usage** (sales through recipes), waste, adjustments, **count variance**, **closing**, each in quantity and value, plus variance as a % of theoretical. The totals give the period's cost of goods; the page shows it as a % of the month's net sales from Finance's profit endpoint when the range is one calendar month (the SPA joins; Inventory never learns money). `/inventory/reports` keeps the usage columns and gains the AvT ones.
+
+### Phase 5 — running the storeroom *(planned)*
+
+Categories and storage areas on `StockItem` (additive migration); count sheets per area in shelf order, partial counts (only the area's items get `Count` movements), entry in packs, a blind mode that hides `Expected`; waste reason codes (a short editable list like Finance's expense categories) and a waste-by-reason report; `ParLevel` beside `ReorderLevel` and a **suggested order** list per branch (par − on hand, grouped by the supplier of the last receipt) shareable as text; a `Storekeeper` realm role and a `Stock` policy (count, receive, waste; no items, recipes or reports); `StockLow` pushed by `FcmService` to the manager's phone.
+
+### Phase 6 — production and control *(planned)*
+
+Sub-recipes: a stock item that is *made* (a `Production` movement pair: ingredients out, the prepared item in, at the summed cost, with a yield); supplier item catalog (item ↔ supplier, SKU, last cost per supplier, feeding the suggested order); period close (a `ClosedThrough` date per branch, movements before it refused); slow-moving report (no `Sale` movement in N days, valued); purchase orders only if the suggested-order list proves not enough.
