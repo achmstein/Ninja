@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Chillax.AI;
+using Chillax.Finance.API.Application.Assist;
 using Chillax.Finance.API.Application.IntegrationEvents.EventHandling;
 using Chillax.Finance.API.Application.IntegrationEvents.Events;
 using Chillax.Finance.API.Application.Queries;
@@ -7,6 +9,7 @@ using Chillax.Finance.Infrastructure;
 using Chillax.Finance.Infrastructure.Idempotency;
 using Chillax.Finance.Infrastructure.Repositories;
 using Chillax.EventBus.Extensions;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Chillax.Finance.API.Extensions;
 
@@ -17,6 +20,15 @@ public static class Extensions
         var services = builder.Services;
 
         builder.AddDefaultAuthentication();
+
+        // The assistant: on when the AppHost handed out a chat model, scripted
+        // under test, off otherwise. Before the build-time guard because the
+        // rate limiter middleware needs its services even when only the
+        // OpenAPI document is being generated.
+        builder.AddAIServices();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<BillScanner>();
+        services.AddFakeAgentScript(BillScanner.AgentKey, BillScannerFake.Respond);
 
         // Avoid loading full database config and migrations if startup
         // is being invoked from build-time OpenAPI generation

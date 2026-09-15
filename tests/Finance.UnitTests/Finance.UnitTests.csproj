@@ -18,4 +18,8 @@
     <ProjectReference Include="..\..\src\Finance.Infrastructure\Finance.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Application\bill-sample.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

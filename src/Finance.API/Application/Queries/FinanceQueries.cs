@@ -8,6 +8,7 @@ public interface IFinanceQueries
     Task<IReadOnlyList<ExpenseCategoryView>> GetCategoriesAsync(bool includeInactive);
     Task<ExpensesView> GetExpensesAsync(int branchId, DateOnly from, DateOnly to);
     Task<IReadOnlyList<RecurringExpenseView>> GetRecurringAsync(int branchId);
+    Task<IReadOnlyList<string>> GetVendorsAsync(int branchId, int take);
     Task<IReadOnlyList<SupplierView>> GetSuppliersAsync(int branchId, bool includeInactive);
     Task<SupplierLedgerView?> GetSupplierLedgerAsync(int supplierId, int branchId);
     Task<IReadOnlyList<PartnerView>> GetPartnersAsync(int branchId, bool includeInactive);
@@ -76,6 +77,33 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
             r.Id, r.BranchId, r.CategoryId, categories.GetValueOrDefault(r.CategoryId) ?? new LocalizedText("?"),
             r.Amount, r.DayOfMonth, r.PaidFrom, r.PartnerId, r.PartnerId is { } pid ? partners.GetValueOrDefault(pid) : null,
             r.Vendor, r.Note, r.IsActive)).ToList();
+    }
+
+    /// <summary>
+    /// The vendor names the branch's expenses were recorded under, most
+    /// recent first, one spelling each: what the bill scanner offers so a
+    /// company keeps one name on the list.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> GetVendorsAsync(int branchId, int take)
+    {
+        var recent = await context.Expenses.AsNoTracking()
+            .Where(e => e.BranchId == branchId && e.VoidedAt == null && e.Vendor != null)
+            .OrderByDescending(e => e.Date).ThenByDescending(e => e.Id)
+            .Select(e => e.Vendor!)
+            .Take(take * 10)
+            .ToListAsync();
+        var recurring = await context.RecurringExpenses.AsNoTracking()
+            .Where(r => r.BranchId == branchId && r.IsActive && r.Vendor != null)
+            .OrderBy(r => r.Id)
+            .Select(r => r.Vendor!)
+            .ToListAsync();
+
+        return recurring.Concat(recent)
+            .Select(v => v.Trim())
+            .Where(v => v.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(take)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<SupplierView>> GetSuppliersAsync(int branchId, bool includeInactive)

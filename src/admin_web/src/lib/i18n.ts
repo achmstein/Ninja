@@ -2330,6 +2330,17 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // AI assistant: a bill on an expense
+  readBill: { en: 'Fill in from the bill', ar: 'املا من الفاتورة' },
+  readingBill: { en: 'Reading the bill…', ar: 'بنقرا الفاتورة…' },
+  billFilledIn: {
+    en: 'Filled in from the bill; check it before saving',
+    ar: 'اتملا من الفاتورة؛ راجعه قبل ما تحفظ',
+  },
+  billNothingToFill: {
+    en: 'Everything was already filled in',
+    ar: 'كله كان متكتّب خلاص',
+  },
   // AI assistant: menu photo scanning
   scanMenu: { en: 'Scan a menu', ar: 'صوّر المنيو' },
   readingMenu: { en: 'Reading the menu…', ar: 'بنقرا المنيو…' },

@@ -180,6 +180,10 @@ public sealed record CategoryTotal(int CategoryId, LocalizedText CategoryName, d
 
 public sealed record ExpensesView(decimal Total, List<CategoryTotal> ByCategory, List<ExpenseView> Expenses);
 
+// The assistant's bill proposal (Finance.API Application/Assist/BillContracts.cs)
+public sealed record BillProposal(string? Date, decimal? Amount, int? CategoryId, double CategoryConfidence, string? Vendor, string? Note,
+    string Currency, List<string> Warnings, string? Notes);
+
 public sealed record SupplierView(int Id, string Name, bool IsActive, decimal Balance);
 
 public sealed record SupplierEntryView(int Id, int SupplierId, int Type, decimal Amount, decimal Signed, DateOnly Date, string? Note, string? Reference, int Source);

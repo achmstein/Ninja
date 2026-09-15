@@ -34,8 +34,9 @@ public class ChatModelConfigurationTests
         var builder = CreateBuilder();
         var catalog = builder.AddProject("catalog-api", ProjectPath("Catalog.API", "Catalog.API.csproj"));
         var inventory = builder.AddProject("inventory-api", ProjectPath("Inventory.API", "Inventory.API.csproj"));
+        var finance = builder.AddProject("finance-api", ProjectPath("Finance.API", "Finance.API.csproj"));
 
-        builder.AddChatModel(catalog, inventory);
+        builder.AddChatModel(catalog, inventory, finance);
 
         var names = builder.Resources.Select(resource => resource.Name).ToArray();
         CollectionAssert.IsSubsetOf(new[] { Extensions.ApiKeyParameterName, "openai", "chatModel" }, names);
@@ -46,7 +47,7 @@ public class ChatModelConfigurationTests
         Assert.AreSame(parameter, ((OpenAIResource)builder.Resources.Single(resource => resource.Name == "openai")).Key);
 
         var model = builder.Resources.Single(resource => resource.Name == "chatModel");
-        foreach (var project in new[] { catalog.Resource, inventory.Resource })
+        foreach (var project in new[] { catalog.Resource, inventory.Resource, finance.Resource })
         {
             var referenced = project.Annotations.OfType<ResourceRelationshipAnnotation>()
                 .Any(relationship => ReferenceEquals(relationship.Resource, model) && relationship.Type == "Reference");

@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Paperclip, X } from 'lucide-react'
+import { Paperclip, Sparkles, X } from 'lucide-react'
 import { formatDay } from '@/lib/business-day'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -27,12 +29,14 @@ import { DatePicker } from '@/components/date-picker'
 import { PAID_FROM, paidFromLabel } from '../format'
 import { categoriesQueryOptions, partnersQueryOptions } from '../queries'
 import { pickedReceipt, RECEIPT_ACCEPT } from '../receipts'
+import { useBillScan } from '../use-bill-scan'
 import { useFinanceActions } from '../use-finance-actions'
 
 /**
  * An expense keyed in by hand: what, when, how much, and where the money
  * came from. Paid from a partner's own pocket, it also lands on that
- * partner's account as a contribution.
+ * partner's account as a contribution. With a bill photo attached, the
+ * sparkle asks the assistant to read it into the fields still empty.
  */
 export function ExpenseDialog({
   open,
@@ -51,6 +55,9 @@ export function ExpenseDialog({
   )
 }
 
+/** The fields the assistant may fill in from the bill */
+type BillField = 'date' | 'amount' | 'category' | 'vendor' | 'note'
+
 function ExpenseForm({ onDone }: { onDone: () => void }) {
   const t = useT()
   const localized = useLocalized()
@@ -58,8 +65,11 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
   const categories = useQuery(categoriesQueryOptions())
   const partners = useQuery(partnersQueryOptions())
   const fileInput = useRef<HTMLInputElement>(null)
+  const billScan = useBillScan()
 
   const [date, setDate] = useState(formatDay(new Date()))
+  // The date starts as today; only a date the user picked counts as typed
+  const [dateTouched, setDateTouched] = useState(false)
   const [categoryId, setCategoryId] = useState('')
   const [amount, setAmount] = useState('')
   const [paidFrom, setPaidFrom] = useState(String(PAID_FROM.drawer))
@@ -67,12 +77,58 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
   const [vendor, setVendor] = useState('')
   const [note, setNote] = useState('')
   const [receipt, setReceipt] = useState<File | null>(null)
+  /** What the assistant filled in and the user has not touched since: shown tinted */
+  const [suggested, setSuggested] = useState<Set<BillField>>(new Set())
 
   const fromPartner = Number(paidFrom) === PAID_FROM.partner
   const canSubmit =
     categoryId !== '' &&
     parseFloat(amount) > 0 &&
     (!fromPartner || partnerId !== '')
+
+  const edited = (field: BillField) =>
+    setSuggested((prev) => {
+      if (!prev.has(field)) return prev
+      const next = new Set(prev)
+      next.delete(field)
+      return next
+    })
+
+  const readBill = async () => {
+    if (!receipt) return
+    const proposal = await billScan.scanFile(receipt)
+    if (!proposal) return
+
+    // Only what is still empty: nothing the user typed is overwritten
+    const filled = new Set<BillField>()
+    if (proposal.date && !dateTouched) {
+      setDate(proposal.date)
+      filled.add('date')
+    }
+    if (proposal.amount != null && amount.trim() === '') {
+      setAmount(String(toNumber(proposal.amount)))
+      filled.add('amount')
+    }
+    if (proposal.categoryId != null && categoryId === '') {
+      setCategoryId(String(toNumber(proposal.categoryId)))
+      filled.add('category')
+    }
+    if (proposal.vendor && vendor.trim() === '') {
+      setVendor(proposal.vendor)
+      filled.add('vendor')
+    }
+    if (proposal.note && note.trim() === '') {
+      setNote(proposal.note)
+      filled.add('note')
+    }
+    setSuggested(filled)
+
+    if (filled.size === 0 && proposal.warnings.length === 0) {
+      toast.info(t('billNothingToFill'))
+    }
+    for (const warning of proposal.warnings) toast.warning(warning)
+    if (proposal.notes) toast.warning(proposal.notes)
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,6 +152,9 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
     }
   }
 
+  const tint = (field: BillField) => suggested.has(field) && 'bg-primary/5'
+  const receiptIsPhoto = !!receipt && receipt.type.startsWith('image/')
+
   return (
     <form onSubmit={submit} className='space-y-4'>
       <DialogHeader>
@@ -109,8 +168,13 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
           <DatePicker
             id='expense-date'
             value={date}
-            onChange={setDate}
+            onChange={(next) => {
+              setDate(next)
+              setDateTouched(true)
+              edited('date')
+            }}
             disabled={(d) => d > new Date()}
+            className={cn(tint('date'))}
           />
         </div>
         <div className='flex flex-col gap-1.5'>
@@ -122,15 +186,25 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             step='any'
             inputMode='decimal'
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value)
+              edited('amount')
+            }}
+            className={cn(tint('amount'))}
             autoFocus
             required
           />
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label>{t('expenseCategory')}</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className='h-9 w-full'>
+          <Select
+            value={categoryId}
+            onValueChange={(next) => {
+              setCategoryId(next)
+              edited('category')
+            }}
+          >
+            <SelectTrigger className={cn('h-9 w-full', tint('category'))}>
               <SelectValue placeholder={t('pickCategory')} />
             </SelectTrigger>
             <SelectContent>
@@ -182,7 +256,11 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
             id='expense-vendor'
             value={vendor}
             placeholder={t('vendorHint')}
-            onChange={(e) => setVendor(e.target.value)}
+            onChange={(e) => {
+              setVendor(e.target.value)
+              edited('vendor')
+            }}
+            className={cn(tint('vendor'))}
           />
         </div>
         <div className='flex flex-col gap-1.5'>
@@ -190,12 +268,16 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
           <Input
             id='expense-note'
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => {
+              setNote(e.target.value)
+              edited('note')
+            }}
+            className={cn(tint('note'))}
           />
         </div>
         <div className='flex flex-col gap-1.5 sm:col-span-2'>
           <Label>{t('receiptPhoto')}</Label>
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-wrap items-center gap-2'>
             <Button
               type='button'
               variant='outline'
@@ -205,6 +287,24 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               <Paperclip className='me-2 h-4 w-4' />
               {receipt ? t('replaceReceipt') : t('attachReceipt')}
             </Button>
+            {receipt && billScan.available && (
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                className='text-primary'
+                disabled={!receiptIsPhoto || billScan.isScanning}
+                title={receiptIsPhoto ? t('readBill') : t('scanImageOnly')}
+                onClick={readBill}
+              >
+                {billScan.isScanning ? (
+                  <Spinner className='me-2' />
+                ) : (
+                  <Sparkles className='me-2 h-4 w-4' />
+                )}
+                {billScan.isScanning ? t('readingBill') : t('readBill')}
+              </Button>
+            )}
             {receipt && (
               <span className='text-muted-foreground flex min-w-0 items-center gap-1 text-xs'>
                 <span className='truncate' dir='ltr'>
@@ -221,6 +321,12 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
               </span>
             )}
           </div>
+          {suggested.size > 0 && (
+            <p className='text-primary flex items-center gap-1 text-xs'>
+              <Sparkles className='size-3' aria-hidden />
+              {t('billFilledIn')}
+            </p>
+          )}
           <input
             ref={fileInput}
             type='file'

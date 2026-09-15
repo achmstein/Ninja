@@ -69,6 +69,17 @@ public sealed class OwnerActor(ApiClient api)
     public Task<ExpensesView> ExpensesAsync(DateOnly from, DateOnly to, CancellationToken ct)
         => Api.GetAsync<ExpensesView>($"/api/finance/expenses?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}", ct);
 
+    /// <summary>expense-dialog.tsx: an expense keyed in by hand, paid from the drawer.</summary>
+    public async Task<int> RecordExpenseAsync(DateOnly date, int categoryId, decimal amount, string? vendor, string? note, CancellationToken ct)
+        => (await Api.PostAsync<CreatedResponse>("/api/finance/expenses", new
+        {
+            date, categoryId, amount, paidFrom = 0, partnerId = (int?)null, vendor, note,
+        }, ct, requestId: Guid.NewGuid())).Id;
+
+    /// <summary>expense-dialog.tsx: the sparkle on the attached bill; the assistant proposes the fields.</summary>
+    public Task<BillProposal> ScanBillAsync(byte[] image, CancellationToken ct)
+        => Api.PostFileAsync<BillProposal>("/api/finance/expenses/scan", image, "bill.png", "image/png", ct);
+
     /// <summary>profit.tsx: the month's P&amp;L, entirely fed by events.</summary>
     public Task<ProfitView> ProfitAsync(int year, int month, CancellationToken ct)
         => Api.GetAsync<ProfitView>($"/api/finance/profit?year={year}&month={month}", ct);

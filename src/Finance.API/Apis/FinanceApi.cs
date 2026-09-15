@@ -1,8 +1,14 @@
 #nullable enable
+using Chillax.AI;
+using Chillax.AI.Agents;
+using Chillax.AI.Http;
+using Chillax.AI.Images;
+using Chillax.Finance.API.Application.Assist;
 using Chillax.Finance.API.Application.Commands;
 using Chillax.Finance.API.Application.Queries;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Chillax.Finance.API.Apis;
 
@@ -36,6 +42,11 @@ public static class FinanceApi
         api.MapGet("/expenses/{id:int}/receipt", GetReceipt).WithName("GetExpenseReceipt")
             .WithSummary("The attached bill, as the file it was uploaded as");
         api.MapDelete("/expenses/{id:int}/receipt", RemoveReceipt).WithName("RemoveExpenseReceipt");
+        api.MapPost("/expenses/scan", ScanBill).WithName("ScanBill")
+            .WithSummary("Read the photo of a bill into a proposed expense")
+            .WithDescription("The assistant reads the date, amount, category and vendor off the bill. Nothing is recorded: the form takes the proposal for the fields still empty, and the user saves.")
+            .DisableAntiforgery()
+            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
 
         // Recurring bills
         api.MapGet("/recurring", GetRecurring).WithName("GetRecurringExpenses")
@@ -193,6 +204,36 @@ public static class FinanceApi
         int id,
         [FromServices] IMediator mediator)
         => await mediator.Send(new RemoveReceiptCommand(id)) ? TypedResults.Ok() : TypedResults.NotFound();
+
+    public static async Task<Results<Ok<BillProposal>, BadRequest<string>, ProblemHttpResult>> ScanBill(
+        IFormFile file,
+        HttpContext httpContext,
+        [FromServices] BillScanner scanner,
+        [FromServices] IFinanceQueries queries,
+        [FromServices] IOptions<AIOptions> aiOptions,
+        CancellationToken ct)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+
+        if (!scanner.IsEnabled)
+            return AIProblems.NotConfigured();
+
+        var (image, error) = await ImageValidation.ReadAsync(file, aiOptions.Value.MaxImageBytes, ct);
+        if (image is null)
+            return TypedResults.BadRequest(error ?? "The bill image could not be read.");
+
+        var categories = await queries.GetCategoriesAsync(includeInactive: false);
+        var vendors = await queries.GetVendorsAsync(branchId, BillScanner.MaxVendors);
+
+        try
+        {
+            return TypedResults.Ok(await scanner.ScanAsync(image, categories, vendors, ct));
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
+    }
 
     // Recurring bills
 

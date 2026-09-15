@@ -11,10 +11,11 @@ namespace Chillax.E2E.Scenarios;
 /// description, picks a category and proposes the item's option groups
 /// before it is even saved (the sparkle works the other way round on a
 /// stock item); the kept groups go up through the customization endpoint
-/// as they came back, and "Suggest" on the saved item leaves them out; and
+/// as they came back, and "Suggest" on the saved item leaves them out;
 /// "Scan receipt" turns a photo into proposed lines that the review sheet
 /// then turns into a real delivery — a new stock item created, the purchase
-/// received, Finance invoiced. The AppHost runs the services with the
+/// received, Finance invoiced; and the sparkle on a bill attached to an
+/// expense fills in the form. The AppHost runs the services with the
 /// scripted fake under test, so the answers are deterministic and no key or
 /// network is needed.
 /// </summary>
@@ -26,7 +27,7 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
     protected override bool OpensShift => false;
 
     [Fact]
-    public async Task Fills_in_a_new_item_proposes_its_options_and_reads_a_receipt_into_a_delivery()
+    public async Task Fills_in_a_new_item_proposes_its_options_reads_a_receipt_into_a_delivery_and_a_bill_into_an_expense()
     {
         // 1. A name alone: the Arabic, a description in both languages and a category come back.
         Step("Ask the assistant to fill in a new menu item from its English name");
@@ -170,10 +171,40 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
             Assert.Equal(water.LineTotal, entry.Amount);
         });
 
-        // 6. A file that is not an image is refused before any model is asked.
+        // 6. A bill photo becomes a proposed expense: dated today, under the first category, from the
+        //    vendor the branch recorded most recently. The expense form takes it for its empty fields.
+        Step("Scan a bill");
+        var vendor = $"E2E Electric {Day.RunId}";
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        await Owner.RecordExpenseAsync(today, Day.ElectricityCategoryId, 1m, vendor, "so the vendor is on file", Ct);
+        var categories = await Owner.CategoriesAsync(Ct);
+        var proposal2 = await Owner.ScanBillAsync(Images.TinyPng, Ct);
+        Assert.NotNull(proposal2.Date);
+        Assert.Equal(350m, proposal2.Amount);
+        Assert.Equal(categories[0].Id, proposal2.CategoryId);
+        Assert.True(proposal2.CategoryConfidence >= 0.9);
+        Assert.Equal(vendor, proposal2.Vendor);
+        Assert.Equal("Fake bill, meter 12345", proposal2.Note);
+        Assert.Equal("EGP", proposal2.Currency);
+        Assert.Empty(proposal2.Warnings);
+
+        // 6b. Saving the form records it like any other expense; the scan itself recorded nothing.
+        var expenseId = await Owner.RecordExpenseAsync(DateOnly.Parse(proposal2.Date!), proposal2.CategoryId!.Value, proposal2.Amount!.Value,
+            proposal2.Vendor, proposal2.Note, Ct);
+        var expenses = await Owner.ExpensesAsync(today.AddDays(-1), today, Ct);
+        var recorded = Assert.Single(expenses.Expenses, e => e.Id == expenseId);
+        Assert.Equal(350m, recorded.Amount);
+        Assert.Equal(categories[0].Id, recorded.CategoryId);
+        Assert.Equal(vendor, recorded.Vendor);
+        Assert.Equal(2, expenses.Expenses.Count(e => e.Vendor == vendor)); // the one on file and the one just saved, nothing from the scan
+
+        // 7. A file that is not an image is refused before any model is asked, on both scanners.
         var junk = await Assert.ThrowsAsync<ApiException>(() =>
             Owner.Api.PostFileAsync<ReceiptProposal>("/api/inventory/purchases/scan", "%PDF-1.4 not a photo"u8.ToArray(), "receipt.pdf", "application/pdf", Ct));
         Assert.Equal(HttpStatusCode.BadRequest, junk.Status);
+        var junkBill = await Assert.ThrowsAsync<ApiException>(() =>
+            Owner.Api.PostFileAsync<BillProposal>("/api/finance/expenses/scan", "%PDF-1.4 not a photo"u8.ToArray(), "bill.pdf", "application/pdf", Ct));
+        Assert.Equal(HttpStatusCode.BadRequest, junkBill.Status);
 
         App.Logs.AssertNoHandlerFailures(Checkpoint.Logs);
         AssertSameBusinessDay();

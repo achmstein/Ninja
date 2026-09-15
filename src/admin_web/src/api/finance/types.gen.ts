@@ -4,6 +4,18 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type BillProposal = {
+    date: null | string;
+    amount: null | number | string;
+    categoryId: null | number | string;
+    categoryConfidence: number | string;
+    vendor: null | string;
+    note: null | string;
+    currency: string;
+    warnings: Array<string>;
+    notes: null | string;
+};
+
 export type CategoryRequest = {
     id: null | number | string;
     name: LocalizedText;
@@ -554,6 +566,46 @@ export type AttachExpenseReceiptResponses = {
      */
     200: unknown;
 };
+
+export type ScanBillData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/finance/expenses/scan';
+};
+
+export type ScanBillErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ScanBillError = ScanBillErrors[keyof ScanBillErrors];
+
+export type ScanBillResponses = {
+    /**
+     * OK
+     */
+    200: BillProposal;
+};
+
+export type ScanBillResponse = ScanBillResponses[keyof ScanBillResponses];
 
 export type GetRecurringExpensesData = {
     body?: never;
