@@ -914,7 +914,14 @@ export function reconstruct(
     }
     const baseChoice = new Map(groups.map((g) => [g.id, assumed(g).id]))
 
-    const varies = (g: MenuGroup, read: (c: Cell) => unknown) => {
+    // Whether what `read` sees changes across the group's options, holding
+    // the other groups fixed; a "nothing" cell says nothing about the item
+    // or the amount, only about presence
+    const varies = (
+      g: MenuGroup,
+      read: (c: Cell) => unknown,
+      presentOnly = false
+    ) => {
       const others = groups.filter((x) => x.id !== g.id)
       return combos(others).some((othersCombo) => {
         const choice = new Map(baseChoice)
@@ -922,14 +929,16 @@ export function reconstruct(
         const seen = new Set<unknown>()
         for (const o of g.options) {
           choice.set(g.id, o.id)
-          seen.add(read(at(choice)!))
+          const cell = at(choice)!
+          if (presentOnly && !cell.present) continue
+          seen.add(read(cell))
         }
         return seen.size > 1
       })
     }
-    const itemGroups = groups.filter((g) => varies(g, (c) => c.item))
+    const itemGroups = groups.filter((g) => varies(g, (c) => c.item, true))
     const amountGroups = groups.filter(
-      (g) => !itemGroups.includes(g) && varies(g, (c) => c.quantity)
+      (g) => !itemGroups.includes(g) && varies(g, (c) => c.quantity, true)
     )
     const whenGroups = groups.filter(
       (g) =>
