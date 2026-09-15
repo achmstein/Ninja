@@ -1,12 +1,17 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { AlertTriangle, CookingPot, Package, X } from 'lucide-react'
+import { AlertTriangle, CookingPot, Package, Sparkles, X } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
-import { type RecipeView, type StockItemView } from '@/api/inventory'
+import {
+  type RecipesProposal,
+  type RecipeView,
+  type StockItemView,
+} from '@/api/inventory'
 import {
   getRecipeCostsOptions,
   getRecipesOptions,
+  proposeRecipesMutation,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -17,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
 import {
   choiceDeltas,
@@ -33,13 +39,15 @@ import {
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
 import { menuOptionsOf, type MenuOptions } from '../menu-options'
+import { toMenuItemToTrack } from '../track-items'
+import { RecipeBuilder } from './recipe-builder'
 import {
   DeductionPreview,
-  RecipeSlotsEditor,
   RecipeSummary,
   type IngredientOption,
   type StockInfo,
 } from './recipe-editor'
+import { RecipeReviewSheet } from './recipe-review-sheet'
 
 type StockRuleSectionProps = {
   item: CatalogItemDto
@@ -70,6 +78,59 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
     (r) => toNumber(r.catalogItemId) === catalogItemId
   )
   const menu = useMemo(() => menuOptionsOf(item, localized), [item, localized])
+
+  const queryClient = useQueryClient()
+
+  // "Propose": the assistant fills the whole recipe for this one item; the
+  // review sheet (the same one "Track items" uses) shows it before anything is saved
+  const assistAvailable = useAssistStore((s) => !s.unavailable)
+  const propose = useMutation(proposeRecipesMutation())
+  const [proposal, setProposal] = useState<RecipesProposal | null>(null)
+  const askAssistant = async () => {
+    try {
+      setProposal(
+        await propose.mutateAsync({
+          body: { items: [toMenuItemToTrack(item)] },
+          query: { 'api-version': API_VERSION },
+        })
+      )
+    } catch (error) {
+      toast.error(assistErrorMessage(error))
+    }
+  }
+  const closeProposal = () => {
+    setProposal(null)
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getRecipes' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getRecipeCosts' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getStockItems' }] })
+  }
+  const proposeButton = assistAvailable && (
+    <Button
+      type='button'
+      variant='outline'
+      size='sm'
+      className='text-primary'
+      disabled={propose.isPending}
+      onClick={askAssistant}
+      title={t('proposeRecipeHint')}
+    >
+      {propose.isPending ? (
+        <Spinner className='me-2' />
+      ) : (
+        <Sparkles className='me-2 h-4 w-4' />
+      )}
+      {t('proposeRecipe')}
+    </Button>
+  )
+  const reviewSheet = proposal && (
+    <RecipeReviewSheet
+      proposals={[proposal]}
+      items={[item]}
+      shelf={stockItems.data ?? []}
+      onOpenChange={(open) => !open && closeProposal()}
+      onBack={() => setProposal(null)}
+    />
+  )
 
   // One base line of exactly one piece is the unit shortcut's shape
   const unitLine = recipe && isUnitRecipe(recipe) ? recipe.lines[0] : null
@@ -133,7 +194,9 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
             <CookingPot className='me-2 h-4 w-4' />
             {t('usesIngredients')}
           </Button>
+          {proposeButton}
         </div>
+        {reviewSheet}
       </div>
     )
   }
@@ -175,7 +238,9 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
           <X className='me-2 h-4 w-4' />
           {t('stopTracking')}
         </Button>
+        {proposeButton}
       </div>
+      {reviewSheet}
 
       <ConfirmDialog
         open={stopOpen}
@@ -213,6 +278,9 @@ function RecipeEditorForm({
     value: String(i.id),
     label: localized(i.name),
     unit: i.unit ?? '',
+    names: [i.name?.en, i.name?.ar].filter(
+      (n): n is string => !!n && n.trim() !== ''
+    ),
   }))
   const stock = new Map<string, StockInfo>(
     ingredients.map((i) => [i.value, { label: i.label, unit: i.unit }])
@@ -248,7 +316,7 @@ function RecipeEditorForm({
 
   return (
     <form onSubmit={save} className='space-y-4'>
-      <RecipeSlotsEditor
+      <RecipeBuilder
         draft={draft}
         onChange={setDraft}
         menu={menu}

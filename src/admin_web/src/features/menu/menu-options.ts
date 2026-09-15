@@ -7,6 +7,8 @@ import { toNumber } from '@/lib/money'
 export type MenuOption = {
   id: string
   label: string
+  /** Both languages' names, for matching an ingredient's name to a choice ("فاتح" in "بن تركي فاتح") */
+  names: string[]
   groupIndex: number
   index: number
   isDefault: boolean
@@ -41,6 +43,9 @@ export function menuOptionsOf(
         const entry = {
           id: String(option.id),
           label: localized(option.name),
+          names: [option.name?.en, option.name?.ar].filter(
+            (n): n is string => !!n && n.trim() !== ''
+          ),
           groupIndex,
           index,
           isDefault: option.isDefault === true,

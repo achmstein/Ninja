@@ -53,7 +53,8 @@ import {
   type ReviewIngredient,
   type ReviewRecipe,
 } from '../track-items'
-import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
+import { RecipeBuilder } from './recipe-builder'
+import { type IngredientOption } from './recipe-editor'
 
 type RecipeReviewSheetProps = {
   proposals: RecipesProposal[]
@@ -121,11 +122,15 @@ export function RecipeReviewSheet({
         value: String(item.id),
         label: localized(item.name),
         unit: item.unit ?? '',
+        names: [item.name?.en, item.name?.ar].filter(
+          (n): n is string => !!n && n.trim() !== ''
+        ),
       })),
       ...review.ingredients.map((i) => ({
         value: NEW_PREFIX + i.key,
         label: `${t('newIngredient')}: ${i.name.en || i.name.ar || i.key}`,
         unit: i.unit,
+        names: [i.name.en, i.name.ar].filter((n) => n.trim() !== ''),
       })),
     ],
     [shelf, review.ingredients, localized, t]
@@ -414,7 +419,7 @@ export function RecipeReviewSheet({
                         </p>
                       ) : recipe.done ? null : (
                         <div className='px-3 py-2'>
-                          <RecipeSlotsEditor
+                          <RecipeBuilder
                             draft={recipe.draft}
                             onChange={(draft) =>
                               updateRecipe(recipe.catalogItemId, { draft })

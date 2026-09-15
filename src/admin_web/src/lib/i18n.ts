@@ -2326,6 +2326,55 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // Recipe builder: one question per option group
+  standardChoiceTakes: {
+    en: 'The standard choice takes',
+    ar: 'الاختيار الأساسي بياخد',
+  },
+  standardChoiceIs: {
+    en: 'The standard choice is {choices}: what comes off the shelf for it. Every other choice is a change to this, below.',
+    ar: 'الاختيار الأساسي هو {choices}: ده اللي بينزل من الرف ليه. أي اختيار تاني هو تغيير على ده، تحت.',
+  },
+  plainSaleHint: {
+    en: 'What comes off the shelf when the customer changes nothing.',
+    ar: 'اللي بينزل من الرف لما العميل مايغيّرش حاجة.',
+  },
+  choicesThatChangeIt: {
+    en: 'Choices that change it',
+    ar: 'الاختيارات اللي بتغيّرها',
+  },
+  choicesHint: {
+    en: 'One answer per group. Bags are guessed from their names; check them.',
+    ar: 'إجابة واحدة لكل مجموعة. الأكياس بتتخمّن من أساميها؛ راجعها.',
+  },
+  modeNone: { en: 'Changes nothing', ar: 'ما بيغيّرش' },
+  modeMultiply: { en: 'Multiplies', ar: 'بيضاعف' },
+  modeAmount: { en: 'The amount', ar: 'الكمية' },
+  modeItem: { en: 'The item', ar: 'الصنف' },
+  modeOnly: { en: 'Only for some', ar: 'لبعضها بس' },
+  modeAddon: { en: 'Each adds', ar: 'كل واحدة بتضيف' },
+  customRules: { en: 'Custom rules', ar: 'قواعد خاصة' },
+  growsWith: { en: 'Grows with it', ar: 'بيكبر معاه' },
+  amountOf: { en: 'the amount of', ar: 'كمية' },
+  itemOf: { en: 'which', ar: 'أنهي' },
+  onlyFor: { en: 'deduct', ar: 'اخصم' },
+  withGroup: { en: 'together with {group}', ar: 'مع {group}' },
+  drawnWithGroup: {
+    en: 'Set together with {group}, in its card above.',
+    ar: 'بيتظبط مع {group} في الكارت اللي فوق.',
+  },
+  addonHint: {
+    en: 'What each add-on takes on top of the plain sale; leave empty for none.',
+    ar: 'كل إضافة بتاخد إيه فوق البيعة العادية؛ سيبها فاضية لو مفيش.',
+  },
+  addsNothing: { en: 'Adds nothing', ar: 'ما بتضيفش حاجة' },
+  simpleEditor: { en: 'Back to the simple editor', ar: 'رجوع للتعديل البسيط' },
+  advancedEditor: { en: 'Advanced editor', ar: 'تعديل متقدم' },
+  proposeRecipe: { en: 'Propose with AI', ar: 'اقترح بالمساعد' },
+  proposeRecipeHint: {
+    en: 'The assistant proposes what one sale takes, with any ingredients the shelf is missing; you review before anything is saved.',
+    ar: 'المساعد يقترح البيعة بتاخد إيه، مع الخامات اللي ناقصة على الرف؛ بتراجع قبل ما أي حاجة تتحفظ.',
+  },
   // Recipe editor: slots, overrides, size factors
   recipeSlotsHint: {
     en: 'One row per thing a sale takes. Pick the choices a row depends on and say what each choice makes of it; an empty cell means the same as the default.',

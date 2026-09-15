@@ -55,7 +55,13 @@ import {
 } from '../menu-options'
 
 /** What a slot can be made of: the shelf, or (in the review sheet) an ingredient about to be created */
-export type IngredientOption = { value: string; label: string; unit: string }
+export type IngredientOption = {
+  value: string
+  label: string
+  unit: string
+  /** Both languages' names, for matching to a choice's name */
+  names: string[]
+}
 
 // ---------------------------------------------------------------------------
 // Shared bits
