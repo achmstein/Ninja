@@ -234,12 +234,18 @@ public sealed class OwnerActor(ApiClient api)
     public Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity)[] lines, CancellationToken ct)
         => SetRecipeAsync(catalogItemId, lines.Select(l => (l.StockItemId, l.Quantity, (int[]?)null)).ToArray(), ct);
 
-    /// <summary>The recipe editor's save: base lines and lines tied to options.</summary>
-    public async Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity, int[]? OptionIds)[] lines, CancellationToken ct)
+    /// <summary>The recipe editor's save: base lines and lines tied to options, each a slot of its own.</summary>
+    public Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity, int[]? OptionIds)[] lines, CancellationToken ct)
+        => SetRecipeAsync(catalogItemId, lines.Select(l => (l.StockItemId, l.Quantity, l.OptionIds, 0, true)).ToArray(), ct);
+
+    /// <summary>The recipe editor's save in full: slots, overrides and size factors.</summary>
+    public async Task SetRecipeAsync(int catalogItemId, (int StockItemId, decimal Quantity, int[]? OptionIds, int Slot, bool Scalable)[] lines, CancellationToken ct,
+        (int OptionId, decimal Factor)[]? scales = null)
     {
         using var r = await Api.PutAsync($"/api/inventory/recipes/{catalogItemId}", new
         {
-            lines = lines.Select(l => new { stockItemId = l.StockItemId, quantity = l.Quantity, optionIds = l.OptionIds }).ToArray(),
+            lines = lines.Select(l => new { stockItemId = l.StockItemId, quantity = l.Quantity, optionIds = l.OptionIds, slot = l.Slot, scalable = l.Scalable, none = false }).ToArray(),
+            scales = scales?.Select(s => new { optionId = s.OptionId, factor = s.Factor }).ToArray(),
         }, ct);
     }
 

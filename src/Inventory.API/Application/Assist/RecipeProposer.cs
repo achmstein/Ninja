@@ -79,9 +79,16 @@ public sealed class RecipeProposer(IChillaxAgentFactory factory)
           cup or packaging only when it is worth counting (takeaway cups, lids, straws): at most one such line.
         - A line names either stockItemId (an id from the shelf, when the shelf already has that ingredient) or
           newItemKey (an ingredient from "newItems"), never both; the other is 0 / "".
-        - optionIds is empty for the base recipe. When an option changes the ingredients (oat milk instead of milk,
-          a large size that takes more, an extra shot), add a line with that option's id; keep the base line for the
-          standard choice. Never invent option ids.
+        - Lines are grouped in SLOTS: lines with the same slot number (1, 2, 3…) are one thing the sale takes — the
+          coffee, the milk, the cup. In a slot, the line with empty optionIds is the default (the standard choice)
+          and a line with optionIds REPLACES it when those options are all chosen: "oat milk" is a line in the milk
+          slot with the oat option and the oat milk ingredient. A choice that changes only the amount is a line in
+          the same slot with the new quantity. An add-on (extra shot) is a slot of its own with no default: one line
+          with the add-on's option id. An ingredient that differs by a combination (a coffee bag per roast + spice)
+          is one override per combination, all in the coffee slot. Never invent option ids.
+        - Sizes are NOT lines: a size option that makes the sale bigger goes in "scales" as an entry with optionId and factor
+          (double 2, large 1.5); the scalable lines are multiplied. Set scalable false on lines that do not grow
+          with size (a cup, a lid, a tea bag); true otherwise. A "unit" recipe has no scales.
         - "newItems": every ingredient not on the shelf, once, with a short lowercase key ("whole-milk"), nameEn
           (Title Case), nameAr (Egyptian Arabic), unit (g for anything weighed, ml for poured, pcs for counted),
           packSize (base units per pack as bought: a 1 l carton of milk is 1000, a 250 g bag of beans 250; 0 when

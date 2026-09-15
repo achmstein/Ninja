@@ -66,6 +66,127 @@ public class RecipeTest
         ]));
     }
 
+    // --- slots -----------------------------------------------------------
+
+    private const int Cup = 4, Sugar = 5, Coffee = 6, LightCoffee = 7, LightSpicedCoffee = 8;
+    private const int Light = 301, Spiced = 302, Plain = 303, Double = 304, NoSugar = 305;
+
+    [TestMethod]
+    public void An_override_replaces_the_slots_default_instead_of_adding_to_it()
+    {
+        var recipe = new Recipe(Latte,
+        [
+            new RecipeLine(Beans, 18, slot: 1),
+            new RecipeLine(Milk, 200, slot: 2),
+            new RecipeLine(OatMilk, 200, [OatOption], slot: 2),
+        ]);
+
+        var oat = recipe.Explode(1, [OatOption]).ToDictionary(x => x.StockItemId, x => x.Quantity);
+        Assert.AreEqual(200m, oat[OatMilk]);
+        Assert.IsFalse(oat.ContainsKey(Milk), "the milk slot resolved to oat milk");
+        Assert.AreEqual(18m, oat[Beans]);
+
+        var plain = recipe.Explode(1).ToDictionary(x => x.StockItemId, x => x.Quantity);
+        Assert.AreEqual(200m, plain[Milk]);
+        Assert.IsFalse(plain.ContainsKey(OatMilk));
+    }
+
+    [TestMethod]
+    public void The_most_specific_override_wins_and_an_uncovered_combination_falls_back_to_the_default()
+    {
+        var recipe = new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7, slot: 1),
+            new RecipeLine(LightCoffee, 7, [Light], slot: 1),
+            new RecipeLine(LightSpicedCoffee, 7, [Light, Spiced], slot: 1),
+        ]);
+
+        Assert.AreEqual(LightSpicedCoffee, recipe.Explode(1, [Light, Spiced]).Single().StockItemId, "two options beat one");
+        Assert.AreEqual(LightCoffee, recipe.Explode(1, [Light, Plain]).Single().StockItemId);
+        Assert.AreEqual(Coffee, recipe.Explode(1, [Spiced]).Single().StockItemId, "no line for spiced alone: the default, never nothing");
+        Assert.AreEqual(Coffee, recipe.Explode(1).Single().StockItemId);
+    }
+
+    [TestMethod]
+    public void A_none_override_deducts_nothing_for_its_choice()
+    {
+        var recipe = new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7, slot: 1),
+            new RecipeLine(Sugar, 4, slot: 2),
+            RecipeLine.None(2, Sugar, [NoSugar]),
+        ]);
+
+        var noSugar = recipe.Explode(1, [NoSugar]).ToDictionary(x => x.StockItemId, x => x.Quantity);
+        Assert.AreEqual(7m, noSugar[Coffee]);
+        Assert.IsFalse(noSugar.ContainsKey(Sugar));
+        Assert.AreEqual(4m, recipe.Explode(1).ToDictionary(x => x.StockItemId, x => x.Quantity)[Sugar]);
+    }
+
+    [TestMethod]
+    public void A_size_factor_multiplies_the_scalable_slots_only()
+    {
+        var recipe = new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7, slot: 1),
+            new RecipeLine(Sugar, 4, slot: 2),
+            new RecipeLine(Cup, 1, slot: 3, scalable: false),
+        ], [new RecipeScale(Double, 2)]);
+
+        var single = recipe.Explode(3).ToDictionary(x => x.StockItemId, x => x.Quantity);
+        Assert.AreEqual(21m, single[Coffee]);
+        Assert.AreEqual(3m, single[Cup]);
+
+        var doubled = recipe.Explode(3, [Double]).ToDictionary(x => x.StockItemId, x => x.Quantity);
+        Assert.AreEqual(42m, doubled[Coffee]);
+        Assert.AreEqual(24m, doubled[Sugar]);
+        Assert.AreEqual(3m, doubled[Cup], "the cup does not grow with the coffee");
+        Assert.AreEqual(2m, recipe.ScaleFactor([Double]));
+        Assert.AreEqual(1m, recipe.ScaleFactor([Light]));
+    }
+
+    [TestMethod]
+    public void Plain_lines_are_slots_of_their_own_and_slot_numbers_are_renumbered_in_order()
+    {
+        var recipe = new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7),
+            new RecipeLine(Sugar, 4, slot: 9),
+            new RecipeLine(Sugar, 2, [Light], slot: 9),
+            new RecipeLine(Cup, 1),
+        ]);
+
+        CollectionAssert.AreEqual(new[] { 1, 2, 2, 3 }, recipe.Lines.Select(l => l.Slot).ToList());
+        Assert.AreEqual(2m, recipe.Explode(1, [Light]).Single(x => x.StockItemId == Sugar).Quantity);
+    }
+
+    [TestMethod]
+    public void A_slot_has_one_default_one_line_per_combination_and_something_to_deduct()
+    {
+        Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7, slot: 1),
+            new RecipeLine(LightCoffee, 7, slot: 1),
+        ]), "two defaults");
+
+        Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20,
+        [
+            new RecipeLine(Coffee, 7, slot: 1),
+            new RecipeLine(LightCoffee, 7, [Light], slot: 1),
+            new RecipeLine(LightSpicedCoffee, 9, [Light], slot: 1),
+        ]), "the same combination twice in a slot");
+
+        Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20, [RecipeLine.None(1, Sugar, [NoSugar])]), "a none override alone");
+
+        Assert.ThrowsExactly<InventoryDomainException>(() => RecipeLine.None(1, Sugar, []), "a none override needs options");
+
+        Assert.ThrowsExactly<InventoryDomainException>(() => new Recipe(20,
+            [new RecipeLine(Coffee, 7, slot: 1)],
+            [new RecipeScale(Double, 2), new RecipeScale(Double, 3)]), "one factor per option");
+
+        Assert.ThrowsExactly<InventoryDomainException>(() => new RecipeScale(Double, 0));
+    }
+
     [TestMethod]
     public void Nothing_is_consumed_for_zero_units()
     {

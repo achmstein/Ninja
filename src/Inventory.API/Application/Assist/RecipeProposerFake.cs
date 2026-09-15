@@ -20,6 +20,7 @@ public static class RecipeProposerFake
     public const decimal ShelfQuantity = 10m;
     public const decimal SyrupQuantity = 20m;
     public const decimal OptionQuantity = 5m;
+    public const decimal ScaleFactor = 2m;
 
     public static string Respond(FakeAgentRequest request)
     {
@@ -32,17 +33,23 @@ public static class RecipeProposerFake
         {
             if (index == 0)
             {
-                recipes.Add(new ExtractedRecipe(item.Id, RecipeKinds.Unit, []));
+                recipes.Add(new ExtractedRecipe(item.Id, RecipeKinds.Unit, [], []));
                 continue;
             }
 
+            // Slot 1: the shelf's first item. Slot 2: the syrup, less of it for the first option.
             var lines = new List<ExtractedRecipeLine>();
             if (shelfId > 0)
-                lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity, []));
-            lines.Add(new ExtractedRecipeLine(0, SyrupKey, SyrupQuantity, []));
+                lines.Add(new ExtractedRecipeLine(shelfId, string.Empty, ShelfQuantity, [], 1, true));
+            lines.Add(new ExtractedRecipeLine(0, SyrupKey, SyrupQuantity, [], 2, true));
+            var scales = new List<ExtractedScale>();
             if (item.Options.Count > 0)
-                lines.Add(new ExtractedRecipeLine(0, SyrupKey, OptionQuantity, [item.Options[0].Id]));
-            recipes.Add(new ExtractedRecipe(item.Id, RecipeKinds.Recipe, lines));
+            {
+                lines.Add(new ExtractedRecipeLine(0, SyrupKey, OptionQuantity, [item.Options[0].Id], 2, true));
+                if (item.Options.Count > 1)
+                    scales.Add(new ExtractedScale(item.Options[1].Id, ScaleFactor));
+            }
+            recipes.Add(new ExtractedRecipe(item.Id, RecipeKinds.Recipe, lines, scales));
         }
 
         var extraction = new RecipesExtraction(

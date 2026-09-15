@@ -39,19 +39,40 @@ public class RecipeCostingTest
         var cost = RecipeCosting.Cost(Latte(), costs, Items);
 
         Assert.AreEqual(7, cost.CatalogItemId);
-        Assert.AreEqual(18 * 0.6m + 200 * 0.03m + 1.5m, cost.BaseCost, "10.80 + 6.00 + 1.50");
+        Assert.AreEqual(18 * 0.6m + 200 * 0.03m + 1.5m, cost.BaseCost, "10.80 + 6.00 + 1.50: the defaults, nothing chosen");
         Assert.IsEmpty(cost.Uncosted);
-        Assert.HasCount(2, cost.Options);
-
-        var oat = cost.Options.Single(o => o.OptionIds.SequenceEqual([OatOption]));
-        Assert.AreEqual(18m, oat.Cost, "200 ml of oat milk");
-        var large = cost.Options.Single(o => o.OptionIds.SequenceEqual([LargeOption]));
-        Assert.AreEqual(100 * 0.03m + 6 * 0.6m, large.Cost, "the two large lines summed");
+        Assert.IsEmpty(cost.Scales);
 
         Assert.HasCount(6, cost.Lines);
         Assert.AreEqual("Beans", cost.Lines[0].Name.En);
         Assert.AreEqual(0.6m, cost.Lines[0].UnitCost);
         Assert.AreEqual(10.8m, cost.Lines[0].Cost);
+        var oat = cost.Lines.Single(l => l.OptionIds.SequenceEqual([OatOption]));
+        Assert.AreEqual(18m, oat.Cost, "200 ml of oat milk, priced for the client to resolve");
+        // Plain lines are their own slots, numbered in order
+        CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 }, cost.Lines.Select(l => l.Slot).ToList());
+    }
+
+    [TestMethod]
+    public void Slots_and_size_factors_ride_along_and_the_base_cost_is_the_standard_sale()
+    {
+        var costs = new Dictionary<int, decimal> { [Beans] = 0.6m, [Milk] = 0.03m, [OatMilk] = 0.09m, [Cup] = 1.5m };
+        var recipe = new Recipe(7,
+        [
+            new RecipeLine(Beans, 18, slot: 1),
+            new RecipeLine(Milk, 200, slot: 2),
+            new RecipeLine(OatMilk, 200, [OatOption], slot: 2),
+            new RecipeLine(Cup, 1, slot: 3, scalable: false),
+        ], [new RecipeScale(LargeOption, 1.5m)]);
+
+        var cost = RecipeCosting.Cost(recipe, costs, Items);
+
+        Assert.AreEqual(10.8m + 6m + 1.5m, cost.BaseCost, "the defaults at factor 1");
+        var scale = Assert.ContainsSingle(cost.Scales);
+        Assert.AreEqual(LargeOption, scale.OptionId);
+        Assert.AreEqual(1.5m, scale.Factor);
+        Assert.IsFalse(cost.Lines.Single(l => l.StockItemId == Cup).Scalable);
+        Assert.AreEqual(2, cost.Lines.Single(l => l.StockItemId == OatMilk).Slot, "the oat override sits in the milk slot");
     }
 
     [TestMethod]
@@ -63,7 +84,7 @@ public class RecipeCostingTest
 
         Assert.AreEqual(10.8m + 1.5m, cost.BaseCost, "milk counts as nothing until it is received");
         CollectionAssert.AreEqual(new[] { Milk, OatMilk }, cost.Uncosted.ToList());
-        Assert.AreEqual(0m, cost.Options.Single(o => o.OptionIds.SequenceEqual([OatOption])).Cost);
+        Assert.AreEqual(0m, cost.Lines.Single(l => l.OptionIds.SequenceEqual([OatOption])).Cost);
     }
 
     [TestMethod]

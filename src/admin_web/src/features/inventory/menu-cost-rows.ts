@@ -51,7 +51,8 @@ export function toMenuCostRows(
       margin: price - cost,
       foodCost,
       uncosted,
-      optionExtras: c.options.length,
+      optionExtras:
+        c.lines.filter((l) => l.optionIds.length > 0).length + c.scales.length,
       status:
         price <= 0
           ? 'unpriced'

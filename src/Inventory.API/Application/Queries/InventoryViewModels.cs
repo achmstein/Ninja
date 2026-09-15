@@ -162,22 +162,28 @@ public record StockCountView(
     int LinesOff,
     IReadOnlyList<StockCountLineView> Lines);
 
-/// <summary>A line; <paramref name="OptionIds"/> empty for the base recipe, else every option the line needs chosen.</summary>
-public record RecipeLineView(int Id, int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds);
+/// <summary>
+/// A line of a slot: the slot's default when <paramref name="OptionIds"/>
+/// is empty, else an override for every option named (a none override
+/// deducts nothing). Lines sharing a <paramref name="Slot"/> are one thing
+/// a sale takes.
+/// </summary>
+public record RecipeLineView(int Id, int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, int Slot, bool Scalable, bool IsNone);
 
-public record RecipeView(int CatalogItemId, IReadOnlyList<RecipeLineView> Lines);
+/// <summary>A size factor: the scalable slots are multiplied by it when the option is chosen.</summary>
+public record RecipeScaleView(int OptionId, decimal Factor);
 
-/// <summary>A recipe line with what it costs at the branch's average.</summary>
-public record RecipeCostLineView(int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, decimal UnitCost, decimal Cost);
+public record RecipeView(int CatalogItemId, IReadOnlyList<RecipeLineView> Lines, IReadOnlyList<RecipeScaleView> Scales);
 
-/// <summary>What one option set adds to the cost when those options are picked.</summary>
-public record RecipeOptionCostView(IReadOnlyList<int> OptionIds, decimal Cost);
+/// <summary>A recipe line with what it costs at the branch's average (0 for a none override).</summary>
+public record RecipeCostLineView(int StockItemId, LocalizedText Name, string Unit, decimal Quantity, IReadOnlyList<int> OptionIds, decimal UnitCost, decimal Cost, int Slot, bool Scalable, bool IsNone);
 
 /// <summary>
-/// What one sale of a menu item costs at the branch. Inventory knows no
-/// prices: the admin app joins Catalog's for the margin.
+/// What one sale of a menu item costs at the branch: every line priced,
+/// plus the size factors, so a client can resolve any choice the way
+/// <see cref="Recipe.Explode"/> does. Inventory knows no prices or
+/// defaults: the admin app joins Catalog's for the margin.
 /// </summary>
-/// <param name="BaseCost">The base lines at the branch's average costs.</param>
-/// <param name="Options">Each option line set and what it adds.</param>
+/// <param name="BaseCost">A sale with nothing chosen: the defaults at the branch's average costs.</param>
 /// <param name="Uncosted">Ingredients with no cost at this branch yet (never received); the figures are lower bounds.</param>
-public record RecipeCostView(int CatalogItemId, decimal BaseCost, IReadOnlyList<RecipeOptionCostView> Options, IReadOnlyList<RecipeCostLineView> Lines, IReadOnlyList<int> Uncosted);
+public record RecipeCostView(int CatalogItemId, decimal BaseCost, IReadOnlyList<RecipeCostLineView> Lines, IReadOnlyList<RecipeScaleView> Scales, IReadOnlyList<int> Uncosted);

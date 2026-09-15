@@ -43,6 +43,7 @@ public class InventoryContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new StockItemEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RecipeEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RecipeLineEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new RecipeScaleEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PurchaseEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PurchaseLineEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new StockCountEntityTypeConfiguration());

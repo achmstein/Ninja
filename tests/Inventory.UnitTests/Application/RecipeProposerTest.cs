@@ -24,7 +24,7 @@ public class RecipeProposerTest
     private static readonly List<MenuItemToTrack> Items =
     [
         new(10, new LocalizedText("Cola", "كولا"), null, "Drinks", 20, null),
-        new(11, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(40, "Milk", new LocalizedText("Oat Milk"))]),
+        new(11, new LocalizedText("Latte", "لاتيه"), null, "Coffee", 45, [new(40, "Milk", new LocalizedText("Oat Milk")), new(41, "Size", new LocalizedText("Large"))]),
         new(12, new LocalizedText("Tea", "شاي"), null, "Tea", 15, null),
     ];
 
@@ -59,9 +59,14 @@ public class RecipeProposerTest
         Assert.AreEqual(RecipeProposerFake.ShelfQuantity, latte.Lines[0].Quantity);
         Assert.AreEqual(RecipeProposerFake.SyrupKey, latte.Lines[1].NewItemKey);
         CollectionAssert.AreEqual(new[] { 40 }, latte.Lines[2].OptionIds.ToList());
+        CollectionAssert.AreEqual(new[] { 1, 2, 2 }, latte.Lines.Select(l => l.Slot).ToList(), "the syrup override sits in the syrup's slot");
+        var scale = Assert.ContainsSingle(latte.Scales);
+        Assert.AreEqual(41, scale.OptionId);
+        Assert.AreEqual(RecipeProposerFake.ScaleFactor, scale.Factor);
 
         var tea = proposal.Recipes[2];
         Assert.HasCount(2, tea.Lines, "no options, no option line");
+        Assert.IsEmpty(tea.Scales);
     }
 
     [TestMethod]

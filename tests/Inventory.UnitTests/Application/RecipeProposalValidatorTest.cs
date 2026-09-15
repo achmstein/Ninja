@@ -33,13 +33,13 @@ public class RecipeProposalValidatorTest
             [
                 new ExtractedRecipe(Latte, "recipe",
                 [
-                    new ExtractedRecipeLine(1, "", 18, []),
-                    new ExtractedRecipeLine(2, "", 200, []),
-                    new ExtractedRecipeLine(0, "cup", 1, []),
-                    new ExtractedRecipeLine(0, "oat-milk", 200, [Oat]),
-                    new ExtractedRecipeLine(1, "", 6, [Large]),
-                ]),
-                new ExtractedRecipe(Cola, "unit", []),
+                    new ExtractedRecipeLine(1, "", 18, [], 0, true),
+                    new ExtractedRecipeLine(2, "", 200, [], 0, true),
+                    new ExtractedRecipeLine(0, "cup", 1, [], 0, true),
+                    new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 0, true),
+                    new ExtractedRecipeLine(1, "", 6, [Large], 0, true),
+                ], []),
+                new ExtractedRecipe(Cola, "unit", [], []),
             ],
             "");
 
@@ -73,7 +73,7 @@ public class RecipeProposalValidatorTest
     {
         var extraction = new RecipesExtraction(
             [Ingredient("milk", "whole  milk"), Ingredient("beans-ar", "Coffee Beans", "بُن", "g", 250, "bag")],
-            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "milk", 200, []), new ExtractedRecipeLine(0, "beans-ar", 18, [])])],
+            [new ExtractedRecipe(Latte, "recipe", [new ExtractedRecipeLine(0, "milk", 200, [], 0, true), new ExtractedRecipeLine(0, "beans-ar", 18, [], 0, true)], [])],
             "");
 
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
@@ -92,13 +92,13 @@ public class RecipeProposalValidatorTest
             [Ingredient("syrup", "Vanilla Syrup", unit: "bottle")],
             [new ExtractedRecipe(Latte, "recipe",
             [
-                new ExtractedRecipeLine(99, "", 10, []),          // unknown shelf id
-                new ExtractedRecipeLine(0, "ghost", 10, []),      // unknown key
-                new ExtractedRecipeLine(0, "syrup", 0, []),       // no quantity
-                new ExtractedRecipeLine(2, "", 1000, [777]),      // unknown option, and a litre of milk per latte? no: 1000 ml is under the bar
-                new ExtractedRecipeLine(1, "", 5000, []),         // 5 kg of beans per sale
-                new ExtractedRecipeLine(1, "", 18, []),           // the same beans, base, again
-            ])],
+                new ExtractedRecipeLine(99, "", 10, [], 0, true),          // unknown shelf id
+                new ExtractedRecipeLine(0, "ghost", 10, [], 0, true),      // unknown key
+                new ExtractedRecipeLine(0, "syrup", 0, [], 0, true),       // no quantity
+                new ExtractedRecipeLine(2, "", 1000, [777], 0, true),      // unknown option, and a litre of milk per latte? no: 1000 ml is under the bar
+                new ExtractedRecipeLine(1, "", 5000, [], 0, true),         // 5 kg of beans per sale
+                new ExtractedRecipeLine(1, "", 18, [], 0, true),           // the same beans, base, again
+            ], [])],
             "");
 
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
@@ -126,9 +126,9 @@ public class RecipeProposalValidatorTest
         var extraction = new RecipesExtraction(
             [],
             [
-                new ExtractedRecipe(Cola, "unit", []),
-                new ExtractedRecipe(Cola, "recipe", [new ExtractedRecipeLine(1, "", 1, [])]),
-                new ExtractedRecipe(999, "unit", []),
+                new ExtractedRecipe(Cola, "unit", [], []),
+                new ExtractedRecipe(Cola, "recipe", [new ExtractedRecipeLine(1, "", 1, [], 0, true)], []),
+                new ExtractedRecipe(999, "unit", [], []),
             ],
             "Some of these are not drinks");
 
@@ -148,9 +148,34 @@ public class RecipeProposalValidatorTest
     }
 
     [TestMethod]
+    public void Slots_pass_through_and_size_factors_must_belong_to_the_item()
+    {
+        var extraction = new RecipesExtraction(
+            [Ingredient("oat-milk", "Oat Milk", "لبن شوفان")],
+            [new ExtractedRecipe(Latte, "recipe",
+            [
+                new ExtractedRecipeLine(1, "", 18, [], 1, true),
+                new ExtractedRecipeLine(2, "", 200, [], 2, true),
+                new ExtractedRecipeLine(0, "oat-milk", 200, [Oat], 2, true),
+            ],
+            [new ExtractedScale(Large, 1.5m), new ExtractedScale(999, 2), new ExtractedScale(Large, 3), new ExtractedScale(Oat, 0)])],
+            "");
+
+        var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
+
+        var latte = proposal.Recipes[0];
+        CollectionAssert.AreEqual(new[] { 1, 2, 2 }, latte.Lines.Select(l => l.Slot).ToList());
+        var scale = Assert.ContainsSingle(latte.Scales);
+        Assert.AreEqual(Large, scale.OptionId);
+        Assert.AreEqual(1.5m, scale.Factor, "the first factor for an option wins");
+        Assert.IsTrue(latte.Warnings.Any(w => w.Contains("size factor was tied to an option")), string.Join("; ", latte.Warnings));
+        Assert.IsTrue(latte.Warnings.Any(w => w.Contains("out of range")), string.Join("; ", latte.Warnings));
+    }
+
+    [TestMethod]
     public void A_recipe_with_no_usable_lines_says_so()
     {
-        var extraction = new RecipesExtraction([], [new ExtractedRecipe(Latte, "recipe", [])], "");
+        var extraction = new RecipesExtraction([], [new ExtractedRecipe(Latte, "recipe", [], [])], "");
         var proposal = RecipeProposalValidator.Validate(extraction, Requested.Take(1).ToList(), Shelf, []);
         CollectionAssert.Contains(proposal.Recipes[0].Warnings.ToList(), "No usable ingredient lines were proposed; set it up by hand or sell it as a unit.");
     }

@@ -110,7 +110,7 @@ public static class RecipeProposalValidator
             if (!answered.TryGetValue(item.CatalogItemId, out var raw))
             {
                 itemWarnings.Add("The assistant proposed nothing for this item; set it up by hand.");
-                recipes.Add(new ProposedRecipe(item.CatalogItemId, RecipeKinds.Recipe, [], itemWarnings));
+                recipes.Add(new ProposedRecipe(item.CatalogItemId, RecipeKinds.Recipe, [], [], itemWarnings));
                 continue;
             }
 
@@ -187,14 +187,35 @@ public static class RecipeProposalValidator
                         continue;
                     }
 
-                    lines.Add(new ProposedRecipeLine(stockItemId, newKey, quantity, options));
+                    lines.Add(new ProposedRecipeLine(stockItemId, newKey, quantity, options, Math.Max(0, line.Slot), line.Scalable));
                 }
 
                 if (lines.Count == 0)
                     itemWarnings.Add("No usable ingredient lines were proposed; set it up by hand or sell it as a unit.");
             }
 
-            recipes.Add(new ProposedRecipe(item.CatalogItemId, kind, lines, itemWarnings));
+            // Size factors: one per option of this item, within reason
+            var scales = new List<ProposedScale>();
+            foreach (var scale in raw.Scales ?? [])
+            {
+                if (kind == RecipeKinds.Unit)
+                    break;
+                if (!optionIds.Contains(scale.OptionId))
+                {
+                    itemWarnings.Add("A size factor was tied to an option this item does not have; dropped.");
+                    continue;
+                }
+                if (scale.Factor <= 0 || scale.Factor > 20)
+                {
+                    itemWarnings.Add($"A size factor of {scale.Factor:0.##} is out of range; dropped.");
+                    continue;
+                }
+                if (scales.Any(s => s.OptionId == scale.OptionId))
+                    continue;
+                scales.Add(new ProposedScale(scale.OptionId, Math.Round(scale.Factor, 3, MidpointRounding.AwayFromZero)));
+            }
+
+            recipes.Add(new ProposedRecipe(item.CatalogItemId, kind, lines, scales, itemWarnings));
         }
 
         // An ingredient no recipe uses is noise

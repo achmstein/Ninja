@@ -22,6 +22,27 @@ class RecipeEntityTypeConfiguration : IEntityTypeConfiguration<Recipe>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(r => r.Lines).AutoInclude();
+
+        // Size factors: one row per option, owned by the recipe
+        builder.HasMany(r => r.Scales)
+            .WithOne()
+            .HasForeignKey("CatalogItemId")
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(r => r.Scales).AutoInclude();
+    }
+}
+
+class RecipeScaleEntityTypeConfiguration : IEntityTypeConfiguration<RecipeScale>
+{
+    public void Configure(EntityTypeBuilder<RecipeScale> builder)
+    {
+        builder.ToTable("recipe_scales");
+
+        builder.HasKey("CatalogItemId", nameof(RecipeScale.OptionId));
+
+        builder.Property(s => s.Factor).HasPrecision(9, 3);
     }
 }
 
@@ -40,6 +61,11 @@ class RecipeLineEntityTypeConfiguration : IEntityTypeConfiguration<RecipeLine>
         builder.Ignore(l => l.IsBase);
 
         builder.Property(l => l.Quantity).HasPrecision(18, 3);
+
+        // Slots: lines with the same number are one thing a sale takes
+        builder.Property(l => l.Slot).HasDefaultValue(0);
+        builder.Property(l => l.Scalable).HasDefaultValue(true);
+        builder.Property(l => l.IsNone).HasDefaultValue(false);
 
         // A Postgres integer[]: empty for a base line, the sorted option ids
         // a combination needs otherwise

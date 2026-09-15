@@ -92,9 +92,10 @@ public class StockPostingService(
         // Every single-option line of the affected recipes, grouped by option.
         // A line that needs a combination (medium + spiced) says nothing about
         // either option on its own: the menu can hide an option, not a pair,
-        // so those lines only deduct and never sell an option out.
+        // so those lines only deduct and never sell an option out. A none
+        // override deducts nothing, so it says nothing either.
         var linesByOption = affected
-            .SelectMany(r => r.Lines.Where(l => l.OptionIds.Count == 1))
+            .SelectMany(r => r.Lines.Where(l => l.OptionIds.Count == 1 && !l.IsNone))
             .GroupBy(l => l.OptionIds[0])
             .ToDictionary(g => g.Key, g => g.Select(l => l.StockItemId).Distinct().ToList());
 

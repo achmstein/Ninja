@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  Plus,
-  Sparkles,
-  X,
-} from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check, Sparkles } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipesProposal, type StockItemView } from '@/api/inventory'
@@ -43,25 +36,24 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Combobox, type ComboboxOption } from '@/components/combobox'
 import {
   fromLocalizedValue,
   LocalizedFields,
   LocalizedInput,
 } from '@/components/localized-input'
 import { unitLabel } from '@/features/inventory/format'
+import { toApi } from '@/features/inventory/recipe-model'
 import { menuOptionsOf } from '../menu-options'
 import {
   isRecipeReady,
-  lineUnit,
   neededIngredients,
   NEW_PREFIX,
-  newLineKey,
-  type ReviewIngredient,
-  type ReviewLine,
-  type ReviewRecipe,
   toReview,
+  withCreatedIds,
+  type ReviewIngredient,
+  type ReviewRecipe,
 } from '../track-items'
+import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
 
 type RecipeReviewSheetProps = {
   proposals: RecipesProposal[]
@@ -77,11 +69,11 @@ const UNITS = ['g', 'ml', 'pcs']
 /**
  * What the assistant proposed for the picked menu items, for checking
  * before anything is saved: the ingredients the shelf is missing (edit,
- * untick), then one rule per item — sold as a unit, or a recipe whose
- * lines can be repointed, resized, tied to an option or removed. Confirming
- * creates the needed ingredients, then sets each recipe (or tracks the
- * item by unit); a failure leaves the sheet open with what was done
- * remembered, so a retry never repeats it.
+ * untick), then one rule per item — sold as a unit, or a recipe in the
+ * same slots editor the item sheet uses. Confirming creates the needed
+ * ingredients, then sets each recipe (or tracks the item by unit); a
+ * failure leaves the sheet open with what was done remembered, so a retry
+ * never repeats it.
  */
 export function RecipeReviewSheet({
   proposals,
@@ -97,7 +89,7 @@ export function RecipeReviewSheet({
   const setRecipe = useMutation(setRecipeMutation())
   const trackByUnit = useMutation(trackByUnitMutation())
 
-  const [review, setReview] = useState(() => toReview(proposals))
+  const [review, setReview] = useState(() => toReview(proposals, items))
   const [saving, setSaving] = useState<{ done: number; total: number } | null>(
     null
   )
@@ -105,14 +97,6 @@ export function RecipeReviewSheet({
   const itemById = useMemo(
     () => new Map(items.map((item) => [toNumber(item.id), item])),
     [items]
-  )
-  const shelfById = useMemo(
-    () => new Map(shelf.map((item) => [String(item.id), item])),
-    [shelf]
-  )
-  const proposedByKey = useMemo(
-    () => new Map(review.ingredients.map((i) => [i.key, i])),
-    [review.ingredients]
   )
 
   const updateIngredient = (key: string, patch: Partial<ReviewIngredient>) =>
@@ -129,37 +113,19 @@ export function RecipeReviewSheet({
         r.catalogItemId === catalogItemId ? { ...r, ...patch } : r
       ),
     }))
-  const updateLine = (
-    catalogItemId: number,
-    key: number,
-    patch: Partial<ReviewLine>
-  ) =>
-    setReview((prev) => ({
-      ...prev,
-      recipes: prev.recipes.map((r) =>
-        r.catalogItemId === catalogItemId
-          ? {
-              ...r,
-              lines: r.lines.map((l) =>
-                l.key === key ? { ...l, ...patch } : l
-              ),
-            }
-          : r
-      ),
-    }))
 
   // Pickers: the shelf, then the proposed ingredients as "new" entries
-  const ingredientOptions: ComboboxOption[] = useMemo(
+  const ingredients: IngredientOption[] = useMemo(
     () => [
       ...shelf.map((item) => ({
         value: String(item.id),
         label: localized(item.name),
-        hint: unitLabel(item.unit, t),
+        unit: item.unit ?? '',
       })),
       ...review.ingredients.map((i) => ({
         value: NEW_PREFIX + i.key,
         label: `${t('newIngredient')}: ${i.name.en || i.name.ar || i.key}`,
-        hint: unitLabel(i.unit, t),
+        unit: i.unit,
       })),
     ],
     [shelf, review.ingredients, localized, t]
@@ -229,16 +195,7 @@ export function RecipeReviewSheet({
         } else {
           await setRecipe.mutateAsync({
             path: { catalogItemId: recipe.catalogItemId },
-            body: {
-              lines: recipe.lines.map((line) => ({
-                stockItemId: line.ingredient!.startsWith(NEW_PREFIX)
-                  ? createdIds.get(line.ingredient!.slice(NEW_PREFIX.length))!
-                  : Number(line.ingredient),
-                quantity: parseFloat(line.quantity),
-                optionIds:
-                  line.optionIds.length > 0 ? line.optionIds.map(Number) : null,
-              })),
-            },
+            body: toApi(withCreatedIds(recipe.draft, createdIds)),
             query: { 'api-version': API_VERSION },
           })
         }
@@ -455,124 +412,16 @@ export function RecipeReviewSheet({
                             name: localized(item?.name),
                           })}
                         </p>
-                      ) : (
-                        <div className='space-y-1.5 px-3 py-2'>
-                          {recipe.lines.map((line) => (
-                            <div
-                              key={line.key}
-                              className='grid gap-2 sm:grid-cols-[minmax(0,2fr)_6rem_minmax(0,1fr)_auto] sm:items-center'
-                            >
-                              <Combobox
-                                value={line.ingredient}
-                                onChange={(value) =>
-                                  updateLine(recipe.catalogItemId, line.key, {
-                                    ingredient: value,
-                                  })
-                                }
-                                options={ingredientOptions}
-                                placeholder={t('pickStockItem')}
-                                disabled={recipe.done}
-                              />
-                              <div className='relative'>
-                                <Input
-                                  type='number'
-                                  min='0'
-                                  step='any'
-                                  className='h-9 pe-9'
-                                  aria-label={t('quantity')}
-                                  value={line.quantity}
-                                  disabled={recipe.done}
-                                  onChange={(e) =>
-                                    updateLine(recipe.catalogItemId, line.key, {
-                                      quantity: e.target.value,
-                                    })
-                                  }
-                                />
-                                <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
-                                  {unitLabel(
-                                    lineUnit(
-                                      line.ingredient,
-                                      shelfById,
-                                      proposedByKey
-                                    ),
-                                    t
-                                  )}
-                                </span>
-                              </div>
-                              <Select
-                                value={line.optionIds[0] ?? 'base'}
-                                disabled={
-                                  recipe.done || menu.groups.length === 0
-                                }
-                                onValueChange={(value) =>
-                                  updateLine(recipe.catalogItemId, line.key, {
-                                    optionIds: value === 'base' ? [] : [value],
-                                  })
-                                }
-                              >
-                                <SelectTrigger
-                                  className='h-9'
-                                  aria-label={t('appliesTo')}
-                                >
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='base'>
-                                    {t('everySale')}
-                                  </SelectItem>
-                                  {menu.groups.flatMap((group) =>
-                                    group.options.map((option) => (
-                                      <SelectItem
-                                        key={option.id}
-                                        value={option.id}
-                                      >
-                                        {group.label}: {option.label}
-                                      </SelectItem>
-                                    ))
-                                  )}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='icon'
-                                className='size-9'
-                                disabled={recipe.done}
-                                aria-label={t('removeLine')}
-                                onClick={() =>
-                                  updateRecipe(recipe.catalogItemId, {
-                                    lines: recipe.lines.filter(
-                                      (l) => l.key !== line.key
-                                    ),
-                                  })
-                                }
-                              >
-                                <X className='h-4 w-4' />
-                              </Button>
-                            </div>
-                          ))}
-                          {!recipe.done && (
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              onClick={() =>
-                                updateRecipe(recipe.catalogItemId, {
-                                  lines: [
-                                    ...recipe.lines,
-                                    {
-                                      key: newLineKey(),
-                                      ingredient: null,
-                                      quantity: '',
-                                      optionIds: [],
-                                    },
-                                  ],
-                                })
-                              }
-                            >
-                              <Plus className='me-1 h-4 w-4' /> {t('addLine')}
-                            </Button>
-                          )}
+                      ) : recipe.done ? null : (
+                        <div className='px-3 py-2'>
+                          <RecipeSlotsEditor
+                            draft={recipe.draft}
+                            onChange={(draft) =>
+                              updateRecipe(recipe.catalogItemId, { draft })
+                            }
+                            menu={menu}
+                            ingredients={ingredients}
+                          />
                         </div>
                       )}
                     </div>

@@ -393,7 +393,8 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
     private static RecipeView ToView(Recipe r, Dictionary<int, StockItem> names)
         => new(r.CatalogItemId,
             // Ids climb in the order the lines were saved: the back office's own order
-            r.Lines.OrderBy(l => l.Id).Select(l => new RecipeLineView(l.Id, l.StockItemId, Name(names, l.StockItemId), Unit(names, l.StockItemId), l.Quantity, l.OptionIds)).ToList());
+            r.Lines.OrderBy(l => l.Slot).ThenBy(l => l.Id).Select(l => new RecipeLineView(l.Id, l.StockItemId, Name(names, l.StockItemId), Unit(names, l.StockItemId), l.Quantity, l.OptionIds, l.Slot, l.Scalable, l.IsNone)).ToList(),
+            r.Scales.Select(s => new RecipeScaleView(s.OptionId, s.Factor)).ToList());
 
     private static LocalizedText Name(Dictionary<int, StockItem> names, int id)
         => names.TryGetValue(id, out var s) ? s.Name : new LocalizedText($"#{id}");

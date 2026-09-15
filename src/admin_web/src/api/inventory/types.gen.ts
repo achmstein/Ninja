@@ -115,6 +115,7 @@ export type ProposedRecipe = {
     catalogItemId: number | string;
     kind: string;
     lines: Array<ProposedRecipeLine>;
+    scales: Array<ProposedScale>;
     warnings: Array<string>;
 };
 
@@ -123,6 +124,13 @@ export type ProposedRecipeLine = {
     newItemKey: null | string;
     quantity: number | string;
     optionIds: Array<number | string>;
+    slot: number | string;
+    scalable: boolean;
+};
+
+export type ProposedScale = {
+    optionId: number | string;
+    factor: number | string;
 };
 
 export type ProposeRecipesRequest = {
@@ -187,13 +195,16 @@ export type RecipeCostLineView = {
     optionIds: Array<number | string>;
     unitCost: number | string;
     cost: number | string;
+    slot: number | string;
+    scalable: boolean;
+    isNone: boolean;
 };
 
 export type RecipeCostView = {
     catalogItemId: number | string;
     baseCost: number | string;
-    options: Array<RecipeOptionCostView>;
     lines: Array<RecipeCostLineView>;
+    scales: Array<RecipeScaleView>;
     uncosted: Array<number | string>;
 };
 
@@ -201,6 +212,9 @@ export type RecipeLineInput = {
     stockItemId: number | string;
     quantity: number | string;
     optionIds?: null | Array<number | string>;
+    slot?: number | string;
+    scalable?: boolean;
+    none?: boolean;
 };
 
 export type RecipeLineView = {
@@ -210,15 +224,24 @@ export type RecipeLineView = {
     unit: string;
     quantity: number | string;
     optionIds: Array<number | string>;
-};
-
-export type RecipeOptionCostView = {
-    optionIds: Array<number | string>;
-    cost: number | string;
+    slot: number | string;
+    scalable: boolean;
+    isNone: boolean;
 };
 
 export type RecipeRequest = {
     lines: Array<RecipeLineInput>;
+    scales?: null | Array<RecipeScaleInput>;
+};
+
+export type RecipeScaleInput = {
+    optionId: number | string;
+    factor: number | string;
+};
+
+export type RecipeScaleView = {
+    optionId: number | string;
+    factor: number | string;
 };
 
 export type RecipesProposal = {
@@ -231,6 +254,7 @@ export type RecipesProposal = {
 export type RecipeView = {
     catalogItemId: number | string;
     lines: Array<RecipeLineView>;
+    scales: Array<RecipeScaleView>;
 };
 
 export type ReorderLevelRequest = {

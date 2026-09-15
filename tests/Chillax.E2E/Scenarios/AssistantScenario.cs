@@ -112,18 +112,24 @@ public sealed class AssistantScenario(ChillaxApp app, DaySetup day) : ScenarioBa
         Assert.Equal(shelfBefore[0].Id, proposedLatte.Lines[0].StockItemId);
         Assert.Equal("fake-syrup", proposedLatte.Lines[1].NewItemKey);
         Assert.Equal([saved.Options.OrderBy(o => o.DisplayOrder).First().Id], proposedLatte.Lines[2].OptionIds);
+        Assert.Equal([1, 2, 2], proposedLatte.Lines.Select(l => l.Slot)); // the syrup's override sits in the syrup's slot
+        var proposedScale = Assert.Single(proposedLatte.Scales);
+        Assert.Equal(saved.Options.OrderBy(o => o.DisplayOrder).Last().Id, proposedScale.OptionId); // the double is a factor, not a line
+        Assert.Equal(2m, proposedScale.Factor);
         Assert.Equal(shelfBefore.Count, (await Owner.StockItemsAsync(Ct)).Count); // a proposal creates nothing
 
         var syrupId = await Owner.CreateStockItemAsync(new LocalizedText($"{syrup.Name.En} {Day.RunId}", syrup.Name.Ar), syrup.Unit, syrup.PackSize, syrup.PackName, syrup.AutoSoldOut, Ct);
         var colaStockId = await Owner.TrackByUnitAsync(cola.Id, cola.Name, Ct);
         Assert.True(colaStockId > 0);
         await Owner.SetRecipeAsync(item.Id, proposedLatte.Lines
-            .Select(l => (l.StockItemId ?? syrupId, l.Quantity, l.OptionIds.Count > 0 ? l.OptionIds.ToArray() : null))
-            .ToArray(), Ct);
+            .Select(l => (l.StockItemId ?? syrupId, l.Quantity, l.OptionIds.Count > 0 ? l.OptionIds.ToArray() : null, l.Slot, l.Scalable))
+            .ToArray(), Ct, scales: proposedLatte.Scales.Select(s => (s.OptionId, s.Factor)).ToArray());
         var latteRecipe = await Owner.RecipeAsync(item.Id, Ct);
         Assert.Equal(3, latteRecipe.Lines.Count);
         Assert.Equal(2, latteRecipe.Lines.Count(l => l.StockItemId == syrupId));
         Assert.Contains(latteRecipe.Lines, l => l.OptionIds.Count == 1);
+        Assert.Equal([1, 2, 2], latteRecipe.Lines.Select(l => l.Slot));
+        Assert.Equal(2m, Assert.Single(latteRecipe.Scales).Factor);
         var costs = await Owner.RecipeCostsAsync(Ct);
         Assert.Contains(costs, c => c.CatalogItemId == cola.Id);
         Assert.Contains(costs, c => c.CatalogItemId == item.Id && c.Uncosted.Contains(syrupId)); // never received: uncosted
