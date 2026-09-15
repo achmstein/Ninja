@@ -64,6 +64,7 @@ import {
   stockItemsQueryOptions,
   toStockItemOptions,
 } from '@/features/inventory/queries'
+import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
 
 type StockRuleSectionProps = {
@@ -96,14 +97,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   const menu = useMemo(() => menuOptionsOf(item, localized), [item, localized])
 
   // One base line of exactly one piece is the unit shortcut's shape
-  const unitLine =
-    recipe &&
-    recipe.lines.length === 1 &&
-    toNumber(recipe.lines[0].quantity) === 1 &&
-    recipe.lines[0].optionIds.length === 0 &&
-    recipe.lines[0].unit === 'pcs'
-      ? recipe.lines[0]
-      : null
+  const unitLine = recipe && isUnitRecipe(recipe) ? recipe.lines[0] : null
 
   if (recipes.isLoading || stockItems.isLoading) {
     return <Skeleton className='h-9 w-64' />

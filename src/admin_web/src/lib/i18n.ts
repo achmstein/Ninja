@@ -2330,6 +2330,15 @@ const webExtras = {
       other: 'ضيف {count} سطر',
     },
   },
+  // Menu list: which items the storeroom tracks
+  soldAsUnitBadge: {
+    en: 'Sold as a unit: one stock item comes off the shelf per sale',
+    ar: 'بيتباع كوحدة: صنف مخزون واحد بينزل من الرف مع كل بيعة',
+  },
+  usesIngredientsBadge: {
+    en: 'Uses ingredients: a recipe comes off the shelf per sale; the number is its food cost',
+    ar: 'بيستخدم خامات: وصفة بتنزل من الرف مع كل بيعة؛ الرقم هو نسبة تكلفتها',
+  },
   // Cost control: what a sale costs, what a receipt changed, what the period lost
   menuCost: { en: 'Menu cost', ar: 'تكلفة المنيو' },
   menuCostSubtitle: {

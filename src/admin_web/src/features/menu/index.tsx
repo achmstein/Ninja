@@ -18,7 +18,9 @@ import {
 } from '@dnd-kit/sortable'
 import {
   Coffee,
+  CookingPot,
   MoreHorizontal,
+  Package,
   Pencil,
   Plus,
   ScanLine,
@@ -62,6 +64,10 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { Grip, Sortable } from '@/components/sortable'
+import {
+  type StockRuleBadge,
+  useStockRuleBadges,
+} from '@/features/inventory/stock-rules'
 import { CategoryDialog } from './components/category-dialog'
 import { DeleteConfirmDialog } from './components/delete-confirm-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
@@ -117,6 +123,13 @@ export function MenuManagement() {
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
   const items = itemsQuery.data ?? NO_ITEMS
+  // Which items the storeroom tracks, and what a sale of each costs here
+  const prices = useMemo(
+    () =>
+      new Map(items.map((item) => [toNumber(item.id), toNumber(item.price)])),
+    [items]
+  )
+  const stockRules = useStockRuleBadges(prices)
   const categoriesQuery = useQuery(
     listCategoriesOptions({ query: { 'api-version': API_VERSION } })
   )
@@ -499,6 +512,9 @@ export function MenuManagement() {
                                     <MenuRow
                                       key={toNumber(item.id)}
                                       item={item}
+                                      stockRule={stockRules.get(
+                                        toNumber(item.id)
+                                      )}
                                       draggable={!!category && !dragDisabled}
                                       onOpen={() => openItem(item)}
                                       onAvailable={(checked) =>
@@ -585,13 +601,21 @@ export function MenuManagement() {
 
 type MenuRowProps = {
   item: CatalogItemDto
+  /** Set when the storeroom tracks the item */
+  stockRule: StockRuleBadge | undefined
   draggable: boolean
   onOpen: () => void
   onAvailable: (checked: boolean) => void
 }
 
 /** One item: grip, the row itself opens it, and the availability switch */
-function MenuRow({ item, draggable, onOpen, onAvailable }: MenuRowProps) {
+function MenuRow({
+  item,
+  stockRule,
+  draggable,
+  onOpen,
+  onAvailable,
+}: MenuRowProps) {
   const t = useT()
   const localized = useLocalized()
   const onOffer = item.isOnOffer && item.offerPrice != null
@@ -642,6 +666,33 @@ function MenuRow({ item, draggable, onOpen, onAvailable }: MenuRowProps) {
                 )}
                 {item.isOutOfStock && (
                   <Badge variant='destructive'>{t('outOfStock')}</Badge>
+                )}
+                {stockRule && (
+                  <Badge
+                    variant='outline'
+                    className={cn(
+                      'gap-1 font-normal',
+                      stockRule.overTarget &&
+                        'border-destructive text-destructive'
+                    )}
+                    title={
+                      stockRule.kind === 'unit'
+                        ? t('soldAsUnitBadge')
+                        : t('usesIngredientsBadge')
+                    }
+                  >
+                    {stockRule.kind === 'unit' ? (
+                      <Package className='size-3' aria-hidden />
+                    ) : (
+                      <CookingPot className='size-3' aria-hidden />
+                    )}
+                    {t('tracked')}
+                    {stockRule.foodCost !== null && (
+                      <span className='tabular-nums'>
+                        · {stockRule.foodCost}%{stockRule.incomplete && '+'}
+                      </span>
+                    )}
+                  </Badge>
                 )}
               </div>
               {description && (
