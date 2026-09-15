@@ -358,71 +358,103 @@ function IngredientCard({
         </>
       )}
 
-      <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>
-        <span className='text-muted-foreground w-14 shrink-0 text-xs'>
-          {t('howMuch')}
-        </span>
-        {amountGroup ? (
-          <div className='flex flex-wrap gap-x-4 gap-y-1'>
-            {amountGroup.options.map((o) => (
-              <label key={o.id} className='flex items-center gap-1.5 text-xs'>
-                <span className='max-w-32 truncate'>{o.label}</span>
-                <Quantity
-                  value={spec.amount.values[o.id] ?? ''}
-                  unit={unit}
-                  compact
-                  onChange={(v) =>
-                    onChange({
-                      amount: {
-                        ...spec.amount,
-                        values: { ...spec.amount.values, [o.id]: v },
-                      },
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        ) : (
-          <Quantity
-            value={spec.amount.fixed}
-            unit={unit}
-            onChange={(fixed) =>
-              onChange({ amount: { ...spec.amount, fixed } })
-            }
-          />
-        )}
-        {single.length > 0 && (
-          <GroupPicker
-            groups={single}
-            value={spec.amount.groupId ? [spec.amount.groupId] : []}
-            max={1}
-            label={
-              amountGroup
-                ? t('dependsOn', { groups: amountGroup.label })
-                : t('fixed')
-            }
-            onChange={(ids) => setAmountGroup(ids[0] ?? null)}
-          />
-        )}
-        {amountGroup && (
-          <span className='text-muted-foreground text-xs'>
-            {t('zeroMeansNothing')}
+      <div className='border-t'>
+        <div className='flex items-center gap-2 px-3 py-2'>
+          <span className='text-muted-foreground w-14 shrink-0 text-xs'>
+            {t('howMuch')}
           </span>
+          <div className='min-w-0 flex-1'>
+            {amountGroup ? (
+              <span className='text-muted-foreground text-xs'>
+                {t('amountDecidedBelow')}
+              </span>
+            ) : (
+              <Quantity
+                value={spec.amount.fixed}
+                unit={unit}
+                onChange={(fixed) =>
+                  onChange({ amount: { ...spec.amount, fixed } })
+                }
+              />
+            )}
+          </div>
+          {single.length > 0 && (
+            <GroupPicker
+              groups={single}
+              value={spec.amount.groupId ? [spec.amount.groupId] : []}
+              max={1}
+              label={
+                amountGroup
+                  ? t('dependsOn', { groups: amountGroup.label })
+                  : t('fixed')
+              }
+              onChange={(ids) => setAmountGroup(ids[0] ?? null)}
+            />
+          )}
+        </div>
+        {amountGroup && (
+          <>
+            <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
+              {amountGroup.options.map((o) => (
+                <div
+                  key={o.id}
+                  className='grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-xs'
+                >
+                  <span className='truncate'>{o.label}</span>
+                  <Quantity
+                    value={spec.amount.values[o.id] ?? ''}
+                    unit={unit}
+                    compact
+                    onChange={(v) =>
+                      onChange({
+                        amount: {
+                          ...spec.amount,
+                          values: { ...spec.amount.values, [o.id]: v },
+                        },
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+            <p className='text-muted-foreground px-3 pb-2 text-xs'>
+              {t('zeroMeansNothing')}
+            </p>
+          </>
         )}
       </div>
 
       {menu.groups.length > 0 && (
-        <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>
-          <span className='text-muted-foreground w-14 shrink-0 text-xs'>
-            {t('whenDeducted')}
-          </span>
-          {whenGroup ? (
-            <div className='flex flex-wrap gap-x-4 gap-y-1'>
+        <div className='border-t'>
+          <div className='flex items-center gap-2 px-3 py-2'>
+            <span className='text-muted-foreground w-14 shrink-0 text-xs'>
+              {t('whenDeducted')}
+            </span>
+            <div className='min-w-0 flex-1'>
+              <span
+                className={cn('text-xs', whenGroup && 'text-muted-foreground')}
+              >
+                {whenGroup ? t('whenDecidedBelow') : t('always')}
+              </span>
+            </div>
+            <GroupPicker
+              groups={menu.groups}
+              value={spec.when.groupId ? [spec.when.groupId] : []}
+              max={1}
+              label={
+                whenGroup
+                  ? t('onlyWith', { group: whenGroup.label })
+                  : t('always')
+              }
+              onChange={(ids) => setWhenGroup(ids[0] ?? null)}
+            />
+          </div>
+          {whenGroup && (
+            <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
               {whenGroup.options.map((o) => (
                 <label
                   key={o.id}
-                  className='flex cursor-pointer items-center gap-1.5 text-xs'
+                  className='flex cursor-pointer items-center gap-2 text-xs'
                 >
                   <Checkbox
                     checked={spec.when.only.includes(o.id)}
@@ -442,20 +474,7 @@ function IngredientCard({
                 </label>
               ))}
             </div>
-          ) : (
-            <span className='text-xs'>{t('always')}</span>
           )}
-          <GroupPicker
-            groups={menu.groups}
-            value={spec.when.groupId ? [spec.when.groupId] : []}
-            max={1}
-            label={
-              whenGroup
-                ? t('onlyWith', { group: whenGroup.label })
-                : t('always')
-            }
-            onChange={(ids) => setWhenGroup(ids[0] ?? null)}
-          />
         </div>
       )}
     </div>

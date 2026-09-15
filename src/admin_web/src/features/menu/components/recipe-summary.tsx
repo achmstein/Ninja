@@ -148,35 +148,41 @@ function IngredientSummary({
         </>
       )}
 
-      {/* The amount */}
-      <div className='mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs'>
-        {amountGroup ? (
-          <>
-            <span className='text-muted-foreground'>{amountGroup.label}:</span>
+      {/* The amount: one row per choice when a group decides it, laid out like the item table */}
+      {amountGroup ? (
+        <>
+          <div className='text-muted-foreground mt-1 text-xs'>
+            {t('dependsOn', { groups: amountGroup.label })}
+          </div>
+          <ul className='mt-1 grid gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2'>
             {amountGroup.options.map((o) => (
-              <span key={o.id} className='tabular-nums'>
-                {o.label}{' '}
-                {toNumber(spec.amount.values[o.id]) > 0
-                  ? formatQuantity(spec.amount.values[o.id], u, t)
-                  : t('nothing')}
-              </span>
+              <li key={o.id} className='flex gap-1.5'>
+                <span className='text-muted-foreground min-w-16'>
+                  {o.label}
+                </span>
+                <span className='tabular-nums'>
+                  {toNumber(spec.amount.values[o.id]) > 0
+                    ? formatQuantity(spec.amount.values[o.id], u, t)
+                    : t('nothing')}
+                </span>
+              </li>
             ))}
-          </>
-        ) : (
-          <span className='tabular-nums'>
-            {formatQuantity(spec.amount.fixed, u, t)}
-          </span>
-        )}
-        {whenGroup && (
-          <span className='text-muted-foreground'>
-            · {t('onlyWith', { group: whenGroup.label })}:{' '}
-            {whenGroup.options
-              .filter((o) => spec.when.only.includes(o.id))
-              .map((o) => o.label)
-              .join('، ')}
-          </span>
-        )}
-      </div>
+          </ul>
+        </>
+      ) : (
+        <div className='mt-1 text-xs tabular-nums'>
+          {formatQuantity(spec.amount.fixed, u, t)}
+        </div>
+      )}
+      {whenGroup && (
+        <div className='text-muted-foreground mt-1 text-xs'>
+          {t('onlyWith', { group: whenGroup.label })}:{' '}
+          {whenGroup.options
+            .filter((o) => spec.when.only.includes(o.id))
+            .map((o) => o.label)
+            .join('، ')}
+        </div>
+      )}
     </div>
   )
 }

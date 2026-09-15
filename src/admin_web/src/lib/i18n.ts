@@ -2347,6 +2347,14 @@ const webExtras = {
     ar: 'اختار كيس واحد في أي خانة؛ الباقي بيتخمّن من اسمه. راجعهم.',
   },
   zeroMeansNothing: { en: '0 = nothing', ar: '0 = مفيش' },
+  amountDecidedBelow: {
+    en: 'Decided by the choice below',
+    ar: 'بتتحدد حسب الاختيار اللي تحت',
+  },
+  whenDecidedBelow: {
+    en: 'Only for the ticked choices below',
+    ar: 'بس للاختيارات المعلّمة تحت',
+  },
   customRulesCount: {
     plural: 'count',
     en: { '=1': '1 custom rule', other: '{count} custom rules' },
