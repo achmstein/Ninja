@@ -36,6 +36,7 @@ import {
   LocalizedFields,
   LocalizedInput,
   toLocalizedValue,
+  useDefaultLang,
   type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
@@ -175,7 +176,7 @@ export function ItemDetailsForm({
   // language it filled so what came back is in view.
   const assist = useLocalizeAssist()
   const customizations = useCustomizationsAssist()
-  const [lang, setLang] = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>(useDefaultLang())
   const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
   const [categoryTouched, setCategoryTouched] = useState(false)
   const [proposals, setProposals] = useState<DraftGroup[]>([])

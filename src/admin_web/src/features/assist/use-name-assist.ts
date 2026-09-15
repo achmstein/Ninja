@@ -5,6 +5,7 @@ import {
   type AssistSlot,
   type Lang,
   type LocalizedValue,
+  useDefaultLang,
 } from '@/components/localized-input'
 import { halfFilled, hasText } from './helpers'
 import { localizeBlocker, useLocalizeAssist } from './use-localize-assist'
@@ -22,7 +23,7 @@ export function useNameAssist(
 ) {
   const t = useT()
   const assist = useLocalizeAssist()
-  const [lang, setLang] = useState<Lang>('en')
+  const [lang, setLang] = useState<Lang>(useDefaultLang())
   const [suggested, setSuggested] = useState<Partial<Record<Lang, boolean>>>({})
   const blocker = localizeBlocker(name)
 

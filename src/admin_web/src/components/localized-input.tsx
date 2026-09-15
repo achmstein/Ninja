@@ -1,7 +1,7 @@
 import { createContext, useContext, useId, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { type LocalizedText } from '@/api/catalog'
-import { useT } from '@/lib/i18n'
+import { useLanguage, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   InputGroup,
@@ -40,11 +40,21 @@ const LangContext = createContext<{
 } | null>(null)
 
 /**
+ * The language a localized field starts in: the one the UI is in, so an
+ * Arabic-speaking admin types Arabic first and an English-speaking one
+ * English. Read once, when the field or form mounts.
+ */
+export function useDefaultLang(): Lang {
+  return useLanguage((s) => s.language)
+}
+
+/**
  * Wrap a form in this so every localized field on it switches language
- * together: pick Arabic once, fill in all the Arabic names, done.
+ * together: pick Arabic once, fill in all the Arabic names, done. Starts
+ * in the UI's language unless `defaultLang` says otherwise.
  */
 export function LocalizedFields({
-  defaultLang = 'en',
+  defaultLang,
   lang: controlled,
   onLangChange,
   children,
@@ -55,7 +65,8 @@ export function LocalizedFields({
   onLangChange?: (lang: Lang) => void
   children: React.ReactNode
 }) {
-  const [own, setOwn] = useState<Lang>(defaultLang)
+  const uiLang = useDefaultLang()
+  const [own, setOwn] = useState<Lang>(defaultLang ?? uiLang)
   const lang = controlled ?? own
   const setLang = (next: Lang) => {
     setOwn(next)
@@ -70,7 +81,8 @@ export function LocalizedFields({
 
 function useLang(): [Lang, (lang: Lang) => void] {
   const shared = useContext(LangContext)
-  const [local, setLocal] = useState<Lang>('en')
+  const uiLang = useDefaultLang()
+  const [local, setLocal] = useState<Lang>(uiLang)
   return shared ? [shared.lang, shared.setLang] : [local, setLocal]
 }
 
