@@ -46,7 +46,7 @@ export function standardCost(
   return costOfSelection(cost, standardSelection(item))
 }
 
-export type CostLine = {
+type CostLine = {
   stockItemId: string
   name: LocalizedText | undefined
   unit: string

@@ -71,7 +71,7 @@ type StockRuleSectionProps = {
  * What one sale of this item takes out of stock. Three states: not
  * tracked; sold as a unit (a stock item of its own, one per sale); or a
  * recipe of slots — the coffee, the sugar, the cup — each with a default
- * and what the customer's choices make of it, plus size factors. Shown
+ * and what the customer's choices make of it. Shown
  * as rows, edited in place, with a preview that picks options the way the
  * cashier does and shows what would be deducted, and the cost of a sale
  * against the price.
