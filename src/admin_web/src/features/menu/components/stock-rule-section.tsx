@@ -35,9 +35,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { assistErrorMessage, useAssistStore } from '@/features/assist/errors'
+import { formatQuantity } from '@/features/inventory/format'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
 import {
   choiceDeltas,
+  standardBreakdown,
   standardChoiceNames,
   standardCost,
 } from '@/features/inventory/recipe-cost'
@@ -398,7 +400,10 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
     )
   ).filter(Boolean)
   const choices = standardChoiceNames(item, localized)
+  const breakdown = standardBreakdown(cost, item)
   const groups = choiceDeltas(cost, item)
+  const perUnit = (value: number) =>
+    value.toLocaleString(undefined, { maximumFractionDigits: 3 })
 
   return (
     <div className='rounded-lg border'>
@@ -459,6 +464,43 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
           )}
         </div>
       </dl>
+
+      {/* How the figure adds up: what the standard choice takes, priced line by line */}
+      {breakdown.length > 0 && (
+        <div className='border-t px-3 py-1.5 text-xs'>
+          <div className='text-muted-foreground mb-0.5'>
+            {t('howCostAddsUp')}
+          </div>
+          <ul className='space-y-0.5'>
+            {breakdown.map((line) => (
+              <li
+                key={line.stockItemId}
+                className='flex items-baseline justify-between gap-3'
+              >
+                <span className='min-w-0 truncate'>
+                  {localized(line.name)}
+                  <span className='text-muted-foreground'>
+                    {' · '}
+                    {formatQuantity(line.quantity, line.unit, t)}
+                  </span>
+                </span>
+                {line.uncosted ? (
+                  <span className='text-warning shrink-0'>
+                    {t('countsAsFree')}
+                  </span>
+                ) : (
+                  <span className='text-muted-foreground shrink-0 tabular-nums'>
+                    × {perUnit(line.unitCost)} ={' '}
+                    <span className='text-foreground'>
+                      {formatEgp(line.cost)}
+                    </span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {incomplete && (
         <div className='text-warning flex items-start gap-1.5 border-t px-3 py-1.5 text-xs'>

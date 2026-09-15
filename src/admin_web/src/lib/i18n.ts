@@ -2353,6 +2353,11 @@ const webExtras = {
     ar: 'نفس التكلفة مهما اختار العميل',
   },
   costLabel: { en: 'Cost', ar: 'التكلفة' },
+  howCostAddsUp: { en: 'How it adds up', ar: 'اتحسبت إزاي' },
+  countsAsFree: {
+    en: 'not received yet, counts as free',
+    ar: 'لسه ماوصلتش، بتتحسب ببلاش',
+  },
   byChoice: { en: 'By choice', ar: 'حسب الاختيار' },
   standardChoice: { en: 'standard', ar: 'أساسي' },
   costIncompleteHint: {

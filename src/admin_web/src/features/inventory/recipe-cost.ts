@@ -46,6 +46,43 @@ export function standardCost(
   return costOfSelection(cost, standardSelection(item))
 }
 
+export type CostLine = {
+  stockItemId: string
+  name: LocalizedText | undefined
+  unit: string
+  quantity: number
+  unitCost: number
+  cost: number
+  /** Never received at the branch, so priced at nothing */
+  uncosted: boolean
+}
+
+/** What the standard choice takes, line by line and priced: how its cost adds up */
+export function standardBreakdown(
+  cost: RecipeCostView,
+  item: CatalogItemDto
+): CostLine[] {
+  const uncosted = new Set(cost.uncosted.map(String))
+  const lines: CostLine[] = []
+  for (const [stockItemId, quantity] of resolve(
+    cost.lines,
+    standardSelection(item)
+  )) {
+    const line = cost.lines.find((l) => String(l.stockItemId) === stockItemId)
+    const unitCost = toNumber(line?.unitCost)
+    lines.push({
+      stockItemId,
+      name: line?.name,
+      unit: line?.unit ?? '',
+      quantity,
+      unitCost,
+      cost: Math.round(quantity * unitCost * 100) / 100,
+      uncosted: uncosted.has(stockItemId),
+    })
+  }
+  return lines
+}
+
 type ChoiceDelta = {
   id: string
   name: LocalizedText | undefined
