@@ -17,6 +17,8 @@ export type MenuGroup = {
   id: string
   label: string
   allowMultiple: boolean
+  /** The customer must pick one; the tills refuse a sale without */
+  isRequired: boolean
   options: MenuOption[]
 }
 export type MenuOptions = {
@@ -39,6 +41,7 @@ export function menuOptionsOf(
       id: String(group.id),
       label: localized(group.name),
       allowMultiple: group.allowMultiple === true,
+      isRequired: group.isRequired === true,
       options: [...(group.options ?? [])].sort(byOrder).map((option, index) => {
         const entry = {
           id: String(option.id),

@@ -14,18 +14,19 @@ import {
 import { Combobox, type ComboboxOption } from '@/components/combobox'
 import { unitLabel } from '@/features/inventory/format'
 import {
-  draftKey,
   optionSetKey,
-  overrideHasContent,
-  type OverrideDraft,
   type RecipeDraft,
-  type SlotDraft,
 } from '@/features/inventory/recipe-model'
+import { type MenuGroup, type MenuOptions } from '../menu-options'
 import {
-  type MenuGroup,
-  type MenuOption,
-  type MenuOptions,
-} from '../menu-options'
+  combos,
+  compile,
+  guessCell,
+  newIngredient,
+  reconstruct,
+  type BuilderState,
+  type IngredientSpec,
+} from '../recipe-cards'
 import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
 
 /**
@@ -35,52 +36,16 @@ import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
  * size, the sugar by sugar level), and when (always, or only with some
  * choices — the paper cup). No defaults to think about: every cell of a
  * table is asked for, bags are guessed from their names, and the slot
- * draft the till reads is compiled from the answers, with the fallback
- * for an unchosen optional group worked out here. What the cards cannot
- * express is kept as custom rules for the advanced editor.
+ * draft the till reads is compiled from the answers (recipe-cards.ts),
+ * with what the till sends for an untouched group worked out there. What
+ * the cards cannot express is kept as custom rules for the advanced
+ * editor.
  */
 type Props = {
   draft: RecipeDraft
   onChange: (draft: RecipeDraft) => void
   menu: MenuOptions
   ingredients: IngredientOption[]
-}
-
-type ItemSpec = {
-  /** The item when nothing decides it; also the bag the table is guessed from */
-  fixed: string | null
-  /** The groups that decide the item (at most two); empty = fixed */
-  groupIds: string[]
-  /** Per combination of those groups' options (optionSetKey) */
-  cells: Record<string, string | null>
-}
-
-type AmountSpec = {
-  fixed: string
-  /** The one group that decides the amount; null = fixed */
-  groupId: string | null
-  /** Per option of that group; '0' = nothing for that choice */
-  values: Record<string, string>
-}
-
-type WhenSpec = {
-  /** The one group whose choices decide whether the ingredient is deducted; null = always */
-  groupId: string | null
-  /** The options it is deducted for */
-  only: string[]
-}
-
-export type IngredientSpec = {
-  key: number
-  item: ItemSpec
-  amount: AmountSpec
-  when: WhenSpec
-}
-
-type BuilderState = {
-  ingredients: IngredientSpec[]
-  /** Slots the cards could not express, kept verbatim */
-  custom: SlotDraft[]
 }
 
 export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
@@ -206,13 +171,6 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
     </div>
   )
 }
-
-const newIngredient = (): IngredientSpec => ({
-  key: draftKey(),
-  item: { fixed: null, groupIds: [], cells: {} },
-  amount: { fixed: '', groupId: null, values: {} },
-  when: { groupId: null, only: [] },
-})
 
 // ---------------------------------------------------------------------------
 // One card per ingredient: which item, how much, when
@@ -672,374 +630,4 @@ function Quantity({
       )}
     </div>
   )
-}
-
-// ---------------------------------------------------------------------------
-// Guessing a bag from its name
-
-/** Arabic and Latin names folded to one spelling for matching */
-function fold(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[ً-ْـ]/g, '')
-    .replace(/[آأإ]/g, 'ا')
-    .replace(/ة/g, 'ه')
-    .replace(/ى/g, 'ي')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/** Every combination of one option per group, in menu order */
-export function combos(groups: MenuGroup[]): MenuOption[][] {
-  return groups.reduce<MenuOption[][]>(
-    (acc, group) =>
-      acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
-    [[]]
-  )
-}
-
-/**
- * The bag for a combination, from the base bag's name: for each group, the
- * option whose name is in the base name is swapped for the wanted one
- * ("بن تركي وسط سادة" → "بن تركي فاتح محوج"); when that exact name is not
- * on the shelf, an item carrying every wanted word and the base's first
- * word will do.
- */
-function guessCell(
-  base: IngredientOption,
-  combo: MenuOption[],
-  groups: MenuGroup[],
-  ingredients: IngredientOption[]
-): string | null {
-  const byName = new Map<string, string>()
-  for (const i of ingredients)
-    for (const n of i.names) byName.set(fold(n), i.value)
-
-  for (const baseName of base.names) {
-    let candidates = [baseName]
-    for (const [index, group] of groups.entries()) {
-      const wanted = combo[index]
-      const present = group.options.find((o) =>
-        o.names.some((n) => baseName.includes(n))
-      )
-      if (!present || present.id === wanted.id) continue
-      candidates = candidates.flatMap((c) =>
-        present.names
-          .filter((f) => c.includes(f))
-          .flatMap((f) => wanted.names.map((w) => c.replace(f, w)))
-      )
-    }
-    for (const c of candidates) {
-      const hit = byName.get(fold(c))
-      if (hit) return hit
-    }
-  }
-
-  const first = fold(base.names[0] ?? '').split(' ')[0]
-  const wanted = combo.map((o) => o.names.map(fold))
-  const fallback = ingredients.find((i) =>
-    i.names.some((n) => {
-      const f = fold(n)
-      return (
-        (!first || f.includes(first)) &&
-        wanted.every((names) => names.some((w) => w && f.includes(w)))
-      )
-    })
-  )
-  return fallback?.value ?? null
-}
-
-// ---------------------------------------------------------------------------
-// Between the cards and the slot draft
-
-/** The option a group counts as when the customer did not pick one */
-const assumed = (group: MenuGroup): MenuOption =>
-  group.options.find((o) => o.isDefault) ?? group.options[0]
-
-/**
- * The answers compiled into slots. An ingredient decided by groups K gets
- * an override for every combination over K, and the combination of the
- * assumed options as the slot's default.
- */
-export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
-  const slots: SlotDraft[] = []
-  for (const spec of state.ingredients) {
-    const keyGroupIds = Array.from(
-      new Set(
-        [...spec.item.groupIds, spec.amount.groupId, spec.when.groupId].filter(
-          (id): id is string => !!id
-        )
-      )
-    )
-    const keyGroups = menu.groups.filter((g) => keyGroupIds.includes(g.id))
-
-    const resolveCell = (choice: Map<string, MenuOption>) => {
-      let item = spec.item.fixed
-      if (spec.item.groupIds.length > 0) {
-        const key = optionSetKey(
-          spec.item.groupIds.map((id) => choice.get(id)!.id)
-        )
-        item = spec.item.cells[key] ?? null
-      }
-      let quantity = parseFloat(spec.amount.fixed)
-      if (spec.amount.groupId) {
-        quantity = parseFloat(
-          spec.amount.values[choice.get(spec.amount.groupId)!.id] ?? ''
-        )
-      }
-      let present = true
-      if (spec.when.groupId)
-        present = spec.when.only.includes(choice.get(spec.when.groupId)!.id)
-      return {
-        item,
-        quantity: Number.isFinite(quantity) ? quantity : 0,
-        present,
-      }
-    }
-
-    if (keyGroups.length === 0) {
-      slots.push({
-        key: spec.key,
-        stockItemId: spec.item.fixed,
-        quantity: spec.amount.fixed,
-        hasDefault: true,
-        scalable: false,
-        groupIds: [],
-        overrides: [],
-      })
-      continue
-    }
-
-    const overrides: OverrideDraft[] = []
-    const anchor =
-      spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
-    // The empty combination (every group at its assumed option) is the
-    // slot's default; every full combination is an override. The tills
-    // pre-select each group's default, so a sale always carries one option
-    // per group and no partial keys are needed.
-    const assumedChoice = new Map<string, MenuOption>()
-    for (const g of keyGroups) assumedChoice.set(g.id, assumed(g))
-    const baseCell = resolveCell(assumedChoice)
-    const base =
-      !baseCell.present || baseCell.quantity <= 0 || !baseCell.item
-        ? null
-        : { stockItemId: baseCell.item, quantity: String(baseCell.quantity) }
-    for (const combo of combos(keyGroups)) {
-      const choice = new Map<string, MenuOption>()
-      keyGroups.forEach((g, i) => choice.set(g.id, combo[i]))
-      const cell = resolveCell(choice)
-      const nothing = !cell.present || cell.quantity <= 0 || !cell.item
-      overrides.push({
-        key: draftKey(),
-        optionIds: combo.map((o) => o.id),
-        stockItemId: nothing ? null : cell.item,
-        quantity: nothing ? '' : String(cell.quantity),
-        none: nothing,
-      })
-    }
-    if (!base && !anchor) continue
-    slots.push({
-      key: spec.key,
-      stockItemId: base?.stockItemId ?? anchor,
-      quantity: base?.quantity ?? '',
-      hasDefault: base !== null,
-      scalable: false,
-      groupIds: keyGroups.map((g) => g.id),
-      overrides,
-    })
-  }
-  return { slots: [...slots, ...state.custom], scales: [] }
-}
-
-/**
- * The cards read back from a saved draft: a slot's overrides are complete
- * over some groups K; per group, whether the item, the amount or the
- * presence varies with it says which question it answers. A slot the
- * cards cannot express is kept as a custom rule.
- */
-export function reconstruct(
-  draft: RecipeDraft,
-  menu: MenuOptions
-): BuilderState {
-  const ingredients: IngredientSpec[] = []
-  const custom: SlotDraft[] = []
-  const groupOf = new Map<string, MenuGroup>()
-  for (const g of menu.groups) for (const o of g.options) groupOf.set(o.id, g)
-
-  for (const slot of draft.slots) {
-    const overrides = slot.overrides.filter(overrideHasContent)
-    if (overrides.length === 0) {
-      if (slot.hasDefault) {
-        ingredients.push({
-          key: slot.key,
-          item: { fixed: slot.stockItemId, groupIds: [], cells: {} },
-          amount: { fixed: slot.quantity, groupId: null, values: {} },
-          when: { groupId: null, only: [] },
-        })
-      } else custom.push(slot)
-      continue
-    }
-
-    const groups = menu.groups.filter((g) =>
-      overrides.some((o) =>
-        o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
-      )
-    )
-    if (
-      groups.length === 0 ||
-      groups.length > 3 ||
-      groups.some((g) => g.allowMultiple)
-    ) {
-      custom.push(slot)
-      continue
-    }
-    const full = slot.overrides.filter(
-      (o) =>
-        o.optionIds.length === groups.length &&
-        groups.every((g) =>
-          o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
-        )
-    )
-
-    type Cell = { item: string | null; quantity: number; present: boolean }
-    const cellOf = (o: OverrideDraft): Cell => ({
-      item: o.none ? null : (o.stockItemId ?? slot.stockItemId),
-      quantity: o.none
-        ? 0
-        : parseFloat(o.quantity !== '' ? o.quantity : slot.quantity),
-      present: !o.none,
-    })
-    // A combination with no rule of its own is the default, when there is one
-    const defaultCell: Cell | null = slot.hasDefault
-      ? {
-          item: slot.stockItemId,
-          quantity: parseFloat(slot.quantity),
-          present: true,
-        }
-      : null
-    const at = (choice: Map<string, string>): Cell | null => {
-      const o = full.find((x) =>
-        groups.every((g) => x.optionIds.includes(choice.get(g.id)!))
-      )
-      return o ? cellOf(o) : defaultCell
-    }
-    const covered = combos(groups).every((combo) => {
-      const choice = new Map(groups.map((g, i) => [g.id, combo[i].id]))
-      return at(choice) !== null
-    })
-    if (!covered) {
-      custom.push(slot)
-      continue
-    }
-    const baseChoice = new Map(groups.map((g) => [g.id, assumed(g).id]))
-
-    // Whether what `read` sees changes across the group's options, holding
-    // the other groups fixed; a "nothing" cell says nothing about the item
-    // or the amount, only about presence
-    const varies = (
-      g: MenuGroup,
-      read: (c: Cell) => unknown,
-      presentOnly = false
-    ) => {
-      const others = groups.filter((x) => x.id !== g.id)
-      return combos(others).some((othersCombo) => {
-        const choice = new Map(baseChoice)
-        others.forEach((x, i) => choice.set(x.id, othersCombo[i].id))
-        const seen = new Set<unknown>()
-        for (const o of g.options) {
-          choice.set(g.id, o.id)
-          const cell = at(choice)!
-          if (presentOnly && !cell.present) continue
-          seen.add(read(cell))
-        }
-        return seen.size > 1
-      })
-    }
-    const itemGroups = groups.filter((g) => varies(g, (c) => c.item, true))
-    const amountGroups = groups.filter(
-      (g) => !itemGroups.includes(g) && varies(g, (c) => c.quantity, true)
-    )
-    const whenGroups = groups.filter(
-      (g) =>
-        !itemGroups.includes(g) &&
-        !amountGroups.includes(g) &&
-        varies(g, (c) => c.present)
-    )
-    if (
-      itemGroups.length > 2 ||
-      amountGroups.length > 1 ||
-      whenGroups.length > 1
-    ) {
-      custom.push(slot)
-      continue
-    }
-
-    const cells: Record<string, string | null> = {}
-    for (const combo of combos(itemGroups)) {
-      const choice = new Map(baseChoice)
-      itemGroups.forEach((g, i) => choice.set(g.id, combo[i].id))
-      cells[optionSetKey(combo.map((o) => o.id))] = at(choice)!.item
-    }
-    const values: Record<string, string> = {}
-    for (const o of amountGroups[0]?.options ?? []) {
-      const choice = new Map(baseChoice)
-      choice.set(amountGroups[0].id, o.id)
-      values[o.id] = String(at(choice)!.quantity)
-    }
-    const only: string[] = []
-    for (const o of whenGroups[0]?.options ?? []) {
-      const choice = new Map(baseChoice)
-      choice.set(whenGroups[0].id, o.id)
-      if (at(choice)!.present) only.push(o.id)
-    }
-    const baseCell = at(baseChoice)!
-    ingredients.push({
-      key: slot.key,
-      item: {
-        fixed:
-          itemGroups.length > 0
-            ? (slot.stockItemId ?? baseCell.item)
-            : baseCell.item,
-        groupIds: itemGroups.map((g) => g.id),
-        cells,
-      },
-      amount: {
-        fixed: String(baseCell.quantity || ''),
-        groupId: amountGroups[0]?.id ?? null,
-        values,
-      },
-      when: { groupId: whenGroups[0]?.id ?? null, only },
-    })
-  }
-
-  // Size factors from an older recipe become amounts per size on the scalable rows
-  if (draft.scales.length > 0) {
-    const sizeGroup = menu.groups.find((g) =>
-      g.options.some((o) => draft.scales.some((s) => s.optionId === o.id))
-    )
-    if (sizeGroup) {
-      for (const spec of ingredients) {
-        const slot = draft.slots.find((s) => s.key === spec.key)
-        if (!slot?.scalable || spec.amount.groupId) continue
-        const baseQty = parseFloat(spec.amount.fixed)
-        if (!(baseQty > 0)) continue
-        const values: Record<string, string> = {}
-        for (const o of sizeGroup.options) {
-          const factor = parseFloat(
-            draft.scales.find((s) => s.optionId === o.id)?.factor ?? '1'
-          )
-          values[o.id] = String(
-            Math.round(baseQty * (factor > 0 ? factor : 1) * 1000) / 1000
-          )
-        }
-        spec.amount = {
-          fixed: spec.amount.fixed,
-          groupId: sizeGroup.id,
-          values,
-        }
-      }
-    }
-  }
-
-  return { ingredients, custom }
 }

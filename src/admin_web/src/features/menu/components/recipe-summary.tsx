@@ -4,7 +4,7 @@ import { toNumber } from '@/lib/money'
 import { formatQuantity } from '@/features/inventory/format'
 import { fromApi, type SlotDraft } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from '../menu-options'
-import { combos, reconstruct, type IngredientSpec } from './recipe-builder'
+import { combos, reconstruct, type IngredientSpec } from '../recipe-cards'
 import { OptionChips, type StockInfo } from './recipe-editor'
 
 /**
