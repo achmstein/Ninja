@@ -22,10 +22,7 @@ export type SlotLine = {
 export type SlotScale = { optionId: number | string; factor: number | string }
 
 /** The product of the chosen options' factors; 1 when none applies */
-export function scaleFactor(
-  scales: SlotScale[],
-  chosen: ReadonlySet<string>
-): number {
+function scaleFactor(scales: SlotScale[], chosen: ReadonlySet<string>): number {
   let factor = 1
   for (const scale of scales) {
     if (chosen.has(String(scale.optionId))) factor *= toNumber(scale.factor)
@@ -34,7 +31,7 @@ export function scaleFactor(
 }
 
 /** The line a slot resolves to: the most specific applicable override, else the default, else nothing */
-export function resolveSlot(
+function resolveSlot(
   lines: SlotLine[],
   chosen: ReadonlySet<string>
 ): SlotLine | undefined {
@@ -49,7 +46,7 @@ export function resolveSlot(
 }
 
 /** Lines grouped by slot, in slot order */
-export function bySlot(lines: SlotLine[]): Map<string, SlotLine[]> {
+function bySlot(lines: SlotLine[]): Map<string, SlotLine[]> {
   const slots = new Map<string, SlotLine[]>()
   for (const line of [...lines].sort(
     (a, b) => toNumber(a.slot) - toNumber(b.slot)
@@ -133,7 +130,7 @@ export function newSlot(
   }
 }
 
-export const emptyDraft = (): RecipeDraft => ({ slots: [], scales: [] })
+const emptyDraft = (): RecipeDraft => ({ slots: [], scales: [] })
 
 /** Order-independent identity of an option set */
 export const optionSetKey = (optionIds: readonly string[]) =>
@@ -199,7 +196,7 @@ export const overrideHasContent = (o: OverrideDraft) =>
   o.none || o.stockItemId !== null || o.quantity.trim() !== ''
 
 /** The line the resolver would see for an override, with the slot's default filled in */
-export function overrideLine(
+function overrideLine(
   slot: SlotDraft,
   o: OverrideDraft
 ): { stockItemId: string | null; quantity: number } {
@@ -212,7 +209,7 @@ export function overrideLine(
   }
 }
 
-export type DraftProblem =
+type DraftProblem =
   | 'recipeNeedsLine'
   | 'recipeLineIncomplete'
   | 'recipeOverrideIncomplete'
@@ -319,15 +316,4 @@ export function draftLines(draft: RecipeDraft): {
     })),
     scales: request.scales ?? [],
   }
-}
-
-/** One base line of exactly one piece, no overrides, no factors: the "sell as a unit" shape */
-export function isUnitDraft(draft: RecipeDraft): boolean {
-  return (
-    draft.slots.length === 1 &&
-    draft.slots[0].hasDefault &&
-    draft.slots[0].overrides.length === 0 &&
-    parseFloat(draft.slots[0].quantity) === 1 &&
-    draft.scales.length === 0
-  )
 }

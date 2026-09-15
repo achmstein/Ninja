@@ -2,7 +2,7 @@ import { apiClient } from '@/lib/api-client'
 
 // Notification.API does not emit an OpenAPI document yet, so this thin
 // handwritten client mirrors its announcement endpoints.
-export interface Announcement {
+interface Announcement {
   id: number
   title: string
   body: string

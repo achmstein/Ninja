@@ -23,27 +23,11 @@ export function useLoyaltyAccounts(first?: number, max?: number) {
   })
 }
 
-export function useLoyaltyAccount(userId: string) {
-  return useQuery({
-    queryKey: loyaltyKeys.account(userId),
-    queryFn: () => loyaltyService.getAccount(userId),
-    enabled: !!userId,
-  })
-}
-
 export function useLoyaltyStats() {
   return useQuery({
     queryKey: loyaltyKeys.stats(),
     queryFn: () => loyaltyService.getStats(),
     refetchInterval: 30000, // Refresh every 30 seconds
-  })
-}
-
-export function useLoyaltyTiers() {
-  return useQuery({
-    queryKey: loyaltyKeys.tiers(),
-    queryFn: () => loyaltyService.getTiers(),
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour - tiers rarely change
   })
 }
 

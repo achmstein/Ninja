@@ -14,7 +14,7 @@ type ErrorPageProps = {
  * the code, what happened, and the way out. 503 offers a reload instead of
  * "go back", since going back lands on the same outage.
  */
-export function ErrorPage({ code, title, message }: ErrorPageProps) {
+function ErrorPage({ code, title, message }: ErrorPageProps) {
   const t = useT()
   const { history } = useRouter()
   const outage = code === 503

@@ -7,8 +7,8 @@ const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
 const realm = import.meta.env.VITE_KEYCLOAK_REALM || 'chillax'
 const adminUrl = import.meta.env.VITE_ADMIN_URL || window.location.origin
 
-export const authority = `${keycloakUrl}/realms/${realm}`
-export const clientId = 'admin-panel'
+const authority = `${keycloakUrl}/realms/${realm}`
+const clientId = 'admin-panel'
 
 export const oidcConfig: AuthProviderProps = {
   authority,

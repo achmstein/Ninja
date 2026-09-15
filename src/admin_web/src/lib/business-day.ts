@@ -20,7 +20,7 @@ function atMinutes(day: Date, dayOffset: number, minutes: number): Date {
 // calendar day when the window crosses midnight (17:00 → 05:00). Before
 // today's DayStart (say 02:00) we are still inside the window that opened
 // YESTERDAY at DayStart. Missing times degrade to the calendar day.
-export function businessDayWindow(
+function businessDayWindow(
   dayStart: string | null | undefined,
   dayEnd: string | null | undefined,
   now: Date

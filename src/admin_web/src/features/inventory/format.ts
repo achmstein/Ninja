@@ -130,7 +130,7 @@ export function actorLabel(
 }
 
 /** A cost this far from the last receipt's is worth a look (the server's ReceiptProposalValidator uses the same) */
-export const PRICE_CHANGE_THRESHOLD = 10
+const PRICE_CHANGE_THRESHOLD = 10
 
 /**
  * How a unit cost moved against the last one, as a rounded percent, and

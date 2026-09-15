@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export type RankedItem = {
+type RankedItem = {
   key: string
   label: string
   value: number

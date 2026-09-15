@@ -12,7 +12,7 @@ import { DEFAULT_FOOD_COST_TARGET } from './menu-cost-rows'
 import { standardCost } from './recipe-cost'
 
 /** How a menu item is tracked: a stock item of its own, or a recipe of ingredients */
-export type StockRuleKind = 'unit' | 'recipe'
+type StockRuleKind = 'unit' | 'recipe'
 
 /** One base line of exactly one piece is the "sell as a unit" shortcut's shape */
 export function isUnitRecipe(recipe: RecipeView): boolean {

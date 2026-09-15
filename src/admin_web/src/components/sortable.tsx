@@ -3,8 +3,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type Activator = (node: HTMLElement | null) => void
-export type GripProps = {
+type Activator = (node: HTMLElement | null) => void
+type GripProps = {
   attributes: React.HTMLAttributes<HTMLElement>
   listeners: Record<string, unknown> | undefined
 }

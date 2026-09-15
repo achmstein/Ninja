@@ -12,7 +12,7 @@ import { resolve } from './recipe-model'
  */
 
 /** The option ids a sale has when the customer changes nothing */
-export function standardSelection(item: CatalogItemDto): Set<string> {
+function standardSelection(item: CatalogItemDto): Set<string> {
   const selected = new Set<string>()
   for (const group of item.customizations ?? []) {
     for (const option of group.options ?? []) {
@@ -23,7 +23,7 @@ export function standardSelection(item: CatalogItemDto): Set<string> {
 }
 
 /** The resolved deduction for a selection, priced */
-export function costOfSelection(
+function costOfSelection(
   cost: RecipeCostView,
   selection: ReadonlySet<string>
 ): number {
@@ -50,7 +50,7 @@ export function standardCost(
   return costOfSelection(cost, standardSelection(item))
 }
 
-export type ChoiceDelta = {
+type ChoiceDelta = {
   id: string
   name: LocalizedText | undefined
   isDefault: boolean
@@ -58,7 +58,7 @@ export type ChoiceDelta = {
   delta: number
 }
 
-export type GroupDeltas = {
+type GroupDeltas = {
   id: string
   name: LocalizedText | undefined
   allowMultiple: boolean

@@ -3,8 +3,8 @@ import { type TranslationKey } from '@/lib/i18n'
 
 // RoomDisplayStatus enum values from Spaces.API — what listRooms returns
 export const ROOM_AVAILABLE = 1
-export const ROOM_OCCUPIED = 2
-export const ROOM_RESERVED = 3
+const ROOM_OCCUPIED = 2
+const ROOM_RESERVED = 3
 export const ROOM_MAINTENANCE = 4
 
 // RoomPhysicalStatus enum values — what PUT /api/rooms/{id}/status accepts.
@@ -27,7 +27,7 @@ export const roomStatusConfig: Record<
 // ReservationStatus enum values from Rooms.Domain
 export const SESSION_RESERVED = 1
 export const SESSION_ACTIVE = 2
-export const SESSION_COMPLETED = 3
+const SESSION_COMPLETED = 3
 export const SESSION_CANCELLED = 4
 
 export const sessionStatusConfig: Record<
@@ -73,4 +73,3 @@ export function sessionBilledHours(session: ReservationViewModel): number {
     Number(session.multiRoundedHours ?? 0)
   )
 }
-

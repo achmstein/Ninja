@@ -10,8 +10,6 @@ export const REQUEST_SWITCH_TO_MULTI = 4
 export const REQUEST_SWITCH_TO_SINGLE = 5
 
 export const REQUEST_STATUS_PENDING = 1
-export const REQUEST_STATUS_ACKNOWLEDGED = 2
-export const REQUEST_STATUS_COMPLETED = 3
 
 export interface ServiceRequest {
   id: number

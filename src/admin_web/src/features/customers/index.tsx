@@ -30,7 +30,7 @@ const PAGE_SIZE = 40
 // Staff accounts live on the Staff page
 const STAFF_ROLES = 'Admin,Owner,Cashier'
 
-export type CustomerFilter = 'owing' | 'members'
+type CustomerFilter = 'owing' | 'members'
 
 /** One list row, whatever list it came from */
 type Row = {

@@ -60,18 +60,3 @@ export const tierColors: Record<LoyaltyTier, string> = {
   gold: '#EAB308',
   platinum: '#22D3EE',
 }
-
-// Get next tier
-export function getNextTier(currentTier: LoyaltyTier): LoyaltyTier | null {
-  const tiers: LoyaltyTier[] = ['bronze', 'silver', 'gold', 'platinum']
-  const currentIndex = tiers.indexOf(currentTier)
-  if (currentIndex < tiers.length - 1) {
-    return tiers[currentIndex + 1]
-  }
-  return null
-}
-
-// Format tier name for display
-export function formatTierName(tier: LoyaltyTier): string {
-  return tier.charAt(0).toUpperCase() + tier.slice(1)
-}

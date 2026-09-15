@@ -4,7 +4,7 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
 
-export type MenuTab = 'menu' | 'bundles'
+type MenuTab = 'menu' | 'bundles'
 
 type MenuPageProps = {
   tab: MenuTab

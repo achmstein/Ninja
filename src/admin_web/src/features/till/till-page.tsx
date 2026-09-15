@@ -6,7 +6,7 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
 
-export type TillTab = 'report' | 'shifts'
+type TillTab = 'report' | 'shifts'
 
 type TillPageProps = {
   tab: TillTab

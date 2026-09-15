@@ -3,7 +3,7 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
 
-export type HistoryTab = 'movements' | 'purchases' | 'counts' | 'transfers'
+type HistoryTab = 'movements' | 'purchases' | 'counts' | 'transfers'
 
 type HistoryPageProps = {
   tab: HistoryTab

@@ -1,4 +1,4 @@
-export type TransactionType = 'charge' | 'payment'
+type TransactionType = 'charge' | 'payment'
 
 export interface AccountTransaction {
   id: number

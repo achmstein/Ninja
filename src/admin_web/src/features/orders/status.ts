@@ -8,7 +8,7 @@ import { urgencyFor, type Urgency } from '@/components/queue-card'
 
 export { urgencyTextClass } from '@/components/queue-card'
 
-export type OrderStatusValue = 'submitted' | 'confirmed' | 'cancelled'
+type OrderStatusValue = 'submitted' | 'confirmed' | 'cancelled'
 
 export const orderStatuses: {
   value: OrderStatusValue
@@ -94,7 +94,7 @@ export function relativeTime(
 export const WARN_AFTER_MINUTES = 2
 export const DELAYED_AFTER_MINUTES = 3
 
-export type OrderUrgency = Urgency
+type OrderUrgency = Urgency
 
 export function orderUrgency(
   value: string | undefined,

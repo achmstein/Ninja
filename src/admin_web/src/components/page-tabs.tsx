@@ -2,7 +2,7 @@ import { Link, type LinkProps } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
-export type PageTab = {
+type PageTab = {
   value: string
   label: React.ReactNode
   to: LinkProps['to']

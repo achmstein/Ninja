@@ -10,13 +10,6 @@ export const customersKeys = {
   count: (search?: string) => [...customersKeys.all, 'count', search] as const,
 }
 
-export function useCustomers(params: CustomerParams = {}) {
-  return useQuery({
-    queryKey: customersKeys.list(params),
-    queryFn: () => customersService.getCustomers(params),
-  })
-}
-
 export function useCustomer(userId: string) {
   return useQuery({
     queryKey: customersKeys.detail(userId),

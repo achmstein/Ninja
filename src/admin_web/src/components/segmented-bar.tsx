@@ -1,7 +1,7 @@
 import { Link, type LinkProps } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
-export type Segment = {
+type Segment = {
   key: string
   label: string
   value: number

@@ -1,6 +1,5 @@
 import {
   type Column,
-  type ColumnDef,
   type ReactTable,
   type Row,
   type RowData,
@@ -70,7 +69,7 @@ export const dataTableFeatures = tableFeatures({
   },
 })
 
-export type DataTableFeatures = typeof dataTableFeatures
+type DataTableFeatures = typeof dataTableFeatures
 
 // The React-side table (adds reactive `.state`); tables are created without a
 // selector so `.state` carries the full table state.
@@ -84,12 +83,6 @@ export type AppColumn<TData extends RowData, TValue = unknown> = Column<
   TValue
 >
 export type AppRow<TData extends RowData> = Row<DataTableFeatures, TData>
-export type AppColumnDef<TData extends RowData> = ColumnDef<
-  DataTableFeatures,
-  TData,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
->
 
 // Column helper pre-bound to the shared feature set
 export function createAppColumnHelper<TData extends RowData>() {

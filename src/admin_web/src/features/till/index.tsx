@@ -23,7 +23,7 @@ import { useTillWindow } from './use-till-window'
 
 const route = getRouteApi('/_authenticated/till/')
 
-export type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
+type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
 
 /**
  * Settled sales over a window of business days. Net is the one big number,

@@ -14,11 +14,6 @@ export interface Customer {
   branches?: number[]
 }
 
-export interface CustomersResponse {
-  users: Customer[]
-  count: number
-}
-
 export interface CustomerParams {
   first?: number
   max?: number
