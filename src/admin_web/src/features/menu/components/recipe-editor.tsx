@@ -139,7 +139,9 @@ export function RecipeSlotsEditor({
     hint: unitLabel(i.unit, t),
   }))
   const hasChoices = menu.groups.length > 0
-  const sizeable = menu.groups.some((g) => !g.allowMultiple)
+  // Size is "the amount depends on الحجم" in the builder; factors only show
+  // for a recipe that still carries them from before
+  const sizeable = draft.scales.length > 0
 
   const updateSlot = (key: number, patch: Partial<SlotDraft>) =>
     onChange({
