@@ -2488,6 +2488,10 @@ const webExtras = {
     ar: 'نفس التكلفة مهما اختار العميل',
   },
   costLabel: { en: 'Cost', ar: 'التكلفة' },
+  standardGap: {
+    en: 'The standard {group} ({standard}) deducts no {ingredient}: the recipe has lines only for {covered}. Add the missing lines, or the standard sale takes nothing off the shelf.',
+    ar: '{group} الأساسي ({standard}) مش بيخصم {ingredient}: الوصفة فيها سطور لـ {covered} بس. ضيف السطور الناقصة، وإلا البيعة الأساسية مش هتنزّل حاجة من الرف.',
+  },
   byChoice: { en: 'By choice', ar: 'حسب الاختيار' },
   standardChoice: { en: 'standard', ar: 'أساسي' },
   costIncompleteHint: {

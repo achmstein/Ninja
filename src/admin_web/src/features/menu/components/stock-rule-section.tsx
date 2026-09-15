@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import {
+  AlertTriangle,
   ArrowRight,
   ChevronDown,
   ChevronsUpDown,
@@ -68,6 +69,7 @@ import {
   choiceDeltas,
   standardChoiceNames,
   standardCost,
+  standardGaps,
 } from '@/features/inventory/recipe-cost'
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
@@ -370,6 +372,7 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
   const incomplete = cost.uncosted.length > 0
   const choices = standardChoiceNames(item, localized)
   const groups = choiceDeltas(cost, item)
+  const gaps = standardGaps(cost, item)
 
   return (
     <div className='rounded-lg border'>
@@ -435,6 +438,24 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
         <p className='text-warning border-t px-3 py-1.5 text-xs'>
           {t('costIncompleteHint', { count: cost.uncosted.length })}
         </p>
+      )}
+
+      {gaps.length > 0 && (
+        <div className='text-destructive space-y-1 border-t px-3 py-2 text-xs'>
+          {gaps.map((gap, i) => (
+            <p key={i} className='flex items-start gap-1.5'>
+              <AlertTriangle className='mt-0.5 size-3 shrink-0' aria-hidden />
+              <span>
+                {t('standardGap', {
+                  ingredient: localized(gap.ingredient),
+                  group: localized(gap.group),
+                  standard: localized(gap.standard),
+                  covered: gap.covered.map((c) => localized(c)).join('، '),
+                })}
+              </span>
+            </p>
+          ))}
+        </div>
       )}
 
       {groups.length > 0 && (
