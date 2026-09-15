@@ -2338,9 +2338,13 @@ const webExtras = {
   dependsOnWhich: { en: 'or decided by…', ar: 'أو حسب…' },
   always: { en: 'Always', ar: 'دايمًا' },
   onlyWith: { en: 'Only with {group}', ar: 'بس مع {group}' },
-  baseBagHint: {
-    en: 'Any one of the bags: the rest are guessed from its name',
-    ar: 'أي كيس منهم: الباقي بيتخمّن من اسمه',
+  itemDecidedBelow: {
+    en: 'Decided by the choices below',
+    ar: 'بيتحدد حسب الاختيارات اللي تحت',
+  },
+  guessHint: {
+    en: 'Pick one bag in any cell; the rest are guessed from its name. Check them.',
+    ar: 'اختار كيس واحد في أي خانة؛ الباقي بيتخمّن من اسمه. راجعهم.',
   },
   zeroMeansNothing: { en: '0 = nothing', ar: '0 = مفيش' },
   customRulesCount: {

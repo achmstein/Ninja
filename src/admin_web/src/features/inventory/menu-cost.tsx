@@ -1,9 +1,14 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { ChefHat, CircleAlert, Percent, TriangleAlert } from 'lucide-react'
-import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import { type CatalogItemDto } from '@/api/catalog'
+import {
+  deleteItemMutation,
+  listCategoriesOptions,
+  listItemsOptions,
+} from '@/api/catalog/@tanstack/react-query.gen'
 import { getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
@@ -20,6 +25,11 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
+import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
+import {
+  ItemSheet,
+  type ItemSheetState,
+} from '@/features/menu/components/item-sheet'
 import { getMenuCostColumns } from './menu-cost-columns'
 import {
   DEFAULT_FOOD_COST_TARGET,
@@ -49,6 +59,25 @@ export function MenuCost() {
   const items = useQuery(
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
+  const categories = useQuery(
+    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
+  )
+
+  // "Edit recipe" on a row opens the item's sheet on its stock section, the
+  // same sheet the menu page opens; a delete from there is confirmed here
+  const queryClient = useQueryClient()
+  const [sheet, setSheet] = useState<ItemSheetState>(null)
+  const [deleteItem, setDeleteItem] = useState<CatalogItemDto | null>(null)
+  const deleteItemMut = useMutation({
+    ...deleteItemMutation(),
+    onSuccess: () => {
+      setDeleteItem(null)
+      setSheet(null)
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getRecipes' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getRecipeCosts' }] })
+    },
+  })
 
   const rows = useMemo(
     () => toMenuCostRows(costs.data ?? [], items.data ?? [], target),
@@ -65,7 +94,13 @@ export function MenuCost() {
     })
 
   const columns = useMemo(
-    () => getMenuCostColumns({ t, localized }),
+    () =>
+      getMenuCostColumns({
+        t,
+        localized,
+        onEdit: (catalogItemId) =>
+          setSheet({ mode: 'edit', itemId: catalogItemId }),
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   )
@@ -182,6 +217,28 @@ export function MenuCost() {
       />
 
       <DataTablePagination table={table} />
+
+      <ItemSheet
+        state={sheet}
+        items={items.data ?? []}
+        categories={categories.data ?? []}
+        onStateChange={setSheet}
+        onDelete={setDeleteItem}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteItem}
+        onOpenChange={() => setDeleteItem(null)}
+        onConfirm={() =>
+          deleteItem &&
+          deleteItemMut.mutate({
+            path: { id: Number(deleteItem.id) },
+            query: { 'api-version': API_VERSION },
+          })
+        }
+        itemName={localized(deleteItem?.name)}
+        isLoading={deleteItemMut.isPending}
+      />
     </Main>
   )
 }

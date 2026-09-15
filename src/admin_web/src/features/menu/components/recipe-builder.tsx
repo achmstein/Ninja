@@ -236,7 +236,9 @@ function IngredientCard({
 }) {
   const t = useT()
   const single = menu.groups.filter((g) => !g.allowMultiple)
-  const base = spec.item.fixed ? byValue.get(spec.item.fixed) : undefined
+  const baseId =
+    spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
+  const base = baseId ? byValue.get(baseId) : undefined
   const unit = base?.unit ?? ''
   const itemGroups = spec.item.groupIds
     .map((id) => menu.groups.find((g) => g.id === id))
@@ -257,6 +259,22 @@ function IngredientCard({
         (base ? guessCell(base, combo, groups, ingredients) : null)
     }
     onChange({ item: { ...spec.item, groupIds, cells } })
+  }
+
+  // One bag picked in any cell: the empty cells are guessed from its name
+  const setCell = (key: string, value: string | null) => {
+    const cells = { ...spec.item.cells, [key]: value }
+    let fixed = spec.item.fixed
+    const picked = value ? byValue.get(value) : undefined
+    if (picked) {
+      if (!fixed) fixed = value
+      for (const combo of combos(itemGroups)) {
+        const k = optionSetKey(combo.map((o) => o.id))
+        if (!cells[k])
+          cells[k] = guessCell(picked, combo, itemGroups, ingredients)
+      }
+    }
+    onChange({ item: { ...spec.item, fixed, cells } })
   }
 
   const setAmountGroup = (groupId: string | null) => {
@@ -282,18 +300,22 @@ function IngredientCard({
           {t('whichItem')}
         </span>
         <div className='min-w-0 flex-1'>
-          <Combobox
-            value={spec.item.fixed}
-            onChange={(value) =>
-              onChange({ item: { ...spec.item, fixed: value } })
-            }
-            options={options}
-            placeholder={
-              itemGroups.length > 0 ? t('baseBagHint') : t('pickStockItem')
-            }
-            size='sm'
-            wrap
-          />
+          {itemGroups.length === 0 ? (
+            <Combobox
+              value={spec.item.fixed}
+              onChange={(value) =>
+                onChange({ item: { ...spec.item, fixed: value } })
+              }
+              options={options}
+              placeholder={t('pickStockItem')}
+              size='sm'
+              wrap
+            />
+          ) : (
+            <span className='text-muted-foreground text-xs'>
+              {t('itemDecidedBelow')}
+            </span>
+          )}
         </div>
         {single.length > 0 && (
           <GroupPicker
@@ -323,19 +345,17 @@ function IngredientCard({
       </div>
 
       {itemGroups.length > 0 && (
-        <ItemTable
-          groups={itemGroups}
-          cells={spec.item.cells}
-          options={options}
-          onCell={(key, value) =>
-            onChange({
-              item: {
-                ...spec.item,
-                cells: { ...spec.item.cells, [key]: value },
-              },
-            })
-          }
-        />
+        <>
+          <ItemTable
+            groups={itemGroups}
+            cells={spec.item.cells}
+            options={options}
+            onCell={setCell}
+          />
+          <p className='text-muted-foreground px-3 pb-2 text-xs'>
+            {t('guessHint')}
+          </p>
+        </>
       )}
 
       <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>

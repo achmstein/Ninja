@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router'
+import { CookingPot } from 'lucide-react'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { createAppColumnHelper } from '@/components/data-table'
 import { type MenuCostRow } from './menu-cost-rows'
 
@@ -17,9 +19,12 @@ const columnHelper = createAppColumnHelper<MenuCostRow>()
 export function getMenuCostColumns({
   t,
   localized,
+  onEdit,
 }: {
   t: Translate
   localized: Localized
+  /** Opens the item's recipe for editing */
+  onEdit: (catalogItemId: number) => void
 }) {
   const endHeader = (key: TranslationKey) => () => (
     <div className='text-end'>{t(key)}</div>
@@ -69,6 +74,16 @@ export function getMenuCostColumns({
               {t('plusOptionExtras', { count: row.original.optionExtras })}
             </div>
           )}
+          <Button
+            type='button'
+            variant='link'
+            size='sm'
+            className='h-auto p-0 text-xs'
+            onClick={() => onEdit(row.original.catalogItemId)}
+          >
+            <CookingPot className='me-1 size-3' />
+            {t('editRecipe')}
+          </Button>
         </div>
       ),
     }),
