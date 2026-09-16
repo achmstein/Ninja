@@ -129,6 +129,7 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
         ),
     }),
     columnHelper.accessor((row) => toNumber(row.countVariance), {
+      meta: { align: 'end' },
       id: 'countVariance',
       header: () => (
         <div className='text-end'>
@@ -168,6 +169,7 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
     columnHelper.accessor(
       (row) => toNumber(row.transferredIn) + toNumber(row.transferredOut),
       {
+        meta: { align: 'end' },
         id: 'transfers',
         header: () => (
           <div className='text-end'>

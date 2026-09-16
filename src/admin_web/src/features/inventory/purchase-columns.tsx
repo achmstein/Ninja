@@ -21,6 +21,7 @@ export function getPurchaseColumns({ t, locale }: PurchaseColumnsContext) {
 
   return columnHelper.columns([
     columnHelper.accessor('receivedAt', {
+      meta: { align: 'end' },
       id: 'receivedAt',
       header: t('receivedAt'),
       cell: (info) => (
@@ -44,6 +45,7 @@ export function getPurchaseColumns({ t, locale }: PurchaseColumnsContext) {
       cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor((row) => row.lines.length, {
+      meta: { align: 'end' },
       id: 'lines',
       header: () => <div className='text-end'>{t('lines')}</div>,
       cell: (info) => (
@@ -51,6 +53,7 @@ export function getPurchaseColumns({ t, locale }: PurchaseColumnsContext) {
       ),
     }),
     columnHelper.accessor('total', {
+      meta: { align: 'end' },
       id: 'total',
       header: () => <div className='text-end'>{t('total')}</div>,
       cell: (info) => (

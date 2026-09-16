@@ -167,6 +167,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
   const payments = ticket?.payments ?? []
   const refunds = ticket?.refunds ?? []
   const service = toNumber(ticket?.serviceCharge)
+  const discount = toNumber(ticket?.discount)
   const vat = toNumber(ticket?.vat)
   const change = toNumber(ticket?.changeGiven)
   const refunded = toNumber(ticket?.refundedTotal)
@@ -292,10 +293,21 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
               {/* The bill as settled — frozen figures and the rates behind
                   them; VAT shown out of an inclusive price, or added on top */}
               <div className='space-y-1 text-sm'>
-                {(service > 0 || vat > 0) && (
+                {(discount > 0 || service > 0 || vat > 0) && (
                   <BillRow
                     label={t('subtotal')}
                     value={formatEgp(ticket.subtotal)}
+                    emphasis='muted'
+                  />
+                )}
+                {discount > 0 && (
+                  <BillRow
+                    label={
+                      ticket.discountReason
+                        ? `${t('discount')} · ${ticket.discountReason}`
+                        : t('discount')
+                    }
+                    value={`−${formatEgp(discount)}`}
                     emphasis='muted'
                   />
                 )}

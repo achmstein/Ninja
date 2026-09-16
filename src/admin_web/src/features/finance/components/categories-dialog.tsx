@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -49,7 +48,6 @@ export function CategoriesDialog({
       <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('expenseCategories')}</DialogTitle>
-          <DialogDescription>{t('categoriesDescription')}</DialogDescription>
         </DialogHeader>
         {categories.isLoading ? (
           <Skeleton className='h-40' />

@@ -200,7 +200,7 @@ export function Customers() {
 
   return (
     <Main fixed className='gap-4'>
-      <PageHeader title={t('customers')} description={t('customersSubtitle')}>
+      <PageHeader title={t('customers')}>
         <CustomerStats />
       </PageHeader>
 
@@ -306,7 +306,6 @@ export function Customers() {
             <EmptyState
               icon={Users}
               title={t('selectCustomer')}
-              description={t('selectCustomerHint')}
             />
           </div>
         )}

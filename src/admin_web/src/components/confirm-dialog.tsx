@@ -16,7 +16,11 @@ type ConfirmDialogProps = {
   onOpenChange: (open: boolean) => void
   title: React.ReactNode
   disabled?: boolean
-  desc: React.JSX.Element | string
+  /**
+   * Only the one consequence the title cannot carry ("Cannot be undone.");
+   * the question is the title and the verb is the button.
+   */
+  desc?: React.JSX.Element | string
   cancelBtnText?: string
   confirmText?: React.ReactNode
   destructive?: boolean
@@ -46,9 +50,13 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
       <AlertDialogContent className={cn(className && className)}>
         <AlertDialogHeader className='text-start'>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div>{desc}</div>
-          </AlertDialogDescription>
+          {desc ? (
+            <AlertDialogDescription asChild>
+              <div>{desc}</div>
+            </AlertDialogDescription>
+          ) : (
+            <AlertDialogDescription className='sr-only'>{title}</AlertDialogDescription>
+          )}
         </AlertDialogHeader>
         {children}
         <AlertDialogFooter>

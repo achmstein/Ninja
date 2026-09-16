@@ -1,3 +1,4 @@
+import '../../core/providers/branch_provider.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,7 +103,12 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                       alignment: Alignment.topCenter,
                       child: SizedBox(
                         width: receiptWidth,
-                        child: ReceiptSheet(ticket: ticket, l10n: l10n, locale: locale, logo: logo.data),
+                        child: ReceiptSheet(
+                            ticket: ticket,
+                            l10n: l10n,
+                            locale: locale,
+                            logo: logo.data,
+                            branch: ref.watch(branchProvider).selectedBranch),
                       ),
                     ),
                   ),

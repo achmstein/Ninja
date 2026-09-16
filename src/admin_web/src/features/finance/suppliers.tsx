@@ -21,7 +21,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -81,7 +80,6 @@ export function Suppliers() {
       <Main className='flex flex-col gap-6'>
         <PageHeader
           title={t('navFinanceSuppliers')}
-          description={t('suppliersSubtitle')}
           badge={
             totalOwed > 0 ? (
               <span className='text-muted-foreground text-sm tabular-nums'>
@@ -120,7 +118,6 @@ export function Suppliers() {
           <EmptyState
             icon={Truck}
             title={t('noSuppliers')}
-            description={t('noSuppliersHint')}
             action={
               <Button onClick={() => setAdding(true)}>
                 <Plus className='me-2 h-4 w-4' />
@@ -207,11 +204,6 @@ function SupplierSheet({
           <SheetTitle>
             {isNew ? t('addSupplier') : (supplier?.name ?? '')}
           </SheetTitle>
-          <SheetDescription>
-            {isNew
-              ? t('addSupplierDescription')
-              : (supplier?.phone ?? t('supplier'))}
-          </SheetDescription>
         </SheetHeader>
 
         {isNew ? (
@@ -221,7 +213,7 @@ function SupplierSheet({
         ) : supplier ? (
           <>
             <section className='space-y-3 border-b p-4'>
-              <h3 className='text-sm font-semibold'>{t('details')}</h3>
+              <h3 className='text-sm font-medium'>{t('details')}</h3>
               <SupplierForm
                 key={String(supplier.id)}
                 supplier={supplier}
@@ -230,10 +222,7 @@ function SupplierSheet({
             </section>
             <section className='space-y-3 border-b p-4'>
               <div>
-                <h3 className='text-sm font-semibold'>{t('account')}</h3>
-                <p className='text-muted-foreground text-xs'>
-                  {t('supplierAccountHint')}
-                </p>
+                <h3 className='text-sm font-medium'>{t('account')}</h3>
               </div>
               <SupplierLedger supplier={supplier} />
             </section>

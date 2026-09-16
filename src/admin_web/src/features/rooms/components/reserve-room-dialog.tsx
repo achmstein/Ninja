@@ -10,7 +10,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -106,9 +105,6 @@ export function ReserveRoomDialog({
               <CalendarClock className='h-5 w-5' />
               {t('reserveRoomTitle', { name: localized(room.name) })}
             </DialogTitle>
-            <DialogDescription>
-              {t('reserveRoomDescription')}
-            </DialogDescription>
           </DialogHeader>
 
           <div className='space-y-4 py-2'>

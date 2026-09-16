@@ -59,6 +59,10 @@ export type CatalogItem = {
     preparationTimeMinutes?: null | number | string;
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
+    isOfferActive?: boolean;
     effectivePrice?: number | string;
     isPopular?: boolean;
     displayOrder?: number | string;
@@ -70,6 +74,9 @@ export type CatalogItemBaseDto = {
     offerPrice: null | number | string;
     isOnOffer: boolean;
     isAvailable: boolean;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
 };
 
 export type CatalogItemDto = {
@@ -85,6 +92,9 @@ export type CatalogItemDto = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
     effectivePrice?: number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
     isPopular?: boolean;
     preparationTimeMinutes?: null | number | string;
     displayOrder?: number | string;
@@ -159,6 +169,34 @@ export type LocalizedText = {
     ar?: null | string;
 };
 
+export type LocalizeKind = number;
+
+export type LocalizeRequest = {
+    kind: LocalizeKind;
+    name: LocalizedText;
+    description?: null | LocalizedText;
+    /**
+     * The menu item's category, as context
+     */
+    catalogTypeId?: null | number | string;
+    suggestCategory?: boolean;
+    suggestDescription?: boolean;
+};
+
+export type LocalizeResponse = {
+    name: LocalizedText;
+    description: null | LocalizedText;
+    suggestedCatalogTypeId: null | number | string;
+    filled: Array<string>;
+    warnings: Array<string>;
+};
+
+export type MenuProposal = {
+    categories: Array<ProposedCategory>;
+    warnings: Array<string>;
+    notes: null | string;
+};
+
 export type PaginatedItemsDtoOfCatalogItemDto = {
     pageIndex: number | string;
     pageSize: number | string;
@@ -172,6 +210,33 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type ProposedCategory = {
+    name: LocalizedText;
+    catalogTypeId: null | number | string;
+    items: Array<ProposedItem>;
+};
+
+export type ProposedCustomization = {
+    name: LocalizedText;
+    isRequired: boolean;
+    allowMultiple: boolean;
+    options: Array<ProposedOption>;
+};
+
+export type ProposedItem = {
+    rawText: string;
+    name: LocalizedText;
+    description: LocalizedText;
+    price: number | string;
+    existingItemId: null | number | string;
+};
+
+export type ProposedOption = {
+    name: LocalizedText;
+    priceAdjustment: number | string;
+    isDefault: boolean;
 };
 
 export type ReorderItemDto = {
@@ -203,6 +268,22 @@ export type SetBundleActiveRequest = {
 export type SetItemOfferRequest = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
+};
+
+export type SuggestCustomizationsRequest = {
+    name: LocalizedText;
+    description?: null | LocalizedText;
+    catalogTypeId?: null | number | string;
+    price?: number | string;
+    existingGroups?: null | Array<LocalizedText>;
+};
+
+export type SuggestCustomizationsResponse = {
+    groups: Array<ProposedCustomization>;
+    warnings: Array<string>;
 };
 
 export type UpdateCatalogItemRequest = {
@@ -213,6 +294,9 @@ export type UpdateCatalogItemRequest = {
     isAvailable?: boolean;
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
     isPopular?: boolean;
     preparationTimeMinutes?: null | number | string;
 };
@@ -227,6 +311,122 @@ export type UserPreferenceOptionDto = {
     customizationId?: number | string;
     optionId?: number | string;
 };
+
+export type LocalizeMenuTextData = {
+    body: LocalizeRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/localize';
+};
+
+export type LocalizeMenuTextErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type LocalizeMenuTextError = LocalizeMenuTextErrors[keyof LocalizeMenuTextErrors];
+
+export type LocalizeMenuTextResponses = {
+    /**
+     * OK
+     */
+    200: LocalizeResponse;
+};
+
+export type LocalizeMenuTextResponse = LocalizeMenuTextResponses[keyof LocalizeMenuTextResponses];
+
+export type SuggestCustomizationsData = {
+    body: SuggestCustomizationsRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/customizations';
+};
+
+export type SuggestCustomizationsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SuggestCustomizationsError = SuggestCustomizationsErrors[keyof SuggestCustomizationsErrors];
+
+export type SuggestCustomizationsResponses = {
+    /**
+     * OK
+     */
+    200: SuggestCustomizationsResponse;
+};
+
+export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyof SuggestCustomizationsResponses];
+
+export type ScanMenuData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/menu/scan';
+};
+
+export type ScanMenuErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ScanMenuError = ScanMenuErrors[keyof ScanMenuErrors];
+
+export type ScanMenuResponses = {
+    /**
+     * OK
+     */
+    200: MenuProposal;
+};
+
+export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
 
 export type ListItemsData = {
     body?: never;

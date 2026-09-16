@@ -136,7 +136,7 @@ export function Trends() {
   return (
     <section className='flex flex-col gap-4'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
-        <h2 className='text-lg font-semibold tracking-tight'>{t('trends')}</h2>
+        <h2 className='text-sm font-semibold'>{t('trends')}</h2>
         <ToggleGroup
           type='single'
           variant='outline'
@@ -168,7 +168,7 @@ export function Trends() {
       ) : (
         <div>
           <div className='mb-2 flex items-baseline justify-between'>
-            <h3 className='text-sm font-semibold'>{t('revenueByDay')}</h3>
+            <h3 className='text-sm font-medium'>{t('revenueByDay')}</h3>
             {totalRevenue > 0 && (
               <span className='text-muted-foreground text-sm tabular-nums'>
                 {formatEgp(totalRevenue)}
@@ -238,7 +238,7 @@ export function Trends() {
 
       <div className='grid gap-8 lg:grid-cols-2'>
         <div>
-          <h3 className='mb-1 text-sm font-semibold'>{t('topItemsTitle')}</h3>
+          <h3 className='mb-1 text-sm font-medium'>{t('topItemsTitle')}</h3>
           {orderStats.isLoading ? (
             <Skeleton className='h-40 w-full' />
           ) : topItems.length === 0 ? (
@@ -250,7 +250,7 @@ export function Trends() {
           )}
         </div>
         <div>
-          <h3 className='mb-1 text-sm font-semibold'>{t('roomsByHours')}</h3>
+          <h3 className='mb-1 text-sm font-medium'>{t('roomsByHours')}</h3>
           {sessionStats.isError ? (
             <ErrorState
               error={sessionStats.error}

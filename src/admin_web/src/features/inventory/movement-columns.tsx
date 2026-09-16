@@ -55,6 +55,7 @@ export function getMovementColumns({
       cell: (info) => <MovementTypeBadge type={info.getValue()} />,
     }),
     columnHelper.accessor((row) => toNumber(row.quantity), {
+      meta: { align: 'end' },
       id: 'quantity',
       header: () => <div className='text-end'>{t('quantity')}</div>,
       cell: ({ row }) => {
@@ -73,6 +74,7 @@ export function getMovementColumns({
       },
     }),
     columnHelper.accessor('unitCost', {
+      meta: { align: 'end' },
       id: 'unitCost',
       header: () => <div className='text-end'>{t('unitCost')}</div>,
       cell: (info) => (

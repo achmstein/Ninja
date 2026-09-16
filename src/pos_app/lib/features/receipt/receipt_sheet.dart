@@ -1,3 +1,4 @@
+import '../../core/models/branch.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../core/models/money.dart';
@@ -37,12 +38,17 @@ class ReceiptSheet extends StatelessWidget {
   /// The decoded wordmark; the name prints as text without it
   final ui.Image? logo;
 
+  /// Whose receipt: name, address, phone and tax number under the wordmark,
+  /// its own footer line at the bottom
+  final Branch? branch;
+
   const ReceiptSheet({
     super.key,
     required this.ticket,
     required this.l10n,
     required this.locale,
     this.logo,
+    this.branch,
     this.paymentsOverride,
     this.receiptNumberOverride,
     this.provisionalReceiptNumber,
@@ -54,7 +60,7 @@ class ReceiptSheet extends StatelessWidget {
         [for (final p in ticket.payments) ReceiptPayment(tender: p.tender, amount: p.amount)];
     final paid = payments.fold<double>(0, (sum, p) => sum + p.amount);
     final change = paid - ticket.total > 0 ? paid - ticket.total : 0.0;
-    final hasBreakdown = ticket.serviceCharge > 0 || ticket.vat > 0;
+    final hasBreakdown = ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0;
     final receiptNumber = receiptNumberOverride ?? ticket.receiptNumber;
     final provisional = provisionalReceiptNumber ?? ticket.provisionalReceiptNumber;
     final placeName = ticket.locationName?.getText(locale) ?? '';
@@ -64,6 +70,14 @@ class ReceiptSheet extends StatelessWidget {
       children: [
         SheetCentered(children: [
           BrandMark(logo: logo, text: l10n.brandName),
+          if (branch != null) ...[
+            Text(branch!.name.getText(locale), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+            if ((branch!.address?.getText(locale) ?? '').isNotEmpty)
+              Text(branch!.address!.getText(locale), style: const TextStyle(fontSize: 20)),
+            if (branch!.phone != null) Text(branch!.phone!, style: const TextStyle(fontSize: 20)),
+            if (branch!.taxNumber != null) Text(l10n.taxNumber(branch!.taxNumber!), style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 6),
+          ],
           if (receiptNumber != null)
             Text(l10n.receiptNumber(receiptNumber), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
           if (provisional != null)
@@ -93,6 +107,7 @@ class ReceiptSheet extends StatelessWidget {
         const SizedBox(height: 8),
         if (hasBreakdown) ...[
           SheetRow(l10n.subtotal, moneyWith(l10n, ticket.subtotal), size: 22),
+          if (ticket.discount > 0) SheetRow(l10n.discount, '−${moneyWith(l10n, ticket.discount)}', size: 22),
           if (ticket.serviceCharge > 0)
             SheetRow(l10n.serviceCharge(rateText(ticket.serviceChargeRate)), moneyWith(l10n, ticket.serviceCharge), size: 22),
           if (ticket.vat > 0 && !ticket.vatIncluded)
@@ -115,9 +130,16 @@ class ReceiptSheet extends StatelessWidget {
           SheetRow(l10n.refundedSoFar, '−${moneyWith(l10n, ticket.refundedTotal)}', weight: FontWeight.w600),
         ],
         const SizedBox(height: 16),
-        SheetCentered(children: [Text(l10n.receiptThanks, style: const TextStyle(fontSize: 24))]),
+        SheetCentered(children: [
+          Text(_footer(branch, locale) ?? l10n.receiptThanks, style: const TextStyle(fontSize: 24)),
+        ]),
       ],
     );
+  }
+
+  static String? _footer(Branch? branch, Locale locale) {
+    final text = branch?.receiptFooter?.getText(locale).trim() ?? '';
+    return text.isEmpty ? null : text;
   }
 
   static String _qty(double qty) => qty == qty.roundToDouble() ? qty.toStringAsFixed(0) : qty.toString();

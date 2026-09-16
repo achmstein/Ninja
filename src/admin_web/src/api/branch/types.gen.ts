@@ -9,6 +9,8 @@ export type BranchResponse = {
     name: LocalizedText;
     address: null | LocalizedText;
     phone: null | string;
+    taxNumber: null | string;
+    receiptFooter: null | LocalizedText;
     isActive: boolean;
     displayOrder: number | string;
     dayStartTime: string;
@@ -22,6 +24,8 @@ export type CreateBranchRequest = {
     address: null | LocalizedText;
     phone: null | string;
     displayOrder?: number | string;
+    taxNumber?: null | string;
+    receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
     dayEndTime?: null | string;
     isOrderingEnabled?: boolean;
@@ -39,6 +43,8 @@ export type UpdateBranchRequest = {
     phone: null | string;
     isActive: boolean;
     displayOrder: number | string;
+    taxNumber?: null | string;
+    receiptFooter?: null | LocalizedText;
     dayStartTime?: null | string;
     dayEndTime?: null | string;
     isOrderingEnabled?: null | boolean;

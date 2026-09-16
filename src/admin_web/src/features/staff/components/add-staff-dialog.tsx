@@ -3,12 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAllBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -132,7 +132,6 @@ export function AddStaffDialog({
       <DialogContent className='sm:max-w-[440px]'>
         <DialogHeader>
           <DialogTitle>{t('addStaffAccount')}</DialogTitle>
-          <DialogDescription>{t('addStaffDescription')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
@@ -177,20 +176,13 @@ export function AddStaffDialog({
                 <SelectItem value='Cashier'>{t('cashierRole')}</SelectItem>
               </SelectContent>
             </Select>
-            {role === 'Cashier' && (
-              <p className='text-muted-foreground text-xs'>
-                {t('cashierDescription')}
-              </p>
-            )}
           </div>
           {role === 'Admin' && (
-            <div className='flex items-center justify-between rounded-lg border p-3'>
-              <div>
-                <Label className='text-sm'>{t('makeOwner')}</Label>
-                <p className='text-muted-foreground text-xs'>
-                  {t('ownerDescription')}
-                </p>
-              </div>
+            <div className='flex items-center justify-between'>
+              <Label className='flex items-center gap-1 text-sm'>
+                {t('makeOwner')}
+                <InfoTip>{t('ownerDescription')}</InfoTip>
+              </Label>
               <Switch checked={isOwner} onCheckedChange={setIsOwner} />
             </div>
           )}

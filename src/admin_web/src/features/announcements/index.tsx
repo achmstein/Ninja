@@ -3,14 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Send, Users } from 'lucide-react'
 import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -58,20 +52,10 @@ export function AnnouncementsManagement() {
   return (
     <>
       <Main className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            {t('announcements')}
-          </h1>
-          <p className='text-muted-foreground'>{t('announcementsSubtitle')}</p>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('sendAnnouncement')}</CardTitle>
-            <CardDescription>
-              {t('sendAnnouncementDescription')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <PageHeader title={t('announcements')} />
+        <section className='flex flex-col gap-3'>
+          <h2 className='text-sm font-semibold'>{t('sendAnnouncement')}</h2>
+          <div>
             <form
               onSubmit={handleSubmit}
               className='flex max-w-xl flex-col gap-4'
@@ -109,15 +93,15 @@ export function AnnouncementsManagement() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+            </div>
+            </section>
 
         <div className='flex flex-col gap-3'>
-          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+          <h2 className='text-muted-foreground tracking-wide uppercase text-sm font-semibold'>
             {t('sentSection')}
           </h2>
           {isLoading ? (
-            <div className='space-y-3'>
+            <div className='divide-y rounded-lg border'>
               {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className='h-20 w-full' />
               ))}
@@ -128,8 +112,7 @@ export function AnnouncementsManagement() {
             </p>
           ) : (
             announcements.map((announcement) => (
-              <Card key={announcement.id}>
-                <CardContent className='flex flex-col gap-1 py-4'>
+              <div key={announcement.id} className='flex flex-col gap-1 px-4 py-3'>
                   <div className='flex items-baseline justify-between gap-2'>
                     <span className='font-semibold'>{announcement.title}</span>
                     <span className='text-muted-foreground shrink-0 text-xs'>
@@ -146,8 +129,7 @@ export function AnnouncementsManagement() {
                       })}
                     </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
             ))
           )}
         </div>

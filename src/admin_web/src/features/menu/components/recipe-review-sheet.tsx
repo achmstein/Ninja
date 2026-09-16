@@ -14,6 +14,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { InfoTip } from '@/components/info-tip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -228,7 +228,6 @@ export function RecipeReviewSheet({
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewRecipes')}
           </SheetTitle>
-          <SheetDescription>{t('reviewRecipesDescription')}</SheetDescription>
         </SheetHeader>
 
         <LocalizedFields>
@@ -249,10 +248,10 @@ export function RecipeReviewSheet({
 
             {review.ingredients.length > 0 && (
               <section className='space-y-2'>
-                <h3 className='text-sm font-medium'>{t('newIngredients')}</h3>
-                <p className='text-muted-foreground text-xs'>
-                  {t('newIngredientsHint')}
-                </p>
+                <h3 className='flex items-center gap-1 text-sm font-medium'>
+                  {t('newIngredients')}
+                  <InfoTip>{t('newIngredientsHint')}</InfoTip>
+                </h3>
                 <div className='divide-y rounded-lg border'>
                   {review.ingredients.map((ingredient) => {
                     const used = needed.some((n) => n.key === ingredient.key)

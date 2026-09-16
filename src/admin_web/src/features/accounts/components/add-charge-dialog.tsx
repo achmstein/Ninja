@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -71,19 +70,11 @@ export function AddChargeDialog({
     addChargeMutation.mutate()
   }
 
-  const customerName = customer
-    ? [customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
-      customer.username
-    : ''
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('addCharge')}</DialogTitle>
-          <DialogDescription>
-            {t('addChargeDescription', { name: customerName })}
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>

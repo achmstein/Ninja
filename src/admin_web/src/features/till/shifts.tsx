@@ -66,6 +66,7 @@ function getShiftColumns({ t, locale }: { t: Translate; locale: string }) {
 
   return columnHelper.columns([
     columnHelper.accessor('id', {
+      meta: { align: 'end' },
       id: 'id',
       header: t('shiftHash'),
       cell: (info) => (
@@ -91,6 +92,7 @@ function getShiftColumns({ t, locale }: { t: Translate; locale: string }) {
       cell: (info) => at(info.getValue(), info.row.original.closedBy),
     }),
     columnHelper.accessor('ticketsSettled', {
+      meta: { align: 'end' },
       id: 'tickets',
       header: () => <div className='text-end'>{t('posTicketsSettled')}</div>,
       cell: (info) => (

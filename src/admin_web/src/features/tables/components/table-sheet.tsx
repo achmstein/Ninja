@@ -183,9 +183,7 @@ export function TableSheet({
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         title={t('deleteTableQuestion')}
-        desc={t('deleteTableConfirmation', {
-          name: table ? localized(table.name) : '',
-        })}
+        desc={t('cannotBeUndone')}
         confirmText={t('delete')}
         destructive
         isLoading={remove.isPending}
@@ -200,7 +198,6 @@ export function TableSheet({
           if (!open) setCancelTarget(null)
         }}
         title={t('cancelOrderQuestion')}
-        desc={t('cancelOrderConfirmation')}
         cancelBtnText={t('keepOrder')}
         confirmText={t('cancelOrderButton')}
         destructive

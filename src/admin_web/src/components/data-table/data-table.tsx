@@ -49,9 +49,10 @@ export function DataTable<TData extends RowData>({
   const rows = table.getRowModel().rows
 
   return (
-    <div className={cn('overflow-hidden rounded-md border', className)}>
+    <div className={cn('overflow-hidden rounded-lg border', className)}>
       <Table>
-        <TableHeader>
+        {/* The header stays put while a long list scrolls under it */}
+        <TableHeader className='sticky top-0 z-10'>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className='group/row'>
               {headerGroup.headers.map((header) => (
@@ -60,6 +61,8 @@ export function DataTable<TData extends RowData>({
                   colSpan={header.colSpan}
                   className={cn(
                     'bg-background group-hover/row:bg-muted',
+                    header.column.columnDef.meta?.align === 'end' &&
+                      'text-end [&>div]:justify-end',
                     header.column.columnDef.meta?.className,
                     header.column.columnDef.meta?.thClassName
                   )}
@@ -113,6 +116,12 @@ export function DataTable<TData extends RowData>({
                         key={cell.id}
                         className={cn(
                           'bg-background group-hover/row:bg-muted',
+                          cell.column.columnDef.meta?.align === 'end' &&
+                            'text-end tabular-nums',
+                          cell.column.columnDef.meta?.emphasis === 'primary' &&
+                            'font-medium',
+                          cell.column.columnDef.meta?.emphasis === 'muted' &&
+                            'text-muted-foreground',
                           cell.column.columnDef.meta?.className,
                           cell.column.columnDef.meta?.tdClassName
                         )}

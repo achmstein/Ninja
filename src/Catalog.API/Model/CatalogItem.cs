@@ -47,10 +47,22 @@ public class CatalogItem
     /// </summary>
     public decimal? OfferPrice { get; set; }
 
+    /// <summary>When the offer applies: a bit per <see cref="DayOfWeek"/>; null or 0 is every day.</summary>
+    public int? OfferWeekdays { get; set; }
+
+    /// <summary>The offer's hours, local time; both null is all day. Ending before it starts runs past midnight.</summary>
+    public TimeOnly? OfferFrom { get; set; }
+
+    public TimeOnly? OfferTo { get; set; }
+
+    /// <summary>The offer is switched on, priced, and its window covers now.</summary>
+    public bool IsOfferActive
+        => IsOnOffer && OfferPrice.HasValue && OfferWindow.Covers(OfferWeekdays, OfferFrom, OfferTo, LocalClock.Now);
+
     /// <summary>
-    /// Returns the effective price: OfferPrice when on offer, otherwise regular Price
+    /// Returns the effective price: OfferPrice while the offer is active, otherwise regular Price
     /// </summary>
-    public decimal EffectivePrice => IsOnOffer && OfferPrice.HasValue ? OfferPrice.Value : Price;
+    public decimal EffectivePrice => IsOfferActive ? OfferPrice!.Value : Price;
 
     /// <summary>
     /// Whether this item should appear in the "Most Popular" section

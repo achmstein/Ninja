@@ -66,6 +66,10 @@ export const dataTableFeatures = tableFeatures({
     className?: string // apply to both th and td
     tdClassName?: string
     thClassName?: string
+    /** Numbers and money sit at the end, in tabular figures; the header follows */
+    align?: 'start' | 'end'
+    /** The one column the eye reads first, or the ones it may skip */
+    emphasis?: 'primary' | 'muted'
   },
 })
 

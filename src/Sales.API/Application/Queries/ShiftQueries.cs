@@ -138,6 +138,7 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
                 m.SupplierId, m.SupplierName, m.PartnerId, m.PartnerName, m.CategoryId)).ToList(),
             TicketsSettled = tickets.Count,
             SalesTotal = tickets.Sum(t => t.Total),
+            Discounts = TicketQueries.DiscountsOf(tickets),
             RefundsTotal = refundsTotal,
             CashRefunds = cashRefunds,
             TenderTotals = tenders,

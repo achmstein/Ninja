@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -75,7 +74,6 @@ export function BundleDialog({
           <DialogTitle>
             {bundle ? t('editBundle') : t('createBundle')}
           </DialogTitle>
-          <DialogDescription>{t('bundlesSubtitle')}</DialogDescription>
         </DialogHeader>
         {/* Keyed so form state resets per bundle; closing unmounts and resets */}
         <BundleForm
@@ -394,13 +392,8 @@ function BundleForm({
             </p>
           )}
         </div>
-        <div className='flex items-center justify-between self-start rounded-lg border p-3'>
-          <div className='space-y-0.5'>
-            <Label className='text-sm'>{t('bundleActive')}</Label>
-            <p className='text-muted-foreground text-xs'>
-              {t('visibleToCustomers')}
-            </p>
-          </div>
+        <div className='flex items-center justify-between self-start'>
+          <Label className='text-sm'>{t('bundleActive')}</Label>
           <Switch checked={isActive} onCheckedChange={setIsActive} />
         </div>
       </div>

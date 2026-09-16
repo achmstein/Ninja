@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { attachExpenseReceipt, getExpenseCategories, getExpenseReceipt, getExpenses, getPartnerLedger, getPartners, getProfit, getProfitTrend, getRecurringExpenses, getSupplierLedger, getSuppliers, getTillCategories, getTillPartners, getTillSuppliers, type Options, postPartnerEntry, postSupplierEntry, recordExpense, removeExpenseReceipt, saveExpenseCategory, savePartner, saveRecurringExpense, saveSupplier, voidExpense } from '../sdk.gen';
-import type { AttachExpenseReceiptData, AttachExpenseReceiptError, GetExpenseCategoriesData, GetExpenseCategoriesResponse, GetExpenseReceiptData, GetExpensesData, GetExpensesResponse, GetPartnerLedgerData, GetPartnerLedgerResponse, GetPartnersData, GetPartnersResponse, GetProfitData, GetProfitResponse, GetProfitTrendData, GetProfitTrendResponse, GetRecurringExpensesData, GetRecurringExpensesResponse, GetSupplierLedgerData, GetSupplierLedgerResponse, GetSuppliersData, GetSuppliersResponse, GetTillCategoriesData, GetTillCategoriesResponse, GetTillPartnersData, GetTillPartnersResponse, GetTillSuppliersData, GetTillSuppliersResponse, PostPartnerEntryData, PostPartnerEntryError, PostPartnerEntryResponse, PostSupplierEntryData, PostSupplierEntryError, PostSupplierEntryResponse, RecordExpenseData, RecordExpenseError, RecordExpenseResponse, RemoveExpenseReceiptData, SaveExpenseCategoryData, SaveExpenseCategoryError, SaveExpenseCategoryResponse, SavePartnerData, SavePartnerError, SavePartnerResponse, SaveRecurringExpenseData, SaveRecurringExpenseError, SaveRecurringExpenseResponse, SaveSupplierData, SaveSupplierError, SaveSupplierResponse, VoidExpenseData, VoidExpenseError } from '../types.gen';
+import { attachExpenseReceipt, getExpenseCategories, getExpenseReceipt, getExpenses, getPartnerLedger, getPartners, getProfit, getProfitTrend, getRecurringExpenses, getSupplierLedger, getSuppliers, getTillCategories, getTillPartners, getTillSuppliers, type Options, postPartnerEntry, postSupplierEntry, recordExpense, removeExpenseReceipt, saveExpenseCategory, savePartner, saveRecurringExpense, saveSupplier, scanBill, voidExpense } from '../sdk.gen';
+import type { AttachExpenseReceiptData, AttachExpenseReceiptError, GetExpenseCategoriesData, GetExpenseCategoriesResponse, GetExpenseReceiptData, GetExpensesData, GetExpensesResponse, GetPartnerLedgerData, GetPartnerLedgerResponse, GetPartnersData, GetPartnersResponse, GetProfitData, GetProfitResponse, GetProfitTrendData, GetProfitTrendResponse, GetRecurringExpensesData, GetRecurringExpensesResponse, GetSupplierLedgerData, GetSupplierLedgerResponse, GetSuppliersData, GetSuppliersResponse, GetTillCategoriesData, GetTillCategoriesResponse, GetTillPartnersData, GetTillPartnersResponse, GetTillSuppliersData, GetTillSuppliersResponse, PostPartnerEntryData, PostPartnerEntryError, PostPartnerEntryResponse, PostSupplierEntryData, PostSupplierEntryError, PostSupplierEntryResponse, RecordExpenseData, RecordExpenseError, RecordExpenseResponse, RemoveExpenseReceiptData, SaveExpenseCategoryData, SaveExpenseCategoryError, SaveExpenseCategoryResponse, SavePartnerData, SavePartnerError, SavePartnerResponse, SaveRecurringExpenseData, SaveRecurringExpenseError, SaveRecurringExpenseResponse, SaveSupplierData, SaveSupplierError, SaveSupplierResponse, ScanBillData, ScanBillError, ScanBillResponse, VoidExpenseData, VoidExpenseError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -163,6 +163,25 @@ export const attachExpenseReceiptMutation = (options?: Partial<Options<AttachExp
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AttachExpenseReceiptError>, Options<AttachExpenseReceiptData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await attachExpenseReceipt({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Read the photo of a bill into a proposed expense
+ *
+ * The assistant reads the date, amount, category and vendor off the bill. Nothing is recorded: the form takes the proposal for the fields still empty, and the user saves.
+ */
+export const scanBillMutation = (options?: Partial<Options<ScanBillData>>): UseMutationOptions<ScanBillResponse, AxiosError<ScanBillError>, Options<ScanBillData>> => {
+    const mutationOptions: UseMutationOptions<ScanBillResponse, AxiosError<ScanBillError>, Options<ScanBillData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await scanBill({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

@@ -20,7 +20,6 @@ export function HistoryPage({ tab, children }: HistoryPageProps) {
     <Main className='flex flex-col gap-4'>
       <PageHeader
         title={t('inventoryHistory')}
-        description={t('historySubtitle')}
       >
         <PageTabs
           value={tab}

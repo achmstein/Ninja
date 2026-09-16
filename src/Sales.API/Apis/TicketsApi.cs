@@ -63,6 +63,11 @@ public static class TicketsApi
             .WithSummary("Settled sales over a window: tender split, discounts, per-type counts")
             .WithDescription("The caller picks the window — pass the branch's business-day bounds for the day report.");
 
+        api.MapGet("/reports/breakdown", GetBreakdownReport)
+            .WithName("GetBreakdownReport")
+            .WithSummary("Settled sales in a window by hour, weekday, cashier and item")
+            .WithDescription("offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.");
+
         api.MapGet("/by-order/{orderId:int}", GetTicketByOrder)
             .WithName("GetTicketByOrder")
             .WithSummary("The ticket a confirmed order landed on")
@@ -91,6 +96,15 @@ public static class TicketsApi
             .WithName("AssignTicketLinesCustomer")
             .WithSummary("Name the customer on chosen lines")
             .WithDescription("The split-bill fix: several people rang up as one sale, and some lines were theirs. Sets the customer snapshot on just those lines — bill grouping, receipt, Account tender. Points do not move: they follow the whole order (assign the order's customer in Ordering for that). Session time cannot be reassigned.");
+
+        api.MapPost("/{id:int}/discount", ApplyDiscount)
+            .WithName("ApplyTicketDiscount")
+            .WithSummary("Take a percent or an amount off the whole bill, with a reason")
+            .WithDescription("Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.");
+
+        api.MapDelete("/{id:int}/discount", RemoveDiscount)
+            .WithName("RemoveTicketDiscount")
+            .WithSummary("Take the discount back off an open ticket");
 
         api.MapPost("/{id:int}/void", VoidTicket)
             .WithName("VoidTicket")
@@ -278,6 +292,22 @@ public static class TicketsApi
         return TypedResults.Ok(await queries.GetRangeReportAsync(branchId, from, to));
     }
 
+    public static async Task<Results<Ok<BreakdownReport>, BadRequest<string>>> GetBreakdownReport(
+        DateTime from,
+        DateTime to,
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        int offsetMinutes = 0)
+    {
+        if (to <= from)
+        {
+            return TypedResults.BadRequest("The report window must end after it starts.");
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetBreakdownAsync(branchId, from, to, offsetMinutes));
+    }
+
     public static async Task<Results<Ok<OpenTicketResponse>, NotFound>> GetTicketByOrder(
         int orderId,
         [FromServices] ITicketQueries queries)
@@ -357,6 +387,46 @@ public static class TicketsApi
         }
     }
 
+    public static async Task<Results<Ok, BadRequest<string>>> ApplyDiscount(
+        int id,
+        DiscountRequest request,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            await mediator.SendIdentified<ApplyTicketDiscountCommand, bool>(requestId, new ApplyTicketDiscountCommand(
+                id,
+                request.Rate,
+                request.Amount,
+                request.Reason,
+                httpContext.GetActor(),
+                Uncapped: httpContext.User.IsInRole("Owner")));
+
+            return TypedResults.Ok();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Results<NoContent, BadRequest<string>>> RemoveDiscount(
+        int id,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            await mediator.Send(new RemoveTicketDiscountCommand(id));
+            return TypedResults.NoContent();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Results<Ok, BadRequest<string>>> VoidTicket(
         int id,
         VoidTicketRequest request,
@@ -419,6 +489,7 @@ public static class TicketsApi
                 request.VatRate,
                 request.PricesIncludeVat,
                 request.ServiceChargeRate,
+                request.MaxCashierDiscountRate,
                 httpContext.GetActor()));
 
             return TypedResults.Ok();
@@ -509,6 +580,9 @@ public record NewTicketRequest(TicketType Type, int? TableId = null, LocalizedTe
 
 public record VoidTicketRequest(string Reason);
 
+/// <summary>One of Rate (a fraction: 0.1 is 10%) or Amount (money off the bill).</summary>
+public record DiscountRequest(string Reason, decimal? Rate = null, decimal? Amount = null);
+
 public record RefundRequest(List<RefundLineRequest> Lines, string Reason, PaymentTender Tender, string? CustomerId = null, string? CustomerName = null);
 
 public record RefundLineRequest(int LineId, decimal Qty);
@@ -516,5 +590,5 @@ public record RefundLineRequest(int LineId, decimal Qty);
 /// <summary>Money taken against a customer's tab; the amount is what the customer handed over.</summary>
 public record TabPaymentRequest(string CustomerId, string? CustomerName, PaymentTender Tender, decimal Amount);
 
-/// <summary>Rates are fractions: 0.14 is 14%.</summary>
-public record PricingRequest(decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate);
+/// <summary>Rates are fractions: 0.14 is 14%. MaxCashierDiscountRate is how much of a bill a cashier may take off alone.</summary>
+public record PricingRequest(decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate, decimal MaxCashierDiscountRate = BranchPricing.DefaultMaxCashierDiscountRate);

@@ -38,6 +38,7 @@ function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
   })
   return columnHelper.columns([
     columnHelper.accessor('number', {
+      meta: { emphasis: 'primary' },
       id: 'number',
       header: t('creditNoteHash'),
       cell: (info) => (
@@ -61,6 +62,7 @@ function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
       },
     }),
     columnHelper.accessor('receiptNumber', {
+      meta: { align: 'end' },
       id: 'receipt',
       header: t('receiptHash'),
       cell: (info) => (
@@ -68,6 +70,7 @@ function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
       ),
     }),
     columnHelper.accessor('shiftId', {
+      meta: { align: 'end' },
       id: 'shift',
       header: t('shiftHash'),
       cell: (info) => {
@@ -105,6 +108,7 @@ function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
       cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor('lineCount', {
+      meta: { align: 'end' },
       id: 'lines',
       header: () => <div className='text-end'>{t('lines')}</div>,
       cell: (info) => (
@@ -112,6 +116,7 @@ function getRefundColumns({ t, locale }: { t: Translate; locale: string }) {
       ),
     }),
     columnHelper.accessor('amount', {
+      meta: { align: 'end' },
       id: 'amount',
       header: () => <div className='text-end'>{t('amount')}</div>,
       cell: (info) => (

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -47,7 +46,6 @@ export function ReceiveDialog({
       <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[760px]'>
         <DialogHeader>
           <DialogTitle>{t('receiveStock')}</DialogTitle>
-          <DialogDescription>{t('receiveStockDescription')}</DialogDescription>
         </DialogHeader>
         {open && (
           <ReceiveForm

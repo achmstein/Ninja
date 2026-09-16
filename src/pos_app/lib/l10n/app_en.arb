@@ -383,6 +383,8 @@
   "settleAction": "Settle",
   "settledBadge": "Settled",
   "discount": "Discount",
+  "apply": "Apply",
+  "remove": "Remove",
   "cancel": "Cancel",
   "close": "Close",
   "selectLines": "Select",
@@ -635,6 +637,14 @@
   "failedToUpdateAvailability": "Failed to update availability",
   "receiptDate": "Date",
   "receiptThanks": "Thank you!",
+  "taxNumber": "Tax no. {number}",
+  "@taxNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "toastSuccess": "Success",
   "toastError": "Something went wrong",
   "toastInfo": "Heads up",

@@ -10,6 +10,7 @@ import {
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useDirection } from '@/context/direction-provider'
+import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -147,7 +148,9 @@ export function RecipeSlotsEditor({
 
   return (
     <div className='space-y-3'>
-      <p className='text-muted-foreground text-xs'>{t('recipeSlotsHint')}</p>
+      <div className='flex justify-end'>
+        <InfoTip>{t('recipeSlotsHint')}</InfoTip>
+      </div>
 
       {draft.slots.map((slot) => (
         <SlotEditor
@@ -345,7 +348,6 @@ function DependsOnPicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-60 space-y-2 p-3' align='start'>
-        <p className='text-muted-foreground text-xs'>{t('dependsOnHint')}</p>
         {menu.groups.map((group) => (
           <label
             key={group.id}
@@ -724,7 +726,6 @@ export function DeductionPreview({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='mt-2 space-y-3 rounded-lg border p-3'>
-        <p className='text-muted-foreground text-xs'>{t('tryItHint')}</p>
         <div className='space-y-2'>
           {menu.groups.map((group) => {
             const inGroup = group.options

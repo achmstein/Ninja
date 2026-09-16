@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AttachExpenseReceiptData, AttachExpenseReceiptErrors, AttachExpenseReceiptResponses, GetExpenseCategoriesData, GetExpenseCategoriesErrors, GetExpenseCategoriesResponses, GetExpenseReceiptData, GetExpenseReceiptErrors, GetExpensesData, GetExpensesErrors, GetExpensesResponses, GetPartnerLedgerData, GetPartnerLedgerErrors, GetPartnerLedgerResponses, GetPartnersData, GetPartnersErrors, GetPartnersResponses, GetProfitData, GetProfitErrors, GetProfitResponses, GetProfitTrendData, GetProfitTrendErrors, GetProfitTrendResponses, GetRecurringExpensesData, GetRecurringExpensesErrors, GetRecurringExpensesResponses, GetSupplierLedgerData, GetSupplierLedgerErrors, GetSupplierLedgerResponses, GetSuppliersData, GetSuppliersErrors, GetSuppliersResponses, GetTillCategoriesData, GetTillCategoriesErrors, GetTillCategoriesResponses, GetTillPartnersData, GetTillPartnersErrors, GetTillPartnersResponses, GetTillSuppliersData, GetTillSuppliersErrors, GetTillSuppliersResponses, PostPartnerEntryData, PostPartnerEntryErrors, PostPartnerEntryResponses, PostSupplierEntryData, PostSupplierEntryErrors, PostSupplierEntryResponses, RecordExpenseData, RecordExpenseErrors, RecordExpenseResponses, RemoveExpenseReceiptData, RemoveExpenseReceiptErrors, RemoveExpenseReceiptResponses, SaveExpenseCategoryData, SaveExpenseCategoryErrors, SaveExpenseCategoryResponses, SavePartnerData, SavePartnerErrors, SavePartnerResponses, SaveRecurringExpenseData, SaveRecurringExpenseErrors, SaveRecurringExpenseResponses, SaveSupplierData, SaveSupplierErrors, SaveSupplierResponses, VoidExpenseData, VoidExpenseErrors, VoidExpenseResponses } from './types.gen';
+import type { AttachExpenseReceiptData, AttachExpenseReceiptErrors, AttachExpenseReceiptResponses, GetExpenseCategoriesData, GetExpenseCategoriesErrors, GetExpenseCategoriesResponses, GetExpenseReceiptData, GetExpenseReceiptErrors, GetExpensesData, GetExpensesErrors, GetExpensesResponses, GetPartnerLedgerData, GetPartnerLedgerErrors, GetPartnerLedgerResponses, GetPartnersData, GetPartnersErrors, GetPartnersResponses, GetProfitData, GetProfitErrors, GetProfitResponses, GetProfitTrendData, GetProfitTrendErrors, GetProfitTrendResponses, GetRecurringExpensesData, GetRecurringExpensesErrors, GetRecurringExpensesResponses, GetSupplierLedgerData, GetSupplierLedgerErrors, GetSupplierLedgerResponses, GetSuppliersData, GetSuppliersErrors, GetSuppliersResponses, GetTillCategoriesData, GetTillCategoriesErrors, GetTillCategoriesResponses, GetTillPartnersData, GetTillPartnersErrors, GetTillPartnersResponses, GetTillSuppliersData, GetTillSuppliersErrors, GetTillSuppliersResponses, PostPartnerEntryData, PostPartnerEntryErrors, PostPartnerEntryResponses, PostSupplierEntryData, PostSupplierEntryErrors, PostSupplierEntryResponses, RecordExpenseData, RecordExpenseErrors, RecordExpenseResponses, RemoveExpenseReceiptData, RemoveExpenseReceiptErrors, RemoveExpenseReceiptResponses, SaveExpenseCategoryData, SaveExpenseCategoryErrors, SaveExpenseCategoryResponses, SavePartnerData, SavePartnerErrors, SavePartnerResponses, SaveRecurringExpenseData, SaveRecurringExpenseErrors, SaveRecurringExpenseResponses, SaveSupplierData, SaveSupplierErrors, SaveSupplierResponses, ScanBillData, ScanBillErrors, ScanBillResponses, VoidExpenseData, VoidExpenseErrors, VoidExpenseResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -84,6 +84,22 @@ export const getExpenseReceipt = <ThrowOnError extends boolean = false>(options:
 export const attachExpenseReceipt = <ThrowOnError extends boolean = false>(options: Options<AttachExpenseReceiptData, ThrowOnError>): RequestResult<AttachExpenseReceiptResponses, AttachExpenseReceiptErrors, ThrowOnError> => (options.client ?? client).post<AttachExpenseReceiptResponses, AttachExpenseReceiptErrors, ThrowOnError>({
     ...formDataBodySerializer,
     url: '/api/finance/expenses/{id}/receipt',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Read the photo of a bill into a proposed expense
+ *
+ * The assistant reads the date, amount, category and vendor off the bill. Nothing is recorded: the form takes the proposal for the fields still empty, and the user saves.
+ */
+export const scanBill = <ThrowOnError extends boolean = false>(options: Options<ScanBillData, ThrowOnError>): RequestResult<ScanBillResponses, ScanBillErrors, ThrowOnError> => (options.client ?? client).post<ScanBillResponses, ScanBillErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    responseType: 'json',
+    url: '/api/finance/expenses/scan',
     ...options,
     headers: {
         'Content-Type': null,

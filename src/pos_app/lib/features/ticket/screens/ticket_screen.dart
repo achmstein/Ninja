@@ -41,6 +41,7 @@ import '../dialogs/move_target_dialog.dart';
 import '../dialogs/refund_dialog.dart';
 import '../dialogs/settle_dialog.dart';
 import '../dialogs/void_dialog.dart';
+import '../dialogs/discount_dialog.dart';
 import '../lines.dart';
 import '../../../core/utils/bidi.dart';
 
@@ -173,6 +174,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   Future<void> _void() async {
     final voided = await showVoidDialog(context, widget.ticketId);
     if (voided && mounted) context.go('/');
+  }
+
+  Future<void> _discount(TicketDetail ticket) async {
+    await showDiscountDialog(context, ticket);
   }
 
   Future<void> _refund(TicketDetail ticket) async {
@@ -395,6 +400,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     onToggleSelecting: _toggleSelecting,
                     onDiscard: _discard,
                     onVoid: () => _voidGuarded(activeSession),
+                    onDiscount: () => _discount(ticket),
                   ),
                   const FDivider(),
                   if (sessionLoading) ...[
@@ -587,6 +593,7 @@ class _Header extends StatelessWidget {
   final VoidCallback onToggleSelecting;
   final VoidCallback onDiscard;
   final VoidCallback onVoid;
+  final VoidCallback onDiscount;
 
   const _Header({
     required this.ticket,
@@ -599,6 +606,7 @@ class _Header extends StatelessWidget {
     required this.onToggleSelecting,
     required this.onDiscard,
     required this.onVoid,
+    required this.onDiscount,
   });
 
   @override
@@ -672,6 +680,17 @@ class _Header extends StatelessWidget {
               onPress: canSelect ? onToggleSelecting : null,
               prefix: const Icon(FIcons.listChecks, size: 20),
               child: Text(l10n.selectLines, style: theme.typography.base.forButton),
+            ),
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            height: 48,
+            child: FButton(
+              variant: ticket.discount > 0 ? FButtonVariant.secondary : FButtonVariant.outline,
+              mainAxisSize: MainAxisSize.min,
+              onPress: canSelect ? onDiscount : null,
+              prefix: const Icon(FIcons.badgePercent, size: 20),
+              child: Text(l10n.discount, style: theme.typography.base.forButton),
             ),
           ),
           // Both ways out live up here, deliberately far from the Settle
@@ -1010,9 +1029,10 @@ class _ActionBar extends StatelessWidget {
 
     // The bill's parts, when the branch adds any: menu money, service, VAT
     // — shown out of the price or added on top
-    final breakdown = ticket.serviceCharge > 0 || ticket.vat > 0
+    final breakdown = ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0
         ? [
             '${l10n.subtotal} ${money(context, ticket.subtotal)}',
+            if (ticket.discount > 0) '${l10n.discount} −${money(context, ticket.discount)}',
             if (ticket.serviceCharge > 0)
               '${l10n.serviceCharge(rateText(ticket.serviceChargeRate))} ${money(context, ticket.serviceCharge)}',
             if (ticket.vat > 0)

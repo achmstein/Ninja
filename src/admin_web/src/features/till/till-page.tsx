@@ -6,7 +6,7 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
 
-type TillTab = 'report' | 'shifts'
+type TillTab = 'report' | 'breakdown' | 'shifts'
 
 type TillPageProps = {
   tab: TillTab
@@ -37,7 +37,7 @@ export function TillPage({
   const range = { range: search.range, from: search.from, to: search.to }
   return (
     <Main className='flex flex-col gap-6'>
-      <PageHeader title={t('navTill')} description={t('tillSubtitle')}>
+      <PageHeader title={t('navTill')}>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <PageTabs
             value={tab}
@@ -46,6 +46,12 @@ export function TillPage({
                 value: 'report',
                 label: t('tillReport'),
                 to: '/till',
+                search: range,
+              },
+              {
+                value: 'breakdown',
+                label: t('tillBreakdown'),
+                to: '/till/breakdown',
                 search: range,
               },
               {

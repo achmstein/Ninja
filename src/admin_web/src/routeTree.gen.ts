@@ -37,6 +37,7 @@ import { Route as AuthenticatedTillTicketsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedTillShiftsRouteImport } from './routes/_authenticated/till/shifts'
 import { Route as AuthenticatedTillRefundsRouteImport } from './routes/_authenticated/till/refunds'
 import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authenticated/till/payments'
+import { Route as AuthenticatedTillBreakdownRouteImport } from './routes/_authenticated/till/breakdown'
 import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenticated/tables/print'
 import { Route as AuthenticatedRoomsPrintRouteImport } from './routes/_authenticated/rooms/print'
 import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
@@ -209,6 +210,12 @@ const AuthenticatedTillPaymentsRoute =
     path: '/till/payments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTillBreakdownRoute =
+  AuthenticatedTillBreakdownRouteImport.update({
+    id: '/till/breakdown',
+    path: '/till/breakdown',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTablesPrintRoute =
   AuthenticatedTablesPrintRouteImport.update({
     id: '/tables/print',
@@ -348,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/till/shifts': typeof AuthenticatedTillShiftsRoute
@@ -396,6 +404,7 @@ export interface FileRoutesByTo {
   '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/till/shifts': typeof AuthenticatedTillShiftsRoute
@@ -446,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
   '/_authenticated/rooms/print': typeof AuthenticatedRoomsPrintRoute
   '/_authenticated/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/_authenticated/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/_authenticated/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/_authenticated/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/_authenticated/till/shifts': typeof AuthenticatedTillShiftsRoute
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/rooms/history'
     | '/rooms/print'
     | '/tables/print'
+    | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
     | '/till/shifts'
@@ -544,6 +555,7 @@ export interface FileRouteTypes {
     | '/rooms/history'
     | '/rooms/print'
     | '/tables/print'
+    | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
     | '/till/shifts'
@@ -593,6 +605,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rooms/history'
     | '/_authenticated/rooms/print'
     | '/_authenticated/tables/print'
+    | '/_authenticated/till/breakdown'
     | '/_authenticated/till/payments'
     | '/_authenticated/till/refunds'
     | '/_authenticated/till/shifts'
@@ -827,6 +840,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTillPaymentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/till/breakdown': {
+      id: '/_authenticated/till/breakdown'
+      path: '/till/breakdown'
+      fullPath: '/till/breakdown'
+      preLoaderRoute: typeof AuthenticatedTillBreakdownRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tables/print': {
       id: '/_authenticated/tables/print'
       path: '/tables/print'
@@ -980,6 +1000,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
   AuthenticatedRoomsPrintRoute: typeof AuthenticatedRoomsPrintRoute
   AuthenticatedTablesPrintRoute: typeof AuthenticatedTablesPrintRoute
+  AuthenticatedTillBreakdownRoute: typeof AuthenticatedTillBreakdownRoute
   AuthenticatedTillPaymentsRoute: typeof AuthenticatedTillPaymentsRoute
   AuthenticatedTillRefundsRoute: typeof AuthenticatedTillRefundsRoute
   AuthenticatedTillShiftsRoute: typeof AuthenticatedTillShiftsRoute
@@ -1021,6 +1042,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
   AuthenticatedRoomsPrintRoute: AuthenticatedRoomsPrintRoute,
   AuthenticatedTablesPrintRoute: AuthenticatedTablesPrintRoute,
+  AuthenticatedTillBreakdownRoute: AuthenticatedTillBreakdownRoute,
   AuthenticatedTillPaymentsRoute: AuthenticatedTillPaymentsRoute,
   AuthenticatedTillRefundsRoute: AuthenticatedTillRefundsRoute,
   AuthenticatedTillShiftsRoute: AuthenticatedTillShiftsRoute,

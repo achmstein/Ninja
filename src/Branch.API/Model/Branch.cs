@@ -6,6 +6,12 @@ public class Branch
     public LocalizedText Name { get; set; } = new();
     public LocalizedText? Address { get; set; }
     public string? Phone { get; set; }
+
+    /// <summary>The tax registration number printed on receipts.</summary>
+    public string? TaxNumber { get; set; }
+
+    /// <summary>The line under the receipt, in both languages; the till's own thank-you when empty.</summary>
+    public LocalizedText? ReceiptFooter { get; set; }
     public bool IsActive { get; set; } = true;
     public int DisplayOrder { get; set; }
     public TimeOnly DayStartTime { get; set; } = new(17, 0);

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -159,7 +158,6 @@ function ExpenseForm({ onDone }: { onDone: () => void }) {
     <form onSubmit={submit} className='space-y-4'>
       <DialogHeader>
         <DialogTitle>{t('addExpense')}</DialogTitle>
-        <DialogDescription>{t('addExpenseDescription')}</DialogDescription>
       </DialogHeader>
 
       <div className='grid gap-3 sm:grid-cols-2'>

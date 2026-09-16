@@ -170,7 +170,7 @@ export function Dashboard() {
         description={
           dayWindow
             ? `${dateTime.format(dayWindow.from)} – ${dateTime.format(dayWindow.to)}`
-            : t('dashboardSubtitle')
+            : undefined
         }
       >
         {attention.length > 0 && (

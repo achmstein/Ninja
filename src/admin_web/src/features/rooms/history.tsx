@@ -137,6 +137,7 @@ export function SessionsHistory() {
         }),
         // Rounded quarter-hour steps, exactly what gets entered into the POS
         columnHelper.accessor((row) => sessionBilledHours(row), {
+          meta: { align: 'end' },
           id: 'billedHours',
           header: () => <div className='text-end'>{t('billedHours')}</div>,
           cell: ({ row }) => {

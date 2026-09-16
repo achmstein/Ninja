@@ -137,6 +137,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
         {stat(t('openingFloat'), money(shift.openingFloat))}
         {stat(t('ticketsSettled'), String(toNumber(shift.ticketsSettled)))}
         {stat(t('salesTotal'), money(shift.salesTotal))}
+        {stat(t('discount'), money(shift.discounts))}
         {stat(t('changeGiven'), money(shift.changeGiven))}
         {stat(t('payInsTotal'), money(shift.payInsTotal))}
         {stat(t('payOutsTotal'), money(shift.payOutsTotal))}

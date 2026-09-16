@@ -23,13 +23,17 @@ public static class CatalogMappers
             CatalogTypeId = item.CatalogTypeId,
             CatalogTypeName = item.CatalogType?.Name ?? new LocalizedText(),
             IsAvailable = item.IsAvailable,
-            IsOnOffer = item.IsOnOffer,
+            IsOnOffer = item.IsOfferActive,
             OfferPrice = item.OfferPrice,
             EffectivePrice = item.EffectivePrice,
+            OfferWeekdays = item.OfferWeekdays,
+            OfferFrom = Clock(item.OfferFrom),
+            OfferTo = Clock(item.OfferTo),
             IsPopular = item.IsPopular,
             PreparationTimeMinutes = item.PreparationTimeMinutes,
             DisplayOrder = item.DisplayOrder,
-            Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto()).ToList()
+            Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto()).ToList(),
+            Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable, item.OfferWeekdays, Clock(item.OfferFrom), Clock(item.OfferTo))
         };
     }
 
@@ -44,10 +48,13 @@ public static class CatalogMappers
                 Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto(outOfStockOptionIds)).ToList()
             };
 
-        var isOnOffer = branchOverride.IsOnOfferOverride ?? item.IsOnOffer;
+        // A branch overrides the switch and the price; the window is the item's
         var price = branchOverride.PriceOverride ?? item.Price;
         var offerPrice = branchOverride.OfferPriceOverride ?? item.OfferPrice;
-        var effectivePrice = isOnOffer && offerPrice.HasValue ? offerPrice.Value : price;
+        var isOnOffer = (branchOverride.IsOnOfferOverride ?? item.IsOnOffer)
+            && offerPrice.HasValue
+            && OfferWindow.Covers(item.OfferWeekdays, item.OfferFrom, item.OfferTo, LocalClock.Now);
+        var effectivePrice = isOnOffer ? offerPrice!.Value : price;
 
         return new CatalogItemDto
         {
@@ -67,13 +74,18 @@ public static class CatalogMappers
             IsOnOffer = isOnOffer,
             OfferPrice = offerPrice,
             EffectivePrice = effectivePrice,
+            OfferWeekdays = item.OfferWeekdays,
+            OfferFrom = Clock(item.OfferFrom),
+            OfferTo = Clock(item.OfferTo),
             IsPopular = item.IsPopular,
             PreparationTimeMinutes = item.PreparationTimeMinutes,
             DisplayOrder = item.DisplayOrder,
             Customizations = item.Customizations.OrderBy(c => c.DisplayOrder).Select(c => c.ToDto(outOfStockOptionIds)).ToList(),
-            Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable)
+            Base = new CatalogItemBaseDto(item.Price, item.OfferPrice, item.IsOnOffer, item.IsAvailable, item.OfferWeekdays, Clock(item.OfferFrom), Clock(item.OfferTo))
         };
     }
+
+    private static string? Clock(TimeOnly? time) => time?.ToString("HH:mm");
 
     public static List<CatalogItemDto> ToDtoList(this IEnumerable<CatalogItem> items, string? baseUrl = null)
     {

@@ -303,6 +303,43 @@ class _DemoTicketsRepository implements TicketsRepository {
     );
   }
 
+  @override
+  Future<void> applyDiscount(int id, {double? rate, double? amount, required String reason, String? requestId}) async {
+    final ticket = _tickets[id];
+    if (ticket == null) throw const TicketNotFound();
+    if (!ticket.isOpen) throw const SalesException('Only an open ticket can be discounted.');
+    if (reason.trim().isEmpty) throw const SalesException('A discount needs a reason.');
+    if ((rate == null) == (amount == null)) throw const SalesException('A discount is a percent or an amount, not both.');
+    final money = rate != null ? (ticket.subtotal * rate * 100).roundToDouble() / 100 : amount!;
+    if (money > ticket.subtotal) throw const SalesException('A discount cannot exceed the bill.');
+    _tickets[id] = _withDiscount(ticket, discount: money, rate: rate, reason: reason.trim());
+  }
+
+  @override
+  Future<void> removeDiscount(int id) async {
+    final ticket = _tickets[id];
+    if (ticket == null) throw const TicketNotFound();
+    _tickets[id] = _withDiscount(ticket, discount: 0, rate: null, reason: null);
+  }
+
+  static TicketDetail _withDiscount(TicketDetail t, {required double discount, double? rate, String? reason}) =>
+      TicketDetail(
+        id: t.id,
+        type: t.type,
+        status: t.status,
+        tableId: t.tableId,
+        locationName: t.locationName,
+        label: t.label,
+        openedAt: t.openedAt,
+        subtotal: t.subtotal,
+        discount: discount,
+        discountRate: rate,
+        discountReason: reason,
+        discountBy: reason == null ? null : 'Demo Cashier',
+        total: t.subtotal - discount,
+        lines: t.lines,
+      );
+
   int _nextRefund = 7;
 
   int _nextTabPayment = 1;

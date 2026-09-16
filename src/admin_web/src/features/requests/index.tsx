@@ -115,7 +115,6 @@ export function ServiceRequests() {
     <Main className='flex flex-col gap-4'>
       <PageHeader
         title={t('requests')}
-        description={t('requestsSubtitle')}
         badge={
           all.length > 0 && (
             <Badge variant='destructive' className='h-6 tabular-nums'>
@@ -179,9 +178,6 @@ export function ServiceRequests() {
         <EmptyState
           icon={CheckCircle2}
           title={t('allClear')}
-          description={
-            search.type ? t('noRequestsOfType') : t('noPendingRequests')
-          }
         />
       ) : (
         <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3'>

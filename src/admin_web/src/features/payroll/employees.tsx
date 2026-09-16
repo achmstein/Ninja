@@ -70,6 +70,7 @@ export function Employees() {
           ),
         }),
         columnHelper.display({
+          meta: { align: 'end' },
           id: 'pay',
           header: t('pay'),
           cell: ({ row }) => (
@@ -79,6 +80,7 @@ export function Employees() {
           ),
         }),
         columnHelper.accessor((row) => toNumber(row.balance), {
+          meta: { align: 'end' },
           id: 'balance',
           header: t('owed'),
           cell: ({ row }) => {
@@ -138,7 +140,6 @@ export function Employees() {
       <Main className='flex flex-col gap-6'>
         <PageHeader
           title={t('navPayrollEmployees')}
-          description={t('employeesSubtitle')}
           actions={
             <Button onClick={() => open(undefined, true)}>
               <UserPlus className='me-2 h-4 w-4' />
@@ -168,7 +169,6 @@ export function Employees() {
           <EmptyState
             icon={Users}
             title={t('noEmployees')}
-            description={t('noEmployeesHint')}
             action={
               <Button onClick={() => open(undefined, true)}>
                 <UserPlus className='me-2 h-4 w-4' />

@@ -142,6 +142,7 @@ class ShiftReport extends StatelessWidget {
             stat(l10n.openingFloat, money(context, shift.openingFloat)),
             stat(l10n.ticketsSettled, '${shift.ticketsSettled}'),
             stat(l10n.salesTotal, money(context, shift.salesTotal)),
+            stat(l10n.discount, money(context, shift.discounts)),
           ],
           [
             stat(l10n.changeGiven, money(context, shift.changeGiven)),

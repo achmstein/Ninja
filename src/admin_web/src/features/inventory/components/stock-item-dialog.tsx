@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { type StockItemView } from '@/api/inventory'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -55,11 +55,6 @@ export function StockItemDialog({
           <DialogTitle>
             {isEditing ? t('editStockItem') : t('addStockItem')}
           </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? t('editStockItemDescription')
-              : t('addStockItemDescription')}
-          </DialogDescription>
         </DialogHeader>
         {/* Keyed so form state resets per item; closing unmounts and resets */}
         <StockItemForm
@@ -216,16 +211,13 @@ function StockItemForm({
               />
             </div>
           </div>
-          <p className='text-muted-foreground text-xs'>{t('packHint')}</p>
         </div>
 
-        <div className='flex items-center justify-between rounded-lg border p-3'>
-          <div className='space-y-0.5 pe-4'>
-            <Label className='text-sm'>{t('autoSoldOut')}</Label>
-            <p className='text-muted-foreground text-xs'>
-              {t('autoSoldOutHint')}
-            </p>
-          </div>
+        <div className='flex items-center justify-between'>
+          <Label className='flex items-center gap-1 text-sm'>
+            {t('autoSoldOut')}
+            <InfoTip>{t('autoSoldOutHint')}</InfoTip>
+          </Label>
           <Switch
             checked={form.autoSoldOut}
             onCheckedChange={(checked) =>

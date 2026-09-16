@@ -4,8 +4,65 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, createBundle, createCategory, createCustomization, createItem, deleteBundle, deleteBundlePicture, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, getAvailableItems, getBranchOverrides, getBundle, getBundlePicture, getBundles, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, type Options, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, saveUserPreferencesForCustomer, setBranchItemOverride, setItemOffer, toggleBundleActive, toggleItemAvailability, updateBundle, updateCategory, updateCustomization, updateItem, uploadBundlePicture, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateBundleData, CreateBundleResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, DeleteBundleData, DeleteBundlePictureData, DeleteBundlePictureResponse, DeleteBundleResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetBundleData, GetBundlePictureData, GetBundleResponse, GetBundlesData, GetBundlesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, ToggleBundleActiveData, ToggleBundleActiveResponse, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateBundleData, UpdateBundleResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UploadBundlePictureData, UploadBundlePictureError, UploadBundlePictureResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, createBundle, createCategory, createCustomization, createItem, deleteBundle, deleteBundlePicture, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, getAvailableItems, getBranchOverrides, getBundle, getBundlePicture, getBundles, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, localizeMenuText, type Options, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, suggestCustomizations, toggleBundleActive, toggleItemAvailability, updateBundle, updateCategory, updateCustomization, updateItem, uploadBundlePicture, uploadItemPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateBundleData, CreateBundleResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, DeleteBundleData, DeleteBundlePictureData, DeleteBundlePictureResponse, DeleteBundleResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetBundleData, GetBundlePictureData, GetBundleResponse, GetBundlesData, GetBundlesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleBundleActiveData, ToggleBundleActiveResponse, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateBundleData, UpdateBundleResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UploadBundlePictureData, UploadBundlePictureError, UploadBundlePictureResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+
+/**
+ * Fill in what a menu text is missing
+ *
+ * Given a name in English or Arabic (or both), the assistant fills in the other language of the name and description, writes a description when asked, and suggests a category when asked. Nothing is saved (Admin only).
+ */
+export const localizeMenuTextMutation = (options?: Partial<Options<LocalizeMenuTextData>>): UseMutationOptions<LocalizeMenuTextResponse, AxiosError<LocalizeMenuTextError>, Options<LocalizeMenuTextData>> => {
+    const mutationOptions: UseMutationOptions<LocalizeMenuTextResponse, AxiosError<LocalizeMenuTextError>, Options<LocalizeMenuTextData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await localizeMenuText({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Propose customization groups for a menu item
+ *
+ * The assistant proposes the option groups (size, sugar, extras…) a menu item is ordered with, in the menu's own wording. The item is sent as the form has it, saved or not; groups it already has are left out. Nothing is saved: add the ones you want through the customization endpoints (Admin only).
+ */
+export const suggestCustomizationsMutation = (options?: Partial<Options<SuggestCustomizationsData>>): UseMutationOptions<SuggestCustomizationsResponse2, AxiosError<SuggestCustomizationsError>, Options<SuggestCustomizationsData>> => {
+    const mutationOptions: UseMutationOptions<SuggestCustomizationsResponse2, AxiosError<SuggestCustomizationsError>, Options<SuggestCustomizationsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await suggestCustomizations({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Read a menu photo into proposed categories and items
+ *
+ * The assistant transcribes a photo of a menu — sections, items, prices, both languages — matching sections to existing categories and flagging items already on the menu. Nothing is saved: review the proposal, then create what you keep (Admin only).
+ */
+export const scanMenuMutation = (options?: Partial<Options<ScanMenuData>>): UseMutationOptions<ScanMenuResponse, AxiosError<ScanMenuError>, Options<ScanMenuData>> => {
+    const mutationOptions: UseMutationOptions<ScanMenuResponse, AxiosError<ScanMenuError>, Options<ScanMenuData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await scanMenu({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {

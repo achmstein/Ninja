@@ -23,7 +23,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -186,7 +185,6 @@ export function ReceiptReviewSheet({
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewScan')}
           </SheetTitle>
-          <SheetDescription>{t('reviewScanDescription')}</SheetDescription>
         </SheetHeader>
 
         <div className='space-y-4 p-4'>

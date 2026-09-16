@@ -625,6 +625,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get discount => 'الخصم';
 
   @override
+  String get apply => 'تطبيق';
+
+  @override
+  String get remove => 'شيل';
+
+  @override
   String get cancel => 'إلغاء';
 
   @override
@@ -1182,6 +1188,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get receiptThanks => 'شكراً لحضرتك!';
+
+  @override
+  String taxNumber(String number) {
+    return 'رقم ضريبي $number';
+  }
 
   @override
   String get toastSuccess => 'تم بنجاح';

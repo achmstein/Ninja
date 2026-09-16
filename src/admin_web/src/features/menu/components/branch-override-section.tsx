@@ -164,9 +164,6 @@ function OverrideForm({
 
   return (
     <form onSubmit={save} className='space-y-3'>
-      <p className='text-muted-foreground text-sm'>
-        {t('branchOverrideHint', { branch: branchName })}
-      </p>
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-2'>
           <Label htmlFor='override-price'>

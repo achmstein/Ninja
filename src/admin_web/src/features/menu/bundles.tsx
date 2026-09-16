@@ -151,7 +151,7 @@ export function BundleDeals() {
                   />
                   <div className='flex flex-1 flex-col gap-2 p-4'>
                     <div className='flex items-start justify-between gap-2'>
-                      <h2 className='flex min-w-0 items-baseline gap-2 font-semibold'>
+                      <h2 className='flex min-w-0 items-baseline gap-2 text-sm font-semibold'>
                         <span className='truncate'>
                           {localized(bundle.name)}
                         </span>

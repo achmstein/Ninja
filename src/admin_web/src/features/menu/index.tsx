@@ -340,7 +340,6 @@ export function MenuManagement() {
             <Button
               variant='outline'
               onClick={() => setTrackOpen(true)}
-              title={t('trackItemsDescription')}
             >
               <CookingPot className='me-2 h-4 w-4' />
               {t('trackItems')}
@@ -450,7 +449,7 @@ export function MenuManagement() {
                                 label={t('dragToReorder')}
                               />
                             )}
-                            <h2 className='text-base font-semibold'>
+                            <h2 className='text-sm font-semibold'>
                               {category
                                 ? localized(category.name)
                                 : t('uncategorized')}

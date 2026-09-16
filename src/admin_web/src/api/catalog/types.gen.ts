@@ -59,6 +59,10 @@ export type CatalogItem = {
     preparationTimeMinutes?: null | number | string;
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
+    isOfferActive?: boolean;
     effectivePrice?: number | string;
     isPopular?: boolean;
     displayOrder?: number | string;
@@ -70,6 +74,9 @@ export type CatalogItemBaseDto = {
     offerPrice: null | number | string;
     isOnOffer: boolean;
     isAvailable: boolean;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
 };
 
 export type CatalogItemDto = {
@@ -85,6 +92,9 @@ export type CatalogItemDto = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
     effectivePrice?: number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
     isPopular?: boolean;
     preparationTimeMinutes?: null | number | string;
     displayOrder?: number | string;
@@ -258,6 +268,9 @@ export type SetBundleActiveRequest = {
 export type SetItemOfferRequest = {
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
 };
 
 export type SuggestCustomizationsRequest = {
@@ -281,6 +294,9 @@ export type UpdateCatalogItemRequest = {
     isAvailable?: boolean;
     isOnOffer?: boolean;
     offerPrice?: null | number | string;
+    offerWeekdays?: null | number | string;
+    offerFrom?: null | string;
+    offerTo?: null | string;
     isPopular?: boolean;
     preparationTimeMinutes?: null | number | string;
 };

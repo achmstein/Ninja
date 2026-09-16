@@ -3,7 +3,6 @@ import { RefreshCw } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -19,7 +18,6 @@ interface AdjustPointsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   userId: string
-  userName?: string
   currentBalance: number
 }
 
@@ -27,7 +25,6 @@ export function AdjustPointsDialog({
   open,
   onOpenChange,
   userId,
-  userName,
   currentBalance,
 }: AdjustPointsDialogProps) {
   const t = useT()
@@ -81,11 +78,6 @@ export function AdjustPointsDialog({
               <RefreshCw className='h-5 w-5' />
               {t('adjustPoints')}
             </DialogTitle>
-            <DialogDescription>
-              {t('adjustPointsDescription', {
-                name: userName || t('thisAccount'),
-              })}
-            </DialogDescription>
           </DialogHeader>
 
           <div className='grid gap-4 py-4'>

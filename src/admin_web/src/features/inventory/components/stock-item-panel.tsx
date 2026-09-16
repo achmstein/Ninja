@@ -110,7 +110,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
           </Button>
           <div className='min-w-0'>
             <div className='flex min-w-0 items-center gap-2'>
-              <h2 className='truncate font-semibold'>
+              <h2 className='truncate text-sm font-semibold'>
                 {localized(level.name)}
               </h2>
               {level.autoSoldOut && (

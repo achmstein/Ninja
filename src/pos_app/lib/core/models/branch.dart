@@ -5,6 +5,12 @@ class Branch {
   final LocalizedText name;
   final LocalizedText? address;
   final String? phone;
+
+  /// Printed on receipts, when the branch has one
+  final String? taxNumber;
+
+  /// The line under the receipt; the till's own thank-you when empty
+  final LocalizedText? receiptFooter;
   final bool isActive;
   final int displayOrder;
   final String dayStartTime;
@@ -17,6 +23,8 @@ class Branch {
     required this.name,
     this.address,
     this.phone,
+    this.taxNumber,
+    this.receiptFooter,
     required this.isActive,
     required this.displayOrder,
     this.dayStartTime = '17:00',
@@ -31,6 +39,8 @@ class Branch {
       name: LocalizedText.parse(json['name']),
       address: LocalizedText.parseNullable(json['address']),
       phone: json['phone'] as String?,
+      taxNumber: json['taxNumber'] as String?,
+      receiptFooter: LocalizedText.parseNullable(json['receiptFooter']),
       isActive: json['isActive'] as bool? ?? true,
       displayOrder: json['displayOrder'] as int? ?? 0,
       dayStartTime: json['dayStartTime'] as String? ?? '17:00',

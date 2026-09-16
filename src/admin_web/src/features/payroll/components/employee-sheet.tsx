@@ -11,6 +11,8 @@ import { formatDay } from '@/lib/business-day'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { Section } from '@/components/section'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +26,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -74,11 +75,6 @@ export function EmployeeSheet({
           <SheetTitle>
             {isNew ? t('addEmployee') : (employee.data?.name ?? '…')}
           </SheetTitle>
-          <SheetDescription>
-            {isNew
-              ? t('addEmployeeDescription')
-              : employee.data?.jobTitle || t('employee')}
-          </SheetDescription>
         </SheetHeader>
 
         {isNew ? (
@@ -94,10 +90,10 @@ export function EmployeeSheet({
                 onSaved={() => {}}
               />
             </Section>
-            <Section title={t('pay')} hint={t('payTermsHint')}>
+            <Section title={t('pay')}>
               <PayTermsSection employee={employee.data} />
             </Section>
-            <Section title={t('ledger')} hint={t('ledgerHint')}>
+            <Section title={t('ledger')}>
               <LedgerSection employee={employee.data} />
             </Section>
             <Section title={t('employment')}>
@@ -116,25 +112,6 @@ export function EmployeeSheet({
   )
 }
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className='space-y-3 border-b p-4'>
-      <div>
-        <h3 className='text-sm font-semibold'>{title}</h3>
-        {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
-      </div>
-      {children}
-    </section>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Who they are (and, for a new hire, what they start on)
@@ -381,9 +358,7 @@ function EmployeeForm({
             required
           />
         </div>
-        <p className='text-muted-foreground self-end text-xs'>
-          {t('paidDaysOffHint')}
-        </p>
+        <InfoTip className='self-end'>{t('paidDaysOffHint')}</InfoTip>
       </div>
 
       <div className='flex justify-end'>
@@ -577,11 +552,6 @@ function EmploymentSection({ employee }: { employee: EmployeeView }) {
         title={employee.isActive ? t('markLeftQuestion') : t('rehireQuestion')}
         desc={
           <div className='space-y-3'>
-            <p>
-              {employee.isActive
-                ? t('markLeftDescription')
-                : t('rehireDescription')}
-            </p>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='employment-date'>
                 {employee.isActive ? t('lastDay') : t('startedOn')}

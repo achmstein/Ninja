@@ -170,6 +170,8 @@ export type OrderSummary = {
     userId?: null | string;
     guestPhone?: null | string;
     ratingValue?: null | number | string;
+    customerNote?: null | string;
+    items?: null | Array<Orderitem>;
 };
 
 export type PaginatedResultOfOrderSummary = {
@@ -686,6 +688,8 @@ export type GetAllOrdersData = {
         fromDate?: string;
         toDate?: string;
         sessionId?: number | string;
+        search?: string;
+        sort?: string;
         /**
          * The API version, in the format 'major.minor'.
          */

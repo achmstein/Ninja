@@ -317,7 +317,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                           <GripVertical className='h-4 w-4' />
                         </button>
                         <div className='min-w-0'>
-                          <h4 className='truncate text-sm font-semibold'>
+                          <h4 className='truncate text-sm font-medium'>
                             {localized(group.name)}
                           </h4>
                           <p className='text-muted-foreground text-xs'>

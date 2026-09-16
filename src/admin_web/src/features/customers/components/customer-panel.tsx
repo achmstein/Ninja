@@ -21,6 +21,7 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Section } from '@/components/section'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -143,7 +144,7 @@ function CustomerHub({
           </Avatar>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
-              <h2 className='truncate font-semibold'>{name}</h2>
+              <h2 className='truncate text-sm font-semibold'>{name}</h2>
               {!customer.enabled && (
                 <Badge variant='destructive'>{t('disabled')}</Badge>
               )}
@@ -207,11 +208,6 @@ function CustomerHub({
         onOpenChange={setToggleOpen}
         destructive={customer.enabled}
         title={customer.enabled ? t('disableAccount') : t('enableAccount')}
-        desc={
-          customer.enabled
-            ? t('disableAccountDescription', { name })
-            : t('enableAccountDescription', { name })
-        }
         confirmText={
           customer.enabled ? t('disableAccount') : t('enableAccount')
         }
@@ -222,30 +218,6 @@ function CustomerHub({
   )
 }
 
-function Section({
-  icon: Icon,
-  title,
-  actions,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  actions?: React.ReactNode
-  children: React.ReactNode
-}) {
-  return (
-    <section className='space-y-3 border-b p-4'>
-      <div className='flex items-center justify-between gap-2'>
-        <h3 className='flex items-center gap-2 text-sm font-semibold'>
-          <Icon className='text-muted-foreground h-4 w-4' />
-          {title}
-        </h3>
-        {actions && <div className='flex flex-wrap gap-2'>{actions}</div>}
-      </div>
-      {children}
-    </section>
-  )
-}
 
 const tierPointsRequired: Record<LoyaltyTier, number> = {
   bronze: 0,
@@ -259,7 +231,6 @@ const tierOrder: LoyaltyTier[] = ['bronze', 'silver', 'gold', 'platinum']
 function LoyaltySection({ customer }: { customer: Customer }) {
   const t = useT()
   const locale = useLocale()
-  const name = getCustomerDisplayName(customer)
   const [earnOpen, setEarnOpen] = useState(false)
   const [adjustOpen, setAdjustOpen] = useState(false)
   const enrol = useEnrolCustomer()
@@ -389,13 +360,11 @@ function LoyaltySection({ customer }: { customer: Customer }) {
         open={earnOpen}
         onOpenChange={setEarnOpen}
         userId={customer.id}
-        userName={name}
       />
       <AdjustPointsDialog
         open={adjustOpen}
         onOpenChange={setAdjustOpen}
         userId={customer.id}
-        userName={name}
         currentBalance={member.pointsBalance}
       />
     </Section>
@@ -613,7 +582,7 @@ function RecentOrders({
   return (
     <section className='space-y-2 p-4'>
       <div className='flex items-center justify-between'>
-        <h3 className='text-sm font-semibold'>{t('recentOrders')}</h3>
+        <h3 className='text-sm font-medium'>{t('recentOrders')}</h3>
         <Button variant='link' size='sm' className='h-auto p-0' asChild>
           <Link to='/orders/history' search={{ q: name }}>
             {t('viewAllOrders')}

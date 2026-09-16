@@ -36,9 +36,11 @@ public record PricingRules
 /// <summary>
 /// What a ticket comes to under a set of rules, rounded to piastres. On a
 /// settled ticket these are the frozen figures the receipt was printed with.
+/// <see cref="Subtotal"/> is the menu money before the bill discount.
 /// </summary>
 public record Bill(
     decimal Subtotal,
+    decimal Discount,
     decimal ServiceCharge,
     decimal Vat,
     decimal Total,

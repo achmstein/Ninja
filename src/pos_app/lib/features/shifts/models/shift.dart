@@ -109,6 +109,9 @@ class ShiftView {
   final List<TenderTotal> tenderTotals;
   final double changeGiven;
   final double refundsTotal;
+
+  /// Bill, line and loyalty discounts on the shift's tickets, as a positive number
+  final double discounts;
   final double cashRefunds;
   final double payInsTotal;
   final double payOutsTotal;
@@ -135,6 +138,7 @@ class ShiftView {
     this.tenderTotals = const [],
     this.changeGiven = 0,
     this.refundsTotal = 0,
+    this.discounts = 0,
     this.cashRefunds = 0,
     this.payInsTotal = 0,
     this.payOutsTotal = 0,
@@ -172,6 +176,7 @@ class ShiftView {
           .toList(),
       changeGiven: toNumber(json['changeGiven']),
       refundsTotal: toNumber(json['refundsTotal']),
+      discounts: toNumber(json['discounts']),
       cashRefunds: toNumber(json['cashRefunds']),
       payInsTotal: toNumber(json['payInsTotal']),
       payOutsTotal: toNumber(json['payOutsTotal']),

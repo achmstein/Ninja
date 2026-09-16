@@ -2,11 +2,11 @@ import { Trash2 } from 'lucide-react'
 import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { Section } from '@/components/section'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -63,11 +63,6 @@ export function ItemSheet({
           <SheetTitle>
             {item ? localized(item.name) : t('addMenuItem')}
           </SheetTitle>
-          <SheetDescription>
-            {item
-              ? localized(item.catalogTypeName) || t('uncategorized')
-              : t('addMenuItemDescription')}
-          </SheetDescription>
         </SheetHeader>
 
         {state?.mode === 'create' && (
@@ -97,11 +92,10 @@ export function ItemSheet({
             </Section>
             <Section
               title={t('customizations')}
-              hint={t('customizationsSectionHint')}
             >
               <CustomizationsSection item={item} />
             </Section>
-            <Section title={t('stock')} hint={t('stockRuleHint')}>
+            <Section title={t('stock')}>
               <StockRuleSection item={item} />
             </Section>
             <Section title={t('thisBranch')}>
@@ -125,22 +119,3 @@ export function ItemSheet({
   )
 }
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className='space-y-3 border-b p-4'>
-      <div>
-        <h3 className='text-sm font-semibold'>{title}</h3>
-        {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
-      </div>
-      {children}
-    </section>
-  )
-}

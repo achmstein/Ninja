@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Ban,
+  BadgePercent,
   Check,
   Clock,
   ListChecks,
@@ -58,6 +59,7 @@ import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
 import { RefundDialog } from './refund-dialog'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { VoidTicketDialog } from './void-dialog'
+import { DiscountDialog } from './discount-dialog'
 
 const percent = (rate: number | string | undefined) =>
   Math.round(toNumber(rate) * 10000) / 100
@@ -215,6 +217,7 @@ export function TicketScreen({
   const [sessionGuardOpen, setSessionGuardOpen] = useState(false)
   const [voidOpen, setVoidOpen] = useState(false)
   const [voidGuardOpen, setVoidGuardOpen] = useState(false)
+  const [discountOpen, setDiscountOpen] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [settleOutcome, setSettleOutcome] = useState<SettleOutcome | null>(null)
@@ -599,6 +602,15 @@ export function TicketScreen({
               <ListChecks className='size-5' />
               <span className='hidden sm:inline'>{t('selectLines')}</span>
             </Button>
+            <Button
+              variant={toNumber(ticket.discount) > 0 ? 'secondary' : 'outline'}
+              className='h-12 gap-2 px-3'
+              disabled={lines.length === 0}
+              onClick={() => setDiscountOpen(true)}
+            >
+              <BadgePercent className='size-5' />
+              <span className='hidden sm:inline'>{t('discount')}</span>
+            </Button>
             {/* Both ways out live up here, deliberately far from the Settle
                 button in the bottom bar, so neither can be fat-fingered.
                 Nothing on the ticket yet means nothing to audit, so any
@@ -829,9 +841,11 @@ export function TicketScreen({
             </div>
             {/* The bill's parts, when the branch adds any: menu money,
                 service, VAT — shown out of the price or added on top */}
-            {(toNumber(ticket.serviceCharge) > 0 || toNumber(ticket.vat) > 0) && (
+            {(toNumber(ticket.discount) > 0 || toNumber(ticket.serviceCharge) > 0 || toNumber(ticket.vat) > 0) && (
               <div className='text-muted-foreground truncate text-xs tabular-nums'>
                 {t('subtotal')} {money(ticket.subtotal)}
+                {toNumber(ticket.discount) > 0 &&
+                  ` · ${t('discount')} −${money(ticket.discount)}`}
                 {toNumber(ticket.serviceCharge) > 0 &&
                   ` · ${t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} ${money(ticket.serviceCharge)}`}
                 {toNumber(ticket.vat) > 0 &&
@@ -1007,6 +1021,11 @@ export function TicketScreen({
         ticketId={ticketId}
         open={voidOpen}
         onOpenChange={setVoidOpen}
+      />
+      <DiscountDialog
+        ticket={ticket}
+        open={discountOpen}
+        onOpenChange={setDiscountOpen}
       />
       {/* The sale pad's own picker, reused: an account, or just a name —
           with the room's people first when this is a room's bill */}

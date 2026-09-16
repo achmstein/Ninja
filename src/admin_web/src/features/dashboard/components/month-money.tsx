@@ -42,7 +42,7 @@ export function MonthMoney() {
   return (
     <section className='flex flex-col gap-3'>
       <div className='flex items-baseline justify-between gap-4'>
-        <h2 className='text-lg font-semibold tracking-tight'>
+        <h2 className='text-sm font-semibold'>
           {t('monthMoney', { month: monthLabel })}
         </h2>
         <Link

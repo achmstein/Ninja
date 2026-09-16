@@ -85,7 +85,7 @@ export function BranchesManagement() {
                   <div className='flex items-start justify-between'>
                     <div>
                       <div className='flex items-center gap-2'>
-                        <h3 className='text-lg font-semibold'>
+                        <h3 className='text-sm font-medium'>
                           {localized(branch.name)}
                         </h3>
                         <Badge

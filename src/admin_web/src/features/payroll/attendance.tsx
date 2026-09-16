@@ -16,6 +16,7 @@ import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -201,7 +202,13 @@ export function Attendance() {
     <Main className='flex flex-col gap-6'>
       <PageHeader
         title={t('navPayrollAttendance')}
-        description={t('attendanceSubtitle')}
+        badge={
+          <InfoTip>
+            <p>{t('attendanceLegend')}</p>
+            <p className='mt-2'>{t('monthlyGridHint')}</p>
+            <p className='mt-2'>{t('overtimeModeHint')}</p>
+          </InfoTip>
+        }
         actions={
           rows.length > 0 ? (
             <div className='flex gap-2'>
@@ -255,7 +262,6 @@ export function Attendance() {
         <EmptyState
           icon={CalendarCheck}
           title={t('noEmployees')}
-          description={t('noEmployeesHint')}
           action={
             <Button asChild>
               <Link to='/payroll/employees' search={{ new: true }}>
@@ -415,9 +421,6 @@ export function Attendance() {
         </div>
       )}
 
-      <p className='text-muted-foreground text-xs'>
-        {t('attendanceLegend')} {t('monthlyGridHint')} {t('overtimeModeHint')}
-      </p>
     </Main>
   )
 }

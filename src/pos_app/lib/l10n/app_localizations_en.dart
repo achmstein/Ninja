@@ -622,6 +622,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discount => 'Discount';
 
   @override
+  String get apply => 'Apply';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -1182,6 +1188,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receiptThanks => 'Thank you!';
+
+  @override
+  String taxNumber(String number) {
+    return 'Tax no. $number';
+  }
 
   @override
   String get toastSuccess => 'Success';

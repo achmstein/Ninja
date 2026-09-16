@@ -24,7 +24,6 @@ export function MenuPage({ tab, actions, fixed, children }: MenuPageProps) {
     <Main fixed={fixed} className={cn('flex flex-col gap-4')}>
       <PageHeader
         title={t('menu')}
-        description={t('menuSubtitle')}
         actions={actions}
       >
         <PageTabs

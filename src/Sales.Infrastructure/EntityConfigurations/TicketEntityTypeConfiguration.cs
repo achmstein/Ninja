@@ -40,6 +40,13 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(t => t.VoidReason).HasMaxLength(300);
         builder.Property(t => t.ChangeGiven).HasPrecision(18, 2);
 
+        builder.Ignore(t => t.HasDiscount);
+
+        builder.Property(t => t.Discount).HasPrecision(18, 2);
+        builder.Property(t => t.DiscountRate).HasPrecision(5, 4);
+        builder.Property(t => t.DiscountReason).HasMaxLength(300);
+        builder.Property(t => t.DiscountBy).HasMaxLength(64);
+
         // The bill as settled — frozen figures and the rates behind them
         builder.Property(t => t.Subtotal).HasPrecision(18, 2);
         builder.Property(t => t.ServiceCharge).HasPrecision(18, 2);

@@ -67,6 +67,10 @@ const nothingSuggested: Suggested = {
   category: false,
 }
 
+// Sunday first, like DayOfWeek on the server; a Sunday to name them from
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const
+const A_SUNDAY = Date.UTC(2023, 0, 1)
+
 type FormState = {
   name: LocalizedValue
   description: LocalizedValue
@@ -75,6 +79,10 @@ type FormState = {
   isPopular: boolean
   isOnOffer: boolean
   offerPrice: string
+  /** A bit per weekday, Sunday first; 0 is every day */
+  offerWeekdays: number
+  offerFrom: string
+  offerTo: string
   preparationTimeMinutes: string
 }
 
@@ -139,6 +147,11 @@ export function ItemDetailsForm({
   onCancel,
 }: ItemDetailsFormProps) {
   const t = useT()
+  const locale = useLocale()
+  const weekdayName = (day: number) =>
+    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(
+      new Date(A_SUNDAY + day * 86_400_000)
+    )
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const isEditing = !!item
@@ -155,6 +168,9 @@ export function ItemDetailsForm({
     isPopular: item?.isPopular ?? false,
     isOnOffer: base?.isOnOffer ?? false,
     offerPrice: base?.offerPrice != null ? String(Number(base.offerPrice)) : '',
+    offerWeekdays: Number(base?.offerWeekdays ?? 0),
+    offerFrom: base?.offerFrom ?? '',
+    offerTo: base?.offerTo ?? '',
     preparationTimeMinutes:
       item?.preparationTimeMinutes != null
         ? String(Number(item.preparationTimeMinutes))
@@ -292,6 +308,9 @@ export function ItemDetailsForm({
       isPopular: form.isPopular,
       isOnOffer: form.isOnOffer,
       offerPrice: form.isOnOffer ? parseFloat(form.offerPrice) : null,
+      offerWeekdays: form.offerWeekdays || null,
+      offerFrom: form.offerFrom && form.offerTo ? form.offerFrom : null,
+      offerTo: form.offerFrom && form.offerTo ? form.offerTo : null,
       preparationTimeMinutes: form.preparationTimeMinutes
         ? parseInt(form.preparationTimeMinutes)
         : null,
@@ -478,11 +497,9 @@ export function ItemDetailsForm({
               )}
               {t('assistFillIn')}
             </Button>
-            <p className='text-muted-foreground text-xs'>
-              {fillBlocker
-                ? t(fillBlocker)
-                : t(isEditing ? 'assistFillMissingHint' : 'assistFillItemHint')}
-            </p>
+            {fillBlocker && (
+              <p className='text-muted-foreground text-xs'>{t(fillBlocker)}</p>
+            )}
           </div>
         )}
 
@@ -580,14 +597,9 @@ export function ItemDetailsForm({
 
         <div className='space-y-3'>
           <div className='flex items-center justify-between gap-4'>
-            <div className='space-y-0.5'>
-              <Label htmlFor='item-offer' className='text-sm'>
-                {t('itemOnOffer')}
-              </Label>
-              <p className='text-muted-foreground text-xs'>
-                {t('onOfferHint')}
-              </p>
-            </div>
+            <Label htmlFor='item-offer' className='text-sm'>
+              {t('itemOnOffer')}
+            </Label>
             <Switch
               id='item-offer'
               checked={form.isOnOffer}
@@ -611,6 +623,48 @@ export function ItemDetailsForm({
               {errors.offerPrice && (
                 <p className='text-destructive text-sm'>{errors.offerPrice}</p>
               )}
+              {/* When: any weekday off means the offer sleeps that day; the
+                  hours are optional and may run past midnight */}
+              <div className='flex flex-wrap gap-1'>
+                {WEEKDAYS.map((day) => {
+                  const bit = 1 << day
+                  const on = form.offerWeekdays === 0 || (form.offerWeekdays & bit) !== 0
+                  return (
+                    <Button
+                      key={day}
+                      type='button'
+                      size='sm'
+                      variant={on ? 'secondary' : 'outline'}
+                      className='h-8 w-11 px-0 text-xs'
+                      onClick={() => {
+                        const all = 127
+                        const current = form.offerWeekdays === 0 ? all : form.offerWeekdays
+                        const next = current ^ bit
+                        set('offerWeekdays', next === all || next === 0 ? 0 : next)
+                      }}
+                    >
+                      {weekdayName(day)}
+                    </Button>
+                  )
+                })}
+              </div>
+              <div className='flex items-center gap-2'>
+                <Input
+                  type='time'
+                  className='w-32'
+                  aria-label={t('offerFrom')}
+                  value={form.offerFrom}
+                  onChange={(e) => set('offerFrom', e.target.value)}
+                />
+                <span className='text-muted-foreground text-xs'>–</span>
+                <Input
+                  type='time'
+                  className='w-32'
+                  aria-label={t('offerTo')}
+                  value={form.offerTo}
+                  onChange={(e) => set('offerTo', e.target.value)}
+                />
+              </div>
             </div>
           )}
         </div>

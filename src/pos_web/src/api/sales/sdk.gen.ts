@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -134,6 +134,17 @@ export const getRangeReport = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
+ * Settled sales in a window by hour, weekday, cashier and item
+ *
+ * offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.
+ */
+export const getBreakdownReport = <ThrowOnError extends boolean = false>(options: Options<GetBreakdownReportData, ThrowOnError>): RequestResult<GetBreakdownReportResponses, GetBreakdownReportErrors, ThrowOnError> => (options.client ?? client).get<GetBreakdownReportResponses, GetBreakdownReportErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/reports/breakdown',
+    ...options
+});
+
+/**
  * The ticket a confirmed order landed on
  *
  * 404 while the order's confirmation event is still in flight — the POS polls this after creating a counter sale.
@@ -208,6 +219,25 @@ export const moveTicketLines = <ThrowOnError extends boolean = false>(options: O
  */
 export const assignTicketLinesCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignTicketLinesCustomerData, ThrowOnError>): RequestResult<AssignTicketLinesCustomerResponses, AssignTicketLinesCustomerErrors, ThrowOnError> => (options.client ?? client).post<AssignTicketLinesCustomerResponses, AssignTicketLinesCustomerErrors, ThrowOnError>({
     url: '/api/tickets/{id}/lines/customer',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Take the discount back off an open ticket
+ */
+export const removeTicketDiscount = <ThrowOnError extends boolean = false>(options: Options<RemoveTicketDiscountData, ThrowOnError>): RequestResult<RemoveTicketDiscountResponses, RemoveTicketDiscountErrors, ThrowOnError> => (options.client ?? client).delete<RemoveTicketDiscountResponses, RemoveTicketDiscountErrors, ThrowOnError>({ url: '/api/tickets/{id}/discount', ...options });
+
+/**
+ * Take a percent or an amount off the whole bill, with a reason
+ *
+ * Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.
+ */
+export const applyTicketDiscount = <ThrowOnError extends boolean = false>(options: Options<ApplyTicketDiscountData, ThrowOnError>): RequestResult<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError> => (options.client ?? client).post<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError>({
+    url: '/api/tickets/{id}/discount',
     ...options,
     headers: {
         'Content-Type': 'application/json',

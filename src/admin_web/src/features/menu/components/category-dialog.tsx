@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -49,11 +48,6 @@ export function CategoryDialog({
           <DialogTitle>
             {isEditing ? t('editCategory') : t('addCategory')}
           </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? t('editCategoryDescription')
-              : t('addCategoryDescription')}
-          </DialogDescription>
         </DialogHeader>
         {/* Keyed so form state resets per category; closing unmounts it */}
         <CategoryForm

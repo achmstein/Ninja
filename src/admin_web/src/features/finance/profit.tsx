@@ -11,6 +11,7 @@ import { downloadCsv } from '@/lib/csv'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -168,7 +169,6 @@ export function Profit() {
     <Main className='flex flex-col gap-6'>
       <PageHeader
         title={t('navFinanceProfit')}
-        description={t('profitSubtitle')}
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -236,7 +236,12 @@ export function Profit() {
             />
             <Stat label={t('netSales')} value={formatEgp(p.netSales)} />
             <Stat
-              label={t('primeCost')}
+              label={
+                <span className='inline-flex items-center gap-1'>
+                  {t('primeCost')}
+                  <InfoTip>{t('primeCostHint')}</InfoTip>
+                </span>
+              }
               value={
                 p.primeCostRatio != null
                   ? percent.format(toNumber(p.primeCostRatio))
@@ -247,7 +252,6 @@ export function Profit() {
                   ? 'warning'
                   : 'default'
               }
-              hint={t('primeCostHint')}
             />
           </StatStrip>
 
@@ -292,7 +296,7 @@ export function Profit() {
           {/* How the month falls to the owners, by the shares set on them */}
           {partnerShares.length > 0 && (
             <div className='space-y-2'>
-              <h3 className='text-sm font-semibold'>{t('partnersShare')}</h3>
+              <h3 className='text-sm font-medium'>{t('partnersShare')}</h3>
               <div className='divide-y rounded-lg border px-4 text-sm'>
                 {partnerShares.map((s) => (
                   <div

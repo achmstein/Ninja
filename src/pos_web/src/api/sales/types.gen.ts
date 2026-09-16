@@ -18,6 +18,25 @@ export type AssignLinesCustomerRequest = {
     customerName: string;
 };
 
+export type BreakdownReport = {
+    from?: string;
+    to?: string;
+    offsetMinutes?: number | string;
+    byHour?: Array<HourTotal>;
+    byWeekday?: Array<WeekdayTotal>;
+    byCashier?: Array<CashierTotal>;
+    byItem?: Array<ItemTotal>;
+};
+
+export type CashierTotal = {
+    name: string;
+    count: number | string;
+    net: number | string;
+    discounts: number | string;
+    voids: number | string;
+    refunds: number | string;
+};
+
 export type CashMovementKind = number;
 
 export type CashMovementRequest = {
@@ -54,6 +73,25 @@ export type CashMovementView = {
 
 export type CloseShiftRequest = {
     closingCount: number | string;
+};
+
+export type DiscountRequest = {
+    reason: string;
+    rate?: null | number | string;
+    amount?: null | number | string;
+};
+
+export type HourTotal = {
+    hour: number | string;
+    count: number | string;
+    net: number | string;
+};
+
+export type ItemTotal = {
+    description: LocalizedText;
+    qty: number | string;
+    amount: number | string;
+    tickets: number | string;
 };
 
 export type LocalizedText = {
@@ -151,6 +189,7 @@ export type PricingRequest = {
     vatRate: number | string;
     pricesIncludeVat: boolean;
     serviceChargeRate: number | string;
+    maxCashierDiscountRate?: number | string;
 };
 
 export type PricingView = {
@@ -158,6 +197,7 @@ export type PricingView = {
     vatRate: number | string;
     pricesIncludeVat: boolean;
     serviceChargeRate: number | string;
+    maxCashierDiscountRate: number | string;
 };
 
 export type RangeReport = {
@@ -276,6 +316,7 @@ export type ShiftView = {
     movements?: Array<CashMovementView>;
     ticketsSettled?: number | string;
     salesTotal?: number | string;
+    discounts?: number | string;
     tenderTotals?: Array<TenderTotal>;
     changeGiven?: number | string;
     refundsTotal?: number | string;
@@ -347,6 +388,10 @@ export type TicketDetail = {
     receiptNumber?: null | number | string;
     provisionalReceiptNumber?: null | string;
     subtotal?: number | string;
+    discount?: number | string;
+    discountRate?: null | number | string;
+    discountReason?: null | string;
+    discountBy?: null | string;
     serviceCharge?: number | string;
     vat?: number | string;
     vatIncluded?: boolean;
@@ -413,6 +458,12 @@ export type TypeTotal = {
 
 export type VoidTicketRequest = {
     reason: string;
+};
+
+export type WeekdayTotal = {
+    weekday: number | string;
+    count: number | string;
+    net: number | string;
 };
 
 export type GetOpenTicketsData = {
@@ -853,6 +904,47 @@ export type GetRangeReportResponses = {
 
 export type GetRangeReportResponse = GetRangeReportResponses[keyof GetRangeReportResponses];
 
+export type GetBreakdownReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        offsetMinutes?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/reports/breakdown';
+};
+
+export type GetBreakdownReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetBreakdownReportError = GetBreakdownReportErrors[keyof GetBreakdownReportErrors];
+
+export type GetBreakdownReportResponses = {
+    /**
+     * OK
+     */
+    200: BreakdownReport;
+};
+
+export type GetBreakdownReportResponse = GetBreakdownReportResponses[keyof GetBreakdownReportResponses];
+
 export type GetTicketByOrderData = {
     body?: never;
     path: {
@@ -1101,6 +1193,87 @@ export type AssignTicketLinesCustomerResponses = {
 };
 
 export type AssignTicketLinesCustomerResponse = AssignTicketLinesCustomerResponses[keyof AssignTicketLinesCustomerResponses];
+
+export type RemoveTicketDiscountData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/discount';
+};
+
+export type RemoveTicketDiscountErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RemoveTicketDiscountError = RemoveTicketDiscountErrors[keyof RemoveTicketDiscountErrors];
+
+export type RemoveTicketDiscountResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RemoveTicketDiscountResponse = RemoveTicketDiscountResponses[keyof RemoveTicketDiscountResponses];
+
+export type ApplyTicketDiscountData = {
+    body: DiscountRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/discount';
+};
+
+export type ApplyTicketDiscountErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ApplyTicketDiscountError = ApplyTicketDiscountErrors[keyof ApplyTicketDiscountErrors];
+
+export type ApplyTicketDiscountResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type VoidTicketData = {
     body: VoidTicketRequest;

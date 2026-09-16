@@ -15,6 +15,7 @@ import { downloadCsv } from '@/lib/csv'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -191,7 +192,6 @@ export function Payslips() {
       <Main className='flex flex-col gap-6'>
         <PageHeader
           title={t('navPayrollPayslips')}
-          description={t('payslipsSubtitle')}
           actions={
             <div className='flex gap-2'>
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
@@ -250,7 +250,6 @@ export function Payslips() {
           <EmptyState
             icon={FileText}
             title={t('noPayslips')}
-            description={t('noPayslipsHint', { month: monthLabel })}
             action={
               <Button onClick={() => generate()} disabled={isPending}>
                 <FileText className='me-2 h-4 w-4' />
@@ -511,9 +510,9 @@ function PayForm({
           toNumber(payslip.earned)
         )}
         {payslip.termsChangedOn && (
-          <p className='text-muted-foreground py-1 text-xs'>
-            {t('payChangedHint')}
-          </p>
+          <div className='flex justify-end py-1'>
+            <InfoTip>{t('payChangedHint')}</InfoTip>
+          </div>
         )}
         {toNumber(payslip.overtimePay) > 0 &&
           line(
@@ -563,9 +562,6 @@ function PayForm({
                 {formatEgp(payslip.remaining)}
               </span>
             </div>
-            <p className='text-muted-foreground text-xs'>
-              {t('paidSinceGenerated')}
-            </p>
           </div>
         )}
       </div>

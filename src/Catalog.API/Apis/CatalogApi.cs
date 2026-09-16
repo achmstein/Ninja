@@ -720,6 +720,11 @@ public static class CatalogApi
         catalogItem.IsAvailable = productToUpdate.IsAvailable;
         catalogItem.IsOnOffer = productToUpdate.IsOnOffer;
         catalogItem.OfferPrice = productToUpdate.OfferPrice;
+        // The offer's window: every day and all day unless both hours parse
+        catalogItem.OfferWeekdays = productToUpdate.OfferWeekdays is > 0 ? productToUpdate.OfferWeekdays : null;
+        TryParseWindow(productToUpdate.OfferFrom, productToUpdate.OfferTo, out var offerFrom, out var offerTo);
+        catalogItem.OfferFrom = offerFrom;
+        catalogItem.OfferTo = offerTo;
         catalogItem.IsPopular = productToUpdate.IsPopular;
         catalogItem.PreparationTimeMinutes = productToUpdate.PreparationTimeMinutes;
         // DisplayOrder is owned by /items/reorder: an edit must never reshuffle the menu
@@ -872,6 +877,16 @@ public static class CatalogApi
                 });
             }
         }
+
+        if (!TryParseWindow(request.OfferFrom, request.OfferTo, out var offerFrom, out var offerTo))
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The offer hours are a pair of HH:mm times, or neither" });
+        }
+
+        // The window is the item's, chain-wide; a branch overrides only the switch and the price
+        item.OfferWeekdays = request.OfferWeekdays is > 0 ? request.OfferWeekdays : null;
+        item.OfferFrom = offerFrom;
+        item.OfferTo = offerTo;
 
         var baseUrl = GetBaseUrl(httpContext);
         var branchId = httpContext.GetBranchId();
@@ -1346,6 +1361,23 @@ public static class CatalogApi
 
     public static string GetFullPath(string contentRootPath, string pictureFileName) =>
         Path.Combine(contentRootPath, "Pics", pictureFileName);
+
+    /// <summary>"HH:mm" and "HH:mm", or neither; anything else is a bad request.</summary>
+    private static bool TryParseWindow(string? fromText, string? toText, out TimeOnly? from, out TimeOnly? to)
+    {
+        from = null;
+        to = null;
+
+        if (string.IsNullOrWhiteSpace(fromText) && string.IsNullOrWhiteSpace(toText))
+            return true;
+
+        if (!TimeOnly.TryParseExact(fromText, "HH:mm", out var f) || !TimeOnly.TryParseExact(toText, "HH:mm", out var t))
+            return false;
+
+        from = f;
+        to = t;
+        return true;
+    }
 
     private static string GetBaseUrl(HttpContext httpContext)
     {

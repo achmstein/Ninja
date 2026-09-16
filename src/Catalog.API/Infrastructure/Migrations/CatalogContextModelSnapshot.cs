@@ -166,9 +166,18 @@ namespace Catalog.API.Infrastructure.Migrations
                     b.Property<bool>("IsPopular")
                         .HasColumnType("boolean");
 
+                    b.Property<TimeOnly?>("OfferFrom")
+                        .HasColumnType("time without time zone");
+
                     b.Property<decimal?>("OfferPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<TimeOnly?>("OfferTo")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int?>("OfferWeekdays")
+                        .HasColumnType("integer");
 
                     b.Property<string>("PictureFileName")
                         .HasColumnType("text");

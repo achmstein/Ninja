@@ -114,7 +114,6 @@ export function Stock() {
       <Main fixed className='gap-4'>
         <PageHeader
           title={t('inventoryStock')}
-          description={t('stockSubtitle')}
           actions={
             <>
               {branches.length > 1 && (
@@ -369,7 +368,6 @@ export function Stock() {
                 <EmptyState
                   icon={Boxes}
                   title={t('selectStockItem')}
-                  description={t('selectStockItemHint')}
                 />
               </div>
             ))}
@@ -488,7 +486,6 @@ function CountMode({
           {t('saveCount')}
         </Button>
       </div>
-      <p className='text-muted-foreground text-xs'>{t('countModeHint')}</p>
 
       <ScrollArea className='-mx-3 h-full p-3'>
         <ul className='divide-y'>

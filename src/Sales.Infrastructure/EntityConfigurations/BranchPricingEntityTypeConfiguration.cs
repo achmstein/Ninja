@@ -14,6 +14,7 @@ class BranchPricingEntityTypeConfiguration : IEntityTypeConfiguration<BranchPric
 
         builder.Property(p => p.VatRate).HasPrecision(5, 4);
         builder.Property(p => p.ServiceChargeRate).HasPrecision(5, 4);
+        builder.Property(p => p.MaxCashierDiscountRate).HasPrecision(5, 4).HasDefaultValue(BranchPricing.DefaultMaxCashierDiscountRate);
         builder.Property(p => p.UpdatedBy).HasMaxLength(64).IsRequired();
     }
 }

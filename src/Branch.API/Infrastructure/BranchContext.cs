@@ -14,6 +14,8 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.OwnsOne(e => e.Name, b => b.ToJson());
             entity.OwnsOne(e => e.Address, b => b.ToJson());
             entity.Property(e => e.Phone).HasMaxLength(20);
+            entity.Property(e => e.TaxNumber).HasMaxLength(30);
+            entity.OwnsOne(e => e.ReceiptFooter, b => b.ToJson());
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.DisplayOrder).IsRequired();
 

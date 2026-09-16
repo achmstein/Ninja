@@ -90,6 +90,26 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public decimal Subtotal { get; private set; }
 
+    /// <summary>
+    /// The bill discount: money taken off the whole ticket by the till. A
+    /// percent discount follows the lines while the ticket is open — this
+    /// holds the money it came to at settle; a fixed one holds what was
+    /// entered. Zero when none was given.
+    /// </summary>
+    public decimal Discount { get; private set; }
+
+    /// <summary>The rate behind <see cref="Discount"/> as a fraction; null for a fixed amount, or none.</summary>
+    public decimal? DiscountRate { get; private set; }
+
+    /// <summary>Why — the audit trail a discount exists to leave.</summary>
+    public string? DiscountReason { get; private set; }
+
+    public string? DiscountBy { get; private set; }
+
+    public DateTime? DiscountAt { get; private set; }
+
+    public bool HasDiscount => DiscountRate is not null || Discount > 0;
+
     public decimal ServiceCharge { get; private set; }
 
     public decimal Vat { get; private set; }
@@ -134,29 +154,42 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public Bill GetBill(PricingRules rules)
         => Status == TicketStatus.Settled
-            ? new Bill(Subtotal, ServiceCharge, Vat, Total, VatIncluded, VatRate, ServiceChargeRate)
+            ? new Bill(Subtotal, Discount, ServiceCharge, Vat, Total, VatIncluded, VatRate, ServiceChargeRate)
             : ComputeBill(rules);
 
     private Bill ComputeBill(PricingRules rules)
     {
         var subtotal = GetSubtotal();
 
+        // The bill discount comes off the menu money first: a percent follows
+        // the lines as they land, a fixed amount never exceeds what is there
+        var discount = subtotal <= 0
+            ? 0m
+            : DiscountRate is { } rate
+                ? Money(subtotal * rate)
+                : Math.Min(Discount, subtotal);
+        var discounted = subtotal - discount;
+
         // Service is for being served: what is ordered at a table or in a
         // room. A counter sale is not served, and room time is not an order.
+        // The discount thins every line alike, so the served part shrinks by
+        // the same share.
         var served = Type == TicketType.Counter
             ? 0m
             : _lines.Where(l => l.Source != TicketLineSource.SessionTime).Sum(l => l.Total);
+        if (subtotal > 0)
+            served *= discounted / subtotal;
         var service = Money(Math.Max(0m, served) * rules.ServiceChargeRate);
 
         // VAT is on everything, service included — either shown out of a
         // price that already holds it, or added on top
-        var taxable = subtotal + service;
+        var taxable = discounted + service;
         var vat = rules.PricesIncludeVat
             ? Money(taxable - taxable / (1 + rules.VatRate))
             : Money(taxable * rules.VatRate);
         var total = rules.PricesIncludeVat ? taxable : taxable + vat;
 
-        return new Bill(subtotal, service, vat, total, rules.PricesIncludeVat, rules.VatRate, rules.ServiceChargeRate);
+        return new Bill(subtotal, discount, service, vat, total, rules.PricesIncludeVat, rules.VatRate, rules.ServiceChargeRate);
     }
 
     private static decimal Money(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
@@ -420,6 +453,7 @@ public class Ticket : Entity, IAggregateRoot
         ChangeGiven = overpaid;
 
         Subtotal = bill.Subtotal;
+        Discount = bill.Discount;
         ServiceCharge = bill.ServiceCharge;
         Vat = bill.Vat;
         Total = bill.Total;
@@ -430,6 +464,66 @@ public class Ticket : Entity, IAggregateRoot
         AddDomainEvent(new TicketSettledDomainEvent(this));
 
         return overpaid;
+    }
+
+    /// <summary>
+    /// Take money off the whole bill — a regular, a complaint, staff. One
+    /// discount per ticket, replaced when given again. A percent follows the
+    /// lines until settle; a fixed amount is capped by the menu money at
+    /// settle. The reason is the audit trail. <paramref name="maxRate"/> is
+    /// the caller's ceiling as a share of the bill — the branch's cashier cap,
+    /// or null for an owner, who has none.
+    /// </summary>
+    public void ApplyDiscount(decimal? rate, decimal? amount, string reason, string by, decimal? maxRate)
+    {
+        EnsureOpen();
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new SalesDomainException("A discount needs a reason — that is the whole audit trail.");
+
+        if ((rate is null) == (amount is null))
+            throw new SalesDomainException("A discount is a percent or an amount, not both.");
+
+        if (rate is <= 0 or > 1)
+            throw new SalesDomainException("A percent discount is between 0 and 100.");
+
+        if (amount is <= 0)
+            throw new SalesDomainException("A discount amount is positive.");
+
+        var subtotal = GetSubtotal();
+
+        if (subtotal <= 0)
+            throw new SalesDomainException("There is nothing on the bill to discount.");
+
+        if (amount > subtotal)
+            throw new SalesDomainException("A discount cannot exceed the bill.");
+
+        var share = rate ?? amount!.Value / subtotal;
+
+        if (maxRate is { } cap && share > cap + 0.00001m)
+            throw new SalesDomainException($"Discounts above {cap:P0} need an owner.");
+
+        DiscountRate = rate;
+        Discount = amount ?? 0m;
+        DiscountReason = reason.Trim();
+        DiscountBy = by;
+        DiscountAt = DateTime.UtcNow;
+
+        AddDomainEvent(new TicketChangedDomainEvent(this));
+    }
+
+    /// <summary>Take the discount back off an open ticket — nothing was settled, so nothing is recorded.</summary>
+    public void RemoveDiscount()
+    {
+        EnsureOpen();
+
+        DiscountRate = null;
+        Discount = 0m;
+        DiscountReason = null;
+        DiscountBy = null;
+        DiscountAt = null;
+
+        AddDomainEvent(new TicketChangedDomainEvent(this));
     }
 
     /// <summary>

@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input'
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -191,7 +190,6 @@ export function TrackItemsSheet({
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-xl'>
         <SheetHeader className='border-b'>
           <SheetTitle>{t('trackItems')}</SheetTitle>
-          <SheetDescription>{t('trackItemsDescription')}</SheetDescription>
         </SheetHeader>
 
         <div className='flex items-center gap-2 border-b px-4 py-2'>
@@ -301,7 +299,6 @@ export function TrackItemsSheet({
                 variant='outline'
                 disabled={picked.length === 0 || busy}
                 onClick={sellAsUnits}
-                title={t('sellAsUnitsHint')}
               >
                 {busy && trackByUnit.isPending ? (
                   <Spinner className='me-2' />
@@ -315,7 +312,6 @@ export function TrackItemsSheet({
                   type='button'
                   disabled={picked.length === 0 || busy}
                   onClick={proposeRecipes}
-                  title={t('proposeRecipesHint')}
                 >
                   {busy && propose.isPending ? (
                     <Spinner className='me-2' />

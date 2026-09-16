@@ -42,6 +42,7 @@ class ShiftReportSheet extends StatelessWidget {
         SheetRow(l10n.openingFloat, moneyWith(l10n, shift.openingFloat)),
         SheetRow(l10n.ticketsSettled, '${shift.ticketsSettled}'),
         SheetRow(l10n.salesTotal, moneyWith(l10n, shift.salesTotal), weight: FontWeight.w700),
+        SheetRow(l10n.discount, moneyWith(l10n, shift.discounts)),
         SheetRow(l10n.changeGiven, moneyWith(l10n, shift.changeGiven)),
         SheetRow(l10n.payInsTotal, moneyWith(l10n, shift.payInsTotal)),
         SheetRow(l10n.payOutsTotal, moneyWith(l10n, shift.payOutsTotal)),

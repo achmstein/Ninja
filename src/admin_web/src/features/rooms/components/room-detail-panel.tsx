@@ -296,7 +296,7 @@ export function RoomDetailPanel({
           <span
             className={`h-2.5 w-2.5 shrink-0 rounded-full ${roomStatus?.dotClass ?? 'bg-muted'}`}
           />
-          <h2 className='truncate font-semibold'>{localized(room.name)}</h2>
+          <h2 className='truncate text-sm font-semibold'>{localized(room.name)}</h2>
         </div>
         <div className='flex items-center gap-2'>
           <span className='text-muted-foreground text-sm tabular-nums'>
@@ -571,7 +571,7 @@ export function RoomDetailPanel({
 
       {/* History (scrolls independently when it exceeds the height) */}
       <div className='flex min-h-0 flex-1 flex-col border-t'>
-        <h3 className='flex-none px-4 pt-3 pb-1 text-sm font-semibold'>
+        <h3 className='flex-none px-4 pt-3 pb-1 text-sm font-medium'>
           {t('history')}
         </h3>
         <ScrollArea className='min-h-0 flex-1 px-4 pb-4'>
@@ -699,9 +699,6 @@ export function RoomDetailPanel({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('cancelThisReservation')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('roomBecomesAvailable')}
-            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('keepIt')}</AlertDialogCancel>
@@ -733,20 +730,6 @@ export function RoomDetailPanel({
                 ),
               })}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('switchModeDescription', {
-                current: t(
-                  currentMode === 'Multi'
-                    ? 'playerModeMulti'
-                    : 'playerModeSingle'
-                ),
-                next: t(
-                  pendingMode === 'Multi'
-                    ? 'playerModeMulti'
-                    : 'playerModeSingle'
-                ),
-              })}
-            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
@@ -779,9 +762,7 @@ export function RoomDetailPanel({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteRoom')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteRoomConfirmation', { name: localized(room.name) })}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('cannotBeUndone')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>

@@ -3319,6 +3319,32 @@
             ],
             "format": "double"
           },
+          "offerWeekdays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offerFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "offerTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "isOfferActive": {
+            "type": "boolean"
+          },
           "effectivePrice": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
@@ -3377,6 +3403,27 @@
           },
           "isAvailable": {
             "type": "boolean"
+          },
+          "offerWeekdays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offerFrom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "offerTo": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3447,6 +3494,27 @@
               "string"
             ],
             "format": "double"
+          },
+          "offerWeekdays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offerFrom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "offerTo": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "isPopular": {
             "type": "boolean"
@@ -4185,6 +4253,27 @@
               "string"
             ],
             "format": "double"
+          },
+          "offerWeekdays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offerFrom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "offerTo": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4296,6 +4385,27 @@
               "string"
             ],
             "format": "double"
+          },
+          "offerWeekdays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offerFrom": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "offerTo": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "isPopular": {
             "type": "boolean"

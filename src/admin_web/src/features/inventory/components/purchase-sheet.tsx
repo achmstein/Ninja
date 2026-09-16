@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -64,7 +63,6 @@ export function PurchaseSheet({
                 id: toNumber(purchase?.id ?? purchaseId),
               })}
             </SheetTitle>
-            <SheetDescription>{t('purchaseSheetHint')}</SheetDescription>
           </div>
           <Button
             variant='outline'

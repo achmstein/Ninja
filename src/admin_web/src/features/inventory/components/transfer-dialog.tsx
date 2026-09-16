@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -45,7 +44,6 @@ export function TransferDialog({ open, onOpenChange }: TransferDialogProps) {
       <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[640px]'>
         <DialogHeader>
           <DialogTitle>{t('transferStock')}</DialogTitle>
-          <DialogDescription>{t('transferStockDescription')}</DialogDescription>
         </DialogHeader>
         {open && <TransferForm onOpenChange={onOpenChange} />}
       </DialogContent>

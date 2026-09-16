@@ -21,9 +21,15 @@ public record CatalogItemDto
     /// a stock-out from a manual sold-out.
     /// </summary>
     public bool IsOutOfStock { get; init; }
+    /// <summary>The offer applies right now: switched on and inside its window.</summary>
     public bool IsOnOffer { get; init; }
     public decimal? OfferPrice { get; init; }
     public decimal EffectivePrice { get; init; }
+    /// <summary>A bit per DayOfWeek (1 is Sunday); null is every day.</summary>
+    public int? OfferWeekdays { get; init; }
+    /// <summary>"HH:mm" local; both null is all day.</summary>
+    public string? OfferFrom { get; init; }
+    public string? OfferTo { get; init; }
     public bool IsPopular { get; init; }
     public int? PreparationTimeMinutes { get; init; }
     public int DisplayOrder { get; init; }
@@ -37,7 +43,7 @@ public record CatalogItemDto
 }
 
 /// <summary>The item as the chain defines it, before any branch override.</summary>
-public record CatalogItemBaseDto(decimal Price, decimal? OfferPrice, bool IsOnOffer, bool IsAvailable);
+public record CatalogItemBaseDto(decimal Price, decimal? OfferPrice, bool IsOnOffer, bool IsAvailable, int? OfferWeekdays = null, string? OfferFrom = null, string? OfferTo = null);
 
 /// <summary>
 /// What the admin may change on a menu item. Display order is owned by the
@@ -52,6 +58,9 @@ public record UpdateCatalogItemRequest
     public bool IsAvailable { get; init; } = true;
     public bool IsOnOffer { get; init; }
     public decimal? OfferPrice { get; init; }
+    public int? OfferWeekdays { get; init; }
+    public string? OfferFrom { get; init; }
+    public string? OfferTo { get; init; }
     public bool IsPopular { get; init; }
     public int? PreparationTimeMinutes { get; init; }
 }
@@ -183,6 +192,11 @@ public record SetItemOfferRequest
 {
     public bool IsOnOffer { get; init; }
     public decimal? OfferPrice { get; init; }
+    /// <summary>A bit per DayOfWeek (1 is Sunday); null or 0 is every day.</summary>
+    public int? OfferWeekdays { get; init; }
+    /// <summary>"HH:mm" local; both or neither.</summary>
+    public string? OfferFrom { get; init; }
+    public string? OfferTo { get; init; }
 }
 
 /// <summary>

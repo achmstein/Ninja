@@ -115,7 +115,7 @@ export function DraftCard({
     <div className='bg-background rounded-md border p-2.5'>
       <div className='flex items-start justify-between gap-2'>
         <div className='min-w-0'>
-          <h4 className='truncate text-sm font-semibold'>
+          <h4 className='truncate text-sm font-medium'>
             {localized(draft.name)}
           </h4>
           <p className='text-muted-foreground text-xs'>

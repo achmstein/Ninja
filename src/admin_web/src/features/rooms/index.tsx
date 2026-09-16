@@ -139,9 +139,6 @@ export function RoomsManagement() {
                 <h1 className='text-2xl font-bold tracking-tight'>
                   {t('rooms')}
                 </h1>
-                <p className='text-muted-foreground text-sm'>
-                  {t('roomsSubtitle')}
-                </p>
               </div>
               <div className='flex items-center'>
                 <Button
@@ -255,10 +252,7 @@ export function RoomsManagement() {
                   <Gamepad2 className='size-8' />
                 </div>
                 <div className='space-y-2 text-center'>
-                  <h2 className='text-xl font-semibold'>{t('selectRoom')}</h2>
-                  <p className='text-muted-foreground text-sm'>
-                    {t('selectRoomHint')}
-                  </p>
+                  <h2 className='text-sm font-semibold'>{t('selectRoom')}</h2>
                 </div>
               </div>
             </div>

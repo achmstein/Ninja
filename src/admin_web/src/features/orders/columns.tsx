@@ -159,6 +159,7 @@ export function getOrdersColumns({
       },
     }),
     columnHelper.accessor('total', {
+      meta: { align: 'end' },
       id: 'total',
       header: ({ column }) => (
         <DataTableColumnHeader

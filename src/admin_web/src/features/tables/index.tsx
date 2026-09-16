@@ -117,7 +117,6 @@ export function TablesManagement() {
       <Main className='flex flex-col gap-4'>
         <PageHeader
           title={t('tables')}
-          description={t('tablesSubtitle')}
           badge={
             busyCount > 0 && (
               <Badge className='h-6 tabular-nums'>

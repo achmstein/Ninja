@@ -12,7 +12,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -73,7 +72,6 @@ export function CustomerSearchDialog({
     >
       <DialogHeader className='sr-only'>
         <DialogTitle>{t('findRegisteredCustomer')}</DialogTitle>
-        <DialogDescription>{t('searchByNameOrEmail')}</DialogDescription>
       </DialogHeader>
       <DialogContent className='overflow-hidden p-0'>
         {/* The server does the filtering; cmdk should not filter again */}

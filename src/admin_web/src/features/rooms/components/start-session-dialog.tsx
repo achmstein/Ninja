@@ -7,7 +7,6 @@ import { startWalkInSessionMutation } from '@/api/spaces/@tanstack/react-query.g
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -58,14 +57,11 @@ export function StartSessionDialog({
             <Gamepad2 className='h-5 w-5' />
             {t('startWalkInSession')}
           </DialogTitle>
-          <DialogDescription>
-            {t('startWalkInDescription', { name: localized(room.name) })}
-          </DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
           <div className='bg-muted rounded-lg p-4 text-center'>
-            <h3 className='text-lg font-semibold'>{localized(room.name)}</h3>
+            <h3 className='text-sm font-medium'>{localized(room.name)}</h3>
             <p className='text-primary text-2xl font-bold tabular-nums'>
               {Number(room.singleRate ?? 0)} / {Number(room.multiRate ?? 0)}{' '}
               <span className='text-muted-foreground text-sm font-normal'>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronsUpDown, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -104,7 +105,9 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
 
   return (
     <div className='space-y-3'>
-      <p className='text-muted-foreground text-xs'>{t('builderHint')}</p>
+      <div className='flex justify-end'>
+        <InfoTip>{t('builderHint')}</InfoTip>
+      </div>
 
       {state.ingredients.map((spec) => (
         <IngredientCard

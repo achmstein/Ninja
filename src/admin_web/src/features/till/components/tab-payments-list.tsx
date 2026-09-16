@@ -37,6 +37,7 @@ function getTabPaymentColumns({ t, locale }: { t: Translate; locale: string }) {
   })
   return columnHelper.columns([
     columnHelper.accessor('recordedAt', {
+      meta: { align: 'end' },
       id: 'time',
       header: t('time'),
       cell: (info) => (
@@ -46,6 +47,7 @@ function getTabPaymentColumns({ t, locale }: { t: Translate; locale: string }) {
       ),
     }),
     columnHelper.accessor('number', {
+      meta: { align: 'end' },
       id: 'number',
       header: t('slipHash'),
       cell: (info) => (
@@ -70,6 +72,7 @@ function getTabPaymentColumns({ t, locale }: { t: Translate; locale: string }) {
       cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor('amount', {
+      meta: { align: 'end' },
       id: 'amount',
       header: () => <div className='text-end'>{t('amount')}</div>,
       cell: (info) => (

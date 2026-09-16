@@ -1,5 +1,8 @@
 import { createPortal } from 'react-dom'
+import { useQuery } from '@tanstack/react-query'
+import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
+import { useBranchStore } from '@/stores/branch-store'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { tenderLabelKey } from '@/features/ticket/tenders'
@@ -40,6 +43,12 @@ export function ReceiptSheet({
   const locale = useLocale()
   const money = useMoney()
 
+  // Whose receipt: the active branch, off the same list the switcher uses
+  const branchId = useBranchStore((s) => s.branchId)
+  const { data: branches = [] } = useQuery(getBranchesOptions())
+  const branch = branches.find((b) => Number(b.id) === branchId)
+  const footer = localized(branch?.receiptFooter)?.trim()
+
   const payments: ReceiptPayment[] =
     paymentsOverride ??
     (ticket.payments ?? []).map((p) => ({
@@ -51,7 +60,8 @@ export function ReceiptSheet({
   const subtotal = toNumber(ticket.subtotal)
   const service = toNumber(ticket.serviceCharge)
   const vat = toNumber(ticket.vat)
-  const hasBreakdown = service > 0 || vat > 0
+  const discount = toNumber(ticket.discount)
+  const hasBreakdown = discount > 0 || service > 0 || vat > 0
   const paid = payments.reduce((sum, p) => sum + p.amount, 0)
   const change = Math.max(0, paid - total)
   const receiptNumber = receiptNumberOverride ?? ticket.receiptNumber
@@ -65,7 +75,6 @@ export function ReceiptSheet({
 
   return createPortal(
     <div className='receipt-sheet'>
-      {/* TODO(pos-plan phase 2): print the branch name once receipts carry it */}
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
         {/* The wordmark, about half the paper wide, as the tablet till prints it */}
         <img
@@ -73,6 +82,14 @@ export function ReceiptSheet({
           alt={t('brandName')}
           style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
         />
+        {branch && (
+          <div style={{ fontSize: 11, marginBottom: '1.5mm' }}>
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{localized(branch.name)}</div>
+            {localized(branch.address) && <div>{localized(branch.address)}</div>}
+            {branch.phone && <div>{branch.phone}</div>}
+            {branch.taxNumber && <div>{t('taxNumber', { number: branch.taxNumber })}</div>}
+          </div>
+        )}
         {receiptNumber != null && (
           <div style={{ fontSize: 13, fontWeight: 600 }}>
             {t('receiptNumber', { number: toNumber(receiptNumber) })}
@@ -117,6 +134,12 @@ export function ReceiptSheet({
             <span>{t('subtotal')}</span>
             <span>{money(subtotal)}</span>
           </div>
+          {discount > 0 && (
+            <div style={row}>
+              <span>{t('discount')}</span>
+              <span>−{money(discount)}</span>
+            </div>
+          )}
           {service > 0 && (
             <div style={row}>
               <span>
@@ -179,7 +202,7 @@ export function ReceiptSheet({
       )}
 
       <div style={{ textAlign: 'center', marginTop: '4mm', fontSize: 12 }}>
-        {t('receiptThanks')}
+        {footer || t('receiptThanks')}
       </div>
     </div>,
     document.body

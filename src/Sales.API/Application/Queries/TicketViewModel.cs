@@ -76,8 +76,14 @@ public record TicketDetail
     /// <summary>What the till printed while offline, when the sale was replayed.</summary>
     public string? ProvisionalReceiptNumber { get; init; }
 
-    /// <summary>Menu money — the lines before service charge and VAT.</summary>
+    /// <summary>Menu money — the lines before the bill discount, service charge and VAT.</summary>
     public decimal Subtotal { get; init; }
+    /// <summary>The bill discount as money; zero when none.</summary>
+    public decimal Discount { get; init; }
+    /// <summary>The rate behind it as a fraction; null for a fixed amount or none.</summary>
+    public decimal? DiscountRate { get; init; }
+    public string? DiscountReason { get; init; }
+    public string? DiscountBy { get; init; }
     public decimal ServiceCharge { get; init; }
     public decimal Vat { get; init; }
     /// <summary>The VAT sits inside the menu prices: shown on the receipt, not added to it.</summary>
@@ -104,8 +110,8 @@ public record RefundView(
 
 public record RefundLineView(int TicketLineId, LocalizedText Description, decimal Qty, decimal Amount);
 
-/// <summary>A branch's pricing rules; rates are fractions (0.14 is 14%).</summary>
-public record PricingView(int BranchId, decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate);
+/// <summary>A branch's pricing rules; rates are fractions (0.14 is 14%). MaxCashierDiscountRate caps what a cashier may take off a bill alone.</summary>
+public record PricingView(int BranchId, decimal VatRate, bool PricesIncludeVat, decimal ServiceChargeRate, decimal MaxCashierDiscountRate);
 
 public record TicketLineView
 {

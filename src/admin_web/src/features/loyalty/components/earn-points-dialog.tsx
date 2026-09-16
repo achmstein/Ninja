@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -25,7 +24,6 @@ interface EarnPointsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   userId: string
-  userName?: string
 }
 
 const earnTypes: { value: string; labelKey: TranslationKey }[] = [
@@ -40,7 +38,6 @@ export function EarnPointsDialog({
   open,
   onOpenChange,
   userId,
-  userName,
 }: EarnPointsDialogProps) {
   const t = useT()
   const [points, setPoints] = useState('')
@@ -96,11 +93,6 @@ export function EarnPointsDialog({
               <Plus className='h-5 w-5' />
               {t('addPoints')}
             </DialogTitle>
-            <DialogDescription>
-              {t('addPointsDescription', {
-                name: userName || t('thisAccount'),
-              })}
-            </DialogDescription>
           </DialogHeader>
 
           <div className='grid gap-4 py-4'>

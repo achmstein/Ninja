@@ -1154,6 +1154,18 @@ abstract class AppLocalizations {
   /// **'Discount'**
   String get discount;
 
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -2203,6 +2215,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thank you!'**
   String get receiptThanks;
+
+  /// No description provided for @taxNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax no. {number}'**
+  String taxNumber(String number);
 
   /// No description provided for @toastSuccess.
   ///

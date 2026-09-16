@@ -10,6 +10,7 @@ public record SetBranchPricingCommand(
     decimal VatRate,
     bool PricesIncludeVat,
     decimal ServiceChargeRate,
+    decimal MaxCashierDiscountRate,
     string UpdatedBy) : IRequest<bool>;
 
 public class SetBranchPricingCommandHandler(
@@ -23,15 +24,15 @@ public class SetBranchPricingCommandHandler(
         var pricing = await ticketRepository.FindPricingAsync(command.BranchId);
 
         if (pricing is null)
-            ticketRepository.AddPricing(new BranchPricing(command.BranchId, rules, command.UpdatedBy));
+            ticketRepository.AddPricing(new BranchPricing(command.BranchId, rules, command.MaxCashierDiscountRate, command.UpdatedBy));
         else
-            pricing.Set(rules, command.UpdatedBy);
+            pricing.Set(rules, command.MaxCashierDiscountRate, command.UpdatedBy);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 
         logger.LogInformation(
-            "Branch {BranchId} pricing set by {UpdatedBy}: VAT {Vat:P0} ({Inclusive}), service {Service:P0}",
-            command.BranchId, command.UpdatedBy, rules.VatRate, rules.PricesIncludeVat ? "included" : "added", rules.ServiceChargeRate);
+            "Branch {BranchId} pricing set by {UpdatedBy}: VAT {Vat:P0} ({Inclusive}), service {Service:P0}, cashier discount up to {Cap:P0}",
+            command.BranchId, command.UpdatedBy, rules.VatRate, rules.PricesIncludeVat ? "included" : "added", rules.ServiceChargeRate, command.MaxCashierDiscountRate);
 
         return true;
     }

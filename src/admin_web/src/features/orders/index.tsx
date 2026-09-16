@@ -178,7 +178,7 @@ export function OrdersManagement() {
   return (
     <>
       <Main className='flex flex-col gap-4'>
-        <PageHeader title={t('orders')} description={t('ordersSubtitle')}>
+        <PageHeader title={t('orders')}>
           <OrdersTabs value='history' pendingCount={pendingOrders.length} />
         </PageHeader>
 
@@ -257,7 +257,7 @@ export function OrdersManagement() {
           if (!open) setOrderToDelete(null)
         }}
         title={t('deleteOrderQuestion')}
-        desc={t('deleteOrderConfirmation', { orderNumber: orderToDelete ?? 0 })}
+        desc={t('cannotBeUndone')}
         confirmText={t('delete')}
         destructive
         handleConfirm={() => {
@@ -270,9 +270,7 @@ export function OrdersManagement() {
         open={bulkDeleteOpen}
         onOpenChange={setBulkDeleteOpen}
         title={t('deleteOrdersQuestion')}
-        desc={t('deleteOrdersConfirmation', {
-          count: table.getSelectedRowModel().rows.length,
-        })}
+        desc={t('cannotBeUndone')}
         confirmText={t('delete')}
         destructive
         isLoading={isActing}

@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -47,11 +46,6 @@ export function BranchDialog({
           <DialogTitle>
             {isEditing ? t('editBranch') : t('createBranch')}
           </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? t('editBranchDescription')
-              : t('createBranchDescription')}
-          </DialogDescription>
         </DialogHeader>
         {/* Keyed so form state resets per branch; closing unmounts it */}
         <BranchForm
@@ -80,6 +74,8 @@ function BranchForm({
     addressEn: branch?.address?.en ?? '',
     addressAr: branch?.address?.ar ?? '',
     phone: branch?.phone ?? '',
+    taxNumber: branch?.taxNumber ?? '',
+    receiptFooter: toLocalizedValue(branch?.receiptFooter),
     dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '10:00',
     dayEndTime: branch?.dayEndTime?.slice(0, 5) ?? '02:00',
     isActive: branch?.isActive ?? true,
@@ -126,6 +122,11 @@ function BranchForm({
           }
         : null
     const phone = form.phone.trim() || null
+    const taxNumber = form.taxNumber.trim() || null
+    const receiptFooter =
+      form.receiptFooter.en.trim() || form.receiptFooter.ar.trim()
+        ? fromLocalizedValue(form.receiptFooter)
+        : null
     const dayStartTime = `${form.dayStartTime}:00`
     const dayEndTime = `${form.dayEndTime}:00`
 
@@ -136,6 +137,8 @@ function BranchForm({
           name,
           address,
           phone,
+          taxNumber,
+          receiptFooter,
           isActive: form.isActive,
           displayOrder: branch.displayOrder,
           dayStartTime,
@@ -150,6 +153,8 @@ function BranchForm({
           name,
           address,
           phone,
+          taxNumber,
+          receiptFooter,
           dayStartTime,
           dayEndTime,
         },
@@ -197,6 +202,22 @@ function BranchForm({
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
       </div>
+
+      <div className='space-y-2'>
+        <Label htmlFor='branchTaxNumber'>{t('taxNumber')}</Label>
+        <Input
+          id='branchTaxNumber'
+          value={form.taxNumber}
+          onChange={(e) => setForm({ ...form, taxNumber: e.target.value })}
+        />
+      </div>
+
+      <LocalizedInput
+        id='branch-receipt-footer'
+        label={t('receiptFooter')}
+        value={form.receiptFooter}
+        onChange={(receiptFooter) => setForm({ ...form, receiptFooter })}
+      />
 
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-2'>

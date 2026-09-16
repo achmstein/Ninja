@@ -27,6 +27,7 @@ export function getCountColumns({ t, locale }: CountColumnsContext) {
 
   return columnHelper.columns([
     columnHelper.accessor('countedAt', {
+      meta: { align: 'end' },
       id: 'countedAt',
       header: t('countedAt'),
       cell: (info) => (
@@ -36,6 +37,7 @@ export function getCountColumns({ t, locale }: CountColumnsContext) {
       ),
     }),
     columnHelper.accessor((row) => toNumber(row.linesOff), {
+      meta: { align: 'end' },
       id: 'verdict',
       header: t('result'),
       cell: ({ row }) => {

@@ -221,6 +221,8 @@
           "name",
           "address",
           "phone",
+          "taxNumber",
+          "receiptFooter",
           "isActive",
           "displayOrder",
           "dayStartTime",
@@ -255,6 +257,22 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "isActive": {
@@ -317,6 +335,22 @@
             ],
             "format": "int32",
             "default": 0
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           },
           "dayStartTime": {
             "type": [
@@ -393,6 +427,22 @@
               "string"
             ],
             "format": "int32"
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           },
           "dayStartTime": {
             "type": [

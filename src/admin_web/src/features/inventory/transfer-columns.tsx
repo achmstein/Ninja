@@ -27,6 +27,7 @@ export function getTransferColumns({
 
   return columnHelper.columns([
     columnHelper.accessor('sentAt', {
+      meta: { align: 'end' },
       id: 'sentAt',
       header: t('sentAt'),
       cell: (info) => (
@@ -47,6 +48,7 @@ export function getTransferColumns({
       ),
     }),
     columnHelper.accessor((row) => row.lines.length, {
+      meta: { align: 'end' },
       id: 'lines',
       header: () => <div className='text-end'>{t('lines')}</div>,
       cell: (info) => (

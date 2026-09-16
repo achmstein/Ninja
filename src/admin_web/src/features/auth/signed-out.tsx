@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -33,7 +32,6 @@ export function SignedOut() {
           <CardTitle className='text-xl tracking-tight'>
             {t('signedOutTitle')}
           </CardTitle>
-          <CardDescription>{t('signedOutDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {auth.isAuthenticated ? (

@@ -52,6 +52,10 @@ namespace Chillax.Branch.API.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DisplayOrder");
@@ -101,10 +105,31 @@ namespace Chillax.Branch.API.Migrations
                                 .HasForeignKey("BranchId");
                         });
 
+                    b.OwnsOne("Chillax.Branch.API.Model.LocalizedText", "ReceiptFooter", b1 =>
+                        {
+                            b1.Property<int>("BranchId");
+
+                            b1.Property<string>("Ar");
+
+                            b1.Property<string>("En")
+                                .IsRequired();
+
+                            b1.HasKey("BranchId");
+
+                            b1.ToTable("Branches");
+
+                            b1.ToJson("ReceiptFooter");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BranchId");
+                        });
+
                     b.Navigation("Address");
 
                     b.Navigation("Name")
                         .IsRequired();
+
+                    b.Navigation("ReceiptFooter");
                 });
 #pragma warning restore 612, 618
         }

@@ -24,7 +24,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
@@ -88,7 +87,6 @@ export function Partners() {
       <Main className='flex flex-col gap-6'>
         <PageHeader
           title={t('navFinancePartners')}
-          description={t('partnersSubtitle')}
           actions={
             <Button onClick={() => setAdding(true)}>
               <Plus className='me-2 h-4 w-4' />
@@ -105,7 +103,6 @@ export function Partners() {
           <EmptyState
             icon={Handshake}
             title={t('noPartners')}
-            description={t('noPartnersHint')}
             action={
               <Button onClick={() => setAdding(true)}>
                 <Plus className='me-2 h-4 w-4' />
@@ -203,9 +200,6 @@ function PartnerSheet({
           <SheetTitle>
             {isNew ? t('addPartner') : (partner?.name ?? '')}
           </SheetTitle>
-          <SheetDescription>
-            {isNew ? t('addPartnerDescription') : t('partner')}
-          </SheetDescription>
         </SheetHeader>
 
         {isNew ? (
@@ -215,7 +209,7 @@ function PartnerSheet({
         ) : partner ? (
           <>
             <section className='space-y-3 border-b p-4'>
-              <h3 className='text-sm font-semibold'>{t('details')}</h3>
+              <h3 className='text-sm font-medium'>{t('details')}</h3>
               <PartnerForm
                 key={String(partner.id)}
                 partner={partner}
@@ -224,10 +218,7 @@ function PartnerSheet({
             </section>
             <section className='space-y-3 border-b p-4'>
               <div>
-                <h3 className='text-sm font-semibold'>{t('account')}</h3>
-                <p className='text-muted-foreground text-xs'>
-                  {t('partnerAccountHint')}
-                </p>
+                <h3 className='text-sm font-medium'>{t('account')}</h3>
               </div>
               <PartnerLedger partner={partner} />
             </section>
@@ -369,9 +360,6 @@ function PartnerForm({
               )
             })}
           </div>
-          <p className='text-muted-foreground text-xs'>
-            {t('profitShareHint')}
-          </p>
         </div>
       </div>
       <div className='flex items-center justify-between gap-2'>

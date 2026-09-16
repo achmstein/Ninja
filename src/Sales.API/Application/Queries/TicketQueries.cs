@@ -30,6 +30,9 @@ public interface ITicketQueries
     /// </summary>
     Task<RangeReport> GetRangeReportAsync(int branchId, DateTime from, DateTime to);
 
+    /// <summary>The window by hour, weekday, cashier and item; hours in the caller's clock.</summary>
+    Task<BreakdownReport> GetBreakdownAsync(int branchId, DateTime from, DateTime to, int offsetMinutes);
+
     /// <summary>The branch's pricing rules, defaults when it never set any.</summary>
     Task<PricingView> GetPricingAsync(int branchId);
 
@@ -187,10 +190,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             TabPayments = tabPayments.Sum(p => p.Amount),
             TabPaymentCount = tabPayments.Count,
             TabPaymentTenderTotals = ShiftQueries.TenderTotals(tabPayments),
-            // Line discounts plus loyalty (negative) lines, reported positive
-            Discounts = tickets
-                .SelectMany(t => t.Lines)
-                .Sum(l => l.Discount + (l.Total < 0 ? -l.Total : 0)),
+            Discounts = DiscountsOf(tickets),
             ChangeGiven = tickets.Sum(t => t.ChangeGiven),
             TenderTotals = tickets
                 .SelectMany(t => t.Payments)
@@ -276,6 +276,10 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             }).ToList(),
             Total = bill.Total,
             Subtotal = bill.Subtotal,
+            Discount = bill.Discount,
+            DiscountRate = ticket.DiscountRate,
+            DiscountReason = ticket.DiscountReason,
+            DiscountBy = ticket.DiscountBy,
             ServiceCharge = bill.ServiceCharge,
             Vat = bill.Vat,
             VatIncluded = bill.VatIncluded,
@@ -288,11 +292,109 @@ public class TicketQueries(SalesContext context) : ITicketQueries
         };
     }
 
+    public async Task<BreakdownReport> GetBreakdownAsync(int branchId, DateTime from, DateTime to, int offsetMinutes)
+    {
+        var tickets = await context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId
+                        && t.Status == TicketStatus.Settled
+                        && t.SettledAt >= from && t.SettledAt < to)
+            .ToListAsync();
+
+        var voids = await context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId
+                        && t.Status == TicketStatus.Voided
+                        && t.VoidedAt >= from && t.VoidedAt < to)
+            .Select(t => new { t.VoidedBy })
+            .ToListAsync();
+
+        var refunds = await context.Refunds
+            .AsNoTracking()
+            .Where(r => r.BranchId == branchId && r.RefundedAt >= from && r.RefundedAt < to)
+            .Select(r => new { r.RefundedBy, r.Amount })
+            .ToListAsync();
+
+        var offset = TimeSpan.FromMinutes(offsetMinutes);
+        DateTime Local(Ticket t) => (t.SettledAt ?? t.OpenedAt) + offset;
+
+        var byHour = tickets
+            .GroupBy(t => Local(t).Hour)
+            .ToDictionary(g => g.Key, g => (Count: g.Count(), Net: g.Sum(t => t.Total)));
+
+        var byWeekday = tickets
+            .GroupBy(t => (int)Local(t).DayOfWeek)
+            .ToDictionary(g => g.Key, g => (Count: g.Count(), Net: g.Sum(t => t.Total)));
+
+        var voidsBy = voids.GroupBy(v => v.VoidedBy ?? "").ToDictionary(g => g.Key, g => g.Count());
+        var refundsBy = refunds.GroupBy(r => r.RefundedBy).ToDictionary(g => g.Key, g => g.Sum(r => r.Amount));
+
+        var cashiers = tickets.Select(t => t.SettledBy ?? "")
+            .Concat(voidsBy.Keys)
+            .Concat(refundsBy.Keys)
+            .Distinct()
+            .Select(name =>
+            {
+                var own = tickets.Where(t => (t.SettledBy ?? "") == name).ToList();
+                return new CashierTotal(
+                    name,
+                    own.Count,
+                    own.Sum(t => t.Total),
+                    DiscountsOf(own),
+                    voidsBy.GetValueOrDefault(name),
+                    refundsBy.GetValueOrDefault(name));
+            })
+            .OrderByDescending(c => c.Net)
+            .ToList();
+
+        // What sold, by the line's name: the loyalty line is money off, not
+        // a thing sold, so negative lines stay out
+        var items = tickets
+            .SelectMany(t => t.Lines.Where(l => l.Total > 0).Select(l => (Ticket: t.Id, Line: l)))
+            .GroupBy(x => x.Line.Description.En)
+            .Select(g => new ItemTotal(
+                g.First().Line.Description,
+                g.Sum(x => x.Line.Qty),
+                g.Sum(x => x.Line.Total),
+                g.Select(x => x.Ticket).Distinct().Count()))
+            .OrderByDescending(i => i.Amount)
+            .Take(50)
+            .ToList();
+
+        return new BreakdownReport
+        {
+            From = from,
+            To = to,
+            OffsetMinutes = offsetMinutes,
+            ByHour = Enumerable.Range(0, 24)
+                .Select(h => new HourTotal(h, byHour.GetValueOrDefault(h).Count, byHour.GetValueOrDefault(h).Net))
+                .ToList(),
+            ByWeekday = Enumerable.Range(0, 7)
+                .Select(d => new WeekdayTotal(d, byWeekday.GetValueOrDefault(d).Count, byWeekday.GetValueOrDefault(d).Net))
+                .ToList(),
+            ByCashier = cashiers,
+            ByItem = items,
+        };
+    }
+
     public async Task<PricingView> GetPricingAsync(int branchId)
     {
-        var rules = await RulesForAsync(branchId);
-        return new PricingView(branchId, rules.VatRate, rules.PricesIncludeVat, rules.ServiceChargeRate);
+        var pricing = await context.BranchPricings.AsNoTracking().FirstOrDefaultAsync(p => p.BranchId == branchId);
+        var rules = pricing?.Rules ?? PricingRules.None;
+        return new PricingView(
+            branchId,
+            rules.VatRate,
+            rules.PricesIncludeVat,
+            rules.ServiceChargeRate,
+            pricing?.MaxCashierDiscountRate ?? BranchPricing.DefaultMaxCashierDiscountRate);
     }
+
+    /// <summary>
+    /// Everything taken off settled bills, as a positive number: the bill
+    /// discount frozen at settle, line discounts, and loyalty (negative) lines.
+    /// </summary>
+    internal static decimal DiscountsOf(IEnumerable<Ticket> tickets)
+        => tickets.Sum(t => t.Discount + t.Lines.Sum(l => l.Discount + (l.Total < 0 ? -l.Total : 0)));
 
     public async Task<PagedResult<TicketHistoryRow>> GetTicketHistoryAsync(
         int branchId, TicketStatus status, DateTime? from, DateTime? to, int? receiptNumber, int pageIndex, int pageSize)

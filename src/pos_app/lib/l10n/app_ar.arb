@@ -383,6 +383,8 @@
   "settleAction": "اقفل الحساب",
   "settledBadge": "متقفل",
   "discount": "الخصم",
+  "apply": "تطبيق",
+  "remove": "شيل",
   "cancel": "إلغاء",
   "close": "إغلاق",
   "selectLines": "تحديد",
@@ -635,6 +637,14 @@
   "failedToUpdateAvailability": "معرفناش نحدث التوفر",
   "receiptDate": "التاريخ",
   "receiptThanks": "شكراً لحضرتك!",
+  "taxNumber": "رقم ضريبي {number}",
+  "@taxNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "toastSuccess": "تم بنجاح",
   "toastError": "في حاجة غلط",
   "toastInfo": "خد بالك",

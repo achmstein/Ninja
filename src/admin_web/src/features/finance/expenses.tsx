@@ -125,7 +125,6 @@ export function Expenses() {
       <Main className='flex flex-col gap-6'>
         <PageHeader
           title={t('navFinanceExpenses')}
-          description={t('expensesSubtitle')}
           actions={
             <div className='flex gap-2'>
               <Button variant='outline' onClick={() => setCategoriesOpen(true)}>
@@ -176,7 +175,6 @@ export function Expenses() {
           <EmptyState
             icon={Receipt}
             title={t('noExpenses')}
-            description={t('noExpensesHint')}
             action={
               <Button onClick={() => setAdding(true)}>
                 <Plus className='me-2 h-4 w-4' />
@@ -327,7 +325,6 @@ export function Expenses() {
         title={t('voidExpenseQuestion')}
         desc={
           <div className='space-y-3'>
-            <p>{t('voidExpenseDescription')}</p>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='void-reason'>{t('reason')}</Label>
               <Input

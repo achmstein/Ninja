@@ -25,7 +25,6 @@ import {
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -188,7 +187,6 @@ export function MenuReviewSheet({
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewMenuScan')}
           </SheetTitle>
-          <SheetDescription>{t('reviewMenuScanDescription')}</SheetDescription>
         </SheetHeader>
 
         <LocalizedFields>

@@ -1,3 +1,4 @@
+import '../providers/branch_provider.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,6 +59,7 @@ class PrintService {
       l10n: l10n,
       locale: locale,
       logo: await _logo(),
+      branch: _ref.read(branchProvider).selectedBranch,
       paymentsOverride: paymentsOverride,
       receiptNumberOverride: receiptNumberOverride,
       provisionalReceiptNumber: provisionalReceiptNumber,

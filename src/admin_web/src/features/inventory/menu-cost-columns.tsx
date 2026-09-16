@@ -64,6 +64,7 @@ export function getMenuCostColumns({
       cell: ({ row }) => money(row.original.price),
     }),
     columnHelper.accessor('cost', {
+      meta: { align: 'end' },
       id: 'cost',
       header: endHeader('costPerSaleHeader'),
       cell: ({ row }) => (
@@ -97,6 +98,7 @@ export function getMenuCostColumns({
         ),
     }),
     columnHelper.accessor((row) => row.foodCost ?? -1, {
+      meta: { align: 'end' },
       id: 'foodCost',
       header: endHeader('foodCostPercent'),
       cell: ({ row }) => {

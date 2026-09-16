@@ -124,7 +124,6 @@ export function MenuCost() {
       <div className='flex flex-wrap items-end justify-between gap-3'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>{t('menuCost')}</h1>
-          <p className='text-muted-foreground'>{t('menuCostSubtitle')}</p>
         </div>
         <div className='flex items-center gap-2'>
           <Label htmlFor='food-cost-target' className='whitespace-nowrap'>

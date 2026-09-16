@@ -83,7 +83,6 @@ export function OrdersBoard() {
       <Main className='flex flex-col gap-4'>
         <PageHeader
           title={t('orders')}
-          description={t('liveOrdersSubtitle')}
           badge={
             <>
               {pending.length > 0 && (
@@ -150,7 +149,6 @@ export function OrdersBoard() {
           <EmptyState
             icon={CheckCircle2}
             title={t('allClear')}
-            description={t('newOrdersAppearInstantly')}
           />
         ) : (
           // A grid, not CSS columns: reading order is the queue order
@@ -181,7 +179,6 @@ export function OrdersBoard() {
           if (!open) setCancelTarget(null)
         }}
         title={t('cancelOrderQuestion')}
-        desc={t('cancelOrderConfirmation')}
         cancelBtnText={t('keepOrder')}
         confirmText={t('cancelOrderButton')}
         destructive

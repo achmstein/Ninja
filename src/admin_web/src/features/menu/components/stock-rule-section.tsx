@@ -136,7 +136,6 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       className='text-primary'
       disabled={propose.isPending}
       onClick={askAssistant}
-      title={t('proposeRecipeHint')}
     >
       {propose.isPending ? (
         <Spinner className='me-2' />

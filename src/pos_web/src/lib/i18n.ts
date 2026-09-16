@@ -306,6 +306,8 @@ const dictionary = {
   settleAction: { en: 'Settle', ar: 'اقفل الحساب' },
   settledBadge: { en: 'Settled', ar: 'متقفل' },
   discount: { en: 'Discount', ar: 'الخصم' },
+  apply: { en: 'Apply', ar: 'تطبيق' },
+  remove: { en: 'Remove', ar: 'شيل' },
   cancel: { en: 'Cancel', ar: 'إلغاء' },
   close: { en: 'Close', ar: 'إغلاق' },
   selectLines: { en: 'Select', ar: 'تحديد' },
@@ -583,6 +585,7 @@ const dictionary = {
   // Receipt
   receiptDate: { en: 'Date', ar: 'التاريخ' },
   receiptThanks: { en: 'Thank you!', ar: 'شكراً لحضرتك!' },
+  taxNumber: { en: 'Tax no. {number}', ar: 'رقم ضريبي {number}' },
 
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },

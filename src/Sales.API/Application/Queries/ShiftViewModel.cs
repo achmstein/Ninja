@@ -22,6 +22,8 @@ public record ShiftView
     public List<CashMovementView> Movements { get; init; } = [];
     public int TicketsSettled { get; init; }
     public decimal SalesTotal { get; init; }
+    /// <summary>Bill discounts, line discounts and loyalty lines on the shift's tickets, as a positive number.</summary>
+    public decimal Discounts { get; init; }
     public List<TenderTotal> TenderTotals { get; init; } = [];
     public decimal ChangeGiven { get; init; }
     /// <summary>Credit notes issued during the shift, all tenders.</summary>
@@ -75,7 +77,7 @@ public record RangeReport
     public int TicketsSettled { get; init; }
     /// <summary>Σ ticket totals — what customers actually paid.</summary>
     public decimal Net { get; init; }
-    /// <summary>Line discounts plus loyalty (negative) lines, as a positive number.</summary>
+    /// <summary>Bill discounts, line discounts and loyalty (negative) lines, as a positive number.</summary>
     public decimal Discounts { get; init; }
     public decimal ChangeGiven { get; init; }
     public List<TenderTotal> TenderTotals { get; init; } = [];
@@ -94,3 +96,31 @@ public record RangeReport
 }
 
 public record TypeTotal(string Type, int Count, decimal Net);
+
+/// <summary>
+/// The same window cut four ways: by the hour and weekday the bills were
+/// settled (in the caller's clock, hence the offset), by who settled them,
+/// and by what was sold. Every figure is settled money; voids are counted
+/// beside the cashier who gave them, refunds beside who issued them.
+/// </summary>
+public record BreakdownReport
+{
+    public DateTime From { get; init; }
+    public DateTime To { get; init; }
+    /// <summary>Minutes the caller's clock is ahead of UTC; the hours and weekdays below are in it.</summary>
+    public int OffsetMinutes { get; init; }
+    public List<HourTotal> ByHour { get; init; } = [];
+    public List<WeekdayTotal> ByWeekday { get; init; } = [];
+    public List<CashierTotal> ByCashier { get; init; } = [];
+    /// <summary>What sold, by the line's name, biggest first (top 50).</summary>
+    public List<ItemTotal> ByItem { get; init; } = [];
+}
+
+public record HourTotal(int Hour, int Count, decimal Net);
+
+/// <summary>0 is Sunday, like <see cref="DayOfWeek"/>.</summary>
+public record WeekdayTotal(int Weekday, int Count, decimal Net);
+
+public record CashierTotal(string Name, int Count, decimal Net, decimal Discounts, int Voids, decimal Refunds);
+
+public record ItemTotal(LocalizedText Description, decimal Qty, decimal Amount, int Tickets);

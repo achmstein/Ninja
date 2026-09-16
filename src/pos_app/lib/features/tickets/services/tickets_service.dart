@@ -61,6 +61,12 @@ abstract class TicketsRepository {
   /// Owner-only: void an open ticket with a reason
   Future<void> voidTicket(int id, String reason, {String? requestId});
 
+  /// Money off the whole bill: one of [rate] (a fraction) or [amount]. The
+  /// server caps a cashier at the branch's rate; an owner is uncapped.
+  Future<void> applyDiscount(int id, {double? rate, double? amount, required String reason, String? requestId});
+
+  Future<void> removeDiscount(int id);
+
   /// Owner-only: a credit note against a settled ticket
   Future<RefundResult> refund(int id, RefundRequest request, {String? requestId});
 
@@ -191,6 +197,25 @@ class ApiTicketsRepository implements TicketsRepository {
   Future<void> voidTicket(int id, String reason, {String? requestId}) async {
     try {
       await _apiClient.post('tickets/$id/void', data: {'reason': reason}, requestId: requestId);
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<void> applyDiscount(int id, {double? rate, double? amount, required String reason, String? requestId}) async {
+    try {
+      await _apiClient.post('tickets/$id/discount',
+          data: {'reason': reason, 'rate': rate, 'amount': amount}, requestId: requestId);
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<void> removeDiscount(int id) async {
+    try {
+      await _apiClient.delete('tickets/$id/discount');
     } on DioException catch (e) {
       throw asSalesException(e);
     }

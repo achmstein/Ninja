@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -73,11 +72,6 @@ export function RecordPaymentDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('recordPayment')}</DialogTitle>
-          <DialogDescription>
-            {t('recordPaymentDescription', {
-              name: account?.customerName || t('customer'),
-            })}
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>

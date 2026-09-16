@@ -282,6 +282,12 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("MaxCashierDiscountRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)")
+                        .HasDefaultValue(0.10m);
+
                     b.Property<bool>("PricesIncludeVat")
                         .HasColumnType("boolean");
 
@@ -495,6 +501,25 @@ namespace Sales.Infrastructure.Migrations
                     b.Property<decimal>("ChangeGiven")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("Discount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("DiscountAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscountBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal?>("DiscountRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<string>("DiscountReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<string>("GuestPhone")
                         .HasMaxLength(30)

@@ -163,6 +163,14 @@ class TicketDetail {
   final String? voidedBy;
   final String? voidReason;
   final double subtotal;
+
+  /// The bill discount as money; zero when none
+  final double discount;
+
+  /// The rate behind it as a fraction; null for a fixed amount or none
+  final double? discountRate;
+  final String? discountReason;
+  final String? discountBy;
   final double serviceCharge;
   final double serviceChargeRate;
   final double vat;
@@ -195,6 +203,10 @@ class TicketDetail {
     this.voidedBy,
     this.voidReason,
     this.subtotal = 0,
+    this.discount = 0,
+    this.discountRate,
+    this.discountReason,
+    this.discountBy,
     this.serviceCharge = 0,
     this.serviceChargeRate = 0,
     this.vat = 0,
@@ -238,6 +250,10 @@ class TicketDetail {
       voidedBy: json['voidedBy'] as String?,
       voidReason: json['voidReason'] as String?,
       subtotal: toNumber(json['subtotal']),
+      discount: toNumber(json['discount']),
+      discountRate: json['discountRate'] == null ? null : toNumber(json['discountRate']),
+      discountReason: json['discountReason'] as String?,
+      discountBy: json['discountBy'] as String?,
       serviceCharge: toNumber(json['serviceCharge']),
       serviceChargeRate: toNumber(json['serviceChargeRate']),
       vat: toNumber(json['vat']),

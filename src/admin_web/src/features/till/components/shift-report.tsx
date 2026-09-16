@@ -148,7 +148,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
 
       {tenders.length > 0 && (
         <section>
-          <h4 className='mb-1 text-sm font-semibold'>{t('tenderSplit')}</h4>
+          <h4 className='mb-1 text-sm font-medium'>{t('tenderSplit')}</h4>
           <ul className='divide-y text-sm'>
             {tenders.map((total) => {
               const key = tenderLabelKey(total.tender)
@@ -177,7 +177,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       {/* Account tabs paid at the counter: part of the drawer, not of sales */}
       {(tabTenders.length > 0 || tabPayments.length > 0) && (
         <section>
-          <h4 className='mb-1 text-sm font-semibold'>{t('tabPayments')}</h4>
+          <h4 className='mb-1 text-sm font-medium'>{t('tabPayments')}</h4>
           {tabTenders.length > 0 && (
             <ul className='divide-y text-sm'>
               {tabTenders.map((total) => {
@@ -231,7 +231,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       )}
 
       <section>
-        <h4 className='mb-1 text-sm font-semibold'>{t('drawerMovements')}</h4>
+        <h4 className='mb-1 text-sm font-medium'>{t('drawerMovements')}</h4>
         {movements.length === 0 ? (
           <p className='text-muted-foreground py-2 text-sm'>
             {t('noMovements')}

@@ -69,6 +69,7 @@ function getPaymentColumns({
       },
     }),
     columnHelper.accessor('receiptNumber', {
+      meta: { align: 'end' },
       id: 'receipt',
       header: t('receiptHash'),
       cell: (info) => {
@@ -101,6 +102,7 @@ function getPaymentColumns({
       cell: (info) => info.getValue() || '—',
     }),
     columnHelper.accessor('amount', {
+      meta: { align: 'end' },
       id: 'amount',
       header: () => <div className='text-end'>{t('amount')}</div>,
       cell: (info) => (

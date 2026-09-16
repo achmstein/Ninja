@@ -53,7 +53,7 @@ public static class BranchApi
             .AsNoTracking()
             .Where(b => b.IsActive)
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayEndTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled))
+            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayEndTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -64,7 +64,7 @@ public static class BranchApi
         var branches = await context.Branches
             .AsNoTracking()
             .OrderBy(b => b.DisplayOrder)
-            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayEndTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled))
+            .Select(b => new BranchResponse(b.Id, b.Name, b.Address, b.Phone, b.TaxNumber, b.ReceiptFooter, b.IsActive, b.DisplayOrder, b.DayStartTime.ToString("HH:mm"), b.DayEndTime.ToString("HH:mm"), b.IsOrderingEnabled, b.IsReservationsEnabled))
             .ToListAsync();
 
         return TypedResults.Ok(branches);
@@ -79,6 +79,8 @@ public static class BranchApi
             Name = request.Name,
             Address = request.Address,
             Phone = request.Phone,
+            TaxNumber = request.TaxNumber,
+            ReceiptFooter = request.ReceiptFooter,
             IsActive = true,
             DisplayOrder = request.DisplayOrder,
             DayStartTime = request.DayStartTime != null ? TimeOnly.Parse(request.DayStartTime) : new TimeOnly(17, 0),
@@ -90,7 +92,7 @@ public static class BranchApi
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
         return TypedResults.Created($"/api/branches/{branch.Id}", response);
     }
 
@@ -107,6 +109,8 @@ public static class BranchApi
         branch.Name = request.Name;
         branch.Address = request.Address;
         branch.Phone = request.Phone;
+        branch.TaxNumber = request.TaxNumber;
+        branch.ReceiptFooter = request.ReceiptFooter;
         branch.IsActive = request.IsActive;
         branch.DisplayOrder = request.DisplayOrder;
         if (request.DayStartTime != null) branch.DayStartTime = TimeOnly.Parse(request.DayStartTime);
@@ -115,7 +119,7 @@ public static class BranchApi
         // The flags ride the same save; the service announces the change
         await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled);
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
         return TypedResults.Ok(response);
     }
 
@@ -128,17 +132,17 @@ public static class BranchApi
         if (branch == null)
             return TypedResults.NotFound();
 
-        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
+        var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled);
         return TypedResults.Ok(response);
     }
 
 }
 
-public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled);
+public record BranchResponse(int Id, LocalizedText Name, LocalizedText? Address, string? Phone, string? TaxNumber, LocalizedText? ReceiptFooter, bool IsActive, int DisplayOrder, string DayStartTime, string DayEndTime, bool IsOrderingEnabled, bool IsReservationsEnabled);
 
-public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? DayStartTime = null, string? DayEndTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true);
+public record CreateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, int DisplayOrder = 0, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, string? DayEndTime = null, bool IsOrderingEnabled = true, bool IsReservationsEnabled = true);
 
-public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? DayStartTime = null, string? DayEndTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null);
+public record UpdateBranchRequest(LocalizedText Name, LocalizedText? Address, string? Phone, bool IsActive, int DisplayOrder, string? TaxNumber = null, LocalizedText? ReceiptFooter = null, string? DayStartTime = null, string? DayEndTime = null, bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null);
 
 public record UpdateBranchSettingsRequest(bool? IsOrderingEnabled = null, bool? IsReservationsEnabled = null);
 

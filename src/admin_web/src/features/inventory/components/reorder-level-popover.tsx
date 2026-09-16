@@ -86,9 +86,6 @@ export function ReorderLevelPopover({ level }: { level: StockLevelView }) {
               onChange={(e) => setValue(e.target.value)}
               autoFocus
             />
-            <p className='text-muted-foreground text-xs'>
-              {t('reorderLevelHint')}
-            </p>
           </div>
           <div className='flex justify-end gap-2'>
             {current != null && (

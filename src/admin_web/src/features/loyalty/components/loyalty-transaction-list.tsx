@@ -68,7 +68,7 @@ export function LoyaltyTransactionList({
   if (isLoading) {
     return (
       <div className='space-y-3'>
-        <h4 className='font-medium'>{t('history')}</h4>
+        <h4 className='text-sm font-medium'>{t('history')}</h4>
         <div className='space-y-2'>
           {Array.from({ length: 5 }).map((_, i) => (
             <div
@@ -91,7 +91,7 @@ export function LoyaltyTransactionList({
   if (!transactions || transactions.length === 0) {
     return (
       <div className='space-y-3'>
-        <h4 className='font-medium'>{t('history')}</h4>
+        <h4 className='text-sm font-medium'>{t('history')}</h4>
         <div className='flex flex-col items-center gap-2 rounded-lg border border-dashed p-6 text-muted-foreground'>
           <Clock className='h-8 w-8' />
           <p className='text-sm'>{t('noTransactionsYet')}</p>
@@ -102,7 +102,7 @@ export function LoyaltyTransactionList({
 
   return (
     <div className='space-y-3'>
-      <h4 className='font-medium'>{t('history')}</h4>
+      <h4 className='text-sm font-medium'>{t('history')}</h4>
       <ScrollArea className='h-[300px]'>
         <div className='space-y-2 pe-4'>
           {transactions.map((transaction) => (

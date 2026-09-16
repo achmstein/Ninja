@@ -11,7 +11,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -56,7 +55,7 @@ export function SettingsProfile() {
   return (
     <div className='space-y-6'>
       <div>
-        <h3 className='text-lg font-medium'>{t('profile')}</h3>
+        <h3 className='text-sm font-medium'>{t('profile')}</h3>
         <p className='text-muted-foreground text-sm'>{t('profileSubtitle')}</p>
       </div>
 
@@ -110,9 +109,6 @@ export function SettingsProfile() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('signOutQuestion')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('signOutConfirmation')}
-            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>

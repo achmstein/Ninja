@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -57,9 +56,6 @@ export function RecurringDialog({
       <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>{t('recurringBills')}</DialogTitle>
-          <DialogDescription>
-            {t('recurringBillsDescription')}
-          </DialogDescription>
         </DialogHeader>
 
         {editing ? (
