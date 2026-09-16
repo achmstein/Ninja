@@ -72,15 +72,15 @@ export function OrderCard({
 
   // Where it goes: the room or table it was ordered from; failing that, the
   // counter it was rung up at, or the pickup shelf
-  const place = localized(order.roomName) || localized(order.tableName)
+  const place = localized(order.placeName)
   const channel = place || (isPos ? t('counter') : t('pickup'))
-  const PlaceIcon = localized(order.roomName)
-    ? DoorOpen
-    : place
-      ? Armchair
-      : isPos
-        ? Store
-        : ShoppingBag
+  const PlaceIcon = !place
+    ? isPos
+      ? Store
+      : ShoppingBag
+    : order.placeKind === 'Room'
+      ? DoorOpen
+      : Armchair
 
   // Who it is for: the name to call out. A counter sale or a table order
   // without a name needs nobody called, so the line is left out; an app
@@ -106,7 +106,7 @@ export function OrderCard({
           <span
             className={cn(
               'ms-auto shrink-0 text-xl leading-none font-bold tabular-nums',
-              toneClockClass(tone)
+              toneClockClass(tone),
             )}
           >
             {clock}

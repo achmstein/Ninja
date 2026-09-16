@@ -9,8 +9,8 @@ void main() {
       'confirmedAt': '2026-09-05T19:52:00Z',
       'readyAt': null,
       'source': 'Customer',
-      'roomName': {'en': 'Room 3', 'ar': 'اوضة 3'},
-      'tableName': null,
+      'placeKind': 'Room',
+      'placeName': {'en': 'Room 3', 'ar': 'اوضة 3'},
       'customerName': 'Ahmed',
       'customerNote': null,
       'items': [
@@ -32,8 +32,8 @@ void main() {
     expect(order.orderNumber, 3121);
     expect(order.isReady, isFalse);
     expect(order.since, DateTime.utc(2026, 9, 5, 19, 52));
-    expect(order.roomName?.ar, 'اوضة 3');
-    expect(order.tableName, isNull);
+    expect(order.placeName?.ar, 'اوضة 3');
+    expect(order.placeKind, 'Room');
     expect(order.customerNote, isNull);
     expect(order.isPos, isFalse);
     expect(order.items, hasLength(2));

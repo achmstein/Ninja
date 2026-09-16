@@ -34,8 +34,9 @@ class KitchenOrder {
 
   /// Who placed it: Customer, Guest or Pos
   final String source;
-  final LocalizedText? roomName;
-  final LocalizedText? tableName;
+  /// The place it was ordered from; kind 'Room', 'Table' or 'Station'
+  final String? placeKind;
+  final LocalizedText? placeName;
   final String? customerName;
   final String? customerNote;
   final List<KitchenOrderItem> items;
@@ -46,8 +47,8 @@ class KitchenOrder {
     this.confirmedAt,
     this.readyAt,
     this.source = 'Customer',
-    this.roomName,
-    this.tableName,
+    this.placeKind,
+    this.placeName,
     this.customerName,
     this.customerNote,
     this.items = const [],
@@ -65,8 +66,8 @@ class KitchenOrder {
         confirmedAt: confirmedAt,
         readyAt: readyAt,
         source: source,
-        roomName: roomName,
-        tableName: tableName,
+        placeKind: placeKind,
+        placeName: placeName,
         customerName: customerName,
         customerNote: customerNote,
         items: items,
@@ -78,8 +79,8 @@ class KitchenOrder {
         confirmedAt: readUtc(json['confirmedAt']),
         readyAt: readUtc(json['readyAt']),
         source: _text(json['source']) ?? 'Customer',
-        roomName: LocalizedText.parseNullable(json['roomName']),
-        tableName: LocalizedText.parseNullable(json['tableName']),
+        placeKind: json['placeKind'] as String?,
+        placeName: LocalizedText.parseNullable(json['placeName']),
         customerName: _text(json['customerName']),
         customerNote: _text(json['customerNote']),
         items: [

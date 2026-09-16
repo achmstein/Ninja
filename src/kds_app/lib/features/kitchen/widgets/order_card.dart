@@ -59,21 +59,17 @@ class OrderCard extends StatelessWidget {
 
     // Where it goes: the room or table it was ordered from; failing that, the
     // counter it was rung up at, or the pickup shelf
-    final room = order.roomName?.localized(context) ?? '';
-    final table = order.tableName?.localized(context) ?? '';
-    final place = room.isNotEmpty ? room : table;
+    final place = order.placeName?.localized(context) ?? '';
     final channel = place.isNotEmpty
         ? place
         : order.isPos
             ? l10n.counter
             : l10n.pickup;
-    final placeIcon = room.isNotEmpty
-        ? FIcons.doorOpen
-        : place.isNotEmpty
-            ? FIcons.armchair
-            : order.isPos
-                ? FIcons.store
-                : FIcons.shoppingBag;
+    final placeIcon = place.isNotEmpty
+        ? (order.placeKind == 'Room' ? FIcons.doorOpen : FIcons.armchair)
+        : order.isPos
+            ? FIcons.store
+            : FIcons.shoppingBag;
 
     // Who it is for: the name to call out. A counter sale or a table order
     // without a name needs nobody called, so the line is left out; an app

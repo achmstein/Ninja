@@ -110,7 +110,8 @@ final List<KitchenOrder> _sampleOrders = [
     date: _now.subtract(const Duration(minutes: 1, seconds: 20)),
     confirmedAt: _now.subtract(const Duration(minutes: 1)),
     source: 'Customer',
-    roomName: _lt('Room 3', 'اوضة 3'),
+    placeKind: 'Room',
+    placeName: _lt('Room 3', 'اوضة 3'),
     customerName: 'Ahmed',
     items: [
       _item('Latte', 'لاتيه', 2, customEn: 'Large, oat milk', customAr: 'كبير، لبن شوفان'),
@@ -122,7 +123,8 @@ final List<KitchenOrder> _sampleOrders = [
     date: _now.subtract(const Duration(minutes: 6, seconds: 30)),
     confirmedAt: _now.subtract(const Duration(minutes: 6)),
     source: 'Guest',
-    tableName: _lt('Table 5', 'ترابيزة 5'),
+    placeKind: 'Table',
+    placeName: _lt('Table 5', 'ترابيزة 5'),
     customerNote: 'No ice please',
     items: [
       _item('Iced Americano', 'أمريكانو مثلج', 1, instructions: 'Less ice'),
@@ -155,7 +157,8 @@ final List<KitchenOrder> _sampleOrders = [
     date: _now.subtract(const Duration(minutes: 9)),
     confirmedAt: _now.subtract(const Duration(minutes: 9)),
     source: 'Pos',
-    tableName: _lt('Table 2', 'ترابيزة 2'),
+    placeKind: 'Table',
+    placeName: _lt('Table 2', 'ترابيزة 2'),
     items: [
       _item('Fresh orange', 'عصير برتقال', 3),
     ],
@@ -166,7 +169,8 @@ final List<KitchenOrder> _sampleOrders = [
     confirmedAt: _now.subtract(const Duration(minutes: 20)),
     readyAt: _now.subtract(const Duration(minutes: 3)),
     source: 'Customer',
-    roomName: _lt('Room 1', 'اوضة 1'),
+    placeKind: 'Room',
+    placeName: _lt('Room 1', 'اوضة 1'),
     customerName: 'Omar',
     items: [
       _item('Espresso', 'إسبريسو', 2),

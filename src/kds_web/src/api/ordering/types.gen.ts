@@ -57,6 +57,9 @@ export type CreateOrderRequest = {
     guestPhone?: null | string;
     sessionId?: null | number | string;
     roomId?: null | number | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
 };
 
 export type KitchenOrder = {
@@ -65,6 +68,9 @@ export type KitchenOrder = {
     confirmedAt?: null | string;
     readyAt?: null | string;
     source?: string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
     roomName?: null | LocalizedText;
     tableName?: null | LocalizedText;
     customerName?: null | string;
@@ -89,6 +95,9 @@ export type Order = {
     date?: string;
     status?: string;
     description?: null | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
     roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     roomId?: null | number | string;
@@ -102,6 +111,12 @@ export type Order = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    paidAt?: null | string;
+    receiptNumber?: null | number | string;
+    paidWith?: null | string;
+    refundedAmount?: number | string;
+    voidedAt?: null | string;
+    ticketId?: null | number | string;
     rating?: null | OrderRatingDto;
 };
 
@@ -128,6 +143,7 @@ export type OrderItemDto = {
     pictureUrl?: null | string;
     specialInstructions?: null | string;
     customizationsDescription?: null | LocalizedText;
+    optionIds?: null | Array<number | string>;
 };
 
 export type OrderRatingDto = {
@@ -160,6 +176,15 @@ export type OrderSummary = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    paidAt?: null | string;
+    receiptNumber?: null | number | string;
+    paidWith?: null | string;
+    refundedAmount?: number | string;
+    voidedAt?: null | string;
+    ticketId?: null | number | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
     roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
@@ -169,6 +194,8 @@ export type OrderSummary = {
     userId?: null | string;
     guestPhone?: null | string;
     ratingValue?: null | number | string;
+    customerNote?: null | string;
+    items?: null | Array<Orderitem>;
 };
 
 export type PaginatedResultOfOrderSummary = {
@@ -193,6 +220,9 @@ export type PosOrderRequest = {
     ticketId?: null | number | string;
     customerName?: null | string;
     placedAt?: null | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
     replay?: boolean;
 };
 
@@ -685,6 +715,8 @@ export type GetAllOrdersData = {
         fromDate?: string;
         toDate?: string;
         sessionId?: number | string;
+        search?: string;
+        sort?: string;
         /**
          * The API version, in the format 'major.minor'.
          */
