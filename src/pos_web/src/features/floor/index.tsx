@@ -28,17 +28,17 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
-import { PlacePanel } from '@/features/rooms/room-panel'
-import { StartSessionDialog } from '@/features/rooms/start-session-dialog'
+import { PlacePanel } from '@/features/places/place-panel'
+import { StartStayDialog } from '@/features/places/start-stay-dialog'
 import {
   PLACE_AVAILABLE,
   elapsedSeconds,
   formatClock,
-  isActive,
-  isReserved,
+  isRunning,
+  isHeld,
   isTimed,
-} from '@/features/rooms/status'
-import { usePlaces, useSecondsClock } from '@/features/rooms/use-rooms'
+} from '@/features/places/status'
+import { usePlaces, useSecondsClock } from '@/features/places/use-places'
 import { API_VERSION } from '@/lib/api-client'
 import {
   pendingForTicket,
@@ -47,7 +47,10 @@ import {
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList } from './place-list'
@@ -71,13 +74,13 @@ function Heading({ children }: { children: React.ReactNode }) {
  *  room, and a dot when an order is still waiting to be confirmed onto it. */
 function BillCard({
   ticket,
-  session,
+  stay,
   waiting,
   nowMs,
   onClick,
 }: {
   ticket: TicketSummary
-  session: StayViewModel | undefined
+  stay: StayViewModel | undefined
   waiting: boolean
   nowMs: number
   onClick: () => void
@@ -92,7 +95,7 @@ function BillCard({
     type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
   const title = localized(ticket.locationName) || ticket.label || typeLabel
 
-  const active = isActive(session)
+  const active = isRunning(stay)
 
   return (
     <button
@@ -120,7 +123,7 @@ function BillCard({
 
       {active && (
         <span className='text-muted-foreground font-mono text-sm tabular-nums'>
-          {formatClock(elapsedSeconds(session, nowMs))}
+          {formatClock(elapsedSeconds(stay, nowMs))}
         </span>
       )}
 
@@ -176,16 +179,22 @@ export function Floor() {
     })
   }
   const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
-    'all'
+    'all',
   )
 
   const { data: tickets = [], isLoading } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     // Poll fallback in case the SignalR connection is silently dead; a
-    // quick poll while a just-started session's bill is on its way
+    // quick poll while a just-started stay's bill is on its way
     refetchInterval: startedPlaceId != null ? 600 : 20_000,
   })
-  const { places, stays, stayForPlace, placeById, isLoading: placesLoading } = usePlaces()
+  const {
+    places,
+    stays,
+    stayForPlace,
+    placeById,
+    isLoading: placesLoading,
+  } = usePlaces()
   const { pending } = usePendingOrders()
 
   const openTable = useMutation({
@@ -209,7 +218,7 @@ export function Floor() {
     if (startedPlaceId == null) return
     const bill = tickets.find(
       (ticket) =>
-        toNumber(ticket.placeId) === startedPlaceId && ticket.sessionId != null
+        toNumber(ticket.placeId) === startedPlaceId && ticket.sessionId != null,
     )
     if (bill) {
       setStartedPlaceId(null)
@@ -223,15 +232,15 @@ export function Floor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startedPlaceId, tickets])
 
-  const sessionForTicket = (ticket: TicketSummary) =>
+  const stayForTicket = (ticket: TicketSummary) =>
     ticket.sessionId == null
       ? undefined
       : stays.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
 
   // Holds are the one thing not yet a bill that the cashier must not
   // miss: somebody is on their way
-  const reserved = stays.filter((stay) => isReserved(stay))
-  const running = tickets.some((ticket) => isActive(sessionForTicket(ticket)))
+  const reserved = stays.filter((stay) => isHeld(stay))
+  const running = tickets.some((ticket) => isRunning(stayForTicket(ticket)))
   const nowMs = useSecondsClock(running || reserved.length > 0)
 
   // Bills in the order of their places: rooms, then tables, then counter
@@ -242,12 +251,13 @@ export function Floor() {
   const placeRank = (ticket: TicketSummary) =>
     ticket.type === 'Counter'
       ? 0
-      : (placeOrder.get(toNumber(ticket.placeId ?? ticket.roomId)) ?? places.length)
+      : (placeOrder.get(toNumber(ticket.placeId ?? ticket.roomId)) ??
+        places.length)
   const bills = [...tickets].sort(
     (a, b) =>
       typeRank(a.type) - typeRank(b.type) ||
       placeRank(a) - placeRank(b) ||
-      new Date(a.openedAt ?? 0).getTime() - new Date(b.openedAt ?? 0).getTime()
+      new Date(a.openedAt ?? 0).getTime() - new Date(b.openedAt ?? 0).getTime(),
   )
 
   const counts = {
@@ -262,12 +272,14 @@ export function Floor() {
     .filter((b) => {
       if (!billQuery) return true
       const name = (localized(b.locationName) || b.label || '').toLowerCase()
-      return name.includes(billQuery) || String(toNumber(b.id)).includes(billQuery)
+      return (
+        name.includes(billQuery) || String(toNumber(b.id)).includes(billQuery)
+      )
     })
   const waitingIds = new Set(
     bills
       .filter((b) => pendingForTicket(pending, b).length > 0)
-      .map((b) => toNumber(b.id))
+      .map((b) => toNumber(b.id)),
   )
 
   const selectedPlace = placeById(selectedPlaceId ?? undefined) ?? null
@@ -283,14 +295,18 @@ export function Floor() {
       body: {
         type: TICKET_TYPE_TABLE,
         placeId: toNumber(place.id),
-        tableId: place.legacyTableId != null ? toNumber(place.legacyTableId) : null,
+        tableId:
+          place.legacyTableId != null ? toNumber(place.legacyTableId) : null,
         tableName: place.name,
       },
     })
   const pickPlace = (place: PlaceViewModel) => {
     const id = toNumber(place.id)
     if (!isTimed(place)) openBill(place)
-    else if (Number(place.status) === PLACE_AVAILABLE && !stayForPlace(place.id))
+    else if (
+      Number(place.status) === PLACE_AVAILABLE &&
+      !stayForPlace(place.id)
+    )
       setStartPlaceId(id)
     else setSelectedPlaceId(id)
   }
@@ -397,22 +413,25 @@ export function Floor() {
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
-              {reserved.map((session) => {
-                const place = placeById(session.placeId)
-                const expiresIn = session.expiresAt
-                  ? Math.max(0, (new Date(session.expiresAt).getTime() - nowMs) / 1000)
+              {reserved.map((stay) => {
+                const place = placeById(stay.placeId)
+                const expiresIn = stay.expiresAt
+                  ? Math.max(
+                      0,
+                      (new Date(stay.expiresAt).getTime() - nowMs) / 1000,
+                    )
                   : null
                 return (
                   <button
-                    key={String(session.id)}
+                    key={String(stay.id)}
                     type='button'
-                    onClick={() => setSelectedPlaceId(toNumber(session.placeId))}
+                    onClick={() => setSelectedPlaceId(toNumber(stay.placeId))}
                     className='bg-card hover:bg-accent/50 flex w-[240px] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
                   >
                     <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
                       {/* The customer asked for the clock to start on arrival:
                           Confirm in the panel does both */}
-                      {session.startOnConfirm ? (
+                      {stay.startOnConfirm ? (
                         <TimerReset className='size-5 text-amber-600 dark:text-amber-500' />
                       ) : (
                         <Clock className='size-5 text-amber-600 dark:text-amber-500' />
@@ -420,10 +439,10 @@ export function Floor() {
                     </div>
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate text-base font-semibold'>
-                        {localized(place?.name ?? session.placeName)}
+                        {localized(place?.name ?? stay.placeName)}
                       </span>
                       <span className='text-muted-foreground block truncate text-sm'>
-                        {session.customerName || t('statusReserved')}
+                        {stay.customerName || t('statusReserved')}
                       </span>
                     </span>
                     {expiresIn != null && (
@@ -537,7 +556,7 @@ export function Floor() {
                 <BillCard
                   key={String(ticket.id)}
                   ticket={ticket}
-                  session={sessionForTicket(ticket)}
+                  stay={stayForTicket(ticket)}
                   waiting={waitingIds.has(toNumber(ticket.id))}
                   nowMs={nowMs}
                   onClick={() => toTicket(ticket)}
@@ -556,11 +575,19 @@ export function Floor() {
         accountsOnly
         titleKey='findCustomer'
         onSelect={(picked) => {
-          if (picked.id) setCardFor({ id: picked.id, name: picked.name, phone: picked.phone })
+          if (picked.id)
+            setCardFor({
+              id: picked.id,
+              name: picked.name,
+              phone: picked.phone,
+            })
         }}
       />
-      <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
-      <StartSessionDialog
+      <CustomerCard
+        customer={cardFor}
+        onOpenChange={(open) => !open && setCardFor(null)}
+      />
+      <StartStayDialog
         place={startPlace}
         onOpenChange={(open) => {
           if (!open) setStartPlaceId(null)

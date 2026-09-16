@@ -37,15 +37,21 @@ import {
   pendingForTicket,
   usePendingOrders,
 } from '@/features/orders/use-pending-orders'
-import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
-import { SessionBar } from '@/features/rooms/session-bar'
-import { SessionMembers } from '@/features/rooms/session-members'
-import { isActive, isReserved, sessionRoster } from '@/features/rooms/status'
-import { TimeSoFar } from '@/features/rooms/time-so-far'
-import { useStay, useStayActions } from '@/features/rooms/use-rooms'
+import {
+  ReceiptSheet,
+  type ReceiptPayment,
+} from '@/features/receipt/receipt-sheet'
+import { StayBar } from '@/features/places/stay-bar'
+import { StayMembers } from '@/features/places/stay-members'
+import { isRunning, isHeld, stayRoster } from '@/features/places/status'
+import { TimeSoFar } from '@/features/places/time-so-far'
+import { useStay, useStayActions } from '@/features/places/use-places'
 import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { getRealmRoles } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
@@ -133,7 +139,7 @@ function LineRow({
           aria-hidden
           className={cn(
             'border-input mt-1 flex size-6 shrink-0 items-center justify-center rounded-md border',
-            selected && 'bg-primary text-primary-foreground border-primary'
+            selected && 'bg-primary text-primary-foreground border-primary',
           )}
         >
           {selected && <Check className='size-4' />}
@@ -143,7 +149,7 @@ function LineRow({
         <div
           className={cn(
             'truncate text-base font-medium',
-            isNegative && 'text-emerald-600 dark:text-emerald-400'
+            isNegative && 'text-emerald-600 dark:text-emerald-400',
           )}
         >
           {localized(line.description)}
@@ -156,14 +162,17 @@ function LineRow({
         <div className='text-muted-foreground text-sm tabular-nums'>
           {toNumber(line.qty)} × {money(line.unitPrice)}
           {discount > 0 && (
-            <span> − {money(discount)} ({t('discount')})</span>
+            <span>
+              {' '}
+              − {money(discount)} ({t('discount')})
+            </span>
           )}
         </div>
       </div>
       <div
         className={cn(
           'shrink-0 text-lg font-semibold tabular-nums',
-          isNegative && 'text-emerald-600 dark:text-emerald-400'
+          isNegative && 'text-emerald-600 dark:text-emerald-400',
         )}
       >
         {money(line.total)}
@@ -178,7 +187,7 @@ function LineRow({
         onClick={onToggle}
         className={cn(
           'flex min-h-12 w-full items-start gap-3 rounded-lg px-3 py-2 text-start',
-          selected ? 'bg-accent' : 'hover:bg-accent/50'
+          selected ? 'bg-accent' : 'hover:bg-accent/50',
         )}
       >
         {content}
@@ -273,11 +282,13 @@ export function TicketScreen({
   // guards the settle until then. The stay is read by id, not off the open
   // list: once it has ended the bill is still open, and the people there
   // are still its account holders
-  const session = useStay(
+  const stay = useStay(
     ticket?.sessionId,
-    ticket?.sessionId != null && ticket?.settledAt == null && ticket?.voidedAt == null
+    ticket?.sessionId != null &&
+      ticket?.settledAt == null &&
+      ticket?.voidedAt == null,
   )
-  const sessionActions = useStayActions()
+  const stayActions = useStayActions()
 
   // Arriving from the sale pad (?settle): the walk-in is standing at the
   // till, so jump straight into taking payment. Once only, and only after
@@ -320,11 +331,11 @@ export function TicketScreen({
     // Somebody with an account named on a room's lines is in the room:
     // onto the roster, so their share of the time has a tab at settle
     if (
-      session &&
+      stay &&
       customer.id &&
-      !sessionRoster(session).some((m) => m.id === customer.id)
+      !stayRoster(stay).some((m) => m.id === customer.id)
     ) {
-      sessionActions.addMember(toNumber(session.id), customer.id, customer.name)
+      stayActions.addMember(toNumber(stay.id), customer.id, customer.name)
     }
     try {
       await Promise.all(
@@ -336,8 +347,8 @@ export function TicketScreen({
             // and a later assignment is a new one
             headers: { 'x-requestid': crypto.randomUUID() },
             body: { customerUserId: customer.id, customerName: customer.name },
-          })
-        )
+          }),
+        ),
       )
       // Part of an order (or several): the snapshot on just those lines
       if (lineIds.length > 0) {
@@ -346,7 +357,11 @@ export function TicketScreen({
           headers: { 'x-requestid': crypto.randomUUID() },
           path: { id: ticketId },
           query: { 'api-version': API_VERSION },
-          body: { lineIds, customerId: customer.id ?? null, customerName: customer.name },
+          body: {
+            lineIds,
+            customerId: customer.id ?? null,
+            customerName: customer.name,
+          },
         })
       }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
@@ -361,7 +376,7 @@ export function TicketScreen({
           : undefined
       toast.error(
         t('failedToAssignCustomer'),
-        detail ? { description: detail } : undefined
+        detail ? { description: detail } : undefined,
       )
     }
   }
@@ -411,21 +426,23 @@ export function TicketScreen({
   const isVoided = ticket.voidedAt != null
   const lines = ticket.lines ?? []
   const waiting = isSettled || isVoided ? [] : pendingForTicket(pending, ticket)
-  const liveSession = isSettled || isVoided ? undefined : session
-  const activeSession =
-    liveSession && isActive(liveSession) ? liveSession : undefined
+  const liveStay = isSettled || isVoided ? undefined : stay
+  const runningStay = liveStay && isRunning(liveStay) ? liveStay : undefined
   // Ended, bill still open: the time has landed and the roster stays
   // editable so every share can find its tab
-  const endedSession =
-    liveSession && !isActive(liveSession) && !isReserved(liveSession)
-      ? liveSession
-      : undefined
+  const endedStay =
+    liveStay && !isRunning(liveStay) && !isHeld(liveStay) ? liveStay : undefined
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
   // order keeps the first person named at the top instead of reshuffling the
   // bill every time someone orders again.
   const groups = lines.reduce<
-    { key: string | null; name: string | null; lines: typeof lines; total: number }[]
+    {
+      key: string | null
+      name: string | null
+      lines: typeof lines
+      total: number
+    }[]
   >((acc, line) => {
     // One person is one group however they were named: an account holder by
     // their account, a guest by the id Ordering gave them, and a name the
@@ -452,7 +469,6 @@ export function TicketScreen({
     }
     return acc
   }, [])
-
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
 
@@ -639,7 +655,7 @@ export function TicketScreen({
                   variant='outline'
                   className='text-destructive hover:text-destructive h-12 gap-2 px-3'
                   onClick={() =>
-                    activeSession ? setVoidGuardOpen(true) : setVoidOpen(true)
+                    runningStay ? setVoidGuardOpen(true) : setVoidOpen(true)
                   }
                 >
                   <Ban className='size-5' />
@@ -653,19 +669,19 @@ export function TicketScreen({
 
       <Separator className='my-3' />
 
-      {activeSession && (
+      {runningStay && (
         <div className='mb-4'>
-          <SessionBar session={activeSession} />
+          <StayBar stay={runningStay} />
         </div>
       )}
 
-      {endedSession && (
+      {endedStay && (
         <div className='bg-card text-card-foreground mb-4 flex flex-col gap-3 rounded-xl border p-3 shadow-xs'>
           <div className='text-muted-foreground flex items-center gap-2 text-sm'>
             <Users className='size-4' />
             {t('inTheRoom')}
           </div>
-          <SessionMembers session={endedSession} />
+          <StayMembers stay={endedStay} />
         </div>
       )}
 
@@ -684,18 +700,20 @@ export function TicketScreen({
       {/* The time is not a line until the session ends; until then the
           bill shows it as the row it will become, so the running cost is
           read where the rest of the bill is */}
-      {activeSession && (
+      {runningStay && (
         <div className='text-muted-foreground flex items-center gap-3 border-b border-dashed py-3'>
           <Timer className='size-5 shrink-0' />
-          <span className='min-w-0 flex-1 truncate'>{t('roomTimeRunning')}</span>
+          <span className='min-w-0 flex-1 truncate'>
+            {t('roomTimeRunning')}
+          </span>
           <span className='shrink-0 tabular-nums'>
-            ≈ <TimeSoFar session={activeSession} />
+            ≈ <TimeSoFar stay={runningStay} />
           </span>
         </div>
       )}
 
       {lines.length === 0 ? (
-        !activeSession && (
+        !runningStay && (
           <p className='text-muted-foreground py-16 text-center'>
             {t('emptyTicket')}
           </p>
@@ -814,7 +832,10 @@ export function TicketScreen({
           </h2>
           <div className='divide-y rounded-lg border'>
             {ticket.refunds!.map((refund) => (
-              <div key={String(refund.id)} className='flex flex-col gap-0.5 px-3 py-2'>
+              <div
+                key={String(refund.id)}
+                className='flex flex-col gap-0.5 px-3 py-2'
+              >
                 <div className='flex items-baseline justify-between gap-4'>
                   <span className='font-medium'>
                     {t('creditNote', { number: toNumber(refund.number) })}
@@ -847,123 +868,124 @@ export function TicketScreen({
       {/* Sticky action bar: the running total is always in reach, and so is
           the primary action (Settle, or Move while selecting) */}
       {!isVoided && (
-      <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur'>
-        <div className='mx-auto flex max-w-3xl items-center gap-4'>
-          <div className='min-w-0'>
-            <div className='text-muted-foreground text-sm'>{t('total')}</div>
-            <div className='text-2xl font-bold tabular-nums'>
-              {money(ticket.total)}
-            </div>
-            {toNumber(ticket.discount) > 0 && (
-              <div className='text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
-                {t('discount')} −{money(ticket.discount)}
-                {ticket.discountRate != null && ` (${percent(ticket.discountRate)}%)`}
+        <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur'>
+          <div className='mx-auto flex max-w-3xl items-center gap-4'>
+            <div className='min-w-0'>
+              <div className='text-muted-foreground text-sm'>{t('total')}</div>
+              <div className='text-2xl font-bold tabular-nums'>
+                {money(ticket.total)}
               </div>
-            )}
-            {/* The rest of the bill's parts (menu money, service, VAT, what
+              {toNumber(ticket.discount) > 0 && (
+                <div className='text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+                  {t('discount')} −{money(ticket.discount)}
+                  {ticket.discountRate != null &&
+                    ` (${percent(ticket.discountRate)}%)`}
+                </div>
+              )}
+              {/* The rest of the bill's parts (menu money, service, VAT, what
                 went back) are one tap away; the bar carries the total and
                 the discount, which the cashier must not miss */}
-            {(toNumber(ticket.discount) > 0 ||
-              toNumber(ticket.serviceCharge) > 0 ||
-              toNumber(ticket.vat) > 0 ||
-              toNumber(ticket.refundedTotal) > 0) && (
-              <Button
-                variant='ghost'
-                size='sm'
-                className='text-muted-foreground -ms-2 h-7 px-2 text-xs'
-                onClick={() => setBreakdownOpen(true)}
-              >
-                {t('breakdown')}
-              </Button>
-            )}
-            {activeSession && (
-              <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                + {t('timeSoFar')} ≈ <TimeSoFar session={activeSession} />
-              </div>
-            )}
-          </div>
-          <div className='ms-auto'>
-            {isSettled ? (
-              <div className='flex gap-2'>
-                {/* Owner-only, like void: money goes back, so an owner says
+              {(toNumber(ticket.discount) > 0 ||
+                toNumber(ticket.serviceCharge) > 0 ||
+                toNumber(ticket.vat) > 0 ||
+                toNumber(ticket.refundedTotal) > 0) && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='text-muted-foreground -ms-2 h-7 px-2 text-xs'
+                  onClick={() => setBreakdownOpen(true)}
+                >
+                  {t('breakdown')}
+                </Button>
+              )}
+              {runningStay && (
+                <div className='text-muted-foreground truncate text-xs tabular-nums'>
+                  + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
+                </div>
+              )}
+            </div>
+            <div className='ms-auto'>
+              {isSettled ? (
+                <div className='flex gap-2'>
+                  {/* Owner-only, like void: money goes back, so an owner says
                     so. Gone once the whole receipt has been credited. */}
-                {isOwner &&
-                  toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
-                    <Button
-                      size='lg'
-                      variant='outline'
-                      className='text-destructive hover:text-destructive h-14 px-5 text-lg'
-                      onClick={() => setRefundOpen(true)}
-                    >
-                      <Undo2 className='size-5' />
-                      {t('refundTicket')}
-                    </Button>
-                  )}
+                  {isOwner &&
+                    toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
+                      <Button
+                        size='lg'
+                        variant='outline'
+                        className='text-destructive hover:text-destructive h-14 px-5 text-lg'
+                        onClick={() => setRefundOpen(true)}
+                      >
+                        <Undo2 className='size-5' />
+                        {t('refundTicket')}
+                      </Button>
+                    )}
+                  <Button
+                    size='lg'
+                    className='h-14 px-6 text-lg'
+                    onClick={() => window.print()}
+                  >
+                    <Printer className='size-5' />
+                    {t('print')}
+                  </Button>
+                </div>
+              ) : selecting ? (
+                <div className='flex items-center gap-2'>
+                  <Button
+                    variant='outline'
+                    size='lg'
+                    className='h-14 gap-2 px-5 text-lg'
+                    disabled={
+                      selectedIds.size === 0 ||
+                      assignCustomer.isPending ||
+                      assignLines.isPending
+                    }
+                    onClick={assignSelected}
+                  >
+                    <UserPlus className='size-5' />
+                    {t('assignCustomer')}
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='lg'
+                    className='h-14 gap-2 px-5 text-lg'
+                    disabled={selectedIds.size === 0 || moveLines.isPending}
+                    onClick={() => setMoveMode('move')}
+                  >
+                    {t('moveToBill')}
+                  </Button>
+                  <Button
+                    size='lg'
+                    className='h-14 gap-2 px-6 text-lg'
+                    disabled={selectedIds.size === 0 || moveLines.isPending}
+                    onClick={() => setMoveMode('new')}
+                  >
+                    {moveLines.isPending && (
+                      <Loader2 className='size-5 animate-spin' />
+                    )}
+                    {t('newBill')}
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   size='lg'
-                  className='h-14 px-6 text-lg'
-                  onClick={() => window.print()}
-                >
-                  <Printer className='size-5' />
-                  {t('print')}
-                </Button>
-              </div>
-            ) : selecting ? (
-              <div className='flex items-center gap-2'>
-                <Button
-                  variant='outline'
-                  size='lg'
-                  className='h-14 gap-2 px-5 text-lg'
-                  disabled={
-                    selectedIds.size === 0 ||
-                    assignCustomer.isPending ||
-                    assignLines.isPending
+                  className='h-14 px-8 text-lg'
+                  disabled={lines.length === 0}
+                  onClick={() =>
+                    runningStay
+                      ? setSessionGuardOpen(true)
+                      : waiting.length > 0
+                        ? setSettleGuardOpen(true)
+                        : setSettleOpen(true)
                   }
-                  onClick={assignSelected}
                 >
-                  <UserPlus className='size-5' />
-                  {t('assignCustomer')}
+                  {t('settleAction')}
                 </Button>
-              <Button
-                variant='outline'
-                size='lg'
-                className='h-14 gap-2 px-5 text-lg'
-                disabled={selectedIds.size === 0 || moveLines.isPending}
-                onClick={() => setMoveMode('move')}
-              >
-                {t('moveToBill')}
-              </Button>
-              <Button
-                size='lg'
-                className='h-14 gap-2 px-6 text-lg'
-                disabled={selectedIds.size === 0 || moveLines.isPending}
-                onClick={() => setMoveMode('new')}
-              >
-                {moveLines.isPending && (
-                  <Loader2 className='size-5 animate-spin' />
-                )}
-                {t('newBill')}
-              </Button>
-              </div>
-            ) : (
-              <Button
-                size='lg'
-                className='h-14 px-8 text-lg'
-                disabled={lines.length === 0}
-                onClick={() =>
-                  activeSession
-                    ? setSessionGuardOpen(true)
-                    : waiting.length > 0
-                      ? setSettleGuardOpen(true)
-                      : setSettleOpen(true)
-                }
-              >
-                {t('settleAction')}
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       <DiscardTicketDialog
@@ -1006,7 +1028,7 @@ export function TicketScreen({
         actionLabel={t('endSessionButton')}
         destructive
         onAction={() => {
-          if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
+          if (runningStay) stayActions.endStay(toNumber(runningStay.id))
         }}
       />
       {/* Same rule for Void, server-enforced too: time that has not landed
@@ -1019,7 +1041,7 @@ export function TicketScreen({
         actionLabel={t('endSessionButton')}
         destructive
         onAction={() => {
-          if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
+          if (runningStay) stayActions.endStay(toNumber(runningStay.id))
         }}
       />
       <BreakdownDialog
@@ -1030,7 +1052,7 @@ export function TicketScreen({
       />
       <SettleDialog
         ticket={ticket}
-        members={liveSession?.members}
+        members={liveStay?.members}
         open={settleOpen}
         onOpenChange={setSettleOpen}
         onSettled={setSettleOutcome}
@@ -1053,7 +1075,7 @@ export function TicketScreen({
           if (!open) closeAssign()
         }}
         onSelect={doAssignCustomer}
-        quickPicks={sessionRoster(session)}
+        quickPicks={stayRoster(stay)}
       />
       <CustomerCard
         customer={cardFor}

@@ -12,7 +12,7 @@ import {
   openTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { SaleCustomer } from '@/features/sale/cart'
-import { usePlaces } from '@/features/rooms/use-rooms'
+import { usePlaces } from '@/features/places/use-places'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,7 +28,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
-import { STAY_RUNNING } from '@/features/rooms/status'
+import { STAY_RUNNING } from '@/features/places/status'
 
 type NewTicketDialogProps = {
   open: boolean
@@ -114,18 +114,17 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   const { stays } = usePlaces({ enabled: open })
   const busy = new Map<string, string>()
   for (const ticket of openTickets) {
-    const where =
-      localized(ticket.locationName) || ticket.label || t('counter')
+    const where = localized(ticket.locationName) || ticket.label || t('counter')
     for (const id of ticket.customerIds ?? []) busy.set(id, where)
     if (ticket.id !== undefined) {
       const pendingId = readPendingCustomerId(ticket.id)
       if (pendingId) busy.set(pendingId, where)
     }
   }
-  for (const session of stays) {
-    if (Number(session.status) !== STAY_RUNNING) continue
-    const where = localized(session.placeName) || t('room')
-    for (const member of session.members ?? []) {
+  for (const stay of stays) {
+    if (Number(stay.status) !== STAY_RUNNING) continue
+    const where = localized(stay.placeName) || t('room')
+    for (const member of stay.members ?? []) {
       if (member.customerId) busy.set(member.customerId, where)
     }
   }
@@ -137,7 +136,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
         '/api/identity/users',
-        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } }
+        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } },
       )
       return response.data
     },
@@ -157,7 +156,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
         try {
           localStorage.setItem(
             pendingTicketCustomerKey(result.ticketId),
-            JSON.stringify(picked)
+            JSON.stringify(picked),
           )
         } catch {
           // A browser refusing storage just loses the pre-selection
@@ -259,7 +258,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
                       onClick={() => pick(user)}
                       className={cn(
                         'hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-2 text-start',
-                        'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent'
+                        'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent',
                       )}
                     >
                       <UserPlus className='text-muted-foreground size-4 shrink-0' />

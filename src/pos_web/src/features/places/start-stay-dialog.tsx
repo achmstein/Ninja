@@ -13,11 +13,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { OptionToggle } from './player-mode-toggle'
+import { RateOptionToggle } from './rate-option-toggle'
 import { findOption, hasOptions, isRoom, tariffOptions } from './status'
-import { useStayActions } from './use-rooms'
+import { useStayActions } from './use-places'
 
-type StartSessionDialogProps = {
+type StartStayDialogProps = {
   /** The place to start the clock on; null keeps the dialog closed. */
   place: PlaceViewModel | null
   /** A hold to start the clock on; without one, a walk-in starts. */
@@ -34,13 +34,13 @@ type StartSessionDialogProps = {
  * who just arrived. Where the tariff has options the cashier picks one;
  * where it has one rate there is nothing to pick.
  */
-export function StartSessionDialog({
+export function StartStayDialog({
   place,
   stay,
   onOpenChange,
   onStarted,
   onBillOnly,
-}: StartSessionDialogProps) {
+}: StartStayDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -73,7 +73,7 @@ export function StartSessionDialog({
       },
     }
     const code = chosen?.code ?? null
-    if (stay) actions.startReserved(toNumber(stay.id), code, done)
+    if (stay) actions.startHeld(toNumber(stay.id), code, done)
     else actions.startWalkIn(toNumber(place.id), code, done)
   }
 
@@ -109,7 +109,7 @@ export function StartSessionDialog({
         {hasOptions(place?.tariff) && (
           <div className='grid gap-2'>
             <Label>{t('playerMode')}</Label>
-            <OptionToggle
+            <RateOptionToggle
               options={options}
               value={chosen?.code ?? null}
               onChange={setOptionCode}

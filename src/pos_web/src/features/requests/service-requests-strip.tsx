@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { relativeTime } from '@/features/orders/status'
-import { useSecondsClock } from '@/features/rooms/use-rooms'
+import { useSecondsClock } from '@/features/places/use-places'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import {
   REQUEST_CALL_WAITER,

@@ -5,11 +5,11 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { OptionToggle } from './player-mode-toggle'
-import { SessionMembers } from './session-members'
+import { RateOptionToggle } from './rate-option-toggle'
+import { StayMembers } from './stay-members'
 import {
   elapsedSeconds,
-  estimateSessionCost,
+  estimateStayCost,
   findOption,
   formatBillingHours,
   formatClock,
@@ -17,7 +17,7 @@ import {
   optionSeconds,
   tariffOptions,
 } from './status'
-import { useSecondsClock, useStayActions } from './use-rooms'
+import { useSecondsClock, useStayActions } from './use-places'
 
 /**
  * The running clock on a bill. Its time is not on the bill yet — it lands
@@ -28,7 +28,7 @@ import { useSecondsClock, useStayActions } from './use-rooms'
  * right here, and the clock stops from here. On the bill itself,
  * customers go on lines with the ticket's own Assign customer.
  */
-export function SessionBar({ session }: { session: StayViewModel }) {
+export function StayBar({ stay }: { stay: StayViewModel }) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -38,15 +38,15 @@ export function SessionBar({ session }: { session: StayViewModel }) {
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [pendingOption, setPendingOption] = useState<string | null>(null)
 
-  const stayId = toNumber(session.id)
-  const currentCode = session.currentOptionCode ?? null
-  const options = tariffOptions(session.tariff)
-  const estimate = estimateSessionCost(session, now)
+  const stayId = toNumber(stay.id)
+  const currentCode = stay.currentOptionCode ?? null
+  const options = tariffOptions(stay.tariff)
+  const estimate = estimateStayCost(stay, now)
   const hoursLabel = formatBillingHours(estimate.hours, t)
   // Per-option split only once more than one option has been used
-  const used = options.filter((o) => optionSeconds(session, o.code, now) > 0)
+  const used = options.filter((o) => optionSeconds(stay, o.code, now) > 0)
   const optionName = (code: string | null) =>
-    localized(findOption(session.tariff, code)?.name) || code || ''
+    localized(findOption(stay.tariff, code)?.name) || code || ''
 
   return (
     <>
@@ -56,21 +56,23 @@ export function SessionBar({ session }: { session: StayViewModel }) {
           <Timer className='text-muted-foreground mt-1 size-6 shrink-0' />
           <div className='min-w-0 flex-1'>
             <div className='font-mono text-3xl tabular-nums'>
-              {formatClock(elapsedSeconds(session, now))}
+              {formatClock(elapsedSeconds(stay, now))}
             </div>
             {used.length > 1 && (
               <div className='text-muted-foreground truncate text-sm tabular-nums'>
                 {used
                   .map(
                     (o) =>
-                      `${localized(o.name)} ${formatClock(optionSeconds(session, o.code, now))}`,
+                      `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, now))}`,
                   )
                   .join(' · ')}
               </div>
             )}
           </div>
           <div className='shrink-0 text-end'>
-            <div className='text-muted-foreground text-sm'>{t('timeSoFar')}</div>
+            <div className='text-muted-foreground text-sm'>
+              {t('timeSoFar')}
+            </div>
             <div className='text-2xl font-bold tabular-nums'>
               {money(estimate.amount)}
             </div>
@@ -80,12 +82,12 @@ export function SessionBar({ session }: { session: StayViewModel }) {
           </div>
         </div>
 
-        <SessionMembers session={session} />
+        <StayMembers stay={stay} />
 
         {/* Switching the rate is the common ask; ending is the last one */}
         <div className='flex items-center gap-2'>
-          {hasOptions(session.tariff) && (
-            <OptionToggle
+          {hasOptions(stay.tariff) && (
+            <RateOptionToggle
               className='min-w-0 flex-1'
               options={options}
               value={currentCode}
@@ -132,7 +134,7 @@ export function SessionBar({ session }: { session: StayViewModel }) {
         description={t('endSessionBilledAt', { hours: hoursLabel })}
         cancelLabel={t('keepPlaying')}
         actionLabel={t('endSessionButton')}
-        onAction={() => actions.endSession(stayId)}
+        onAction={() => actions.endStay(stayId)}
         secondaryLabel={t('cancelSessionButton')}
         onSecondary={() => setConfirmCancel(true)}
       />
@@ -145,7 +147,7 @@ export function SessionBar({ session }: { session: StayViewModel }) {
         cancelLabel={t('keepIt')}
         actionLabel={t('cancelSessionButton')}
         destructive
-        onAction={() => actions.cancelSession(stayId, true)}
+        onAction={() => actions.cancelStay(stayId, true)}
       />
     </>
   )

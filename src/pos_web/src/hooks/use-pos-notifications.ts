@@ -98,7 +98,7 @@ export function usePosNotifications() {
                 orderId,
                 name: event.buyerName,
               })
-            : translate('newOrderToast', { orderId })
+            : translate('newOrderToast', { orderId }),
         )
       }
       if (event?.type === 'order_reminder') {
@@ -108,17 +108,18 @@ export function usePosNotifications() {
           translate('orderWaitingToast', {
             orderId: event.orderId ?? 0,
             minutes: event.minutesPending ?? 0,
-          })
+          }),
         )
       }
     })
 
-    const invalidateRooms = () => refresh('listPlaces', 'getOpenStays', 'getStay')
+    const invalidatePlaces = () =>
+      refresh('listPlaces', 'getOpenStays', 'getStay')
 
     // Sessions start, end and get cancelled from the till, the admin apps
     // and the customers' phones alike; the rooms group carries all of it
     connection.on('RoomStatusChanged', () => {
-      invalidateRooms()
+      invalidatePlaces()
     })
 
     const invalidateItems = () => refresh('listItems')
@@ -153,7 +154,7 @@ export function usePosNotifications() {
         connection.invoke('JoinAdminGroup'),
         connection.invoke('JoinRoomsGroup'),
       ]).catch((error) =>
-        console.warn('[signalr] joining the staff groups failed:', error)
+        console.warn('[signalr] joining the staff groups failed:', error),
       )
 
     let disposed = false
@@ -184,7 +185,7 @@ export function usePosNotifications() {
       joinGroup().catch(() => {})
       invalidateTickets()
       invalidateOrders()
-      invalidateRooms()
+      invalidatePlaces()
       invalidateItems()
       invalidateBranches()
       refresh('serviceRequestsPending')

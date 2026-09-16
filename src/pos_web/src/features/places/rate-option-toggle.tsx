@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
  * sees them all while choosing. Renders nothing for a one-rate tariff:
  * there is nothing to pick.
  */
-export function OptionToggle({
+export function RateOptionToggle({
   options,
   value,
   onChange,
@@ -31,7 +31,9 @@ export function OptionToggle({
   return (
     <div
       className={cn('grid gap-2', className)}
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      style={{
+        gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
+      }}
     >
       {options.map((option, index) => {
         const code = option.code ?? ''
@@ -57,7 +59,9 @@ export function OptionToggle({
               <span
                 className={cn(
                   'text-sm tabular-nums',
-                  selected ? 'text-primary-foreground/80' : 'text-muted-foreground',
+                  selected
+                    ? 'text-primary-foreground/80'
+                    : 'text-muted-foreground',
                 )}
               >
                 · {rates[code]}

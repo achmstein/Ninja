@@ -56,7 +56,9 @@ export function tariffOptions(
 }
 
 /** A tariff with a choice of rates (single / multi). */
-export function hasOptions(tariff: TariffViewModel | null | undefined): boolean {
+export function hasOptions(
+  tariff: TariffViewModel | null | undefined,
+): boolean {
   return tariffOptions(tariff).length > 1
 }
 
@@ -72,13 +74,13 @@ export function findOption(
 export type RunningStay = StayViewModel & { readonly __state: 'running' }
 export type HeldStay = StayViewModel & { readonly __state: 'held' }
 
-export function isActive(
+export function isRunning(
   stay: StayViewModel | null | undefined,
 ): stay is RunningStay {
   return stay != null && Number(stay.status) === STAY_RUNNING
 }
 
-export function isReserved(
+export function isHeld(
   stay: StayViewModel | null | undefined,
 ): stay is HeldStay {
   return stay != null && Number(stay.status) === STAY_HELD
@@ -129,17 +131,25 @@ export function roundedHours(seconds: number, roundingMinutes = 15): number {
  * segment closes, at the tariff's rate for its option. The bill only gets
  * the real figure when the stay ends; this is the cashier's preview.
  */
-export function estimateSessionCost(
+export function estimateStayCost(
   stay: StayViewModel,
   nowMs: number,
 ): {
-  lines: { code: string; name: LocalizedText | undefined; hours: number; amount: number }[]
+  lines: {
+    code: string
+    name: LocalizedText | undefined
+    hours: number
+    amount: number
+  }[]
   hours: number
   amount: number
 } {
   const rounding = Number(stay.tariff?.roundingMinutes ?? 15) || 15
   const lines = tariffOptions(stay.tariff).map((option) => {
-    const hours = roundedHours(optionSeconds(stay, option.code, nowMs), rounding)
+    const hours = roundedHours(
+      optionSeconds(stay, option.code, nowMs),
+      rounding,
+    )
     return {
       code: option.code ?? '',
       name: option.name,
@@ -157,7 +167,7 @@ export function estimateSessionCost(
 // The server bills in rounding steps (1.25, 2.5, ...) and puts the rounded
 // figures on the stay once a segment closes; these read them rather than
 // estimating
-export function sessionBilledHours(stay: StayViewModel): number {
+export function stayBilledHours(stay: StayViewModel): number {
   return (stay.costs ?? []).reduce((sum, c) => sum + Number(c.hours ?? 0), 0)
 }
 
@@ -173,7 +183,7 @@ export function formatBillingHours(
  * the roster who has an account. A member with no name still shows, as
  * the picker labels the blank.
  */
-export function sessionRoster(
+export function stayRoster(
   stay: StayViewModel | null | undefined,
 ): { id: string; name: string }[] {
   return (stay?.members ?? [])

@@ -15,23 +15,25 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   elapsedSeconds,
   formatClock,
-  isActive,
-  isReserved,
+  isRunning,
+  isHeld,
   isTimed,
   PLACE_OUT_OF_SERVICE,
   PLACE_ROOM,
   PLACE_STATION,
   PLACE_TABLE,
   placeStatusDot,
-} from '@/features/rooms/status'
-import { useSecondsClock } from '@/features/rooms/use-rooms'
+} from '@/features/places/status'
+import { useSecondsClock } from '@/features/places/use-places'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
 type PlaceListProps = {
   places: PlaceViewModel[]
-  stayForPlace: (placeId: number | string | undefined) => StayViewModel | undefined
+  stayForPlace: (
+    placeId: number | string | undefined,
+  ) => StayViewModel | undefined
   tickets: TicketSummary[]
   busy: boolean
   loading: boolean
@@ -58,13 +60,17 @@ const kindIcon: Record<number, LucideIcon> = {
 
 /** Whether a place already has a bill on the floor: a stay's bill names the
  *  stay, a table's bill names the place. */
-export function hasBill(place: PlaceViewModel, tickets: TicketSummary[]): boolean {
+export function hasBill(
+  place: PlaceViewModel,
+  tickets: TicketSummary[],
+): boolean {
   const id = toNumber(place.id)
   return tickets.some(
     (ticket) =>
       toNumber(ticket.placeId) === id ||
       // Bills opened before the remodel name the room by its id
-      (Number(place.kind ?? PLACE_ROOM) === PLACE_ROOM && toNumber(ticket.roomId) === id),
+      (Number(place.kind ?? PLACE_ROOM) === PLACE_ROOM &&
+        toNumber(ticket.roomId) === id),
   )
 }
 
@@ -90,7 +96,9 @@ export function PlaceList({
   const nowMs = useSecondsClock(true)
 
   const needle = term.trim().toLowerCase()
-  const matches = (name: { en?: string | null; ar?: string | null } | null | undefined) =>
+  const matches = (
+    name: { en?: string | null; ar?: string | null } | null | undefined,
+  ) =>
     !needle ||
     (name?.en ?? '').toLowerCase().includes(needle) ||
     (name?.ar ?? '').toLowerCase().includes(needle)
@@ -98,7 +106,10 @@ export function PlaceList({
   // A place with a bill is among the bills already; one without is here, in
   // whatever state it is in
   const free = places.filter(
-    (place) => place.isActive !== false && matches(place.name) && !hasBill(place, tickets),
+    (place) =>
+      place.isActive !== false &&
+      matches(place.name) &&
+      !hasBill(place, tickets),
   )
   const groups = [
     { kind: PLACE_ROOM, label: t('rooms') },
@@ -152,12 +163,13 @@ export function PlaceList({
                 const Icon = kindIcon[group.kind] ?? DoorOpen
                 const timed = isTimed(place)
                 const stay = timed ? stayForPlace(place.id) : undefined
-                const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
+                const outOfService =
+                  Number(place.status) === PLACE_OUT_OF_SERVICE
                 // The dot already says free; text only when there is
                 // something to add
-                const detail = isActive(stay)
+                const detail = isRunning(stay)
                   ? formatClock(elapsedSeconds(stay, nowMs))
-                  : isReserved(stay)
+                  : isHeld(stay)
                     ? stay.customerName || t('statusReserved')
                     : outOfService
                       ? t('underMaintenance')
@@ -174,7 +186,8 @@ export function PlaceList({
                       className={cn(
                         'size-2.5 shrink-0 rounded-full',
                         timed
-                          ? (placeStatusDot[Number(place.status ?? 0)] ?? 'bg-muted')
+                          ? (placeStatusDot[Number(place.status ?? 0)] ??
+                              'bg-muted')
                           : 'bg-green-500',
                       )}
                     />

@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { Star, User, UserPlus, X } from 'lucide-react'
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { Badge } from '@/components/ui/badge'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { useStayActions } from './use-rooms'
+import { useStayActions } from './use-places'
 
 /**
  * Who is in the room: the owner starred, members removable, and a dashed
@@ -15,17 +18,17 @@ import { useStayActions } from './use-rooms'
  * on — which is why the till keeps naming people after the time has
  * landed: someone who never scanned the QR still owes their share.
  */
-export function SessionMembers({ session }: { session: StayViewModel }) {
+export function StayMembers({ stay }: { stay: StayViewModel }) {
   const t = useT()
   const actions = useStayActions()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
-  const sessionId = toNumber(session.id)
+  const stayId = toNumber(stay.id)
 
   return (
     <>
       <div className='flex flex-wrap items-center gap-2'>
-        {(session.members ?? []).map((member) => {
+        {(stay.members ?? []).map((member) => {
           const isOwner = member.role === 'Owner'
           return (
             <Badge
@@ -60,7 +63,9 @@ export function SessionMembers({ session }: { session: StayViewModel }) {
                   aria-label={t('memberRemove')}
                   disabled={actions.isBusy}
                   className='-me-1 flex size-6 items-center justify-center'
-                  onClick={() => actions.removeMember(sessionId, member.customerId!)}
+                  onClick={() =>
+                    actions.removeMember(stayId, member.customerId!)
+                  }
                 >
                   <X className='text-muted-foreground hover:text-destructive size-3.5' />
                 </button>
@@ -68,10 +73,10 @@ export function SessionMembers({ session }: { session: StayViewModel }) {
             </Badge>
           )
         })}
-        {(session.members?.length ?? 0) === 0 && session.customerName && (
+        {(stay.members?.length ?? 0) === 0 && stay.customerName && (
           <span className='text-muted-foreground flex items-center gap-1 text-sm'>
             <User className='size-4' />
-            {session.customerName}
+            {stay.customerName}
           </span>
         )}
         <button
@@ -90,7 +95,7 @@ export function SessionMembers({ session }: { session: StayViewModel }) {
         onOpenChange={setPickerOpen}
         accountsOnly
         onSelect={(picked) => {
-          if (picked.id) actions.addMember(sessionId, picked.id, picked.name)
+          if (picked.id) actions.addMember(stayId, picked.id, picked.name)
           setPickerOpen(false)
         }}
       />

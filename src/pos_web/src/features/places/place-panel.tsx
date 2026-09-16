@@ -25,31 +25,34 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { OptionToggle } from './player-mode-toggle'
-import { SessionMembers } from './session-members'
-import { StartSessionDialog } from './start-session-dialog'
+import { RateOptionToggle } from './rate-option-toggle'
+import { StayMembers } from './stay-members'
+import { StartStayDialog } from './start-stay-dialog'
 import {
   elapsedSeconds,
   findOption,
   formatBillingHours,
   formatClock,
   hasOptions,
-  isActive,
-  isReserved,
+  isRunning,
+  isHeld,
   optionSeconds,
   PLACE_OUT_OF_SERVICE,
   placeStatusDot,
-  sessionBilledHours,
+  stayBilledHours,
   tariffLine,
   tariffOptions,
 } from './status'
-import { useSecondsClock, useStayActions } from './use-rooms'
+import { useSecondsClock, useStayActions } from './use-places'
 
 type PlacePanelProps = {
   /** The place to show; null keeps the panel closed. */
@@ -68,7 +71,12 @@ type PlacePanelProps = {
  * the admin panel's "now" section, sized for a thumb. Hours here; the
  * money is the ticket's, one tap away while the clock runs.
  */
-export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelProps) {
+export function PlacePanel({
+  place,
+  stay,
+  onOpenChange,
+  onStarted,
+}: PlacePanelProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -85,8 +93,8 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
   const [pickerFor, setPickerFor] = useState<'member' | 'assign' | null>(null)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
-  const running = isActive(stay)
-  const held = isReserved(stay)
+  const running = isRunning(stay)
+  const held = isHeld(stay)
   const outOfService = Number(place?.status) === PLACE_OUT_OF_SERVICE
   const stayId = toNumber(stay?.id)
   const options = tariffOptions(place?.tariff)
@@ -105,14 +113,16 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
   const used = running
     ? options.filter((o) => optionSeconds(stay, o.code, now) > 0)
     : []
-  const billed = stay ? sessionBilledHours(stay) : 0
+  const billed = stay ? stayBilledHours(stay) : 0
   const billedLabel = formatBillingHours(billed, t)
   const expiresInSeconds =
     held && stay.expiresAt
       ? Math.max(0, (new Date(stay.expiresAt).getTime() - now) / 1000)
       : null
   const optionName = (code: string | null) =>
-    localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) || code || ''
+    localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) ||
+    code ||
+    ''
 
   const close = () => onOpenChange(false)
 
@@ -144,14 +154,15 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
                 <div className='text-muted-foreground flex gap-4 font-mono text-sm'>
                   {used.map((o) => (
                     <span key={o.code}>
-                      {localized(o.name)} {formatClock(optionSeconds(stay, o.code, now))}
+                      {localized(o.name)}{' '}
+                      {formatClock(optionSeconds(stay, o.code, now))}
                     </span>
                   ))}
                 </div>
               )}
 
               {hasOptions(stay.tariff) && (
-                <OptionToggle
+                <RateOptionToggle
                   className='w-full'
                   options={tariffOptions(stay.tariff)}
                   value={currentCode}
@@ -162,7 +173,7 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
                 />
               )}
 
-              <SessionMembers session={stay} />
+              <StayMembers stay={stay} />
 
               {/* Billed hours in rounding steps; hidden until the first step
                   lands, like the admin panel */}
@@ -173,7 +184,9 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
                     .map((c) => (
                       <div key={c.optionCode} className='flex justify-between'>
                         <span className='text-muted-foreground'>
-                          {hasOptions(stay.tariff) ? localized(c.optionName) : t('time')}
+                          {hasOptions(stay.tariff)
+                            ? localized(c.optionName)
+                            : t('time')}
                         </span>
                         <span className='tabular-nums'>
                           {formatBillingHours(c.hours, t)}
@@ -352,7 +365,7 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
         </DialogContent>
       </Dialog>
 
-      <StartSessionDialog
+      <StartStayDialog
         place={startOpen ? place : null}
         stay={held ? stay : null}
         onOpenChange={(isOpen) => {
@@ -393,7 +406,7 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
         cancelLabel={t('keepPlaying')}
         actionLabel={t('endSessionButton')}
         destructive
-        onAction={() => actions.endSession(stayId)}
+        onAction={() => actions.endStay(stayId)}
       />
 
       <ConfirmDialog
@@ -402,12 +415,16 @@ export function PlacePanel({ place, stay, onOpenChange, onStarted }: PlacePanelP
         title={running ? t('cancelThisSession') : t('cancelThisReservation')}
         description={running ? t('cancelSessionHint') : undefined}
         cancelLabel={t('keepIt')}
-        actionLabel={running ? t('cancelSessionButton') : t('cancelReservation')}
+        actionLabel={
+          running ? t('cancelSessionButton') : t('cancelReservation')
+        }
         destructive
         // Close the panel once cancelled — otherwise it falls through to the
         // "available" state, re-showing the Start/Reserve options as if
         // prompting to start again.
-        onAction={() => actions.cancelSession(stayId, running, { onSuccess: close })}
+        onAction={() =>
+          actions.cancelStay(stayId, running, { onSuccess: close })
+        }
       />
 
       <ConfirmDialog

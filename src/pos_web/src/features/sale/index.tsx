@@ -13,22 +13,38 @@ import {
   UserPlus,
   X,
 } from 'lucide-react'
-import { listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import {
+  listCategoriesOptions,
+  listItemsOptions,
+} from '@/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { getTicketByOrderOptions, getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  getTicketByOrderOptions,
+  getTicketOptions,
+} from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { useLoyalty } from '@/features/customer/use-customer-card'
-import { sessionRoster } from '@/features/rooms/status'
-import { useStay, useStayActions } from '@/features/rooms/use-rooms'
+import { stayRoster } from '@/features/places/status'
+import { useStay, useStayActions } from '@/features/places/use-places'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
-import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
+import {
+  lineKey,
+  saleCount,
+  saleTotal,
+  useSale,
+  type SaleCustomer,
+  type SaleLine,
+} from './cart'
 import { CustomerDialog } from './customer-dialog'
 import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { cn } from '@/lib/utils'
@@ -93,7 +109,7 @@ function CartLineRow({
   const name = language === 'ar' && line.nameAr ? line.nameAr : line.nameEn
   const optionsLabel = line.customizations
     .map((c) =>
-      language === 'ar' && c.optionNameAr ? c.optionNameAr : c.optionNameEn
+      language === 'ar' && c.optionNameAr ? c.optionNameAr : c.optionNameEn,
     )
     .join(' · ')
 
@@ -175,7 +191,9 @@ function CustomerPointsLine({ userId }: { userId: string }) {
   )
 }
 
-function readLastCustomer(key: string | null): { id: string; name: string } | null {
+function readLastCustomer(
+  key: string | null,
+): { id: string; name: string } | null {
   if (!key) return null
   try {
     const raw = localStorage.getItem(key)
@@ -213,7 +231,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   }, [ticketId, setTarget])
 
   const [activeCategory, setActiveCategory] = useState<number | null>(null)
-  const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(null)
+  const [customizeItem, setCustomizeItem] = useState<CatalogItemDto | null>(
+    null,
+  )
   const [customerOpen, setCustomerOpen] = useState(false)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
@@ -230,17 +250,23 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   })
   const roomSession = useStay(
     ticketQuery.data?.sessionId,
-    ticketQuery.data?.sessionId != null
+    ticketQuery.data?.sessionId != null,
   )
-  const roster = sessionRoster(roomSession)
-  const ownerId = (roomSession?.members ?? []).find((m) => m.role === 'Owner')?.customerId
+  const roster = stayRoster(roomSession)
+  const ownerId = (roomSession?.members ?? []).find(
+    (m) => m.role === 'Owner',
+  )?.customerId
   const sessionId = roomSession?.id != null ? Number(roomSession.id) : null
-  const lastKey = sessionId != null ? `pos.session.${sessionId}.lastCustomer` : null
+  const lastKey =
+    sessionId != null ? `pos.session.${sessionId}.lastCustomer` : null
   const sessionActions = useStayActions()
   const rememberLast = (picked: SaleCustomer) => {
     if (!lastKey || !picked.id) return
     try {
-      localStorage.setItem(lastKey, JSON.stringify({ id: picked.id, name: picked.name }))
+      localStorage.setItem(
+        lastKey,
+        JSON.stringify({ id: picked.id, name: picked.name }),
+      )
     } catch {
       // A browser that refuses storage just loses the convenience
     }
@@ -282,7 +308,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }
     const byId = new Map<string, string>()
     for (const line of ticket.lines ?? []) {
-      if (line.customerId) byId.set(String(line.customerId), line.customerName ?? '')
+      if (line.customerId)
+        byId.set(String(line.customerId), line.customerName ?? '')
     }
     let only: SaleCustomer | null = null
     if (byId.size === 1) {
@@ -300,7 +327,18 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       if (pick) only = { id: pick.id, name: pick.name }
     }
     if (only) setCustomer(only)
-  }, [addingToTicket, ticketId, ticketQuery.data, target, customer, lines.length, roster, ownerId, lastKey, setCustomer])
+  }, [
+    addingToTicket,
+    ticketId,
+    ticketQuery.data,
+    target,
+    customer,
+    lines.length,
+    roster,
+    ownerId,
+    lastKey,
+    setCustomer,
+  ])
 
   // Set once the order is accepted; drives the blocking "sending to
   // kitchen" state while the ticket lookup polls
@@ -310,10 +348,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   } | null>(null)
 
   const { data: categories = [] } = useQuery(
-    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
+    listCategoriesOptions({ query: { 'api-version': API_VERSION } }),
   )
   const { data: items = [], isLoading: itemsLoading } = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
+    listItemsOptions({ query: { 'api-version': API_VERSION } }),
   )
 
   // The attached customer's most-ordered items, ranked. A walk-in (no id) or a
@@ -322,7 +360,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     queryKey: ['customerTopItems', customer?.id],
     queryFn: async () => {
       const response = await apiClient.get<number[]>(
-        `/api/catalog/customers/${customer!.id}/top-items`
+        `/api/catalog/customers/${customer!.id}/top-items`,
       )
       return response.data
     },
@@ -364,7 +402,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       : items
           .filter((item) => toNumber(item.catalogTypeId) === activeCategoryId)
           .sort(
-            (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
+            (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0),
           )
 
   const total = saleTotal(lines)
@@ -396,7 +434,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // After a POS order for an attached customer, remember how their items were
   // customized so it prefills next time — the same thing the customer app does
   // for its own orders. Fire-and-forget; a failure just means no prefill.
-  const saveCustomerPreferences = (customerId: string, saleLines: SaleLine[]) => {
+  const saveCustomerPreferences = (
+    customerId: string,
+    saleLines: SaleLine[],
+  ) => {
     const byProduct = new Map<
       number,
       { customizationId: number; optionId: number }[]
@@ -409,12 +450,15 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         line.customizations.map((c) => ({
           customizationId: c.customizationId,
           optionId: c.optionId,
-        }))
+        })),
       )
     }
     if (byProduct.size === 0) return
     const items = [...byProduct.entries()].map(
-      ([catalogItemId, selectedOptions]) => ({ catalogItemId, selectedOptions })
+      ([catalogItemId, selectedOptions]) => ({
+        catalogItemId,
+        selectedOptions,
+      }),
     )
     apiClient
       .post(`/api/catalog/customers/${customerId}/preferences`, { items })
@@ -438,7 +482,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
         toast.success(
-          t(orderId === 0 ? 'orderAlreadyPlaced' : 'itemsAddedToTicket')
+          t(orderId === 0 ? 'orderAlreadyPlaced' : 'itemsAddedToTicket'),
         )
         navigate({
           to: '/ticket/$ticketId',
@@ -561,12 +605,15 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   useEffect(() => {
     if (pending === null) return
     const remaining = TICKET_POLL_TIMEOUT_MS - (Date.now() - pending.startedAt)
-    const handle = setTimeout(() => {
-      setPending(null)
-      clear()
-      toast.warning(t('ticketNotReadyYet'))
-      navigate({ to: '/' })
-    }, Math.max(0, remaining))
+    const handle = setTimeout(
+      () => {
+        setPending(null)
+        clear()
+        toast.warning(t('ticketNotReadyYet'))
+        navigate({ to: '/' })
+      },
+      Math.max(0, remaining),
+    )
     return () => clearTimeout(handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending])
@@ -578,7 +625,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       {/* ----- item pad ----- */}
       <div className='flex min-w-0 flex-1 flex-col'>
         <div className='flex items-center gap-2 border-b p-2'>
-          <Button asChild variant='ghost' size='icon' className='size-12 shrink-0'>
+          <Button
+            asChild
+            variant='ghost'
+            size='icon'
+            className='size-12 shrink-0'
+          >
             {addingToTicket ? (
               <Link
                 to='/ticket/$ticketId'
@@ -694,7 +746,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                       'rounded-full border px-3 py-1.5 text-sm',
                       customer?.id === m.id
                         ? 'border-primary bg-primary text-primary-foreground'
-                        : 'bg-background'
+                        : 'bg-background',
                     )}
                   >
                     {m.name || t('guest')}
@@ -719,12 +771,18 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                   type='button'
                   className='flex min-w-0 flex-1 items-center gap-2 text-start'
                   onClick={() =>
-                    setCardFor({ id: customer.id!, name: customer.name, phone: customer.phone })
+                    setCardFor({
+                      id: customer.id!,
+                      name: customer.name,
+                      phone: customer.phone,
+                    })
                   }
                 >
                   <User className='size-4 shrink-0' />
                   <span className='min-w-0'>
-                    <span className='block truncate font-medium'>{customer.name}</span>
+                    <span className='block truncate font-medium'>
+                      {customer.name}
+                    </span>
                     <CustomerPointsLine userId={customer.id} />
                   </span>
                 </button>

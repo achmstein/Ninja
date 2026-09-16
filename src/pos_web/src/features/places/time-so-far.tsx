@@ -1,7 +1,7 @@
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { useMoney } from '@/lib/money'
-import { estimateSessionCost } from './status'
-import { useSecondsClock } from './use-rooms'
+import { estimateStayCost } from './status'
+import { useSecondsClock } from './use-places'
 
 /**
  * The running stay's cost so far, as money, ticking on its own clock so
@@ -10,8 +10,8 @@ import { useSecondsClock } from './use-rooms'
  * lines and the total), because the time is not on the bill until the
  * clock stops.
  */
-export function TimeSoFar({ session }: { session: StayViewModel }) {
+export function TimeSoFar({ stay }: { stay: StayViewModel }) {
   const money = useMoney()
   const now = useSecondsClock(true)
-  return <>{money(estimateSessionCost(session, now).amount)}</>
+  return <>{money(estimateStayCost(stay, now).amount)}</>
 }
