@@ -45,7 +45,7 @@ import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useOrderDestination } from '@/lib/order-destination'
 import { PLACE_ROOM, PLACE_TABLE, PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
-import { useTableStore } from '@/stores/table-store'
+import { usePlaceStore } from '@/stores/place-store'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -73,7 +73,7 @@ function CartPage() {
   const auth = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const stampOrdered = useTableStore((s) => s.stampOrdered)
+  const stampOrdered = usePlaceStore((s) => s.stampOrdered)
   // Room-beats-table lives in useOrderDestination so the header chip and this
   // payload can never disagree about where the order is going
   const destination = useOrderDestination()

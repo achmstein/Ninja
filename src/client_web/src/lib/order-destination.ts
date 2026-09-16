@@ -1,16 +1,16 @@
 import { useEffect } from 'react'
 import { type LocalizedText } from '@/api/spaces'
 import { PLACE_ROOM } from '@/lib/places'
-import { useActiveStay } from '@/lib/session'
-import { useActiveTable, useTableStore } from '@/stores/table-store'
+import { useActiveStay } from '@/lib/stays'
+import { useActivePlace, usePlaceStore } from '@/stores/place-store'
 
 /**
  * Where the next order goes: a Spaces place, and — when a clock is running
  * there for the customer — the stay whose bill it joins.
  */
 export type OrderDestination = {
-  /** 'stay': the customer's running clock; 'table': a place they scanned to order at */
-  kind: 'stay' | 'table'
+  /** 'stay': the customer's running clock; 'place': a spot they scanned to order at */
+  kind: 'stay' | 'place'
   placeId: number
   /** PlaceKind: 1 room, 2 table, 3 station */
   placeKind: number
@@ -33,14 +33,14 @@ export type OrderDestination = {
  */
 export function useOrderDestination(): OrderDestination {
   const activeStay = useActiveStay()
-  const activeTable = useActiveTable()
-  const clearTable = useTableStore((s) => s.clearTable)
+  const activePlace = useActivePlace()
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
 
   const inStay = activeStay != null
 
   useEffect(() => {
-    if (inStay && activeTable) clearTable()
-  }, [inStay, activeTable, clearTable])
+    if (inStay && activePlace) clearPlace()
+  }, [inStay, activePlace, clearPlace])
 
   if (activeStay) {
     return {
@@ -51,12 +51,12 @@ export function useOrderDestination(): OrderDestination {
       sessionId: Number(activeStay.id),
     }
   }
-  if (activeTable) {
+  if (activePlace) {
     return {
-      kind: 'table',
-      placeId: activeTable.id,
-      placeKind: activeTable.kind,
-      name: activeTable.name,
+      kind: 'place',
+      placeId: activePlace.id,
+      placeKind: activePlace.kind,
+      name: activePlace.name,
       sessionId: null,
     }
   }

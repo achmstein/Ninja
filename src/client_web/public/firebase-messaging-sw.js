@@ -36,7 +36,7 @@ self.addEventListener('notificationclick', (event) => {
   const type = event.notification.data?.type ?? ''
   const target = ['order_confirmed', 'order_cancelled'].includes(type)
     ? '/orders'
-    : '/rooms'
+    : '/places'
   event.waitUntil(
     clients
       .matchAll({ type: 'window', includeUncontrolled: true })

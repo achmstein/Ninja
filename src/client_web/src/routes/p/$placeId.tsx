@@ -12,7 +12,7 @@ import {
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { cartHasItems } from '@/lib/cart'
 import { useBranchStore } from '@/stores/branch-store'
-import { useTableStore } from '@/stores/table-store'
+import { usePlaceStore } from '@/stores/place-store'
 import { useT, useLocalized } from '@/lib/i18n'
 import {
   PLACE_AVAILABLE,
@@ -20,8 +20,8 @@ import {
   PlaceIcon,
   STAY_RUNNING,
 } from '@/lib/places'
-import { ReserveSheet } from '@/components/rooms/reserve-sheet'
-import { TariffLine } from '@/components/rooms/room-row'
+import { HoldSheet } from '@/components/places/hold-sheet'
+import { TariffLine } from '@/components/places/place-row'
 import { useProfileGate } from '@/components/profile-gate'
 import { SignInOptions } from '@/components/sign-in-options'
 import { Button } from '@/components/ui/button'
@@ -51,8 +51,8 @@ function PlaceLinkPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
-  const setTable = useTableStore((s) => s.setTable)
-  const clearTable = useTableStore((s) => s.clearTable)
+  const setPlace = usePlaceStore((s) => s.setPlace)
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [reservePlace, setReservePlace] = useState<PlaceViewModel | null>(null)
@@ -89,7 +89,7 @@ function PlaceLinkPage() {
 
     if (!place.isActive) {
       handled.current = true
-      clearTable()
+      clearPlace()
       toast.error(t('tableUnavailable'))
       resume()
       return
@@ -103,7 +103,7 @@ function PlaceLinkPage() {
 
     // A table is where the order goes, clock or no clock
     if (Number(place.kind) === PLACE_TABLE) {
-      setTable({
+      setPlace({
         id: Number(place.id),
         kind: Number(place.kind),
         name: { en: place.name?.en ?? '', ar: place.name?.ar },
@@ -124,7 +124,7 @@ function PlaceLinkPage() {
   useEffect(() => {
     if (scan?.isAlreadyMember) {
       toast.info(t('alreadyInSession'))
-      navigate({ to: '/rooms', replace: true })
+      navigate({ to: '/places', replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scan?.isAlreadyMember])
@@ -134,7 +134,7 @@ function PlaceLinkPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
       toast.success(t('joinedSession'))
-      navigate({ to: '/rooms', replace: true })
+      navigate({ to: '/places', replace: true })
     },
     onError: () => toast.error(t('failedToJoinSession')),
   })
@@ -223,12 +223,12 @@ function PlaceLinkPage() {
         </Button>
       )}
 
-      <ReserveSheet
+      <HoldSheet
         place={reservePlace}
         onOpenChange={(open) => {
           if (!open) setReservePlace(null)
         }}
-        onReserved={() => navigate({ to: '/rooms', replace: true })}
+        onReserved={() => navigate({ to: '/places', replace: true })}
       />
       {profileGateDialog}
     </div>

@@ -2,9 +2,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronDown, MapPin } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { useBranches } from '@/lib/branch'
-import { useActiveStay } from '@/lib/session'
+import { useActiveStay } from '@/lib/stays'
 import { useBranchStore } from '@/stores/branch-store'
-import { useTableStore } from '@/stores/table-store'
+import { usePlaceStore } from '@/stores/place-store'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,7 @@ export function BranchSwitcher() {
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
-  const clearTable = useTableStore((s) => s.clearTable)
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
 
   const { data: branches = [] } = useBranches()
   const activeStay = useActiveStay()
@@ -42,7 +42,7 @@ export function BranchSwitcher() {
     // Changing branch is a stronger "I have left" than joining a room, so the
     // scanned table goes with it. Scanning a table auto-switches branch on its
     // own path, which does not come through here, so that stays intact.
-    clearTable()
+    clearPlace()
     // Everything on screen is branch-scoped — refetch it all
     queryClient.invalidateQueries()
   }

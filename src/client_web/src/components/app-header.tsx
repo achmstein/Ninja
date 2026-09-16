@@ -22,12 +22,12 @@ import { SignInSheet } from './sign-in-options'
 // Mobile IA: primary nav is Menu / Rooms / Orders; everything else lives
 // under Profile.
 const navLinks: ReadonlyArray<{
-  to: '/' | '/rooms' | '/orders'
+  to: '/' | '/places' | '/orders'
   key: TranslationKey
   exact?: boolean
 }> = [
   { to: '/', key: 'menu', exact: true },
-  { to: '/rooms', key: 'rooms' },
+  { to: '/places', key: 'rooms' },
   { to: '/orders', key: 'orders' },
 ]
 
@@ -75,7 +75,7 @@ export function AppHeader() {
                   'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
                   active
                     ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {t(key)}

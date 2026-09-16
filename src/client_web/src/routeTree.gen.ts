@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as LoyaltyRouteImport } from './routes/loyalty'
+import { Route as PlacesRouteImport } from './routes/places'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StaysRouteImport } from './routes/stays'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
@@ -45,6 +47,11 @@ const LoyaltyRoute = LoyaltyRouteImport.update({
   path: '/loyalty',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlacesRoute = PlacesRouteImport.update({
+  id: '/places',
+  path: '/places',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -63,6 +70,11 @@ const SessionsRoute = SessionsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaysRoute = StaysRouteImport.update({
+  id: '/stays',
+  path: '/stays',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -106,10 +118,12 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/cart': typeof CartRoute
   '/loyalty': typeof LoyaltyRoute
+  '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
@@ -123,10 +137,12 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/cart': typeof CartRoute
   '/loyalty': typeof LoyaltyRoute
+  '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
@@ -141,10 +157,12 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/cart': typeof CartRoute
   '/loyalty': typeof LoyaltyRoute
+  '/places': typeof PlacesRoute
   '/profile': typeof ProfileRoute
   '/rooms': typeof RoomsRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
   '/p/$placeId': typeof PPlaceIdRoute
@@ -160,10 +178,12 @@ export interface FileRouteTypes {
     | '/account'
     | '/cart'
     | '/loyalty'
+    | '/places'
     | '/profile'
     | '/rooms'
     | '/sessions'
     | '/settings'
+    | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
@@ -177,10 +197,12 @@ export interface FileRouteTypes {
     | '/account'
     | '/cart'
     | '/loyalty'
+    | '/places'
     | '/profile'
     | '/rooms'
     | '/sessions'
     | '/settings'
+    | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
@@ -194,10 +216,12 @@ export interface FileRouteTypes {
     | '/account'
     | '/cart'
     | '/loyalty'
+    | '/places'
     | '/profile'
     | '/rooms'
     | '/sessions'
     | '/settings'
+    | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
     | '/p/$placeId'
@@ -212,10 +236,12 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   CartRoute: typeof CartRoute
   LoyaltyRoute: typeof LoyaltyRoute
+  PlacesRoute: typeof PlacesRoute
   ProfileRoute: typeof ProfileRoute
   RoomsRoute: typeof RoomsRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
+  StaysRoute: typeof StaysRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
   PPlaceIdRoute: typeof PPlaceIdRoute
@@ -255,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoyaltyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/places': {
+      id: '/places'
+      path: '/places'
+      fullPath: '/places'
+      preLoaderRoute: typeof PlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -281,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stays': {
+      id: '/stays'
+      path: '/stays'
+      fullPath: '/stays'
+      preLoaderRoute: typeof StaysRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -340,10 +380,12 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   CartRoute: CartRoute,
   LoyaltyRoute: LoyaltyRoute,
+  PlacesRoute: PlacesRoute,
   ProfileRoute: ProfileRoute,
   RoomsRoute: RoomsRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
+  StaysRoute: StaysRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
   PPlaceIdRoute: PPlaceIdRoute,

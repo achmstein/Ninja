@@ -19,7 +19,7 @@ import {
 /** The customer's pending hold, as the amber gradient card from the app:
  *  place name, reserved pill, date/time, whether the clock starts on
  *  arrival, and a cancel link. */
-export function ReservedBanner({ stay }: { stay: StayViewModel }) {
+export function HeldBanner({ stay }: { stay: StayViewModel }) {
   const t = useT()
   const localized = useLocalized()
   const language = useLanguage((s) => s.language)

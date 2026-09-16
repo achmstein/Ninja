@@ -16,9 +16,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
-import { TariffLine } from './room-row'
+import { TariffLine } from './place-row'
 
-interface ReserveSheetProps {
+interface HoldSheetProps {
   place: PlaceViewModel | null
   onOpenChange: (open: boolean) => void
   /** After a successful hold (the sheet closes itself either way) */
@@ -27,11 +27,7 @@ interface ReserveSheetProps {
 
 /** The hold sheet, mirroring the app: the rates, the description, the
  *  arrival window, the start-on-arrival switch, one full-width button. */
-export function ReserveSheet({
-  place,
-  onOpenChange,
-  onReserved,
-}: ReserveSheetProps) {
+export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const auth = useAuth()

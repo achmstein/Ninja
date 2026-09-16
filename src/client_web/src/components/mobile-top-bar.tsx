@@ -15,10 +15,10 @@ import {
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
 import { PlaceIcon, placeKindName } from '@/lib/places'
-import { useTableStore } from '@/stores/table-store'
+import { usePlaceStore } from '@/stores/place-store'
 import { BranchSwitcher } from './branch-switcher'
 
-const tabPaths = ['/', '/rooms', '/orders', '/profile']
+const tabPaths = ['/', '/places', '/orders', '/profile']
 
 /** Scanning a place's code drops the customer straight on the menu, so this
  *  is the standing reminder of where their order is going - and the way out
@@ -31,17 +31,17 @@ const tabPaths = ['/', '/rooms', '/orders', '/profile']
 function DestinationChip() {
   const localized = useLocalized()
   const destination = useOrderDestination()
-  const clearTable = useTableStore((s) => s.clearTable)
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
 
   if (!destination) return null
 
-  if (destination.kind === 'table') {
+  if (destination.kind === 'place') {
     return (
-      <TableChip
+      <PlaceChip
         placeId={destination.placeId}
         placeKind={destination.placeKind}
         name={localized(destination.name)}
-        onLeave={clearTable}
+        onLeave={clearPlace}
       />
     )
   }
@@ -62,7 +62,7 @@ const REQUEST_COOLDOWN_MS = 60_000
 /** The table chip is the table's menu: a waiter, the bill, or leaving it.
  *  Same cooldown as the room's quick actions, so a nervous tap does not
  *  ring the till twice. */
-function TableChip({
+function PlaceChip({
   placeId,
   placeKind,
   name,

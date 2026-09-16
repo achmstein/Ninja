@@ -5,14 +5,14 @@ import { getActiveBranchId, useBranchStore } from './branch-store'
 /** How long a scanned place stays attached to the customer. Long enough for a
  *  sitting with several rounds, short enough that yesterday's scan never
  *  mislabels today's order. */
-export const TABLE_TTL_MS = 3 * 60 * 60 * 1000
+export const PLACE_TTL_MS = 3 * 60 * 60 * 1000
 
-/** The place the customer scanned to order at: a table, or a timed place
+/** The place the customer scanned to order at: a place, or a timed place
  *  they sat at without a clock running for them. */
-export type StoredTable = {
+export type StoredPlace = {
   /** The Spaces place id — what orders and requests name */
   id: number
-  /** PlaceKind: 1 room, 2 table, 3 station */
+  /** PlaceKind: 1 room, 2 place, 3 station */
   kind: number
   /** Same shape as the API's LocalizedText, so it renders through useLocalized */
   name: { en?: string; ar?: string | null }
@@ -21,23 +21,23 @@ export type StoredTable = {
   scannedAt: number
 }
 
-type TableState = {
-  table: StoredTable | null
-  setTable: (table: Omit<StoredTable, 'scannedAt'>) => void
-  clearTable: () => void
+type PlaceState = {
+  place: StoredPlace | null
+  setPlace: (place: Omit<StoredPlace, 'scannedAt'>) => void
+  clearPlace: () => void
   stampOrdered: () => void
 }
 
-export const useTableStore = create<TableState>()(
+export const usePlaceStore = create<PlaceState>()(
   persist(
     (set) => ({
-      table: null,
-      setTable: (table) => set({ table: { ...table, scannedAt: Date.now() } }),
-      clearTable: () => set({ table: null }),
+      place: null,
+      setPlace: (place) => set({ place: { ...place, scannedAt: Date.now() } }),
+      clearPlace: () => set({ place: null }),
       stampOrdered: () =>
         set((state) =>
-          state.table
-            ? { table: { ...state.table, scannedAt: Date.now() } }
+          state.place
+            ? { place: { ...state.place, scannedAt: Date.now() } }
             : state,
         ),
     }),
@@ -50,24 +50,24 @@ export const useTableStore = create<TableState>()(
 /** A stored place only counts while it is fresh and belongs to the branch the
  *  customer is actually browsing. */
 function isUsable(
-  table: StoredTable | null,
+  place: StoredPlace | null,
   branchId: number,
-): table is StoredTable {
-  if (!table) return false
-  if (Date.now() - table.scannedAt > TABLE_TTL_MS) return false
-  return table.branchId === branchId
+): place is StoredPlace {
+  if (!place) return false
+  if (Date.now() - place.scannedAt > PLACE_TTL_MS) return false
+  return place.branchId === branchId
 }
 
-export function useActiveTable(): StoredTable | null {
-  const table = useTableStore((s) => s.table)
+export function useActivePlace(): StoredPlace | null {
+  const place = usePlaceStore((s) => s.place)
   // Subscribed, not read once: switching branch has to re-evaluate this, or a
-  // table from the branch just left keeps showing as the destination.
+  // place from the branch just left keeps showing as the destination.
   const branchId = useBranchStore((s) => s.branchId)
-  return isUsable(table, branchId) ? table : null
+  return isUsable(place, branchId) ? place : null
 }
 
 // For code outside the React tree
-export function getActiveTable(): StoredTable | null {
-  const { table } = useTableStore.getState()
-  return isUsable(table, getActiveBranchId()) ? table : null
+export function getActivePlace(): StoredPlace | null {
+  const { place } = usePlaceStore.getState()
+  return isUsable(place, getActiveBranchId()) ? place : null
 }
