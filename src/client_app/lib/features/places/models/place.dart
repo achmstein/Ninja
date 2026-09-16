@@ -6,7 +6,7 @@ import '../../../core/models/localized_text.dart';
 /// What a place is, for icons and words. What it *does* comes from its
 /// tariff (a timed place has one), not from its kind.
 enum PlaceKind {
-  room(1, 'Room', FIcons.gamepad2),
+  room(1, 'Place', FIcons.gamepad2),
   table(2, 'Table', FIcons.armchair),
   station(3, 'Station', FIcons.trophy);
 
@@ -27,7 +27,7 @@ enum PlaceKind {
 }
 
 /// Place display status (computed at query time)
-enum RoomDisplayStatus {
+enum PlaceStatus {
   available(1, 'Available'),
   occupied(2, 'Occupied'),
   reserved(3, 'Reserved'), // Held: the customer has 10 min to arrive
@@ -36,18 +36,18 @@ enum RoomDisplayStatus {
   final int value;
   final String label;
 
-  const RoomDisplayStatus(this.value, this.label);
+  const PlaceStatus(this.value, this.label);
 
-  static RoomDisplayStatus fromValue(int value) {
-    return RoomDisplayStatus.values.firstWhere(
+  static PlaceStatus fromValue(int value) {
+    return PlaceStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => RoomDisplayStatus.available,
+      orElse: () => PlaceStatus.available,
     );
   }
 }
 
 /// Stay status
-enum SessionStatus {
+enum StayStatus {
   reserved(1, 'Held'),
   active(2, 'Running'),
   completed(3, 'Ended'),
@@ -56,12 +56,12 @@ enum SessionStatus {
   final int value;
   final String label;
 
-  const SessionStatus(this.value, this.label);
+  const StayStatus(this.value, this.label);
 
-  static SessionStatus fromValue(int value) {
-    return SessionStatus.values.firstWhere(
+  static StayStatus fromValue(int value) {
+    return StayStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => SessionStatus.reserved,
+      orElse: () => StayStatus.reserved,
     );
   }
 }
@@ -90,18 +90,18 @@ List<RateOption> _parseOptions(dynamic tariff) {
 }
 
 /// A timed place: a PlayStation room, a table or a station with a clock.
-class Room {
+class Place {
   final int id;
   final PlaceKind kind;
   final LocalizedText name;
   final LocalizedText? description;
-  final RoomDisplayStatus displayStatus;
+  final PlaceStatus displayStatus;
   final bool isActive;
   final List<RateOption> options;
   final bool canReserve;
   final bool takesControllerRequests;
 
-  Room({
+  Place({
     required this.id,
     this.kind = PlaceKind.room,
     required this.name,
@@ -117,15 +117,15 @@ class Room {
   bool get hasOptions => options.length > 1;
 
   /// Can the user hold this place now?
-  bool get canBookNow => canReserve && displayStatus == RoomDisplayStatus.available;
+  bool get canBookNow => canReserve && displayStatus == PlaceStatus.available;
 
-  factory Room.fromJson(Map<String, dynamic> json) {
-    return Room(
+  factory Place.fromJson(Map<String, dynamic> json) {
+    return Place(
       id: json['id'] as int,
       kind: PlaceKind.fromValue(json['kind'] as int?),
       name: LocalizedText.parse(json['name']),
       description: json['description'] != null ? LocalizedText.parse(json['description']) : null,
-      displayStatus: RoomDisplayStatus.fromValue(json['status'] as int? ?? 1),
+      displayStatus: PlaceStatus.fromValue(json['status'] as int? ?? 1),
       isActive: json['isActive'] as bool? ?? true,
       options: _parseOptions(json['tariff']),
       canReserve: json['canReserve'] as bool? ?? true,
@@ -135,13 +135,13 @@ class Room {
 }
 
 /// Session member model
-class SessionMember {
+class StayMember {
   final String customerId;
   final String? customerName;
   final DateTime joinedAt;
   final String role;
 
-  SessionMember({
+  StayMember({
     required this.customerId,
     this.customerName,
     required this.joinedAt,
@@ -150,8 +150,8 @@ class SessionMember {
 
   bool get isOwner => role == 'Owner';
 
-  factory SessionMember.fromJson(Map<String, dynamic> json) {
-    return SessionMember(
+  factory StayMember.fromJson(Map<String, dynamic> json) {
+    return StayMember(
       customerId: json['customerId'] as String,
       customerName: json['customerName'] as String?,
       joinedAt: DateTime.parse(json['joinedAt'] as String),
@@ -161,14 +161,14 @@ class SessionMember {
 }
 
 /// A stretch of the stay charged at one rate option
-class SessionSegment {
+class StaySegment {
   final String optionCode;
   final LocalizedText optionName;
   final double hourlyRate;
   final DateTime startTime;
   final DateTime? endTime;
 
-  SessionSegment({
+  StaySegment({
     required this.optionCode,
     required this.optionName,
     required this.hourlyRate,
@@ -176,8 +176,8 @@ class SessionSegment {
     this.endTime,
   });
 
-  factory SessionSegment.fromJson(Map<String, dynamic> json) {
-    return SessionSegment(
+  factory StaySegment.fromJson(Map<String, dynamic> json) {
+    return StaySegment(
       optionCode: json['optionCode'] as String? ?? '',
       optionName: LocalizedText.parse(json['optionName']),
       hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0,
@@ -189,17 +189,17 @@ class SessionSegment {
 
 /// A stay: one party's timed use of a place — the hold, the running clock,
 /// the ended one on the bill.
-class RoomSession {
+class Stay {
   final int id;
-  final int roomId;
+  final int placeId;
   final PlaceKind placeKind;
-  final LocalizedText roomName;
+  final LocalizedText placeName;
   final List<RateOption> options;
   final DateTime createdAt;
-  final DateTime? actualStartTime;
+  final DateTime? startedAt;
   final DateTime? endTime;
   final double? totalCost;
-  final SessionStatus status;
+  final StayStatus status;
   final String? notes;
   final String? currentOptionCode;
   final LocalizedText? currentOptionName;
@@ -207,8 +207,8 @@ class RoomSession {
   /// The customer asked that the till's Confirm also start the clock
   final bool startOnConfirm;
   final String? customerId;
-  final List<SessionMember> members;
-  final List<SessionSegment> segments;
+  final List<StayMember> members;
+  final List<StaySegment> segments;
 
   /// The till's receipt, projected by Spaces: null while the bill is open
   final int? receiptNumber;
@@ -220,14 +220,14 @@ class RoomSession {
   /// The Sales ticket the time was billed on — what the receipt opens
   final int? ticketId;
 
-  RoomSession({
+  Stay({
     required this.id,
-    required this.roomId,
+    required this.placeId,
     this.placeKind = PlaceKind.room,
-    required this.roomName,
+    required this.placeName,
     this.options = const [],
     required this.createdAt,
-    this.actualStartTime,
+    this.startedAt,
     this.endTime,
     this.totalCost,
     required this.status,
@@ -262,9 +262,9 @@ class RoomSession {
 
   /// Calculate duration if session is active or completed
   Duration? get duration {
-    if (actualStartTime == null) return null;
+    if (startedAt == null) return null;
     final end = endTime ?? DateTime.now();
-    return end.difference(actualStartTime!);
+    return end.difference(startedAt!);
   }
 
   /// Format duration as HH:MM:SS
@@ -277,22 +277,22 @@ class RoomSession {
     return '$hours:$minutes:$seconds';
   }
 
-  factory RoomSession.fromJson(Map<String, dynamic> json) {
-    return RoomSession(
+  factory Stay.fromJson(Map<String, dynamic> json) {
+    return Stay(
       id: json['id'] as int,
-      roomId: json['placeId'] as int,
+      placeId: json['placeId'] as int,
       placeKind: PlaceKind.fromValue(json['placeKind'] as int?),
-      roomName: LocalizedText.parse(json['placeName'] ?? 'Place ${json['placeId']}'),
+      placeName: LocalizedText.parse(json['placeName'] ?? 'Place ${json['placeId']}'),
       options: _parseOptions(json['tariff']),
       receiptNumber: (json['receiptNumber'] as num?)?.toInt(),
       paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt'] as String) : null,
       paidWith: json['paidWith'] as String?,
       ticketId: (json['ticketId'] as num?)?.toInt(),
       createdAt: DateTime.parse(json['createdAt'] as String),
-      actualStartTime: json['startedAt'] != null ? DateTime.parse(json['startedAt'] as String) : null,
+      startedAt: json['startedAt'] != null ? DateTime.parse(json['startedAt'] as String) : null,
       endTime: json['endedAt'] != null ? DateTime.parse(json['endedAt'] as String) : null,
       totalCost: (json['totalCost'] as num?)?.toDouble(),
-      status: SessionStatus.fromValue(json['status'] as int),
+      status: StayStatus.fromValue(json['status'] as int),
       notes: json['notes'] as String?,
       currentOptionCode: json['currentOptionCode'] as String?,
       currentOptionName:
@@ -300,11 +300,11 @@ class RoomSession {
       startOnConfirm: json['startOnConfirm'] as bool? ?? false,
       customerId: json['customerId'] as String?,
       members: (json['members'] as List<dynamic>?)
-              ?.map((e) => SessionMember.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => StayMember.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       segments: (json['segments'] as List<dynamic>?)
-              ?.map((e) => SessionSegment.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => StaySegment.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
@@ -312,29 +312,29 @@ class RoomSession {
 }
 
 /// The stay on a place, as the scan shows it before joining
-class SessionPreview {
+class StayPreview {
   final int sessionId;
-  final int roomId;
-  final LocalizedText roomName;
-  final SessionStatus status;
+  final int placeId;
+  final LocalizedText placeName;
+  final StayStatus status;
   final DateTime startTime;
   final int memberCount;
 
-  SessionPreview({
+  StayPreview({
     required this.sessionId,
-    required this.roomId,
-    required this.roomName,
+    required this.placeId,
+    required this.placeName,
     required this.status,
     required this.startTime,
     required this.memberCount,
   });
 
-  factory SessionPreview.fromJson(Map<String, dynamic> json) {
-    return SessionPreview(
+  factory StayPreview.fromJson(Map<String, dynamic> json) {
+    return StayPreview(
       sessionId: json['stayId'] as int,
-      roomId: json['placeId'] as int,
-      roomName: LocalizedText.parse(json['placeName']),
-      status: SessionStatus.fromValue(json['status'] as int? ?? 2),
+      placeId: json['placeId'] as int,
+      placeName: LocalizedText.parse(json['placeName']),
+      status: StayStatus.fromValue(json['status'] as int? ?? 2),
       startTime: DateTime.parse(json['startTime'] as String),
       memberCount: json['memberCount'] as int? ?? 0,
     );
@@ -342,26 +342,26 @@ class SessionPreview {
 }
 
 /// What a scanned place QR resolves to for this customer
-class RoomScanResult {
+class PlaceScanResult {
   final int branchId;
-  final int roomId;
+  final int placeId;
   final PlaceKind kind;
-  final LocalizedText roomName;
+  final LocalizedText placeName;
   final List<RateOption> options;
-  final RoomDisplayStatus displayStatus;
+  final PlaceStatus displayStatus;
   final bool isActive;
   final bool isTimed;
   final bool canReserve;
   final bool takesControllerRequests;
   final bool hasActiveSession;
-  final SessionPreview? sessionPreview;
+  final StayPreview? sessionPreview;
   final bool isAlreadyMember;
 
-  RoomScanResult({
+  PlaceScanResult({
     required this.branchId,
-    required this.roomId,
+    required this.placeId,
     required this.kind,
-    required this.roomName,
+    required this.placeName,
     required this.options,
     required this.displayStatus,
     required this.isActive,
@@ -376,10 +376,10 @@ class RoomScanResult {
   bool get hasOptions => options.length > 1;
 
   /// The place as the hold sheet takes it
-  Room toRoom() => Room(
-        id: roomId,
+  Place toPlace() => Place(
+        id: placeId,
         kind: kind,
-        name: roomName,
+        name: placeName,
         displayStatus: displayStatus,
         isActive: isActive,
         options: options,
@@ -387,47 +387,47 @@ class RoomScanResult {
         takesControllerRequests: takesControllerRequests,
       );
 
-  factory RoomScanResult.fromJson(Map<String, dynamic> json) {
-    return RoomScanResult(
+  factory PlaceScanResult.fromJson(Map<String, dynamic> json) {
+    return PlaceScanResult(
       branchId: json['branchId'] as int,
-      roomId: json['placeId'] as int,
+      placeId: json['placeId'] as int,
       kind: PlaceKind.fromValue(json['kind'] as int?),
-      roomName: LocalizedText.parse(json['placeName']),
+      placeName: LocalizedText.parse(json['placeName']),
       options: _parseOptions(json['tariff']),
-      displayStatus: RoomDisplayStatus.fromValue(json['status'] as int? ?? 1),
+      displayStatus: PlaceStatus.fromValue(json['status'] as int? ?? 1),
       isActive: json['isActive'] as bool? ?? true,
       isTimed: json['isTimed'] as bool? ?? false,
       canReserve: json['canReserve'] as bool? ?? false,
       takesControllerRequests: json['takesControllerRequests'] as bool? ?? false,
       hasActiveSession: json['hasRunningStay'] as bool? ?? false,
       sessionPreview:
-          json['stay'] != null ? SessionPreview.fromJson(json['stay'] as Map<String, dynamic>) : null,
+          json['stay'] != null ? StayPreview.fromJson(json['stay'] as Map<String, dynamic>) : null,
       isAlreadyMember: json['isAlreadyMember'] as bool? ?? false,
     );
   }
 }
 
 /// Result of joining a stay
-class JoinSessionResult {
+class JoinStayResult {
   final int reservationId;
-  final int roomId;
-  final LocalizedText roomName;
+  final int placeId;
+  final LocalizedText placeName;
   final bool isOwner;
   final DateTime startTime;
 
-  JoinSessionResult({
+  JoinStayResult({
     required this.reservationId,
-    required this.roomId,
-    required this.roomName,
+    required this.placeId,
+    required this.placeName,
     required this.isOwner,
     required this.startTime,
   });
 
-  factory JoinSessionResult.fromJson(Map<String, dynamic> json) {
-    return JoinSessionResult(
+  factory JoinStayResult.fromJson(Map<String, dynamic> json) {
+    return JoinStayResult(
       reservationId: json['stayId'] as int,
-      roomId: json['placeId'] as int,
-      roomName: LocalizedText.parse(json['placeName']),
+      placeId: json['placeId'] as int,
+      placeName: LocalizedText.parse(json['placeName']),
       isOwner: json['isOwner'] as bool,
       startTime: DateTime.parse(json['startTime'] as String),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 import '../../../core/models/localized_text.dart';
-import '../../rooms/models/room.dart';
+import '../../places/models/place.dart';
 
 /// Types of service requests users can make
 enum ServiceRequestType {

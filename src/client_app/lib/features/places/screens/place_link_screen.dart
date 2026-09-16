@@ -5,14 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
-import '../../../core/providers/current_table_provider.dart';
+import '../../../core/providers/current_place_provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/room.dart';
-import '../services/room_service.dart';
-import 'rooms_screen.dart';
+import '../models/place.dart';
+import '../services/place_service.dart';
+import 'places_screen.dart';
 
 /// Landing for a place QR that opened the app as an App Link
 /// (https://chillax.site/p/{id}; the older /room and /table stickers resolve
@@ -32,7 +32,7 @@ class PlaceLinkScreen extends ConsumerStatefulWidget {
 }
 
 class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
-  RoomScanResult? _scan;
+  PlaceScanResult? _scan;
   bool _loading = true;
   bool _busy = false;
 
@@ -46,7 +46,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      final place = await ref.read(roomRepositoryProvider).getRoom(widget.placeId);
+      final place = await ref.read(placeRepositoryProvider).getPlace(widget.placeId);
       if (!mounted) return;
 
       if (!place.isActive) {
@@ -56,8 +56,8 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
 
       // A table is where the order goes, clock or no clock
       if (place.kind == PlaceKind.table) {
-        await ref.read(currentTableProvider.notifier).setTable(
-              CurrentTable(
+        await ref.read(currentPlaceProvider.notifier).setPlace(
+              CurrentPlace(
                 id: place.id,
                 kind: place.kind,
                 name: place.name,
@@ -80,7 +80,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
         return;
       }
 
-      final result = await ref.read(roomRepositoryProvider).scanRoom(widget.placeId);
+      final result = await ref.read(placeRepositoryProvider).scanPlace(widget.placeId);
       if (!mounted) return;
 
       // The QR belongs to a specific branch — switch to it
@@ -91,7 +91,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
 
       // Already in the party here — nothing to decide
       if (result.isAlreadyMember) {
-        _leave('/rooms', l10n.alreadyInSession, icon: FIcons.info);
+        _leave('/places', l10n.alreadyInSession, icon: FIcons.info);
         return;
       }
 
@@ -115,15 +115,15 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
     setState(() => _busy = true);
 
     try {
-      await ref.read(roomRepositoryProvider).joinSessionByRoom(widget.placeId);
+      await ref.read(placeRepositoryProvider).joinStay(widget.placeId);
       if (!mounted) return;
 
       _refreshRooms();
-      _leave('/rooms', l10n.joinedSession, icon: FIcons.check, success: true);
+      _leave('/places', l10n.joinedSession, icon: FIcons.check, success: true);
     } catch (_) {
       if (mounted) {
         setState(() => _busy = false);
-        _leave('/rooms', l10n.failedToJoinSession, isError: true);
+        _leave('/places', l10n.failedToJoinSession, isError: true);
       }
     }
   }
@@ -137,15 +137,15 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReservationSheet(room: scan.toRoom()),
+      builder: (_) => HoldSheet(room: scan.toPlace()),
     );
-    if (mounted) context.go('/rooms');
+    if (mounted) context.go('/places');
   }
 
   void _refreshRooms() {
-    ref.read(mySessionsProvider.notifier).refresh();
+    ref.read(myStaysProvider.notifier).refresh();
     final branchId = ref.read(selectedBranchIdProvider);
-    if (branchId != null) ref.invalidate(roomsProvider(branchId));
+    if (branchId != null) ref.invalidate(placesProvider(branchId));
   }
 
   /// Every outcome ends elsewhere with a toast — the link is a way in, not a
@@ -184,13 +184,13 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       );
     }
 
-    final available = scan.canReserve && scan.displayStatus == RoomDisplayStatus.available;
+    final available = scan.canReserve && scan.displayStatus == PlaceStatus.available;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(FIcons.x),
-          onPressed: () => context.go('/rooms'),
+          onPressed: () => context.go('/places'),
         ),
       ),
       body: Padding(
@@ -210,7 +210,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
             const SizedBox(height: 16),
 
             AppText(
-              scan.roomName.localized(context),
+              scan.placeName.localized(context),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,

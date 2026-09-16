@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../router/app_router.dart';
 import '../../features/notifications/services/notification_service.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../../features/places/services/place_service.dart';
 
 
 /// Method channel for native notification (used in background handler)
@@ -169,14 +169,14 @@ class FirebaseService {
 
     // Refresh sessions — the session notification listener will
     // automatically show the notification when it sees the active session.
-    _ref!.read(mySessionsProvider.notifier).refresh();
+    _ref!.read(myStaysProvider.notifier).refresh();
   }
 
   void _handleSessionEnded() {
     if (_ref == null) return;
 
     // Refresh sessions — the listener will auto-dismiss when no active session.
-    _ref!.read(mySessionsProvider.notifier).refresh();
+    _ref!.read(myStaysProvider.notifier).refresh();
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
@@ -185,7 +185,7 @@ class FirebaseService {
     final type = message.data['type'];
     final route = switch (type) {
       'order_confirmed' || 'order_cancelled' => '/orders',
-      'session_started' || 'session_ended' || 'reservation_cancelled' || 'room_available' => '/rooms',
+      'session_started' || 'session_ended' || 'reservation_cancelled' || 'room_available' => '/places',
       _ => null,
     };
     if (route != null) {

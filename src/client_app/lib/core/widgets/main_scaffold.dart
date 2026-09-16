@@ -7,9 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'app_text.dart';
 import 'branch_switcher.dart';
 import 'destination_chip.dart';
-import '../providers/current_table_provider.dart';
-import '../../features/rooms/models/room.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../providers/current_place_provider.dart';
+import '../../features/places/models/place.dart';
+import '../../features/places/services/place_service.dart';
 
 
 /// Tracks the current route for tab-aware refreshing
@@ -44,14 +44,14 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // Moving into a room means the customer left their table, so forget it.
     // Driven by the session appearing rather than by the join button, so it
     // also covers a session a cashier starts for a walk-in.
-    ref.listenManual(mySessionsProvider, (_, next) {
+    ref.listenManual(myStaysProvider, (_, next) {
       final inRoom = next.whenOrNull(
             data: (sessions) =>
-                sessions.any((s) => s.status == SessionStatus.active),
+                sessions.any((s) => s.status == StayStatus.active),
           ) ??
           false;
-      if (inRoom && ref.read(currentTableProvider) != null) {
-        ref.read(currentTableProvider.notifier).clear();
+      if (inRoom && ref.read(currentPlaceProvider) != null) {
+        ref.read(currentPlaceProvider.notifier).clear();
       }
     });
   }
@@ -148,7 +148,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   int _calculateSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/menu')) return 0;
-    if (location.startsWith('/rooms')) return 1;
+    if (location.startsWith('/places')) return 1;
     if (location.startsWith('/orders')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
@@ -160,7 +160,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         context.go('/menu');
         break;
       case 1:
-        context.go('/rooms');
+        context.go('/places');
         break;
       case 2:
         context.go('/orders');

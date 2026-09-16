@@ -147,7 +147,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       prefix: const Icon(FIcons.gamepad2),
                       title: AppText(l10n.sessions),
                       suffix: const Icon(FIcons.chevronRight),
-                      onPress: () => context.push('/sessions'),
+                      onPress: () => context.push('/stays'),
                     ),
                     FTile(
                       prefix: const Icon(FIcons.heart),

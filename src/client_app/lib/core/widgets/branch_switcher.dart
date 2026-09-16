@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
-import '../../features/rooms/models/room.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../../features/places/models/place.dart';
+import '../../features/places/services/place_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
 
@@ -70,8 +70,8 @@ class BranchSwitcher extends ConsumerWidget {
 
   void _showBranchPicker(BuildContext context, WidgetRef ref, List<Branch> branches, Branch current) {
     // Check for active session
-    final sessions = ref.read(mySessionsProvider);
-    final hasActiveSession = sessions.value?.any((s) => s.status == SessionStatus.active) ?? false;
+    final sessions = ref.read(myStaysProvider);
+    final hasActiveSession = sessions.value?.any((s) => s.status == StayStatus.active) ?? false;
 
     if (hasActiveSession) {
       final l10n = AppLocalizations.of(context)!;

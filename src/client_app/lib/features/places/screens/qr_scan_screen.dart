@@ -4,14 +4,14 @@ import 'package:forui/forui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
-import '../../../core/providers/current_table_provider.dart';
+import '../../../core/providers/current_place_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tables/services/table_service.dart';
-import '../models/room.dart';
-import '../services/room_service.dart';
-import 'rooms_screen.dart';
+import '../models/place.dart';
+import '../services/place_service.dart';
+import 'places_screen.dart';
 
 /// A scanned chillax.site QR: a place (/p/{id}), or one of the older room
 /// (/room/{id}) and table (/table/{id}) stickers.
@@ -89,7 +89,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   /// offers a hold. A timed table is both.
   Future<void> _handlePlace(int placeId) async {
     final l10n = AppLocalizations.of(context)!;
-    final place = await ref.read(roomRepositoryProvider).getRoom(placeId);
+    final place = await ref.read(placeRepositoryProvider).getPlace(placeId);
     if (!mounted) return;
 
     if (!place.isActive) {
@@ -121,7 +121,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       return;
     }
 
-    final result = await ref.read(roomRepositoryProvider).scanRoom(placeId);
+    final result = await ref.read(placeRepositoryProvider).scanPlace(placeId);
     if (!mounted) return;
 
     // Auto-switch branch if the place belongs to a different branch
@@ -142,7 +142,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
 
     // A clock is running → join it directly without showing a sheet
     if (result.hasActiveSession) {
-      await _joinSessionDirect(result.roomId);
+      await _joinSessionDirect(result.placeId);
       return;
     }
 
@@ -150,11 +150,11 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   }
 
   /// A scanned table is where the next order goes, clock or no clock
-  Future<void> _rememberTable(Room place) async {
+  Future<void> _rememberTable(Place place) async {
     final currentBranchId = ref.read(selectedBranchIdProvider);
     final branchId = currentBranchId ?? 1;
-    await ref.read(currentTableProvider.notifier).setTable(
-          CurrentTable(
+    await ref.read(currentPlaceProvider.notifier).setPlace(
+          CurrentPlace(
             id: place.id,
             kind: place.kind,
             name: place.name,
@@ -181,14 +181,14 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   Future<void> _joinSessionDirect(int roomId) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final service = ref.read(roomRepositoryProvider);
-      await service.joinSessionByRoom(roomId);
+      final service = ref.read(placeRepositoryProvider);
+      await service.joinStay(roomId);
 
       if (!mounted) return;
 
-      ref.read(mySessionsProvider.notifier).refresh();
+      ref.read(myStaysProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(roomsProvider(branchId));
+      if (branchId != null) ref.invalidate(placesProvider(branchId));
 
       Navigator.of(context).pop();
       showFToast(
@@ -208,10 +208,10 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     }
   }
 
-  void _showScanResult(RoomScanResult result) {
+  void _showScanResult(PlaceScanResult result) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!result.canReserve || result.displayStatus != RoomDisplayStatus.available) {
+    if (!result.canReserve || result.displayStatus != PlaceStatus.available) {
       showFToast(
         context: context,
         title: Text(l10n.roomNotAvailable),
@@ -225,7 +225,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReservationSheet(room: result.toRoom()),
+      builder: (_) => HoldSheet(room: result.toPlace()),
     ).whenComplete(() {
       if (!mounted) return;
       // Held or not, the customer is done scanning: the rooms tab shows the hold

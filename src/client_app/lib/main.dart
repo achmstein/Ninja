@@ -12,7 +12,7 @@ import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/auth/auth_service.dart';
 import 'core/providers/branch_provider.dart';
-import 'core/providers/current_table_provider.dart';
+import 'core/providers/current_place_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/firebase_service.dart';
 import 'core/services/session_notification_service.dart';
@@ -23,7 +23,7 @@ import 'features/menu/providers/favorites_provider.dart';
 import 'features/menu/services/menu_service.dart';
 import 'features/notifications/services/notification_service.dart';
 import 'features/orders/services/order_service.dart';
-import 'features/rooms/services/room_service.dart';
+import 'features/places/services/place_service.dart';
 import 'features/settings/providers/settings_provider.dart';
 
 void main() async {
@@ -32,7 +32,7 @@ void main() async {
 
   await initializeLocale();
   await initializeBranch();
-  await initializeCurrentTable();
+  await initializeCurrentPlace();
 
   // Initialize Firebase before setting up Crashlytics handlers
   try {
@@ -90,10 +90,10 @@ class _ChillaxAppState extends ConsumerState<ChillaxApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _wasAuthenticated) {
       ref.read(signalRServiceProvider).reconnectIfNeeded();
-      ref.read(mySessionsProvider.notifier).refresh();
+      ref.read(myStaysProvider.notifier).refresh();
       ref.read(branchProvider.notifier).refreshSilently();
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(roomsProvider(branchId));
+      if (branchId != null) ref.invalidate(placesProvider(branchId));
       _reregisterNotificationsIfEnabled();
     }
   }
@@ -183,8 +183,8 @@ class _ChillaxAppState extends ConsumerState<ChillaxApp>
     _signalRSubscriptions.add(
       signalR.onRoomStatusChanged.listen((_) {
         final branchId = ref.read(selectedBranchIdProvider);
-        if (branchId != null) ref.invalidate(roomsProvider(branchId));
-        ref.read(mySessionsProvider.notifier).refresh();
+        if (branchId != null) ref.invalidate(placesProvider(branchId));
+        ref.read(myStaysProvider.notifier).refresh();
         ref.invalidate(roomAvailabilitySubscriptionProvider);
         WidgetsBinding.instance.ensureVisualUpdate();
       }),

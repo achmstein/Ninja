@@ -9,22 +9,22 @@ import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/room.dart';
-import '../services/room_service.dart';
+import '../models/place.dart';
+import '../services/place_service.dart';
 
 /// Screen showing user's sessions with Today / Previous tabs
-class SessionsScreen extends ConsumerStatefulWidget {
-  const SessionsScreen({super.key});
+class StaysScreen extends ConsumerStatefulWidget {
+  const StaysScreen({super.key});
 
   @override
-  ConsumerState<SessionsScreen> createState() => _SessionsScreenState();
+  ConsumerState<StaysScreen> createState() => _StaysScreenState();
 }
 
-class _SessionsScreenState extends ConsumerState<SessionsScreen> {
+class _StaysScreenState extends ConsumerState<StaysScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(mySessionsProvider.notifier).refresh();
+    ref.read(myStaysProvider.notifier).refresh();
   }
 
   DateTime _getSessionStart() {
@@ -46,7 +46,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sessionsAsync = ref.watch(mySessionsProvider);
+    final sessionsAsync = ref.watch(myStaysProvider);
     final currentUserId = ref.watch(authServiceProvider).userId;
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
@@ -88,7 +88,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                         currentUserId: currentUserId,
                         colors: colors,
                         sessionStart: _getSessionStart(),
-                        onRefresh: () => ref.read(mySessionsProvider.notifier).refresh(),
+                        onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
                       ),
                     ),
                   ),
@@ -98,7 +98,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                       child: _HistorySessionsList(
                         sessionsAsync: sessionsAsync,
                         currentUserId: currentUserId,
-                        onRefresh: () => ref.read(mySessionsProvider.notifier).refresh(),
+                        onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
                       ),
                     ),
                   ),
@@ -117,7 +117,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
 // ════════════════════════════════════════════════════════════════════
 
 class _TodaySessionsList extends StatelessWidget {
-  final AsyncValue<List<RoomSession>> sessionsAsync;
+  final AsyncValue<List<Stay>> sessionsAsync;
   final String? currentUserId;
   final dynamic colors;
   final DateTime sessionStart;
@@ -140,7 +140,7 @@ class _TodaySessionsList extends StatelessWidget {
       error: (error, _) => _buildError(l10n),
       data: (allSessions) {
         final sessions = allSessions.where((s) {
-          final time = s.actualStartTime ?? s.createdAt;
+          final time = s.startedAt ?? s.createdAt;
           return time.isAfter(sessionStart);
         }).toList();
 
@@ -201,7 +201,7 @@ class _TodaySessionsList extends StatelessWidget {
 // ════════════════════════════════════════════════════════════════════
 
 class _HistorySessionsList extends ConsumerWidget {
-  final AsyncValue<List<RoomSession>> sessionsAsync;
+  final AsyncValue<List<Stay>> sessionsAsync;
   final String? currentUserId;
   final Future<void> Function() onRefresh;
 
@@ -293,7 +293,7 @@ class _HistorySessionsList extends ConsumerWidget {
   }
 
   List<_ShiftGroup> _groupByShift(
-    List<RoomSession> sessions,
+    List<Stay> sessions,
     Locale locale,
     AppLocalizations l10n,
     WidgetRef ref,
@@ -306,7 +306,7 @@ class _HistorySessionsList extends ConsumerWidget {
     final isOvernight = branch?.isOvernightShift ?? true;
 
     for (final session in sessions) {
-      final sessionTime = (session.actualStartTime ?? session.createdAt).toLocal();
+      final sessionTime = (session.startedAt ?? session.createdAt).toLocal();
       final shiftDate = isOvernight && sessionTime.hour < startHour
           ? DateTime(sessionTime.year, sessionTime.month, sessionTime.day - 1)
           : DateTime(sessionTime.year, sessionTime.month, sessionTime.day);
@@ -340,7 +340,7 @@ class _HistorySessionsList extends ConsumerWidget {
 
 class _ShiftGroup {
   final String label;
-  final List<RoomSession> sessions;
+  final List<Stay> sessions;
   _ShiftGroup({required this.label, required this.sessions});
 }
 
@@ -349,7 +349,7 @@ class _ShiftGroup {
 // ════════════════════════════════════════════════════════════════════
 
 class SessionTile extends StatefulWidget {
-  final RoomSession session;
+  final Stay session;
   final String? currentUserId;
   final bool showTimeOnly;
 
@@ -370,7 +370,7 @@ class _SessionTileState extends State<SessionTile> {
   @override
   void initState() {
     super.initState();
-    _isActive = widget.session.status == SessionStatus.active;
+    _isActive = widget.session.status == StayStatus.active;
     if (_isActive) {
       _startTimer();
     }
@@ -388,10 +388,10 @@ class _SessionTileState extends State<SessionTile> {
   /// The colour of a rate option by its place in the tariff: the first reads
   /// as the base rate, any other as the upgrade — the way Single and Multi
   /// always did.
-  Color _optionColor(SessionSegment segment, dynamic colors) =>
+  Color _optionColor(StaySegment segment, dynamic colors) =>
       widget.session.optionIndex(segment.optionCode) > 0 ? Colors.orange : colors.primary as Color;
 
-  String _segmentDuration(SessionSegment segment, AppLocalizations l10n) {
+  String _segmentDuration(StaySegment segment, AppLocalizations l10n) {
     final end = segment.endTime ?? DateTime.now();
     final d = end.difference(segment.startTime);
     final h = d.inHours;
@@ -424,7 +424,7 @@ class _SessionTileState extends State<SessionTile> {
               const SizedBox(width: 8),
               Expanded(
                 child: AppText(
-                  session.roomName.localized(context),
+                  session.placeName.localized(context),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -580,7 +580,7 @@ class _SessionTileState extends State<SessionTile> {
   }
 
   /// Sales' receipt, projected onto the session by Spaces
-  Widget _buildPaidBadge(RoomSession session, AppLocalizations l10n) {
+  Widget _buildPaidBadge(Stay session, AppLocalizations l10n) {
     final receipt = session.receiptNumber != null ? ' ${l10n.receiptShort(session.receiptNumber!)}' : '';
     final label = session.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
     return GestureDetector(
@@ -589,20 +589,20 @@ class _SessionTileState extends State<SessionTile> {
     );
   }
 
-  Widget _buildStatusBadge(SessionStatus status) {
+  Widget _buildStatusBadge(StayStatus status) {
     final l10n = AppLocalizations.of(context)!;
     String label;
     switch (status) {
-      case SessionStatus.reserved:
+      case StayStatus.reserved:
         label = l10n.statusReserved;
         return FBadge(variant: FBadgeVariant.secondary, child: Text(label));
-      case SessionStatus.active:
+      case StayStatus.active:
         label = l10n.statusActive;
         return FBadge(child: Text(label));
-      case SessionStatus.completed:
+      case StayStatus.completed:
         label = l10n.statusCompleted;
         return FBadge(variant: FBadgeVariant.outline, child: Text(label));
-      case SessionStatus.cancelled:
+      case StayStatus.cancelled:
         label = l10n.statusCancelled;
         return FBadge(variant: FBadgeVariant.destructive, child: Text(label));
     }

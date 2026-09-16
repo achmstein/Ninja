@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../models/localized_text.dart';
-import '../providers/current_table_provider.dart';
+import '../providers/current_place_provider.dart';
 import 'app_text.dart';
 import '../../features/service_request/models/service_request.dart';
 import '../../features/service_request/services/service_request_service.dart';
@@ -31,7 +31,7 @@ class DestinationChip extends ConsumerWidget {
       padding: const EdgeInsetsDirectional.only(end: 12, top: 8),
       child: GestureDetector(
         // The table chip is the table's menu: a waiter or the bill
-        onTap: isRoom ? null : () => showTableRequests(context, destination),
+        onTap: isRoom ? null : () => showPlaceRequests(context, destination),
         behavior: HitTestBehavior.opaque,
         child: Container(
         padding: EdgeInsetsDirectional.only(
@@ -66,7 +66,7 @@ class DestinationChip extends ConsumerWidget {
             ),
             if (!isRoom)
               GestureDetector(
-                onTap: () => ref.read(currentTableProvider.notifier).clear(),
+                onTap: () => ref.read(currentPlaceProvider.notifier).clear(),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding: const EdgeInsets.all(4),
@@ -87,7 +87,7 @@ class DestinationChip extends ConsumerWidget {
 
 /// Waiter or the bill, from a table — the room's quick actions, for the
 /// customer who scanned a table sticker. One minute between taps of a kind.
-Future<void> showTableRequests(BuildContext context, OrderDestination destination) {
+Future<void> showPlaceRequests(BuildContext context, OrderDestination destination) {
   return showFDialog<void>(
     context: context,
     builder: (context, style, animation) => FDialog(

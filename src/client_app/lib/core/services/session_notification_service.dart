@@ -15,8 +15,8 @@ import '../router/app_router.dart';
 import '../../features/menu/models/menu_item.dart';
 import '../../features/menu/services/menu_service.dart';
 import '../../features/orders/services/order_service.dart';
-import '../../features/rooms/models/room.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../../features/places/models/place.dart';
+import '../../features/places/services/place_service.dart';
 
 const _channel = MethodChannel('com.chillax.client/session_notification');
 
@@ -38,7 +38,7 @@ class _DrinkInfo {
 class SessionNotificationService {
   final Ref _ref;
   Timer? _updateTimer;
-  RoomSession? _activeSession;
+  Stay? _activeSession;
   ProviderSubscription? _sessionSub;
 
   MenuItem? _drink1Item;
@@ -61,8 +61,8 @@ class SessionNotificationService {
     // Avoid duplicate subscriptions
     _sessionSub?.close();
 
-    _sessionSub = _ref.listen<AsyncValue<List<RoomSession>>>(
-      mySessionsProvider,
+    _sessionSub = _ref.listen<AsyncValue<List<Stay>>>(
+      myStaysProvider,
       (previous, next) => _onSessionsChanged(next),
       fireImmediately: true,
     );
@@ -70,7 +70,7 @@ class SessionNotificationService {
     // Ensure fresh data — the provider's initial load may have failed
     // (e.g., 401 before auth was ready). This triggers a silent refresh
     // that updates the state and fires the listener above.
-    _ref.read(mySessionsProvider.notifier).refresh();
+    _ref.read(myStaysProvider.notifier).refresh();
   }
 
   /// Stop listening (e.g., on logout).
@@ -80,10 +80,10 @@ class SessionNotificationService {
     dismissNotification();
   }
 
-  void _onSessionsChanged(AsyncValue<List<RoomSession>> state) {
+  void _onSessionsChanged(AsyncValue<List<Stay>> state) {
     state.whenData((sessions) {
       final active = sessions
-          .where((s) => s.status == SessionStatus.active)
+          .where((s) => s.status == StayStatus.active)
           .firstOrNull;
 
       if (active != null) {
@@ -98,7 +98,7 @@ class SessionNotificationService {
   }
 
   /// Show or update the notification for an active session.
-  Future<void> _showForSession(RoomSession session, String locale) async {
+  Future<void> _showForSession(Stay session, String locale) async {
     _activeSession = session;
 
     // Save session info in parallel, don't block notification display
@@ -106,8 +106,8 @@ class SessionNotificationService {
 
     final isArabic = locale == 'ar';
     final roomName = isArabic
-        ? (session.roomName.ar ?? session.roomName.en)
-        : session.roomName.en;
+        ? (session.placeName.ar ?? session.placeName.en)
+        : session.placeName.en;
 
     // Session context for iOS Live Activity intents (background actions)
     final accessToken = await _ref.read(authServiceProvider.notifier).getAccessToken();
@@ -116,10 +116,10 @@ class SessionNotificationService {
       if (accessToken != null) 'accessToken': accessToken,
       'apiBaseUrl': AppConfig.notificationsApiUrl,
       'sessionId': session.id,
-      'roomId': session.roomId,
+      'roomId': session.placeId,
       if (branchId != null) 'branchId': branchId,
-      'roomNameEn': session.roomName.en,
-      if (session.roomName.ar != null) 'roomNameAr': session.roomName.ar,
+      'roomNameEn': session.placeName.en,
+      if (session.placeName.ar != null) 'roomNameAr': session.placeName.ar,
     };
 
     // Show Live Activity immediately with basic info (room + timer + waiter/controller)
@@ -128,7 +128,7 @@ class SessionNotificationService {
       await _channel.invokeMethod('show', {
         'roomName': roomName,
         'duration': session.formattedDuration,
-        'startTimeMs': session.actualStartTime?.millisecondsSinceEpoch,
+        'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
         'locale': locale,
         ...sessionContext,
         // Include cached drinks if available from a previous resolve
@@ -157,7 +157,7 @@ class SessionNotificationService {
           await _channel.invokeMethod('show', {
             'roomName': roomName,
             'duration': session.formattedDuration,
-            'startTimeMs': session.actualStartTime?.millisecondsSinceEpoch,
+            'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
             'locale': locale,
             ...sessionContext,
             'drink1Name': drinks[0].name,
@@ -280,8 +280,8 @@ class SessionNotificationService {
 
       await dio.post('service-requests', data: {
         'sessionId': _activeSession!.id,
-        'roomId': _activeSession!.roomId,
-        'roomName': _activeSession!.roomName.toJson(),
+        'roomId': _activeSession!.placeId,
+        'roomName': _activeSession!.placeName.toJson(),
         'requestType': requestType,
       });
     } catch (e) {
@@ -305,9 +305,9 @@ class SessionNotificationService {
         item: item,
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
-        roomName: _activeSession!.roomName.toJson(),
+        roomName: _activeSession!.placeName.toJson(),
         sessionId: _activeSession!.id,
-        roomId: _activeSession!.roomId,
+        roomId: _activeSession!.placeId,
         preference: preference,
       );
 
@@ -320,17 +320,17 @@ class SessionNotificationService {
 
   // ── SharedPreferences for native fallback ────────────────────────────
 
-  Future<void> _saveSessionInfo(RoomSession session) async {
+  Future<void> _saveSessionInfo(Stay session) async {
     final prefs = await SharedPreferences.getInstance();
     final accessToken =
         await _ref.read(authServiceProvider.notifier).getAccessToken();
     final branchId = _ref.read(selectedBranchIdProvider);
 
     await prefs.setInt('active_session_id', session.id);
-    await prefs.setInt('active_session_room_id', session.roomId);
-    await prefs.setString('active_session_room_name_en', session.roomName.en);
-    if (session.roomName.ar != null) {
-      await prefs.setString('active_session_room_name_ar', session.roomName.ar!);
+    await prefs.setInt('active_session_room_id', session.placeId);
+    await prefs.setString('active_session_room_name_en', session.placeName.en);
+    if (session.placeName.ar != null) {
+      await prefs.setString('active_session_room_name_ar', session.placeName.ar!);
     }
     if (accessToken != null) {
       await prefs.setString('active_session_access_token', accessToken);

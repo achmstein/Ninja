@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
+
 import 'package:go_router/go_router.dart';
 import '../auth/auth_service.dart';
 import '../../features/receipts/screens/receipt_screen.dart';
 import '../../features/menu/screens/menu_screen.dart';
 import '../../features/cart/screens/cart_screen.dart';
 import '../../features/orders/screens/orders_screen.dart';
-import '../../features/rooms/screens/rooms_screen.dart';
-import '../../features/rooms/screens/sessions_screen.dart';
-import '../../features/rooms/screens/place_link_screen.dart';
+import '../../features/places/screens/places_screen.dart';
+import '../../features/places/screens/stays_screen.dart';
+import '../../features/places/screens/place_link_screen.dart';
 import '../../features/tables/screens/table_link_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/transactions_screen.dart';
@@ -186,9 +186,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Sessions route (separate from shell for push navigation)
       GoRoute(
-        path: '/sessions',
+        path: '/stays',
         pageBuilder: (context, state) => CustomTransitionPage(
-          child: const SessionsScreen(),
+          child: const StaysScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -321,9 +321,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/rooms',
+            path: '/places',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: RoomsScreen(),
+              child: PlacesScreen(),
             ),
           ),
           GoRoute(

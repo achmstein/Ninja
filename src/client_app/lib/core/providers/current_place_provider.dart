@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/localized_text.dart';
 import 'branch_provider.dart';
-import '../../features/rooms/models/room.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../../features/places/models/place.dart';
+import '../../features/places/services/place_service.dart';
 
 // A new key: what was stored before the Places remodel carried the printed
 // sticker's id, which is not the place id
@@ -16,17 +16,17 @@ const String _tableKey = 'current_place';
 const Duration tableTtl = Duration(hours: 3);
 
 /// Cached value loaded before the app starts
-CurrentTable? _initialTable;
+CurrentPlace? _initialTable;
 
 /// Call this before runApp() to preload the remembered table
-Future<void> initializeCurrentTable() async {
+Future<void> initializeCurrentPlace() async {
   final prefs = await SharedPreferences.getInstance();
   _initialTable = _decode(prefs.getString(_tableKey));
 }
 
 /// The place the customer scanned to order at: a table, or a timed place
 /// they sat at without a clock running for them.
-class CurrentTable {
+class CurrentPlace {
   /// The Spaces place id — what orders and requests name
   final int id;
   final PlaceKind kind;
@@ -36,7 +36,7 @@ class CurrentTable {
   /// Refreshed on each order, so a long sitting does not expire mid-visit.
   final DateTime scannedAt;
 
-  const CurrentTable({
+  const CurrentPlace({
     required this.id,
     this.kind = PlaceKind.table,
     required this.name,
@@ -55,7 +55,7 @@ class CurrentTable {
         'scannedAt': scannedAt.millisecondsSinceEpoch,
       };
 
-  CurrentTable copyWith({DateTime? scannedAt}) => CurrentTable(
+  CurrentPlace copyWith({DateTime? scannedAt}) => CurrentPlace(
         id: id,
         kind: kind,
         name: name,
@@ -64,11 +64,11 @@ class CurrentTable {
       );
 }
 
-CurrentTable? _decode(String? raw) {
+CurrentPlace? _decode(String? raw) {
   if (raw == null) return null;
   try {
     final json = jsonDecode(raw) as Map<String, dynamic>;
-    return CurrentTable(
+    return CurrentPlace(
       id: json['id'] as int,
       kind: PlaceKind.fromValue(json['kind'] as int?),
       name: LocalizedText(
@@ -84,11 +84,11 @@ CurrentTable? _decode(String? raw) {
   }
 }
 
-class CurrentTableNotifier extends Notifier<CurrentTable?> {
+class CurrentPlaceNotifier extends Notifier<CurrentPlace?> {
   @override
-  CurrentTable? build() => _initialTable;
+  CurrentPlace? build() => _initialTable;
 
-  Future<void> setTable(CurrentTable table) async {
+  Future<void> setPlace(CurrentPlace table) async {
     state = table;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tableKey, jsonEncode(table.toJson()));
@@ -104,19 +104,19 @@ class CurrentTableNotifier extends Notifier<CurrentTable?> {
   Future<void> stampOrdered() async {
     final table = state;
     if (table == null) return;
-    await setTable(table.copyWith(scannedAt: DateTime.now()));
+    await setPlace(table.copyWith(scannedAt: DateTime.now()));
   }
 }
 
-final currentTableProvider =
-    NotifierProvider<CurrentTableNotifier, CurrentTable?>(
-  CurrentTableNotifier.new,
+final currentPlaceProvider =
+    NotifierProvider<CurrentPlaceNotifier, CurrentPlace?>(
+  CurrentPlaceNotifier.new,
 );
 
 /// The remembered table, but only while it is fresh and belongs to the branch
 /// the customer is actually browsing.
-final activeTableProvider = Provider<CurrentTable?>((ref) {
-  final table = ref.watch(currentTableProvider);
+final activePlaceProvider = Provider<CurrentPlace?>((ref) {
+  final table = ref.watch(currentPlaceProvider);
   if (table == null || !table.isFresh) return null;
   final branchId = ref.watch(selectedBranchIdProvider);
   return table.branchId == branchId ? table : null;
@@ -128,7 +128,7 @@ enum OrderDestinationKind {
   stay,
 
   /// A place they scanned to order at
-  table,
+  place,
 }
 
 /// The Spaces place the order goes to and, when a clock is running there for
@@ -164,26 +164,26 @@ class OrderDestination {
 /// Mirrors useOrderDestination in the web client; every surface that shows or
 /// sends the destination reads it from here so they cannot disagree.
 final orderDestinationProvider = Provider<OrderDestination?>((ref) {
-  final activeSession = ref.watch(mySessionsProvider).whenOrNull(
+  final activeSession = ref.watch(myStaysProvider).whenOrNull(
         data: (sessions) => sessions
-            .where((s) => s.status == SessionStatus.active)
+            .where((s) => s.status == StayStatus.active)
             .firstOrNull,
       );
 
   if (activeSession != null) {
     return OrderDestination(
       kind: OrderDestinationKind.stay,
-      placeId: activeSession.roomId,
+      placeId: activeSession.placeId,
       placeKind: activeSession.placeKind,
-      name: activeSession.roomName,
+      name: activeSession.placeName,
       sessionId: activeSession.id,
     );
   }
 
-  final table = ref.watch(activeTableProvider);
+  final table = ref.watch(activePlaceProvider);
   if (table != null) {
     return OrderDestination(
-      kind: OrderDestinationKind.table,
+      kind: OrderDestinationKind.place,
       placeId: table.id,
       placeKind: table.kind,
       name: table.name,

@@ -16,20 +16,20 @@ import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
 import '../../service_request/models/service_request.dart';
 import '../../service_request/services/service_request_service.dart';
-import '../models/room.dart';
+import '../models/place.dart';
 import '../../../core/services/signalr_service.dart';
-import '../services/room_service.dart';
+import '../services/place_service.dart';
 import '../../../core/services/sound_service.dart';
 
 /// Rooms screen for viewing and reserving PlayStation rooms
-class RoomsScreen extends ConsumerStatefulWidget {
-  const RoomsScreen({super.key});
+class PlacesScreen extends ConsumerStatefulWidget {
+  const PlacesScreen({super.key});
 
   @override
-  ConsumerState<RoomsScreen> createState() => _RoomsScreenState();
+  ConsumerState<PlacesScreen> createState() => _PlacesScreenState();
 }
 
-class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingObserver {
+class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBindingObserver {
   Timer? _pollTimer;
   late final SignalRService _signalRService;
   final _scrollController = ScrollController();
@@ -42,12 +42,12 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
 
     // Refresh when navigating to rooms tab
     ref.listenManual(currentRouteProvider, (previous, next) {
-      if (next == '/rooms' && previous != '/rooms') {
-        ref.read(mySessionsProvider.notifier).refresh();
+      if (next == '/places' && previous != '/places') {
+        ref.read(myStaysProvider.notifier).refresh();
         final branchId = ref.read(selectedBranchIdProvider);
-        if (branchId != null) ref.invalidate(roomsProvider(branchId));
+        if (branchId != null) ref.invalidate(placesProvider(branchId));
         _startPolling();
-      } else if (previous == '/rooms' && next != '/rooms') {
+      } else if (previous == '/places' && next != '/places') {
         _stopPolling();
       }
     });
@@ -55,9 +55,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     _startPolling();
 
     // Scroll to top when a new reservation appears
-    ref.listenManual(mySessionsProvider, (previous, next) {
-      final hadReserved = previous?.value?.any((s) => s.status == SessionStatus.reserved) ?? false;
-      final hasReserved = next.value?.any((s) => s.status == SessionStatus.reserved) ?? false;
+    ref.listenManual(myStaysProvider, (previous, next) {
+      final hadReserved = previous?.value?.any((s) => s.status == StayStatus.reserved) ?? false;
+      final hasReserved = next.value?.any((s) => s.status == StayStatus.reserved) ?? false;
       if (!hadReserved && hasReserved && _scrollController.hasClients) {
         _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
@@ -79,9 +79,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
   void _startPolling() {
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      ref.read(mySessionsProvider.notifier).refresh();
+      ref.read(myStaysProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(roomsProvider(branchId));
+      if (branchId != null) ref.invalidate(placesProvider(branchId));
     });
   }
 
@@ -97,9 +97,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     // while fetching — the first request after resume often fails
     // due to stale sockets, and invalidate would flash an error.
     if (state == AppLifecycleState.resumed) {
-      ref.read(mySessionsProvider.notifier).refresh();
+      ref.read(myStaysProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.refresh(roomsProvider(branchId));
+      if (branchId != null) ref.refresh(placesProvider(branchId));
     }
   }
 
@@ -110,8 +110,8 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     if (branchId == null) {
       return Center(child: CircularProgressIndicator(color: colors.primary));
     }
-    final roomsAsync = ref.watch(roomsProvider(branchId));
-    final sessionsAsync = ref.watch(mySessionsProvider);
+    final roomsAsync = ref.watch(placesProvider(branchId));
+    final sessionsAsync = ref.watch(myStaysProvider);
     final l10n = AppLocalizations.of(context)!;
     final isReservationsEnabled = ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true;
 
@@ -128,7 +128,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
               // room or a table, so it does not belong under Rooms.
               FHeaderAction(
                 icon: const Icon(FIcons.history, size: 20),
-                onPress: () => context.push('/sessions'),
+                onPress: () => context.push('/stays'),
               ),
             ],
           ),
@@ -161,15 +161,15 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
               error: (_, _) => _buildRoomsList(context, roomsAsync, null, null),
               data: (sessions) {
                 final activeSession = sessions
-                    .where((s) => s.status == SessionStatus.active)
+                    .where((s) => s.status == StayStatus.active)
                     .firstOrNull;
                 final reservedSession = sessions
-                    .where((s) => s.status == SessionStatus.reserved)
+                    .where((s) => s.status == StayStatus.reserved)
                     .firstOrNull;
 
                 // If user has active session, show session view
                 if (activeSession != null) {
-                  return _ActiveSessionView(session: activeSession);
+                  return _ActiveStayView(session: activeSession);
                 }
 
                 // If user has reserved session, show reservation + rooms
@@ -184,9 +184,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
 
   Widget _buildRoomsList(
     BuildContext context,
-    AsyncValue<List<Room>> roomsAsync,
-    RoomSession? reservedSession,
-    RoomSession? activeSession,
+    AsyncValue<List<Place>> roomsAsync,
+    Stay? reservedSession,
+    Stay? activeSession,
   ) {
     final branchId = ref.read(selectedBranchIdProvider)!;
 
@@ -209,7 +209,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
               AppText(AppLocalizations.of(context)!.failedToLoadRooms),
               const SizedBox(height: 16),
               FButton(
-                onPress: () => ref.refresh(roomsProvider(branchId)),
+                onPress: () => ref.refresh(placesProvider(branchId)),
                 child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
@@ -222,9 +222,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
 
   Widget _buildRoomsContent(
     BuildContext context,
-    List<Room> rooms,
-    RoomSession? reservedSession,
-    RoomSession? activeSession,
+    List<Place> rooms,
+    Stay? reservedSession,
+    Stay? activeSession,
   ) {
     final branchId = ref.read(selectedBranchIdProvider)!;
     final colors = context.theme.colors;
@@ -237,8 +237,8 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
       color: colors.primary,
       backgroundColor: colors.background,
       onRefresh: () async {
-        ref.invalidate(roomsProvider(branchId));
-        await ref.read(mySessionsProvider.notifier).refresh();
+        ref.invalidate(placesProvider(branchId));
+        await ref.read(myStaysProvider.notifier).refresh();
       },
       child: ListView.builder(
         controller: _scrollController,
@@ -251,7 +251,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
           if (reservedSession != null && currentIndex == 0) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: _ReservedSessionBanner(session: reservedSession),
+              child: _HeldStayBanner(session: reservedSession),
             );
           }
           if (reservedSession != null) currentIndex--;
@@ -265,11 +265,11 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
           }
           if (showNotifyBanner) currentIndex--;
 
-          // Room items
+          // Place items
           final room = rooms[currentIndex];
           return Column(
             children: [
-              RoomListItem(
+              PlaceListItem(
                 room: room,
                 canReserve: reservedSession == null && (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
               ),
@@ -287,7 +287,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
     );
   }
 
-  int _getItemCount(List<Room> rooms, RoomSession? reservedSession, bool showNotifyBanner) {
+  int _getItemCount(List<Place> rooms, Stay? reservedSession, bool showNotifyBanner) {
     int count = rooms.length;
     if (reservedSession != null) count++;
     if (showNotifyBanner) count++;
@@ -296,16 +296,16 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> with WidgetsBindingOb
 }
 
 /// Active session view - shown when user is currently playing
-class _ActiveSessionView extends ConsumerStatefulWidget {
-  final RoomSession session;
+class _ActiveStayView extends ConsumerStatefulWidget {
+  final Stay session;
 
-  const _ActiveSessionView({required this.session});
+  const _ActiveStayView({required this.session});
 
   @override
-  ConsumerState<_ActiveSessionView> createState() => _ActiveSessionViewState();
+  ConsumerState<_ActiveStayView> createState() => _ActiveStayViewState();
 }
 
-class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
+class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
   Timer? _timer;
   static const _cooldownDuration = 30; // seconds
 
@@ -349,7 +349,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
     return RefreshIndicator(
       color: colors.primary,
       backgroundColor: colors.background,
-      onRefresh: () => ref.read(mySessionsProvider.notifier).refresh(),
+      onRefresh: () => ref.read(myStaysProvider.notifier).refresh(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -379,12 +379,12 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
               ),
               child: Column(
                 children: [
-                  // Room name + player mode in one row
+                  // Place name + player mode in one row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       AppText(
-                        session.roomName.localized(context),
+                        session.placeName.localized(context),
                         style: TextStyle(
                           color: colors.primaryForeground,
                           fontSize: 20,
@@ -478,7 +478,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
     );
   }
 
-  List<_QuickAction> _quickActions(RoomSession session) {
+  List<_QuickAction> _quickActions(Stay session) {
     final l10n = AppLocalizations.of(context)!;
     return [
       _QuickAction(
@@ -517,9 +517,9 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
 
     final session = widget.session;
     final request = CreateServiceRequest(
-      placeId: session.roomId,
+      placeId: session.placeId,
       placeKind: session.placeKind,
-      placeName: session.roomName,
+      placeName: session.placeName,
       sessionId: session.id,
       optionCode: optionCode,
       requestType: type,
@@ -589,12 +589,12 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
             onPress: () async {
               Navigator.pop(dialogContext);
               try {
-                await ref.read(roomRepositoryProvider).leaveSession(sessionId);
+                await ref.read(placeRepositoryProvider).leaveStay(sessionId);
                 if (!mounted) return;
 
-                ref.read(mySessionsProvider.notifier).refresh();
+                ref.read(myStaysProvider.notifier).refresh();
                 final branchId = ref.read(selectedBranchIdProvider);
-                if (branchId != null) ref.invalidate(roomsProvider(branchId));
+                if (branchId != null) ref.invalidate(placesProvider(branchId));
 
                 showFToast(
                   context: context,
@@ -760,10 +760,10 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
 }
 
 /// Reserved session banner - matches active session card style
-class _ReservedSessionBanner extends ConsumerWidget {
-  final RoomSession session;
+class _HeldStayBanner extends ConsumerWidget {
+  final Stay session;
 
-  const _ReservedSessionBanner({required this.session});
+  const _HeldStayBanner({required this.session});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -790,7 +790,7 @@ class _ReservedSessionBanner extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Room name
+          // Place name
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -798,7 +798,7 @@ class _ReservedSessionBanner extends ConsumerWidget {
               Icon(session.placeKind.icon, color: Colors.white, size: 24),
               const SizedBox(width: 8),
               AppText(
-                session.roomName.localized(context),
+                session.placeName.localized(context),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -900,11 +900,11 @@ class _ReservedSessionBanner extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
-        final service = ref.read(roomRepositoryProvider);
-        await service.cancelReservation(session.id);
-        ref.read(mySessionsProvider.notifier).refresh();
+        final service = ref.read(placeRepositoryProvider);
+        await service.cancelHold(session.id);
+        ref.read(myStaysProvider.notifier).refresh();
         final branchId = ref.read(selectedBranchIdProvider);
-        if (branchId != null) ref.invalidate(roomsProvider(branchId));
+        if (branchId != null) ref.invalidate(placesProvider(branchId));
         if (context.mounted) {
           showFToast(
             context: context,
@@ -1010,12 +1010,12 @@ class NotifyMeBanner extends ConsumerWidget {
   }
 }
 
-/// Room list item - minimal design like menu items
-class RoomListItem extends ConsumerWidget {
-  final Room room;
+/// Place list item - minimal design like menu items
+class PlaceListItem extends ConsumerWidget {
+  final Place room;
   final bool canReserve;
 
-  const RoomListItem({
+  const PlaceListItem({
     super.key,
     required this.room,
     this.canReserve = true,
@@ -1053,7 +1053,7 @@ class RoomListItem extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
 
-            // Room info
+            // Place info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1127,13 +1127,13 @@ class RoomListItem extends ConsumerWidget {
 
   Color _getStatusColor(dynamic colors) {
     switch (room.displayStatus) {
-      case RoomDisplayStatus.available:
+      case PlaceStatus.available:
         return canReserve ? AppTheme.successColor : colors.mutedForeground;
-      case RoomDisplayStatus.occupied:
+      case PlaceStatus.occupied:
         return colors.destructive;
-      case RoomDisplayStatus.reserved:
+      case PlaceStatus.reserved:
         return AppTheme.warningColor;
-      case RoomDisplayStatus.maintenance:
+      case PlaceStatus.maintenance:
         return colors.mutedForeground;
     }
   }
@@ -1157,16 +1157,16 @@ class RoomListItem extends ConsumerWidget {
     );
   }
 
-  String _getLocalizedStatus(BuildContext context, RoomDisplayStatus status) {
+  String _getLocalizedStatus(BuildContext context, PlaceStatus status) {
     final l10n = AppLocalizations.of(context)!;
     switch (status) {
-      case RoomDisplayStatus.available:
+      case PlaceStatus.available:
         return l10n.available;
-      case RoomDisplayStatus.occupied:
+      case PlaceStatus.occupied:
         return l10n.occupied;
-      case RoomDisplayStatus.reserved:
+      case PlaceStatus.reserved:
         return l10n.reserved;
-      case RoomDisplayStatus.maintenance:
+      case PlaceStatus.maintenance:
         return l10n.maintenance;
     }
   }
@@ -1177,22 +1177,22 @@ class RoomListItem extends ConsumerWidget {
       isScrollControlled: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ReservationSheet(room: room),
+      builder: (context) => HoldSheet(room: room),
     );
   }
 }
 
 /// Reservation bottom sheet - immediate reservation with 15 min arrival window
-class ReservationSheet extends ConsumerStatefulWidget {
-  final Room room;
+class HoldSheet extends ConsumerStatefulWidget {
+  final Place room;
 
-  const ReservationSheet({super.key, required this.room});
+  const HoldSheet({super.key, required this.room});
 
   @override
-  ConsumerState<ReservationSheet> createState() => _ReservationSheetState();
+  ConsumerState<HoldSheet> createState() => _HoldSheetState();
 }
 
-class _ReservationSheetState extends ConsumerState<ReservationSheet> {
+class _HoldSheetState extends ConsumerState<HoldSheet> {
   bool _isLoading = false;
   bool _startOnConfirm = false;
 
@@ -1252,7 +1252,7 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
                   fontSize: 14,
                 ),
               ),
-              // Room description
+              // Place description
               if (widget.room.description != null) ...[
                 const SizedBox(height: 12),
                 AppText(
@@ -1374,16 +1374,16 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
     setState(() => _isLoading = true);
 
     final success = await ref
-        .read(reservationProvider.notifier)
-        .reserveRoom(widget.room.id, startOnConfirm: _startOnConfirm);
+        .read(holdProvider.notifier)
+        .holdPlace(widget.room.id, startOnConfirm: _startOnConfirm);
 
     setState(() => _isLoading = false);
 
     if (success && mounted) {
       Navigator.pop(context);
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(roomsProvider(branchId));
-      ref.read(mySessionsProvider.notifier).refresh();
+      if (branchId != null) ref.invalidate(placesProvider(branchId));
+      ref.read(myStaysProvider.notifier).refresh();
       SoundService.instance.playSuccess();
       showFToast(
         context: context,

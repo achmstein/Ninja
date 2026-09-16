@@ -97,7 +97,7 @@ class BranchNotifier extends Notifier<BranchState> {
 
     // Branch-scoped providers use .family(branchId) so switching branches
     // creates a fresh provider instance with clean loading state.
-    // mySessionsProvider watches selectedBranchIdProvider directly (Notifier).
+    // myStaysProvider watches selectedBranchIdProvider directly (Notifier).
     // Cart is local state — just clear it on branch switch:
     ref.read(cartProvider.notifier).clear();
   }

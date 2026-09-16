@@ -7,7 +7,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../../core/auth/auth_service.dart';
-import '../../rooms/screens/qr_scan_screen.dart';
+import '../../places/screens/qr_scan_screen.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -23,8 +23,8 @@ import '../providers/favorites_provider.dart';
 import '../../cart/models/cart_item.dart';
 import '../../cart/services/cart_service.dart';
 import '../../orders/services/order_service.dart';
-import '../../rooms/models/room.dart';
-import '../../rooms/services/room_service.dart';
+import '../../places/models/place.dart';
+import '../../places/services/place_service.dart';
 import '../widgets/item_customization_sheet.dart';
 import '../../../core/services/sound_service.dart';
 
@@ -773,26 +773,26 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
 
     // Try to get active session's room name (optional); the ids ride along
     // so the order lands on the session's bill
-    await ref.read(mySessionsProvider.notifier).refresh();
+    await ref.read(myStaysProvider.notifier).refresh();
     int? placeId;
     String? placeKind;
     Map<String, dynamic>? placeName;
     Map<String, dynamic>? roomName;
     int? sessionId;
     int? roomId;
-    final sessionsState = ref.read(mySessionsProvider);
+    final sessionsState = ref.read(myStaysProvider);
     if (sessionsState.hasValue) {
       final activeSession = sessionsState.value!
-          .where((s) => s.status == SessionStatus.active)
+          .where((s) => s.status == StayStatus.active)
           .firstOrNull;
       if (activeSession != null) {
-        placeId = activeSession.roomId;
+        placeId = activeSession.placeId;
         placeKind = activeSession.placeKind.wireName;
-        placeName = activeSession.roomName.toJson();
+        placeName = activeSession.placeName.toJson();
         sessionId = activeSession.id;
         if (activeSession.placeKind == PlaceKind.room) {
-          roomName = activeSession.roomName.toJson();
-          roomId = activeSession.roomId;
+          roomName = activeSession.placeName.toJson();
+          roomId = activeSession.placeId;
         }
       }
     }

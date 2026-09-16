@@ -5,7 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/branch_provider.dart';
-import '../../../core/providers/current_table_provider.dart';
+import '../../../core/providers/current_place_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
@@ -16,7 +16,7 @@ import '../services/cart_service.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
 import '../../../core/models/localized_text.dart';
-import '../../rooms/services/room_service.dart';
+import '../../places/services/place_service.dart';
 import '../../../core/services/sound_service.dart';
 
 /// Shopping cart screen - minimalistic
@@ -609,7 +609,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     // Make sure the destination reflects a session that may have started while
     // the cart was open; room-beats-table lives in orderDestinationProvider.
-    await ref.read(mySessionsProvider.notifier).refresh();
+    await ref.read(myStaysProvider.notifier).refresh();
     final destination = ref.read(orderDestinationProvider);
 
     final success = await ref.read(checkoutProvider.notifier).submitOrder(
@@ -637,7 +637,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       _noteController.clear();
       ref.read(loyaltyRedemptionProvider.notifier).reset();
       // Keep the table alive through a long sitting with several rounds
-      ref.read(currentTableProvider.notifier).stampOrdered();
+      ref.read(currentPlaceProvider.notifier).stampOrdered();
 
       // Refresh loyalty info to show updated balance after order is confirmed
       ref.read(loyaltyProvider.notifier).refresh();
