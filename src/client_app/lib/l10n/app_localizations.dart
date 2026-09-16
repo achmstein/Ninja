@@ -1610,6 +1610,12 @@ abstract class AppLocalizations {
   /// **'On your tab'**
   String get onYourTab;
 
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
   /// No description provided for @refunded.
   ///
   /// In en, this message translates to:
