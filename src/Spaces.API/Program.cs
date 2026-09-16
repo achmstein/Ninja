@@ -20,6 +20,7 @@ app.UseStatusCodePages();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapPlacesApi();
 app.MapRoomsApi();
 app.MapTablesApi();
 

@@ -1,0 +1,226 @@
+using Chillax.EventBus.Abstractions;
+using Chillax.Spaces.API.Application.IntegrationEvents.Events;
+using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+using Chillax.Spaces.Domain.Events;
+using Chillax.Spaces.Domain.SeedWork;
+using MediatR;
+
+namespace Chillax.Spaces.API.Application.DomainEventHandlers;
+
+// Every handler here turns a domain event into the integration event the
+// other services and the screens listen for. They run after the commit
+// (see SpacesContext.SaveEntitiesAsync), so a screen that refetches on
+// hearing one reads the new state.
+
+/// <summary>The place fields every Spaces event carries, from a stay whose Place may or may not be loaded.</summary>
+internal static class StayEventFields
+{
+    public static int PlaceId(this Stay stay) => stay.PlaceId;
+    public static string PlaceKind(this Stay stay) => (stay.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Room).ToString();
+    public static LocalizedText PlaceName(this Stay stay) => stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}");
+    public static int BranchId(this Stay stay) => stay.Place?.BranchId ?? 1;
+    public static string? OptionWord(this Stay stay) => stay.CurrentOption?.Name.En;
+
+    /// <summary>Everyone in the party, owner included, each once.</summary>
+    public static List<string> PartyIds(this Stay stay)
+    {
+        var ids = stay.Members.Select(m => m.CustomerId).ToList();
+        if (stay.CustomerId is { } owner && !ids.Contains(owner))
+            ids.Add(owner);
+        return ids;
+    }
+}
+
+public class StayHeldDomainEventHandler(IEventBus eventBus, ILogger<StayHeldDomainEventHandler> logger)
+    : INotificationHandler<StayHeldDomainEvent>
+{
+    public async Task Handle(StayHeldDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay held: {StayId} at place {PlaceId} for {Customer}", stay.Id, stay.PlaceId, stay.CustomerName ?? "Unknown");
+
+        await eventBus.PublishAsync(new RoomReservedIntegrationEvent(
+            stay.Id,
+            stay.PlaceId,
+            stay.PlaceName(),
+            stay.CustomerId,
+            stay.CustomerName,
+            stay.ExpiresAt,
+            stay.BranchId(),
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName(),
+            stay.StartOnConfirm));
+    }
+}
+
+public class StayStartedDomainEventHandler(IEventBus eventBus, ILogger<StayStartedDomainEventHandler> logger)
+    : INotificationHandler<StayStartedDomainEvent>
+{
+    public async Task Handle(StayStartedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay started: {StayId} at place {PlaceId} on {Option}", stay.Id, stay.PlaceId, stay.CurrentOptionCode);
+
+        await eventBus.PublishAsync(new SessionStartedIntegrationEvent(
+            stay.Id,
+            stay.PlaceId,
+            stay.PlaceName(),
+            stay.CustomerId,
+            stay.StartedAt,
+            stay.OptionWord(),
+            stay.BranchId(),
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName(),
+            stay.CurrentOptionCode));
+    }
+}
+
+public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDomainEventHandler> logger)
+    : INotificationHandler<StayEndedDomainEvent>
+{
+    public async Task Handle(StayEndedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay ended: {StayId} at place {PlaceId}, cost {Cost}", stay.Id, stay.PlaceId, stay.TotalCost);
+
+        // The party's devices drop their stay notification
+        await eventBus.PublishAsync(new SessionEndedIntegrationEvent(
+            stay.Id, stay.PlaceId, stay.PlaceName(), stay.PartyIds(),
+            stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+
+        // Whoever asked to be told the place is free
+        await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
+            stay.PlaceId, stay.PlaceName(), stay.BranchId(),
+            stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+
+        // The bill. Every real stay gets one — a walk-in nobody claimed is
+        // still a bill Sales has to settle; CustomerId simply travels null.
+        if (stay.StartedAt is { } started && stay.EndedAt is { } ended)
+        {
+            var costs = stay.CostBreakdown()
+                .Select(c => new SessionCostLine(c.OptionCode, c.OptionName, c.HourlyRate, c.Hours, c.Cost))
+                .ToList();
+
+            await eventBus.PublishAsync(new SessionCompletedIntegrationEvent(
+                stay.Id,
+                stay.CustomerId,
+                stay.PlaceId,
+                stay.PlaceName(),
+                stay.CostFor(Tariff.SingleCode),
+                stay.CostFor(Tariff.MultiCode),
+                stay.TotalCost ?? 0,
+                stay.HoursFor(Tariff.SingleCode),
+                stay.HoursFor(Tariff.MultiCode),
+                started,
+                ended,
+                ended - started,
+                stay.BranchId(),
+                stay.PlaceId,
+                stay.PlaceKind(),
+                stay.PlaceName(),
+                costs));
+        }
+    }
+}
+
+public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCancelledDomainEventHandler> logger)
+    : INotificationHandler<StayCancelledDomainEvent>
+{
+    public async Task Handle(StayCancelledDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay cancelled: {StayId}, was {PreviousStatus}", stay.Id, notification.PreviousStatus);
+
+        await eventBus.PublishAsync(new ReservationCancelledIntegrationEvent(
+            stay.Id,
+            stay.PlaceId,
+            stay.PlaceName(),
+            stay.CustomerId,
+            stay.CustomerName,
+            stay.BranchId(),
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName(),
+            notification.PreviousStatus == StayStatus.Running));
+
+        // A hold and a running stay both kept the place; either way it is free now
+        if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
+        {
+            await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
+                stay.PlaceId, stay.PlaceName(), stay.BranchId(),
+                stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+        }
+    }
+}
+
+public class StayMemberJoinedDomainEventHandler(IEventBus eventBus, ILogger<StayMemberJoinedDomainEventHandler> logger)
+    : INotificationHandler<StayMemberJoinedDomainEvent>
+{
+    public async Task Handle(StayMemberJoinedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay member joined: {StayId} at place {PlaceId}, member {MemberId}", stay.Id, stay.PlaceId, notification.MemberUserId);
+
+        await eventBus.PublishAsync(new SessionMemberJoinedIntegrationEvent(
+            stay.Id,
+            stay.PlaceId,
+            stay.PlaceName(),
+            notification.MemberUserId,
+            stay.StartedAt,
+            stay.OptionWord(),
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName(),
+            stay.CurrentOptionCode));
+    }
+}
+
+public class StayCustomerAssignedDomainEventHandler(IEventBus eventBus, ILogger<StayCustomerAssignedDomainEventHandler> logger)
+    : INotificationHandler<StayCustomerAssignedDomainEvent>
+{
+    public async Task Handle(StayCustomerAssignedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay customer assigned: {StayId} at place {PlaceId}, customer {CustomerId}", stay.Id, stay.PlaceId, notification.CustomerId);
+
+        await eventBus.PublishAsync(new SessionCustomerAssignedIntegrationEvent(
+            stay.Id,
+            stay.PlaceId,
+            notification.CustomerId,
+            stay.CustomerName,
+            stay.BranchId(),
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName()));
+    }
+}
+
+/// <summary>What Ordering and Notification project: a place's identity and capabilities.</summary>
+public class PlaceChangedDomainEventHandler(IEventBus eventBus, ILogger<PlaceChangedDomainEventHandler> logger)
+    : INotificationHandler<PlaceChangedDomainEvent>
+{
+    public async Task Handle(PlaceChangedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var place = notification.Place;
+        logger.LogInformation("Place changed: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.En);
+        await eventBus.PublishAsync(place.ToUpdatedEvent());
+    }
+}
+
+public static class PlaceEventMapping
+{
+    public static PlaceUpdatedIntegrationEvent ToUpdatedEvent(this Place place, bool deleted = false) => new PlaceUpdatedIntegrationEvent(
+        place.Id,
+        place.Kind.ToString(),
+        place.Name,
+        place.BranchId,
+        place.IsTimed,
+        place.HasOptions,
+        place.IsActive,
+        place.LegacyRoomId,
+        place.LegacyTableId,
+        deleted);
+}

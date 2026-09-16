@@ -65,6 +65,7 @@
     <Project Path="tests/Ordering.UnitTests/Ordering.UnitTests.csproj" />
     <Project Path="tests/Sales.UnitTests/Sales.UnitTests.csproj" />
     <Project Path="tests/ServiceDefaults.UnitTests/ServiceDefaults.UnitTests.csproj" />
+    <Project Path="tests/Spaces.UnitTests/Spaces.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />

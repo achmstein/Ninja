@@ -1,51 +1,58 @@
 using Chillax.EventBus.Abstractions;
 using Chillax.Spaces.API.Application.IntegrationEvents.Events;
-using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
-using Microsoft.Extensions.Logging;
+using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+using Chillax.Spaces.Domain.SeedWork;
 
 namespace Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
-/// The till paid a room bill: the session it covered learns its receipt
-/// number and tender, which is what the customer's session list shows next
+/// The till paid a bill with a stay's time on it: the stay learns its
+/// receipt number and tender, which is what the customer's list shows next
 /// to the cost. A direct write like the branch-settings projection — the
 /// aggregate raises no domain event for this. Idempotent: a receipt already
 /// carried is ignored.
 /// </summary>
 public class TicketSettledIntegrationEventHandler(
-    IReservationRepository reservations,
+    IStayRepository stays,
     IEventBus eventBus,
     ILogger<TicketSettledIntegrationEventHandler> logger)
     : IIntegrationEventHandler<TicketSettledIntegrationEvent>
 {
     public async Task Handle(TicketSettledIntegrationEvent @event)
     {
-        if (@event.SessionId is not { } sessionId)
+        if (@event.SessionId is not { } stayId)
         {
             return;
         }
-        var reservation = await reservations.GetWithMembersAsync(sessionId);
-        if (reservation is null)
+        var stay = await stays.GetWithMembersAsync(stayId);
+        if (stay is null)
         {
-            logger.LogWarning("Ticket {TicketId} settled session {SessionId}, which Spaces does not know", @event.TicketId, sessionId);
+            logger.LogWarning("Ticket {TicketId} settled stay {StayId}, which Spaces does not know", @event.TicketId, stayId);
             return;
         }
         var at = @event.SettledAt == default ? @event.CreationDate : @event.SettledAt;
-        if (!reservation.MarkPaid(@event.ReceiptNumber, @event.Tender ?? "Mixed", at, @event.TicketId))
+        if (!stay.MarkPaid(@event.ReceiptNumber, @event.Tender ?? "Mixed", at, @event.TicketId))
         {
             return;
         }
-        reservations.Update(reservation);
-        await reservations.UnitOfWork.SaveEntitiesAsync();
-        logger.LogInformation("Session {SessionId} paid on receipt #{Receipt} ({Tender})", sessionId, @event.ReceiptNumber, @event.Tender);
+        stays.Update(stay);
+        await stays.UnitOfWork.SaveEntitiesAsync();
+        logger.LogInformation("Stay {StayId} paid on receipt #{Receipt} ({Tender})", stayId, @event.ReceiptNumber, @event.Tender);
 
-        // Everyone who sat in the room gets their session list refreshed
-        var members = reservation.SessionMembers.Select(m => m.CustomerId)
-            .Concat(reservation.CustomerId is { } owner ? [owner] : [])
+        // Everyone in the party gets their list refreshed
+        var members = stay.Members.Select(m => m.CustomerId)
+            .Concat(stay.CustomerId is { } owner ? [owner] : [])
             .Where(id => !string.IsNullOrEmpty(id))
             .Distinct()
             .ToList();
         await eventBus.PublishAsync(new SessionPaidIntegrationEvent(
-            reservation.Id, reservation.RoomId, members, @event.ReceiptNumber, @event.BranchId));
+            stay.Id,
+            stay.PlaceId,
+            members,
+            @event.ReceiptNumber,
+            @event.BranchId,
+            stay.PlaceId,
+            (stay.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Room).ToString(),
+            stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}")));
     }
 }

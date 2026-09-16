@@ -1,115 +1,64 @@
 using System.ComponentModel;
+using Chillax.EventBus.Abstractions;
 using Chillax.Spaces.API.Application.Queries;
+using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
 using Chillax.Spaces.Domain.Exceptions;
 using Chillax.Spaces.Domain.SeedWork;
 using Chillax.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Table = Chillax.Spaces.Domain.AggregatesModel.TableAggregate.Table;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
 
 namespace Chillax.Spaces.API.Apis;
 
+/// <summary>
+/// The /api/tables routes, kept for one release as aliases over places of
+/// kind Table. Tables got new place ids in the remodel, so an id here is
+/// first tried as the id a printed table sticker carries (LegacyTableId),
+/// then as a place id — which is what a table created through this alias
+/// has. Remove once every client is on /api/places.
+/// </summary>
 public static class TablesApi
 {
     public static IEndpointRouteBuilder MapTablesApi(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/tables");
+        var api = app.MapGroup("api/tables").WithTags("Tables");
 
-        // Queries - anonymous: the QR landing page is reachable before sign-in
-        api.MapGet("/", GetAllTables)
-            .WithName("ListTables")
-            .WithSummary("List all tables")
-            .WithDescription("Get all café tables for the branch, including inactive ones")
-            .WithTags("Tables");
-
-        api.MapGet("/{id:int}", GetTableById)
-            .WithName("GetTable")
-            .WithSummary("Get table by ID")
-            .WithDescription("Get a table by its ID. This is what a scanned table QR code resolves to.")
-            .WithTags("Tables");
-
-        // Admin table management
-        api.MapPost("/", CreateTable)
-            .WithName("CreateTable")
-            .WithSummary("Create a new table")
-            .WithDescription("Create a new café table (Admin only)")
-            .WithTags("Tables")
-            .RequireAuthorization("Admin");
-
-        api.MapPut("/{id:int}", UpdateTable)
-            .WithName("UpdateTable")
-            .WithSummary("Rename a table")
-            .WithDescription("Update a table's name (Admin only)")
-            .WithTags("Tables")
-            .RequireAuthorization("Admin");
-
-        api.MapPut("/{id:int}/active", SetTableActive)
-            .WithName("SetTableActive")
-            .WithSummary("Activate or deactivate a table")
-            .WithDescription("Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)")
-            .WithTags("Tables")
-            .RequireAuthorization("Admin");
-
-        api.MapDelete("/{id:int}", DeleteTable)
-            .WithName("DeleteTable")
-            .WithSummary("Delete a table")
-            .WithDescription("Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)")
-            .WithTags("Tables")
-            .RequireAuthorization("Admin");
+        api.MapGet("/", GetAllTables).WithName("ListTables").WithSummary("List all tables");
+        api.MapGet("/{id:int}", GetTableById).WithName("GetTable").WithSummary("Get table by ID");
+        api.MapPost("/", CreateTable).WithName("CreateTable").WithSummary("Create a new table").RequireAuthorization("Admin");
+        api.MapPut("/{id:int}", UpdateTable).WithName("UpdateTable").WithSummary("Rename a table").RequireAuthorization("Admin");
+        api.MapPut("/{id:int}/active", SetTableActive).WithName("SetTableActive").WithSummary("Activate or deactivate a table").RequireAuthorization("Admin");
+        api.MapDelete("/{id:int}", DeleteTable).WithName("DeleteTable").WithSummary("Delete a table").RequireAuthorization("Admin");
 
         return app;
     }
 
-    public static async Task<Ok<IEnumerable<TableViewModel>>> GetAllTables(
-        SpacesContext context,
-        HttpContext httpContext)
+    private static async Task<Place?> Resolve(IPlaceRepository places, int id)
+        => await places.GetByLegacyTableIdAsync(id) ?? await places.GetAsync(id);
+
+    public static async Task<Ok<IEnumerable<TableViewModel>>> GetAllTables([FromServices] IPlaceQueries queries, HttpContext httpContext)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-
-        var tables = await context.Tables
-            .Where(t => t.BranchId == branchId)
-            .OrderBy(t => t.Name.En)
-            .ToListAsync();
-
-        return TypedResults.Ok<IEnumerable<TableViewModel>>(tables.Select(ToViewModel).ToList());
+        var places = await queries.GetPlacesAsync(httpContext.GetRequiredBranchId(), PlaceKind.Table);
+        return TypedResults.Ok(places.Select(p => p.ToTable()));
     }
 
     public static async Task<Results<Ok<TableViewModel>, NotFound>> GetTableById(
-        SpacesContext context,
-        [Description("The table ID")] int id)
+        [FromServices] IPlaceQueries queries, [Description("The table ID")] int id)
     {
-        var table = await context.Tables.FindAsync(id);
-        if (table == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(ToViewModel(table));
+        var place = await queries.GetPlaceByLegacyTableIdAsync(id) ?? await queries.GetPlaceByIdAsync(id);
+        return place is null || place.Kind != PlaceKind.Table ? TypedResults.NotFound() : TypedResults.Ok(place.ToTable());
     }
 
-    private static TableViewModel ToViewModel(Table table) => new()
-    {
-        Id = table.Id,
-        Name = table.Name,
-        BranchId = table.BranchId,
-        IsActive = table.IsActive
-    };
-
     public static async Task<Results<Created<int>, BadRequest<ProblemDetails>>> CreateTable(
-        SpacesContext context,
-        HttpContext httpContext,
-        CreateTableRequest request)
+        [FromServices] IPlaceRepository places, HttpContext httpContext, CreateTableRequest request)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-
         try
         {
-            var table = new Table(request.Name, branchId);
-            context.Tables.Add(table);
-            await context.SaveChangesAsync();
-            return TypedResults.Created($"/api/tables/{table.Id}", table.Id);
+            var place = Place.Table(request.Name, httpContext.GetRequiredBranchId());
+            places.Add(place);
+            await places.UnitOfWork.SaveEntitiesAsync();
+            return TypedResults.Created($"/api/tables/{place.Id}", place.Id);
         }
         catch (SpacesDomainException ex)
         {
@@ -118,20 +67,15 @@ public static class TablesApi
     }
 
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> UpdateTable(
-        SpacesContext context,
-        [Description("The table ID")] int id,
-        UpdateTableRequest request)
+        [FromServices] IPlaceRepository places, [Description("The table ID")] int id, UpdateTableRequest request)
     {
-        var table = await context.Tables.FindAsync(id);
-        if (table == null)
-        {
-            return TypedResults.NotFound();
-        }
-
+        var place = await Resolve(places, id);
+        if (place is null) return TypedResults.NotFound();
         try
         {
-            table.Rename(request.Name);
-            await context.SaveChangesAsync();
+            place.UpdateDetails(request.Name, place.Description);
+            places.Update(place);
+            await places.UnitOfWork.SaveEntitiesAsync();
             return TypedResults.Ok();
         }
         catch (SpacesDomainException ex)
@@ -141,48 +85,28 @@ public static class TablesApi
     }
 
     public static async Task<Results<Ok, NotFound>> SetTableActive(
-        SpacesContext context,
-        [Description("The table ID")] int id,
-        SetTableActiveRequest request)
+        [FromServices] IPlaceRepository places, [Description("The table ID")] int id, SetTableActiveRequest request)
     {
-        var table = await context.Tables.FindAsync(id);
-        if (table == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        table.SetActive(request.IsActive);
-        await context.SaveChangesAsync();
+        var place = await Resolve(places, id);
+        if (place is null) return TypedResults.NotFound();
+        place.SetActive(request.IsActive);
+        places.Update(place);
+        await places.UnitOfWork.SaveEntitiesAsync();
         return TypedResults.Ok();
     }
 
-    public static async Task<Results<Ok, NotFound>> DeleteTable(
-        SpacesContext context,
+    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> DeleteTable(
+        [FromServices] IPlaceRepository places, [FromServices] IStayRepository stays, [FromServices] IEventBus eventBus,
         [Description("The table ID")] int id)
     {
-        var table = await context.Tables.FindAsync(id);
-        if (table == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        context.Tables.Remove(table);
-        await context.SaveChangesAsync();
-        return TypedResults.Ok();
+        var place = await Resolve(places, id);
+        if (place is null) return TypedResults.NotFound();
+        return await PlacesApi.DeletePlace(places, stays, eventBus, place.Id);
     }
 }
 
-/// <summary>
-/// Request model for creating a café table
-/// </summary>
 public record CreateTableRequest(LocalizedText Name);
 
-/// <summary>
-/// Request model for renaming a café table
-/// </summary>
 public record UpdateTableRequest(LocalizedText Name);
 
-/// <summary>
-/// Request model for activating or deactivating a café table
-/// </summary>
 public record SetTableActiveRequest(bool IsActive);

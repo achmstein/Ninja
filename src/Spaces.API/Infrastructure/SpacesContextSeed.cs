@@ -1,7 +1,7 @@
-using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.TableAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Chillax.Spaces.Domain.SeedWork;
 using Chillax.Spaces.Infrastructure;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chillax.Spaces.API.Infrastructure;
 
@@ -9,54 +9,54 @@ public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<Sp
 {
     public async Task SeedAsync(SpacesContext context)
     {
-        if (!context.Rooms.Any())
+        // Rooms and tables are guarded separately: a database that already
+        // has rooms may still be missing tables.
+        if (!await context.Places.AnyAsync(p => p.Kind == PlaceKind.Room))
         {
-            var rooms = new List<Room>
+            var rooms = new List<Place>
             {
                 // El-Manshia (Branch 1)
-                new("Room 1", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "اوضة ١", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room 2", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "اوضة ٢", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room 3", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "اوضة ٣", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room 4", 60.00m, 90.00m, 1, "PS5 with 4 controllers and 65\" TV - Great for groups", "اوضة ٤", "بلايستيشن 5 مع 4 دراعات وشاشة 65 بوصة - مناسبة للمجموعات"),
-                new("Room 5", 70.00m, 100.00m, 1, "PS5 Pro with VR headset and 65\" TV", "اوضة ٥", "بلايستيشن 5 برو مع نظارة VR وشاشة 65 بوصة"),
-                new("Room 6", 70.00m, 100.00m, 1, "PS5 Pro with VR headset and 65\" TV", "اوضة ٦", "بلايستيشن 5 برو مع نظارة VR وشاشة 65 بوصة"),
-                new("Room VIP", 150.00m, 200.00m, 1, "Premium VIP room with 2 PS5 Pro consoles, VR headsets, 75\" OLED TV, premium sound system, and private lounge area - Fits up to 10 people", "اوضة VIP", "اوضة VIP مميزة مع 2 بلايستيشن 5 برو، نظارات VR، شاشة OLED 75 بوصة، نظام صوت مميز، ومنطقة جلوس خاصة - تتسع حتى 10 أشخاص"),
+                Room("Room 1", "اوضة ١", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room 2", "اوضة ٢", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room 3", "اوضة ٣", 50.00m, 80.00m, 1, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room 4", "اوضة ٤", 60.00m, 90.00m, 1, "PS5 with 4 controllers and 65\" TV - Great for groups", "بلايستيشن 5 مع 4 دراعات وشاشة 65 بوصة - مناسبة للمجموعات"),
+                Room("Room 5", "اوضة ٥", 70.00m, 100.00m, 1, "PS5 Pro with VR headset and 65\" TV", "بلايستيشن 5 برو مع نظارة VR وشاشة 65 بوصة"),
+                Room("Room 6", "اوضة ٦", 70.00m, 100.00m, 1, "PS5 Pro with VR headset and 65\" TV", "بلايستيشن 5 برو مع نظارة VR وشاشة 65 بوصة"),
+                Room("Room VIP", "اوضة VIP", 150.00m, 200.00m, 1, "Premium VIP room with 2 PS5 Pro consoles, VR headsets, 75\" OLED TV, premium sound system, and private lounge area - Fits up to 10 people", "اوضة VIP مميزة مع 2 بلايستيشن 5 برو، نظارات VR، شاشة OLED 75 بوصة، نظام صوت مميز، ومنطقة جلوس خاصة - تتسع حتى 10 أشخاص"),
                 // El-Benzina (Branch 2)
-                new("Room 1", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "اوضة ١", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room 2", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "اوضة ٢", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room 3", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "اوضة ٣", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
-                new("Room VIP", 150.00m, 200.00m, 2, "Premium VIP room with 2 PS5 Pro consoles, VR headsets, 75\" OLED TV, premium sound system, and private lounge area", "اوضة VIP", "اوضة VIP مميزة مع 2 بلايستيشن 5 برو، نظارات VR، شاشة OLED 75 بوصة، نظام صوت مميز، ومنطقة جلوس خاصة")
+                Room("Room 1", "اوضة ١", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room 2", "اوضة ٢", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room 3", "اوضة ٣", 50.00m, 80.00m, 2, "PS5 with 2 controllers and 55\" TV", "بلايستيشن 5 مع 2 دراعات وشاشة 55 بوصة"),
+                Room("Room VIP", "اوضة VIP", 150.00m, 200.00m, 2, "Premium VIP room with 2 PS5 Pro consoles, VR headsets, 75\" OLED TV, premium sound system, and private lounge area", "اوضة VIP مميزة مع 2 بلايستيشن 5 برو، نظارات VR، شاشة OLED 75 بوصة، نظام صوت مميز، ومنطقة جلوس خاصة"),
             };
 
-            context.Rooms.AddRange(rooms);
+            context.Places.AddRange(rooms);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded {NumRooms} rooms", rooms.Count);
         }
 
-        // Guarded separately from rooms: existing databases already have rooms, so the
-        // check above never fires there and tables would otherwise never be seeded.
-        if (!context.Tables.Any())
+        if (!await context.Places.AnyAsync(p => p.Kind == PlaceKind.Table))
         {
-            var tables = new List<Table>();
+            var tables = new List<Place>();
 
             // El-Manshia (Branch 1): four tables and the high chairs at the bar
             for (var i = 1; i <= 4; i++)
-            {
-                tables.Add(new Table($"Table {i}", 1, $"ترابيزة {ArabicDigits(i)}"));
-            }
-            tables.Add(new Table("High Chairs", 1, "الكراسي العالية"));
+                tables.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
+            tables.Add(Place.Table(new LocalizedText("High Chairs", "الكراسي العالية"), 1));
 
             // El-Benzina (Branch 2)
             for (var i = 1; i <= 5; i++)
-            {
-                tables.Add(new Table($"Table {i}", 2, $"ترابيزة {ArabicDigits(i)}"));
-            }
+                tables.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 2));
 
-            context.Tables.AddRange(tables);
+            context.Places.AddRange(tables);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded {NumTables} tables", tables.Count);
         }
     }
+
+    private static Place Room(string en, string ar, decimal single, decimal multi, int branchId, string descEn, string descAr)
+        => Place.Room(new LocalizedText(en, ar), single, multi, branchId, new LocalizedText(descEn, descAr));
+
     // Arabic-Indic numerals for the Arabic name, so a table reads ترابيزة ١
     // the way the rooms read اوضة ١ rather than mixing Western digits in.
     private static string ArabicDigits(int n) => n.ToString()

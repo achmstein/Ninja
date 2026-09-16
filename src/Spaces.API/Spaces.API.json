@@ -6,13 +6,1600 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/places": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "List places",
+        "description": "Every place of the branch with its status; narrow by kind or to timed places",
+        "operationId": "ListPlaces",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "description": "Only places of this kind",
+            "schema": {
+              "$ref": "#/components/schemas/PlaceKind"
+            }
+          },
+          {
+            "name": "timed",
+            "in": "query",
+            "description": "Only timed (true) or order-only (false) places",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceViewModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Create a place (Admin)",
+        "operationId": "CreatePlace",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)$",
+                  "type": [
+                    "integer",
+                    "string"
+                  ],
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/available": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Places a customer can book now",
+        "operationId": "GetAvailablePlaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlaceViewModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/places/{id}": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Get a place",
+        "description": "What a scanned place QR resolves to",
+        "operationId": "GetPlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceViewModel"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Rename a place or change its description (Admin)",
+        "operationId": "UpdatePlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlaceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Delete a place (Admin)",
+        "description": "Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.",
+        "operationId": "DeletePlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/tariff": {
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Give a place a tariff, change it, or take it away (Admin)",
+        "description": "A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.",
+        "operationId": "SetPlaceTariff",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlaceTariffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/active": {
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Activate or deactivate a place (Admin)",
+        "description": "Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it",
+        "operationId": "SetPlaceActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlaceActiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/status": {
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Set a place's physical status (Admin)",
+        "operationId": "SetPlaceStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "The new physical status",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/PlaceStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/scan": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "What this customer sees after scanning the place's QR",
+        "operationId": "ScanPlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceScanViewModel"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/hold": {
+      "post": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Hold a timed place",
+        "description": "The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.",
+        "operationId": "HoldPlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/HoldPlaceRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)$",
+                  "type": [
+                    "integer",
+                    "string"
+                  ],
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/walk-in": {
+      "post": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Start the clock for a party that walked in (staff)",
+        "operationId": "StartWalkIn",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/WalkInStayRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartWalkInStayResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/join": {
+      "post": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Join the stay running at a place (QR scan)",
+        "operationId": "JoinStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinStayResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/places/{id}/stays": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Ended and cancelled stays at a place (Admin)",
+        "operationId": "GetPlaceStayHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of stays to return",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StayViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/my": {
+      "get": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "The signed-in customer's stays, newest first",
+        "operationId": "GetMyStays",
+        "parameters": [
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StayViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/open": {
+      "get": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Held and running stays of the branch (staff)",
+        "operationId": "GetOpenStays",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StayViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/history": {
+      "get": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Ended and cancelled stays across the branch, paged (Admin)",
+        "operationId": "GetStayHistory",
+        "parameters": [
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "placeId",
+            "in": "query",
+            "description": "Filter by place",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResultOfStayViewModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/stats": {
+      "get": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Per-day and per-place hours, stays and revenue (Admin)",
+        "operationId": "GetStayStats",
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "tzOffsetMinutes",
+            "in": "query",
+            "description": "JS getTimezoneOffset() of the caller, for local-day bucketing",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StayStats"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}": {
+      "get": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Get a stay",
+        "operationId": "GetStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StayViewModel"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "The customer arrived (staff)",
+        "description": "Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start",
+        "operationId": "ConfirmStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConfirmStayRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/start": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Start the clock on a held stay (staff)",
+        "operationId": "StartStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartStayRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/end": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Stop the clock and settle the cost (staff)",
+        "operationId": "EndStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Give up a hold or cut a running stay short (staff)",
+        "operationId": "CancelStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/option": {
+      "put": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Switch a running stay to another rate option (staff)",
+        "operationId": "ChangeStayOption",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeStayOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/assign-customer": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Give an unclaimed walk-in its owner (staff)",
+        "operationId": "AssignStayCustomer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/members": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Name someone in the party (staff)",
+        "description": "Allowed on a running or ended stay: after the clock stops this still names who was there, so their share can go on their tab at settle",
+        "operationId": "AddStayMember",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/members/{customerId}": {
+      "delete": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Remove a member (not the owner) from a running stay (staff)",
+        "operationId": "RemoveStayMember",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "path",
+            "description": "The customer ID to remove",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/{id}/leave": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Leave a stay you joined (not as its owner)",
+        "operationId": "LeaveStay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/stays/my/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Stays"
+        ],
+        "summary": "Give up your own hold before it starts",
+        "operationId": "CancelMyHold",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The stay ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/rooms": {
       "get": {
         "tags": [
           "Rooms"
         ],
         "summary": "List all rooms",
-        "description": "Get all PlayStation rooms with their current display status",
         "operationId": "ListRooms",
         "responses": {
           "200": {
@@ -35,7 +1622,6 @@
           "Rooms"
         ],
         "summary": "Create a new room",
-        "description": "Create a new PlayStation room (Admin only)",
         "operationId": "CreateRoom",
         "requestBody": {
           "content": {
@@ -63,6 +1649,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -81,7 +1677,6 @@
           "Rooms"
         ],
         "summary": "Get room by ID",
-        "description": "Get a specific room by its ID",
         "operationId": "GetRoom",
         "parameters": [
           {
@@ -117,7 +1712,6 @@
           "Rooms"
         ],
         "summary": "Update room details",
-        "description": "Update room name, description, and rates (Admin only)",
         "operationId": "UpdateRoom",
         "parameters": [
           {
@@ -149,6 +1743,16 @@
           "404": {
             "description": "Not Found"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -165,13 +1769,12 @@
           "Rooms"
         ],
         "summary": "Delete a room",
-        "description": "Delete a room (Admin only)",
         "operationId": "DeleteRoom",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The room ID",
+            "description": "The place ID",
             "required": true,
             "schema": {
               "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -215,7 +1818,6 @@
           "Rooms"
         ],
         "summary": "Get available rooms",
-        "description": "Get only rooms that are currently available for reservation",
         "operationId": "GetAvailableRooms",
         "responses": {
           "200": {
@@ -240,7 +1842,6 @@
           "Rooms"
         ],
         "summary": "Update room physical status",
-        "description": "Update the physical status of a room (Admin only)",
         "operationId": "UpdateRoomStatus",
         "parameters": [
           {
@@ -299,7 +1900,6 @@
           "Reservations"
         ],
         "summary": "Reserve a room",
-        "description": "Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.",
         "operationId": "ReserveRoom",
         "parameters": [
           {
@@ -374,8 +1974,72 @@
           "Sessions"
         ],
         "summary": "Start a session",
-        "description": "Start the timer for a reserved session (staff)",
         "operationId": "StartSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "description": "The session ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartSessionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/rooms/sessions/{sessionId}/confirm": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Confirm the customer arrived",
+        "operationId": "ConfirmSession",
         "parameters": [
           {
             "name": "sessionId",
@@ -440,7 +2104,6 @@
           "Sessions"
         ],
         "summary": "End a session",
-        "description": "End the session and calculate cost (staff)",
         "operationId": "EndSession",
         "parameters": [
           {
@@ -490,7 +2153,6 @@
           "Sessions"
         ],
         "summary": "Cancel a session",
-        "description": "Cancel a reservation or active session (staff)",
         "operationId": "CancelSession",
         "parameters": [
           {
@@ -540,7 +2202,6 @@
           "Sessions"
         ],
         "summary": "Start a walk-in session",
-        "description": "Start a walk-in session without an assigned customer (staff)",
         "operationId": "StartWalkInSession",
         "parameters": [
           {
@@ -610,7 +2271,6 @@
           "Sessions"
         ],
         "summary": "Change player mode",
-        "description": "Change the player mode (Single/Multi) for an active session (staff)",
         "operationId": "ChangePlayerMode",
         "parameters": [
           {
@@ -670,7 +2330,6 @@
           "Sessions"
         ],
         "summary": "Leave a session",
-        "description": "Leave a session you've joined (cannot leave if you're the owner)",
         "operationId": "LeaveSession",
         "parameters": [
           {
@@ -720,7 +2379,6 @@
           "Sessions"
         ],
         "summary": "Cancel my reservation",
-        "description": "Cancel your own reservation (only if still in Reserved status)",
         "operationId": "CancelMyReservation",
         "parameters": [
           {
@@ -770,7 +2428,6 @@
           "Sessions"
         ],
         "summary": "Get my sessions",
-        "description": "Get all sessions for the current authenticated user",
         "operationId": "GetMySessions",
         "parameters": [
           {
@@ -832,7 +2489,6 @@
           "Sessions"
         ],
         "summary": "Get active sessions",
-        "description": "Get all currently active sessions (staff)",
         "operationId": "GetActiveSessions",
         "responses": {
           "200": {
@@ -866,7 +2522,6 @@
           "Sessions"
         ],
         "summary": "Assign a customer to a walk-in session",
-        "description": "Assign a customer to an active walk-in session that has no owner (staff)",
         "operationId": "AssignCustomerToSession",
         "parameters": [
           {
@@ -926,7 +2581,6 @@
           "Sessions"
         ],
         "summary": "Add a member to a session",
-        "description": "Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.",
         "operationId": "AddMemberToSession",
         "parameters": [
           {
@@ -986,7 +2640,6 @@
           "Sessions"
         ],
         "summary": "Remove a member from a session",
-        "description": "Remove a non-owner member from an active session (staff)",
         "operationId": "RemoveMemberFromSession",
         "parameters": [
           {
@@ -1045,7 +2698,6 @@
           "Sessions"
         ],
         "summary": "Get session by ID",
-        "description": "Get a specific session by its ID",
         "operationId": "GetSession",
         "parameters": [
           {
@@ -1092,7 +2744,6 @@
           "Sessions"
         ],
         "summary": "Get room session history",
-        "description": "Get completed sessions history for a specific room (Admin only)",
         "operationId": "GetRoomSessionHistory",
         "parameters": [
           {
@@ -1153,7 +2804,6 @@
           "Sessions"
         ],
         "summary": "Get session history",
-        "description": "Get completed/cancelled sessions across all rooms, paginated (Admin only)",
         "operationId": "GetSessionHistory",
         "parameters": [
           {
@@ -1241,7 +2891,6 @@
           "Sessions"
         ],
         "summary": "Get aggregated session statistics",
-        "description": "Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)",
         "operationId": "GetSessionStats",
         "parameters": [
           {
@@ -1306,7 +2955,6 @@
           "Rooms"
         ],
         "summary": "Get room scan info",
-        "description": "Get room info and active session status for QR code scan-to-join",
         "operationId": "ScanRoom",
         "parameters": [
           {
@@ -1353,7 +3001,6 @@
           "Sessions"
         ],
         "summary": "Join session by room",
-        "description": "Join the active session of a room (via QR scan)",
         "operationId": "JoinSessionByRoom",
         "parameters": [
           {
@@ -1407,7 +3054,6 @@
           "Tables"
         ],
         "summary": "List all tables",
-        "description": "Get all café tables for the branch, including inactive ones",
         "operationId": "ListTables",
         "responses": {
           "200": {
@@ -1430,7 +3076,6 @@
           "Tables"
         ],
         "summary": "Create a new table",
-        "description": "Create a new café table (Admin only)",
         "operationId": "CreateTable",
         "requestBody": {
           "content": {
@@ -1486,7 +3131,6 @@
           "Tables"
         ],
         "summary": "Get table by ID",
-        "description": "Get a table by its ID. This is what a scanned table QR code resolves to.",
         "operationId": "GetTable",
         "parameters": [
           {
@@ -1522,7 +3166,6 @@
           "Tables"
         ],
         "summary": "Rename a table",
-        "description": "Update a table's name (Admin only)",
         "operationId": "UpdateTable",
         "parameters": [
           {
@@ -1580,7 +3223,6 @@
           "Tables"
         ],
         "summary": "Delete a table",
-        "description": "Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)",
         "operationId": "DeleteTable",
         "parameters": [
           {
@@ -1602,6 +3244,16 @@
           "404": {
             "description": "Not Found"
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -1620,7 +3272,6 @@
           "Tables"
         ],
         "summary": "Activate or deactivate a table",
-        "description": "Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)",
         "operationId": "SetTableActive",
         "parameters": [
           {
@@ -1714,6 +3365,63 @@
           }
         }
       },
+      "ChangeStayOptionRequest": {
+        "required": [
+          "optionCode"
+        ],
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ConfirmStayRequest": {
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePlaceRequest": {
+        "required": [
+          "kind",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "description": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "tariff": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TariffRequest"
+              }
+            ]
+          }
+        }
+      },
       "CreateRoomRequest": {
         "required": [
           "name",
@@ -1765,6 +3473,27 @@
           }
         }
       },
+      "HoldPlaceRequest": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startOnConfirm": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "JoinSessionResult": {
         "required": [
           "reservationId",
@@ -1792,6 +3521,44 @@
             "format": "int32"
           },
           "roomName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JoinStayResult": {
+        "required": [
+          "stayId",
+          "placeId",
+          "placeName",
+          "isOwner",
+          "startTime"
+        ],
+        "type": "object",
+        "properties": {
+          "stayId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeName": {
             "$ref": "#/components/schemas/LocalizedText"
           },
           "isOwner": {
@@ -1866,6 +3633,228 @@
           }
         }
       },
+      "PaginatedResultOfStayViewModel": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StayViewModel"
+            }
+          },
+          "pageIndex": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          },
+          "hasPreviousPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlaceDisplayStatus": {
+        "type": "integer"
+      },
+      "PlaceKind": {
+        "type": "integer"
+      },
+      "PlaceScanViewModel": {
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlaceDisplayStatus"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "tariff": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TariffViewModel"
+              }
+            ]
+          },
+          "isTimed": {
+            "type": "boolean"
+          },
+          "hasOptions": {
+            "type": "boolean"
+          },
+          "canReserve": {
+            "type": "boolean"
+          },
+          "takesControllerRequests": {
+            "type": "boolean"
+          },
+          "hasRunningStay": {
+            "type": "boolean"
+          },
+          "stay": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StayPreviewViewModel"
+              }
+            ]
+          },
+          "isAlreadyMember": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlaceStatus": {
+        "type": "integer"
+      },
+      "PlaceViewModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "description": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PlaceDisplayStatus"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "tariff": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TariffViewModel"
+              }
+            ]
+          },
+          "isTimed": {
+            "type": "boolean"
+          },
+          "hasOptions": {
+            "type": "boolean"
+          },
+          "canReserve": {
+            "type": "boolean"
+          },
+          "takesControllerRequests": {
+            "type": "boolean"
+          },
+          "legacyRoomId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "legacyTableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentStay": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StayPreviewViewModel"
+              }
+            ]
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -1901,6 +3890,49 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RateOptionRequest": {
+        "required": [
+          "code",
+          "name",
+          "hourlyRate"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "hourlyRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "RateOptionViewModel": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "hourlyRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -2097,6 +4129,10 @@
               "null",
               "string"
             ]
+          },
+          "startOnConfirm": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -2384,6 +4420,35 @@
           }
         }
       },
+      "SetPlaceActiveRequest": {
+        "required": [
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetPlaceTariffRequest": {
+        "required": [
+          "tariff"
+        ],
+        "type": "object",
+        "properties": {
+          "tariff": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TariffRequest"
+              }
+            ]
+          }
+        }
+      },
       "SetTableActiveRequest": {
         "required": [
           "isActive"
@@ -2406,6 +4471,17 @@
           }
         }
       },
+      "StartStayRequest": {
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "StartWalkInSessionResult": {
         "required": [
           "reservationId"
@@ -2419,6 +4495,403 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "StartWalkInStayResult": {
+        "required": [
+          "stayId"
+        ],
+        "type": "object",
+        "properties": {
+          "stayId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "StayCostViewModel": {
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": "string"
+          },
+          "optionName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "hourlyRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "hours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "cost": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "StayMemberViewModel": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "StayPreviewViewModel": {
+        "type": "object",
+        "properties": {
+          "stayId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StayStatus"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "memberCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "StaySegmentViewModel": {
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": "string"
+          },
+          "optionName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "hourlyRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "StayStats": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StayStatsDay"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StayStatsPlace"
+            }
+          }
+        }
+      },
+      "StayStatsDay": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "stays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "revenue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "StayStatsPlace": {
+        "type": "object",
+        "properties": {
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "stays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "revenue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "StayStatus": {
+        "type": "integer"
+      },
+      "StayViewModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "startOnConfirm": {
+            "type": "boolean"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "tariff": {
+            "$ref": "#/components/schemas/TariffViewModel"
+          },
+          "currentOptionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currentOptionName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StayCostViewModel"
+            }
+          },
+          "totalCost": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "receiptNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paidAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "ticketId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paidWith": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/StayStatus"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StayMemberViewModel"
+            }
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaySegmentViewModel"
+            }
           }
         }
       },
@@ -2446,6 +4919,69 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "TariffRequest": {
+        "required": [
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateOptionRequest"
+            }
+          },
+          "roundingMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 15
+          }
+        }
+      },
+      "TariffViewModel": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateOptionViewModel"
+            }
+          },
+          "roundingMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpdatePlaceRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "description": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           }
         }
       },
@@ -2516,10 +5052,45 @@
             ]
           }
         }
+      },
+      "WalkInStayRequest": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       }
     }
   },
   "tags": [
+    {
+      "name": "Places"
+    },
+    {
+      "name": "Stays"
+    },
     {
       "name": "Rooms"
     },

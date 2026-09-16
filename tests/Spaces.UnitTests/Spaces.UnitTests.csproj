@@ -1,0 +1,17 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateErrorForMissingTargetingPacks>false</GenerateErrorForMissingTargetingPacks>
+    <IsPublishable>false</IsPublishable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Spaces.API\Spaces.API.csproj" />
+    <ProjectReference Include="..\..\src\Spaces.Domain\Spaces.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Spaces.Infrastructure\Spaces.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

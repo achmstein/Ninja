@@ -1,333 +1,135 @@
 using System.ComponentModel;
 using Chillax.Spaces.API.Application.Commands;
 using Chillax.Spaces.API.Application.Queries;
-using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
 using Chillax.Spaces.Domain.Exceptions;
 using Chillax.Spaces.Domain.SeedWork;
 using Chillax.ServiceDefaults;
-using Room = Chillax.Spaces.Domain.AggregatesModel.RoomAggregate.Room;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
 
 namespace Chillax.Spaces.API.Apis;
 
+/// <summary>
+/// The routes the tills and the customer apps called before the Places
+/// remodel, kept for one release as thin aliases over the same commands and
+/// queries as <see cref="PlacesApi"/>. Rooms kept their ids, so a room id
+/// here is the place id. "Single"/"Multi" are accepted as option codes
+/// (the tariff finds options case-insensitively). Remove once every client
+/// is on /api/places and /api/stays.
+/// </summary>
 public static class RoomsApi
 {
     public static IEndpointRouteBuilder MapRoomsApi(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("api/rooms");
 
-        // Room endpoints (queries)
-        api.MapGet("/", GetAllRooms)
-            .WithName("ListRooms")
-            .WithSummary("List all rooms")
-            .WithDescription("Get all PlayStation rooms with their current display status")
-            .WithTags("Rooms");
+        api.MapGet("/", GetAllRooms).WithName("ListRooms").WithTags("Rooms")
+            .WithSummary("List all rooms");
+        api.MapGet("/{id:int}", GetRoomById).WithName("GetRoom").WithTags("Rooms")
+            .WithSummary("Get room by ID");
+        api.MapGet("/available", GetAvailableRooms).WithName("GetAvailableRooms").WithTags("Rooms")
+            .WithSummary("Get available rooms");
+        api.MapPost("/", CreateRoom).WithName("CreateRoom").WithTags("Rooms")
+            .WithSummary("Create a new room").RequireAuthorization("Admin");
+        api.MapPut("/{id:int}", UpdateRoom).WithName("UpdateRoom").WithTags("Rooms")
+            .WithSummary("Update room details").RequireAuthorization("Admin");
+        api.MapDelete("/{id:int}", PlacesApi.DeletePlace).WithName("DeleteRoom").WithTags("Rooms")
+            .WithSummary("Delete a room").RequireAuthorization("Admin");
+        api.MapPut("/{id:int}/status", UpdateRoomStatus).WithName("UpdateRoomStatus").WithTags("Rooms")
+            .WithSummary("Update room physical status").RequireAuthorization("Admin");
 
-        api.MapGet("/{id:int}", GetRoomById)
-            .WithName("GetRoom")
-            .WithSummary("Get room by ID")
-            .WithDescription("Get a specific room by its ID")
-            .WithTags("Rooms");
+        api.MapPost("/{roomId:int}/reserve", CreateReservation).WithName("ReserveRoom").WithTags("Reservations")
+            .WithSummary("Reserve a room").RequireAuthorization();
 
-        api.MapGet("/available", GetAvailableRooms)
-            .WithName("GetAvailableRooms")
-            .WithSummary("Get available rooms")
-            .WithDescription("Get only rooms that are currently available for reservation")
-            .WithTags("Rooms");
-
-        // Admin room management
-        api.MapPost("/", CreateRoom)
-            .WithName("CreateRoom")
-            .WithSummary("Create a new room")
-            .WithDescription("Create a new PlayStation room (Admin only)")
-            .WithTags("Rooms")
-            .RequireAuthorization("Admin");
-
-        api.MapPut("/{id:int}", UpdateRoom)
-            .WithName("UpdateRoom")
-            .WithSummary("Update room details")
-            .WithDescription("Update room name, description, and rates (Admin only)")
-            .WithTags("Rooms")
-            .RequireAuthorization("Admin");
-
-        api.MapDelete("/{id:int}", DeleteRoom)
-            .WithName("DeleteRoom")
-            .WithSummary("Delete a room")
-            .WithDescription("Delete a room (Admin only)")
-            .WithTags("Rooms")
-            .RequireAuthorization("Admin");
-
-        api.MapPut("/{id:int}/status", UpdateRoomStatus)
-            .WithName("UpdateRoomStatus")
-            .WithSummary("Update room physical status")
-            .WithDescription("Update the physical status of a room (Admin only)")
-            .WithTags("Rooms")
-            .RequireAuthorization("Admin");
-
-        // Reservation endpoints (commands)
-        api.MapPost("/{roomId:int}/reserve", CreateReservation)
-            .WithName("ReserveRoom")
-            .WithSummary("Reserve a room")
-            .WithDescription("Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.")
-            .WithTags("Reservations")
-            .RequireAuthorization();
-
-        // Session endpoints (Admin commands)
-        // Session control belongs to whoever is at the counter, so these take
-        // the "Pos" policy (Admin, Owner or Cashier): the till runs the rooms
-        // the way admin_web does. Room set-up (create, edit, delete,
-        // maintenance) and history stay Admin.
-        api.MapPost("/sessions/{sessionId:int}/start", StartSession)
-            .WithName("StartSession")
-            .WithSummary("Start a session")
-            .WithDescription("Start the timer for a reserved session (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapPost("/sessions/{sessionId:int}/end", EndSession)
-            .WithName("EndSession")
-            .WithSummary("End a session")
-            .WithDescription("End the session and calculate cost (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapPost("/sessions/{sessionId:int}/cancel", CancelSession)
-            .WithName("CancelSession")
-            .WithSummary("Cancel a session")
-            .WithDescription("Cancel a reservation or active session (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        // Walk-in session endpoints (Admin)
-        api.MapPost("/sessions/walk-in/{roomId:int}", StartWalkInSession)
-            .WithName("StartWalkInSession")
-            .WithSummary("Start a walk-in session")
-            .WithDescription("Start a walk-in session without an assigned customer (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        // Player mode change (Admin)
-        api.MapPut("/sessions/{sessionId:int}/player-mode", ChangePlayerMode)
-            .WithName("ChangePlayerMode")
-            .WithSummary("Change player mode")
-            .WithDescription("Change the player mode (Single/Multi) for an active session (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        // Session membership endpoints (Customer)
-        api.MapPost("/sessions/{sessionId:int}/leave", LeaveSession)
-            .WithName("LeaveSession")
-            .WithSummary("Leave a session")
-            .WithDescription("Leave a session you've joined (cannot leave if you're the owner)")
-            .WithTags("Sessions")
-            .RequireAuthorization();
-
-        api.MapPost("/sessions/my/{sessionId:int}/cancel", CancelMyReservation)
-            .WithName("CancelMyReservation")
-            .WithSummary("Cancel my reservation")
-            .WithDescription("Cancel your own reservation (only if still in Reserved status)")
-            .WithTags("Sessions")
-            .RequireAuthorization();
-
-        // Session query endpoints
-        api.MapGet("/sessions/my", GetMySessions)
-            .WithName("GetMySessions")
-            .WithSummary("Get my sessions")
-            .WithDescription("Get all sessions for the current authenticated user")
-            .WithTags("Sessions")
-            .RequireAuthorization();
-
-        api.MapGet("/sessions/active", GetActiveSessions)
-            .WithName("GetActiveSessions")
-            .WithSummary("Get active sessions")
-            .WithDescription("Get all currently active sessions (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapPost("/sessions/{sessionId:int}/assign-customer", AssignCustomerToSession)
-            .WithName("AssignCustomerToSession")
-            .WithSummary("Assign a customer to a walk-in session")
-            .WithDescription("Assign a customer to an active walk-in session that has no owner (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapPost("/sessions/{sessionId:int}/members", AddMemberToSession)
-            .WithName("AddMemberToSession")
-            .WithSummary("Add a member to a session")
-            .WithDescription("Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapDelete("/sessions/{sessionId:int}/members/{customerId}", RemoveMemberFromSession)
-            .WithName("RemoveMemberFromSession")
-            .WithSummary("Remove a member from a session")
-            .WithDescription("Remove a non-owner member from an active session (staff)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Pos");
-
-        api.MapGet("/sessions/{sessionId:int}", GetSessionById)
-            .WithName("GetSession")
-            .WithSummary("Get session by ID")
-            .WithDescription("Get a specific session by its ID")
-            .WithTags("Sessions")
-            .RequireAuthorization();
-
-        api.MapGet("/{roomId:int}/sessions/history", GetRoomSessionHistory)
-            .WithName("GetRoomSessionHistory")
-            .WithSummary("Get room session history")
-            .WithDescription("Get completed sessions history for a specific room (Admin only)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Admin");
-
-        api.MapGet("/sessions/history", GetSessionHistory)
-            .WithName("GetSessionHistory")
-            .WithSummary("Get session history")
-            .WithDescription("Get completed/cancelled sessions across all rooms, paginated (Admin only)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Admin");
-
-        api.MapGet("/sessions/stats", GetSessionStats)
-            .WithName("GetSessionStats")
-            .WithSummary("Get aggregated session statistics")
-            .WithDescription("Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)")
-            .WithTags("Sessions")
-            .RequireAuthorization("Admin");
-
-        // QR scan endpoints
-        api.MapGet("/{roomId:int}/scan", ScanRoom)
-            .WithName("ScanRoom")
-            .WithSummary("Get room scan info")
-            .WithDescription("Get room info and active session status for QR code scan-to-join")
-            .WithTags("Rooms")
-            .RequireAuthorization();
-
-        api.MapPost("/sessions/join-by-room/{roomId:int}", JoinSessionByRoom)
-            .WithName("JoinSessionByRoom")
-            .WithSummary("Join session by room")
-            .WithDescription("Join the active session of a room (via QR scan)")
-            .WithTags("Sessions")
-            .RequireAuthorization();
+        api.MapPost("/sessions/{sessionId:int}/start", StartSession).WithName("StartSession").WithTags("Sessions")
+            .WithSummary("Start a session").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/confirm", ConfirmSession).WithName("ConfirmSession").WithTags("Sessions")
+            .WithSummary("Confirm the customer arrived").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/end", EndSession).WithName("EndSession").WithTags("Sessions")
+            .WithSummary("End a session").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/cancel", CancelSession).WithName("CancelSession").WithTags("Sessions")
+            .WithSummary("Cancel a session").RequireAuthorization("Pos");
+        api.MapPost("/sessions/walk-in/{roomId:int}", StartWalkInSession).WithName("StartWalkInSession").WithTags("Sessions")
+            .WithSummary("Start a walk-in session").RequireAuthorization("Pos");
+        api.MapPut("/sessions/{sessionId:int}/player-mode", ChangePlayerMode).WithName("ChangePlayerMode").WithTags("Sessions")
+            .WithSummary("Change player mode").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/leave", LeaveSession).WithName("LeaveSession").WithTags("Sessions")
+            .WithSummary("Leave a session").RequireAuthorization();
+        api.MapPost("/sessions/my/{sessionId:int}/cancel", CancelMyReservation).WithName("CancelMyReservation").WithTags("Sessions")
+            .WithSummary("Cancel my reservation").RequireAuthorization();
+        api.MapGet("/sessions/my", GetMySessions).WithName("GetMySessions").WithTags("Sessions")
+            .WithSummary("Get my sessions").RequireAuthorization();
+        api.MapGet("/sessions/active", GetActiveSessions).WithName("GetActiveSessions").WithTags("Sessions")
+            .WithSummary("Get active sessions").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/assign-customer", AssignCustomerToSession).WithName("AssignCustomerToSession").WithTags("Sessions")
+            .WithSummary("Assign a customer to a walk-in session").RequireAuthorization("Pos");
+        api.MapPost("/sessions/{sessionId:int}/members", AddMemberToSession).WithName("AddMemberToSession").WithTags("Sessions")
+            .WithSummary("Add a member to a session").RequireAuthorization("Pos");
+        api.MapDelete("/sessions/{sessionId:int}/members/{customerId}", RemoveMemberFromSession).WithName("RemoveMemberFromSession").WithTags("Sessions")
+            .WithSummary("Remove a member from a session").RequireAuthorization("Pos");
+        api.MapGet("/sessions/{sessionId:int}", GetSessionById).WithName("GetSession").WithTags("Sessions")
+            .WithSummary("Get session by ID").RequireAuthorization();
+        api.MapGet("/{roomId:int}/sessions/history", GetRoomSessionHistory).WithName("GetRoomSessionHistory").WithTags("Sessions")
+            .WithSummary("Get room session history").RequireAuthorization("Admin");
+        api.MapGet("/sessions/history", GetSessionHistory).WithName("GetSessionHistory").WithTags("Sessions")
+            .WithSummary("Get session history").RequireAuthorization("Admin");
+        api.MapGet("/sessions/stats", GetSessionStats).WithName("GetSessionStats").WithTags("Sessions")
+            .WithSummary("Get aggregated session statistics").RequireAuthorization("Admin");
+        api.MapGet("/{roomId:int}/scan", ScanRoom).WithName("ScanRoom").WithTags("Rooms")
+            .WithSummary("Get room scan info").RequireAuthorization();
+        api.MapPost("/sessions/join-by-room/{roomId:int}", JoinSessionByRoom).WithName("JoinSessionByRoom").WithTags("Sessions")
+            .WithSummary("Join session by room").RequireAuthorization();
 
         return app;
     }
 
-    // Query endpoints
-    public static async Task<Ok<IEnumerable<RoomViewModel>>> GetAllRooms(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext)
+    public static async Task<Ok<IEnumerable<RoomViewModel>>> GetAllRooms([FromServices] IPlaceQueries queries, HttpContext httpContext)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-        var rooms = await queries.GetAllRoomsAsync(branchId);
-        return TypedResults.Ok(rooms);
+        var places = await queries.GetPlacesAsync(httpContext.GetRequiredBranchId(), PlaceKind.Room);
+        return TypedResults.Ok(places.Select(p => p.ToRoom()));
     }
 
-    public static async Task<Results<Ok<RoomViewModel>, NotFound>> GetRoomById(
-        [FromServices] IRoomQueries queries,
-        [Description("The room ID")] int id)
+    public static async Task<Results<Ok<RoomViewModel>, NotFound>> GetRoomById([FromServices] IPlaceQueries queries, [Description("The room ID")] int id)
     {
-        var room = await queries.GetRoomByIdAsync(id);
-
-        if (room == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(room);
+        var place = await queries.GetPlaceByIdAsync(id);
+        return place is null ? TypedResults.NotFound() : TypedResults.Ok(place.ToRoom());
     }
 
-    public static async Task<Ok<IEnumerable<RoomViewModel>>> GetAvailableRooms(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext)
+    public static async Task<Ok<IEnumerable<RoomViewModel>>> GetAvailableRooms([FromServices] IPlaceQueries queries, HttpContext httpContext)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-        var rooms = await queries.GetAvailableRoomsAsync(branchId);
-        return TypedResults.Ok(rooms);
+        var places = await queries.GetAvailablePlacesAsync(httpContext.GetRequiredBranchId());
+        return TypedResults.Ok(places.Where(p => p.Kind == PlaceKind.Room).Select(p => p.ToRoom()));
     }
 
-    public static async Task<Created<int>> CreateRoom(
-        SpacesContext context,
-        HttpContext httpContext,
-        CreateRoomRequest request)
+    public static async Task<Results<Created<int>, BadRequest<ProblemDetails>>> CreateRoom(
+        [FromServices] IPlaceRepository places, HttpContext httpContext, CreateRoomRequest request)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-        var room = new Room(request.Name, request.SingleRate, request.MultiRate, branchId, request.Description);
-        context.Rooms.Add(room);
-        await context.SaveChangesAsync();
-        return TypedResults.Created($"/api/rooms/{room.Id}", room.Id);
-    }
-
-    public static async Task<Results<Ok, NotFound>> UpdateRoom(
-        SpacesContext context,
-        [Description("The room ID")] int id,
-        UpdateRoomRequest request)
-    {
-        var room = await context.Rooms.FindAsync(id);
-        if (room == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        room.UpdateDetails(request.Name, request.Description, request.SingleRate, request.MultiRate);
-        await context.SaveChangesAsync();
-        return TypedResults.Ok();
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> DeleteRoom(
-        SpacesContext context,
-        [Description("The room ID")] int id)
-    {
-        var room = await context.Rooms.FindAsync(id);
-        if (room == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        // Check if room has active sessions
-        var hasActiveSessions = await context.Reservations
-            .AnyAsync(r => r.RoomId == id && (r.Status == ReservationStatus.Active || r.Status == ReservationStatus.Reserved));
-
-        if (hasActiveSessions)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Cannot delete room with active sessions" });
-        }
-
-        context.Rooms.Remove(room);
-        await context.SaveChangesAsync();
-        return TypedResults.Ok();
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> UpdateRoomStatus(
-        SpacesContext context,
-        [Description("The room ID")] int id,
-        [Description("The new physical status")] RoomPhysicalStatus status)
-    {
-        var room = await context.Rooms.FindAsync(id);
-
-        if (room == null)
-        {
-            return TypedResults.NotFound();
-        }
-
         try
         {
-            switch (status)
-            {
-                case RoomPhysicalStatus.Available:
-                    room.SetAvailable();
-                    break;
-                case RoomPhysicalStatus.Occupied:
-                    room.SetOccupied();
-                    break;
-                case RoomPhysicalStatus.Maintenance:
-                    room.SetMaintenance();
-                    break;
-            }
-            await context.SaveChangesAsync();
+            var place = Place.Room(request.Name, request.SingleRate, request.MultiRate, httpContext.GetRequiredBranchId(), request.Description);
+            places.Add(place);
+            await places.UnitOfWork.SaveEntitiesAsync();
+            return TypedResults.Created($"/api/rooms/{place.Id}", place.Id);
+        }
+        catch (SpacesDomainException ex)
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
+        }
+    }
+
+    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> UpdateRoom(
+        [FromServices] IPlaceRepository places, [Description("The room ID")] int id, UpdateRoomRequest request)
+    {
+        var place = await places.GetAsync(id);
+        if (place is null) return TypedResults.NotFound();
+        try
+        {
+            place.UpdateDetails(request.Name, request.Description);
+            place.SetTariff(Tariff.Room(request.SingleRate, request.MultiRate));
+            places.Update(place);
+            await places.UnitOfWork.SaveEntitiesAsync();
             return TypedResults.Ok();
         }
         catch (SpacesDomainException ex)
@@ -336,199 +138,43 @@ public static class RoomsApi
         }
     }
 
-    // Command endpoints
-    public static async Task<Results<Created<int>, BadRequest<ProblemDetails>>> CreateReservation(
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> UpdateRoomStatus(
+        [FromServices] IPlaceRepository places,
+        [Description("The room ID")] int id,
+        [Description("The new physical status")] RoomPhysicalStatus status)
+        => PlacesApi.SetPlaceStatus(places, id, (PlaceStatus)(int)status);
+
+    public static Task<Results<Created<int>, BadRequest<ProblemDetails>>> CreateReservation(
         [FromServices] IMediator mediator,
-        [FromServices] ILoggerFactory loggerFactory,
         HttpContext httpContext,
         [Description("The room ID to reserve")] int roomId,
         ReserveRoomRequest? request = null)
-    {
-        var logger = loggerFactory.CreateLogger("RoomsApi");
+        => PlacesApi.HoldPlace(mediator, httpContext, roomId,
+            request is null ? null : new HoldPlaceRequest(request.CustomerName, request.Notes, request.StartOnConfirm));
 
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new()
-            {
-                Detail = "User ID not found in token"
-            });
-        }
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> StartSession(
+        [FromServices] IMediator mediator, [Description("The session ID")] int sessionId, StartSessionRequest? request = null)
+        => PlacesApi.Run(mediator, new StartStayCommand(sessionId, request?.PlayerMode));
 
-        var customerName = httpContext.User.GetUserName() ?? request?.CustomerName;
-        var roles = httpContext.User.GetRoles().ToList();
-        var isAdmin = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
-        // Staff of any kind book walk-ins past the reservations pause; only
-        // Admin changes whose reservation it is
-        var isStaff = isAdmin
-            || roles.Contains("Owner", StringComparer.OrdinalIgnoreCase)
-            || roles.Contains("Cashier", StringComparer.OrdinalIgnoreCase);
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> ConfirmSession(
+        [FromServices] IMediator mediator, [Description("The session ID")] int sessionId, StartSessionRequest? request = null)
+        => PlacesApi.Run(mediator, new ConfirmStayCommand(sessionId, request?.PlayerMode));
 
-        logger.LogInformation("CreateReservation API: CustomerId={CustomerId}, Roles=[{Roles}], IsAdmin={IsAdmin}",
-            customerId, string.Join(", ", roles), isAdmin);
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> EndSession(
+        [FromServices] IMediator mediator, [Description("The session ID")] int sessionId)
+        => PlacesApi.Run(mediator, new EndStayCommand(sessionId));
 
-        try
-        {
-            // A staff reservation is a hold for a walk-in: the typed name is
-            // the customer, and it is not tied to the cashier's own account
-            // (so it never counts against them or auto-cancels). A customer
-            // reserving for themselves keeps their id and name.
-            var command = new CreateReservationCommand(
-                roomId,
-                isStaff ? null : customerId,
-                isStaff ? request?.CustomerName : customerName,
-                request?.Notes,
-                isAdmin,
-                isStaff);
-
-            var reservationId = await mediator.Send(command);
-            return TypedResults.Created($"/api/rooms/sessions/{reservationId}", reservationId);
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> StartSession(
-        [FromServices] IMediator mediator,
-        [Description("The session ID")] int sessionId,
-        StartSessionRequest? request = null)
-    {
-        try
-        {
-            var initialMode = PlayerMode.Single;
-            if (request?.PlayerMode != null && Enum.TryParse<PlayerMode>(request.PlayerMode, ignoreCase: true, out var parsed))
-                initialMode = parsed;
-
-            var command = new StartSessionCommand(sessionId, initialMode);
-            var result = await mediator.Send(command);
-            return result ? TypedResults.Ok() : TypedResults.NotFound();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> EndSession(
-        [FromServices] IMediator mediator,
-        [Description("The session ID")] int sessionId)
-    {
-        try
-        {
-            var command = new EndSessionCommand(sessionId);
-            var result = await mediator.Send(command);
-            return result ? TypedResults.Ok() : TypedResults.NotFound();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> CancelSession(
-        [FromServices] IMediator mediator,
-        [Description("The session ID")] int sessionId)
-    {
-        try
-        {
-            var command = new CancelReservationCommand(sessionId);
-            var result = await mediator.Send(command);
-            return result ? TypedResults.Ok() : TypedResults.NotFound();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, ForbidHttpResult, BadRequest<ProblemDetails>>> CancelMyReservation(
-        [FromServices] IReservationRepository reservationRepository,
-        [FromServices] IRoomRepository roomRepository,
-        HttpContext httpContext,
-        [Description("The session ID")] int sessionId)
-    {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-            return TypedResults.Forbid();
-
-        try
-        {
-            var reservation = await reservationRepository.GetWithRoomAsync(sessionId);
-            if (reservation == null)
-                return TypedResults.NotFound();
-
-            // Verify the customer owns this reservation
-            if (reservation.CustomerId != customerId)
-                return TypedResults.Forbid();
-
-            // Only allow cancelling reservations that are still in Reserved status
-            if (reservation.Status != ReservationStatus.Reserved)
-                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Can only cancel reservations that are still pending. Active sessions cannot be cancelled by customers." });
-
-            reservation.Cancel();
-            reservationRepository.Update(reservation);
-            await reservationRepository.UnitOfWork.SaveEntitiesAsync();
-
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetMySessions(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext,
-        int pageIndex = 0,
-        int pageSize = 20)
-    {
-        // The page size is capped so a polling client can't ask for the world;
-        // the response stays a plain array for compatibility with shipped apps
-        pageSize = Math.Clamp(pageSize, 1, 50);
-        var customerId = httpContext.User.GetUserId();
-        var sessions = await queries.GetCustomerReservationsAsync(customerId ?? string.Empty, Math.Max(0, pageIndex), pageSize);
-        return TypedResults.Ok(sessions);
-    }
-
-    public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetActiveSessions(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext)
-    {
-        var branchId = httpContext.GetRequiredBranchId();
-        var sessions = await queries.GetActiveSessionsAsync(branchId);
-        return TypedResults.Ok(sessions);
-    }
-
-    public static async Task<Results<Ok<ReservationViewModel>, NotFound>> GetSessionById(
-        [FromServices] IRoomQueries queries,
-        [Description("The session ID")] int sessionId)
-    {
-        var session = await queries.GetReservationByIdAsync(sessionId);
-
-        if (session == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(session);
-    }
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> CancelSession(
+        [FromServices] IMediator mediator, [Description("The session ID")] int sessionId)
+        => PlacesApi.Run(mediator, new CancelStayCommand(sessionId));
 
     public static async Task<Results<Created<StartWalkInSessionResult>, BadRequest<ProblemDetails>>> StartWalkInSession(
-        [FromServices] IMediator mediator,
-        [Description("The room ID")] int roomId,
-        WalkInSessionRequest? request = null)
+        [FromServices] IMediator mediator, [Description("The room ID")] int roomId, WalkInSessionRequest? request = null)
     {
         try
         {
-            var initialMode = PlayerMode.Single;
-            if (request?.PlayerMode != null && Enum.TryParse<PlayerMode>(request.PlayerMode, ignoreCase: true, out var parsed))
-                initialMode = parsed;
-            var command = new StartWalkInSessionCommand(roomId, request?.Notes, initialMode);
-            var result = await mediator.Send(command);
-            return TypedResults.Created($"/api/rooms/sessions/{result.ReservationId}", result);
+            var result = await mediator.Send(new StartWalkInStayCommand(roomId, request?.Notes, request?.PlayerMode));
+            return TypedResults.Created($"/api/rooms/sessions/{result.StayId}", new StartWalkInSessionResult(result.StayId));
         }
         catch (SpacesDomainException ex)
         {
@@ -536,227 +182,118 @@ public static class RoomsApi
         }
     }
 
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> ChangePlayerMode(
-        [FromServices] IMediator mediator,
-        [Description("The session ID")] int sessionId,
-        ChangePlayerModeRequest request)
-    {
-        try
-        {
-            if (!Enum.TryParse<PlayerMode>(request.PlayerMode, ignoreCase: true, out var playerMode))
-                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Invalid player mode. Use 'Single' or 'Multi'." });
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> ChangePlayerMode(
+        [FromServices] IMediator mediator, [Description("The session ID")] int sessionId, ChangePlayerModeRequest request)
+        => PlacesApi.Run(mediator, new ChangeStayOptionCommand(sessionId, request.PlayerMode));
 
-            var command = new ChangePlayerModeCommand(sessionId, playerMode);
-            var result = await mediator.Send(command);
-            return result ? TypedResults.Ok() : TypedResults.NotFound();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> LeaveSession(
+        [FromServices] IMediator mediator, HttpContext httpContext, [Description("The session ID")] int sessionId)
+        => PlacesApi.LeaveStay(mediator, httpContext, sessionId);
+
+    public static Task<Results<Ok, NotFound, ForbidHttpResult, BadRequest<ProblemDetails>>> CancelMyReservation(
+        [FromServices] Domain.AggregatesModel.StayAggregate.IStayRepository stays, HttpContext httpContext, [Description("The session ID")] int sessionId)
+        => PlacesApi.CancelMyHold(stays, httpContext, sessionId);
+
+    public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetMySessions(
+        [FromServices] IPlaceQueries queries, HttpContext httpContext, int pageIndex = 0, int pageSize = 20)
+    {
+        var result = await PlacesApi.GetMyStays(queries, httpContext, pageIndex, pageSize);
+        return TypedResults.Ok(result.Value!.Select(s => s.ToReservation()));
     }
 
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> LeaveSession(
-        [FromServices] IMediator mediator,
-        HttpContext httpContext,
-        [Description("The session ID")] int sessionId)
+    public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetActiveSessions([FromServices] IPlaceQueries queries, HttpContext httpContext)
     {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new()
-            {
-                Detail = "User ID not found in token"
-            });
-        }
-
-        try
-        {
-            var command = new LeaveSessionCommand(sessionId, customerId);
-            var result = await mediator.Send(command);
-            return result ? TypedResults.Ok() : TypedResults.NotFound();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
+        var stays = await queries.GetOpenStaysAsync(httpContext.GetRequiredBranchId());
+        return TypedResults.Ok(stays.Select(s => s.ToReservation()));
     }
 
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AssignCustomerToSession(
-        [FromServices] IReservationRepository reservationRepository,
-        [Description("The session ID")] int sessionId,
-        AssignCustomerRequest request)
+    public static async Task<Results<Ok<ReservationViewModel>, NotFound>> GetSessionById([FromServices] IPlaceQueries queries, [Description("The session ID")] int sessionId)
     {
-        try
-        {
-            var reservation = await reservationRepository.GetAsync(sessionId);
-            if (reservation == null)
-                return TypedResults.NotFound();
-
-            reservation.AssignCustomer(request.CustomerId, request.CustomerName);
-            reservationRepository.Update(reservation);
-            await reservationRepository.UnitOfWork.SaveEntitiesAsync();
-
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
+        var stay = await queries.GetStayByIdAsync(sessionId);
+        return stay is null ? TypedResults.NotFound() : TypedResults.Ok(stay.ToReservation());
     }
 
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AddMemberToSession(
-        [FromServices] IReservationRepository reservationRepository,
-        [Description("The session ID")] int sessionId,
-        AddMemberRequest request)
-    {
-        try
-        {
-            var reservation = await reservationRepository.GetWithMembersAsync(sessionId);
-            if (reservation == null)
-                return TypedResults.NotFound();
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AssignCustomerToSession(
+        [FromServices] Domain.AggregatesModel.StayAggregate.IStayRepository stays, [Description("The session ID")] int sessionId, AssignCustomerRequest request)
+        => PlacesApi.AssignCustomer(stays, sessionId, request);
 
-            reservation.AddMember(request.CustomerId, request.CustomerName);
-            reservationRepository.Update(reservation);
-            await reservationRepository.UnitOfWork.SaveEntitiesAsync();
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AddMemberToSession(
+        [FromServices] Domain.AggregatesModel.StayAggregate.IStayRepository stays, [Description("The session ID")] int sessionId, AddMemberRequest request)
+        => PlacesApi.AddMember(stays, sessionId, request);
 
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> RemoveMemberFromSession(
-        [FromServices] IReservationRepository reservationRepository,
-        [Description("The session ID")] int sessionId,
-        [Description("The customer ID to remove")] string customerId)
-    {
-        try
-        {
-            var reservation = await reservationRepository.GetWithMembersAsync(sessionId);
-            if (reservation == null)
-                return TypedResults.NotFound();
-
-            reservation.RemoveMember(customerId);
-            reservationRepository.Update(reservation);
-            await reservationRepository.UnitOfWork.SaveEntitiesAsync();
-
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> RemoveMemberFromSession(
+        [FromServices] Domain.AggregatesModel.StayAggregate.IStayRepository stays, [Description("The session ID")] int sessionId, [Description("The customer ID to remove")] string customerId)
+        => PlacesApi.RemoveMember(stays, sessionId, customerId);
 
     public static async Task<Results<Ok<RoomScanViewModel>, NotFound>> ScanRoom(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext,
-        [Description("The room ID")] int roomId)
+        [FromServices] IPlaceQueries queries, HttpContext httpContext, [Description("The room ID")] int roomId)
     {
-        var customerId = httpContext.User.GetUserId() ?? string.Empty;
-        var result = await queries.GetRoomScanInfoAsync(roomId, customerId);
-
-        if (result == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(result);
+        var scan = await queries.GetScanInfoAsync(roomId, httpContext.User.GetUserId() ?? string.Empty);
+        return scan is null ? TypedResults.NotFound() : TypedResults.Ok(scan.ToRoomScan());
     }
 
     public static async Task<Results<Ok<JoinSessionResult>, BadRequest<ProblemDetails>>> JoinSessionByRoom(
-        [FromServices] IMediator mediator,
-        HttpContext httpContext,
-        [Description("The room ID")] int roomId)
+        [FromServices] IMediator mediator, HttpContext httpContext, [Description("The room ID")] int roomId)
     {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
+        var result = await PlacesApi.JoinStay(mediator, httpContext, roomId);
+        return result.Result switch
         {
-            return TypedResults.BadRequest<ProblemDetails>(new()
-            {
-                Detail = "User ID not found in token"
-            });
-        }
-
-        var customerName = httpContext.User.GetUserName();
-
-        try
-        {
-            var command = new JoinSessionByRoomCommand(roomId, customerId, customerName);
-            var result = await mediator.Send(command);
-            return TypedResults.Ok(result);
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
+            Ok<JoinStayResult> ok => TypedResults.Ok(new JoinSessionResult(ok.Value!.StayId, ok.Value.PlaceId, ok.Value.PlaceName, ok.Value.IsOwner, ok.Value.StartTime)),
+            BadRequest<ProblemDetails> bad => bad,
+            _ => TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Could not join" }),
+        };
     }
 
     public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetRoomSessionHistory(
-        [FromServices] IRoomQueries queries,
-        [Description("The room ID")] int roomId,
-        [Description("Maximum number of sessions to return")] int limit = 20)
+        [FromServices] IPlaceQueries queries, [Description("The room ID")] int roomId, [Description("Maximum number of sessions to return")] int limit = 20)
     {
-        var sessions = await queries.GetRoomSessionHistoryAsync(roomId, limit);
-        return TypedResults.Ok(sessions);
+        var stays = await queries.GetPlaceStayHistoryAsync(roomId, limit);
+        return TypedResults.Ok(stays.Select(s => s.ToReservation()));
     }
 
     public static async Task<Ok<PaginatedResult<ReservationViewModel>>> GetSessionHistory(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext,
-        int pageIndex = 0,
-        int pageSize = 20,
-        [Description("Filter by room")] int? roomId = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null)
+        [FromServices] IPlaceQueries queries, HttpContext httpContext,
+        int pageIndex = 0, int pageSize = 20, [Description("Filter by room")] int? roomId = null, DateTime? fromDate = null, DateTime? toDate = null)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-        var sessions = await queries.GetSessionHistoryAsync(
-            branchId, pageIndex, pageSize, roomId, fromDate, toDate);
-        return TypedResults.Ok(sessions);
+        var page = await queries.GetStayHistoryAsync(httpContext.GetRequiredBranchId(), pageIndex, pageSize, roomId, fromDate, toDate);
+        return TypedResults.Ok(new PaginatedResult<ReservationViewModel>
+        {
+            Items = page.Items.Select(s => s.ToReservation()).ToList(),
+            PageIndex = page.PageIndex,
+            PageSize = page.PageSize,
+            TotalCount = page.TotalCount,
+        });
     }
 
     public static async Task<Ok<SessionStats>> GetSessionStats(
-        [FromServices] IRoomQueries queries,
-        HttpContext httpContext,
-        DateTime fromDate,
-        DateTime toDate,
+        [FromServices] IPlaceQueries queries, HttpContext httpContext, DateTime fromDate, DateTime toDate,
         [Description("JS getTimezoneOffset() of the caller, for local-day bucketing")] int tzOffsetMinutes = 0)
     {
-        var branchId = httpContext.GetRequiredBranchId();
-        var stats = await queries.GetSessionStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes);
-        return TypedResults.Ok(stats);
+        var stats = await queries.GetStayStatsAsync(httpContext.GetRequiredBranchId(), fromDate, toDate, tzOffsetMinutes);
+        return TypedResults.Ok(stats.ToLegacy());
     }
 }
 
-public record ReserveRoomRequest(
-    string? CustomerName = null,
-    string? Notes = null
-);
+/// <summary>The old status words; same numbers as <see cref="PlaceStatus"/>.</summary>
+public enum RoomPhysicalStatus
+{
+    Available = 1,
+    Occupied = 2,
+    Maintenance = 3,
+}
 
-public record WalkInSessionRequest(
-    string? Notes = null,
-    string? PlayerMode = null);
+public record ReserveRoomRequest(string? CustomerName = null, string? Notes = null, bool StartOnConfirm = false);
 
-public record AssignCustomerRequest(string CustomerId, string? CustomerName);
+public record WalkInSessionRequest(string? Notes = null, string? PlayerMode = null);
 
-public record AddMemberRequest(string CustomerId, string? CustomerName);
+public record StartWalkInSessionResult(int ReservationId);
 
 public record StartSessionRequest(string? PlayerMode = null);
 
 public record ChangePlayerModeRequest(string PlayerMode);
 
-public record CreateRoomRequest(
-    LocalizedText Name,
-    LocalizedText? Description,
-    decimal SingleRate,
-    decimal MultiRate);
+public record JoinSessionResult(int ReservationId, int RoomId, LocalizedText RoomName, bool IsOwner, DateTime StartTime);
 
-public record UpdateRoomRequest(
-    LocalizedText Name,
-    LocalizedText? Description,
-    decimal SingleRate,
-    decimal MultiRate);
+public record CreateRoomRequest(LocalizedText Name, LocalizedText? Description, decimal SingleRate, decimal MultiRate);
+
+public record UpdateRoomRequest(LocalizedText Name, LocalizedText? Description, decimal SingleRate, decimal MultiRate);

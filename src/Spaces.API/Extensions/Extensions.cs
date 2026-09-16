@@ -3,8 +3,8 @@ using Chillax.Spaces.API.Application.BackgroundServices;
 using Chillax.Spaces.API.Application.IntegrationEvents.Events;
 using Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
 using Chillax.Spaces.API.Application.Queries;
-using Chillax.Spaces.Domain.AggregatesModel.ReservationAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.RoomAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
 using Chillax.Spaces.API.Infrastructure;
 using Chillax.Spaces.Infrastructure;
 using Chillax.Spaces.Infrastructure.Idempotency;
@@ -27,39 +27,31 @@ public static class Extensions
             return;
         }
 
-        builder.AddNpgsqlDbContext<SpacesContext>("spacesdb", configureDbContextOptions: options =>
-        {
-            // Ensure the schema is created for the new DDD model
-        });
+        builder.AddNpgsqlDbContext<SpacesContext>("spacesdb");
 
         // REVIEW: This is done for development ease but shouldn't be here in production
         builder.Services.AddMigration<SpacesContext, SpacesContextSeed>();
 
-        // Add MediatR for CQRS
         builder.Services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining(typeof(Program));
             cfg.LicenseKey = builder.Configuration["MediatR:LicenseKey"];
         });
 
-        // Register repositories
-        builder.Services.AddScoped<IRoomRepository, RoomRepository>();
-        builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+        builder.Services.AddScoped<IPlaceRepository, PlaceRepository>();
+        builder.Services.AddScoped<IStayRepository, StayRepository>();
         builder.Services.AddScoped<IRequestManager, RequestManager>();
 
-        // Register queries
-        builder.Services.AddScoped<IRoomQueries, RoomQueries>();
+        builder.Services.AddScoped<IPlaceQueries, PlaceQueries>();
         builder.Services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
 
-        // Register background services
-        builder.Services.AddHostedService<ReservationExpirationService>();
+        builder.Services.AddHostedService<HoldExpirationService>();
 
-        // Add RabbitMQ event bus for publishing room availability events
         builder.AddRabbitMqEventBus("eventbus")
             // Branch.API's flags, projected locally: a branch with reservations
-            // paused refuses customer bookings without a call across services
+            // paused refuses customer holds without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
-            // Sales' receipt, projected onto the session it covered: the
+            // Sales' receipt, projected onto the stay it covered: the
             // customer sees the cost as paid without a call to Sales
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
@@ -67,7 +59,10 @@ public static class Extensions
     }
 }
 
+[JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(RoomReservedIntegrationEvent))]
 [JsonSerializable(typeof(RoomBecameAvailableIntegrationEvent))]
+[JsonSerializable(typeof(ReservationCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(SessionEndedIntegrationEvent))]

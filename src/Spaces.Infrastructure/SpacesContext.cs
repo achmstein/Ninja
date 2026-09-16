@@ -11,11 +11,10 @@ namespace Chillax.Spaces.Infrastructure;
 /// </remarks>
 public class SpacesContext : DbContext, IUnitOfWork
 {
-    public DbSet<Room> Rooms { get; set; }
-    public DbSet<Table> Tables { get; set; }
-    public DbSet<Reservation> Reservations { get; set; }
-    public DbSet<SessionMember> SessionMembers { get; set; }
-    public DbSet<SessionSegment> SessionSegments { get; set; }
+    public DbSet<Place> Places { get; set; }
+    public DbSet<Stay> Stays { get; set; }
+    public DbSet<StayMember> StayMembers { get; set; }
+    public DbSet<StaySegment> StaySegments { get; set; }
     public DbSet<BranchSettings> BranchSettings { get; set; }
 
     private readonly IMediator? _mediator;
@@ -35,11 +34,10 @@ public class SpacesContext : DbContext, IUnitOfWork
     {
         modelBuilder.HasDefaultSchema("spaces");
         modelBuilder.ApplyConfiguration(new ClientRequestEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new RoomEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new TableEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ReservationEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SessionMemberEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SessionSegmentEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new StayEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new StayMemberEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new StaySegmentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
