@@ -187,65 +187,12 @@ const webExtras = {
   // Page subtitles
   // Café tables (seating customers order from - no sessions, no billing)
   tables: { en: 'Tables', ar: 'الترابيزات' },
-  addTable: { en: 'Add table', ar: 'ضيف ترابيزة' },
-  editTable: { en: 'Edit table', ar: 'تعديل الترابيزة' },
   printQrSheet: { en: 'Print QR sheet', ar: 'اطبع ورقة الأكواد' },
   qrSheetSubtitle: {
     en: 'Cut along the cards and put one on each table.',
     ar: 'قص الكروت وحط واحد على كل ترابيزة.',
   },
   scanToOrder: { en: 'Scan to order', ar: 'امسح الكود عشان تطلب' },
-  roomQrSheetSubtitle: {
-    en: 'Cut along the cards and put one in each room.',
-    ar: 'قص الكروت وحط واحد في كل اوضة.',
-  },
-  scanToJoinRoom: {
-    en: 'Scan to join or reserve',
-    ar: 'امسح الكود عشان تنضم أو تحجز',
-  },
-  noRoomsYet: {
-    en: 'No rooms yet. Add your first room.',
-    ar: 'مفيش أوض لسه. ضيف أول اوضة.',
-  },
-  tablesWithOpenOrders: {
-    plural: 'count',
-    en: {
-      one: '1 table has an open order',
-      other: '{count} tables have open orders',
-    },
-    ar: {
-      one: 'ترابيزة واحدة عليها أوردر شغال',
-      two: 'ترابيزتين عليهم أوردرات شغالة',
-      few: '{count} ترابيزات عليهم أوردرات شغالة',
-      other: '{count} ترابيزة عليهم أوردرات شغالة',
-    },
-  },
-  tableInactive: { en: 'Inactive', ar: 'موقوفة' },
-  deleteTableQuestion: { en: 'Delete table?', ar: 'حذف الترابيزة؟' },
-  tableCreated: { en: 'Table added', ar: 'الترابيزة اتضافت' },
-  tableUpdated: { en: 'Table updated', ar: 'الترابيزة اتحدثت' },
-  tableDeleted: { en: 'Table deleted', ar: 'الترابيزة اتحذفت' },
-  failedToSaveTable: {
-    en: 'Failed to save table',
-    ar: 'معرفناش نحفظ الترابيزة',
-  },
-  failedToDeleteTable: {
-    en: 'Failed to delete table',
-    ar: 'معرفناش نحذف الترابيزة',
-  },
-  noTablesYet: {
-    en: 'No tables yet. Add your first table.',
-    ar: 'مفيش ترابيزات لسه. ضيف أول ترابيزة.',
-  },
-  copyTableLink: {
-    en: 'Copy table QR link',
-    ar: 'انسخ لينك الترابيزة',
-  },
-  tableLinkCopied: {
-    en: 'Table link copied',
-    ar: 'اتنسخ لينك الترابيزة',
-  },
-  sessionHistory: { en: 'Session History', ar: 'سجل الجلسات' },
 
   // Dashboard
   cannotBeUndone: {
@@ -254,32 +201,11 @@ const webExtras = {
   },
 
   // Rooms master-detail
-  allRooms: { en: 'All rooms', ar: 'كل الاوض' },
-  selectRoom: { en: 'Select a room', ar: 'اختار اوضة' },
-  allSessionHistory: { en: 'All session history', ar: 'سجل كل الجلسات' },
-  reservedFor: { en: 'Reserved for {name}', ar: 'محجوزة لـ {name}' },
   reserved: { en: 'Reserved', ar: 'محجوزة' },
   underMaintenance: { en: 'Under maintenance', ar: 'في الصيانة' },
-  backToRooms: { en: 'Back to rooms', ar: 'رجوع للاوض' },
-  copyRoomLink: { en: 'Copy room QR link', ar: 'انسخ لينك الاوضة' },
-  roomLinkCopied: { en: 'Room link copied', ar: 'اتنسخ لينك الاوضة' },
-  roomDeletedSuccess: { en: 'Room deleted', ar: 'الاوضة اتحذفت' },
-  failedToDeleteRoom: {
-    en: 'Failed to delete room',
-    ar: 'معرفناش نحذف الاوضة',
-  },
   billedHours: { en: 'Billed hours', ar: 'الساعات المحسوبة' },
   billedHoursFormat: { en: '{hours}h', ar: '{hours} ساعة' },
-  endThisSession: { en: 'End this session?', ar: 'إنهاء الجلسة دي؟' },
-  endSessionBilledAt: {
-    en: '{hours} on the bill.',
-    ar: '{hours} على الفاتورة.',
-  },
   keepPlaying: { en: 'Keep playing', ar: 'كمّلوا لعب' },
-  cancelThisReservation: {
-    en: 'Cancel this reservation?',
-    ar: 'إلغاء الحجز ده؟',
-  },
   keepIt: { en: 'Keep it', ar: 'خليه' },
   switchToModeQuestion: {
     en: 'Switch to {mode} mode?',
@@ -293,27 +219,6 @@ const webExtras = {
   failedToAddCustomer: {
     en: 'Failed to add customer',
     ar: 'معرفناش نضيف العميل',
-  },
-  sessionEnded: { en: 'Session ended', ar: 'الجلسة خلصت' },
-  failedToEndSession: {
-    en: 'Failed to end session',
-    ar: 'معرفناش ننهي الجلسة',
-  },
-  reservationCancelled: {
-    en: 'Reservation cancelled',
-    ar: 'الحجز اتلغى',
-  },
-  failedToCancelReservation: {
-    en: 'Failed to cancel reservation',
-    ar: 'معرفناش نلغي الحجز',
-  },
-  playerModeUpdated: {
-    en: 'Player mode updated',
-    ar: 'اتغير وضع اللعب',
-  },
-  failedToChangePlayerMode: {
-    en: 'Failed to change player mode',
-    ar: 'معرفناش نغير وضع اللعب',
   },
   guest: { en: 'Guest', ar: 'ضيف' },
 
@@ -338,11 +243,6 @@ const webExtras = {
     ar: 'معرفناش نحفظ تسعير الإيصال',
   },
   loading: { en: 'Loading…', ar: 'ثواني…' },
-  noCompletedSessions: {
-    en: 'No completed sessions match.',
-    ar: 'مفيش جلسات مكتملة مطابقة.',
-  },
-  sessionNumber: { en: 'Session #', ar: 'جلسة #' },
   started: { en: 'Started', ar: 'بدأت' },
   duration: { en: 'Duration', ar: 'المدة' },
   allTime: { en: 'All time', ar: 'كل الوقت' },
@@ -354,7 +254,6 @@ const webExtras = {
   revenueByDay: { en: 'Revenue', ar: 'الإيرادات' },
   topItemsTitle: { en: 'Top Items', ar: 'الأصناف الأكتر مبيعًا' },
   ordersLabel: { en: 'orders', ar: 'أوردرات' },
-  sessionsLabel: { en: 'sessions', ar: 'جلسات' },
   unitsLabel: { en: 'units', ar: 'وحدة' },
   noAnalyticsData: {
     en: 'No data for this range yet',
@@ -389,7 +288,6 @@ const webExtras = {
   ticketTypeRoom: { en: 'Rooms', ar: 'الاوض' },
   ticketTypeTable: { en: 'Tables', ar: 'الترابيزات' },
   ticketTypeCounter: { en: 'Counter', ar: 'الكاونتر' },
-  reserveRoomTitle: { en: 'Reserve {name}', ar: 'حجز {name}' },
   findRegisteredCustomer: {
     en: 'Find registered customer',
     ar: 'دوّر على عميل مسجل',
@@ -401,11 +299,6 @@ const webExtras = {
     ar: 'للضيوف اللي معندهمش حساب',
   },
   notesOptional: { en: 'Notes (optional)', ar: 'ملاحظات (اختياري)' },
-  roomReserved: { en: '{name} reserved', ar: 'اتحجزت {name}' },
-  failedToReserveRoom: {
-    en: 'Failed to reserve room',
-    ar: 'معرفناش نحجز الاوضة',
-  },
 
   // Orders
   orderConfirmed: { en: 'Order confirmed', ar: 'الطلب اتأكد' },
@@ -428,19 +321,6 @@ const webExtras = {
   startWalkInSession: {
     en: 'Start Walk-in Session',
     ar: 'بدء جلسة فورية',
-  },
-  sessionStartedFor: {
-    en: 'Session started for {name}',
-    ar: 'الجلسة بدأت في {name}',
-  },
-  sessionStarted: { en: 'Session started', ar: 'الجلسة بدأت' },
-  failedToStartSession: {
-    en: 'Failed to start session',
-    ar: 'معرفناش نبدأ الجلسة',
-  },
-  sessionNotesPlaceholder: {
-    en: 'Add any notes for this session',
-    ar: 'ضيف أي ملاحظات للجلسة دي',
   },
   start: { en: 'Start', ar: 'ابدأ' },
   statusCompleted: { en: 'Completed', ar: 'خلصت' },
@@ -1263,13 +1143,11 @@ const webExtras = {
       other: '{count} صنف ناقص',
     },
   },
-  roomsInUse: { en: 'Rooms in use', ar: 'اوض شغالة' },
   tablesInUse: { en: 'Tables with orders', ar: 'ترابيزات عليها أوردرات' },
   ofTotal: { en: '{count} of {total}', ar: '{count} من {total}' },
   todaysTill: { en: "Today's till", ar: 'كاشير النهارده' },
   trends: { en: 'Trends', ar: 'الاتجاهات' },
   tabPayments: { en: 'Tab payments', ar: 'دفعات الحسابات' },
-  roomsByHours: { en: 'Rooms by hours', ar: 'الاوض حسب الساعات' },
   counter: { en: 'Counter', ar: 'الكاونتر' },
   filterByPlace: { en: 'Filter by place', ar: 'فلترة حسب المكان' },
   searchOrdersPlaceholder: {
@@ -1278,22 +1156,10 @@ const webExtras = {
   },
   onIt: { en: 'On it', ar: 'جاي' },
   keepOrder: { en: 'Keep order', ar: 'سيب الأوردر' },
-  tableOpenOrders: {
-    plural: 'count',
-    en: { one: '{count} open order', other: '{count} open orders' },
-    ar: {
-      one: 'أوردر واحد شغال',
-      two: 'أوردرين شغالين',
-      few: '{count} أوردرات شغالة',
-      other: '{count} أوردر شغال',
-    },
-  },
   noOrdersForTable: {
     en: 'No orders waiting on this table',
     ar: 'مفيش أوردرات مستنية على الترابيزة دي',
   },
-  tableAcceptingOrders: { en: 'Accepting orders', ar: 'بتستقبل أوردرات' },
-  searchTables: { en: 'Search tables…', ar: 'دوّر على ترابيزة…' },
   notes: { en: 'Notes', ar: 'ملاحظات' },
   remove: { en: 'Remove', ar: 'شيل' },
   selectAll: { en: 'Select all', ar: 'اختار الكل' },
