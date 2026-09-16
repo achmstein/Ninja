@@ -138,7 +138,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orders => 'Orders';
 
   @override
-  String get rooms => 'Rooms';
+  String get rooms => 'Rooms & Tables';
+
+  @override
+  String optionRateFormat(String option, String rate) {
+    return '$option £$rate';
+  }
+
+  @override
+  String get perHourShort => '/hr';
+
+  @override
+  String get startTimerOnArrival => 'Start the timer as soon as I arrive';
+
+  @override
+  String get timerStartsOnArrival => 'The timer starts when you arrive';
+
+  @override
+  String switchToOption(String option) {
+    return 'Switch to $option';
+  }
+
+  @override
+  String get switchRequestSent => 'Switch request sent';
+
+  @override
+  String get orderHere => 'Order here';
 
   @override
   String get profile => 'Profile';

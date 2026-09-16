@@ -774,6 +774,9 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
     // Try to get active session's room name (optional); the ids ride along
     // so the order lands on the session's bill
     await ref.read(mySessionsProvider.notifier).refresh();
+    int? placeId;
+    String? placeKind;
+    Map<String, dynamic>? placeName;
     Map<String, dynamic>? roomName;
     int? sessionId;
     int? roomId;
@@ -783,9 +786,14 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
           .where((s) => s.status == SessionStatus.active)
           .firstOrNull;
       if (activeSession != null) {
-        roomName = activeSession.roomName.toJson();
+        placeId = activeSession.roomId;
+        placeKind = activeSession.placeKind.wireName;
+        placeName = activeSession.roomName.toJson();
         sessionId = activeSession.id;
-        roomId = activeSession.roomId;
+        if (activeSession.placeKind == PlaceKind.room) {
+          roomName = activeSession.roomName.toJson();
+          roomId = activeSession.roomId;
+        }
       }
     }
 
@@ -794,6 +802,9 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
         item: widget.item,
         userId: currentAuthState.userId ?? '',
         userName: currentAuthState.name ?? 'Guest',
+        placeId: placeId,
+        placeKind: placeKind,
+        placeName: placeName,
         roomName: roomName,
         sessionId: sessionId,
         roomId: roomId,

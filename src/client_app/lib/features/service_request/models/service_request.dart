@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 import '../../../core/models/localized_text.dart';
+import '../../rooms/models/room.dart';
 
 /// Types of service requests users can make
 enum ServiceRequestType {
@@ -9,7 +10,10 @@ enum ServiceRequestType {
   controllerChange(2, 'Controller', FIcons.gamepad2),
   receiptToPay(3, 'Pay Bill', FIcons.receipt),
   switchToMulti(4, 'Switch to Multi', FIcons.users),
-  switchToSingle(5, 'Switch to Single', FIcons.user);
+  switchToSingle(5, 'Switch to Single', FIcons.user),
+
+  /// Switch the stay to another rate option; the option travels in optionCode
+  changeOption(6, 'Change rate', FIcons.refreshCw);
 
   final int value;
   final String label;
@@ -36,38 +40,38 @@ enum ServiceRequestStatus {
   const ServiceRequestStatus(this.value);
 }
 
-/// Request payload for creating a service request
-/// From a room session, or from a table (waiter or bill only)
+/// Request payload for creating a service request: from the customer's
+/// running stay, or from a place they scanned. The server allows the
+/// request by what the place can do.
 class CreateServiceRequest {
+  final int placeId;
+  final PlaceKind placeKind;
+  final LocalizedText placeName;
+
+  /// The running stay, when the request comes from one
   final int? sessionId;
-  final int? roomId;
-  final LocalizedText? roomName;
-  final int? tableId;
-  final LocalizedText? tableName;
+
+  /// The rate option wanted, for a changeOption request
+  final String? optionCode;
   final ServiceRequestType requestType;
 
   CreateServiceRequest({
+    required this.placeId,
+    required this.placeKind,
+    required this.placeName,
     this.sessionId,
-    this.roomId,
-    this.roomName,
-    this.tableId,
-    this.tableName,
+    this.optionCode,
     required this.requestType,
   });
-
-  CreateServiceRequest.forTable({required int this.tableId, required LocalizedText this.tableName, required this.requestType})
-      : sessionId = null,
-        roomId = null,
-        roomName = null;
 
   Map<String, dynamic> toJson() {
     return {
       'requestType': requestType.value,
+      'placeId': placeId,
+      'placeKind': placeKind.wireName,
+      'placeName': placeName.toJson(),
       if (sessionId != null) 'sessionId': sessionId,
-      if (roomId != null) 'roomId': roomId,
-      if (roomName != null) 'roomName': roomName!.toJson(),
-      if (tableId != null) 'tableId': tableId,
-      if (tableName != null) 'tableName': tableName!.toJson(),
+      if (optionCode != null) 'optionCode': optionCode,
     };
   }
 }
@@ -76,7 +80,7 @@ class CreateServiceRequest {
 class ServiceRequestResponse {
   final int id;
   final String userName;
-  final int roomId;
+  final int? roomId;
   final LocalizedText roomName;
   final ServiceRequestType requestType;
   final ServiceRequestStatus status;
@@ -96,8 +100,8 @@ class ServiceRequestResponse {
     return ServiceRequestResponse(
       id: json['id'] as int,
       userName: json['userName'] as String,
-      roomId: json['roomId'] as int,
-      roomName: LocalizedText.fromJson(json['roomName'] as Map<String, dynamic>),
+      roomId: json['roomId'] as int?,
+      roomName: LocalizedText.parse(json['roomName']),
       requestType: ServiceRequestType.fromValue(json['requestType'] as int)!,
       status: ServiceRequestStatus.values.firstWhere(
         (e) => e.value == json['status'],

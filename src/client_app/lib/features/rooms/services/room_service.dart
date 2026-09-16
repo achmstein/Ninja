@@ -4,12 +4,16 @@ import '../../../core/network/api_client.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../models/room.dart';
 
-/// Abstract room repository
+/// The timed places of the branch and the customer's stays on them
 abstract class RoomRepository {
+  /// Every timed place of the branch that takes customers
   Future<List<Room>> getRooms();
-  Future<List<Room>> getAvailableRooms();
+
+  /// One place, whatever it is — the anonymous read a scanned code starts with
   Future<Room> getRoom(int id);
-  Future<int> reserveRoom(int roomId);
+
+  /// Hold a place; the customer has 10 minutes to arrive
+  Future<int> reserveRoom(int roomId, {bool startOnConfirm = false});
   Future<List<RoomSession>> getMySessions();
   Future<void> cancelReservation(int sessionId);
   Future<void> leaveSession(int sessionId);
@@ -17,121 +21,83 @@ abstract class RoomRepository {
   Future<JoinSessionResult> joinSessionByRoom(int roomId);
 }
 
-/// API-backed room repository
+/// API-backed repository over /api/places and /api/stays
 class ApiRoomRepository implements RoomRepository {
-  final ApiClient _apiClient;
+  final ApiClient _places;
+  final ApiClient _stays;
 
-  ApiRoomRepository(this._apiClient);
+  ApiRoomRepository(this._places, this._stays);
 
-  /// Get all rooms
   @override
   Future<List<Room>> getRooms() async {
-    final response = await _apiClient.get<List<dynamic>>(
-      '',
-    );
-
+    final response = await _places.get<List<dynamic>>('', queryParameters: {'timed': true});
     return (response.data ?? [])
         .map((e) => Room.fromJson(e as Map<String, dynamic>))
+        .where((p) => p.isActive)
         .toList();
   }
 
-  /// Get available rooms
-  @override
-  Future<List<Room>> getAvailableRooms() async {
-    final response = await _apiClient.get<List<dynamic>>(
-      'available',
-    );
-
-    return (response.data ?? [])
-        .map((e) => Room.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  /// Get room by ID
   @override
   Future<Room> getRoom(int id) async {
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '$id',
-    );
-
+    final response = await _places.get<Map<String, dynamic>>('$id');
     return Room.fromJson(response.data!);
   }
 
-  /// Reserve a room (immediate - customer has 15 min to arrive)
   @override
-  Future<int> reserveRoom(int roomId) async {
-    final response = await _apiClient.post<int>(
-      '$roomId/reserve',
+  Future<int> reserveRoom(int roomId, {bool startOnConfirm = false}) async {
+    final response = await _places.post<int>(
+      '$roomId/hold',
+      data: {'startOnConfirm': startOnConfirm},
     );
-
     return response.data!;
   }
 
-  /// Get customer's sessions
   @override
   Future<List<RoomSession>> getMySessions() async {
-    final response = await _apiClient.get<List<dynamic>>(
-      'sessions/my',
-    );
-
+    final response = await _stays.get<List<dynamic>>('my');
     return (response.data ?? [])
         .map((e) => RoomSession.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  /// Cancel reservation (customer can only cancel their own reservations)
   @override
   Future<void> cancelReservation(int sessionId) async {
-    await _apiClient.post('sessions/my/$sessionId/cancel');
+    await _stays.post('my/$sessionId/cancel');
   }
 
-  /// Leave a session
   @override
   Future<void> leaveSession(int sessionId) async {
-    await _apiClient.post('sessions/$sessionId/leave');
+    await _stays.post('$sessionId/leave');
   }
 
-  /// Scan room (QR code scan-to-join)
   @override
   Future<RoomScanResult> scanRoom(int roomId) async {
-    final response = await _apiClient.get<Map<String, dynamic>>(
-      '$roomId/scan',
-    );
+    final response = await _places.get<Map<String, dynamic>>('$roomId/scan');
     return RoomScanResult.fromJson(response.data!);
   }
 
-  /// Join session by room ID (via QR scan)
   @override
   Future<JoinSessionResult> joinSessionByRoom(int roomId) async {
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      'sessions/join-by-room/$roomId',
-    );
+    final response = await _places.post<Map<String, dynamic>>('$roomId/join');
     return JoinSessionResult.fromJson(response.data!);
   }
 }
 
 /// Provider for room repository
 final roomRepositoryProvider = Provider<RoomRepository>((ref) {
-  final apiClient = ref.watch(roomsApiProvider);
-  return ApiRoomRepository(apiClient);
+  return ApiRoomRepository(ref.watch(placesApiProvider), ref.watch(staysApiProvider));
 });
 
-/// Provider for all rooms — keyed by branch ID for clean state per branch
+/// Provider for the branch's timed places — keyed by branch ID for clean state per branch
 final roomsProvider = FutureProvider.family<List<Room>, int>((ref, branchId) async {
   final service = ref.watch(roomRepositoryProvider);
   return service.getRooms();
 });
 
-/// Provider for available rooms
-final availableRoomsProvider = FutureProvider<List<Room>>((ref) async {
-  final service = ref.watch(roomRepositoryProvider);
-  return service.getAvailableRooms();
-});
-
-/// Provider for customer sessions
+/// Provider for customer stays
 final mySessionsProvider = NotifierProvider<MySessionsNotifier, AsyncValue<List<RoomSession>>>(MySessionsNotifier.new);
 
-/// Sessions notifier - refreshes on demand (app resume, screen focus, pull-to-refresh)
+/// Stays notifier - refreshes on demand (app resume, screen focus, pull-to-refresh)
 class MySessionsNotifier extends Notifier<AsyncValue<List<RoomSession>>> {
   late RoomRepository _roomService;
 
@@ -158,7 +124,7 @@ class MySessionsNotifier extends Notifier<AsyncValue<List<RoomSession>>> {
     }
   }
 
-  /// Refresh sessions (silent - no loading indicator)
+  /// Refresh (silent - no loading indicator)
   Future<void> refresh() async {
     await _loadSessions(silent: true);
   }
@@ -204,12 +170,12 @@ class ReservationNotifier extends Notifier<ReservationState> {
     return const ReservationState();
   }
 
-  /// Reserve a room (immediate - customer has 15 min to arrive)
-  Future<bool> reserveRoom(int roomId) async {
+  /// Hold a place (the customer has 10 minutes to arrive)
+  Future<bool> reserveRoom(int roomId, {bool startOnConfirm = false}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final reservationId = await _roomService.reserveRoom(roomId);
+      final reservationId = await _roomService.reserveRoom(roomId, startOnConfirm: startOnConfirm);
       state = state.copyWith(isLoading: false, reservationId: reservationId);
       return true;
     } catch (e) {

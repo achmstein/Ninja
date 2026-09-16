@@ -14,8 +14,12 @@ class AppConfig {
   static String get catalogApiUrl => '$bffBaseUrl/api/catalog/';
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
   static String get ticketsApiUrl => '$bffBaseUrl/api/tickets/';
-  static String get roomsApiUrl => '$bffBaseUrl/api/rooms/';
-  static String get sessionsApiUrl => '$bffBaseUrl/api/sessions/';
+  /// Spaces' places: the rooms, the tables, the stations
+  static String get placesApiUrl => '$bffBaseUrl/api/places/';
+  /// Spaces' stays: the customer's holds and running clocks
+  static String get staysApiUrl => '$bffBaseUrl/api/stays/';
+  /// The older table stickers (/table/{id}) resolve through this
+
   static String get tablesApiUrl => '$bffBaseUrl/api/tables/';
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';

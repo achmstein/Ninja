@@ -11,14 +11,17 @@ import '../../../l10n/app_localizations.dart';
 import '../../tables/services/table_service.dart';
 import '../models/room.dart';
 import '../services/room_service.dart';
-import '../../../core/services/sound_service.dart';
+import 'rooms_screen.dart';
 
-/// A scanned chillax.site QR: either a room or a café table.
+/// A scanned chillax.site QR: a place (/p/{id}), or one of the older room
+/// (/room/{id}) and table (/table/{id}) stickers.
 class _ScannedTarget {
-  final bool isTable;
+  /// The older table stickers carry the id the table had before the Places
+  /// remodel, which is not the place id; it is resolved first.
+  final bool isLegacyTable;
   final int id;
 
-  const _ScannedTarget({required this.isTable, required this.id});
+  const _ScannedTarget({required this.isLegacyTable, required this.id});
 }
 
 class QrScanScreen extends ConsumerStatefulWidget {
@@ -38,17 +41,18 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     super.dispose();
   }
 
-  /// Match https://chillax.site/room/{id} and https://chillax.site/table/{id}
+  /// Match https://chillax.site/p/{id}, and the older /room/{id} (rooms kept
+  /// their ids) and /table/{id} stickers
   _ScannedTarget? _parseTarget(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
     if (uri.host != 'chillax.site') return null;
     final segments = uri.pathSegments;
     if (segments.length != 2) return null;
-    if (segments[0] != 'room' && segments[0] != 'table') return null;
+    if (segments[0] != 'p' && segments[0] != 'room' && segments[0] != 'table') return null;
     final id = int.tryParse(segments[1]);
     if (id == null) return null;
-    return _ScannedTarget(isTable: segments[0] == 'table', id: id);
+    return _ScannedTarget(isLegacyTable: segments[0] == 'table', id: id);
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -65,49 +69,99 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     setState(() => _isProcessing = true);
     _scannerController.stop();
 
-    if (target.isTable) {
-      await _handleTableScan(target.id);
-      return;
-    }
-
-    final roomId = target.id;
-
     try {
-      final service = ref.read(roomRepositoryProvider);
-      final result = await service.scanRoom(roomId);
-
+      final placeId = target.isLegacyTable
+          ? (await ref.read(tableRepositoryProvider).getTable(target.id)).placeId
+          : target.id;
       if (!mounted) return;
-
-      // Auto-switch branch if room belongs to a different branch
-      final currentBranchId = ref.read(selectedBranchIdProvider);
-      if (result.branchId != currentBranchId) {
-        ref.read(branchProvider.notifier).selectBranch(result.branchId);
-      }
-
-      if (result.isAlreadyMember) {
-        final l10n = AppLocalizations.of(context)!;
-        showFToast(
-          context: context,
-          title: Text(l10n.alreadyInSession),
-          icon: Icon(FIcons.info, color: context.theme.colors.primary),
-        );
-        Navigator.of(context).pop();
-        return;
-      }
-
-      // Active session → join directly without showing a sheet
-      if (result.hasActiveSession && result.sessionPreview != null) {
-        await _joinSessionDirect(result.roomId);
-        return;
-      }
-
-      _showScanResult(result);
+      await _handlePlace(placeId);
     } catch (e) {
       if (mounted) {
         _showInvalidQr();
         _resumeScanning();
       }
     }
+  }
+
+  /// What the place is decides what scanning it does: a place that only
+  /// takes orders is remembered as where the customer sits and the scanner
+  /// closes on the menu; a timed place joins the clock running there, or
+  /// offers a hold. A timed table is both.
+  Future<void> _handlePlace(int placeId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final place = await ref.read(roomRepositoryProvider).getRoom(placeId);
+    if (!mounted) return;
+
+    if (!place.isActive) {
+      showFToast(
+        context: context,
+        title: Text(l10n.tableUnavailable),
+        icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+      );
+      _resumeScanning();
+      return;
+    }
+
+    if (place.kind == PlaceKind.table) {
+      await _rememberTable(place);
+      if (!mounted) return;
+    }
+
+    if (place.options.isEmpty) {
+      // Someone scanning a table code wants the menu, so close the scanner and
+      // confirm with a toast rather than making them tap through a sheet.
+      Navigator.of(context).pop();
+      showFToast(
+        context: context,
+        title: Text(l10n.youAreAtTable(place.name.localized(context))),
+        // Where they are sitting, not an operation that succeeded — a seat
+        // reads better here than a green tick.
+        icon: Icon(FIcons.armchair, color: context.theme.colors.primary),
+      );
+      return;
+    }
+
+    final result = await ref.read(roomRepositoryProvider).scanRoom(placeId);
+    if (!mounted) return;
+
+    // Auto-switch branch if the place belongs to a different branch
+    final currentBranchId = ref.read(selectedBranchIdProvider);
+    if (result.branchId != currentBranchId) {
+      ref.read(branchProvider.notifier).selectBranch(result.branchId);
+    }
+
+    if (result.isAlreadyMember) {
+      showFToast(
+        context: context,
+        title: Text(l10n.alreadyInSession),
+        icon: Icon(FIcons.info, color: context.theme.colors.primary),
+      );
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // A clock is running → join it directly without showing a sheet
+    if (result.hasActiveSession) {
+      await _joinSessionDirect(result.roomId);
+      return;
+    }
+
+    _showScanResult(result);
+  }
+
+  /// A scanned table is where the next order goes, clock or no clock
+  Future<void> _rememberTable(Room place) async {
+    final currentBranchId = ref.read(selectedBranchIdProvider);
+    final branchId = currentBranchId ?? 1;
+    await ref.read(currentTableProvider.notifier).setTable(
+          CurrentTable(
+            id: place.id,
+            kind: place.kind,
+            name: place.name,
+            branchId: branchId,
+            scannedAt: DateTime.now(),
+          ),
+        );
   }
 
   void _showInvalidQr() {
@@ -117,61 +171,6 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
       title: Text(l10n.invalidQrCode),
       icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
     );
-  }
-
-  /// A table has no session to join — scanning just remembers where the
-  /// customer is sitting so their next order carries the table.
-  Future<void> _handleTableScan(int tableId) async {
-    try {
-      final table = await ref.read(tableRepositoryProvider).getTable(tableId);
-
-      if (!mounted) return;
-
-      if (!table.isActive) {
-        final l10n = AppLocalizations.of(context)!;
-        showFToast(
-          context: context,
-          title: Text(l10n.tableUnavailable),
-          icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
-        );
-        _resumeScanning();
-        return;
-      }
-
-      // The QR belongs to a specific branch — switch to it
-      final currentBranchId = ref.read(selectedBranchIdProvider);
-      if (table.branchId != currentBranchId) {
-        ref.read(branchProvider.notifier).selectBranch(table.branchId);
-      }
-
-      await ref.read(currentTableProvider.notifier).setTable(
-            CurrentTable(
-              id: table.id,
-              name: table.name,
-              branchId: table.branchId,
-              scannedAt: DateTime.now(),
-            ),
-          );
-
-      if (!mounted) return;
-
-      // Someone scanning a table code wants the menu, so close the scanner and
-      // confirm with a toast rather than making them tap through a sheet.
-      final l10n = AppLocalizations.of(context)!;
-      Navigator.of(context).pop();
-      showFToast(
-        context: context,
-        title: Text(l10n.youAreAtTable(table.name.localized(context))),
-        // Where they are sitting, not an operation that succeeded — a seat
-        // reads better here than a green tick.
-        icon: Icon(FIcons.armchair, color: context.theme.colors.primary),
-      );
-    } catch (e) {
-      if (mounted) {
-        _showInvalidQr();
-        _resumeScanning();
-      }
-    }
   }
 
   void _resumeScanning() {
@@ -211,143 +210,29 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
 
   void _showScanResult(RoomScanResult result) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
+
+    if (!result.canReserve || result.displayStatus != RoomDisplayStatus.available) {
+      showFToast(
+        context: context,
+        title: Text(l10n.roomNotAvailable),
+        icon: Icon(FIcons.info, color: context.theme.colors.primary),
+      );
+      _resumeScanning();
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: colors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.mutedForeground.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Room name + status badge in one row
-              Row(
-                children: [
-                  Expanded(
-                    child: AppText(
-                      result.roomName.localized(context),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colors.foreground,
-                      ),
-                    ),
-                  ),
-                  _buildStatusBadge(result, l10n, colors),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Action button (only for available rooms)
-              if (result.displayStatus == RoomDisplayStatus.available)
-                SizedBox(
-                  width: double.infinity,
-                  child: FButton(
-                    onPress: () => _reserveRoom(result.roomId, sheetContext),
-                    child: Text(l10n.reserveThisRoom),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReservationSheet(room: result.toRoom()),
     ).whenComplete(() {
-      if (mounted && _isProcessing) {
-        _resumeScanning();
-      }
+      if (!mounted) return;
+      // Held or not, the customer is done scanning: the rooms tab shows the hold
+      Navigator.of(context).pop();
     });
   }
 
-  Widget _buildStatusBadge(RoomScanResult result, AppLocalizations l10n, dynamic colors) {
-    final Color color;
-    final String label;
-
-    if (result.displayStatus == RoomDisplayStatus.available) {
-      color = AppTheme.successColor;
-      label = l10n.available;
-    } else {
-      color = colors.mutedForeground as Color;
-      label = l10n.roomNotAvailable;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 6),
-          AppText(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _reserveRoom(int roomId, BuildContext sheetContext) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    try {
-      final service = ref.read(roomRepositoryProvider);
-      await service.reserveRoom(roomId);
-
-      if (!mounted) return;
-
-      // Refresh sessions
-      ref.read(mySessionsProvider.notifier).refresh();
-      final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.invalidate(roomsProvider(branchId));
-
-      Navigator.of(sheetContext).pop(); // close bottom sheet
-      Navigator.of(context).pop(); // close QR screen
-
-      SoundService.instance.playSuccess();
-      showFToast(
-        context: context,
-        title: Text(l10n.roomReservedSuccessQr),
-        icon: Icon(FIcons.check, color: AppTheme.successColor),
-      );
-    } catch (e) {
-      if (mounted) {
-        showFToast(
-          context: context,
-          title: Text(l10n.failedToReserveRoom),
-          icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

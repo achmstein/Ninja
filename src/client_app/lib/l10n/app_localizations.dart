@@ -347,8 +347,50 @@ abstract class AppLocalizations {
   /// No description provided for @rooms.
   ///
   /// In en, this message translates to:
-  /// **'Rooms'**
+  /// **'Rooms & Tables'**
   String get rooms;
+
+  /// No description provided for @optionRateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'{option} £{rate}'**
+  String optionRateFormat(String option, String rate);
+
+  /// No description provided for @perHourShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/hr'**
+  String get perHourShort;
+
+  /// No description provided for @startTimerOnArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the timer as soon as I arrive'**
+  String get startTimerOnArrival;
+
+  /// No description provided for @timerStartsOnArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'The timer starts when you arrive'**
+  String get timerStartsOnArrival;
+
+  /// No description provided for @switchToOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {option}'**
+  String switchToOption(String option);
+
+  /// No description provided for @switchRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch request sent'**
+  String get switchRequestSent;
+
+  /// No description provided for @orderHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Order here'**
+  String get orderHere;
 
   /// No description provided for @profile.
   ///

@@ -2,18 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/models/localized_text.dart';
-import '../../../core/providers/branch_provider.dart';
-import '../../../core/providers/current_table_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/table_service.dart';
 
-/// Landing for a scanned table QR that opened the app as an App Link
-/// (https://chillax.site/table/{id}).
-///
-/// Deliberately not a page the customer reads: it resolves the table, remembers
-/// where they are sitting, and sends them to the menu with a toast - the same
-/// shape as the in-app scanner and the web client.
+/// Landing for an older table QR that opened the app as an App Link
+/// (https://chillax.site/table/{id}, with the id the table had before the
+/// Places remodel). It resolves the place behind it and continues on the
+/// place page, which does the rest.
 class TableLinkScreen extends ConsumerStatefulWidget {
   final int tableId;
 
@@ -31,55 +26,19 @@ class _TableLinkScreenState extends ConsumerState<TableLinkScreen> {
   }
 
   Future<void> _resolve() async {
-    final l10n = AppLocalizations.of(context)!;
-
     try {
-      final table =
-          await ref.read(tableRepositoryProvider).getTable(widget.tableId);
-
+      final table = await ref.read(tableRepositoryProvider).getTable(widget.tableId);
       if (!mounted) return;
-
-      if (!table.isActive) {
-        _leave(l10n.tableUnavailable, isError: true);
-        return;
-      }
-
-      // The QR belongs to a specific branch — switch to it
-      final currentBranchId = ref.read(selectedBranchIdProvider);
-      if (table.branchId != currentBranchId) {
-        ref.read(branchProvider.notifier).selectBranch(table.branchId);
-      }
-
-      await ref.read(currentTableProvider.notifier).setTable(
-            CurrentTable(
-              id: table.id,
-              name: table.name,
-              branchId: table.branchId,
-              scannedAt: DateTime.now(),
-            ),
-          );
-
-      if (!mounted) return;
-      _leave(l10n.youAreAtTable(table.name.localized(context)));
+      context.go('/p/${table.placeId}');
     } catch (_) {
-      if (mounted) _leave(l10n.invalidQrCode, isError: true);
+      if (!mounted) return;
+      context.go('/menu');
+      showFToast(
+        context: context,
+        title: Text(AppLocalizations.of(context)!.invalidQrCode),
+        icon: Icon(FIcons.circleX, color: context.theme.colors.destructive),
+      );
     }
-  }
-
-  void _leave(String message, {bool isError = false}) {
-    context.go('/menu');
-    showFToast(
-      context: context,
-      title: Text(message),
-      // A seat, not a green tick: this says where they are sitting rather than
-      // reporting that an operation succeeded.
-      icon: Icon(
-        isError ? FIcons.circleX : FIcons.armchair,
-        color: isError
-            ? context.theme.colors.destructive
-            : context.theme.colors.primary,
-      ),
-    );
   }
 
   @override

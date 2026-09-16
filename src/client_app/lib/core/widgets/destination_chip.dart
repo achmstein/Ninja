@@ -14,8 +14,8 @@ import '../theme/app_theme.dart';
 ///
 /// Scanning a table drops the customer straight on the menu, so without this
 /// the only confirmation is a toast that disappears. A table can be dismissed
-/// here if they moved or scanned the wrong sticker; a room cannot - you leave a
-/// room by ending the session, not by dismissing a chip.
+/// here if they moved or scanned the wrong sticker; a running clock cannot -
+/// you leave it by the counter ending it, not by dismissing a chip.
 class DestinationChip extends ConsumerWidget {
   const DestinationChip({super.key});
 
@@ -25,7 +25,7 @@ class DestinationChip extends ConsumerWidget {
     if (destination == null) return const SizedBox.shrink();
 
     final theme = context.theme;
-    final isRoom = destination.isRoom;
+    final isRoom = destination.isStay;
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 12, top: 8),
@@ -48,7 +48,7 @@ class DestinationChip extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isRoom ? FIcons.gamepad2 : FIcons.armchair,
+              destination.placeKind.icon,
               size: 13,
               color: theme.colors.mutedForeground,
             ),
@@ -123,9 +123,10 @@ class _TableRequestButtonsState extends ConsumerState<_TableRequestButtons> {
     }
     setState(() => _busy = true);
     final ok = await ref.read(serviceRequestProvider.notifier).submitRequest(
-          CreateServiceRequest.forTable(
-            tableId: widget.destination.tableId!,
-            tableName: widget.destination.name,
+          CreateServiceRequest(
+            placeId: widget.destination.placeId,
+            placeKind: widget.destination.placeKind,
+            placeName: widget.destination.name,
             requestType: type,
           ),
         );

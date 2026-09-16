@@ -385,16 +385,11 @@ class _SessionTileState extends State<SessionTile> {
     });
   }
 
-  String _localizedMode(String mode, AppLocalizations l10n) {
-    switch (mode) {
-      case 'Single':
-        return l10n.playerModeSingle;
-      case 'Multi':
-        return l10n.playerModeMulti;
-      default:
-        return mode;
-    }
-  }
+  /// The colour of a rate option by its place in the tariff: the first reads
+  /// as the base rate, any other as the upgrade — the way Single and Multi
+  /// always did.
+  Color _optionColor(SessionSegment segment, dynamic colors) =>
+      widget.session.optionIndex(segment.optionCode) > 0 ? Colors.orange : colors.primary as Color;
 
   String _segmentDuration(SessionSegment segment, AppLocalizations l10n) {
     final end = segment.endTime ?? DateTime.now();
@@ -425,7 +420,7 @@ class _SessionTileState extends State<SessionTile> {
           // Header: room name + status badge
           Row(
             children: [
-              Icon(FIcons.gamepad2, size: 20, color: colors.foreground),
+              Icon(session.placeKind.icon, size: 20, color: colors.foreground),
               const SizedBox(width: 8),
               Expanded(
                 child: AppText(
@@ -470,14 +465,15 @@ class _SessionTileState extends State<SessionTile> {
             ],
           ),
 
-          // Segments timeline
-          if (session.segments.length > 1) ...[
+          // Segments timeline — only where the tariff has a choice of rates;
+          // a one-rate place has nothing to tell apart
+          if (session.hasOptions && session.segments.length > 1) ...[
             const SizedBox(height: 8),
             ...session.segments.asMap().entries.map((entry) {
               final i = entry.key;
               final segment = entry.value;
               final isLast = i == session.segments.length - 1;
-              final isSingle = segment.playerMode == 'Single';
+              final optionColor = _optionColor(segment, colors);
 
               return IntrinsicHeight(
                 child: Row(
@@ -493,7 +489,7 @@ class _SessionTileState extends State<SessionTile> {
                             height: 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isSingle ? colors.primary : Colors.orange,
+                              color: optionColor,
                             ),
                           ),
                           if (!isLast)
@@ -513,11 +509,11 @@ class _SessionTileState extends State<SessionTile> {
                         child: Row(
                           children: [
                             AppText(
-                              _localizedMode(segment.playerMode, l10n),
+                              segment.optionName.localized(context),
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: isSingle ? colors.primary : Colors.orange,
+                                color: optionColor,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -536,27 +532,23 @@ class _SessionTileState extends State<SessionTile> {
                 ),
               );
             }),
-          ] else if (session.segments.length == 1) ...[
-            // Single segment — just show mode badge inline
+          ] else if (session.hasOptions && session.segments.length == 1) ...[
+            // One segment — just the option badge inline
             const SizedBox(height: 4),
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: session.segments.first.playerMode == 'Single'
-                        ? colors.primary.withValues(alpha: 0.1)
-                        : Colors.orange.withValues(alpha: 0.1),
+                    color: _optionColor(session.segments.first, colors).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: AppText(
-                    _localizedMode(session.segments.first.playerMode, l10n),
+                    session.segments.first.optionName.localized(context),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: session.segments.first.playerMode == 'Single'
-                          ? colors.primary
-                          : Colors.orange,
+                      color: _optionColor(session.segments.first, colors),
                     ),
                   ),
                 ),

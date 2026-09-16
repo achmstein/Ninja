@@ -6,7 +6,9 @@ import 'branch_provider.dart';
 import '../../features/rooms/models/room.dart';
 import '../../features/rooms/services/room_service.dart';
 
-const String _tableKey = 'current_table';
+// A new key: what was stored before the Places remodel carried the printed
+// sticker's id, which is not the place id
+const String _tableKey = 'current_place';
 
 /// How long a scanned table stays attached to the customer. Long enough for a
 /// sitting with several rounds, short enough that yesterday's scan never
@@ -22,8 +24,12 @@ Future<void> initializeCurrentTable() async {
   _initialTable = _decode(prefs.getString(_tableKey));
 }
 
+/// The place the customer scanned to order at: a table, or a timed place
+/// they sat at without a clock running for them.
 class CurrentTable {
+  /// The Spaces place id — what orders and requests name
   final int id;
+  final PlaceKind kind;
   final LocalizedText name;
   final int branchId;
 
@@ -32,6 +38,7 @@ class CurrentTable {
 
   const CurrentTable({
     required this.id,
+    this.kind = PlaceKind.table,
     required this.name,
     required this.branchId,
     required this.scannedAt,
@@ -41,6 +48,7 @@ class CurrentTable {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'kind': kind.value,
         'nameEn': name.en,
         'nameAr': name.ar,
         'branchId': branchId,
@@ -49,6 +57,7 @@ class CurrentTable {
 
   CurrentTable copyWith({DateTime? scannedAt}) => CurrentTable(
         id: id,
+        kind: kind,
         name: name,
         branchId: branchId,
         scannedAt: scannedAt ?? this.scannedAt,
@@ -61,6 +70,7 @@ CurrentTable? _decode(String? raw) {
     final json = jsonDecode(raw) as Map<String, dynamic>;
     return CurrentTable(
       id: json['id'] as int,
+      kind: PlaceKind.fromValue(json['kind'] as int?),
       name: LocalizedText(
         en: json['nameEn'] as String? ?? '',
         ar: json['nameAr'] as String?,
@@ -113,34 +123,42 @@ final activeTableProvider = Provider<CurrentTable?>((ref) {
 });
 
 /// Where the next order will be delivered.
-enum OrderDestinationKind { room, table }
+enum OrderDestinationKind {
+  /// The customer's running clock: the order joins the stay's bill
+  stay,
 
+  /// A place they scanned to order at
+  table,
+}
+
+/// The Spaces place the order goes to and, when a clock is running there for
+/// the customer, the stay whose bill it joins.
 class OrderDestination {
   final OrderDestinationKind kind;
+  final int placeId;
+  final PlaceKind placeKind;
   final LocalizedText name;
 
-  /// Only set for a table.
-  final int? tableId;
-
-  /// Only set for a room: the session and room ids ride along so the server
-  /// can group the session's orders into one bill. The name is for display.
+  /// Only set for a running clock
   final int? sessionId;
-  final int? roomId;
 
   const OrderDestination({
     required this.kind,
+    required this.placeId,
+    required this.placeKind,
     required this.name,
-    this.tableId,
     this.sessionId,
-    this.roomId,
   });
 
-  bool get isRoom => kind == OrderDestinationKind.room;
+  bool get isStay => kind == OrderDestinationKind.stay;
+
+  /// Whether the older room fields apply (the order carries them for one release)
+  bool get isRoom => placeKind == PlaceKind.room;
 }
 
-/// A running room session beats a scanned table, and forgets it: moving to a
-/// room means the customer left the table, so once the session ends they have
-/// no destination until they scan wherever they sit next. Keeping the old table
+/// A running clock beats a scanned table, and forgets it: moving to a room
+/// means the customer left the table, so once the stay ends they have no
+/// destination until they scan wherever they sit next. Keeping the old table
 /// warm would risk sending food to a table they had already walked away from.
 ///
 /// Mirrors useOrderDestination in the web client; every surface that shows or
@@ -154,10 +172,11 @@ final orderDestinationProvider = Provider<OrderDestination?>((ref) {
 
   if (activeSession != null) {
     return OrderDestination(
-      kind: OrderDestinationKind.room,
+      kind: OrderDestinationKind.stay,
+      placeId: activeSession.roomId,
+      placeKind: activeSession.placeKind,
       name: activeSession.roomName,
       sessionId: activeSession.id,
-      roomId: activeSession.roomId,
     );
   }
 
@@ -165,8 +184,9 @@ final orderDestinationProvider = Provider<OrderDestination?>((ref) {
   if (table != null) {
     return OrderDestination(
       kind: OrderDestinationKind.table,
+      placeId: table.id,
+      placeKind: table.kind,
       name: table.name,
-      tableId: table.id,
     );
   }
 

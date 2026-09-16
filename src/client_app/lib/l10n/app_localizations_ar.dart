@@ -135,7 +135,32 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orders => 'الطلبات';
 
   @override
-  String get rooms => 'الاوض';
+  String get rooms => 'الأوض والترابيزات';
+
+  @override
+  String optionRateFormat(String option, String rate) {
+    return '$option $rate ج.م';
+  }
+
+  @override
+  String get perHourShort => '/ساعة';
+
+  @override
+  String get startTimerOnArrival => 'ابدأ الوقت أول ما أوصل';
+
+  @override
+  String get timerStartsOnArrival => 'الوقت يبدأ لما توصل';
+
+  @override
+  String switchToOption(String option) {
+    return 'حوّل $option';
+  }
+
+  @override
+  String get switchRequestSent => 'اتبعت طلب التحويل';
+
+  @override
+  String get orderHere => 'اطلب هنا';
 
   @override
   String get profile => 'حسابي';

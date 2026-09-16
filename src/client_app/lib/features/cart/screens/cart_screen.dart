@@ -451,7 +451,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       child: Row(
         children: [
           Icon(
-            destination.isRoom ? FIcons.gamepad2 : FIcons.armchair,
+            destination.placeKind.icon,
             size: 16,
             color: colors.mutedForeground as Color,
           ),
@@ -614,12 +614,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     final success = await ref.read(checkoutProvider.notifier).submitOrder(
           items: cart.items,
-          roomName: destination != null && destination.isRoom
+          placeId: destination?.placeId,
+          placeKind: destination?.placeKind.wireName,
+          placeName: destination?.name.toJson(),
+          sessionId: destination?.sessionId,
+          // The older room/table fields, for one release
+          roomName: destination != null && destination.isStay && destination.isRoom
               ? destination.name.toJson()
               : null,
-          sessionId: destination?.sessionId,
-          roomId: destination?.roomId,
-          tableId: destination?.tableId,
+          roomId: destination != null && destination.isStay && destination.isRoom
+              ? destination.placeId
+              : null,
           tableName: destination != null && !destination.isRoom
               ? destination.name.toJson()
               : null,

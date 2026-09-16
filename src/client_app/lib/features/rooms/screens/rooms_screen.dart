@@ -391,7 +391,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (session.currentPlayerMode != null) ...[
+                      if (session.hasOptions && session.currentOptionName != null) ...[
                         const SizedBox(width: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -401,9 +401,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                             border: Border.all(color: colors.primaryForeground.withValues(alpha: 0.3)),
                           ),
                           child: AppText(
-                            session.currentPlayerMode == 'Single'
-                                ? AppLocalizations.of(context)!.playerModeSingle
-                                : AppLocalizations.of(context)!.playerModeMulti,
+                            session.currentOptionName!.localized(context),
                             style: TextStyle(
                               color: colors.primaryForeground,
                               fontSize: 12,
@@ -428,20 +426,19 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
                     ),
                   ),
 
-                  // Price per hour
-                  const SizedBox(height: 8),
-                  AppText(
-                    AppLocalizations.of(context)!.hourlyRateFormat(
-                      (session.currentPlayerMode == 'Multi'
-                              ? session.multiRate
-                              : session.singleRate)
-                          .toStringAsFixed(0),
+                  // Price per hour, at the rate running now
+                  if (session.currentHourlyRate != null) ...[
+                    const SizedBox(height: 8),
+                    AppText(
+                      AppLocalizations.of(context)!.hourlyRateFormat(
+                        session.currentHourlyRate!.toStringAsFixed(0),
+                      ),
+                      style: TextStyle(
+                        color: colors.primaryForeground.withValues(alpha: 0.7),
+                        fontSize: 14,
+                      ),
                     ),
-                    style: TextStyle(
-                      color: colors.primaryForeground.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -451,59 +448,9 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
             // Quick actions
             const SizedBox(height: 16),
 
-            // Action buttons grid - row 1
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: FIcons.bellRing,
-                    label: AppLocalizations.of(context)!.callWaiter,
-                    cooldownSeconds: _getCooldownRemaining(ServiceRequestType.callWaiter),
-                    onTap: () => _submitRequest(ServiceRequestType.callWaiter),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: FIcons.gamepad2,
-                    label: AppLocalizations.of(context)!.controller,
-                    cooldownSeconds: _getCooldownRemaining(ServiceRequestType.controllerChange),
-                    onTap: () => _submitRequest(ServiceRequestType.controllerChange),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Action buttons grid - row 2
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: FIcons.receipt,
-                    label: AppLocalizations.of(context)!.getBill,
-                    cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
-                    onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: session.currentPlayerMode == 'Multi'
-                      ? _QuickActionButton(
-                          icon: FIcons.user,
-                          label: AppLocalizations.of(context)!.switchToSingle,
-                          cooldownSeconds: _getCooldownRemaining(ServiceRequestType.switchToSingle),
-                          onTap: () => _submitRequest(ServiceRequestType.switchToSingle),
-                        )
-                      : _QuickActionButton(
-                          icon: FIcons.users,
-                          label: AppLocalizations.of(context)!.switchToMulti,
-                          cooldownSeconds: _getCooldownRemaining(ServiceRequestType.switchToMulti),
-                          onTap: () => _submitRequest(ServiceRequestType.switchToMulti),
-                        ),
-                ),
-              ],
-            ),
+            // What the place can take: a waiter and the bill anywhere, a
+            // controller in a console room, a switch per other rate option
+            _QuickActionGrid(actions: _quickActions(session)),
 
             // Leave session button (non-owners only)
             if (session.customerId != null &&
@@ -531,15 +478,50 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
     );
   }
 
-  Future<void> _submitRequest(ServiceRequestType type) async {
+  List<_QuickAction> _quickActions(RoomSession session) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      _QuickAction(
+        icon: FIcons.bellRing,
+        label: l10n.callWaiter,
+        cooldownSeconds: _getCooldownRemaining(ServiceRequestType.callWaiter),
+        onTap: () => _submitRequest(ServiceRequestType.callWaiter),
+      ),
+      if (session.takesControllerRequests)
+        _QuickAction(
+          icon: FIcons.gamepad2,
+          label: l10n.controller,
+          cooldownSeconds: _getCooldownRemaining(ServiceRequestType.controllerChange),
+          onTap: () => _submitRequest(ServiceRequestType.controllerChange),
+        ),
+      _QuickAction(
+        icon: FIcons.receipt,
+        label: l10n.getBill,
+        cooldownSeconds: _getCooldownRemaining(ServiceRequestType.receiptToPay),
+        onTap: () => _submitRequest(ServiceRequestType.receiptToPay),
+      ),
+      if (session.hasOptions)
+        for (final option in session.options.where((o) => o.code != session.currentOptionCode))
+          _QuickAction(
+            icon: FIcons.refreshCw,
+            label: l10n.switchToOption(option.name.localized(context)),
+            cooldownSeconds: _getCooldownRemaining(ServiceRequestType.changeOption),
+            onTap: () => _submitRequest(ServiceRequestType.changeOption, optionCode: option.code),
+          ),
+    ];
+  }
+
+  Future<void> _submitRequest(ServiceRequestType type, {String? optionCode}) async {
     // Check if still in cooldown
     if (_getCooldownRemaining(type) > 0) return;
 
     final session = widget.session;
     final request = CreateServiceRequest(
+      placeId: session.roomId,
+      placeKind: session.placeKind,
+      placeName: session.roomName,
       sessionId: session.id,
-      roomId: session.roomId,
-      roomName: session.roomName,
+      optionCode: optionCode,
       requestType: type,
     );
 
@@ -582,6 +564,8 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
         return l10n.switchToMultiRequestSent;
       case ServiceRequestType.switchToSingle:
         return l10n.switchToSingleRequestSent;
+      case ServiceRequestType.changeOption:
+        return l10n.switchRequestSent;
     }
   }
 
@@ -632,6 +616,56 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
         ],
       ),
     );
+  }
+}
+
+class _QuickAction {
+  final IconData icon;
+  final String label;
+  final int cooldownSeconds;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.cooldownSeconds,
+    required this.onTap,
+  });
+}
+
+/// Two buttons a row, however many the place can take
+class _QuickActionGrid extends StatelessWidget {
+  final List<_QuickAction> actions;
+
+  const _QuickActionGrid({required this.actions});
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < actions.length; i += 2) {
+      final pair = actions.skip(i).take(2).toList();
+      rows.add(Row(
+        children: [
+          for (var j = 0; j < pair.length; j++) ...[
+            if (j > 0) const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionButton(
+                icon: pair[j].icon,
+                label: pair[j].label,
+                cooldownSeconds: pair[j].cooldownSeconds,
+                onTap: pair[j].onTap,
+              ),
+            ),
+          ],
+          if (pair.length == 1) ...[
+            const SizedBox(width: 12),
+            const Expanded(child: SizedBox.shrink()),
+          ],
+        ],
+      ));
+      if (i + 2 < actions.length) rows.add(const SizedBox(height: 12));
+    }
+    return Column(children: rows);
   }
 }
 
@@ -761,7 +795,7 @@ class _ReservedSessionBanner extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(FIcons.gamepad2, color: Colors.white, size: 24),
+              Icon(session.placeKind.icon, color: Colors.white, size: 24),
               const SizedBox(width: 8),
               AppText(
                 session.roomName.localized(context),
@@ -809,6 +843,20 @@ class _ReservedSessionBanner extends ConsumerWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+          if (session.startOnConfirm) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(FIcons.timerReset, color: Colors.white.withValues(alpha: 0.9), size: 14),
+                const SizedBox(width: 6),
+                AppText(
+                  AppLocalizations.of(context)!.timerStartsOnArrival,
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           // Cancel link
           GestureDetector(
@@ -998,7 +1046,7 @@ class RoomListItem extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                FIcons.gamepad2,
+                room.kind.icon,
                 size: 28,
                 color: isAvailable ? colors.primary : colors.mutedForeground,
               ),
@@ -1033,12 +1081,14 @@ class RoomListItem extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      AppText(
-                        AppLocalizations.of(context)!.hourlyRateFormat(room.singleRate.toStringAsFixed(0)),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: colors.foreground,
+                      Flexible(
+                        child: AppText(
+                          tariffLine(context, room.options),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: colors.foreground,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1144,6 +1194,7 @@ class ReservationSheet extends ConsumerStatefulWidget {
 
 class _ReservationSheetState extends ConsumerState<ReservationSheet> {
   bool _isLoading = false;
+  bool _startOnConfirm = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1194,24 +1245,12 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
                 ],
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  AppText(
-                    l10n.singlePlayerRate(widget.room.singleRate.toStringAsFixed(0)),
-                    style: TextStyle(
-                      color: colors.mutedForeground,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  AppText(
-                    l10n.multiPlayerRate(widget.room.multiRate.toStringAsFixed(0)),
-                    style: TextStyle(
-                      color: colors.mutedForeground,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+              AppText(
+                tariffLine(context, widget.room.options),
+                style: TextStyle(
+                  color: colors.mutedForeground,
+                  fontSize: 14,
+                ),
               ),
               // Room description
               if (widget.room.description != null) ...[
@@ -1253,6 +1292,37 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // The clock starts the moment the counter confirms they arrived,
+              // instead of waiting for the cashier to start it
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: colors.border),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(FIcons.timerReset, size: 24, color: colors.mutedForeground),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppText(
+                        l10n.startTimerOnArrival,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                          color: colors.foreground,
+                        ),
+                      ),
+                    ),
+                    FSwitch(
+                      value: _startOnConfirm,
+                      onChange: (value) => setState(() => _startOnConfirm = value),
                     ),
                   ],
                 ),
@@ -1305,7 +1375,7 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
 
     final success = await ref
         .read(reservationProvider.notifier)
-        .reserveRoom(widget.room.id);
+        .reserveRoom(widget.room.id, startOnConfirm: _startOnConfirm);
 
     setState(() => _isLoading = false);
 
@@ -1328,4 +1398,16 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
       );
     }
   }
+}
+
+/// The rate as the tariff has it: one figure for a one-rate place, one per
+/// option when there is a choice ("Single £50 · Multi £80 /hr").
+String tariffLine(BuildContext context, List<RateOption> options) {
+  final l10n = AppLocalizations.of(context)!;
+  if (options.isEmpty) return '';
+  if (options.length == 1) return l10n.hourlyRateFormat(options.first.hourlyRate.toStringAsFixed(0));
+  final parts = options
+      .map((o) => l10n.optionRateFormat(o.name.localized(context), o.hourlyRate.toStringAsFixed(0)))
+      .join(' · ');
+  return '$parts ${l10n.perHourShort}';
 }

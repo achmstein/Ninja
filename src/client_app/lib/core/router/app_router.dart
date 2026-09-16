@@ -9,7 +9,7 @@ import '../../features/cart/screens/cart_screen.dart';
 import '../../features/orders/screens/orders_screen.dart';
 import '../../features/rooms/screens/rooms_screen.dart';
 import '../../features/rooms/screens/sessions_screen.dart';
-import '../../features/rooms/screens/room_link_screen.dart';
+import '../../features/rooms/screens/place_link_screen.dart';
 import '../../features/tables/screens/table_link_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/transactions_screen.dart';
@@ -68,6 +68,11 @@ class _AuthNotifier extends ChangeNotifier {
 /// to walk back to the room to scan the sticker again.
 String? _pendingLink;
 
+/// A place page that needs an account (joining or holding a timed place)
+/// parks its link here and sends the customer to sign in; they come back to
+/// it afterwards.
+void rememberLinkForAfterSignIn(String location) => _pendingLink = location;
+
 /// App router provider
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = _AuthNotifier(ref);
@@ -84,10 +89,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnSplash = currentLocation == '/splash';
       final isLoggingIn = currentLocation == '/login';
       final isRegistering = currentLocation == '/register';
-      // A scanned table QR must resolve before sign-in: it only remembers where
-      // the customer is sitting, and bouncing them to login would lose the
-      // table. It sends them to the menu itself, which is gated as usual.
-      final isTableLink = currentLocation.startsWith('/table/');
+      // A scanned place QR must resolve before sign-in: an order-only table
+      // just remembers where the customer is sitting, and bouncing them to
+      // login would lose it. The page sends them on itself; a timed place
+      // asks for sign-in only when they join or hold.
+      final isTableLink = currentLocation.startsWith('/table/') || currentLocation.startsWith('/p/');
 
       // While initializing, stay on or go to splash
       if (isInitializing) {
@@ -144,12 +150,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Printed room QR opened as an App Link (chillax.site/room/{id})
+      // A place's QR opened as an App Link (chillax.site/p/{id})
+      GoRoute(
+        path: '/p/:placeId',
+        builder: (context, state) => PlaceLinkScreen(
+          placeId: int.tryParse(state.pathParameters['placeId'] ?? '') ?? 0,
+        ),
+      ),
+
+      // The older room stickers (chillax.site/room/{id}); rooms kept their ids
       GoRoute(
         path: '/room/:roomId',
-        builder: (context, state) => RoomLinkScreen(
-          roomId: int.tryParse(state.pathParameters['roomId'] ?? '') ?? 0,
-        ),
+        redirect: (context, state) => '/p/${state.pathParameters['roomId']}',
       ),
 
       // Cart route (separate from shell for push navigation)
