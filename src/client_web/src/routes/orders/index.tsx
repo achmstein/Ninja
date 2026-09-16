@@ -397,14 +397,22 @@ function OrderTile({ order }: { order: OrderSummary }) {
 /**
  * What the till did with the bill this order was on, projected by Ordering
  * from Sales' receipt: paid (and on which receipt), on the customer's tab,
- * refunded — or still unpaid once staff confirmed it. A submitted or
- * cancelled order carries no pill.
+ * refunded, voided (the bill was thrown out, so it will never be paid) —
+ * or still unpaid once staff confirmed it. A submitted or cancelled order
+ * carries no pill.
  */
 function PaidPill({ order }: { order: OrderSummary }) {
   const t = useT()
   const price = usePrice()
   const refunded = Number(order.refundedAmount ?? 0)
   if (order.paidAt == null) {
+    if (order.voidedAt != null) {
+      return (
+        <Badge variant='outline' className='text-muted-foreground mt-1'>
+          {t('voided')}
+        </Badge>
+      )
+    }
     return order.status?.toLowerCase() === 'confirmed' ? (
       <Badge variant='outline' className='mt-1'>
         {t('unpaid')}

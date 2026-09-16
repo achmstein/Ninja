@@ -55,6 +55,8 @@ public record Order
     public string? PaidWith { get; init; }
     /// <summary>What credit notes have given back against it.</summary>
     public decimal RefundedAmount { get; init; }
+    /// <summary>When the open bill it was on was voided; it will never be paid.</summary>
+    public DateTime? VoidedAt { get; init; }
     public OrderRatingDto? Rating { get; init; }
 }
 
@@ -128,6 +130,8 @@ public record OrderSummary
     public string? PaidWith { get; init; }
     /// <summary>What credit notes have given back against it.</summary>
     public decimal RefundedAmount { get; init; }
+    /// <summary>When the open bill it was on was voided; it will never be paid.</summary>
+    public DateTime? VoidedAt { get; init; }
     public LocalizedText? RoomName { get; init; }
     /// <summary>The room session the order was placed into, when ordered from a room.</summary>
     public int? SessionId { get; init; }

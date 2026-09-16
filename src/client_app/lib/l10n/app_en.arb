@@ -493,6 +493,7 @@
   "unpaid": "Unpaid",
   "onYourTab": "On your tab",
   "refunded": "Refunded",
+  "voided": "Voided",
   "receiptShort": "#{number}",
   "@receiptShort": {
     "placeholders": {

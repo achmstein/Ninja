@@ -851,6 +851,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refunded => 'Refunded';
 
   @override
+  String get voided => 'Voided';
+
+  @override
   String receiptShort(int number) {
     return '#$number';
   }

@@ -44,6 +44,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             ReceiptNumber = order.ReceiptNumber,
             PaidWith = order.PaidWith,
             RefundedAmount = order.RefundedAmount,
+            VoidedAt = order.VoidedAt,
             OrderItems = order.OrderItems.Select(oi => new Orderitem
             {
                 ProductName = oi.ProductName,
@@ -116,6 +117,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
+                VoidedAt = o.VoidedAt,
                 RoomName = o.RoomName,
                 TableId = o.TableId,
                 TableName = o.TableName,
@@ -189,6 +191,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
+                VoidedAt = o.VoidedAt,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
@@ -299,6 +302,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 ReceiptNumber = o.ReceiptNumber,
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
+                VoidedAt = o.VoidedAt,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),

@@ -260,6 +260,7 @@
   "unpaid": "غير مدفوع",
   "onYourTab": "على حسابك",
   "refunded": "اترجع",
+  "voided": "اتلغى",
   "receiptShort": "#{number}",
   "@receiptShort": {
     "placeholders": {

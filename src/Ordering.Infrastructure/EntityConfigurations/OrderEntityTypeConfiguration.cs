@@ -64,6 +64,7 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         // Projected from Sales' receipt: what the customer's list shows as paid
         orderConfiguration.Property(o => o.PaidAt);
+        orderConfiguration.Property(o => o.VoidedAt);
         orderConfiguration.Property(o => o.ReceiptNumber);
         orderConfiguration.Property(o => o.PaidWith)
             .HasMaxLength(20);

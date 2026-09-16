@@ -843,6 +843,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refunded => 'اترجع';
 
   @override
+  String get voided => 'اتلغى';
+
+  @override
   String receiptShort(int number) {
     return '#$number';
   }

@@ -1616,6 +1616,12 @@ abstract class AppLocalizations {
   /// **'Refunded'**
   String get refunded;
 
+  /// No description provided for @voided.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided'**
+  String get voided;
+
   /// No description provided for @receiptShort.
   ///
   /// In en, this message translates to:

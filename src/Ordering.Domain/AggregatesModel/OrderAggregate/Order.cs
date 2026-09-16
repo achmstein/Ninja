@@ -79,6 +79,12 @@ public class Order
     /// <summary>What credit notes have given back against this order, capped at its total.</summary>
     public decimal RefundedAmount { get; private set; }
 
+    /// <summary>
+    /// When an owner voided the open bill this order was on — it will never
+    /// be paid. Projected from Sales' TicketVoided event.
+    /// </summary>
+    public DateTime? VoidedAt { get; private set; }
+
     public bool IsPaid => PaidAt != null;
 
     /// <summary>
@@ -449,6 +455,14 @@ public class Order
         ReceiptNumber = receiptNumber;
         PaidWith = tender;
         PaidAt = at;
+    }
+
+    /// <summary>The open bill this order was on was voided; a paid order never is.</summary>
+    public void MarkVoided(DateTime at)
+    {
+        if (IsPaid || VoidedAt != null)
+            return;
+        VoidedAt = at;
     }
 
     /// <summary>A credit note gave part of this order back; never more than it cost.</summary>

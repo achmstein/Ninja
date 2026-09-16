@@ -261,5 +261,6 @@ export const messages = {
   unpaid: { en: "Unpaid", ar: "غير مدفوع" },
   onYourTab: { en: "On your tab", ar: "على حسابك" },
   refunded: { en: "Refunded", ar: "اترجع" },
+  voided: { en: "Voided", ar: "اتلغى" },
   receiptShort: { en: "#{number}", ar: "#{number}" },
 } as const satisfies Record<string, Message>
