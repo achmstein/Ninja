@@ -27,19 +27,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingOrders => 'Pending Orders';
 
   @override
-  String get activeSessions => 'Active Sessions';
-
-  @override
-  String get availableRooms => 'Available Rooms';
-
-  @override
   String get viewAll => 'View all';
 
   @override
   String get noPendingOrders => 'No pending orders';
-
-  @override
-  String get noActiveSessions => 'No active sessions';
 
   @override
   String get signIn => 'Sign In';
@@ -187,55 +178,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rooms => 'Rooms';
 
   @override
-  String get addRoom => 'Add Room';
-
-  @override
-  String get editRoom => 'Edit Room';
-
-  @override
-  String get roomSavedSuccess => 'Room saved successfully';
-
-  @override
-  String get failedToSaveRoom => 'Failed to save room';
-
-  @override
-  String get noRoomsConfigured => 'No rooms configured';
-
-  @override
-  String get addRoomToGetStarted => 'Add a room to get started';
-
-  @override
   String get endSession => 'End Session?';
-
-  @override
-  String get endSessionConfirmation =>
-      'Are you sure you want to end this session? The customer will be charged for the time used.';
-
-  @override
-  String get endSessionButton => 'End Session';
-
-  @override
-  String get statusActive => 'Active';
-
-  @override
-  String get statusReserved => 'Reserved';
 
   @override
   String get statusAvailable => 'Available';
 
   @override
   String get statusOccupied => 'Occupied';
-
-  @override
-  String get statusMaintenance => 'Maintenance';
-
-  @override
-  String reservedCountdown(String countdown) {
-    return 'Reserved ($countdown)';
-  }
-
-  @override
-  String get expiring => 'Expiring...';
 
   @override
   String get perHour => '/hr';
@@ -251,12 +200,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionalDescription => 'Optional description';
-
-  @override
-  String get singleRate => 'Single Rate (2P) *';
-
-  @override
-  String get multiRate => 'Multi Rate (4P) *';
 
   @override
   String get menu => 'Menu';
@@ -362,9 +305,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ordersApi => 'Orders API';
-
-  @override
-  String get roomsApi => 'Rooms API';
 
   @override
   String get catalogApi => 'Catalog API';
@@ -558,22 +498,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no => 'No';
 
   @override
-  String get cancelReservation => 'Cancel Reservation';
-
-  @override
-  String get cancelReservationQuestion => 'Cancel Reservation?';
-
-  @override
-  String get cancelReservationConfirmation =>
-      'Are you sure you want to cancel this reservation?';
-
-  @override
   String get deleteRoom => 'Delete Room?';
-
-  @override
-  String deleteRoomConfirmation(String name) {
-    return 'Delete \"$name\"? This cannot be undone.';
-  }
 
   @override
   String get startSession => 'Start Session';
@@ -583,10 +508,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get walkIn => 'Walk-in';
-
-  @override
-  String get customerWillBeCharged =>
-      'The customer will be charged for the time used.';
 
   @override
   String get record => 'Record';
@@ -661,9 +582,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amountEgpLabel => 'Amount (EGP)';
-
-  @override
-  String get readyToStart => 'Ready to Start';
 
   @override
   String get balance => 'Balance';
@@ -765,9 +683,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCustomersFound => 'No customers found';
 
   @override
-  String get roomNameHint => 'e.g. PlayStation Room 1';
-
-  @override
   String get tierBronze => 'BRONZE';
 
   @override
@@ -778,9 +693,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tierPlatinum => 'PLATINUM';
-
-  @override
-  String get noSessionsYet => 'No sessions yet';
 
   @override
   String get loadMore => 'Load more';
@@ -807,16 +719,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String priceFormat(String price) {
     return '£$price';
-  }
-
-  @override
-  String hourlyRateFormat(String rate) {
-    return '£$rate/hr';
-  }
-
-  @override
-  String dualRateFormat(String singleRate, String multiRate) {
-    return '£$singleRate · £$multiRate /hr';
   }
 
   @override
@@ -1222,27 +1124,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get originalPrice => 'Original Price';
 
   @override
-  String get playerModeSingle => 'Single';
-
-  @override
-  String get playerModeMulti => 'Multi';
-
-  @override
   String get hoursShort => 'hour';
-
-  @override
-  String get selectPlayerMode => 'Select Player Mode';
 
   @override
   String get totalDuration => 'Total Duration';
 
   @override
   String get changePlayerMode => 'Change Player Mode?';
-
-  @override
-  String changePlayerModeConfirmation(String mode) {
-    return 'Switch to $mode? The rate will change accordingly.';
-  }
 
   @override
   String get blockCustomer => 'Block Customer';
@@ -1490,4 +1378,241 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get placesNav => 'Rooms & Tables';
+
+  @override
+  String get tables => 'Tables';
+
+  @override
+  String get stations => 'Stations';
+
+  @override
+  String get fillEveryRate => 'Every rate needs a code and a price per hour';
+
+  @override
+  String get ordersOnly => 'Orders only';
+
+  @override
+  String get timed => 'Timed';
+
+  @override
+  String get scanToOrderOrJoin => 'Scan to order or start your time';
+
+  @override
+  String get placeQrSheetSubtitle =>
+      'Cut along the cards and put one on each room, table and station.';
+
+  @override
+  String get noPlacesYet => 'No rooms or tables yet. Add your first one.';
+
+  @override
+  String get selectPlace => 'Pick a room or table';
+
+  @override
+  String get allPlaces => 'All places';
+
+  @override
+  String get newPlace => 'New place';
+
+  @override
+  String get editPlace => 'Edit place';
+
+  @override
+  String get kind => 'Kind';
+
+  @override
+  String get placeKindRoom => 'Room';
+
+  @override
+  String get placeKindTable => 'Table';
+
+  @override
+  String get placeKindStation => 'Station';
+
+  @override
+  String get rateOptions => 'Rates';
+
+  @override
+  String get addRateOption => 'Add rate';
+
+  @override
+  String get optionCode => 'Code';
+
+  @override
+  String get hourlyRate => 'Per hour';
+
+  @override
+  String get roundingMinutes => 'Round to (minutes)';
+
+  @override
+  String get placeSaved => 'Saved';
+
+  @override
+  String get failedToSavePlace => 'Couldn\'t save';
+
+  @override
+  String get placeDeleted => 'Deleted';
+
+  @override
+  String get deletePlaceQuestion => 'Delete this place?';
+
+  @override
+  String get failedToDeletePlace => 'Couldn\'t delete';
+
+  @override
+  String get outOfService => 'Out of service';
+
+  @override
+  String get backInService => 'Back in service';
+
+  @override
+  String get held => 'Held';
+
+  @override
+  String heldFor(String name) {
+    return 'Held for $name';
+  }
+
+  @override
+  String get hold => 'Hold';
+
+  @override
+  String holdPlaceTitle(String name) {
+    return 'Hold $name';
+  }
+
+  @override
+  String placeHeld(String name) {
+    return '$name held';
+  }
+
+  @override
+  String get failedToHold => 'Couldn\'t hold it';
+
+  @override
+  String get holdCancelled => 'Hold cancelled';
+
+  @override
+  String get cancelHold => 'Cancel hold';
+
+  @override
+  String get cancelHoldQuestion => 'Cancel this hold?';
+
+  @override
+  String get failedToCancelHold => 'Couldn\'t cancel';
+
+  @override
+  String get startOnConfirm => 'Start the clock when they arrive';
+
+  @override
+  String get startsOnConfirm => 'Starts on confirm';
+
+  @override
+  String get failedToConfirm => 'Couldn\'t confirm';
+
+  @override
+  String startClockAt(String name) {
+    return 'Start the clock at $name';
+  }
+
+  @override
+  String get clockStarted => 'Clock started';
+
+  @override
+  String get failedToStartClock => 'Couldn\'t start the clock';
+
+  @override
+  String get rate => 'Rate';
+
+  @override
+  String get rateChanged => 'Rate changed';
+
+  @override
+  String get failedToChangeRate => 'Couldn\'t change the rate';
+
+  @override
+  String switchToRateQuestion(String option) {
+    return 'Switch to $option?';
+  }
+
+  @override
+  String keepRate(String option) {
+    return 'Keep $option';
+  }
+
+  @override
+  String get switchRate => 'Switch';
+
+  @override
+  String get endTimeQuestion => 'End the time?';
+
+  @override
+  String endTimeEstimate(String amount) {
+    return 'About $amount on the bill.';
+  }
+
+  @override
+  String get keepGoing => 'Keep going';
+
+  @override
+  String get timeEnded => 'Time ended';
+
+  @override
+  String get failedToEndTime => 'Couldn\'t end the time';
+
+  @override
+  String get cancelTime => 'Cancel time';
+
+  @override
+  String get cancelTimeQuestion => 'Cancel the time? Nothing goes on the bill.';
+
+  @override
+  String get timeCancelled => 'Time cancelled';
+
+  @override
+  String get estimate => 'So far';
+
+  @override
+  String get noTimeYet => 'No time yet';
+
+  @override
+  String get timeHistory => 'Time history';
+
+  @override
+  String get noTimeHistory => 'Nothing here for this range.';
+
+  @override
+  String get ended => 'Ended';
+
+  @override
+  String get paid => 'Paid';
+
+  @override
+  String get notPaid => 'Not paid';
+
+  @override
+  String get timeRunning => 'Time running';
+
+  @override
+  String get noTimeRunning => 'No time running';
+
+  @override
+  String get placesInUse => 'In use';
+
+  @override
+  String get timeByPlace => 'Time sold by place';
+
+  @override
+  String get visitsLabel => 'visits';
+
+  @override
+  String get copyPlaceLink => 'Copy QR link';
+
+  @override
+  String get placeLinkCopied => 'Link copied';
+
+  @override
+  String get acceptingCustomers => 'Open';
 }

@@ -8,8 +8,8 @@ import '../widgets/admin_scaffold.dart';
 import '../../features/orders/screens/orders_screen.dart';
 import '../../features/orders/screens/order_history_screen.dart';
 import '../../features/service_requests/screens/service_requests_screen.dart';
-import '../../features/rooms/screens/rooms_screen.dart';
-import '../../features/rooms/screens/room_detail_screen.dart';
+import '../../features/places/screens/places_screen.dart';
+import '../../features/places/screens/place_detail_screen.dart';
 import '../../features/menu/screens/menu_list_screen.dart';
 import '../../features/menu/screens/menu_item_edit_screen.dart';
 import '../../features/menu/screens/categories_screen.dart';
@@ -177,16 +177,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/rooms',
+            path: '/places',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: RoomsScreen(),
+              child: PlacesScreen(),
             ),
             routes: [
               GoRoute(
-                path: ':roomId',
+                path: ':placeId',
                 builder: (context, state) {
-                  final roomId = int.parse(state.pathParameters['roomId']!);
-                  return RoomDetailScreen(roomId: roomId);
+                  final placeId = int.parse(state.pathParameters['placeId']!);
+                  return PlaceDetailScreen(placeId: placeId);
                 },
               ),
             ],

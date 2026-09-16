@@ -4,8 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_service.dart';
 import '../../features/orders/providers/orders_provider.dart';
-import '../../features/rooms/providers/rooms_provider.dart';
-import '../../features/rooms/models/room.dart';
+import '../../features/places/providers/places_provider.dart';
 import '../../features/service_requests/providers/service_requests_provider.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
@@ -45,7 +44,7 @@ class NavItem {
 /// Main navigation items (shown in bottom nav on mobile)
 List<NavItem> mainNavItems = [
   NavItem(route: '/orders', labelBuilder: (l10n) => l10n.orders, icon: Icons.receipt_long_outlined),
-  NavItem(route: '/rooms', labelBuilder: (l10n) => l10n.rooms, icon: FIcons.gamepad2),
+  NavItem(route: '/places', labelBuilder: (l10n) => l10n.placesNav, icon: FIcons.doorOpen),
   NavItem(route: '/service-requests', labelBuilder: (l10n) => l10n.requests, icon: Icons.notifications_outlined),
   NavItem(route: '/accounts', labelBuilder: (l10n) => l10n.accounts, icon: Icons.account_balance_wallet_outlined),
 ];
@@ -195,10 +194,7 @@ class _MobileLayout extends ConsumerWidget {
     final isProfileSelected = selectedIndex == mainNavItems.length;
     final ordersState = ref.watch(ordersProvider);
     final pendingOrdersCount = ordersState.orders.length;
-    final roomsState = ref.watch(roomsProvider);
-    final reservationsCount = roomsState.activeSessions
-        .where((s) => s.status == SessionStatus.reserved)
-        .length;
+    final heldCount = ref.watch(placesProvider.select((s) => s.heldCount));
     final serviceRequestsState = ref.watch(serviceRequestsProvider);
     final pendingRequestsCount = serviceRequestsState.pendingRequests.length;
 
@@ -238,12 +234,12 @@ class _MobileLayout extends ConsumerWidget {
                     onTap: () => context.go(mainNavItems[i].route),
                     badgeCount: mainNavItems[i].route == '/orders'
                         ? pendingOrdersCount
-                        : mainNavItems[i].route == '/rooms'
-                            ? reservationsCount
+                        : mainNavItems[i].route == '/places'
+                            ? heldCount
                             : mainNavItems[i].route == '/service-requests'
                                 ? pendingRequestsCount
                                 : 0,
-                    badgeColor: mainNavItems[i].route == '/rooms' ? Colors.orange : null,
+                    badgeColor: mainNavItems[i].route == '/places' ? Colors.orange : null,
                   ),
                 // More button
                 _MoreNavItem(

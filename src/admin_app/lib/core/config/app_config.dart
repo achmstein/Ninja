@@ -13,7 +13,8 @@ class AppConfig {
   // API endpoints (through BFF) - trailing slash required for Dio path resolution
   static String get catalogApiUrl => '$bffBaseUrl/api/catalog/';
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
-  static String get roomsApiUrl => '$bffBaseUrl/api/rooms/';
+  static String get placesApiUrl => '$bffBaseUrl/api/places/';
+  static String get staysApiUrl => '$bffBaseUrl/api/stays/';
   static String get sessionsApiUrl => '$bffBaseUrl/api/sessions/';
   static String get identityApiUrl => '$bffBaseUrl/api/identity/';
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
@@ -54,5 +55,5 @@ class AppConfig {
 
   // Refresh intervals
   static const Duration ordersRefreshInterval = Duration(seconds: 30);
-  static const Duration roomsRefreshInterval = Duration(seconds: 10);
+  static const Duration placesRefreshInterval = Duration(seconds: 10);
 }

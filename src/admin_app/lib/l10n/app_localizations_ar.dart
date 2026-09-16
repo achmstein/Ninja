@@ -27,19 +27,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pendingOrders => 'الطلبات المعلقة';
 
   @override
-  String get activeSessions => 'الجلسات النشطة';
-
-  @override
-  String get availableRooms => 'الاوض المتاحة';
-
-  @override
   String get viewAll => 'عرض الكل';
 
   @override
   String get noPendingOrders => 'مفيش طلبات معلقة';
-
-  @override
-  String get noActiveSessions => 'مفيش جلسات نشطة';
 
   @override
   String get signIn => 'تسجيل الدخول';
@@ -185,54 +176,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rooms => 'الاوض';
 
   @override
-  String get addRoom => 'إضافة غرفة';
-
-  @override
-  String get editRoom => 'تعديل الغرفة';
-
-  @override
-  String get roomSavedSuccess => 'تم حفظ الغرفة بنجاح';
-
-  @override
-  String get failedToSaveRoom => 'فشل حفظ الغرفة';
-
-  @override
-  String get noRoomsConfigured => 'مفيش اوض متضافة';
-
-  @override
-  String get addRoomToGetStarted => 'ضيف غرفة عشان تبدأ';
-
-  @override
   String get endSession => 'إنهاء الوقت؟';
-
-  @override
-  String get endSessionConfirmation => 'متأكد انك عايز تنهي وقت الاوضه دي؟';
-
-  @override
-  String get endSessionButton => 'إنهاء الوقت';
-
-  @override
-  String get statusActive => 'نشط';
-
-  @override
-  String get statusReserved => 'محجوزة';
 
   @override
   String get statusAvailable => 'متاحة';
 
   @override
   String get statusOccupied => 'مشغولة';
-
-  @override
-  String get statusMaintenance => 'صيانة';
-
-  @override
-  String reservedCountdown(String countdown) {
-    return 'محجوزة ($countdown)';
-  }
-
-  @override
-  String get expiring => 'على وشك الانتهاء...';
 
   @override
   String get perHour => '/ساعة';
@@ -248,12 +198,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get optionalDescription => 'وصف اختياري';
-
-  @override
-  String get singleRate => 'سعر سنجل (2 لاعب) *';
-
-  @override
-  String get multiRate => 'سعر مالتي (4 لاعب) *';
 
   @override
   String get menu => 'المنيو';
@@ -359,9 +303,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ordersApi => 'API الطلبات';
-
-  @override
-  String get roomsApi => 'API الغرف';
 
   @override
   String get catalogApi => 'API الكتالوج';
@@ -555,21 +496,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get no => 'لا';
 
   @override
-  String get cancelReservation => 'إلغاء الحجز';
-
-  @override
-  String get cancelReservationQuestion => 'إلغاء الحجز؟';
-
-  @override
-  String get cancelReservationConfirmation => 'متأكد إنك عايز تلغي الحجز ده؟';
-
-  @override
   String get deleteRoom => 'حذف الغرفة؟';
-
-  @override
-  String deleteRoomConfirmation(String name) {
-    return 'حذف \"$name\"؟ مينفعش ترجع فيه.';
-  }
 
   @override
   String get startSession => 'إبدا الوقت';
@@ -579,9 +506,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get walkIn => 'زيارة مباشرة';
-
-  @override
-  String get customerWillBeCharged => 'هيتحاسب العميل على الوقت اللي استخدمه.';
 
   @override
   String get record => 'تسجيل';
@@ -656,9 +580,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get amountEgpLabel => 'المبلغ (جنيه)';
-
-  @override
-  String get readyToStart => 'جاهز للبدء';
 
   @override
   String get balance => 'الرصيد';
@@ -760,9 +681,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noCustomersFound => 'مفيش عملاء';
 
   @override
-  String get roomNameHint => 'مثلاً: غرفة بلايستيشن 1';
-
-  @override
   String get tierBronze => 'برونزي';
 
   @override
@@ -773,9 +691,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tierPlatinum => 'بلاتيني';
-
-  @override
-  String get noSessionsYet => 'مفيش جلسات لسه';
 
   @override
   String get loadMore => 'تحميل المزيد';
@@ -802,16 +717,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String priceFormat(String price) {
     return '$price ج.م';
-  }
-
-  @override
-  String hourlyRateFormat(String rate) {
-    return '$rate ج.م/ساعة';
-  }
-
-  @override
-  String dualRateFormat(String singleRate, String multiRate) {
-    return '$singleRate · $multiRate ج.م/ساعة';
   }
 
   @override
@@ -1215,27 +1120,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get originalPrice => 'السعر الأصلي';
 
   @override
-  String get playerModeSingle => 'سنجل';
-
-  @override
-  String get playerModeMulti => 'مالتي';
-
-  @override
   String get hoursShort => 'ساعة';
-
-  @override
-  String get selectPlayerMode => 'اختار وضع اللعب';
 
   @override
   String get totalDuration => 'المدة الكلية';
 
   @override
   String get changePlayerMode => 'تغيير الوضع؟';
-
-  @override
-  String changePlayerModeConfirmation(String mode) {
-    return 'تغيير لـ $mode؟ السعر هيتغير.';
-  }
 
   @override
   String get blockCustomer => 'حظر العميل';
@@ -1483,4 +1374,241 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get retry => 'حاول تاني';
+
+  @override
+  String get placesNav => 'الأوض والترابيزات';
+
+  @override
+  String get tables => 'الترابيزات';
+
+  @override
+  String get stations => 'الألعاب';
+
+  @override
+  String get fillEveryRate => 'كل سعر لازم له كود وسعر في الساعة';
+
+  @override
+  String get ordersOnly => 'طلبات بس';
+
+  @override
+  String get timed => 'بالوقت';
+
+  @override
+  String get scanToOrderOrJoin => 'امسح تطلب أو تبدأ وقتك';
+
+  @override
+  String get placeQrSheetSubtitle =>
+      'قص الكروت وحط واحد على كل اوضة وترابيزة ولعبة.';
+
+  @override
+  String get noPlacesYet => 'مفيش اوض ولا ترابيزات لسه. ضيف أول واحدة.';
+
+  @override
+  String get selectPlace => 'اختار اوضة أو ترابيزة';
+
+  @override
+  String get allPlaces => 'كل الأماكن';
+
+  @override
+  String get newPlace => 'مكان جديد';
+
+  @override
+  String get editPlace => 'تعديل المكان';
+
+  @override
+  String get kind => 'النوع';
+
+  @override
+  String get placeKindRoom => 'اوضة';
+
+  @override
+  String get placeKindTable => 'ترابيزة';
+
+  @override
+  String get placeKindStation => 'لعبة';
+
+  @override
+  String get rateOptions => 'الأسعار';
+
+  @override
+  String get addRateOption => 'ضيف سعر';
+
+  @override
+  String get optionCode => 'الكود';
+
+  @override
+  String get hourlyRate => 'في الساعة';
+
+  @override
+  String get roundingMinutes => 'التقريب (دقايق)';
+
+  @override
+  String get placeSaved => 'اتحفظ';
+
+  @override
+  String get failedToSavePlace => 'مقدرناش نحفظ';
+
+  @override
+  String get placeDeleted => 'اتحذف';
+
+  @override
+  String get deletePlaceQuestion => 'حذف المكان ده؟';
+
+  @override
+  String get failedToDeletePlace => 'مقدرناش نحذف';
+
+  @override
+  String get outOfService => 'خارج الخدمة';
+
+  @override
+  String get backInService => 'رجّع للخدمة';
+
+  @override
+  String get held => 'محجوز';
+
+  @override
+  String heldFor(String name) {
+    return 'محجوز لـ $name';
+  }
+
+  @override
+  String get hold => 'حجز';
+
+  @override
+  String holdPlaceTitle(String name) {
+    return 'حجز $name';
+  }
+
+  @override
+  String placeHeld(String name) {
+    return 'اتحجز $name';
+  }
+
+  @override
+  String get failedToHold => 'مقدرناش نحجز';
+
+  @override
+  String get holdCancelled => 'الحجز اتلغى';
+
+  @override
+  String get cancelHold => 'إلغاء الحجز';
+
+  @override
+  String get cancelHoldQuestion => 'نلغي الحجز ده؟';
+
+  @override
+  String get failedToCancelHold => 'مقدرناش نلغي';
+
+  @override
+  String get startOnConfirm => 'ابدأ الوقت لما يوصلوا';
+
+  @override
+  String get startsOnConfirm => 'يبدأ لما يتأكد';
+
+  @override
+  String get failedToConfirm => 'مقدرناش نأكد';
+
+  @override
+  String startClockAt(String name) {
+    return 'ابدأ الوقت في $name';
+  }
+
+  @override
+  String get clockStarted => 'الوقت بدأ';
+
+  @override
+  String get failedToStartClock => 'مقدرناش نبدأ الوقت';
+
+  @override
+  String get rate => 'السعر';
+
+  @override
+  String get rateChanged => 'السعر اتغير';
+
+  @override
+  String get failedToChangeRate => 'مقدرناش نغير السعر';
+
+  @override
+  String switchToRateQuestion(String option) {
+    return 'نحوّل لـ $option؟';
+  }
+
+  @override
+  String keepRate(String option) {
+    return 'خلي $option';
+  }
+
+  @override
+  String get switchRate => 'حوّل';
+
+  @override
+  String get endTimeQuestion => 'ننهي الوقت؟';
+
+  @override
+  String endTimeEstimate(String amount) {
+    return 'حوالي $amount على الفاتورة.';
+  }
+
+  @override
+  String get keepGoing => 'كمّلوا';
+
+  @override
+  String get timeEnded => 'الوقت خلص';
+
+  @override
+  String get failedToEndTime => 'مقدرناش ننهي الوقت';
+
+  @override
+  String get cancelTime => 'إلغاء الوقت';
+
+  @override
+  String get cancelTimeQuestion => 'نلغي الوقت؟ مفيش حاجة هتتحسب.';
+
+  @override
+  String get timeCancelled => 'الوقت اتلغى';
+
+  @override
+  String get estimate => 'لحد دلوقتي';
+
+  @override
+  String get noTimeYet => 'مفيش وقت لسه';
+
+  @override
+  String get timeHistory => 'سجل الوقت';
+
+  @override
+  String get noTimeHistory => 'مفيش حاجة في الفترة دي.';
+
+  @override
+  String get ended => 'خلص';
+
+  @override
+  String get paid => 'اتدفع';
+
+  @override
+  String get notPaid => 'لسه ما اتدفعش';
+
+  @override
+  String get timeRunning => 'الوقت شغال';
+
+  @override
+  String get noTimeRunning => 'مفيش وقت شغال';
+
+  @override
+  String get placesInUse => 'مشغول';
+
+  @override
+  String get timeByPlace => 'الوقت المتباع حسب المكان';
+
+  @override
+  String get visitsLabel => 'زيارة';
+
+  @override
+  String get copyPlaceLink => 'انسخ لينك الكود';
+
+  @override
+  String get placeLinkCopied => 'اتنسخ اللينك';
+
+  @override
+  String get acceptingCustomers => 'شغال';
 }

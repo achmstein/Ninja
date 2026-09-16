@@ -16,7 +16,7 @@ import 'core/auth/auth_service.dart';
 import 'core/services/battery_optimization_service.dart';
 import 'features/service_requests/providers/service_requests_provider.dart';
 import 'features/orders/providers/orders_provider.dart';
-import 'features/rooms/providers/rooms_provider.dart';
+import 'features/places/providers/places_provider.dart';
 import 'l10n/app_localizations.dart';
 
 /// Global navigator key for showing dialogs from FCM handlers
@@ -192,7 +192,7 @@ class _ChillaxAdminAppState extends ConsumerState<ChillaxAdminApp> with WidgetsB
     // Listen for realtime events and refresh providers
     _signalRSubscriptions.add(
       signalR.onRoomStatusChanged.listen((_) {
-        ref.read(roomsProvider.notifier).loadRooms();
+        ref.read(placesProvider.notifier).loadPlaces();
       }),
     );
     _signalRSubscriptions.add(
@@ -244,7 +244,7 @@ class _ChillaxAdminAppState extends ConsumerState<ChillaxAdminApp> with WidgetsB
     final route = switch (type) {
       'service_request' => '/service-requests',
       'new_order' || 'order_reminder' => '/orders',
-      'new_reservation' => '/rooms',
+      'new_reservation' => '/places',
       _ => null,
     };
     if (route != null) {
@@ -271,8 +271,8 @@ class _ChillaxAdminAppState extends ConsumerState<ChillaxAdminApp> with WidgetsB
         _showOrderReminderAlert(message.data);
         break;
       case 'new_reservation':
-        // Refresh rooms list
-        ref.read(roomsProvider.notifier).loadRooms();
+        // Refresh places list
+        ref.read(placesProvider.notifier).loadPlaces();
         break;
       default:
         debugPrint('Unknown FCM message type: $type');

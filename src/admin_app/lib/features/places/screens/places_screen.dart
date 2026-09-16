@@ -7,20 +7,23 @@ import '../../../core/config/app_config.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/widgets/admin_scaffold.dart';
 import '../../../core/widgets/app_text.dart';
+import '../../../core/widgets/toast_helpers.dart';
 import '../../../core/widgets/ui_components.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/room.dart';
-import '../providers/rooms_provider.dart';
-import '../widgets/room_form_sheet.dart';
+import '../models/place.dart';
+import '../providers/places_provider.dart';
+import '../status.dart';
+import '../widgets/place_form_sheet.dart';
 
-class RoomsScreen extends ConsumerStatefulWidget {
-  const RoomsScreen({super.key});
+/// Rooms & Tables: every place of the branch, grouped by kind
+class PlacesScreen extends ConsumerStatefulWidget {
+  const PlacesScreen({super.key});
 
   @override
-  ConsumerState<RoomsScreen> createState() => _RoomsScreenState();
+  ConsumerState<PlacesScreen> createState() => _PlacesScreenState();
 }
 
-class _RoomsScreenState extends ConsumerState<RoomsScreen> {
+class _PlacesScreenState extends ConsumerState<PlacesScreen> {
   Timer? _timer;
 
   @override
@@ -28,14 +31,14 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     super.initState();
 
     // Auto-refresh for live timers
-    _timer = Timer.periodic(AppConfig.roomsRefreshInterval, (_) {
-      ref.read(roomsProvider.notifier).loadRooms();
+    _timer = Timer.periodic(AppConfig.placesRefreshInterval, (_) {
+      ref.read(placesProvider.notifier).loadPlaces();
     });
 
     // Listen to route changes and refresh when navigating to this screen
     ref.listenManual(currentRouteProvider, (previous, next) {
-      if (next == '/rooms' && previous != '/rooms' && previous != null) {
-        ref.read(roomsProvider.notifier).loadRooms();
+      if (next == '/places' && previous != '/places' && previous != null) {
+        ref.read(placesProvider.notifier).loadPlaces();
       }
     });
   }
@@ -48,7 +51,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(roomsProvider);
+    final state = ref.watch(placesProvider);
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
 
@@ -60,12 +63,12 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
           padding: const EdgeInsets.only(left: 16, right: 16, top: 2, bottom: 8),
           child: Row(
             children: [
-              AppText(l10n.rooms, style: theme.typography.lg.copyWith(fontSize: 18, fontWeight: FontWeight.w600)),
+              AppText(l10n.placesNav, style: theme.typography.lg.copyWith(fontSize: 18, fontWeight: FontWeight.w600)),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.add, size: 22),
-                onPressed: () => _showRoomForm(context),
-                tooltip: l10n.addRoom,
+                onPressed: () => _showPlaceForm(context),
+                tooltip: l10n.newPlace,
               ),
             ],
           ),
@@ -74,20 +77,20 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
         // Content
         Expanded(
           child: DelayedShimmer(
-            isLoading: state.isLoading && state.rooms.isEmpty,
+            isLoading: state.isLoading && state.places.isEmpty,
             shimmer: const ShimmerLoadingList(),
             child: RefreshIndicator(
               color: theme.colors.primary,
               backgroundColor: theme.colors.background,
-              onRefresh: () => ref.read(roomsProvider.notifier).loadRooms(),
-              child: _RoomStatusSection(
-                rooms: state.rooms,
-                activeSessions: state.activeSessions,
-                onReserve: _reserveRoom,
-                onStartWalkIn: _startWalkIn,
-                onStartSession: _startSession,
-                onEndSession: (id) => _endSession(context, id),
-                onTapRoom: (room) => _showRoomDetail(context, room),
+              onRefresh: () => ref.read(placesProvider.notifier).loadPlaces(),
+              child: _PlaceList(
+                places: state.places,
+                openStays: state.openStays,
+                onTapPlace: (place) => place.isTimed ? _showPlaceDetail(context, place) : _showPlaceForm(context, place: place),
+                onSetActive: _setActive,
+                onEdit: (place) => _showPlaceForm(context, place: place),
+                onToggleService: _toggleService,
+                onDelete: (place) => _deletePlace(context, place),
               ),
             ),
           ),
@@ -96,79 +99,46 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     );
   }
 
-  void _showRoomForm(BuildContext context, {Room? room}) {
+  void _showPlaceForm(BuildContext context, {Place? place}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (context) => RoomFormSheet(room: room),
+      builder: (context) => PlaceFormSheet(place: place),
     );
   }
 
-  void _showRoomDetail(BuildContext context, Room room) {
-    context.go('/rooms/${room.id}');
+  void _showPlaceDetail(BuildContext context, Place place) {
+    context.go('/places/${place.id}');
   }
 
-  Future<void> _reserveRoom(int roomId) async {
-    await ref.read(roomsProvider.notifier).reserveRoom(roomId);
-  }
-
-  Future<String?> _pickPlayerMode(BuildContext context) async {
+  Future<void> _setActive(Place place, bool isActive) async {
     final l10n = AppLocalizations.of(context)!;
-    return showAdaptiveDialog<String>(
-      context: context,
-      builder: (context) => FDialog(
-        direction: Axis.vertical,
-        title: AppText(l10n.selectPlayerMode),
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            FButton(
-              onPress: () => Navigator.of(context).pop('Single'),
-              child: AppText(l10n.playerModeSingle),
-            ),
-            const SizedBox(height: 8),
-            FButton(
-              variant: FButtonVariant.outline,
-              onPress: () => Navigator.of(context).pop('Multi'),
-              child: AppText(l10n.playerModeMulti),
-            ),
-          ],
-        ),
-        actions: [
-          FButton(
-            variant: FButtonVariant.outline,
-            child: AppText(l10n.cancel),
-            onPress: () => Navigator.of(context).pop(null),
-          ),
-        ],
-      ),
-    );
+    final refusal = await ref.read(placesProvider.notifier).setActive(place.id, isActive);
+    if (refusal != null && mounted) {
+      showErrorToast(context, refusal.isEmpty ? l10n.failedToSavePlace : refusal);
+    }
   }
 
-  Future<void> _startWalkIn(int roomId) async {
-    final mode = await _pickPlayerMode(context);
-    if (mode == null) return;
-    await ref.read(roomsProvider.notifier).startWalkInSession(roomId, playerMode: mode);
+  Future<void> _toggleService(Place place) async {
+    final l10n = AppLocalizations.of(context)!;
+    final next = place.status == PlaceStatus.outOfService ? PlaceStatus.available : PlaceStatus.outOfService;
+    final refusal = await ref.read(placesProvider.notifier).setStatus(place.id, next);
+    if (refusal != null && mounted) {
+      showErrorToast(context, refusal.isEmpty ? l10n.failedToSavePlace : refusal);
+    }
   }
 
-  Future<void> _startSession(int sessionId) async {
-    final mode = await _pickPlayerMode(context);
-    if (mode == null) return;
-    await ref.read(roomsProvider.notifier).startSession(sessionId, playerMode: mode);
-  }
-
-  Future<void> _endSession(BuildContext context, int sessionId) async {
+  Future<void> _deletePlace(BuildContext context, Place place) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showAdaptiveDialog<bool>(
       context: context,
       builder: (context) => FDialog(
         direction: Axis.horizontal,
-        title: AppText(l10n.endSession),
-        body: AppText(l10n.endSessionConfirmation),
+        title: AppText(l10n.deletePlaceQuestion),
+        body: AppText(place.name.localized(context)),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
@@ -176,113 +146,126 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
             onPress: () => Navigator.of(context).pop(false),
           ),
           FButton(
-            child: AppText(l10n.endSessionButton),
+            variant: FButtonVariant.destructive,
+            child: AppText(l10n.delete),
             onPress: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      await ref.read(roomsProvider.notifier).endSession(sessionId);
+    if (confirmed != true) return;
+    final refusal = await ref.read(placesProvider.notifier).deletePlace(place.id);
+    if (!context.mounted) return;
+    if (refusal == null) {
+      showSuccessToast(context, l10n.placeDeleted);
+    } else {
+      showErrorToast(context, refusal.isEmpty ? l10n.failedToDeletePlace : refusal);
     }
   }
-
 }
 
-/// Room status section - list layout
-class _RoomStatusSection extends StatelessWidget {
-  final List<Room> rooms;
-  final List<RoomSession> activeSessions;
-  final Function(int) onReserve;
-  final Function(int) onStartWalkIn;
-  final Function(int) onStartSession;
-  final Function(int) onEndSession;
-  final Function(Room) onTapRoom;
+/// The places, grouped by kind: rooms, then tables, then stations
+class _PlaceList extends StatelessWidget {
+  final List<Place> places;
+  final List<Stay> openStays;
+  final void Function(Place) onTapPlace;
+  final void Function(Place, bool) onSetActive;
+  final void Function(Place) onEdit;
+  final void Function(Place) onToggleService;
+  final void Function(Place) onDelete;
 
-  const _RoomStatusSection({
-    required this.rooms,
-    required this.activeSessions,
-    required this.onReserve,
-    required this.onStartWalkIn,
-    required this.onStartSession,
-    required this.onEndSession,
-    required this.onTapRoom,
+  const _PlaceList({
+    required this.places,
+    required this.openStays,
+    required this.onTapPlace,
+    required this.onSetActive,
+    required this.onEdit,
+    required this.onToggleService,
+    required this.onDelete,
   });
+
+  String _groupTitle(AppLocalizations l10n, PlaceKind kind) => switch (kind) {
+        PlaceKind.room => l10n.rooms,
+        PlaceKind.table => l10n.tables,
+        PlaceKind.station => l10n.stations,
+      };
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    if (rooms.isEmpty) {
+    if (places.isEmpty) {
       return EmptyState(
-        icon: FIcons.gamepad2,
-        title: l10n.noRoomsConfigured,
-        subtitle: l10n.addRoomToGetStarted,
+        icon: FIcons.doorOpen,
+        title: l10n.noPlacesYet,
       );
     }
 
-    return ListView.builder(
+    // One flat list: a header row before each kind that has places
+    final rows = <Widget>[];
+    for (final kind in PlaceKind.values) {
+      final ofKind = places.where((p) => p.kind == kind).toList();
+      if (ofKind.isEmpty) continue;
+      rows.add(Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: AppText(
+          _groupTitle(l10n, kind),
+          style: theme.typography.sm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colors.mutedForeground,
+          ),
+        ),
+      ));
+      for (var i = 0; i < ofKind.length; i++) {
+        final place = ofKind[i];
+        rows.add(_PlaceTile(
+          place: place,
+          stay: openStays.where((s) => s.placeId == place.id).firstOrNull,
+          onTap: () => onTapPlace(place),
+          onSetActive: (v) => onSetActive(place, v),
+          onEdit: () => onEdit(place),
+          onToggleService: () => onToggleService(place),
+          onDelete: () => onDelete(place),
+        ));
+        if (i < ofKind.length - 1) {
+          rows.add(Divider(height: 1, indent: 16, endIndent: 16, color: theme.colors.border));
+        }
+      }
+    }
+
+    return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: rooms.length,
-      itemBuilder: (context, index) {
-        final room = rooms[index];
-        final session =
-            activeSessions.where((s) => s.roomId == room.id).firstOrNull;
-        return Column(
-          children: [
-            _RoomTile(
-              room: room,
-              session: session,
-              onReserve: () => onReserve(room.id),
-              onStartWalkIn: () => onStartWalkIn(room.id),
-              onStartSession:
-                  session != null ? () => onStartSession(session.id) : null,
-              onEndSession:
-                  session != null ? () => onEndSession(session.id) : null,
-              onTap: () => onTapRoom(room),
-              isLast: index == rooms.length - 1,
-            ),
-            if (index < rooms.length - 1)
-              Divider(
-                height: 1,
-                indent: 16,
-                endIndent: 16,
-                color: context.theme.colors.border,
-              ),
-          ],
-        );
-      },
+      children: rows,
     );
   }
 }
 
-/// Mobile room tile - matches mobile app design with icon buttons
-class _RoomTile extends StatefulWidget {
-  final Room room;
-  final RoomSession? session;
-  final VoidCallback onReserve;
-  final VoidCallback onStartWalkIn;
-  final VoidCallback? onStartSession;
-  final VoidCallback? onEndSession;
+/// One place: kind icon, name, rates or status, the active switch, a menu
+class _PlaceTile extends StatefulWidget {
+  final Place place;
+  final Stay? stay;
   final VoidCallback onTap;
-  final bool isLast;
+  final ValueChanged<bool> onSetActive;
+  final VoidCallback onEdit;
+  final VoidCallback onToggleService;
+  final VoidCallback onDelete;
 
-  const _RoomTile({
-    required this.room,
-    this.session,
-    required this.onReserve,
-    required this.onStartWalkIn,
-    this.onStartSession,
-    this.onEndSession,
+  const _PlaceTile({
+    required this.place,
+    this.stay,
     required this.onTap,
-    this.isLast = false,
+    required this.onSetActive,
+    required this.onEdit,
+    required this.onToggleService,
+    required this.onDelete,
   });
 
   @override
-  State<_RoomTile> createState() => _RoomTileState();
+  State<_PlaceTile> createState() => _PlaceTileState();
 }
 
-class _RoomTileState extends State<_RoomTile> {
+class _PlaceTileState extends State<_PlaceTile> {
   Timer? _timer;
 
   @override
@@ -292,16 +275,15 @@ class _RoomTileState extends State<_RoomTile> {
   }
 
   @override
-  void didUpdateWidget(_RoomTile oldWidget) {
+  void didUpdateWidget(_PlaceTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     _timer?.cancel();
     _setupTimer();
   }
 
   void _setupTimer() {
-    // Timer needed for both active sessions (duration) and reserved sessions (countdown)
-    if (widget.session?.status == SessionStatus.active ||
-        widget.session?.status == SessionStatus.reserved) {
+    // A running clock and a hold countdown both tick
+    if (widget.stay != null) {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted) setState(() {});
       });
@@ -318,91 +300,62 @@ class _RoomTileState extends State<_RoomTile> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final isActive = widget.session?.status == SessionStatus.active;
-    final isReserved = widget.session?.status == SessionStatus.reserved;
-    final isAvailable = widget.room.status == RoomStatus.available &&
-        !isActive && !isReserved;
+    final place = widget.place;
+    final stay = widget.stay;
+    final statusColor = _statusColor(theme);
+    final isOutOfService = place.status == PlaceStatus.outOfService;
+
+    final rates = place.isTimed
+        ? '${tariffLine(context, place.options, rateText)} ${l10n.perHour}'
+        : l10n.ordersOnly;
 
     return GestureDetector(
       onTap: widget.onTap,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Gamepad icon - larger like mobile app
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: _getStatusColor(theme).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+      child: Opacity(
+        opacity: place.isActive ? 1 : 0.55,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(start: 16, end: 4, top: 12, bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Kind icon, tinted by status
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(place.kind.icon, size: 24, color: statusColor),
               ),
-              child: Icon(
-                FIcons.gamepad2,
-                size: 28,
-                color: _getStatusColor(theme),
-              ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-            // Room info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText(
-                    widget.room.name.localized(context),
-                    style: theme.typography.base.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  if (isAvailable)
-                    Row(
-                      children: [
-                        AppText(
-                          l10n.dualRateFormat(widget.room.singleRate.toStringAsFixed(0), widget.room.multiRate.toStringAsFixed(0)),
-                          style: theme.typography.sm.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        AppText(
-                          '• ${_getStatusLabel(l10n)}',
-                          style: theme.typography.sm.copyWith(
-                            color: _getStatusColor(theme),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    )
-                  else
+              // Name, rates, what is going on
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     AppText(
-                      _getStatusLabel(l10n),
-                      style: theme.typography.sm.copyWith(
-                        color: _getStatusColor(theme),
-                        fontSize: 13,
-                      ),
+                      place.name.localized(context),
+                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  if (widget.session?.userName != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
-                          Icons.person,
-                          size: 14,
-                          color: theme.colors.mutedForeground,
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: AppText(
-                            widget.session!.userName!,
+                            _statusLabel(l10n) ?? rates,
                             style: theme.typography.sm.copyWith(
-                              color: theme.colors.foreground,
+                              color: _statusLabel(l10n) != null ? statusColor : theme.colors.mutedForeground,
                               fontSize: 13,
                             ),
                             maxLines: 1,
@@ -411,150 +364,135 @@ class _RoomTileState extends State<_RoomTile> {
                         ),
                       ],
                     ),
+                    if (stay?.userName != null) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(Icons.person, size: 14, color: theme.colors.mutedForeground),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: AppText(
+                              stay!.userName!,
+                              style: theme.typography.sm.copyWith(color: theme.colors.foreground, fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
 
-            // Action icon button
-            if (isActive)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onEndSession,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colors.destructive,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.stop,
-                      color: theme.colors.destructiveForeground,
-                      size: 18,
+              // Active switch: off keeps the place but customers cannot use it
+              FSwitch(
+                value: place.isActive,
+                onChange: widget.onSetActive,
+              ),
+
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, size: 20, color: theme.colors.mutedForeground),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      widget.onEdit();
+                    case 'service':
+                      widget.onToggleService();
+                    case 'delete':
+                      widget.onDelete();
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_outlined, size: 20),
+                        const SizedBox(width: 8),
+                        Text(l10n.edit),
+                      ],
                     ),
                   ),
-                ),
-              )
-            else if (isReserved)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onStartSession,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colors.primary,
-                      borderRadius: BorderRadius.circular(20),
+                  PopupMenuItem(
+                    value: 'service',
+                    child: Row(
+                      children: [
+                        Icon(isOutOfService ? Icons.check_circle_outline : Icons.build_outlined, size: 20),
+                        const SizedBox(width: 8),
+                        Text(isOutOfService ? l10n.backInService : l10n.outOfService),
+                      ],
                     ),
-                    child: Transform.scale(
-                      scaleX: Directionality.of(context) == TextDirection.rtl ? -1 : 1,
-                      child: Icon(
-                        Icons.play_arrow,
-                        color: theme.colors.primaryForeground,
-                        size: 18,
+                  ),
+                  if (stay == null)
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, size: 20, color: theme.colors.destructive),
+                          const SizedBox(width: 8),
+                          Text(l10n.delete, style: TextStyle(color: theme.colors.destructive)),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-              )
-            else if (isAvailable) ...[
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => widget.onStartWalkIn(),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colors.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.directions_walk,
-                      color: theme.colors.primaryForeground,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onReserve,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      Icons.bookmark_add_outlined,
-                      color: theme.colors.primary,
-                      size: 18,
-                    ),
-                  ),
-                ),
+                ],
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 
-  String _getStatusLabel(AppLocalizations l10n) {
-    if (widget.session?.status == SessionStatus.active) {
-      return widget.session!.formattedDuration;
+  /// What the clock or the hold says; null when the rates line should show
+  String? _statusLabel(AppLocalizations l10n) {
+    final stay = widget.stay;
+    if (stay?.status == StayStatus.running) {
+      return stay!.formattedDuration;
     }
-    if (widget.session?.status == SessionStatus.reserved) {
-      // Show countdown if expiration time is available
-      if (widget.session!.expiresAt != null) {
-        final remaining = widget.session!.timeUntilExpiration;
+    if (stay?.status == StayStatus.held) {
+      if (stay!.expiresAt != null) {
+        final remaining = stay.timeUntilExpiration;
         if (remaining != null && remaining.inSeconds > 0) {
-          return l10n.reservedCountdown(widget.session!.formattedCountdown);
-        } else {
-          return l10n.expiring;
+          return l10n.expiresIn(stay.formattedCountdown);
         }
+        return l10n.expiredAutoCancelling;
       }
-      return l10n.statusReserved;
+      return l10n.held;
     }
-    switch (widget.room.status) {
-      case RoomStatus.available:
-        return l10n.statusAvailable;
-      case RoomStatus.occupied:
+    switch (widget.place.status) {
+      case PlaceStatus.occupied:
         return l10n.statusOccupied;
-      case RoomStatus.reserved:
-        return l10n.statusReserved;
-      case RoomStatus.maintenance:
-        return l10n.statusMaintenance;
+      case PlaceStatus.outOfService:
+        return l10n.outOfService;
+      case PlaceStatus.available:
+      case PlaceStatus.held:
+        return null;
     }
   }
 
-  Color _getStatusColor(FThemeData theme) {
-    if (widget.session?.status == SessionStatus.active) {
+  Color _statusColor(FThemeData theme) {
+    final stay = widget.stay;
+    if (stay?.status == StayStatus.running) {
       return theme.colors.destructive;
     }
-    if (widget.session?.status == SessionStatus.reserved) {
-      // Show red if about to expire (< 5 minutes)
-      final remaining = widget.session!.timeUntilExpiration;
+    if (stay?.status == StayStatus.held) {
+      // Red when the hold is about to lapse
+      final remaining = stay!.timeUntilExpiration;
       if (remaining != null && remaining.inMinutes < 5) {
         return theme.colors.destructive;
       }
       return Colors.orange;
     }
 
-    switch (widget.room.status) {
-      case RoomStatus.available:
-        return theme.colors.primary;
-      case RoomStatus.occupied:
+    switch (widget.place.status) {
+      case PlaceStatus.available:
+        return Colors.green;
+      case PlaceStatus.occupied:
         return theme.colors.destructive;
-      case RoomStatus.reserved:
+      case PlaceStatus.held:
         return Colors.orange;
-      case RoomStatus.maintenance:
+      case PlaceStatus.outOfService:
         return theme.colors.mutedForeground;
     }
   }

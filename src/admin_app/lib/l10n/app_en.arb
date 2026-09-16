@@ -8,11 +8,8 @@
   "active": "Active",
   "available": "Available",
   "pendingOrders": "Pending Orders",
-  "activeSessions": "Active Sessions",
-  "availableRooms": "Available Rooms",
   "viewAll": "View all",
   "noPendingOrders": "No pending orders",
-  "noActiveSessions": "No active sessions",
 
   "signIn": "Sign In",
   "signOut": "Sign Out",
@@ -74,36 +71,14 @@
   "yesCancel": "Yes, Cancel",
 
   "rooms": "Rooms",
-  "addRoom": "Add Room",
-  "editRoom": "Edit Room",
-  "roomSavedSuccess": "Room saved successfully",
-  "failedToSaveRoom": "Failed to save room",
-  "noRoomsConfigured": "No rooms configured",
-  "addRoomToGetStarted": "Add a room to get started",
   "endSession": "End Session?",
-  "endSessionConfirmation": "Are you sure you want to end this session? The customer will be charged for the time used.",
-  "endSessionButton": "End Session",
-  "statusActive": "Active",
-  "statusReserved": "Reserved",
   "statusAvailable": "Available",
   "statusOccupied": "Occupied",
-  "statusMaintenance": "Maintenance",
-  "reservedCountdown": "Reserved ({countdown})",
-  "@reservedCountdown": {
-    "placeholders": {
-      "countdown": {
-        "type": "String"
-      }
-    }
-  },
-  "expiring": "Expiring...",
   "perHour": "/hr",
   "name": "Name",
   "nameRequired": "Name *",
   "description": "Description",
   "optionalDescription": "Optional description",
-  "singleRate": "Single Rate (2P) *",
-  "multiRate": "Multi Rate (4P) *",
 
   "menu": "Menu",
   "categories": "Categories",
@@ -158,7 +133,6 @@
   "appVersion": "App Version",
   "identityProvider": "Identity Provider",
   "ordersApi": "Orders API",
-  "roomsApi": "Rooms API",
   "catalogApi": "Catalog API",
   "signOutQuestion": "Sign Out?",
   "signOutConfirmation": "Are you sure you want to sign out?",
@@ -253,22 +227,10 @@
 
   "end": "End",
   "no": "No",
-  "cancelReservation": "Cancel Reservation",
-  "cancelReservationQuestion": "Cancel Reservation?",
-  "cancelReservationConfirmation": "Are you sure you want to cancel this reservation?",
   "deleteRoom": "Delete Room?",
-  "deleteRoomConfirmation": "Delete \"{name}\"? This cannot be undone.",
-  "@deleteRoomConfirmation": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "startSession": "Start Session",
   "reserve": "Reserve",
   "walkIn": "Walk-in",
-  "customerWillBeCharged": "The customer will be charged for the time used.",
   "record": "Record",
   "paymentRecorded": "Payment recorded",
   "failedToRecordPayment": "Failed to record payment",
@@ -319,7 +281,6 @@
 
   "amountEgpLabel": "Amount (EGP)",
 
-  "readyToStart": "Ready to Start",
   "balance": "Balance",
   "memberSince": "Member since",
   "status": "Status",
@@ -353,14 +314,12 @@
   "prepTimeHint": "e.g. 10",
   "searchByNameOrEmail": "Search by name or email...",
   "noCustomersFound": "No customers found",
-  "roomNameHint": "e.g. PlayStation Room 1",
 
   "tierBronze": "BRONZE",
   "tierSilver": "SILVER",
   "tierGold": "GOLD",
   "tierPlatinum": "PLATINUM",
 
-  "noSessionsYet": "No sessions yet",
   "loadMore": "Load more",
   "sessions": "Sessions",
 
@@ -383,19 +342,6 @@
   "@priceFormat": {
     "placeholders": {
       "price": {"type": "String"}
-    }
-  },
-  "hourlyRateFormat": "£{rate}/hr",
-  "@hourlyRateFormat": {
-    "placeholders": {
-      "rate": {"type": "String"}
-    }
-  },
-  "dualRateFormat": "£{singleRate} · £{multiRate} /hr",
-  "@dualRateFormat": {
-    "placeholders": {
-      "singleRate": {"type": "String"},
-      "multiRate": {"type": "String"}
     }
   },
   "balanceFormat": "{amount} {currency}",
@@ -562,18 +508,9 @@
   "deleteBundleConfirm": "Delete this bundle?",
   "originalPrice": "Original Price",
 
-  "playerModeSingle": "Single",
-  "playerModeMulti": "Multi",
   "hoursShort": "hour",
-  "selectPlayerMode": "Select Player Mode",
   "totalDuration": "Total Duration",
   "changePlayerMode": "Change Player Mode?",
-  "changePlayerModeConfirmation": "Switch to {mode}? The rate will change accordingly.",
-  "@changePlayerModeConfirmation": {
-    "placeholders": {
-      "mode": {"type": "String"}
-    }
-  },
 
   "blockCustomer": "Block Customer",
   "unblockCustomer": "Unblock Customer",
@@ -678,7 +615,9 @@
   "retry": "Retry",
 
   "placesNav": "Rooms & Tables",
+  "tables": "Tables",
   "stations": "Stations",
+  "fillEveryRate": "Every rate needs a code and a price per hour",
   "ordersOnly": "Orders only",
   "timed": "Timed",
   "scanToOrderOrJoin": "Scan to order or start your time",

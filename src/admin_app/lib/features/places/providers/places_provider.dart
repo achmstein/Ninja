@@ -1,255 +1,202 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
-import '../models/room.dart';
-import '../services/room_service.dart';
+import '../models/place.dart';
+import '../services/place_service.dart';
 
-/// Rooms state
-class RoomsState {
+/// Places state
+class PlacesState {
   final bool isLoading;
   final String? error;
-  final List<Room> rooms;
-  final List<RoomSession> activeSessions;
-  final List<RoomSession>? sessionHistory;
+  final List<Place> places;
+  final List<Stay> openStays;
+  final List<Stay>? stayHistory;
   final bool isLoadingHistory;
   final bool hasMoreHistory;
-  final int historyPage;
 
-  const RoomsState({
+  /// How many history rows the screen has asked for so far
+  final int historyLimit;
+
+  const PlacesState({
     this.isLoading = false,
     this.error,
-    this.rooms = const [],
-    this.activeSessions = const [],
-    this.sessionHistory,
+    this.places = const [],
+    this.openStays = const [],
+    this.stayHistory,
     this.isLoadingHistory = false,
     this.hasMoreHistory = false,
-    this.historyPage = 0,
+    this.historyLimit = 0,
   });
 
-  RoomsState copyWith({
+  /// The held stays, for the nav badge
+  int get heldCount => openStays.where((s) => s.status == StayStatus.held).length;
+
+  /// The held or running stay on a place, if any
+  Stay? openStayOn(int placeId) => openStays.where((s) => s.placeId == placeId).firstOrNull;
+
+  PlacesState copyWith({
     bool? isLoading,
     String? error,
-    List<Room>? rooms,
-    List<RoomSession>? activeSessions,
-    List<RoomSession>? sessionHistory,
+    List<Place>? places,
+    List<Stay>? openStays,
+    List<Stay>? stayHistory,
     bool? isLoadingHistory,
     bool? hasMoreHistory,
-    int? historyPage,
+    int? historyLimit,
+    bool clearHistory = false,
   }) {
-    return RoomsState(
+    return PlacesState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      rooms: rooms ?? this.rooms,
-      activeSessions: activeSessions ?? this.activeSessions,
-      sessionHistory: sessionHistory ?? this.sessionHistory,
+      places: places ?? this.places,
+      openStays: openStays ?? this.openStays,
+      stayHistory: clearHistory ? null : (stayHistory ?? this.stayHistory),
       isLoadingHistory: isLoadingHistory ?? this.isLoadingHistory,
       hasMoreHistory: hasMoreHistory ?? this.hasMoreHistory,
-      historyPage: historyPage ?? this.historyPage,
+      historyLimit: historyLimit ?? this.historyLimit,
     );
   }
 }
 
-/// Rooms provider
-class RoomsNotifier extends Notifier<RoomsState> {
-  late RoomRepository _repository;
+/// Places provider
+class PlacesNotifier extends Notifier<PlacesState> {
+  late PlaceRepository _repository;
 
   @override
-  RoomsState build() {
+  PlacesState build() {
     ref.watch(selectedBranchIdProvider);
-    _repository = ref.read(roomRepositoryProvider);
-    Future.microtask(() => loadRooms());
-    return const RoomsState(isLoading: true);
+    _repository = ref.read(placeRepositoryProvider);
+    Future.microtask(() => loadPlaces());
+    return const PlacesState(isLoading: true);
   }
 
-  Future<void> loadRooms() async {
+  Future<void> loadPlaces() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final result = await _repository.loadRooms();
+      final result = await _repository.loadPlaces();
 
       state = state.copyWith(
         isLoading: false,
-        rooms: result.rooms,
-        activeSessions: result.activeSessions,
+        places: result.places,
+        openStays: result.openStays,
       );
     } catch (e) {
-      debugPrint('Failed to load rooms: $e');
+      debugPrint('Failed to load places: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<bool> reserveRoom(int roomId) async {
+  /// Runs one change and reloads; the server's refusal comes back as the
+  /// message, null when it went through
+  Future<String?> _change(String what, Future<void> Function() call) async {
     try {
-      await _repository.reserveRoom(roomId);
-      await loadRooms();
-      return true;
+      await call();
+      await loadPlaces();
+      return null;
+    } on PlaceRequestRefused catch (e) {
+      debugPrint('Failed to $what: ${e.detail}');
+      return e.detail;
     } catch (e) {
-      debugPrint('Failed to reserve room: $e');
-      return false;
+      debugPrint('Failed to $what: $e');
+      return '';
     }
   }
 
-  Future<bool> startSession(int sessionId, {String? playerMode}) async {
-    try {
-      await _repository.startSession(sessionId, playerMode: playerMode);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to start session: $e');
-      return false;
-    }
-  }
+  // ---- stays
 
-  Future<bool> endSession(int sessionId) async {
-    try {
-      await _repository.endSession(sessionId);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to end session: $e');
-      return false;
-    }
-  }
+  Future<bool> holdPlace(int placeId, {String? customerName, bool startOnConfirm = false}) async =>
+      await _change('hold place', () => _repository.holdPlace(placeId, customerName: customerName, startOnConfirm: startOnConfirm)) == null;
 
-  Future<bool> cancelSession(int sessionId) async {
-    try {
-      await _repository.cancelSession(sessionId);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to cancel session: $e');
-      return false;
-    }
-  }
+  Future<bool> startWalkIn(int placeId, {String? optionCode}) async =>
+      await _change('start walk-in', () => _repository.startWalkIn(placeId, optionCode: optionCode)) == null;
 
-  Future<bool> createRoom(Room room) async {
-    try {
-      await _repository.createRoom(room);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to create room: $e');
-      return false;
-    }
-  }
+  Future<bool> confirmStay(int stayId, {String? optionCode}) async =>
+      await _change('confirm stay', () => _repository.confirmStay(stayId, optionCode: optionCode)) == null;
 
-  Future<bool> updateRoom(Room room) async {
-    try {
-      await _repository.updateRoom(room);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to update room: $e');
-      return false;
-    }
-  }
+  Future<bool> startStay(int stayId, {String? optionCode}) async =>
+      await _change('start stay', () => _repository.startStay(stayId, optionCode: optionCode)) == null;
 
-  Future<bool> deleteRoom(int roomId) async {
-    try {
-      await _repository.deleteRoom(roomId);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to delete room: $e');
-      return false;
-    }
-  }
+  Future<bool> endStay(int stayId) async => await _change('end stay', () => _repository.endStay(stayId)) == null;
 
-  /// Assign a customer to an active walk-in session
-  Future<bool> assignCustomerToSession(int sessionId, String customerId, String? customerName) async {
-    try {
-      await _repository.assignCustomerToSession(sessionId, customerId, customerName);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to assign customer to session: $e');
-      return false;
-    }
-  }
+  Future<bool> cancelStay(int stayId) async =>
+      await _change('cancel stay', () => _repository.cancelStay(stayId)) == null;
 
-  /// Add a member to an active session
-  Future<bool> addMemberToSession(int sessionId, String customerId, String? customerName) async {
-    try {
-      await _repository.addMemberToSession(sessionId, customerId, customerName);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to add member to session: $e');
-      return false;
-    }
-  }
+  Future<bool> changeOption(int stayId, String optionCode) async =>
+      await _change('change option', () => _repository.changeOption(stayId, optionCode)) == null;
 
-  /// Remove a member from an active session
-  Future<bool> removeMemberFromSession(int sessionId, String customerId) async {
-    try {
-      await _repository.removeMemberFromSession(sessionId, customerId);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to remove member from session: $e');
-      return false;
-    }
-  }
+  /// Give a walk-in stay its customer
+  Future<bool> assignStayCustomer(int stayId, String customerId, String? customerName) async =>
+      await _change('assign customer', () => _repository.assignStayCustomer(stayId, customerId, customerName)) == null;
 
-  /// Change player mode for an active session
-  Future<bool> changePlayerMode(int sessionId, String playerMode) async {
-    try {
-      await _repository.changePlayerMode(sessionId, playerMode);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to change player mode: $e');
-      return false;
-    }
-  }
+  Future<bool> addStayMember(int stayId, String customerId, String? customerName) async =>
+      await _change('add member', () => _repository.addStayMember(stayId, customerId, customerName)) == null;
 
-  /// Start a walk-in session directly (without reservation)
-  Future<bool> startWalkInSession(int roomId, {String? playerMode}) async {
-    try {
-      await _repository.startWalkInSession(roomId, playerMode: playerMode);
-      await loadRooms();
-      return true;
-    } catch (e) {
-      debugPrint('Failed to start walk-in session: $e');
-      return false;
-    }
-  }
+  Future<bool> removeStayMember(int stayId, String customerId) async =>
+      await _change('remove member', () => _repository.removeStayMember(stayId, customerId)) == null;
+
+  // ---- the place itself; these hand back the server's reason so the
+  // form can show it
+
+  Future<String?> createPlace({
+    required PlaceKind kind,
+    required LocalizedText name,
+    LocalizedText? description,
+    Tariff? tariff,
+  }) =>
+      _change('create place', () => _repository.createPlace(kind: kind, name: name, description: description, tariff: tariff));
+
+  Future<String?> updatePlace(int placeId, {required LocalizedText name, LocalizedText? description}) =>
+      _change('update place', () => _repository.updatePlace(placeId, name: name, description: description));
+
+  Future<String?> setTariff(int placeId, Tariff? tariff) =>
+      _change('set tariff', () => _repository.setTariff(placeId, tariff));
+
+  Future<String?> setActive(int placeId, bool isActive) =>
+      _change('set active', () => _repository.setActive(placeId, isActive));
+
+  Future<String?> setStatus(int placeId, PlaceStatus status) =>
+      _change('set status', () => _repository.setStatus(placeId, status));
+
+  Future<String?> deletePlace(int placeId) => _change('delete place', () => _repository.deletePlace(placeId));
 
   static const int _historyPageSize = 20;
 
-  /// Load session history for a specific room
-  Future<void> loadSessionHistory(int roomId, {bool loadMore = false}) async {
-    final currentPage = loadMore ? state.historyPage + 1 : 0;
-    final currentHistory = loadMore ? (state.sessionHistory ?? []) : <RoomSession>[];
+  /// Load the ended and cancelled stays of one place; load more asks the
+  /// server for a longer list
+  Future<void> loadStayHistory(int placeId, {bool loadMore = false}) async {
+    final limit = loadMore ? state.historyLimit + _historyPageSize : _historyPageSize;
+    final current = loadMore ? state.stayHistory : null;
 
     state = state.copyWith(
       isLoadingHistory: true,
-      sessionHistory: loadMore ? currentHistory : null,
-      historyPage: currentPage,
+      clearHistory: !loadMore,
+      historyLimit: limit,
     );
 
     try {
-      final newHistory = await _repository.getSessionHistory(roomId, limit: _historyPageSize);
+      final history = await _repository.getStayHistory(placeId, limit: limit);
 
       state = state.copyWith(
         isLoadingHistory: false,
-        sessionHistory: [...currentHistory, ...newHistory],
-        hasMoreHistory: newHistory.length >= _historyPageSize,
+        stayHistory: history,
+        hasMoreHistory: history.length >= limit,
       );
     } catch (e) {
       state = state.copyWith(
         isLoadingHistory: false,
-        sessionHistory: currentHistory.isEmpty ? [] : currentHistory,
+        stayHistory: current ?? [],
         hasMoreHistory: false,
       );
     }
   }
 
-  /// Clear session history when closing detail sheet
-  void clearSessionHistory() {
-    state = state.copyWith(sessionHistory: null);
+  /// Clear stay history when leaving the detail screen
+  void clearStayHistory() {
+    state = state.copyWith(clearHistory: true, historyLimit: 0);
   }
 }
 
-/// Rooms provider
-final roomsProvider = NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);
+/// Places provider
+final placesProvider = NotifierProvider<PlacesNotifier, PlacesState>(PlacesNotifier.new);

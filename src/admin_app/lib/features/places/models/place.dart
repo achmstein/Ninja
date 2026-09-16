@@ -1,120 +1,191 @@
+import 'package:flutter/widgets.dart';
+import 'package:forui/forui.dart';
 import '../../../core/models/localized_text.dart';
 
-/// Room display status from API
-enum RoomStatus {
+/// What a place is, for icons and words. What it *does* comes from its
+/// tariff (a timed place has one), not from its kind.
+enum PlaceKind {
+  room(1, 'Room', FIcons.doorOpen),
+  table(2, 'Table', FIcons.armchair),
+  station(3, 'Station', FIcons.gamepad2);
+
+  final int value;
+
+  /// As the services spell it in events and requests
+  final String wireName;
+  final IconData icon;
+
+  const PlaceKind(this.value, this.wireName, this.icon);
+
+  static PlaceKind fromValue(int? value) => PlaceKind.values.firstWhere(
+        (e) => e.value == value,
+        orElse: () => PlaceKind.room,
+      );
+}
+
+/// Place display status from the API
+enum PlaceStatus {
   available(1, 'Available'),
   occupied(2, 'Occupied'),
-  reserved(3, 'Reserved'),  // Customer has 15 min to arrive
-  maintenance(4, 'Maintenance');
+  held(3, 'Held'), // the customer has 10 min to arrive
+  outOfService(4, 'Out of service');
 
   final int value;
   final String label;
 
-  const RoomStatus(this.value, this.label);
+  const PlaceStatus(this.value, this.label);
 
-  static RoomStatus fromValue(int value) {
-    return RoomStatus.values.firstWhere(
+  static PlaceStatus fromValue(int value) {
+    return PlaceStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => RoomStatus.available,
+      orElse: () => PlaceStatus.available,
     );
   }
 }
 
-/// Session status
-enum SessionStatus {
-  reserved(1, 'Reserved'),
-  active(2, 'Active'),
-  completed(3, 'Completed'),
+/// Stay status
+enum StayStatus {
+  held(1, 'Held'),
+  running(2, 'Running'),
+  ended(3, 'Ended'),
   cancelled(4, 'Cancelled');
 
   final int value;
   final String label;
 
-  const SessionStatus(this.value, this.label);
+  const StayStatus(this.value, this.label);
 
-  static SessionStatus fromValue(int value) {
-    return SessionStatus.values.firstWhere(
+  static StayStatus fromValue(int value) {
+    return StayStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => SessionStatus.reserved,
+      orElse: () => StayStatus.held,
     );
   }
 }
 
-/// Room model
-class Room {
+/// One way time at a place is charged: a room has "single" and "multi", a
+/// timed table usually one.
+class RateOption {
+  final String code;
+  final LocalizedText name;
+  final double hourlyRate;
+
+  const RateOption({required this.code, required this.name, required this.hourlyRate});
+
+  factory RateOption.fromJson(Map<String, dynamic> json) => RateOption(
+        code: json['code'] as String? ?? '',
+        name: LocalizedText.parse(json['name']),
+        hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {'code': code, 'name': name.toJson(), 'hourlyRate': hourlyRate};
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RateOption && other.code == code && other.name == name && other.hourlyRate == hourlyRate;
+
+  @override
+  int get hashCode => Object.hash(code, name, hourlyRate);
+}
+
+/// How a timed place charges: its rate options and the rounding step.
+/// The request body of POST /places (tariff) and PUT /places/{id}/tariff.
+class Tariff {
+  final List<RateOption> options;
+  final int roundingMinutes;
+
+  const Tariff({required this.options, this.roundingMinutes = 15});
+
+  Map<String, dynamic> toJson() => {
+        'options': options.map((o) => o.toJson()).toList(),
+        'roundingMinutes': roundingMinutes,
+      };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Tariff || other.roundingMinutes != roundingMinutes || other.options.length != options.length) {
+      return false;
+    }
+    for (var i = 0; i < options.length; i++) {
+      if (options[i] != other.options[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(roundingMinutes, Object.hashAll(options));
+}
+
+List<RateOption> _parseOptions(dynamic tariff) {
+  if (tariff is! Map<String, dynamic>) return const [];
+  return (tariff['options'] as List<dynamic>? ?? const [])
+      .map((e) => RateOption.fromJson(e as Map<String, dynamic>))
+      .toList();
+}
+
+int _parseRounding(dynamic tariff) =>
+    tariff is Map<String, dynamic> ? (tariff['roundingMinutes'] as num?)?.toInt() ?? 15 : 15;
+
+/// A place: a room, a table, a station. Timed when it has a tariff.
+class Place {
   final int id;
+  final PlaceKind kind;
   final LocalizedText name;
   final LocalizedText? description;
-  final RoomStatus status;
-  final double singleRate;
-  final double multiRate;
-  final String? pictureUri;
+  final PlaceStatus status;
+  final bool isActive;
+  final List<RateOption> options;
+  final int roundingMinutes;
+  final bool canReserve;
 
-  Room({
+  Place({
     required this.id,
+    this.kind = PlaceKind.room,
     required this.name,
     this.description,
     required this.status,
-    required this.singleRate,
-    required this.multiRate,
-    this.pictureUri,
+    this.isActive = true,
+    this.options = const [],
+    this.roundingMinutes = 15,
+    this.canReserve = true,
   });
 
-  Room copyWith({
-    int? id,
-    LocalizedText? name,
-    LocalizedText? description,
-    RoomStatus? status,
-    double? singleRate,
-    double? multiRate,
-    String? pictureUri,
-  }) {
-    return Room(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      status: status ?? this.status,
-      singleRate: singleRate ?? this.singleRate,
-      multiRate: multiRate ?? this.multiRate,
-      pictureUri: pictureUri ?? this.pictureUri,
-    );
-  }
+  /// A place with a clock
+  bool get isTimed => options.isNotEmpty;
 
-  factory Room.fromJson(Map<String, dynamic> json) {
-    // API returns 'displayStatus', fallback to 'status' for backwards compatibility
-    final statusValue = json['displayStatus'] ?? json['status'];
-    return Room(
+  /// A choice of rates to make (single / multi)
+  bool get hasOptions => options.length > 1;
+
+  /// The tariff as the form edits it, null for an orders-only place
+  Tariff? get tariff => isTimed ? Tariff(options: options, roundingMinutes: roundingMinutes) : null;
+
+  RateOption? option(String? code) => options.where((o) => o.code == code).firstOrNull;
+
+  factory Place.fromJson(Map<String, dynamic> json) {
+    return Place(
       id: json['id'] as int,
+      kind: PlaceKind.fromValue(json['kind'] as int?),
       name: LocalizedText.parse(json['name']),
       description: LocalizedText.parseNullable(json['description']),
-      status: statusValue != null
-          ? RoomStatus.fromValue(statusValue as int)
-          : RoomStatus.available,
-      singleRate: (json['singleRate'] as num?)?.toDouble() ?? 0.0,
-      multiRate: (json['multiRate'] as num?)?.toDouble() ?? 0.0,
-      pictureUri: json['pictureUri'] as String?,
+      status: PlaceStatus.fromValue(json['status'] as int? ?? 1),
+      isActive: json['isActive'] as bool? ?? true,
+      options: _parseOptions(json['tariff']),
+      roundingMinutes: _parseRounding(json['tariff']),
+      canReserve: json['canReserve'] as bool? ?? true,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name.toJson(),
-      'description': description?.toJson(),
-      'singleRate': singleRate,
-      'multiRate': multiRate,
-      'pictureFileName': pictureUri,
-    };
   }
 }
 
-/// Session member model
-class SessionMember {
+/// Someone on a stay
+class StayMember {
   final String customerId;
   final String? customerName;
   final DateTime joinedAt;
   final String role; // "Owner" or "Member"
 
-  SessionMember({
+  StayMember({
     required this.customerId,
     this.customerName,
     required this.joinedAt,
@@ -123,8 +194,8 @@ class SessionMember {
 
   bool get isOwner => role == 'Owner';
 
-  factory SessionMember.fromJson(Map<String, dynamic> json) {
-    return SessionMember(
+  factory StayMember.fromJson(Map<String, dynamic> json) {
+    return StayMember(
       customerId: json['customerId'] as String,
       customerName: json['customerName'] as String?,
       joinedAt: DateTime.parse(json['joinedAt'] as String),
@@ -133,107 +204,120 @@ class SessionMember {
   }
 }
 
-/// Player mode for dual pricing
-enum PlayerMode {
-  single,
-  multi;
-
-  static PlayerMode? fromString(String? value) {
-    if (value == null) return null;
-    switch (value.toLowerCase()) {
-      case 'single':
-        return PlayerMode.single;
-      case 'multi':
-        return PlayerMode.multi;
-      default:
-        return null;
-    }
-  }
-}
-
-/// Session segment tracking time in each player mode
-class SessionSegment {
-  final String playerMode;
+/// A stretch of a stay charged at one rate option
+class StaySegment {
+  final String optionCode;
+  final LocalizedText optionName;
   final double hourlyRate;
   final DateTime startTime;
   final DateTime? endTime;
 
-  SessionSegment({
-    required this.playerMode,
+  StaySegment({
+    required this.optionCode,
+    required this.optionName,
     required this.hourlyRate,
     required this.startTime,
     this.endTime,
   });
 
-  factory SessionSegment.fromJson(Map<String, dynamic> json) {
-    return SessionSegment(
-      playerMode: json['playerMode'] as String,
+  factory StaySegment.fromJson(Map<String, dynamic> json) {
+    return StaySegment(
+      optionCode: json['optionCode'] as String? ?? '',
+      optionName: LocalizedText.parse(json['optionName']),
       hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0,
       startTime: DateTime.parse(json['startTime'] as String),
-      endTime: json['endTime'] != null
-          ? DateTime.parse(json['endTime'] as String)
-          : null,
+      endTime: json['endTime'] != null ? DateTime.parse(json['endTime'] as String) : null,
     );
   }
 }
 
-/// Room session model
-class RoomSession {
+/// What one rate option of a stay cost, as the server settled it
+class StayCost {
+  final String optionCode;
+  final LocalizedText optionName;
+  final double hourlyRate;
+  final double hours;
+  final double cost;
+
+  const StayCost({
+    required this.optionCode,
+    required this.optionName,
+    required this.hourlyRate,
+    required this.hours,
+    required this.cost,
+  });
+
+  factory StayCost.fromJson(Map<String, dynamic> json) => StayCost(
+        optionCode: json['optionCode'] as String? ?? '',
+        optionName: LocalizedText.parse(json['optionName']),
+        hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 0,
+        hours: (json['hours'] as num?)?.toDouble() ?? 0,
+        cost: (json['cost'] as num?)?.toDouble() ?? 0,
+      );
+}
+
+/// A stay: one party's timed use of a place — the hold, the running clock,
+/// the ended one on the bill.
+class Stay {
   final int id;
-  final int roomId;
-  final LocalizedText roomName;
+  final int placeId;
+  final PlaceKind placeKind;
+  final LocalizedText placeName;
   final String? customerId;
   final String? userName;
-  final DateTime reservationTime;
-  final DateTime? startTime;
-  final DateTime? endTime;
+  final DateTime createdAt;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
   final double? totalCost;
-  final SessionStatus status;
-  final double singleRate;
-  final double multiRate;
-  final String? currentPlayerMode;
-  final double? singleRoundedHours;
-  final double? multiRoundedHours;
-  final double? singleCost;
-  final double? multiCost;
-  final DateTime? expiresAt;
-  final List<SessionMember> members;
-  final List<SessionSegment> segments;
+  final StayStatus status;
+  final List<RateOption> options;
+  final int roundingMinutes;
+  final String? currentOptionCode;
+  final LocalizedText? currentOptionName;
 
-  RoomSession({
+  /// The customer asked that Confirm also start the clock
+  final bool startOnConfirm;
+  final List<StayCost> costs;
+  final DateTime? expiresAt;
+  final List<StayMember> members;
+  final List<StaySegment> segments;
+
+  Stay({
     required this.id,
-    required this.roomId,
-    required this.roomName,
+    required this.placeId,
+    this.placeKind = PlaceKind.room,
+    required this.placeName,
     this.customerId,
     this.userName,
-    required this.reservationTime,
-    this.startTime,
-    this.endTime,
+    required this.createdAt,
+    this.startedAt,
+    this.endedAt,
     this.totalCost,
     required this.status,
-    this.singleRate = 0,
-    this.multiRate = 0,
-    this.currentPlayerMode,
-    this.singleRoundedHours,
-    this.multiRoundedHours,
-    this.singleCost,
-    this.multiCost,
+    this.options = const [],
+    this.roundingMinutes = 15,
+    this.currentOptionCode,
+    this.currentOptionName,
+    this.startOnConfirm = false,
+    this.costs = const [],
     this.expiresAt,
     this.members = const [],
     this.segments = const [],
   });
 
-  /// The active hourly rate based on current player mode
-  double get activeRate {
-    if (currentPlayerMode == 'Multi') return multiRate;
-    return singleRate;
-  }
+  /// A choice of rates on this place (the option pill and toggle)
+  bool get hasOptions => options.length > 1;
 
-  /// Calculate duration if session has started
+  RateOption? option(String? code) => options.where((o) => o.code == code).firstOrNull;
+
+  /// The rate running right now, if the clock runs
+  double get activeRate => option(currentOptionCode)?.hourlyRate ?? 0;
+
+  /// How long the clock has run, once started
   Duration? get duration {
-    if (startTime == null) return null;
-    final end = endTime ?? DateTime.now();
-    return end.difference(startTime!);
+    if (startedAt == null) return null;
+    final end = endedAt ?? DateTime.now();
+    return end.difference(startedAt!);
   }
 
   /// Format duration as HH:MM:SS
@@ -246,22 +330,15 @@ class RoomSession {
     return '$hours:$minutes:$seconds';
   }
 
-  /// Calculate live cost based on duration and current mode rate
-  double get liveCost {
-    final d = duration;
-    if (d == null || activeRate == 0) return totalCost ?? 0;
-    return (d.inSeconds / 3600) * activeRate;
-  }
-
-  /// Check if this reservation is about to expire
+  /// Check if this hold is about to expire
   bool get isExpiring {
-    if (status != SessionStatus.reserved || expiresAt == null) return false;
+    if (status != StayStatus.held || expiresAt == null) return false;
     return DateTime.now().isAfter(expiresAt!);
   }
 
   /// Get remaining time until expiration
   Duration? get timeUntilExpiration {
-    if (status != SessionStatus.reserved || expiresAt == null) return null;
+    if (status != StayStatus.held || expiresAt == null) return null;
     final remaining = expiresAt!.difference(DateTime.now());
     return remaining.isNegative ? Duration.zero : remaining;
   }
@@ -275,61 +352,53 @@ class RoomSession {
     return '$minutes:$seconds';
   }
 
-  factory RoomSession.fromJson(Map<String, dynamic> json) {
-    // Handle status - API may return 'status' as int or enum value
+  factory Stay.fromJson(Map<String, dynamic> json) {
     final statusValue = json['status'];
-    SessionStatus status;
+    StayStatus status;
     if (statusValue is int) {
-      status = SessionStatus.fromValue(statusValue);
+      status = StayStatus.fromValue(statusValue);
     } else if (statusValue is String) {
-      // Handle string enum names
-      status = SessionStatus.values.firstWhere(
+      status = StayStatus.values.firstWhere(
         (e) => e.name.toLowerCase() == statusValue.toLowerCase(),
-        orElse: () => SessionStatus.reserved,
+        orElse: () => StayStatus.held,
       );
     } else {
-      status = SessionStatus.reserved;
+      status = StayStatus.held;
     }
 
-    // Handle date fields - API uses different field names
-    final createdAt = json['createdAt'];
-    final startTime = json['startTime'] ?? json['actualStartTime'];
+    final members = (json['members'] as List<dynamic>?)
+            ?.map((e) => StayMember.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    final segments = (json['segments'] as List<dynamic>?)
+            ?.map((e) => StaySegment.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    final costs = (json['costs'] as List<dynamic>?)
+            ?.map((e) => StayCost.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
 
-    final membersJson = json['members'] as List<dynamic>?;
-    final members = membersJson
-        ?.map((e) => SessionMember.fromJson(e as Map<String, dynamic>))
-        .toList() ?? [];
-
-    final segmentsJson = json['segments'] as List<dynamic>?;
-    final segments = segmentsJson
-        ?.map((e) => SessionSegment.fromJson(e as Map<String, dynamic>))
-        .toList() ?? [];
-
-    return RoomSession(
+    return Stay(
       id: json['id'] as int,
-      roomId: json['roomId'] as int,
-      roomName: LocalizedText.parse(json['roomName'] ?? 'Room ${json['roomId']}'),
+      placeId: json['placeId'] as int,
+      placeKind: PlaceKind.fromValue(json['placeKind'] as int?),
+      placeName: LocalizedText.parse(json['placeName'] ?? 'Place ${json['placeId']}'),
       customerId: json['customerId'] as String?,
       userName: json['customerName'] as String?,
-      reservationTime: DateTime.parse(createdAt as String),
-      startTime: startTime != null
-          ? DateTime.parse(startTime as String)
-          : null,
-      endTime: json['endTime'] != null
-          ? DateTime.parse(json['endTime'] as String)
-          : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      startedAt: json['startedAt'] != null ? DateTime.parse(json['startedAt'] as String) : null,
+      endedAt: json['endedAt'] != null ? DateTime.parse(json['endedAt'] as String) : null,
       totalCost: (json['totalCost'] as num?)?.toDouble(),
       status: status,
-      singleRate: (json['singleRate'] as num?)?.toDouble() ?? 0,
-      multiRate: (json['multiRate'] as num?)?.toDouble() ?? 0,
-      currentPlayerMode: json['currentPlayerMode'] as String?,
-      singleRoundedHours: (json['singleRoundedHours'] as num?)?.toDouble(),
-      multiRoundedHours: (json['multiRoundedHours'] as num?)?.toDouble(),
-      singleCost: (json['singleCost'] as num?)?.toDouble(),
-      multiCost: (json['multiCost'] as num?)?.toDouble(),
-      expiresAt: json['expiresAt'] != null
-          ? DateTime.parse(json['expiresAt'] as String)
-          : null,
+      options: _parseOptions(json['tariff']),
+      roundingMinutes: _parseRounding(json['tariff']),
+      currentOptionCode: json['currentOptionCode'] as String?,
+      currentOptionName:
+          json['currentOptionName'] != null ? LocalizedText.parse(json['currentOptionName']) : null,
+      startOnConfirm: json['startOnConfirm'] as bool? ?? false,
+      costs: costs,
+      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt'] as String) : null,
       members: members,
       segments: segments,
     );

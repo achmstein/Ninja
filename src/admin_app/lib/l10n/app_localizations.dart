@@ -134,18 +134,6 @@ abstract class AppLocalizations {
   /// **'Pending Orders'**
   String get pendingOrders;
 
-  /// No description provided for @activeSessions.
-  ///
-  /// In en, this message translates to:
-  /// **'Active Sessions'**
-  String get activeSessions;
-
-  /// No description provided for @availableRooms.
-  ///
-  /// In en, this message translates to:
-  /// **'Available Rooms'**
-  String get availableRooms;
-
   /// No description provided for @viewAll.
   ///
   /// In en, this message translates to:
@@ -157,12 +145,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No pending orders'**
   String get noPendingOrders;
-
-  /// No description provided for @noActiveSessions.
-  ///
-  /// In en, this message translates to:
-  /// **'No active sessions'**
-  String get noActiveSessions;
 
   /// No description provided for @signIn.
   ///
@@ -428,71 +410,11 @@ abstract class AppLocalizations {
   /// **'Rooms'**
   String get rooms;
 
-  /// No description provided for @addRoom.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Room'**
-  String get addRoom;
-
-  /// No description provided for @editRoom.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Room'**
-  String get editRoom;
-
-  /// No description provided for @roomSavedSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Room saved successfully'**
-  String get roomSavedSuccess;
-
-  /// No description provided for @failedToSaveRoom.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to save room'**
-  String get failedToSaveRoom;
-
-  /// No description provided for @noRoomsConfigured.
-  ///
-  /// In en, this message translates to:
-  /// **'No rooms configured'**
-  String get noRoomsConfigured;
-
-  /// No description provided for @addRoomToGetStarted.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a room to get started'**
-  String get addRoomToGetStarted;
-
   /// No description provided for @endSession.
   ///
   /// In en, this message translates to:
   /// **'End Session?'**
   String get endSession;
-
-  /// No description provided for @endSessionConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to end this session? The customer will be charged for the time used.'**
-  String get endSessionConfirmation;
-
-  /// No description provided for @endSessionButton.
-  ///
-  /// In en, this message translates to:
-  /// **'End Session'**
-  String get endSessionButton;
-
-  /// No description provided for @statusActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get statusActive;
-
-  /// No description provided for @statusReserved.
-  ///
-  /// In en, this message translates to:
-  /// **'Reserved'**
-  String get statusReserved;
 
   /// No description provided for @statusAvailable.
   ///
@@ -505,24 +427,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Occupied'**
   String get statusOccupied;
-
-  /// No description provided for @statusMaintenance.
-  ///
-  /// In en, this message translates to:
-  /// **'Maintenance'**
-  String get statusMaintenance;
-
-  /// No description provided for @reservedCountdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Reserved ({countdown})'**
-  String reservedCountdown(String countdown);
-
-  /// No description provided for @expiring.
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring...'**
-  String get expiring;
 
   /// No description provided for @perHour.
   ///
@@ -553,18 +457,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional description'**
   String get optionalDescription;
-
-  /// No description provided for @singleRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Single Rate (2P) *'**
-  String get singleRate;
-
-  /// No description provided for @multiRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Multi Rate (4P) *'**
-  String get multiRate;
 
   /// No description provided for @menu.
   ///
@@ -751,12 +643,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Orders API'**
   String get ordersApi;
-
-  /// No description provided for @roomsApi.
-  ///
-  /// In en, this message translates to:
-  /// **'Rooms API'**
-  String get roomsApi;
 
   /// No description provided for @catalogApi.
   ///
@@ -1124,35 +1010,11 @@ abstract class AppLocalizations {
   /// **'No'**
   String get no;
 
-  /// No description provided for @cancelReservation.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel Reservation'**
-  String get cancelReservation;
-
-  /// No description provided for @cancelReservationQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel Reservation?'**
-  String get cancelReservationQuestion;
-
-  /// No description provided for @cancelReservationConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to cancel this reservation?'**
-  String get cancelReservationConfirmation;
-
   /// No description provided for @deleteRoom.
   ///
   /// In en, this message translates to:
   /// **'Delete Room?'**
   String get deleteRoom;
-
-  /// No description provided for @deleteRoomConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete \"{name}\"? This cannot be undone.'**
-  String deleteRoomConfirmation(String name);
 
   /// No description provided for @startSession.
   ///
@@ -1171,12 +1033,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Walk-in'**
   String get walkIn;
-
-  /// No description provided for @customerWillBeCharged.
-  ///
-  /// In en, this message translates to:
-  /// **'The customer will be charged for the time used.'**
-  String get customerWillBeCharged;
 
   /// No description provided for @record.
   ///
@@ -1309,12 +1165,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount (EGP)'**
   String get amountEgpLabel;
-
-  /// No description provided for @readyToStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to Start'**
-  String get readyToStart;
 
   /// No description provided for @balance.
   ///
@@ -1514,12 +1364,6 @@ abstract class AppLocalizations {
   /// **'No customers found'**
   String get noCustomersFound;
 
-  /// No description provided for @roomNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. PlayStation Room 1'**
-  String get roomNameHint;
-
   /// No description provided for @tierBronze.
   ///
   /// In en, this message translates to:
@@ -1543,12 +1387,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'PLATINUM'**
   String get tierPlatinum;
-
-  /// No description provided for @noSessionsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No sessions yet'**
-  String get noSessionsYet;
 
   /// No description provided for @loadMore.
   ///
@@ -1591,18 +1429,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'£{price}'**
   String priceFormat(String price);
-
-  /// No description provided for @hourlyRateFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'£{rate}/hr'**
-  String hourlyRateFormat(String rate);
-
-  /// No description provided for @dualRateFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'£{singleRate} · £{multiRate} /hr'**
-  String dualRateFormat(String singleRate, String multiRate);
 
   /// No description provided for @balanceFormat.
   ///
@@ -2372,29 +2198,11 @@ abstract class AppLocalizations {
   /// **'Original Price'**
   String get originalPrice;
 
-  /// No description provided for @playerModeSingle.
-  ///
-  /// In en, this message translates to:
-  /// **'Single'**
-  String get playerModeSingle;
-
-  /// No description provided for @playerModeMulti.
-  ///
-  /// In en, this message translates to:
-  /// **'Multi'**
-  String get playerModeMulti;
-
   /// No description provided for @hoursShort.
   ///
   /// In en, this message translates to:
   /// **'hour'**
   String get hoursShort;
-
-  /// No description provided for @selectPlayerMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Player Mode'**
-  String get selectPlayerMode;
 
   /// No description provided for @totalDuration.
   ///
@@ -2407,12 +2215,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change Player Mode?'**
   String get changePlayerMode;
-
-  /// No description provided for @changePlayerModeConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to {mode}? The rate will change accordingly.'**
-  String changePlayerModeConfirmation(String mode);
 
   /// No description provided for @blockCustomer.
   ///
@@ -2881,6 +2683,450 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// No description provided for @placesNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms & Tables'**
+  String get placesNav;
+
+  /// No description provided for @tables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tables'**
+  String get tables;
+
+  /// No description provided for @stations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get stations;
+
+  /// No description provided for @fillEveryRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Every rate needs a code and a price per hour'**
+  String get fillEveryRate;
+
+  /// No description provided for @ordersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders only'**
+  String get ordersOnly;
+
+  /// No description provided for @timed.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed'**
+  String get timed;
+
+  /// No description provided for @scanToOrderOrJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan to order or start your time'**
+  String get scanToOrderOrJoin;
+
+  /// No description provided for @placeQrSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut along the cards and put one on each room, table and station.'**
+  String get placeQrSheetSubtitle;
+
+  /// No description provided for @noPlacesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No rooms or tables yet. Add your first one.'**
+  String get noPlacesYet;
+
+  /// No description provided for @selectPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a room or table'**
+  String get selectPlace;
+
+  /// No description provided for @allPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'All places'**
+  String get allPlaces;
+
+  /// No description provided for @newPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'New place'**
+  String get newPlace;
+
+  /// No description provided for @editPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit place'**
+  String get editPlace;
+
+  /// No description provided for @kind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get kind;
+
+  /// No description provided for @placeKindRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get placeKindRoom;
+
+  /// No description provided for @placeKindTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get placeKindTable;
+
+  /// No description provided for @placeKindStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get placeKindStation;
+
+  /// No description provided for @rateOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Rates'**
+  String get rateOptions;
+
+  /// No description provided for @addRateOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rate'**
+  String get addRateOption;
+
+  /// No description provided for @optionCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get optionCode;
+
+  /// No description provided for @hourlyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Per hour'**
+  String get hourlyRate;
+
+  /// No description provided for @roundingMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Round to (minutes)'**
+  String get roundingMinutes;
+
+  /// No description provided for @placeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get placeSaved;
+
+  /// No description provided for @failedToSavePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save'**
+  String get failedToSavePlace;
+
+  /// No description provided for @placeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get placeDeleted;
+
+  /// No description provided for @deletePlaceQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this place?'**
+  String get deletePlaceQuestion;
+
+  /// No description provided for @failedToDeletePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete'**
+  String get failedToDeletePlace;
+
+  /// No description provided for @outOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of service'**
+  String get outOfService;
+
+  /// No description provided for @backInService.
+  ///
+  /// In en, this message translates to:
+  /// **'Back in service'**
+  String get backInService;
+
+  /// No description provided for @held.
+  ///
+  /// In en, this message translates to:
+  /// **'Held'**
+  String get held;
+
+  /// No description provided for @heldFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Held for {name}'**
+  String heldFor(String name);
+
+  /// No description provided for @hold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get hold;
+
+  /// No description provided for @holdPlaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold {name}'**
+  String holdPlaceTitle(String name);
+
+  /// No description provided for @placeHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} held'**
+  String placeHeld(String name);
+
+  /// No description provided for @failedToHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t hold it'**
+  String get failedToHold;
+
+  /// No description provided for @holdCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold cancelled'**
+  String get holdCancelled;
+
+  /// No description provided for @cancelHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel hold'**
+  String get cancelHold;
+
+  /// No description provided for @cancelHoldQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this hold?'**
+  String get cancelHoldQuestion;
+
+  /// No description provided for @failedToCancelHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t cancel'**
+  String get failedToCancelHold;
+
+  /// No description provided for @startOnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the clock when they arrive'**
+  String get startOnConfirm;
+
+  /// No description provided for @startsOnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts on confirm'**
+  String get startsOnConfirm;
+
+  /// No description provided for @failedToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm'**
+  String get failedToConfirm;
+
+  /// No description provided for @startClockAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the clock at {name}'**
+  String startClockAt(String name);
+
+  /// No description provided for @clockStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock started'**
+  String get clockStarted;
+
+  /// No description provided for @failedToStartClock.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the clock'**
+  String get failedToStartClock;
+
+  /// No description provided for @rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get rate;
+
+  /// No description provided for @rateChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate changed'**
+  String get rateChanged;
+
+  /// No description provided for @failedToChangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the rate'**
+  String get failedToChangeRate;
+
+  /// No description provided for @switchToRateQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {option}?'**
+  String switchToRateQuestion(String option);
+
+  /// No description provided for @keepRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {option}'**
+  String keepRate(String option);
+
+  /// No description provided for @switchRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchRate;
+
+  /// No description provided for @endTimeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'End the time?'**
+  String get endTimeQuestion;
+
+  /// No description provided for @endTimeEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'About {amount} on the bill.'**
+  String endTimeEstimate(String amount);
+
+  /// No description provided for @keepGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going'**
+  String get keepGoing;
+
+  /// No description provided for @timeEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Time ended'**
+  String get timeEnded;
+
+  /// No description provided for @failedToEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t end the time'**
+  String get failedToEndTime;
+
+  /// No description provided for @cancelTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel time'**
+  String get cancelTime;
+
+  /// No description provided for @cancelTimeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the time? Nothing goes on the bill.'**
+  String get cancelTimeQuestion;
+
+  /// No description provided for @timeCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Time cancelled'**
+  String get timeCancelled;
+
+  /// No description provided for @estimate.
+  ///
+  /// In en, this message translates to:
+  /// **'So far'**
+  String get estimate;
+
+  /// No description provided for @noTimeYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No time yet'**
+  String get noTimeYet;
+
+  /// No description provided for @timeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Time history'**
+  String get timeHistory;
+
+  /// No description provided for @noTimeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here for this range.'**
+  String get noTimeHistory;
+
+  /// No description provided for @ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get ended;
+
+  /// No description provided for @paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paid;
+
+  /// No description provided for @notPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Not paid'**
+  String get notPaid;
+
+  /// No description provided for @timeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Time running'**
+  String get timeRunning;
+
+  /// No description provided for @noTimeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'No time running'**
+  String get noTimeRunning;
+
+  /// No description provided for @placesInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'In use'**
+  String get placesInUse;
+
+  /// No description provided for @timeByPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Time sold by place'**
+  String get timeByPlace;
+
+  /// No description provided for @visitsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'visits'**
+  String get visitsLabel;
+
+  /// No description provided for @copyPlaceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy QR link'**
+  String get copyPlaceLink;
+
+  /// No description provided for @placeLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get placeLinkCopied;
+
+  /// No description provided for @acceptingCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get acceptingCustomers;
 }
 
 class _AppLocalizationsDelegate
