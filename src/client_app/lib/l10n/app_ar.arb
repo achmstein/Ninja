@@ -259,8 +259,9 @@
   "paid": "مدفوع",
   "unpaid": "غير مدفوع",
   "onYourTab": "على حسابك",
-  "refunded": "اترجع",
-  "voided": "اتلغى",
+  "back": "رجوع",
+  "refunded": "مسترجع",
+  "voided": "ملغي",
   "receiptShort": "#{number}",
   "@receiptShort": {
     "placeholders": {

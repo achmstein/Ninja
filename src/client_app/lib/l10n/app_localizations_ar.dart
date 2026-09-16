@@ -840,10 +840,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onYourTab => 'على حسابك';
 
   @override
-  String get refunded => 'اترجع';
+  String get back => 'رجوع';
 
   @override
-  String get voided => 'اتلغى';
+  String get refunded => 'مسترجع';
+
+  @override
+  String get voided => 'ملغي';
 
   @override
   String receiptShort(int number) {

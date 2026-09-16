@@ -848,6 +848,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onYourTab => 'On your tab';
 
   @override
+  String get back => 'Back';
+
+  @override
   String get refunded => 'Refunded';
 
   @override

@@ -837,7 +837,7 @@ const webExtras = {
   voidedBy: { en: 'Voided by', ar: 'لغاه' },
   openedAt: { en: 'Opened', ar: 'وقت الفتح' },
   closedAt: { en: 'Closed', ar: 'وقت القفل' },
-  refunded: { en: 'Refunded', ar: 'اترجع' },
+  refunded: { en: 'Refunded', ar: 'مسترجع' },
   lines: { en: 'Lines', ar: 'الأصناف' },
   tender: { en: 'Tender', ar: 'طريقة الدفع' },
   byColumn: { en: 'By', ar: 'بواسطة' },

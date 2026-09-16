@@ -492,6 +492,7 @@
   "paid": "Paid",
   "unpaid": "Unpaid",
   "onYourTab": "On your tab",
+  "back": "Back",
   "refunded": "Refunded",
   "voided": "Voided",
   "receiptShort": "#{number}",
