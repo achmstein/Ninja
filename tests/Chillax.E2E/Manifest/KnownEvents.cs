@@ -23,6 +23,7 @@ public static class KnownEvents
         new("EmployeeEarningsChanged", "Payroll", ["Finance"]),
         new("OrderConfirmedWithPreferences", "", ["Catalog"]),          // dead consumer: nobody publishes it
         new("OrderCustomerAssigned", "Ordering", ["Sales", "Loyalty"]),
+        new("OrderPaymentChanged", "Ordering", ["Notification"]),
         new("OrderReadyChanged", "Ordering", ["Notification"]),
         new("OrderReminder", "Ordering", ["Notification"]),
         new("OrderStarted", "Ordering", []),                            // dead publisher: nobody subscribes

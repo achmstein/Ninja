@@ -734,9 +734,11 @@ public static class NotificationApi
             OptionCode = optionCode,
             RoomId = roomId,
             BranchId = branchId,
-            RoomName = placeName,
+            // Own copies: both names are owned JSON columns, and EF refuses one
+            // LocalizedText instance hanging off two of them
+            RoomName = new LocalizedText(placeName.En, placeName.Ar),
             TableId = request.TableId,
-            TableName = request.TableName,
+            TableName = request.TableName is null ? null : new LocalizedText(request.TableName.En, request.TableName.Ar),
             RequestType = request.RequestType,
             Status = ServiceRequestStatus.Pending,
             CreatedAt = DateTime.UtcNow

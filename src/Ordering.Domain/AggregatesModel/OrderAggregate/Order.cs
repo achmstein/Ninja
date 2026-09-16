@@ -197,6 +197,9 @@ public class Order
 
     public bool IsReady => ReadyAt != null;
 
+    private static LocalizedText? Copy(LocalizedText? text)
+        => text is null ? null : new LocalizedText(text.En, text.Ar);
+
     public static Order NewDraft()
     {
         var order = new Order
@@ -227,19 +230,21 @@ public class Order
 
         // The place and the older room/table fields are filled from each
         // other, so a client on either vocabulary lands the same order.
+        // Each name is its own copy: the names are owned JSON columns, and EF
+        // refuses one LocalizedText instance hanging off two of them.
         if (placeId is not null)
         {
             PlaceId = placeId;
             PlaceKind = placeKind ?? (tableId is not null ? "Table" : "Room");
-            PlaceName = placeName ?? roomName ?? tableName;
+            PlaceName = Copy(placeName ?? roomName ?? tableName);
             if (string.Equals(PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
             {
                 RoomId ??= placeId;
-                RoomName ??= PlaceName;
+                RoomName ??= Copy(PlaceName);
             }
             else
             {
-                TableName ??= PlaceName;
+                TableName ??= Copy(PlaceName);
             }
         }
         else if (roomName is not null || roomId is not null)
@@ -247,14 +252,14 @@ public class Order
             // Rooms kept their ids in the Places remodel
             PlaceId = roomId;
             PlaceKind = "Room";
-            PlaceName = roomName;
+            PlaceName = Copy(roomName);
         }
         else if (tableId is not null)
         {
             // The table id a printed sticker carries is not the place id;
             // the place, when known, is resolved before the order is created
             PlaceKind = "Table";
-            PlaceName = tableName;
+            PlaceName = Copy(tableName);
         }
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
