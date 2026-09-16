@@ -3,10 +3,10 @@ import {
   useNavigate,
   useRouter,
   type LinkProps,
-} from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
-import { useT } from "@/lib/i18n";
-import { Button } from "@/components/ui/button";
+} from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
+import { useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 
 /**
  * Pushed-page header: back button + page title (mobile-app parity).
@@ -16,27 +16,27 @@ import { Button } from "@/components/ui/button";
  */
 export function BackHeader({
   title,
-  to = "/profile",
+  to = '/profile',
 }: {
-  title: string;
-  to?: LinkProps["to"];
+  title: string
+  to?: LinkProps['to']
 }) {
-  const t = useT();
-  const navigate = useNavigate();
-  const router = useRouter();
-  const canGoBack = useCanGoBack();
+  const t = useT()
+  const navigate = useNavigate()
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
   return (
-    <div className="flex items-center gap-2 pt-2">
+    <div className='flex items-center gap-2 pt-2'>
       <Button
-        variant="ghost"
-        size="icon"
-        className="-ms-2"
-        aria-label={t("back")}
+        variant='ghost'
+        size='icon'
+        className='-ms-2'
+        aria-label={t('back')}
         onClick={() => (canGoBack ? router.history.back() : navigate({ to }))}
       >
-        <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+        <ArrowLeft className='h-5 w-5 rtl:rotate-180' />
       </Button>
-      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      <h1 className='text-2xl font-bold tracking-tight'>{title}</h1>
     </div>
-  );
+  )
 }
