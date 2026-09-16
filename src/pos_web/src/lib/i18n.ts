@@ -218,7 +218,7 @@ const dictionary = {
   ticketRefunded: { en: 'Credit note #{number} issued for {amount}', ar: 'اتعمل إشعار استرجاع #{number} بقيمة {amount}' },
   refundsTitle: { en: 'Refunds', ar: 'الاسترجاعات' },
   creditNote: { en: 'Credit note #{number}', ar: 'إشعار استرجاع #{number}' },
-  refundedSoFar: { en: 'Refunded', ar: 'مسترجع' },
+  refundedSoFar: { en: 'Refunded', ar: 'مرتجع' },
   breakdown: { en: 'Breakdown', ar: 'التفاصيل' },
   none: { en: 'None', ar: 'مفيش' },
 

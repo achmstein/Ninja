@@ -261,7 +261,7 @@ export const messages = {
   unpaid: { en: "Unpaid", ar: "غير مدفوع" },
   onYourTab: { en: "On your tab", ar: "على حسابك" },
   back: { en: "Back", ar: "رجوع" },
-  refunded: { en: "Refunded", ar: "مسترجع" },
+  refunded: { en: "Refunded", ar: "مرتجع" },
   voided: { en: "Voided", ar: "ملغي" },
   receiptShort: { en: "#{number}", ar: "#{number}" },
   receipt: { en: "Receipt", ar: "الإيصال" },

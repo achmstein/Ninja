@@ -843,7 +843,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get back => 'رجوع';
 
   @override
-  String get refunded => 'مسترجع';
+  String get refunded => 'مرتجع';
 
   @override
   String get voided => 'ملغي';
