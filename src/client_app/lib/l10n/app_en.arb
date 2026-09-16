@@ -76,7 +76,7 @@
   "clearCart": "Clear Cart",
   "orderPlacedSuccessfully": "Order placed successfully!",
   "failedToPlaceOrder": "Failed to place order",
-  "noteWithText": "Note: {notes}",
+  "noteWithText": "{notes}",
   "@noteWithText": {
     "placeholders": {
       "notes": {
@@ -94,7 +94,7 @@
       }
     }
   },
-  "totalSpent": "Total: {amount}",
+  "totalSpent": "{amount}",
   "@totalSpent": {
     "placeholders": {
       "amount": {
@@ -183,7 +183,6 @@
   "sessions": "Sessions",
   "previousSessions": "Previous Sessions",
   "favorites": "Favorites",
-  "helpAndSupport": "Help & Support",
   "about": "About",
   "version": "Version {version}",
   "@version": {
@@ -193,8 +192,6 @@
       }
     }
   },
-  "needHelpContactUs": "Need help? Contact us:",
-  "supportHours": "5:00 PM - 5:00 AM",
   "notifications": "Notifications",
   "orderStatusUpdates": "Order Status Updates",
   "promotionsAndOffers": "Promotions & Offers",
@@ -205,12 +202,10 @@
   "deleteAccount": "Delete Account",
   "accountDeletedSuccessfully": "Account deleted successfully",
   "failedToDeleteAccount": "Failed to delete account",
-  "selectTheme": "Select Theme",
   "light": "Light",
   "dark": "Dark",
   "systemDefault": "System Default",
   "language": "Language",
-  "selectLanguage": "Select Language",
   "english": "English",
   "arabic": "Arabic",
   "currency": "EGP",
@@ -322,7 +317,7 @@
   "joinOurLoyaltyProgram": "Join our Loyalty Program",
   "joinNow": "Join Now",
   "viewHistory": "View history",
-  "lifetimePoints": "Lifetime: {points} pts",
+  "lifetimePoints": "{points} lifetime",
   "@lifetimePoints": {
     "placeholders": {
       "points": {
@@ -356,7 +351,6 @@
   "pleaseConfirmPassword": "Please confirm your password",
   "passwordChangedSuccessfully": "Password changed successfully",
   "failedToChangePassword": "Failed to change password. Please try again.",
-  "supportPhone": "0100 469 8 469",
   "tierBronze": "BRONZE",
   "tierSilver": "SILVER",
   "tierGold": "GOLD",
@@ -365,7 +359,7 @@
   "createStrongPassword": "Create a strong password",
   "failedToLoadSessions": "Failed to load sessions",
   "noSessionsYet": "No sessions yet",
-  "durationLabel": "Duration: {duration}",
+  "durationLabel": "{duration}",
   "@durationLabel": {
     "placeholders": {
       "duration": {

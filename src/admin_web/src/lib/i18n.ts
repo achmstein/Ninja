@@ -496,16 +496,16 @@ const webExtras = {
   },
   failedToUpdateBundle: {
     en: 'Failed to update bundle',
-    ar: 'معرفناش نحدث الباكدج',
+    ar: 'معرفناش نحدث العرض',
   },
-  bundleDeleted: { en: 'Bundle deleted', ar: 'الباكدج اتحذف' },
+  bundleDeleted: { en: 'Bundle deleted', ar: 'العرض اتحذف' },
   failedToDeleteBundle: {
     en: 'Failed to delete bundle',
-    ar: 'معرفناش نحذف الباكدج',
+    ar: 'معرفناش نحذف العرض',
   },
   filterBundlesPlaceholder: {
     en: 'Filter bundles...',
-    ar: 'بحث في الباكدجات...',
+    ar: 'بحث في العروض...',
   },
   savePercent: { en: 'Save {percent}%', ar: 'وفر {percent}%' },
 

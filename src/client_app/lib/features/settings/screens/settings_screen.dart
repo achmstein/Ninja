@@ -92,19 +92,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 8),
                     FTileGroup(
                       children: [
+                        // The web's ThemeSwitch, inline: three icons, the
+                        // current one filled, no sheet to open
                         FTile(
                           prefix: const Icon(FIcons.palette),
                           title: AppText(l10n.theme),
-                          subtitle: AppText(_getLocalizedThemeName(themeState.themeMode, l10n)),
-                          suffix: const Icon(FIcons.chevronRight),
-                          onPress: () => _showThemeSelector(context, ref),
+                          suffix: _ThemeSegments(
+                            mode: themeState.themeMode,
+                            onChanged: (mode) => ref.read(themeProvider.notifier).setThemeMode(mode),
+                          ),
                         ),
+                        // Two languages: the row states where it stands and
+                        // flips on tap
                         FTile(
                           prefix: const Icon(FIcons.globe),
                           title: AppText(l10n.language),
-                          subtitle: AppText(locale.languageCode == 'ar' ? l10n.arabic : l10n.english),
-                          suffix: const Icon(FIcons.chevronRight),
-                          onPress: () => _showLanguageSelector(context, ref),
+                          suffix: AppText(locale.languageCode == 'ar' ? l10n.arabic : l10n.english,
+                              style: TextStyle(color: context.theme.colors.mutedForeground)),
+                          onPress: () => ref
+                              .read(localeProvider.notifier)
+                              .setLocale(Locale(locale.languageCode == 'ar' ? 'en' : 'ar')),
                         ),
                       ],
                     ),
@@ -149,17 +156,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  String _getLocalizedThemeName(AppThemeMode mode, AppLocalizations l10n) {
-    switch (mode) {
-      case AppThemeMode.light:
-        return l10n.light;
-      case AppThemeMode.dark:
-        return l10n.dark;
-      case AppThemeMode.system:
-        return l10n.systemDefault;
-    }
-  }
-
   Widget _buildSectionHeader(String title) {
     return AppText(
       title,
@@ -167,46 +163,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: context.theme.colors.mutedForeground,
-      ),
-    );
-  }
-
-  void _showThemeSelector(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (sheetContext) => _ThemeSelectorSheet(
-        onThemeSelected: (mode) {
-          ref.read(themeProvider.notifier).setThemeMode(mode);
-          Navigator.pop(sheetContext);
-        },
-        currentMode: ref.read(themeProvider).themeMode,
-        l10n: l10n,
-      ),
-    );
-  }
-
-  void _showLanguageSelector(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final currentLocale = ref.read(localeProvider);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (sheetContext) => _LanguageSelectorSheet(
-        onLanguageSelected: (locale) {
-          ref.read(localeProvider.notifier).setLocale(locale);
-          Navigator.pop(sheetContext);
-        },
-        currentLocale: currentLocale,
-        l10n: l10n,
       ),
     );
   }
@@ -309,280 +265,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-/// Bottom sheet for selecting theme
-class _ThemeSelectorSheet extends StatelessWidget {
-  final Function(AppThemeMode) onThemeSelected;
-  final AppThemeMode currentMode;
-  final AppLocalizations l10n;
 
-  const _ThemeSelectorSheet({
-    required this.onThemeSelected,
-    required this.currentMode,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.mutedForeground,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppText(
-                      l10n.selectTheme,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: colors.foreground,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
-                  ),
-                ],
-              ),
-            ),
-
-            Divider(height: 1, color: colors.border),
-
-            // Theme options
-            ...AppThemeMode.values.map((mode) {
-              final isSelected = currentMode == mode;
-              return GestureDetector(
-                onTap: () => onThemeSelected(mode),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? colors.primary.withValues(alpha: 0.1) : Colors.transparent,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: isSelected ? colors.primary.withValues(alpha: 0.15) : colors.muted,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          mode == AppThemeMode.light
-                              ? FIcons.sun
-                              : mode == AppThemeMode.dark
-                                  ? FIcons.moon
-                                  : FIcons.monitor,
-                          size: 22,
-                          color: isSelected ? colors.primary : colors.mutedForeground,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText(
-                              _getThemeModeName(mode),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                color: colors.foreground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isSelected)
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(FIcons.check, size: 14, color: colors.primaryForeground),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getThemeModeName(AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.light:
-        return l10n.light;
-      case AppThemeMode.dark:
-        return l10n.dark;
-      case AppThemeMode.system:
-        return l10n.systemDefault;
-    }
-  }
-
-}
-
-/// Bottom sheet for selecting language
-class _LanguageSelectorSheet extends StatelessWidget {
-  final Function(Locale) onLanguageSelected;
-  final Locale currentLocale;
-  final AppLocalizations l10n;
-
-  const _LanguageSelectorSheet({
-    required this.onLanguageSelected,
-    required this.currentLocale,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
-
-    final languages = [
-      (locale: const Locale('ar'), name: 'العربية', nativeName: 'Arabic'),
-      (locale: const Locale('en'), name: 'English', nativeName: 'English'),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.background,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.mutedForeground,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppText(
-                      l10n.selectLanguage,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: colors.foreground,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(FIcons.x, size: 24, color: colors.mutedForeground),
-                  ),
-                ],
-              ),
-            ),
-
-            Divider(height: 1, color: colors.border),
-
-            // Language options
-            ...languages.map((lang) {
-              final isSelected = currentLocale.languageCode == lang.locale.languageCode;
-              return GestureDetector(
-                onTap: () => onLanguageSelected(lang.locale),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? colors.primary.withValues(alpha: 0.1) : Colors.transparent,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: isSelected ? colors.primary.withValues(alpha: 0.15) : colors.muted,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: AppText(
-                            lang.locale.languageCode.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? colors.primary : colors.mutedForeground,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: AppText(
-                          lang.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            color: colors.foreground,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(FIcons.check, size: 14, color: colors.primaryForeground),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// Bottom sheet for updating profile (name + phone)
 class _UpdateProfileSheet extends StatefulWidget {
@@ -969,6 +652,47 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Light / dark / system as three icons, the current one filled: the web's
+/// ThemeSwitch, inline on the row instead of behind a sheet
+class _ThemeSegments extends StatelessWidget {
+  final AppThemeMode mode;
+  final ValueChanged<AppThemeMode> onChanged;
+
+  const _ThemeSegments({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    const options = [
+      (AppThemeMode.light, FIcons.sun),
+      (AppThemeMode.dark, FIcons.moon),
+      (AppThemeMode.system, FIcons.monitor),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (option, icon) in options)
+            GestureDetector(
+              onTap: () => onChanged(option),
+              child: Container(
+                width: 36,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: mode == option ? colors.background : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 16, color: mode == option ? colors.foreground : colors.mutedForeground),
+              ),
+            ),
+        ],
       ),
     );
   }

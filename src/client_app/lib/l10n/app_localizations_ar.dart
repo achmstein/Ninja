@@ -201,7 +201,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String noteWithText(String notes) {
-    return 'ملاحظة: $notes';
+    return '$notes';
   }
 
   @override
@@ -223,7 +223,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String totalSpent(String amount) {
-    return 'الإجمالي: $amount';
+    return '$amount';
   }
 
   @override
@@ -366,21 +366,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get favorites => 'المفضلة';
 
   @override
-  String get helpAndSupport => 'المساعدة';
-
-  @override
   String get about => 'عن التطبيق';
 
   @override
   String version(String version) {
     return 'الاصدار $version';
   }
-
-  @override
-  String get needHelpContactUs => 'محتاج مساعدة؟ كلمنا:';
-
-  @override
-  String get supportHours => '5 بليل - 5 الصبح';
 
   @override
   String get notifications => 'الاشعارات';
@@ -413,9 +404,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToDeleteAccount => 'الحساب مش بيتمسح';
 
   @override
-  String get selectTheme => 'اختار الثيم';
-
-  @override
   String get light => 'فاتح';
 
   @override
@@ -426,9 +414,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get language => 'اللغة';
-
-  @override
-  String get selectLanguage => 'اختار اللغة';
 
   @override
   String get english => 'English';
@@ -556,7 +541,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String lifetimePoints(String points) {
-    return 'إجمالي: $points نقطة';
+    return '$points إجمالي';
   }
 
   @override
@@ -610,9 +595,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToChangePassword => 'الباسورد مش بيتغير. جرب تاني.';
 
   @override
-  String get supportPhone => '0100 469 8 469';
-
-  @override
   String get tierBronze => 'برونزي';
 
   @override
@@ -638,7 +620,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String durationLabel(String duration) {
-    return 'المدة: $duration';
+    return '$duration';
   }
 
   @override

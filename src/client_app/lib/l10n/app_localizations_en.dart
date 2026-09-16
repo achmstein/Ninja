@@ -204,7 +204,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String noteWithText(String notes) {
-    return 'Note: $notes';
+    return '$notes';
   }
 
   @override
@@ -226,7 +226,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String totalSpent(String amount) {
-    return 'Total: $amount';
+    return '$amount';
   }
 
   @override
@@ -370,21 +370,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get favorites => 'Favorites';
 
   @override
-  String get helpAndSupport => 'Help & Support';
-
-  @override
   String get about => 'About';
 
   @override
   String version(String version) {
     return 'Version $version';
   }
-
-  @override
-  String get needHelpContactUs => 'Need help? Contact us:';
-
-  @override
-  String get supportHours => '5:00 PM - 5:00 AM';
 
   @override
   String get notifications => 'Notifications';
@@ -417,9 +408,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToDeleteAccount => 'Failed to delete account';
 
   @override
-  String get selectTheme => 'Select Theme';
-
-  @override
   String get light => 'Light';
 
   @override
@@ -430,9 +418,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
-
-  @override
-  String get selectLanguage => 'Select Language';
 
   @override
   String get english => 'English';
@@ -560,7 +545,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String lifetimePoints(String points) {
-    return 'Lifetime: $points pts';
+    return '$points lifetime';
   }
 
   @override
@@ -615,9 +600,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to change password. Please try again.';
 
   @override
-  String get supportPhone => '0100 469 8 469';
-
-  @override
   String get tierBronze => 'BRONZE';
 
   @override
@@ -643,7 +625,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String durationLabel(String duration) {
-    return 'Duration: $duration';
+    return '$duration';
   }
 
   @override

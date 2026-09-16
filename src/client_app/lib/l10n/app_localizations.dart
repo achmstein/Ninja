@@ -473,7 +473,7 @@ abstract class AppLocalizations {
   /// No description provided for @noteWithText.
   ///
   /// In en, this message translates to:
-  /// **'Note: {notes}'**
+  /// **'{notes}'**
   String noteWithText(String notes);
 
   /// No description provided for @todaysOrders.
@@ -497,7 +497,7 @@ abstract class AppLocalizations {
   /// No description provided for @totalSpent.
   ///
   /// In en, this message translates to:
-  /// **'Total: {amount}'**
+  /// **'{amount}'**
   String totalSpent(String amount);
 
   /// No description provided for @failedToLoadOrders.
@@ -758,12 +758,6 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get favorites;
 
-  /// No description provided for @helpAndSupport.
-  ///
-  /// In en, this message translates to:
-  /// **'Help & Support'**
-  String get helpAndSupport;
-
   /// No description provided for @about.
   ///
   /// In en, this message translates to:
@@ -775,18 +769,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version {version}'**
   String version(String version);
-
-  /// No description provided for @needHelpContactUs.
-  ///
-  /// In en, this message translates to:
-  /// **'Need help? Contact us:'**
-  String get needHelpContactUs;
-
-  /// No description provided for @supportHours.
-  ///
-  /// In en, this message translates to:
-  /// **'5:00 PM - 5:00 AM'**
-  String get supportHours;
 
   /// No description provided for @notifications.
   ///
@@ -848,12 +830,6 @@ abstract class AppLocalizations {
   /// **'Failed to delete account'**
   String get failedToDeleteAccount;
 
-  /// No description provided for @selectTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Theme'**
-  String get selectTheme;
-
   /// No description provided for @light.
   ///
   /// In en, this message translates to:
@@ -877,12 +853,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
-
-  /// No description provided for @selectLanguage.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Language'**
-  String get selectLanguage;
 
   /// No description provided for @english.
   ///
@@ -1091,7 +1061,7 @@ abstract class AppLocalizations {
   /// No description provided for @lifetimePoints.
   ///
   /// In en, this message translates to:
-  /// **'Lifetime: {points} pts'**
+  /// **'{points} lifetime'**
   String lifetimePoints(String points);
 
   /// No description provided for @pointsToNextTier.
@@ -1190,12 +1160,6 @@ abstract class AppLocalizations {
   /// **'Failed to change password. Please try again.'**
   String get failedToChangePassword;
 
-  /// No description provided for @supportPhone.
-  ///
-  /// In en, this message translates to:
-  /// **'0100 469 8 469'**
-  String get supportPhone;
-
   /// No description provided for @tierBronze.
   ///
   /// In en, this message translates to:
@@ -1247,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @durationLabel.
   ///
   /// In en, this message translates to:
-  /// **'Duration: {duration}'**
+  /// **'{duration}'**
   String durationLabel(String duration);
 
   /// No description provided for @phoneNumber.
