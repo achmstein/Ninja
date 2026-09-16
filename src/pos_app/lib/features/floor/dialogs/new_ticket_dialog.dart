@@ -168,8 +168,6 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(l10n.newTab, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text(l10n.newTabHint, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 20),
           FTextField(
             control: FTextFieldControl.managed(controller: _label),

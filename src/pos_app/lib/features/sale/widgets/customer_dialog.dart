@@ -186,7 +186,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ],
             const SizedBox(height: 8),
             _search.isEmpty
-                ? centered(l10n.typeToSearch)
+                ? const SizedBox.shrink()
                 : _loading
                 ? Skeleton(
                     child: Column(

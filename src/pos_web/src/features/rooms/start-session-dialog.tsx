@@ -78,13 +78,13 @@ export function StartSessionDialog({
             <Play className='size-5 rtl:rotate-180' />
             {session ? t('startSession') : t('startWalkInSession')}
           </DialogTitle>
-          <DialogDescription className='text-base'>
-            {session
-              ? [localized(room?.name), session.customerName]
-                  .filter(Boolean)
-                  .join(' · ')
-              : t('startWalkInDescription', { name: localized(room?.name) })}
-          </DialogDescription>
+          {session && (
+            <DialogDescription className='text-base'>
+              {[localized(room?.name), session.customerName]
+                .filter(Boolean)
+                .join(' · ')}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {/* The card prices the mode picked below; the toggle carries both

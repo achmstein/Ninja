@@ -12,11 +12,10 @@
   "signInFailed": "تسجيل الدخول فشل",
   "redirectingToSignIn": "بنحولك لتسجيل الدخول...",
   "signedOutTitle": "تم تسجيل الخروج",
-  "signedOutDescription": "انت سجلت خروج من الكاشير.",
   "signInAgain": "سجل دخول تاني",
   "backToPos": "ارجع للكاشير",
   "accessDeniedTitle": "مفيش صلاحية",
-  "accessDeniedDescription": "حسابك معندوش صلاحية يدخل الكاشير.",
+  "accessDeniedDescription": "مفيش صلاحية.",
   "openTickets": "الحسابات المفتوحة",
   "noOpenTickets": "مفيش حسابات مفتوحة",
   "noOpenTicketsHint": "افتح حساب جديد عشان تبدأ.",
@@ -57,7 +56,7 @@
   "guest": "ضيف",
   "confirmOrder": "أكّد",
   "cancelOrder": "ألغي الطلب",
-  "cancelOrderConfirm": "تلغي الطلب ده؟ العميل هيتبلغ، ومفيش رجوع بعدها.",
+  "cancelOrderConfirm": "تلغي الطلب؟",
   "keepOrder": "سيبه",
   "orderConfirmed": "الطلب اتأكد",
   "orderCancelled": "الطلب اتلغى",
@@ -120,7 +119,6 @@
     }
   },
   "settleWithPendingTitle": "لسه فيه طلب مستني",
-  "settleWithPendingHint": "أكّده الأول عشان ينزل على الحساب ده. لو قفلت دلوقتي هيفتح حساب جديد بعد ما الناس تدفع.",
   "settleAnyway": "اقفل على أي حال",
   "goBack": "رجوع",
   "rooms": "الاوض",
@@ -164,14 +162,6 @@
   "failedToUpdateRequest": "معرفناش نحدث الطلب",
   "newServiceRequestToast": "طلب جديد من أوضة",
   "startWalkInSession": "بدء جلسة فورية",
-  "startWalkInDescription": "ابدأ عداد {name} دلوقتي. العملاء يقدروا ينضموا بمسح كود QR بتاع الاوضة.",
-  "@startWalkInDescription": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "sessionStarted": "الجلسة بدأت",
   "failedToStartSession": "معرفناش نبدأ الجلسة",
   "sessionRunning": "الوقت شغال",
@@ -190,7 +180,7 @@
   "billedSoFar": "اتحسب لحد دلوقتي",
   "endSessionButton": "إنهاء الوقت",
   "endThisSession": "إنهاء الجلسة دي؟",
-  "endSessionBilledAt": "العداد هيقف و{hours} هتنزل على الحساب كبنود وقت.",
+  "endSessionBilledAt": "{hours} على الحساب.",
   "@endSessionBilledAt": {
     "placeholders": {
       "hours": {
@@ -203,11 +193,10 @@
   "failedToEndSession": "معرفناش ننهي الجلسة",
   "cancelSessionButton": "إلغاء من غير حساب",
   "cancelThisSession": "تلغي الجلسة دي؟",
-  "cancelSessionHint": "مش هيتحسب وقت والاوضة هتفضى. لو عايز تحاسب على الوقت، أنهي الجلسة بدل كده.",
+  "cancelSessionHint": "من غير حساب.",
   "sessionCancelled": "الجلسة اتلغت",
   "cancelReservation": "إلغاء الحجز",
   "cancelThisReservation": "إلغاء الحجز ده؟",
-  "roomBecomesAvailable": "الاوضة هتبقى متاحة لعملاء تانيين.",
   "reservationCancelled": "الحجز اتلغى",
   "failedToCancelSession": "معرفناش نلغي",
   "keepIt": "خليه",
@@ -215,17 +204,6 @@
   "@switchToModeQuestion": {
     "placeholders": {
       "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "switchModeDescription": "فترة {current} هتقفل دلوقتي والحساب هيكمل بسعر {next}.",
-  "@switchModeDescription": {
-    "placeholders": {
-      "current": {
-        "type": "String"
-      },
-      "next": {
         "type": "String"
       }
     }
@@ -247,14 +225,11 @@
   "customerAssigned": "تم تعيين العميل",
   "failedToAddCustomer": "معرفناش نضيف العميل",
   "failedToAssignCustomer": "معرفناش نعين العميل",
-  "pointsFollowWholeOrder": "النقط بتفضل لصاحب الأوردر؛ اللي اتغير بس توزيع الحساب.",
   "memberRemove": "شيل العضو",
   "memberRemoved": "العضو اتشال",
   "failedToRemoveMember": "معرفناش نشيل العضو",
   "settleWithSessionTitle": "الوقت لسه شغال",
-  "settleWithSessionHint": "أنهيه الأول عشان الوقت ينزل على الحساب ده. لو قفلت دلوقتي الوقت هينزل على حساب جديد بعد ما الناس تدفع.",
   "voidWithSessionTitle": "الوقت لسه شغال",
-  "voidWithSessionHint": "أنهيه الأول عشان الوقت ينزل على الحساب ده، وبعدين اشطب أو اقفل. لو شطبت دلوقتي الوقت هيضيع من غير ما يتحسب.",
   "subtotal": "المجموع قبل الإضافات",
   "serviceCharge": "خدمة {rate}%",
   "@serviceCharge": {
@@ -289,7 +264,7 @@
       }
     }
   },
-  "refundHint": "اختار اللي هيرجع. كل صنف بيرجع بالمدفوع فيه شامل الخدمة والضريبة. الباقي من الإيصال {amount}.",
+  "refundHint": "الباقي {amount}",
   "@refundHint": {
     "placeholders": {
       "amount": {
@@ -336,8 +311,9 @@
     }
   },
   "refundedSoFar": "اترجع",
+  "breakdown": "التفاصيل",
+  "none": "مفيش",
   "noOpenBills": "مفيش حسابات مفتوحة",
-  "noOpenBillsHint": "ابدأ بيع، أو اختار اوضة أو ترابيزة من الجنب.",
   "openPlace": "افتح",
   "hidePlaces": "إخفاء الأماكن",
   "showPlaces": "إظهار الأماكن",
@@ -360,14 +336,21 @@
   "newTab": "حساب جديد",
   "onCustomerTabHint": "على حساب {name}",
   "@onCustomerTabHint": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "alreadyOnBill": "عليه حساب مفتوح · {where}",
   "@alreadyOnBill": {
-    "placeholders": { "where": { "type": "String" } }
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "findCustomer": "دور على عميل",
-  "newTabHint": "حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.",
   "ticketNumber": "حساب #{id}",
   "@ticketNumber": {
     "placeholders": {
@@ -409,7 +392,6 @@
   "newTicketForPlace": "حساب جديد لنفس المكان",
   "noOtherOpenTickets": "مفيش حسابات مفتوحة تانية",
   "currentSale": "البيع الحالي",
-  "emptySale": "دوس على الأصناف عشان تضيفها للبيع",
   "noItemsInCategory": "مفيش أصناف في القسم ده",
   "unavailable": "مش متاح",
   "required": "مطلوب",
@@ -434,7 +416,6 @@
   },
   "noAccountNeeded": "اسم بس — من غير حساب",
   "searchCustomersPlaceholder": "الاسم أو الموبايل أو الإيميل",
-  "typeToSearch": "اكتب حرفين على الأقل عشان تدور",
   "noCustomersFound": "مفيش عملاء طالعين بالبحث ده",
   "settleTitle": "قفل الحساب",
   "payments": "المدفوعات",
@@ -538,20 +519,17 @@
   "failedToPayTab": "معرفناش نسجل السداد",
   "tabPayments": "سداد حسابات آجلة",
   "voidTicket": "إلغاء الحساب",
-  "voidReasonHint": "سبب الإلغاء مطلوب — ده سجل المراجعة.",
   "confirmVoid": "ألغي الحساب",
   "ticketVoided": "الحساب اتلغى",
   "voidedBadge": "ملغي",
   "voidedBy": "لغاه",
   "discardTicket": "امسح الحساب",
   "discardTicketTitle": "تمسح الحساب ده؟",
-  "discardTicketHint": "مفيش حاجة اتضافت عليه، فمش هيسيب أي أثر. الحساب اللي عليه أصناف لازم صاحب المحل يلغيه.",
   "confirmDiscard": "امسح",
   "ticketDiscarded": "الحساب اتمسح",
   "takingOrders": "بنستلم أوردرات",
   "takingReservations": "بنستلم حجوزات",
   "paused": "متوقف",
-  "takingAutoHint": "فتح الوردية بيشغّل الاتنين، وقفلها بيوقفهم.",
   "shiftDetails": "تفاصيل الوردية",
   "shiftTitle": "الوردية",
   "shiftNumber": "وردية #{id}",
@@ -570,7 +548,6 @@
   "openingFloat": "فكة أول الوردية",
   "shiftOpened": "الوردية اتفتحت",
   "noShiftOpen": "مفيش وردية مفتوحة",
-  "noShiftOpenHint": "عد الفكة وافتح وردية الدرج عشان تبدأ اليوم.",
   "openedAt": "اتفتحت",
   "openedBy": "فتحها",
   "closedAt": "اتقفلت",
@@ -600,10 +577,6 @@
   "payOutWhichSupplier": "أي مورد؟",
   "payOutWhichPartner": "أي شريك؟",
   "payOutWhatFor": "مصروف إيه؟",
-  "payOutNoEmployees": "مفيش موظفين مسجلين للفرع ده لسه — ضيفهم من الأدمن.",
-  "payOutNoSuppliers": "مفيش موردين لسه — ضيفهم من الأدمن.",
-  "payOutNoPartners": "مفيش شركاء متسجلين للفرع ده — ضيفهم من الأدمن.",
-  "payOutNoCategories": "مفيش تصنيفات متسجلة لسه.",
   "closeShiftTitle": "قفل الوردية",
   "closeShiftAction": "اقفل الوردية",
   "countedAmount": "الكاش اللي اتعد في الدرج",
@@ -661,23 +634,9 @@
   "error": "خطأ",
   "invalidCredentials": "اليوزر أو الباسورد غلط. حاول تاني.",
   "enterBothFields": "من فضلك اكتب اليوزر والباسورد.",
-  "cancelOrderConfirmation": "متأكد إنك عايز تلغي الطلب ده؟",
-  "cancelOrderQuestion": "إلغاء الطلب؟",
   "customer": "العميل",
   "date": "التاريخ",
-  "each": "الواحدة",
   "items": "العناصر",
-  "noKeep": "لا، خليه",
-  "priceFormat": "{price} ج.م",
-  "@priceFormat": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "yesCancel": "أيوه، الغيه",
-  "comingSoon": "جاي في المرحلة الجاية",
   "failedToSettle": "معرفناش نحصّل الحساب",
   "customerNote": "ملاحظة العميل",
   "printer": "طابعة الإيصالات",
@@ -732,7 +691,6 @@
   "retrySync": "حاول تاني",
   "discardSale": "احذف",
   "savedOffline": "اتحفظت على الكاشير",
-  "savedOfflineHint": "الشبكة واقعة. البيعة دي محفوظة هنا وهتتبعت أول ما ترجع؛ والإيصال عليه رقم مؤقت.",
   "offlineNotAvailable": "مش متاح وإنت أوفلاين",
   "provisionalReceipt": "نسخة الكاشير {number}",
   "@provisionalReceipt": {
@@ -743,5 +701,5 @@
     }
   },
   "noBranchTitle": "مفيش فرع متعين ليك",
-  "noBranchDescription": "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع."
+  "noBranchDescription": "اطلب من المالك يعينك على فرع."
 }

@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -249,9 +248,6 @@ function CustomizeForm({
             </span>
           )}
         </DialogTitle>
-        {localized(item.description) && (
-          <DialogDescription>{localized(item.description)}</DialogDescription>
-        )}
       </DialogHeader>
 
       {(item.customizations ?? [])

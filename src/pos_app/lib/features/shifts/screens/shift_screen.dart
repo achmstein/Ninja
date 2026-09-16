@@ -40,7 +40,6 @@ class ShiftScreen extends ConsumerWidget {
             Icon(FIcons.banknote, size: 48, color: theme.colors.mutedForeground),
             const SizedBox(height: 16),
             Text(l10n.noShiftOpen, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
-            Text(l10n.noShiftOpenHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
             const SizedBox(height: 16),
             SizedBox(
               height: 56,

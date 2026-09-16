@@ -8,7 +8,6 @@ import { useT } from '@/lib/i18n'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -37,7 +36,6 @@ function SignedOut() {
           <CardTitle className='text-xl tracking-tight'>
             {t('signedOutTitle')}
           </CardTitle>
-          <CardDescription>{t('signedOutDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           {auth.isAuthenticated ? (

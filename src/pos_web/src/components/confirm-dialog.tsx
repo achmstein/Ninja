@@ -12,7 +12,8 @@ type ConfirmDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  description: string
+  /** A datum the decision turns on (an amount, hours); never an explanation */
+  description?: string
   cancelLabel: string
   actionLabel: string
   /** Paint the action red: something ends, or money-relevant state changes. */
@@ -51,9 +52,11 @@ export function ConfirmDialog({
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='text-xl'>{title}</DialogTitle>
-          <DialogDescription className='text-base'>
-            {description}
-          </DialogDescription>
+          {description && (
+            <DialogDescription className='text-base'>
+              {description}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <DialogFooter className='gap-2'>

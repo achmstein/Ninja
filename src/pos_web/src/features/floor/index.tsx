@@ -467,7 +467,6 @@ export function Floor() {
         ) : bills.length === 0 ? (
           <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
             <p className='text-lg font-medium'>{t('noOpenBills')}</p>
-            <p className='text-sm'>{t('noOpenBillsHint')}</p>
           </div>
         ) : (
           <div className='flex flex-col gap-3'>

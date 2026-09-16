@@ -116,10 +116,6 @@ export function SessionBar({
           if (!isOpen) setPendingMode(null)
         }}
         title={t('switchToModeQuestion', { mode: modeLabel(pendingMode, t) })}
-        description={t('switchModeDescription', {
-          current: modeLabel(currentMode, t),
-          next: modeLabel(pendingMode, t),
-        })}
         cancelLabel={t('keepCurrent', { mode: modeLabel(currentMode, t) })}
         actionLabel={t('switchMode')}
         onAction={() => {

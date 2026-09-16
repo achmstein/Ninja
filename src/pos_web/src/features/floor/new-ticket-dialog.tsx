@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -193,9 +192,6 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
       <DialogContent className='gap-5 sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='text-xl'>{t('newTab')}</DialogTitle>
-          <DialogDescription className='text-base'>
-            {t('newTabHint')}
-          </DialogDescription>
         </DialogHeader>
 
         <div className='grid gap-2'>

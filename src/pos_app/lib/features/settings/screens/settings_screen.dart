@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
+import '../../../core/widgets/info_tip.dart';
 import '../../../core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
@@ -116,8 +117,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 16),
               // The tablet as a till and nothing else
               FCard(
-                title: Text(l10n.kiosk),
-                subtitle: Text(l10n.kioskHint),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [Text(l10n.kiosk), const SizedBox(width: 4), InfoTip(text: l10n.kioskHint)],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Builder(builder: (context) {
@@ -170,8 +173,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 16),
               FCard(
-                title: Text(l10n.printer),
-                subtitle: Text(l10n.printerHint),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [Text(l10n.printer), const SizedBox(width: 4), InfoTip(text: l10n.printerHint)],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Column(
@@ -267,8 +272,10 @@ class _OfflineSalesCard extends ConsumerWidget {
     const tabular = [FontFeature.tabularFigures()];
 
     return FCard(
-      title: Text(l10n.offlineSales),
-      subtitle: Text(l10n.offlineSalesHint),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text(l10n.offlineSales), const SizedBox(width: 4), InfoTip(text: l10n.offlineSalesHint)],
+      ),
       child: Padding(
         padding: const EdgeInsets.only(top: 16),
         child: Column(

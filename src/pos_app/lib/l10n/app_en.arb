@@ -12,11 +12,10 @@
   "signInFailed": "Sign-in failed",
   "redirectingToSignIn": "Redirecting to sign in...",
   "signedOutTitle": "Signed out",
-  "signedOutDescription": "You have been signed out of the POS.",
   "signInAgain": "Sign in again",
   "backToPos": "Back to the POS",
   "accessDeniedTitle": "Access denied",
-  "accessDeniedDescription": "Your account does not have access to the POS.",
+  "accessDeniedDescription": "No access.",
   "openTickets": "Open tickets",
   "noOpenTickets": "No open tickets",
   "noOpenTicketsHint": "Open a new ticket to get started.",
@@ -57,7 +56,7 @@
   "guest": "Guest",
   "confirmOrder": "Confirm",
   "cancelOrder": "Cancel order",
-  "cancelOrderConfirm": "Cancel this order? The customer will be told, and it cannot be undone.",
+  "cancelOrderConfirm": "Cancel order?",
   "keepOrder": "Keep it",
   "orderConfirmed": "Order confirmed",
   "orderCancelled": "Order cancelled",
@@ -120,7 +119,6 @@
     }
   },
   "settleWithPendingTitle": "An order is still waiting",
-  "settleWithPendingHint": "Confirm it first so it lands on this bill. Settled now, it would open a new ticket after the group has paid.",
   "settleAnyway": "Settle anyway",
   "goBack": "Back",
   "rooms": "Rooms",
@@ -164,14 +162,6 @@
   "failedToUpdateRequest": "Could not update the request",
   "newServiceRequestToast": "New room request",
   "startWalkInSession": "Start walk-in session",
-  "startWalkInDescription": "Start the timer for {name} right now. Customers can join by scanning the room QR code.",
-  "@startWalkInDescription": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "sessionStarted": "Session started",
   "failedToStartSession": "Failed to start session",
   "sessionRunning": "Session running",
@@ -190,7 +180,7 @@
   "billedSoFar": "Billed so far",
   "endSessionButton": "End session",
   "endThisSession": "End this session?",
-  "endSessionBilledAt": "The timer stops and {hours} land on the bill as time lines.",
+  "endSessionBilledAt": "{hours} on the bill.",
   "@endSessionBilledAt": {
     "placeholders": {
       "hours": {
@@ -203,11 +193,10 @@
   "failedToEndSession": "Failed to end session",
   "cancelSessionButton": "Cancel, no charge",
   "cancelThisSession": "Cancel this session?",
-  "cancelSessionHint": "No time is charged and the room frees up. To bill the time, end the session instead.",
+  "cancelSessionHint": "No charge.",
   "sessionCancelled": "Session cancelled",
   "cancelReservation": "Cancel reservation",
   "cancelThisReservation": "Cancel this reservation?",
-  "roomBecomesAvailable": "The room becomes available for other customers.",
   "reservationCancelled": "Reservation cancelled",
   "failedToCancelSession": "Failed to cancel",
   "keepIt": "Keep it",
@@ -215,17 +204,6 @@
   "@switchToModeQuestion": {
     "placeholders": {
       "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "switchModeDescription": "The {current} segment closes now and billing continues at the {next} rate.",
-  "@switchModeDescription": {
-    "placeholders": {
-      "current": {
-        "type": "String"
-      },
-      "next": {
         "type": "String"
       }
     }
@@ -247,14 +225,11 @@
   "customerAssigned": "Customer assigned",
   "failedToAddCustomer": "Failed to add customer",
   "failedToAssignCustomer": "Failed to assign customer",
-  "pointsFollowWholeOrder": "Points stay with the order's customer; only the bill grouping changed.",
   "memberRemove": "Remove member",
   "memberRemoved": "Member removed",
   "failedToRemoveMember": "Failed to remove member",
   "settleWithSessionTitle": "The session is still running",
-  "settleWithSessionHint": "End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.",
   "voidWithSessionTitle": "The session is still running",
-  "voidWithSessionHint": "End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.",
   "subtotal": "Subtotal",
   "serviceCharge": "Service {rate}%",
   "@serviceCharge": {
@@ -289,7 +264,7 @@
       }
     }
   },
-  "refundHint": "Pick what goes back. Each item returns what was paid for it, service and VAT included. {amount} of this receipt is left.",
+  "refundHint": "{amount} left",
   "@refundHint": {
     "placeholders": {
       "amount": {
@@ -336,8 +311,9 @@
     }
   },
   "refundedSoFar": "Refunded",
+  "breakdown": "Breakdown",
+  "none": "None",
   "noOpenBills": "Nothing open",
-  "noOpenBillsHint": "Start a sale, or pick a room or table beside.",
   "openPlace": "Open",
   "hidePlaces": "Hide places",
   "showPlaces": "Show places",
@@ -360,14 +336,21 @@
   "newTab": "New tab",
   "onCustomerTabHint": "On {name}'s tab",
   "@onCustomerTabHint": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "alreadyOnBill": "Already has a bill open · {where}",
   "@alreadyOnBill": {
-    "placeholders": { "where": { "type": "String" } }
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
   },
   "findCustomer": "Find customer",
-  "newTabHint": "A counter bill with no table, for someone who will order in a moment.",
   "ticketNumber": "Ticket #{id}",
   "@ticketNumber": {
     "placeholders": {
@@ -409,7 +392,6 @@
   "newTicketForPlace": "New ticket for this place",
   "noOtherOpenTickets": "No other open tickets",
   "currentSale": "Current sale",
-  "emptySale": "Tap items to add them to the sale",
   "noItemsInCategory": "No items in this category",
   "unavailable": "Unavailable",
   "required": "Required",
@@ -434,7 +416,6 @@
   },
   "noAccountNeeded": "Just a name — no account",
   "searchCustomersPlaceholder": "Name, phone, or email",
-  "typeToSearch": "Type at least 2 characters to search",
   "noCustomersFound": "No customers found",
   "settleTitle": "Settle ticket",
   "payments": "Payments",
@@ -538,20 +519,17 @@
   "failedToPayTab": "Could not record the payment",
   "tabPayments": "Tab payments",
   "voidTicket": "Void ticket",
-  "voidReasonHint": "A reason is required — this is the audit trail.",
   "confirmVoid": "Void ticket",
   "ticketVoided": "Ticket voided",
   "voidedBadge": "Voided",
   "voidedBy": "Voided by",
   "discardTicket": "Discard",
   "discardTicketTitle": "Discard this ticket?",
-  "discardTicketHint": "Nothing was added to it, so it leaves no trace. A ticket with items on it needs an owner to void it.",
   "confirmDiscard": "Discard",
   "ticketDiscarded": "Ticket discarded",
   "takingOrders": "Taking orders",
   "takingReservations": "Taking reservations",
   "paused": "Paused",
-  "takingAutoHint": "Opening the shift turns both on; closing it turns both off.",
   "shiftDetails": "Shift details",
   "shiftTitle": "Shift",
   "shiftNumber": "Shift #{id}",
@@ -570,7 +548,6 @@
   "openingFloat": "Opening float",
   "shiftOpened": "Shift opened",
   "noShiftOpen": "No shift is open",
-  "noShiftOpenHint": "Count the float and open the drawer shift to start the day.",
   "openedAt": "Opened",
   "openedBy": "Opened by",
   "closedAt": "Closed",
@@ -600,10 +577,6 @@
   "payOutWhichSupplier": "Which supplier?",
   "payOutWhichPartner": "Which partner?",
   "payOutWhatFor": "What for?",
-  "payOutNoEmployees": "Nobody on the register for this branch yet — add employees in the admin app.",
-  "payOutNoSuppliers": "No suppliers yet — add them in the admin app.",
-  "payOutNoPartners": "No partners set for this branch — add them in the admin app.",
-  "payOutNoCategories": "No categories set up yet.",
   "closeShiftTitle": "Close shift",
   "closeShiftAction": "Close shift",
   "countedAmount": "Counted drawer cash",
@@ -661,23 +634,9 @@
   "error": "Error",
   "invalidCredentials": "Invalid username or password. Please try again.",
   "enterBothFields": "Please enter both username and password.",
-  "cancelOrderConfirmation": "Are you sure you want to cancel this order?",
-  "cancelOrderQuestion": "Cancel Order?",
   "customer": "Customer",
   "date": "Date",
-  "each": "each",
   "items": "Items",
-  "noKeep": "No, Keep",
-  "priceFormat": "£{price}",
-  "@priceFormat": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "yesCancel": "Yes, Cancel",
-  "comingSoon": "Coming in the next phase",
   "failedToSettle": "Failed to settle the ticket",
   "customerNote": "Customer Note",
   "printer": "Receipt printer",
@@ -732,7 +691,6 @@
   "retrySync": "Retry",
   "discardSale": "Discard",
   "savedOffline": "Saved on the till",
-  "savedOfflineHint": "The network is down. This sale is kept here and sent when it is back; the receipt carries a temporary number.",
   "offlineNotAvailable": "Not available while offline",
   "provisionalReceipt": "Till copy {number}",
   "@provisionalReceipt": {
@@ -743,5 +701,5 @@
     }
   },
   "noBranchTitle": "No branch assigned",
-  "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one."
+  "noBranchDescription": "Ask the owner to assign a branch."
 }

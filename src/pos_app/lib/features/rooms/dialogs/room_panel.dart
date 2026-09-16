@@ -92,7 +92,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     final ok = await showConfirmDialog(
       context,
       title: active ? l10n.cancelThisSession : l10n.cancelThisReservation,
-      description: active ? l10n.cancelSessionHint : l10n.roomBecomesAvailable,
+      description: active ? l10n.cancelSessionHint : null,
       cancelLabel: l10n.keepIt,
       actionLabel: active ? l10n.cancelSessionButton : l10n.cancelReservation,
       destructive: true,
@@ -112,7 +112,6 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     final ok = await showConfirmDialog(
       context,
       title: l10n.switchToModeQuestion(next),
-      description: l10n.switchModeDescription(current, next),
       cancelLabel: l10n.keepCurrent(current),
       actionLabel: l10n.switchMode,
     );

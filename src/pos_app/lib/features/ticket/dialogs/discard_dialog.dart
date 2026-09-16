@@ -69,8 +69,6 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(l10n.discardTicketTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text(l10n.discardTicketHint, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

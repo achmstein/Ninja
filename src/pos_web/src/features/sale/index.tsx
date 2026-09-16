@@ -760,11 +760,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         </div>
 
         <div className='flex-1 overflow-y-auto'>
-          {lines.length === 0 ? (
-            <p className='text-muted-foreground px-6 py-16 text-center text-sm'>
-              {t('emptySale')}
-            </p>
-          ) : (
+          {lines.length === 0 ? null : (
             <div className='flex flex-col divide-y'>
               {lines.map((line) => (
                 <CartLineRow

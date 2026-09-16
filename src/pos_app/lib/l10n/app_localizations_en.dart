@@ -45,9 +45,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedOutTitle => 'Signed out';
 
   @override
-  String get signedOutDescription => 'You have been signed out of the POS.';
-
-  @override
   String get signInAgain => 'Sign in again';
 
   @override
@@ -57,8 +54,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessDeniedTitle => 'Access denied';
 
   @override
-  String get accessDeniedDescription =>
-      'Your account does not have access to the POS.';
+  String get accessDeniedDescription => 'No access.';
 
   @override
   String get openTickets => 'Open tickets';
@@ -149,8 +145,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelOrder => 'Cancel order';
 
   @override
-  String get cancelOrderConfirm =>
-      'Cancel this order? The customer will be told, and it cannot be undone.';
+  String get cancelOrderConfirm => 'Cancel order?';
 
   @override
   String get keepOrder => 'Keep it';
@@ -211,10 +206,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settleWithPendingTitle => 'An order is still waiting';
-
-  @override
-  String get settleWithPendingHint =>
-      'Confirm it first so it lands on this bill. Settled now, it would open a new ticket after the group has paid.';
 
   @override
   String get settleAnyway => 'Settle anyway';
@@ -308,11 +299,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startWalkInSession => 'Start walk-in session';
 
   @override
-  String startWalkInDescription(String name) {
-    return 'Start the timer for $name right now. Customers can join by scanning the room QR code.';
-  }
-
-  @override
   String get sessionStarted => 'Session started';
 
   @override
@@ -349,7 +335,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String endSessionBilledAt(String hours) {
-    return 'The timer stops and $hours land on the bill as time lines.';
+    return '$hours on the bill.';
   }
 
   @override
@@ -368,8 +354,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelThisSession => 'Cancel this session?';
 
   @override
-  String get cancelSessionHint =>
-      'No time is charged and the room frees up. To bill the time, end the session instead.';
+  String get cancelSessionHint => 'No charge.';
 
   @override
   String get sessionCancelled => 'Session cancelled';
@@ -379,10 +364,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelThisReservation => 'Cancel this reservation?';
-
-  @override
-  String get roomBecomesAvailable =>
-      'The room becomes available for other customers.';
 
   @override
   String get reservationCancelled => 'Reservation cancelled';
@@ -396,11 +377,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String switchToModeQuestion(String mode) {
     return 'Switch to $mode?';
-  }
-
-  @override
-  String switchModeDescription(String current, String next) {
-    return 'The $current segment closes now and billing continues at the $next rate.';
   }
 
   @override
@@ -436,10 +412,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToAssignCustomer => 'Failed to assign customer';
 
   @override
-  String get pointsFollowWholeOrder =>
-      'Points stay with the order\'s customer; only the bill grouping changed.';
-
-  @override
   String get memberRemove => 'Remove member';
 
   @override
@@ -452,15 +424,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settleWithSessionTitle => 'The session is still running';
 
   @override
-  String get settleWithSessionHint =>
-      'End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.';
-
-  @override
   String get voidWithSessionTitle => 'The session is still running';
-
-  @override
-  String get voidWithSessionHint =>
-      'End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.';
 
   @override
   String get subtotal => 'Subtotal';
@@ -490,7 +454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String refundHint(String amount) {
-    return 'Pick what goes back. Each item returns what was paid for it, service and VAT included. $amount of this receipt is left.';
+    return '$amount left';
   }
 
   @override
@@ -532,10 +496,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refundedSoFar => 'Refunded';
 
   @override
-  String get noOpenBills => 'Nothing open';
+  String get breakdown => 'Breakdown';
 
   @override
-  String get noOpenBillsHint => 'Start a sale, or pick a room or table beside.';
+  String get none => 'None';
+
+  @override
+  String get noOpenBills => 'Nothing open';
 
   @override
   String get openPlace => 'Open';
@@ -590,10 +557,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get findCustomer => 'Find customer';
-
-  @override
-  String get newTabHint =>
-      'A counter bill with no table, for someone who will order in a moment.';
 
   @override
   String ticketNumber(int id) {
@@ -687,9 +650,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentSale => 'Current sale';
 
   @override
-  String get emptySale => 'Tap items to add them to the sale';
-
-  @override
   String get noItemsInCategory => 'No items in this category';
 
   @override
@@ -742,9 +702,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchCustomersPlaceholder => 'Name, phone, or email';
-
-  @override
-  String get typeToSearch => 'Type at least 2 characters to search';
 
   @override
   String get noCustomersFound => 'No customers found';
@@ -905,10 +862,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voidTicket => 'Void ticket';
 
   @override
-  String get voidReasonHint =>
-      'A reason is required — this is the audit trail.';
-
-  @override
   String get confirmVoid => 'Void ticket';
 
   @override
@@ -927,10 +880,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discardTicketTitle => 'Discard this ticket?';
 
   @override
-  String get discardTicketHint =>
-      'Nothing was added to it, so it leaves no trace. A ticket with items on it needs an owner to void it.';
-
-  @override
   String get confirmDiscard => 'Discard';
 
   @override
@@ -944,10 +893,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paused => 'Paused';
-
-  @override
-  String get takingAutoHint =>
-      'Opening the shift turns both on; closing it turns both off.';
 
   @override
   String get shiftDetails => 'Shift details';
@@ -983,10 +928,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noShiftOpen => 'No shift is open';
-
-  @override
-  String get noShiftOpenHint =>
-      'Count the float and open the drawer shift to start the day.';
 
   @override
   String get openedAt => 'Opened';
@@ -1074,21 +1015,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payOutWhatFor => 'What for?';
-
-  @override
-  String get payOutNoEmployees =>
-      'Nobody on the register for this branch yet — add employees in the admin app.';
-
-  @override
-  String get payOutNoSuppliers =>
-      'No suppliers yet — add them in the admin app.';
-
-  @override
-  String get payOutNoPartners =>
-      'No partners set for this branch — add them in the admin app.';
-
-  @override
-  String get payOutNoCategories => 'No categories set up yet.';
 
   @override
   String get closeShiftTitle => 'Close shift';
@@ -1244,37 +1170,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterBothFields => 'Please enter both username and password.';
 
   @override
-  String get cancelOrderConfirmation =>
-      'Are you sure you want to cancel this order?';
-
-  @override
-  String get cancelOrderQuestion => 'Cancel Order?';
-
-  @override
   String get customer => 'Customer';
 
   @override
   String get date => 'Date';
 
   @override
-  String get each => 'each';
-
-  @override
   String get items => 'Items';
-
-  @override
-  String get noKeep => 'No, Keep';
-
-  @override
-  String priceFormat(String price) {
-    return '£$price';
-  }
-
-  @override
-  String get yesCancel => 'Yes, Cancel';
-
-  @override
-  String get comingSoon => 'Coming in the next phase';
 
   @override
   String get failedToSettle => 'Failed to settle the ticket';
@@ -1405,10 +1307,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedOffline => 'Saved on the till';
 
   @override
-  String get savedOfflineHint =>
-      'The network is down. This sale is kept here and sent when it is back; the receipt carries a temporary number.';
-
-  @override
   String get offlineNotAvailable => 'Not available while offline';
 
   @override
@@ -1420,6 +1318,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBranchTitle => 'No branch assigned';
 
   @override
-  String get noBranchDescription =>
-      'Your account is not assigned to any branch yet. Ask the owner to assign you one.';
+  String get noBranchDescription => 'Ask the owner to assign a branch.';
 }

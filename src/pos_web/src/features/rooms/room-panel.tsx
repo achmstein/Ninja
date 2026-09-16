@@ -439,7 +439,7 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
         open={confirmCancel}
         onOpenChange={setConfirmCancel}
         title={active ? t('cancelThisSession') : t('cancelThisReservation')}
-        description={active ? t('cancelSessionHint') : t('roomBecomesAvailable')}
+        description={active ? t('cancelSessionHint') : undefined}
         cancelLabel={t('keepIt')}
         actionLabel={active ? t('cancelSessionButton') : t('cancelReservation')}
         destructive
@@ -455,10 +455,6 @@ export function RoomPanel({ room, session, onOpenChange, onStarted }: RoomPanelP
           if (!isOpen) setPendingMode(null)
         }}
         title={t('switchToModeQuestion', { mode: modeLabel(pendingMode, t) })}
-        description={t('switchModeDescription', {
-          current: modeLabel(currentMode, t),
-          next: modeLabel(pendingMode, t),
-        })}
         cancelLabel={t('keepCurrent', { mode: modeLabel(currentMode, t) })}
         actionLabel={t('switchMode')}
         onAction={() => {

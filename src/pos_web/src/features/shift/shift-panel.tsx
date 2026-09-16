@@ -116,9 +116,6 @@ export function ShiftPanel({ shift, open, onOpenChange }: ShiftPanelProps) {
                 className='border-t'
               />
             </div>
-            <p className='text-muted-foreground mt-2 text-sm'>
-              {t('takingAutoHint')}
-            </p>
           </div>
 
           <DialogFooter className='gap-2'>

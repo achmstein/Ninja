@@ -45,9 +45,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signedOutTitle => 'تم تسجيل الخروج';
 
   @override
-  String get signedOutDescription => 'انت سجلت خروج من الكاشير.';
-
-  @override
   String get signInAgain => 'سجل دخول تاني';
 
   @override
@@ -57,7 +54,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accessDeniedTitle => 'مفيش صلاحية';
 
   @override
-  String get accessDeniedDescription => 'حسابك معندوش صلاحية يدخل الكاشير.';
+  String get accessDeniedDescription => 'مفيش صلاحية.';
 
   @override
   String get openTickets => 'الحسابات المفتوحة';
@@ -150,8 +147,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancelOrder => 'ألغي الطلب';
 
   @override
-  String get cancelOrderConfirm =>
-      'تلغي الطلب ده؟ العميل هيتبلغ، ومفيش رجوع بعدها.';
+  String get cancelOrderConfirm => 'تلغي الطلب؟';
 
   @override
   String get keepOrder => 'سيبه';
@@ -214,10 +210,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settleWithPendingTitle => 'لسه فيه طلب مستني';
-
-  @override
-  String get settleWithPendingHint =>
-      'أكّده الأول عشان ينزل على الحساب ده. لو قفلت دلوقتي هيفتح حساب جديد بعد ما الناس تدفع.';
 
   @override
   String get settleAnyway => 'اقفل على أي حال';
@@ -311,11 +303,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get startWalkInSession => 'بدء جلسة فورية';
 
   @override
-  String startWalkInDescription(String name) {
-    return 'ابدأ عداد $name دلوقتي. العملاء يقدروا ينضموا بمسح كود QR بتاع الاوضة.';
-  }
-
-  @override
   String get sessionStarted => 'الجلسة بدأت';
 
   @override
@@ -352,7 +339,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String endSessionBilledAt(String hours) {
-    return 'العداد هيقف و$hours هتنزل على الحساب كبنود وقت.';
+    return '$hours على الحساب.';
   }
 
   @override
@@ -371,8 +358,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancelThisSession => 'تلغي الجلسة دي؟';
 
   @override
-  String get cancelSessionHint =>
-      'مش هيتحسب وقت والاوضة هتفضى. لو عايز تحاسب على الوقت، أنهي الجلسة بدل كده.';
+  String get cancelSessionHint => 'من غير حساب.';
 
   @override
   String get sessionCancelled => 'الجلسة اتلغت';
@@ -382,9 +368,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancelThisReservation => 'إلغاء الحجز ده؟';
-
-  @override
-  String get roomBecomesAvailable => 'الاوضة هتبقى متاحة لعملاء تانيين.';
 
   @override
   String get reservationCancelled => 'الحجز اتلغى';
@@ -398,11 +381,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String switchToModeQuestion(String mode) {
     return 'التحويل لوضع $mode؟';
-  }
-
-  @override
-  String switchModeDescription(String current, String next) {
-    return 'فترة $current هتقفل دلوقتي والحساب هيكمل بسعر $next.';
   }
 
   @override
@@ -438,10 +416,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToAssignCustomer => 'معرفناش نعين العميل';
 
   @override
-  String get pointsFollowWholeOrder =>
-      'النقط بتفضل لصاحب الأوردر؛ اللي اتغير بس توزيع الحساب.';
-
-  @override
   String get memberRemove => 'شيل العضو';
 
   @override
@@ -454,15 +428,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settleWithSessionTitle => 'الوقت لسه شغال';
 
   @override
-  String get settleWithSessionHint =>
-      'أنهيه الأول عشان الوقت ينزل على الحساب ده. لو قفلت دلوقتي الوقت هينزل على حساب جديد بعد ما الناس تدفع.';
-
-  @override
   String get voidWithSessionTitle => 'الوقت لسه شغال';
-
-  @override
-  String get voidWithSessionHint =>
-      'أنهيه الأول عشان الوقت ينزل على الحساب ده، وبعدين اشطب أو اقفل. لو شطبت دلوقتي الوقت هيضيع من غير ما يتحسب.';
 
   @override
   String get subtotal => 'المجموع قبل الإضافات';
@@ -492,7 +458,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String refundHint(String amount) {
-    return 'اختار اللي هيرجع. كل صنف بيرجع بالمدفوع فيه شامل الخدمة والضريبة. الباقي من الإيصال $amount.';
+    return 'الباقي $amount';
   }
 
   @override
@@ -536,10 +502,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refundedSoFar => 'اترجع';
 
   @override
-  String get noOpenBills => 'مفيش حسابات مفتوحة';
+  String get breakdown => 'التفاصيل';
 
   @override
-  String get noOpenBillsHint => 'ابدأ بيع، أو اختار اوضة أو ترابيزة من الجنب.';
+  String get none => 'مفيش';
+
+  @override
+  String get noOpenBills => 'مفيش حسابات مفتوحة';
 
   @override
   String get openPlace => 'افتح';
@@ -594,9 +563,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get findCustomer => 'دور على عميل';
-
-  @override
-  String get newTabHint => 'حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.';
 
   @override
   String ticketNumber(int id) {
@@ -692,9 +658,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentSale => 'البيع الحالي';
 
   @override
-  String get emptySale => 'دوس على الأصناف عشان تضيفها للبيع';
-
-  @override
   String get noItemsInCategory => 'مفيش أصناف في القسم ده';
 
   @override
@@ -747,9 +710,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchCustomersPlaceholder => 'الاسم أو الموبايل أو الإيميل';
-
-  @override
-  String get typeToSearch => 'اكتب حرفين على الأقل عشان تدور';
 
   @override
   String get noCustomersFound => 'مفيش عملاء طالعين بالبحث ده';
@@ -909,9 +869,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voidTicket => 'إلغاء الحساب';
 
   @override
-  String get voidReasonHint => 'سبب الإلغاء مطلوب — ده سجل المراجعة.';
-
-  @override
   String get confirmVoid => 'ألغي الحساب';
 
   @override
@@ -930,10 +887,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get discardTicketTitle => 'تمسح الحساب ده؟';
 
   @override
-  String get discardTicketHint =>
-      'مفيش حاجة اتضافت عليه، فمش هيسيب أي أثر. الحساب اللي عليه أصناف لازم صاحب المحل يلغيه.';
-
-  @override
   String get confirmDiscard => 'امسح';
 
   @override
@@ -947,9 +900,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paused => 'متوقف';
-
-  @override
-  String get takingAutoHint => 'فتح الوردية بيشغّل الاتنين، وقفلها بيوقفهم.';
 
   @override
   String get shiftDetails => 'تفاصيل الوردية';
@@ -985,9 +935,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noShiftOpen => 'مفيش وردية مفتوحة';
-
-  @override
-  String get noShiftOpenHint => 'عد الفكة وافتح وردية الدرج عشان تبدأ اليوم.';
 
   @override
   String get openedAt => 'اتفتحت';
@@ -1075,20 +1022,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payOutWhatFor => 'مصروف إيه؟';
-
-  @override
-  String get payOutNoEmployees =>
-      'مفيش موظفين مسجلين للفرع ده لسه — ضيفهم من الأدمن.';
-
-  @override
-  String get payOutNoSuppliers => 'مفيش موردين لسه — ضيفهم من الأدمن.';
-
-  @override
-  String get payOutNoPartners =>
-      'مفيش شركاء متسجلين للفرع ده — ضيفهم من الأدمن.';
-
-  @override
-  String get payOutNoCategories => 'مفيش تصنيفات متسجلة لسه.';
 
   @override
   String get closeShiftTitle => 'قفل الوردية';
@@ -1243,36 +1176,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterBothFields => 'من فضلك اكتب اليوزر والباسورد.';
 
   @override
-  String get cancelOrderConfirmation => 'متأكد إنك عايز تلغي الطلب ده؟';
-
-  @override
-  String get cancelOrderQuestion => 'إلغاء الطلب؟';
-
-  @override
   String get customer => 'العميل';
 
   @override
   String get date => 'التاريخ';
 
   @override
-  String get each => 'الواحدة';
-
-  @override
   String get items => 'العناصر';
-
-  @override
-  String get noKeep => 'لا، خليه';
-
-  @override
-  String priceFormat(String price) {
-    return '$price ج.م';
-  }
-
-  @override
-  String get yesCancel => 'أيوه، الغيه';
-
-  @override
-  String get comingSoon => 'جاي في المرحلة الجاية';
 
   @override
   String get failedToSettle => 'معرفناش نحصّل الحساب';
@@ -1408,10 +1318,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get savedOffline => 'اتحفظت على الكاشير';
 
   @override
-  String get savedOfflineHint =>
-      'الشبكة واقعة. البيعة دي محفوظة هنا وهتتبعت أول ما ترجع؛ والإيصال عليه رقم مؤقت.';
-
-  @override
   String get offlineNotAvailable => 'مش متاح وإنت أوفلاين';
 
   @override
@@ -1423,6 +1329,5 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noBranchTitle => 'مفيش فرع متعين ليك';
 
   @override
-  String get noBranchDescription =>
-      'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.';
+  String get noBranchDescription => 'اطلب من المالك يعينك على فرع.';
 }

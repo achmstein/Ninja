@@ -81,7 +81,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
     apply.mutate({
       // A retry on café Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
-      path: { id: ticket.id },
+      path: { id: toNumber(ticket.id) },
       query: { 'api-version': API_VERSION },
       body: {
         reason: reason.trim(),
@@ -92,7 +92,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
 
   const doRemove = () =>
     remove.mutate({
-      path: { id: ticket.id },
+      path: { id: toNumber(ticket.id) },
       query: { 'api-version': API_VERSION },
     })
 

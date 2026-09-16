@@ -83,7 +83,6 @@ class _VoidDialogState extends ConsumerState<_VoidDialog> {
           FTextField(
             control: FTextFieldControl.managed(controller: _reason),
             label: Text(l10n.reason),
-            description: Text(l10n.voidReasonHint),
             autofocus: true,
             maxLines: 1,
             textInputAction: TextInputAction.done,

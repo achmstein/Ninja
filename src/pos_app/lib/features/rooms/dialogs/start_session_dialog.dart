@@ -88,13 +88,13 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            session != null
-                ? [name, if ((session.userName ?? '').isNotEmpty) session.userName!].join(' · ')
-                : l10n.startWalkInDescription(name),
-            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
-          ),
+          if (session != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              [name, if ((session.userName ?? '').isNotEmpty) session.userName!].join(' · '),
+              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
+            ),
+          ],
           const SizedBox(height: 16),
           // The card prices the mode picked below; the toggle carries both
           // rates so the other one stays in view

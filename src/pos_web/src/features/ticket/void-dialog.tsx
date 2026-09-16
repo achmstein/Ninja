@@ -79,7 +79,6 @@ export function VoidTicketDialog({
             className='h-12 text-base'
             autoComplete='off'
           />
-          <p className='text-muted-foreground text-sm'>{t('voidReasonHint')}</p>
         </div>
 
         <DialogFooter className='gap-2'>

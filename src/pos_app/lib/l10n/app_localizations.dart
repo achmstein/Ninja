@@ -170,12 +170,6 @@ abstract class AppLocalizations {
   /// **'Signed out'**
   String get signedOutTitle;
 
-  /// No description provided for @signedOutDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'You have been signed out of the POS.'**
-  String get signedOutDescription;
-
   /// No description provided for @signInAgain.
   ///
   /// In en, this message translates to:
@@ -197,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessDeniedDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your account does not have access to the POS.'**
+  /// **'No access.'**
   String get accessDeniedDescription;
 
   /// No description provided for @openTickets.
@@ -359,7 +353,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelOrderConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Cancel this order? The customer will be told, and it cannot be undone.'**
+  /// **'Cancel order?'**
   String get cancelOrderConfirm;
 
   /// No description provided for @keepOrder.
@@ -445,12 +439,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An order is still waiting'**
   String get settleWithPendingTitle;
-
-  /// No description provided for @settleWithPendingHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm it first so it lands on this bill. Settled now, it would open a new ticket after the group has paid.'**
-  String get settleWithPendingHint;
 
   /// No description provided for @settleAnyway.
   ///
@@ -626,12 +614,6 @@ abstract class AppLocalizations {
   /// **'Start walk-in session'**
   String get startWalkInSession;
 
-  /// No description provided for @startWalkInDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Start the timer for {name} right now. Customers can join by scanning the room QR code.'**
-  String startWalkInDescription(String name);
-
   /// No description provided for @sessionStarted.
   ///
   /// In en, this message translates to:
@@ -701,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @endSessionBilledAt.
   ///
   /// In en, this message translates to:
-  /// **'The timer stops and {hours} land on the bill as time lines.'**
+  /// **'{hours} on the bill.'**
   String endSessionBilledAt(String hours);
 
   /// No description provided for @keepPlaying.
@@ -737,7 +719,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelSessionHint.
   ///
   /// In en, this message translates to:
-  /// **'No time is charged and the room frees up. To bill the time, end the session instead.'**
+  /// **'No charge.'**
   String get cancelSessionHint;
 
   /// No description provided for @sessionCancelled.
@@ -757,12 +739,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel this reservation?'**
   String get cancelThisReservation;
-
-  /// No description provided for @roomBecomesAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'The room becomes available for other customers.'**
-  String get roomBecomesAvailable;
 
   /// No description provided for @reservationCancelled.
   ///
@@ -787,12 +763,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch to {mode}?'**
   String switchToModeQuestion(String mode);
-
-  /// No description provided for @switchModeDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'The {current} segment closes now and billing continues at the {next} rate.'**
-  String switchModeDescription(String current, String next);
 
   /// No description provided for @switchMode.
   ///
@@ -854,12 +824,6 @@ abstract class AppLocalizations {
   /// **'Failed to assign customer'**
   String get failedToAssignCustomer;
 
-  /// No description provided for @pointsFollowWholeOrder.
-  ///
-  /// In en, this message translates to:
-  /// **'Points stay with the order\'s customer; only the bill grouping changed.'**
-  String get pointsFollowWholeOrder;
-
   /// No description provided for @memberRemove.
   ///
   /// In en, this message translates to:
@@ -884,23 +848,11 @@ abstract class AppLocalizations {
   /// **'The session is still running'**
   String get settleWithSessionTitle;
 
-  /// No description provided for @settleWithSessionHint.
-  ///
-  /// In en, this message translates to:
-  /// **'End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.'**
-  String get settleWithSessionHint;
-
   /// No description provided for @voidWithSessionTitle.
   ///
   /// In en, this message translates to:
   /// **'The session is still running'**
   String get voidWithSessionTitle;
-
-  /// No description provided for @voidWithSessionHint.
-  ///
-  /// In en, this message translates to:
-  /// **'End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.'**
-  String get voidWithSessionHint;
 
   /// No description provided for @subtotal.
   ///
@@ -941,7 +893,7 @@ abstract class AppLocalizations {
   /// No description provided for @refundHint.
   ///
   /// In en, this message translates to:
-  /// **'Pick what goes back. Each item returns what was paid for it, service and VAT included. {amount} of this receipt is left.'**
+  /// **'{amount} left'**
   String refundHint(String amount);
 
   /// No description provided for @leftToRefund.
@@ -992,17 +944,23 @@ abstract class AppLocalizations {
   /// **'Refunded'**
   String get refundedSoFar;
 
+  /// No description provided for @breakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakdown'**
+  String get breakdown;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
   /// No description provided for @noOpenBills.
   ///
   /// In en, this message translates to:
   /// **'Nothing open'**
   String get noOpenBills;
-
-  /// No description provided for @noOpenBillsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Start a sale, or pick a room or table beside.'**
-  String get noOpenBillsHint;
 
   /// No description provided for @openPlace.
   ///
@@ -1099,12 +1057,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Find customer'**
   String get findCustomer;
-
-  /// No description provided for @newTabHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A counter bill with no table, for someone who will order in a moment.'**
-  String get newTabHint;
 
   /// No description provided for @ticketNumber.
   ///
@@ -1268,12 +1220,6 @@ abstract class AppLocalizations {
   /// **'Current sale'**
   String get currentSale;
 
-  /// No description provided for @emptySale.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap items to add them to the sale'**
-  String get emptySale;
-
   /// No description provided for @noItemsInCategory.
   ///
   /// In en, this message translates to:
@@ -1375,12 +1321,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name, phone, or email'**
   String get searchCustomersPlaceholder;
-
-  /// No description provided for @typeToSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Type at least 2 characters to search'**
-  String get typeToSearch;
 
   /// No description provided for @noCustomersFound.
   ///
@@ -1664,12 +1604,6 @@ abstract class AppLocalizations {
   /// **'Void ticket'**
   String get voidTicket;
 
-  /// No description provided for @voidReasonHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A reason is required — this is the audit trail.'**
-  String get voidReasonHint;
-
   /// No description provided for @confirmVoid.
   ///
   /// In en, this message translates to:
@@ -1706,12 +1640,6 @@ abstract class AppLocalizations {
   /// **'Discard this ticket?'**
   String get discardTicketTitle;
 
-  /// No description provided for @discardTicketHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing was added to it, so it leaves no trace. A ticket with items on it needs an owner to void it.'**
-  String get discardTicketHint;
-
   /// No description provided for @confirmDiscard.
   ///
   /// In en, this message translates to:
@@ -1741,12 +1669,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paused'**
   String get paused;
-
-  /// No description provided for @takingAutoHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening the shift turns both on; closing it turns both off.'**
-  String get takingAutoHint;
 
   /// No description provided for @shiftDetails.
   ///
@@ -1813,12 +1735,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No shift is open'**
   String get noShiftOpen;
-
-  /// No description provided for @noShiftOpenHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Count the float and open the drawer shift to start the day.'**
-  String get noShiftOpenHint;
 
   /// No description provided for @openedAt.
   ///
@@ -1993,30 +1909,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What for?'**
   String get payOutWhatFor;
-
-  /// No description provided for @payOutNoEmployees.
-  ///
-  /// In en, this message translates to:
-  /// **'Nobody on the register for this branch yet — add employees in the admin app.'**
-  String get payOutNoEmployees;
-
-  /// No description provided for @payOutNoSuppliers.
-  ///
-  /// In en, this message translates to:
-  /// **'No suppliers yet — add them in the admin app.'**
-  String get payOutNoSuppliers;
-
-  /// No description provided for @payOutNoPartners.
-  ///
-  /// In en, this message translates to:
-  /// **'No partners set for this branch — add them in the admin app.'**
-  String get payOutNoPartners;
-
-  /// No description provided for @payOutNoCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'No categories set up yet.'**
-  String get payOutNoCategories;
 
   /// No description provided for @closeShiftTitle.
   ///
@@ -2318,18 +2210,6 @@ abstract class AppLocalizations {
   /// **'Please enter both username and password.'**
   String get enterBothFields;
 
-  /// No description provided for @cancelOrderConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to cancel this order?'**
-  String get cancelOrderConfirmation;
-
-  /// No description provided for @cancelOrderQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel Order?'**
-  String get cancelOrderQuestion;
-
   /// No description provided for @customer.
   ///
   /// In en, this message translates to:
@@ -2342,41 +2222,11 @@ abstract class AppLocalizations {
   /// **'Date'**
   String get date;
 
-  /// No description provided for @each.
-  ///
-  /// In en, this message translates to:
-  /// **'each'**
-  String get each;
-
   /// No description provided for @items.
   ///
   /// In en, this message translates to:
   /// **'Items'**
   String get items;
-
-  /// No description provided for @noKeep.
-  ///
-  /// In en, this message translates to:
-  /// **'No, Keep'**
-  String get noKeep;
-
-  /// No description provided for @priceFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'£{price}'**
-  String priceFormat(String price);
-
-  /// No description provided for @yesCancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Yes, Cancel'**
-  String get yesCancel;
-
-  /// No description provided for @comingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming in the next phase'**
-  String get comingSoon;
 
   /// No description provided for @failedToSettle.
   ///
@@ -2576,12 +2426,6 @@ abstract class AppLocalizations {
   /// **'Saved on the till'**
   String get savedOffline;
 
-  /// No description provided for @savedOfflineHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The network is down. This sale is kept here and sent when it is back; the receipt carries a temporary number.'**
-  String get savedOfflineHint;
-
   /// No description provided for @offlineNotAvailable.
   ///
   /// In en, this message translates to:
@@ -2603,7 +2447,7 @@ abstract class AppLocalizations {
   /// No description provided for @noBranchDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your account is not assigned to any branch yet. Ask the owner to assign you one.'**
+  /// **'Ask the owner to assign a branch.'**
   String get noBranchDescription;
 }
 

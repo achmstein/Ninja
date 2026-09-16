@@ -61,7 +61,6 @@ class _SessionBarState extends ConsumerState<SessionBar> {
     final ok = await showConfirmDialog(
       context,
       title: l10n.switchToModeQuestion(next),
-      description: l10n.switchModeDescription(current, next),
       cancelLabel: l10n.keepCurrent(current),
       actionLabel: l10n.switchMode,
     );

@@ -8,7 +8,8 @@ import '../theme/text_styles.dart';
 Future<bool> showConfirmDialog(
   BuildContext context, {
   required String title,
-  required String description,
+  /// A datum the decision turns on (an amount, hours); never an explanation
+  String? description,
   required String cancelLabel,
   required String actionLabel,
   /// Paint the action red: something ends, or money-relevant state changes
@@ -36,8 +37,10 @@ Future<bool> showConfirmDialog(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text(description, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              if (description != null) ...[
+                const SizedBox(height: 8),
+                Text(description, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              ],
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

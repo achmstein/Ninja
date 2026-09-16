@@ -60,6 +60,7 @@ import { RefundDialog } from './refund-dialog'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
+import { BreakdownDialog } from './breakdown-dialog'
 
 const percent = (rate: number | string | undefined) =>
   Math.round(toNumber(rate) * 10000) / 100
@@ -212,6 +213,7 @@ export function TicketScreen({
   const [discardOpen, setDiscardOpen] = useState(false)
   const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
   const [refundOpen, setRefundOpen] = useState(false)
+  const [breakdownOpen, setBreakdownOpen] = useState(false)
   const [settleOpen, setSettleOpen] = useState(false)
   const [settleGuardOpen, setSettleGuardOpen] = useState(false)
   const [sessionGuardOpen, setSessionGuardOpen] = useState(false)
@@ -350,10 +352,7 @@ export function TicketScreen({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       setSelecting(false)
       setSelectedIds(new Set())
-      toast.success(
-        t('customerAssigned'),
-        lineIds.length > 0 ? { description: t('pointsFollowWholeOrder') } : undefined
-      )
+      toast.success(t('customerAssigned'))
     } catch (error) {
       // A 400 carries the domain's own words (cancelled, already somebody's)
       const detail =
@@ -770,26 +769,34 @@ export function TicketScreen({
       {/* A voided ticket keeps its lines for the record but loses every
           action — what remains is the audit trail */}
       {isVoided && (
-        <div className='border-destructive/30 bg-destructive/5 mt-4 rounded-xl border p-4'>
-          <div className='text-destructive flex items-center gap-2 font-semibold'>
+        <div className='mt-4 divide-y rounded-lg border text-base'>
+          <div className='text-destructive flex items-center gap-2 px-3 py-2 font-semibold'>
             <Ban className='size-5' />
             {t('voidedBadge')}
           </div>
           {ticket.voidReason && (
-            <p className='mt-2 text-base'>{ticket.voidReason}</p>
+            <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
+              <span className='text-muted-foreground'>{t('reason')}</span>
+              <span className='text-end'>{ticket.voidReason}</span>
+            </div>
           )}
-          <p className='text-muted-foreground mt-1 text-sm'>
-            {ticket.voidedBy && <span>{t('voidedBy')}: {ticket.voidedBy}</span>}
-            {ticket.voidedAt && (
-              <span className='tabular-nums'>
-                {' '}·{' '}
-                {new Intl.DateTimeFormat(locale, {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                }).format(new Date(ticket.voidedAt))}
+          {(ticket.voidedBy || ticket.voidedAt) && (
+            <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
+              <span className='text-muted-foreground'>{t('voidedBy')}</span>
+              <span className='text-end tabular-nums'>
+                {[
+                  ticket.voidedBy,
+                  ticket.voidedAt &&
+                    new Intl.DateTimeFormat(locale, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    }).format(new Date(ticket.voidedAt)),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
-            )}
-          </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -799,33 +806,35 @@ export function TicketScreen({
           <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
             {t('refundsTitle')}
           </h2>
-          {ticket.refunds!.map((refund) => (
-            <div
-              key={String(refund.id)}
-              className='border-destructive/30 bg-destructive/5 rounded-xl border p-3'
-            >
-              <div className='flex items-baseline justify-between gap-2'>
-                <span className='font-semibold'>
-                  {t('creditNote', { number: toNumber(refund.number) })}
-                </span>
-                <span className='text-destructive font-semibold tabular-nums'>
-                  −{money(refund.amount)}
-                </span>
+          <div className='divide-y rounded-lg border'>
+            {ticket.refunds!.map((refund) => (
+              <div key={String(refund.id)} className='flex flex-col gap-0.5 px-3 py-2'>
+                <div className='flex items-baseline justify-between gap-4'>
+                  <span className='font-medium'>
+                    {t('creditNote', { number: toNumber(refund.number) })}
+                  </span>
+                  <span className='text-destructive font-semibold tabular-nums'>
+                    −{money(refund.amount)}
+                  </span>
+                </div>
+                <p className='text-sm'>{refund.reason}</p>
+                <p className='text-muted-foreground text-xs tabular-nums'>
+                  {[
+                    refund.tender === 'Account' ? t('account') : t('cash'),
+                    refund.customerName,
+                    refund.refundedBy,
+                    refund.refundedAt &&
+                      new Intl.DateTimeFormat(locale, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      }).format(new Date(refund.refundedAt)),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
               </div>
-              <p className='mt-1'>{refund.reason}</p>
-              <p className='text-muted-foreground mt-1 text-sm'>
-                {refund.tender === 'Account' ? t('account') : t('cash')}
-                {refund.customerName && ` · ${refund.customerName}`}
-                {' · '}
-                {refund.refundedBy}
-                {refund.refundedAt &&
-                  ` · ${new Intl.DateTimeFormat(locale, {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  }).format(new Date(refund.refundedAt))}`}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -839,27 +848,20 @@ export function TicketScreen({
             <div className='text-2xl font-bold tabular-nums'>
               {money(ticket.total)}
             </div>
-            {/* The bill's parts, when the branch adds any: menu money,
-                service, VAT — shown out of the price or added on top */}
-            {(toNumber(ticket.discount) > 0 || toNumber(ticket.serviceCharge) > 0 || toNumber(ticket.vat) > 0) && (
-              <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                {t('subtotal')} {money(ticket.subtotal)}
-                {toNumber(ticket.discount) > 0 &&
-                  ` · ${t('discount')} −${money(ticket.discount)}`}
-                {toNumber(ticket.serviceCharge) > 0 &&
-                  ` · ${t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} ${money(ticket.serviceCharge)}`}
-                {toNumber(ticket.vat) > 0 &&
-                  ` · ${
-                    ticket.vatIncluded
-                      ? t('vatIncluded', { rate: percent(ticket.vatRate) })
-                      : t('vat', { rate: percent(ticket.vatRate) })
-                  } ${money(ticket.vat)}`}
-              </div>
-            )}
-            {toNumber(ticket.refundedTotal) > 0 && (
-              <div className='text-destructive text-xs tabular-nums'>
-                {t('refundedSoFar')}: −{money(ticket.refundedTotal)}
-              </div>
+            {/* The bill's parts (menu money, discount, service, VAT, what
+                went back) are one tap away; the bar carries the total only */}
+            {(toNumber(ticket.discount) > 0 ||
+              toNumber(ticket.serviceCharge) > 0 ||
+              toNumber(ticket.vat) > 0 ||
+              toNumber(ticket.refundedTotal) > 0) && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='text-muted-foreground -ms-2 h-7 px-2 text-xs'
+                onClick={() => setBreakdownOpen(true)}
+              >
+                {t('breakdown')}
+              </Button>
             )}
             {activeSession && room && (
               <div className='text-muted-foreground truncate text-xs tabular-nums'>
@@ -978,7 +980,6 @@ export function TicketScreen({
         open={settleGuardOpen}
         onOpenChange={setSettleGuardOpen}
         title={t('settleWithPendingTitle')}
-        description={t('settleWithPendingHint')}
         cancelLabel={t('goBack')}
         actionLabel={t('settleAnyway')}
         destructive
@@ -988,7 +989,6 @@ export function TicketScreen({
         open={sessionGuardOpen}
         onOpenChange={setSessionGuardOpen}
         title={t('settleWithSessionTitle')}
-        description={t('settleWithSessionHint')}
         cancelLabel={t('goBack')}
         actionLabel={t('endSessionButton')}
         destructive
@@ -1002,13 +1002,18 @@ export function TicketScreen({
         open={voidGuardOpen}
         onOpenChange={setVoidGuardOpen}
         title={t('voidWithSessionTitle')}
-        description={t('voidWithSessionHint')}
         cancelLabel={t('goBack')}
         actionLabel={t('endSessionButton')}
         destructive
         onAction={() => {
           if (activeSession) sessionActions.endSession(toNumber(activeSession.id))
         }}
+      />
+      <BreakdownDialog
+        ticket={ticket}
+        open={breakdownOpen}
+        onOpenChange={setBreakdownOpen}
+        percent={percent}
       />
       <SettleDialog
         ticket={ticket}

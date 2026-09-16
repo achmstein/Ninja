@@ -727,8 +727,6 @@ class _EmptyFloor extends StatelessWidget {
         children: [
           Text(l10n.noOpenBills,
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
-          const SizedBox(height: 4),
-          Text(l10n.noOpenBillsHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
         ],
       ),
     );

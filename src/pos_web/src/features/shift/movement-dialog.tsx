@@ -142,7 +142,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
             name: e.name,
             balance: e.balance == null ? undefined : toNumber(e.balance),
           })),
-          empty: 'payOutNoEmployees',
+          empty: 'none',
           title: 'payOutWho',
         }
       : picks === 'supplier'
@@ -152,7 +152,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
               name: s.name,
               balance: toNumber(s.balance),
             })),
-            empty: 'payOutNoSuppliers',
+            empty: 'none',
             title: 'payOutWhichSupplier',
           }
         : picks === 'partner'
@@ -161,7 +161,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
                 id: Number(p.id),
                 name: p.name,
               })),
-              empty: 'payOutNoPartners',
+              empty: 'none',
               title: 'payOutWhichPartner',
             }
           : picks === 'category'
@@ -170,7 +170,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
                   id: Number(c.id),
                   name: localized(c.name),
                 })),
-                empty: 'payOutNoCategories',
+                empty: 'none',
                 title: 'payOutWhatFor',
               }
             : null

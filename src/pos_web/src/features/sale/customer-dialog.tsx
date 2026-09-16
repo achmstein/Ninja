@@ -175,11 +175,7 @@ export function CustomerDialog({
         )}
 
         <div className='-mx-2 flex-1 overflow-y-auto'>
-          {search.length === 0 ? (
-            <p className='text-muted-foreground py-8 text-center text-sm'>
-              {t('typeToSearch')}
-            </p>
-          ) : isFetching && users.length === 0 ? (
+          {search.length === 0 ? null : isFetching && users.length === 0 ? (
             <div className='flex flex-col'>
               {Array.from({ length: 5 }).map((_, i) => (
                 <div

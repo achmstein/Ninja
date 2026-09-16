@@ -310,12 +310,7 @@ class _PickList extends ConsumerWidget {
       error: (e, _) => Text(describeError(e, l10n), style: muted.copyWith(color: theme.colors.destructive)),
       data: (items) {
         if (items.isEmpty) {
-          return Text(switch (pick) {
-            MovementPick.employee => l10n.payOutNoEmployees,
-            MovementPick.supplier => l10n.payOutNoSuppliers,
-            MovementPick.partner => l10n.payOutNoPartners,
-            MovementPick.category => l10n.payOutNoCategories,
-          }, style: muted);
+          return Text(l10n.none, style: muted);
         }
         // Four and a half rows: the cut row says there is more to scroll
         return ConstrainedBox(

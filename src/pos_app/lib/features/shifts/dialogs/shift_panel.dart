@@ -97,8 +97,6 @@ class _ShiftPanelState extends ConsumerState<_ShiftPanel> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(l10n.takingAutoHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

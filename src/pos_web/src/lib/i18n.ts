@@ -36,30 +36,19 @@ const dictionary = {
     ar: 'بنحولك لتسجيل الدخول...',
   },
   signedOutTitle: { en: 'Signed out', ar: 'تم تسجيل الخروج' },
-  signedOutDescription: {
-    en: 'You have been signed out of the POS.',
-    ar: 'انت سجلت خروج من الكاشير.',
-  },
   signInAgain: { en: 'Sign in again', ar: 'سجل دخول تاني' },
   backToPos: { en: 'Back to the POS', ar: 'ارجع للكاشير' },
   accessDeniedTitle: { en: 'Access denied', ar: 'مفيش صلاحية' },
-  accessDeniedDescription: {
-    en: 'Your account does not have access to the POS.',
-    ar: 'حسابك معندوش صلاحية يدخل الكاشير.',
-  },
+  accessDeniedDescription: { en: 'No access.', ar: 'مفيش صلاحية.' },
   noBranchTitle: { en: 'No branch assigned', ar: 'مفيش فرع متعين ليك' },
   noBranchDescription: {
-    en: 'Your account is not assigned to any branch yet. Ask the owner to assign you one.',
-    ar: 'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.',
+    en: 'Ask the owner to assign a branch.',
+    ar: 'اطلب من المالك يعينك على فرع.',
   },
 
   // Floor view
   openTickets: { en: 'Open tickets', ar: 'الحسابات المفتوحة' },
   noOpenTickets: { en: 'No open tickets', ar: 'مفيش حسابات مفتوحة' },
-  noOpenTicketsHint: {
-    en: 'Open a new ticket to get started.',
-    ar: 'افتح حساب جديد عشان تبدأ.',
-  },
   newTicket: { en: 'New ticket', ar: 'حساب جديد' },
   newBill: { en: 'New bill', ar: 'حساب جديد' },
   moveToBill: { en: 'Move to…', ar: 'انقل لحساب' },
@@ -101,10 +90,7 @@ const dictionary = {
   guest: { en: 'Guest', ar: 'ضيف' },
   confirmOrder: { en: 'Confirm', ar: 'أكّد' },
   cancelOrder: { en: 'Cancel order', ar: 'ألغي الطلب' },
-  cancelOrderConfirm: {
-    en: 'Cancel this order? The customer will be told, and it cannot be undone.',
-    ar: 'تلغي الطلب ده؟ العميل هيتبلغ، ومفيش رجوع بعدها.',
-  },
+  cancelOrderConfirm: { en: 'Cancel order?', ar: 'تلغي الطلب؟' },
   keepOrder: { en: 'Keep it', ar: 'سيبه' },
   orderConfirmed: { en: 'Order confirmed', ar: 'الطلب اتأكد' },
   orderCancelled: { en: 'Order cancelled', ar: 'الطلب اتلغى' },
@@ -137,10 +123,6 @@ const dictionary = {
     },
   },
   settleWithPendingTitle: { en: 'An order is still waiting', ar: 'لسه فيه طلب مستني' },
-  settleWithPendingHint: {
-    en: 'Confirm it first so it lands on this bill. Settled now, it would open a new ticket after the group has paid.',
-    ar: 'أكّده الأول عشان ينزل على الحساب ده. لو قفلت دلوقتي هيفتح حساب جديد بعد ما الناس تدفع.',
-  },
   settleAnyway: { en: 'Settle anyway', ar: 'اقفل على أي حال' },
   goBack: { en: 'Back', ar: 'رجوع' },
 
@@ -174,10 +156,6 @@ const dictionary = {
   failedToUpdateRequest: { en: 'Could not update the request', ar: 'معرفناش نحدث الطلب' },
   newServiceRequestToast: { en: 'New room request', ar: 'طلب جديد من أوضة' },
   startWalkInSession: { en: 'Start walk-in session', ar: 'بدء جلسة فورية' },
-  startWalkInDescription: {
-    en: 'Start the timer for {name} right now. Customers can join by scanning the room QR code.',
-    ar: 'ابدأ عداد {name} دلوقتي. العملاء يقدروا ينضموا بمسح كود QR بتاع الاوضة.',
-  },
   sessionStarted: { en: 'Session started', ar: 'الجلسة بدأت' },
   failedToStartSession: { en: 'Failed to start session', ar: 'معرفناش نبدأ الجلسة' },
   sessionRunning: { en: 'Session running', ar: 'الوقت شغال' },
@@ -188,34 +166,20 @@ const dictionary = {
   billedSoFar: { en: 'Billed so far', ar: 'اتحسب لحد دلوقتي' },
   endSessionButton: { en: 'End session', ar: 'إنهاء الوقت' },
   endThisSession: { en: 'End this session?', ar: 'إنهاء الجلسة دي؟' },
-  endSessionBilledAt: {
-    en: 'The timer stops and {hours} land on the bill as time lines.',
-    ar: 'العداد هيقف و{hours} هتنزل على الحساب كبنود وقت.',
-  },
+  endSessionBilledAt: { en: '{hours} on the bill.', ar: '{hours} على الحساب.' },
   keepPlaying: { en: 'Keep playing', ar: 'كمّلوا لعب' },
   sessionEnded: { en: 'Session ended', ar: 'الجلسة خلصت' },
   failedToEndSession: { en: 'Failed to end session', ar: 'معرفناش ننهي الجلسة' },
   cancelSessionButton: { en: 'Cancel, no charge', ar: 'إلغاء من غير حساب' },
   cancelThisSession: { en: 'Cancel this session?', ar: 'تلغي الجلسة دي؟' },
-  cancelSessionHint: {
-    en: 'No time is charged and the room frees up. To bill the time, end the session instead.',
-    ar: 'مش هيتحسب وقت والاوضة هتفضى. لو عايز تحاسب على الوقت، أنهي الجلسة بدل كده.',
-  },
+  cancelSessionHint: { en: 'No charge.', ar: 'من غير حساب.' },
   sessionCancelled: { en: 'Session cancelled', ar: 'الجلسة اتلغت' },
   cancelReservation: { en: 'Cancel reservation', ar: 'إلغاء الحجز' },
   cancelThisReservation: { en: 'Cancel this reservation?', ar: 'إلغاء الحجز ده؟' },
-  roomBecomesAvailable: {
-    en: 'The room becomes available for other customers.',
-    ar: 'الاوضة هتبقى متاحة لعملاء تانيين.',
-  },
   reservationCancelled: { en: 'Reservation cancelled', ar: 'الحجز اتلغى' },
   failedToCancelSession: { en: 'Failed to cancel', ar: 'معرفناش نلغي' },
   keepIt: { en: 'Keep it', ar: 'خليه' },
   switchToModeQuestion: { en: 'Switch to {mode}?', ar: 'التحويل لوضع {mode}؟' },
-  switchModeDescription: {
-    en: 'The {current} segment closes now and billing continues at the {next} rate.',
-    ar: 'فترة {current} هتقفل دلوقتي والحساب هيكمل بسعر {next}.',
-  },
   switchMode: { en: 'Switch mode', ar: 'غيّر الوضع' },
   keepCurrent: { en: 'Keep {mode}', ar: 'خلي {mode}' },
   playerModeUpdated: { en: 'Player mode updated', ar: 'اتغير وضع اللعب' },
@@ -226,23 +190,11 @@ const dictionary = {
   customerAssigned: { en: 'Customer assigned', ar: 'تم تعيين العميل' },
   failedToAddCustomer: { en: 'Failed to add customer', ar: 'معرفناش نضيف العميل' },
   failedToAssignCustomer: { en: 'Failed to assign customer', ar: 'معرفناش نعين العميل' },
-  pointsFollowWholeOrder: {
-    en: "Points stay with the order's customer; only the bill grouping changed.",
-    ar: 'النقط بتفضل لصاحب الأوردر؛ اللي اتغير بس توزيع الحساب.',
-  },
   memberRemove: { en: 'Remove member', ar: 'شيل العضو' },
   memberRemoved: { en: 'Member removed', ar: 'العضو اتشال' },
   failedToRemoveMember: { en: 'Failed to remove member', ar: 'معرفناش نشيل العضو' },
   settleWithSessionTitle: { en: 'The session is still running', ar: 'الوقت لسه شغال' },
-  settleWithSessionHint: {
-    en: 'End it first so the time lands on this bill. Settled now, the time would arrive on a new ticket after the group has paid.',
-    ar: 'أنهيه الأول عشان الوقت ينزل على الحساب ده. لو قفلت دلوقتي الوقت هينزل على حساب جديد بعد ما الناس تدفع.',
-  },
   voidWithSessionTitle: { en: 'The session is still running', ar: 'الوقت لسه شغال' },
-  voidWithSessionHint: {
-    en: 'End it first so its time lands on this bill, then void or settle. A void now would write the time off unseen.',
-    ar: 'أنهيه الأول عشان الوقت ينزل على الحساب ده، وبعدين اشطب أو اقفل. لو شطبت دلوقتي الوقت هيضيع من غير ما يتحسب.',
-  },
 
   // Money on the bill, and credit notes
   subtotal: { en: 'Subtotal', ar: 'المجموع قبل الإضافات' },
@@ -252,8 +204,8 @@ const dictionary = {
   refundTicket: { en: 'Refund', ar: 'استرجاع' },
   refundTitle: { en: 'Refund against receipt #{number}', ar: 'استرجاع على إيصال #{number}' },
   refundHint: {
-    en: 'Pick what goes back. Each item returns what was paid for it, service and VAT included. {amount} of this receipt is left.',
-    ar: 'اختار اللي هيرجع. كل صنف بيرجع بالمدفوع فيه شامل الخدمة والضريبة. الباقي من الإيصال {amount}.',
+    en: '{amount} left',
+    ar: 'الباقي {amount}',
   },
   leftToRefund: {
     plural: 'count',
@@ -267,13 +219,11 @@ const dictionary = {
   refundsTitle: { en: 'Refunds', ar: 'الاسترجاعات' },
   creditNote: { en: 'Credit note #{number}', ar: 'إشعار استرجاع #{number}' },
   refundedSoFar: { en: 'Refunded', ar: 'اترجع' },
+  breakdown: { en: 'Breakdown', ar: 'التفاصيل' },
+  none: { en: 'None', ar: 'مفيش' },
 
   // The floor: what is happening, never what exists
   noOpenBills: { en: 'Nothing open', ar: 'مفيش حسابات مفتوحة' },
-  noOpenBillsHint: {
-    en: 'Start a sale, or pick a room or table beside.',
-    ar: 'ابدأ بيع، أو اختار اوضة أو ترابيزة من الجنب.',
-  },
   openPlace: { en: 'Open', ar: 'افتح' },
   hidePlaces: { en: 'Hide places', ar: 'إخفاء الأماكن' },
   showPlaces: { en: 'Show places', ar: 'إظهار الأماكن' },
@@ -292,10 +242,6 @@ const dictionary = {
   },
   newTab: { en: 'New tab', ar: 'حساب جديد' },
   findCustomer: { en: 'Find customer', ar: 'دور على عميل' },
-  newTabHint: {
-    en: 'A counter bill with no table, for someone who will order in a moment.',
-    ar: 'حساب كاونتر من غير ترابيزة، لحد هيطلب كمان شوية.',
-  },
 
   // Ticket screen
   ticketNumber: { en: 'Ticket #{id}', ar: 'حساب #{id}' },
@@ -328,10 +274,6 @@ const dictionary = {
 
   // Sale pad (counter sale)
   currentSale: { en: 'Current sale', ar: 'البيع الحالي' },
-  emptySale: {
-    en: 'Tap items to add them to the sale',
-    ar: 'دوس على الأصناف عشان تضيفها للبيع',
-  },
   noItemsInCategory: {
     en: 'No items in this category',
     ar: 'مفيش أصناف في القسم ده',
@@ -369,10 +311,6 @@ const dictionary = {
   searchCustomersPlaceholder: {
     en: 'Name, phone, or email',
     ar: 'الاسم أو الموبايل أو الإيميل',
-  },
-  typeToSearch: {
-    en: 'Type at least 2 characters to search',
-    ar: 'اكتب حرفين على الأقل عشان تدور',
   },
   noCustomersFound: {
     en: 'No customers found',
@@ -452,10 +390,6 @@ const dictionary = {
 
   // Void ticket (Owner-only)
   voidTicket: { en: 'Void ticket', ar: 'إلغاء الحساب' },
-  voidReasonHint: {
-    en: 'A reason is required — this is the audit trail.',
-    ar: 'سبب الإلغاء مطلوب — ده سجل المراجعة.',
-  },
   confirmVoid: { en: 'Void ticket', ar: 'ألغي الحساب' },
   ticketVoided: { en: 'Ticket voided', ar: 'الحساب اتلغى' },
   voidedBadge: { en: 'Voided', ar: 'ملغي' },
@@ -464,10 +398,6 @@ const dictionary = {
   // Discard an empty ticket (any cashier — nothing on it, nothing to audit)
   discardTicket: { en: 'Discard', ar: 'امسح الحساب' },
   discardTicketTitle: { en: 'Discard this ticket?', ar: 'تمسح الحساب ده؟' },
-  discardTicketHint: {
-    en: 'Nothing was added to it, so it leaves no trace. A ticket with items on it needs an owner to void it.',
-    ar: 'مفيش حاجة اتضافت عليه، فمش هيسيب أي أثر. الحساب اللي عليه أصناف لازم صاحب المحل يلغيه.',
-  },
   confirmDiscard: { en: 'Discard', ar: 'امسح' },
   ticketDiscarded: { en: 'Ticket discarded', ar: 'الحساب اتمسح' },
 
@@ -475,10 +405,6 @@ const dictionary = {
   takingOrders: { en: 'Taking orders', ar: 'بنستلم أوردرات' },
   takingReservations: { en: 'Taking reservations', ar: 'بنستلم حجوزات' },
   paused: { en: 'Paused', ar: 'متوقف' },
-  takingAutoHint: {
-    en: 'Opening the shift turns both on; closing it turns both off.',
-    ar: 'فتح الوردية بيشغّل الاتنين، وقفلها بيوقفهم.',
-  },
   shiftDetails: { en: 'Shift details', ar: 'تفاصيل الوردية' },
 
   // Shift / cash drawer (وردية = shift, الدرج = the till drawer)
@@ -492,10 +418,6 @@ const dictionary = {
   openingFloat: { en: 'Opening float', ar: 'فكة أول الوردية' },
   shiftOpened: { en: 'Shift opened', ar: 'الوردية اتفتحت' },
   noShiftOpen: { en: 'No shift is open', ar: 'مفيش وردية مفتوحة' },
-  noShiftOpenHint: {
-    en: 'Count the float and open the drawer shift to start the day.',
-    ar: 'عد الفكة وافتح وردية الدرج عشان تبدأ اليوم.',
-  },
   openedAt: { en: 'Opened', ar: 'اتفتحت' },
   openedBy: { en: 'Opened by', ar: 'فتحها' },
   closedAt: { en: 'Closed', ar: 'اتقفلت' },
@@ -527,20 +449,7 @@ const dictionary = {
   payOutWhichSupplier: { en: 'Which supplier?', ar: 'أي مورد؟' },
   payOutWhichPartner: { en: 'Which partner?', ar: 'أي شريك؟' },
   payOutWhatFor: { en: 'What for?', ar: 'مصروف إيه؟' },
-  payOutNoSuppliers: {
-    en: 'No suppliers yet — add them in the admin app.',
-    ar: 'مفيش موردين لسه — ضيفهم من الأدمن.',
-  },
-  payOutNoCategories: { en: 'No categories set up yet.', ar: 'مفيش تصنيفات متسجلة لسه.' },
-  payOutNoPartners: {
-    en: 'No partners set for this branch — add them in the admin app.',
-    ar: 'مفيش شركاء متسجلين للفرع ده — ضيفهم من الأدمن.',
-  },
   payOutWho: { en: 'Who?', ar: 'لمين؟' },
-  payOutNoEmployees: {
-    en: 'Nobody on the register for this branch yet — add employees in the admin app.',
-    ar: 'مفيش موظفين مسجلين للفرع ده لسه — ضيفهم من الأدمن.',
-  },
   closeShiftTitle: { en: 'Close shift', ar: 'قفل الوردية' },
   closeShiftAction: { en: 'Close shift', ar: 'اقفل الوردية' },
   countedAmount: { en: 'Counted drawer cash', ar: 'الكاش اللي اتعد في الدرج' },

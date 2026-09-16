@@ -56,7 +56,6 @@ export function ShiftScreen() {
         <Banknote className='text-muted-foreground size-12' />
         <div>
           <p className='text-lg font-medium'>{t('noShiftOpen')}</p>
-          <p className='text-muted-foreground text-sm'>{t('noShiftOpenHint')}</p>
         </div>
         <Button
           size='lg'

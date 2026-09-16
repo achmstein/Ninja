@@ -42,6 +42,7 @@ import '../dialogs/refund_dialog.dart';
 import '../dialogs/settle_dialog.dart';
 import '../dialogs/void_dialog.dart';
 import '../dialogs/discount_dialog.dart';
+import '../dialogs/breakdown_dialog.dart';
 import '../lines.dart';
 import '../../../core/utils/bidi.dart';
 
@@ -124,7 +125,6 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       final end = await showConfirmDialog(
         context,
         title: l10n.settleWithSessionTitle,
-        description: l10n.settleWithSessionHint,
         cancelLabel: l10n.goBack,
         actionLabel: l10n.endSessionButton,
         destructive: true,
@@ -139,7 +139,6 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       final anyway = await showConfirmDialog(
         context,
         title: l10n.settleWithPendingTitle,
-        description: l10n.settleWithPendingHint,
         cancelLabel: l10n.goBack,
         actionLabel: l10n.settleAnyway,
         destructive: true,
@@ -158,7 +157,6 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final end = await showConfirmDialog(
       context,
       title: l10n.voidWithSessionTitle,
-      description: l10n.voidWithSessionHint,
       cancelLabel: l10n.goBack,
       actionLabel: l10n.endSessionButton,
       destructive: true,
@@ -305,8 +303,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         _selecting = false;
         _selected.clear();
       });
-      showPosToast(context, PosToastType.success, l10n.customerAssigned,
-          description: lineIds.isNotEmpty ? l10n.pointsFollowWholeOrder : null);
+      showPosToast(context, PosToastType.success, l10n.customerAssigned);
     } catch (e) {
       if (!mounted) return;
       // A 400 carries the domain's own words (cancelled, already somebody's)
@@ -893,40 +890,71 @@ class _VoidTombstone extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final reason = ticket.voidReason;
     final voidedAt = ticket.voidedAt;
-    final meta = [
-      if (ticket.voidedBy != null) '${l10n.voidedBy}: ${ticket.voidedBy}',
+    final who = [
+      if (ticket.voidedBy != null) ticket.voidedBy!,
       if (voidedAt != null) formatDateTime(context, voidedAt),
     ].join(' · ');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colors.destructive.withValues(alpha: 0.05),
-        border: Border.all(color: theme.colors.destructive.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return _Rows(
+      header: Row(
         children: [
-          Row(
+          Icon(FIcons.ban, size: 20, color: theme.colors.destructive),
+          const SizedBox(width: 8),
+          Text(l10n.voidedBadge,
+              style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+        ],
+      ),
+      rows: [
+        if (reason != null && reason.isNotEmpty) (l10n.reason, reason),
+        if (who.isNotEmpty) (l10n.voidedBy, who),
+      ],
+    );
+  }
+}
+
+/// A bordered block: an optional header row, then label/value rows with a
+/// hairline between them — the till's way of listing facts about a bill
+class _Rows extends StatelessWidget {
+  final Widget? header;
+  final List<(String, String)> rows;
+
+  const _Rows({this.header, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    const pad = EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+    final children = <Widget>[
+      if (header != null) Padding(padding: pad, child: header),
+      for (final (label, value) in rows)
+        Padding(
+          padding: pad,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              Icon(FIcons.ban, size: 20, color: theme.colors.destructive),
-              const SizedBox(width: 8),
-              Text(l10n.voidedBadge,
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+              Text(label, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(value,
+                    textAlign: TextAlign.end,
+                    style: theme.typography.base.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+              ),
             ],
           ),
-          if (reason != null && reason.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(reason, style: theme.typography.base),
-          ],
-          if (meta.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(meta,
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.mutedForeground,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                )),
+        ),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colors.border),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Container(height: 1, color: theme.colors.border),
+            children[i],
           ],
         ],
       ),
@@ -953,11 +981,10 @@ class _RefundCard extends StatelessWidget {
     ].join(' · ');
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colors.destructive.withValues(alpha: 0.05),
-        border: Border.all(color: theme.colors.destructive.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colors.border),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -968,7 +995,7 @@ class _RefundCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(l10n.creditNote(refund.number),
-                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
               ),
               Text('−${money(context, refund.amount)}',
                   style: theme.typography.base.copyWith(
@@ -978,10 +1005,14 @@ class _RefundCard extends StatelessWidget {
                   )),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(refund.reason, style: theme.typography.base),
-          const SizedBox(height: 4),
-          Text(meta, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          const SizedBox(height: 2),
+          Text(refund.reason, style: theme.typography.sm),
+          const SizedBox(height: 2),
+          Text(meta,
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              )),
         ],
       ),
     );
@@ -1027,18 +1058,10 @@ class _ActionBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
 
-    // The bill's parts, when the branch adds any: menu money, service, VAT
-    // — shown out of the price or added on top
-    final breakdown = ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0
-        ? [
-            '${l10n.subtotal} ${money(context, ticket.subtotal)}',
-            if (ticket.discount > 0) '${l10n.discount} −${money(context, ticket.discount)}',
-            if (ticket.serviceCharge > 0)
-              '${l10n.serviceCharge(rateText(ticket.serviceChargeRate))} ${money(context, ticket.serviceCharge)}',
-            if (ticket.vat > 0)
-              '${ticket.vatIncluded ? l10n.vatIncluded(rateText(ticket.vatRate)) : l10n.vat(rateText(ticket.vatRate))} ${money(context, ticket.vat)}',
-          ].join(' · ')
-        : null;
+    // The bill's parts (menu money, discount, service, VAT, what went back)
+    // are one tap away; the bar carries the total only
+    final hasParts =
+        ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0 || ticket.refundedTotal > 0;
 
     Widget big(String label,
             {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Color? color, double padding = 16}) =>
@@ -1109,14 +1132,17 @@ class _ActionBar extends StatelessWidget {
                     Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                     Text(money(context, ticket.total),
                         style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
-                    if (breakdown != null)
-                      Text(breakdown,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
-                    if (ticket.refundedTotal > 0)
-                      Text('${l10n.refundedSoFar}: −${money(context, ticket.refundedTotal)}',
-                          style: theme.typography.xs.copyWith(color: theme.colors.destructive, fontFeatures: tabular)),
+                    if (hasParts)
+                      SizedBox(
+                        height: 32,
+                        child: FButton(
+                          variant: FButtonVariant.ghost,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: () => showBreakdownDialog(context, ticket),
+                          child: Text(l10n.breakdown,
+                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                        ),
+                      ),
                     if (activeSession != null)
                       Row(
                         mainAxisSize: MainAxisSize.min,

@@ -765,11 +765,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                   ),
                   Expanded(
                     child: lines.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
-                            child: Text(l10n.emptySale, textAlign: TextAlign.center,
-                                style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                          )
+                        ? const SizedBox.shrink()
                         : ListView.separated(
                             itemCount: lines.length,
                             separatorBuilder: (_, _) => Container(height: 1, color: theme.colors.border),

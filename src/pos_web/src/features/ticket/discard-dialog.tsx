@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -69,9 +68,6 @@ export function DiscardTicketDialog({
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='text-xl'>{t('discardTicketTitle')}</DialogTitle>
-          <DialogDescription className='text-base'>
-            {t('discardTicketHint')}
-          </DialogDescription>
         </DialogHeader>
 
         <DialogFooter className='gap-2'>

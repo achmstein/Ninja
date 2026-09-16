@@ -612,12 +612,6 @@ class _SettledView extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(l10n.savedOffline, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.savedOfflineHint,
-                      textAlign: TextAlign.center,
-                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
-                    ),
                   ],
                 ),
               ),
