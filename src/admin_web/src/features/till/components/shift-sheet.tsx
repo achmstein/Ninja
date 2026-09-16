@@ -4,6 +4,7 @@ import { toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -28,7 +29,7 @@ export function ShiftSheet({ shift, onOpenChange }: ShiftSheetProps) {
 
   return (
     <Sheet open={shift != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
+      <SheetContent className='sm:max-w-lg'>
         <SheetHeader>
           <div className='flex items-center gap-2'>
             <SheetTitle>
@@ -47,9 +48,7 @@ export function ShiftSheet({ shift, onOpenChange }: ShiftSheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className='flex-1 px-4 pb-4'>
-          {shift && <ShiftReport shift={shift} />}
-        </div>
+        <SheetBody>{shift && <ShiftReport shift={shift} />}</SheetBody>
       </SheetContent>
     </Sheet>
   )

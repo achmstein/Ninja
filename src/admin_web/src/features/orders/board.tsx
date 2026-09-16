@@ -80,7 +80,7 @@ export function OrdersBoard() {
 
   return (
     <>
-      <Main className='flex flex-col gap-4'>
+      <Main>
         <PageHeader
           title={t('orders')}
           badge={
@@ -146,10 +146,7 @@ export function OrdersBoard() {
             ))}
           </div>
         ) : visible.length === 0 ? (
-          <EmptyState
-            icon={CheckCircle2}
-            title={t('allClear')}
-          />
+          <EmptyState icon={CheckCircle2} title={t('allClear')} />
         ) : (
           // A grid, not CSS columns: reading order is the queue order
           <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3'>

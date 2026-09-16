@@ -236,7 +236,7 @@ export function Trends() {
         </div>
       )}
 
-      <div className='grid gap-8 lg:grid-cols-2'>
+      <div className='grid gap-6 lg:grid-cols-2'>
         <div>
           <h3 className='mb-1 text-sm font-medium'>{t('topItemsTitle')}</h3>
           {orderStats.isLoading ? (

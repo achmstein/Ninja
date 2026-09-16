@@ -95,11 +95,7 @@ export function MonthMoney() {
             value={formatEgp(p.profit)}
             tone={toNumber(p.profit) < 0 ? 'negative' : 'positive'}
             hint={
-              p.margin != null
-                ? t('marginOfSales', {
-                    pct: percent.format(toNumber(p.margin)),
-                  })
-                : undefined
+              p.margin != null ? percent.format(toNumber(p.margin)) : undefined
             }
             to='/finance/profit'
             search={{ month: monthKey }}

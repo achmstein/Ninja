@@ -122,21 +122,29 @@ export function Expenses() {
 
   return (
     <>
-      <Main className='flex flex-col gap-6'>
+      <Main>
         <PageHeader
           title={t('navFinanceExpenses')}
           actions={
             <div className='flex gap-2'>
-              <Button variant='outline' onClick={() => setCategoriesOpen(true)}>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => setCategoriesOpen(true)}
+              >
                 <Settings2 className='me-2 h-4 w-4' />
                 {t('expenseCategories')}
               </Button>
-              <Button variant='outline' onClick={() => setRecurringOpen(true)}>
+              <Button
+                size='sm'
+                variant='outline'
+                onClick={() => setRecurringOpen(true)}
+              >
                 <Repeat className='me-2 h-4 w-4' />
                 {t('recurringBills')}
               </Button>
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
-              <Button onClick={() => setAdding(true)}>
+              <Button size='sm' onClick={() => setAdding(true)}>
                 <Plus className='me-2 h-4 w-4' />
                 {t('addExpense')}
               </Button>

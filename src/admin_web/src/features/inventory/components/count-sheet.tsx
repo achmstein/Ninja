@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -93,15 +94,15 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
 
   return (
     <Sheet open={countId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-lg'>
+        <SheetHeader>
           <SheetTitle>
             {t('countHash', { id: toNumber(count?.id ?? countId) })}
           </SheetTitle>
           <SheetDescription>{meta}</SheetDescription>
         </SheetHeader>
 
-        <div className='flex-1 space-y-4 p-4'>
+        <SheetBody>
           {isLoading || !count ? (
             <div className='space-y-3'>
               {[...Array(4)].map((_, i) => (
@@ -169,7 +170,7 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
               )}
             </>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   )

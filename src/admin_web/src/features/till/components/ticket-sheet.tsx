@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -193,7 +194,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
 
   return (
     <Sheet open={ticketId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
+      <SheetContent className='sm:max-w-lg'>
         <SheetHeader>
           <div className='flex items-center gap-2'>
             <SheetTitle className='flex min-w-0 items-baseline gap-2'>
@@ -215,7 +216,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
           <SheetDescription>{meta}</SheetDescription>
         </SheetHeader>
 
-        <div className='flex-1 space-y-4 px-4 pb-4'>
+        <SheetBody>
           {isLoading ? (
             <div className='space-y-3'>
               <Skeleton className='h-5 w-2/3' />
@@ -453,7 +454,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
           ) : (
             <p className='text-muted-foreground text-sm'>{t('failedToLoad')}</p>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   )

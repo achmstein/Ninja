@@ -57,7 +57,9 @@ export function TillBreakdown() {
       tab='breakdown'
       search={search}
       dayWindow={dayWindow}
-      onRangeChange={(next) => navigate({ search: (prev) => ({ ...prev, ...next }) })}
+      onRangeChange={(next) =>
+        navigate({ search: (prev) => ({ ...prev, ...next }) })
+      }
     >
       {report.isError ? (
         <ErrorState error={report.error} onRetry={() => report.refetch()} />
@@ -68,7 +70,7 @@ export function TillBreakdown() {
           <Skeleton className='h-64' />
         </div>
       ) : (
-        <div className='grid gap-8'>
+        <div className='grid gap-6'>
           <Bars
             title={t('byHour')}
             rows={(data.byHour ?? []).map((h) => ({
@@ -80,7 +82,9 @@ export function TillBreakdown() {
           <Bars
             title={t('byWeekday')}
             rows={(data.byWeekday ?? []).map((d) => ({
-              label: weekday.format(new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)),
+              label: weekday.format(
+                new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)
+              ),
               count: toNumber(d.count),
               net: toNumber(d.net),
             }))}
@@ -104,9 +108,15 @@ export function TillBreakdown() {
                     <TableCell>{c.name || '—'}</TableCell>
                     <Num>{toNumber(c.count)}</Num>
                     <Num>{formatEgp(c.net)}</Num>
-                    <Num muted={toNumber(c.discounts) === 0}>{formatEgp(c.discounts)}</Num>
-                    <Num muted={toNumber(c.voids) === 0}>{toNumber(c.voids)}</Num>
-                    <Num muted={toNumber(c.refunds) === 0}>{formatEgp(c.refunds)}</Num>
+                    <Num muted={toNumber(c.discounts) === 0}>
+                      {formatEgp(c.discounts)}
+                    </Num>
+                    <Num muted={toNumber(c.voids) === 0}>
+                      {toNumber(c.voids)}
+                    </Num>
+                    <Num muted={toNumber(c.refunds) === 0}>
+                      {formatEgp(c.refunds)}
+                    </Num>
                   </TableRow>
                 ))}
               </TableBody>
@@ -141,9 +151,17 @@ export function TillBreakdown() {
   )
 }
 
-function Num({ children, muted }: { children: React.ReactNode; muted?: boolean }) {
+function Num({
+  children,
+  muted,
+}: {
+  children: React.ReactNode
+  muted?: boolean
+}) {
   return (
-    <TableCell className={cn('text-end tabular-nums', muted && 'text-muted-foreground')}>
+    <TableCell
+      className={cn('text-end tabular-nums', muted && 'text-muted-foreground')}
+    >
       {children}
     </TableCell>
   )
@@ -161,18 +179,24 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
         {rows.map((r) => (
           <div
             key={r.label}
-            className='flex min-w-0 flex-1 flex-col items-center gap-1 self-stretch justify-end'
+            className='flex min-w-0 flex-1 flex-col items-center justify-end gap-1 self-stretch'
             title={`${formatEgp(r.net)} · ${r.count}`}
           >
             <div
-              className={cn('w-full rounded-sm', r.net > 0 ? 'bg-primary' : 'bg-muted')}
-              style={{ height: `${max > 0 ? Math.max((r.net / max) * 100, r.net > 0 ? 3 : 2) : 2}%` }}
+              className={cn(
+                'w-full rounded-sm',
+                r.net > 0 ? 'bg-primary' : 'bg-muted'
+              )}
+              style={{
+                height: `${max > 0 ? Math.max((r.net / max) * 100, r.net > 0 ? 3 : 2) : 2}%`,
+              }}
             />
-            <span className='text-muted-foreground truncate text-[10px] tabular-nums'>{r.label}</span>
+            <span className='text-muted-foreground truncate text-[10px] tabular-nums'>
+              {r.label}
+            </span>
           </div>
         ))}
       </div>
     </section>
   )
 }
-

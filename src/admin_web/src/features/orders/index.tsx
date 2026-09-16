@@ -177,7 +177,7 @@ export function OrdersManagement() {
 
   return (
     <>
-      <Main className='flex flex-col gap-4'>
+      <Main>
         <PageHeader title={t('orders')}>
           <OrdersTabs value='history' pendingCount={pendingOrders.length} />
         </PageHeader>

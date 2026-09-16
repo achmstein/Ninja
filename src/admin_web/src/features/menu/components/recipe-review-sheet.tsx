@@ -14,7 +14,6 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { InfoTip } from '@/components/info-tip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { InfoTip } from '@/components/info-tip'
 import {
   fromLocalizedValue,
   LocalizedFields,
@@ -222,8 +223,8 @@ export function RecipeReviewSheet({
 
   return (
     <Sheet open onOpenChange={(open) => !saving && onOpenChange(open)}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-3xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-3xl'>
+        <SheetHeader>
           <SheetTitle className='flex items-center gap-2'>
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewRecipes')}
@@ -231,7 +232,7 @@ export function RecipeReviewSheet({
         </SheetHeader>
 
         <LocalizedFields>
-          <div className='space-y-5 p-4'>
+          <SheetBody>
             {review.warnings.length > 0 && (
               <Alert>
                 <AlertTriangle />
@@ -433,10 +434,10 @@ export function RecipeReviewSheet({
                 })}
               </div>
             </section>
-          </div>
+          </SheetBody>
         </LocalizedFields>
 
-        <SheetFooter className='border-t'>
+        <SheetFooter>
           <div className='flex w-full flex-wrap items-center justify-between gap-2'>
             <Button
               type='button'

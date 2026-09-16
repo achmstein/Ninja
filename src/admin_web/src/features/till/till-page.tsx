@@ -36,7 +36,7 @@ export function TillPage({
   const t = useT()
   const range = { range: search.range, from: search.from, to: search.to }
   return (
-    <Main className='flex flex-col gap-6'>
+    <Main>
       <PageHeader title={t('navTill')}>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <PageTabs

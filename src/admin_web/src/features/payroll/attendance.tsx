@@ -16,7 +16,6 @@ import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +27,7 @@ import {
 import { Toggle } from '@/components/ui/toggle'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
+import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { ATTENDANCE, monthRange, PAY_SCHEME, schemeLabel } from './format'
@@ -199,7 +199,7 @@ export function Attendance() {
   const todayInMonth = today >= range.from && today <= range.to
 
   return (
-    <Main className='flex flex-col gap-6'>
+    <Main>
       <PageHeader
         title={t('navPayrollAttendance')}
         badge={
@@ -223,7 +223,7 @@ export function Attendance() {
                 {t('overtime')}
               </Toggle>
               {todayInMonth && (
-                <Button variant='outline' onClick={everyoneToday}>
+                <Button size='sm' variant='outline' onClick={everyoneToday}>
                   <CalendarCheck className='me-2 h-4 w-4' />
                   {t('everyonePresentToday')}
                 </Button>
@@ -420,7 +420,6 @@ export function Attendance() {
           </table>
         </div>
       )}
-
     </Main>
   )
 }

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { type StockItemView } from '@/api/inventory'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { InfoTip } from '@/components/info-tip'
 import {
   fromLocalizedValue,
   LocalizedFields,
@@ -50,7 +50,7 @@ export function StockItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[520px]'>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t('editStockItem') : t('addStockItem')}

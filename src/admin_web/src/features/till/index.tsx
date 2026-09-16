@@ -195,7 +195,7 @@ export function TillReport() {
                     )}
                   >
                     {delta > 0 ? '+' : ''}
-                    {delta.toFixed(0)}% {t('vsPreviousPeriod')}
+                    {delta.toFixed(0)}%
                   </span>
                 ) : undefined
               }

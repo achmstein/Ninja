@@ -41,7 +41,7 @@ export function TransferDialog({ open, onOpenChange }: TransferDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[640px]'>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-2xl'>
         <DialogHeader>
           <DialogTitle>{t('transferStock')}</DialogTitle>
         </DialogHeader>

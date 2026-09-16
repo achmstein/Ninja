@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -187,8 +188,8 @@ export function TrackItemsSheet({
 
   return (
     <Sheet open onOpenChange={(open) => !busy && onOpenChange(open)}>
-      <SheetContent className='flex w-full flex-col gap-0 sm:max-w-xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-xl'>
+        <SheetHeader>
           <SheetTitle>{t('trackItems')}</SheetTitle>
         </SheetHeader>
 
@@ -223,7 +224,7 @@ export function TrackItemsSheet({
           </Button>
         </div>
 
-        <div className='flex-1 overflow-y-auto px-4 py-2'>
+        <SheetBody className='min-h-0 overflow-y-auto'>
           {untracked.length === 0 ? (
             <p className='text-muted-foreground py-8 text-center text-sm'>
               {t('everythingTracked')}
@@ -281,9 +282,9 @@ export function TrackItemsSheet({
               )
             })
           )}
-        </div>
+        </SheetBody>
 
-        <SheetFooter className='border-t'>
+        <SheetFooter>
           <div className='flex w-full flex-wrap items-center justify-between gap-2'>
             <span className='text-muted-foreground text-sm tabular-nums'>
               {progress

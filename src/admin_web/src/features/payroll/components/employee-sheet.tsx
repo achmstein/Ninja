@@ -11,8 +11,6 @@ import { formatDay } from '@/lib/business-day'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
-import { Section } from '@/components/section'
-import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -34,6 +33,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { DatePicker } from '@/components/date-picker'
+import { InfoTip } from '@/components/info-tip'
+import { Section } from '@/components/section'
 import { customersService } from '@/features/customers/services/customers-service'
 import { getCustomerDisplayName } from '@/features/customers/types'
 import { AddStaffDialog } from '@/features/staff/components/add-staff-dialog'
@@ -70,8 +71,8 @@ export function EmployeeSheet({
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-xl'>
+        <SheetHeader>
           <SheetTitle>
             {isNew ? t('addEmployee') : (employee.data?.name ?? '…')}
           </SheetTitle>
@@ -101,17 +102,16 @@ export function EmployeeSheet({
             </Section>
           </>
         ) : (
-          <div className='space-y-3 p-4'>
+          <SheetBody>
             <Skeleton className='h-9' />
             <Skeleton className='h-9' />
             <Skeleton className='h-9' />
-          </div>
+          </SheetBody>
         )}
       </SheetContent>
     </Sheet>
   )
 }
-
 
 // ---------------------------------------------------------------------------
 // Who they are (and, for a new hire, what they start on)

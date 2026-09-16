@@ -16,7 +16,7 @@ import {
   uploadItemPictureMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -628,7 +628,8 @@ export function ItemDetailsForm({
               <div className='flex flex-wrap gap-1'>
                 {WEEKDAYS.map((day) => {
                   const bit = 1 << day
-                  const on = form.offerWeekdays === 0 || (form.offerWeekdays & bit) !== 0
+                  const on =
+                    form.offerWeekdays === 0 || (form.offerWeekdays & bit) !== 0
                   return (
                     <Button
                       key={day}
@@ -638,9 +639,13 @@ export function ItemDetailsForm({
                       className='h-8 w-11 px-0 text-xs'
                       onClick={() => {
                         const all = 127
-                        const current = form.offerWeekdays === 0 ? all : form.offerWeekdays
+                        const current =
+                          form.offerWeekdays === 0 ? all : form.offerWeekdays
                         const next = current ^ bit
-                        set('offerWeekdays', next === all || next === 0 ? 0 : next)
+                        set(
+                          'offerWeekdays',
+                          next === all || next === 0 ? 0 : next
+                        )
                       }}
                     >
                       {weekdayName(day)}

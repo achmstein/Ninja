@@ -53,7 +53,7 @@ export function PricingDialog({ branch, onOpenChange }: PricingDialogProps) {
 
   return (
     <Dialog open={branch != null} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[420px]'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Receipt className='h-5 w-5' />
@@ -92,7 +92,9 @@ function PricingForm({
   const t = useT()
   const queryClient = useQueryClient()
   const [vat, setVat] = useState(toPercent(pricing.vatRate))
-  const [includesVat, setIncludesVat] = useState(pricing.pricesIncludeVat !== false)
+  const [includesVat, setIncludesVat] = useState(
+    pricing.pricesIncludeVat !== false
+  )
   const [service, setService] = useState(toPercent(pricing.serviceChargeRate))
   const [cap, setCap] = useState(toPercent(pricing.maxCashierDiscountRate))
 
@@ -156,7 +158,9 @@ function PricingForm({
         </div>
 
         <div className='space-y-2'>
-          <Label htmlFor='cashier-discount-cap'>{t('cashierDiscountCap')}</Label>
+          <Label htmlFor='cashier-discount-cap'>
+            {t('cashierDiscountCap')}
+          </Label>
           <Input
             id='cashier-discount-cap'
             type='number'

@@ -245,18 +245,6 @@ const webExtras = {
     en: 'Table link copied',
     ar: 'اتنسخ لينك الترابيزة',
   },
-  sessionHistorySubtitle: {
-    en: 'Completed sessions across all rooms.',
-    ar: 'الجلسات اللي خلصت في كل الاوض.',
-  },
-  staffSubtitle: {
-    en: 'Admin and staff accounts for this branch.',
-    ar: 'حسابات المديرين والموظفين للفرع ده.',
-  },
-  branchesSubtitle: {
-    en: 'Locations and their operating settings.',
-    ar: 'الفروع وإعدادات تشغيلها.',
-  },
   sessionHistory: { en: 'Session History', ar: 'سجل الجلسات' },
 
   // Dashboard
@@ -284,8 +272,8 @@ const webExtras = {
   billedHoursFormat: { en: '{hours}h', ar: '{hours} ساعة' },
   endThisSession: { en: 'End this session?', ar: 'إنهاء الجلسة دي؟' },
   endSessionBilledAt: {
-    en: 'The timer stops and the session is billed at {hours} (as entered into the POS).',
-    ar: 'العداد هيقف والجلسة هتتحسب {hours} (زي ما بتتسجل في الكاشير).',
+    en: '{hours} on the bill.',
+    ar: '{hours} على الفاتورة.',
   },
   keepPlaying: { en: 'Keep playing', ar: 'كمّلوا لعب' },
   cancelThisReservation: {
@@ -333,7 +321,10 @@ const webExtras = {
   receiptPricing: { en: 'Receipt pricing', ar: 'تسعير الإيصال' },
   vatRatePercent: { en: 'VAT %', ar: 'الضريبة %' },
   serviceChargePercent: { en: 'Service charge %', ar: 'الخدمة %' },
-  cashierDiscountCap: { en: 'Cashier discount up to %', ar: 'خصم الكاشير لحد %' },
+  cashierDiscountCap: {
+    en: 'Cashier discount up to %',
+    ar: 'خصم الكاشير لحد %',
+  },
   pricesIncludeVat: {
     en: 'Prices include VAT',
     ar: 'الأسعار شاملة الضريبة',
@@ -658,40 +649,11 @@ const webExtras = {
   // Error pages
   goBack: { en: 'Go Back', ar: 'ارجع' },
   backToHome: { en: 'Back to Home', ar: 'رجوع للرئيسية' },
-  forbiddenTitle: { en: 'Access Forbidden', ar: 'ممنوع الدخول' },
-  forbiddenMessage: {
-    en: "You don't have necessary permission to view this resource.",
-    ar: 'معندكش صلاحية تشوف الصفحة دي.',
-  },
-  generalErrorTitle: {
-    en: "Oops! Something went wrong :')",
-    ar: "أوبس! في حاجة باظت :')",
-  },
-  generalErrorMessage: {
-    en: 'We apologize for the inconvenience. Please try again later.',
-    ar: 'معلش على الإزعاج. جرب تاني بعد شوية.',
-  },
-  maintenanceTitle: {
-    en: 'Website is under maintenance!',
-    ar: 'الموقع في صيانة!',
-  },
-  maintenanceMessage: {
-    en: "The site is not available at the moment. We'll be back online shortly.",
-    ar: 'الموقع مش شغال دلوقتي. هنرجع تاني قريب.',
-  },
-  notFoundTitle: {
-    en: 'Oops! Page Not Found!',
-    ar: 'أوبس! الصفحة مش موجودة!',
-  },
-  notFoundMessage: {
-    en: "It seems like the page you're looking for does not exist or might have been removed.",
-    ar: 'شكلها الصفحة اللي بتدور عليها مش موجودة أو اتشالت.',
-  },
-  unauthorizedTitle: { en: 'Unauthorized Access', ar: 'لازم تسجل دخول' },
-  unauthorizedMessage: {
-    en: 'Please log in with the appropriate credentials to access this resource.',
-    ar: 'سجّل دخول بحساب عنده الصلاحية عشان توصل للصفحة دي.',
-  },
+  forbiddenTitle: { en: 'No access', ar: 'مفيش صلاحية' },
+  generalErrorTitle: { en: 'Something went wrong', ar: 'في حاجة باظت' },
+  maintenanceTitle: { en: 'Under maintenance', ar: 'في صيانة' },
+  notFoundTitle: { en: 'Page not found', ar: 'الصفحة مش موجودة' },
+  unauthorizedTitle: { en: 'Sign in required', ar: 'لازم تسجل دخول' },
 
   // Data table
   pageOf: { en: 'Page {page} of {total}', ar: 'صفحة {page} من {total}' },
@@ -1161,10 +1123,6 @@ const webExtras = {
   // Inventory: usage report, transfers between branches, level rebuild
   inventoryReports: { en: 'Reports', ar: 'التقارير' },
   inventoryTransfers: { en: 'Transfers', ar: 'التحويلات' },
-  reportsSubtitle: {
-    en: 'What came in, what went out, and what it cost over a period.',
-    ar: 'إيه اللي دخل وإيه اللي خرج وكلف كام في فترة.',
-  },
   thisMonth: { en: 'This month', ar: 'الشهر ده' },
   purchased: { en: 'Purchased', ar: 'المشتريات' },
   costOfGoodsSold: { en: 'Cost of goods sold', ar: 'تكلفة المبيعات' },
@@ -1343,10 +1301,6 @@ const webExtras = {
   source: { en: 'Source', ar: 'المصدر' },
   requestFilterAll: { en: 'All requests', ar: 'كل الطلبات' },
   // Phase 2: till
-  vsPreviousPeriod: {
-    en: 'vs previous period',
-    ar: 'مقارنة بالفترة اللي قبلها',
-  },
   findReceipt: { en: 'Find receipt #', ar: 'دوّر برقم الإيصال' },
   receiptIgnoresRange: {
     en: 'Looks across all dates',
@@ -1577,7 +1531,6 @@ const webExtras = {
   noSupplier: { en: 'No supplier', ar: 'من غير مورد' },
   navFinanceProfit: { en: 'Profit & loss', ar: 'الأرباح' },
   profitLabel: { en: 'Profit', ar: 'الربح' },
-  marginOfSales: { en: '{pct} of sales', ar: '{pct} من المبيعات' },
   salesGross: { en: 'Sales', ar: 'المبيعات' },
   costOfGoods: { en: 'Cost of goods', ar: 'تكلفة البضاعة' },
   wasteCost: { en: 'Waste', ar: 'التالف' },
@@ -1677,12 +1630,12 @@ const webExtras = {
     ar: 'مفيش حاجة ناقصة',
   },
   assistProposedCustomizations: {
-    en: 'Option groups the assistant proposes — saved with the item; remove any you do not want',
-    ar: 'خيارات المساعد بيقترحها — هتتحفظ مع الصنف؛ شيل اللي مش عايزه',
+    en: 'Proposed by the assistant',
+    ar: 'اقتراح المساعد',
   },
   itemSavedCustomizationsFailed: {
-    en: 'Item saved, but its option groups could not be added; ask the assistant again',
-    ar: 'الصنف اتحفظ، بس خياراته متضافتش؛ اطلب من المساعد تاني',
+    en: 'Saved without its option groups',
+    ar: 'اتحفظ من غير خياراته',
   },
   // AI assistant: customization groups
   assistSuggest: { en: 'Suggest', ar: 'اقترح' },
@@ -1845,12 +1798,12 @@ const webExtras = {
   addRule: { en: 'Add rule', ar: 'ضيف قاعدة' },
   nothing: { en: 'nothing', ar: 'مفيش' },
   recipeOverrideIncomplete: {
-    en: 'A choice needs an ingredient and a quantity, or nothing at all',
-    ar: 'كل اختيار محتاج مكوّن وكمية، أو مفيش خالص',
+    en: 'A choice needs an ingredient and a quantity',
+    ar: 'الاختيار محتاج مكوّن وكمية',
   },
   recipeSlotEmpty: {
-    en: 'A row that is only for some choices needs at least one choice with something to deduct',
-    ar: 'السطر اللي لاختيارات معيّنة محتاج اختيار واحد على الأقل بيخصم حاجة',
+    en: 'A row needs a choice that deducts',
+    ar: 'السطر محتاج اختيار بيخصم',
   },
   // Menu page: start tracking many items at once
   trackItems: { en: 'Track items', ar: 'تتبّع الأصناف' },
@@ -1894,21 +1847,21 @@ const webExtras = {
   reviewRecipes: { en: 'Check the recipes', ar: 'راجع الوصفات' },
   newIngredients: { en: 'New ingredients', ar: 'خامات جديدة' },
   newIngredientsHint: {
-    en: 'Not on the shelf yet; created before the recipes that need them. A greyed one is not used by any ticked recipe.',
-    ar: 'مش على الرف لسه؛ بتتعمل قبل الوصفات اللي محتاجاها. اللي باهتة مفيش وصفة مختارة بتستخدمها.',
+    en: 'Created before the recipes that need them. Greyed: no ticked recipe uses it.',
+    ar: 'بتتعمل قبل الوصفات اللي محتاجاها. الباهتة مفيش وصفة مختارة بتستخدمها.',
   },
   newIngredient: { en: 'New', ar: 'جديد' },
   stockItemName: { en: 'Name', ar: 'الاسم' },
   autoSoldOutShort: { en: 'Auto sold-out', ar: 'نفاد تلقائي' },
   includeItem: { en: 'Include this item', ar: 'ضيف الصنف ده' },
   sellAsUnitExplained: {
-    en: '"{name}" becomes a stock item of its own; one comes off the shelf per sale.',
-    ar: '"{name}" هيبقى صنف مخزون لوحده؛ واحد بينزل من الرف مع كل بيعة.',
+    en: 'Stocked as its own item.',
+    ar: 'هيتخزن كصنف لوحده.',
   },
   back: { en: 'Back', ar: 'رجوع' },
   recipeNeedsLines: {
-    en: 'Every ticked recipe needs at least one line with an ingredient and a quantity',
-    ar: 'كل وصفة مختارة محتاجة سطر واحد على الأقل فيه خامة وكمية',
+    en: 'A ticked recipe has no lines',
+    ar: 'في وصفة مختارة من غير سطور',
   },
   ingredientNeedsName: {
     en: 'Every new ingredient needs an English name',
@@ -1942,12 +1895,12 @@ const webExtras = {
   },
   // Menu list: which items the storeroom tracks
   soldAsUnitBadge: {
-    en: 'Sold as a unit: one stock item comes off the shelf per sale',
-    ar: 'بيتباع كوحدة: صنف مخزون واحد بينزل من الرف مع كل بيعة',
+    en: 'Sold as a unit',
+    ar: 'بيتباع كوحدة',
   },
   usesIngredientsBadge: {
-    en: 'Uses ingredients: a recipe comes off the shelf per sale; the number is its food cost',
-    ar: 'بيستخدم خامات: وصفة بتنزل من الرف مع كل بيعة؛ الرقم هو نسبة تكلفتها',
+    en: 'Recipe · food cost %',
+    ar: 'وصفة · نسبة التكلفة',
   },
   // Cost control: what a sale costs, what a receipt changed, what the period lost
   menuCost: { en: 'Menu cost', ar: 'تكلفة المنيو' },
@@ -2039,14 +1992,6 @@ const webExtras = {
   countVarianceHint: {
     en: 'what the counts found missing (−) or extra (+) beyond what sales used',
     ar: 'اللي الجرد لقاه ناقص (−) أو زيادة (+) فوق استهلاك المبيعات',
-  },
-  percentOfNetSales: {
-    en: "{percent}% of the month's net sales",
-    ar: '{percent}% من صافي مبيعات الشهر',
-  },
-  pickAMonthForSalesShare: {
-    en: 'Pick a whole month to see it against sales',
-    ar: 'اختار شهر كامل عشان تشوفها مقابل المبيعات',
   },
   // AI assistant: a bill on an expense
   readBill: { en: 'Fill in from the bill', ar: 'املا من الفاتورة' },

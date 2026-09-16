@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -179,15 +180,15 @@ export function ReceiptReviewSheet({
 
   return (
     <Sheet open onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-3xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-3xl'>
+        <SheetHeader>
           <SheetTitle className='flex items-center gap-2'>
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewScan')}
           </SheetTitle>
         </SheetHeader>
 
-        <div className='space-y-4 p-4'>
+        <SheetBody>
           <div className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
               <Label>{t('supplier')}</Label>
@@ -285,9 +286,9 @@ export function ReceiptReviewSheet({
               </p>
             )}
           </div>
-        </div>
+        </SheetBody>
 
-        <SheetFooter className='border-t sm:flex-row sm:justify-end'>
+        <SheetFooter className='sm:flex-row sm:justify-end'>
           <Button
             type='button'
             variant='outline'
@@ -507,7 +508,7 @@ function NewItemFields({
   const set = (patch: Partial<typeof draft>) => onChange({ ...draft, ...patch })
 
   return (
-    <div className='bg-muted/40 space-y-2 rounded-md border p-2'>
+    <div className='bg-muted/40 space-y-2 rounded-lg border p-2'>
       <p className='text-muted-foreground text-xs'>{t('newItemName')}</p>
       <LocalizedInput
         ariaLabel={t('newItemName')}

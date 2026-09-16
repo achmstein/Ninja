@@ -114,7 +114,7 @@ export function TablesManagement() {
 
   return (
     <>
-      <Main className='flex flex-col gap-4'>
+      <Main>
         <PageHeader
           title={t('tables')}
           badge={
@@ -126,13 +126,13 @@ export function TablesManagement() {
           }
           actions={
             <>
-              <Button variant='outline' asChild>
+              <Button size='sm' variant='outline' asChild>
                 <Link to='/tables/print'>
                   <QrCode className='me-2 h-4 w-4' />
                   {t('printQrSheet')}
                 </Link>
               </Button>
-              <Button onClick={() => setAddOpen(true)}>
+              <Button size='sm' onClick={() => setAddOpen(true)}>
                 <Plus className='me-2 h-4 w-4' />
                 {t('addTable')}
               </Button>

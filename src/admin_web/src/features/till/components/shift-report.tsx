@@ -57,21 +57,13 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   return (
     <div className='flex flex-col gap-5'>
       {closed ? (
-        <div className='grid grid-cols-3 gap-4'>
+        <StatStrip>
           <Stat
-            size='hero'
             label={t('expected')}
             value={formatEgp(shift.expectedCash ?? shift.expectedInDrawer)}
-            className='[&>div:nth-child(2)]:text-2xl'
           />
+          <Stat label={t('counted')} value={formatEgp(shift.closingCount)} />
           <Stat
-            size='hero'
-            label={t('counted')}
-            value={formatEgp(shift.closingCount)}
-            className='[&>div:nth-child(2)]:text-2xl'
-          />
-          <Stat
-            size='hero'
             label={t('overShort')}
             value={
               overShort === 0
@@ -79,9 +71,8 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                 : `${overShort > 0 ? '+' : '−'}${formatEgp(Math.abs(overShort))}`
             }
             tone={overShort >= 0 ? 'positive' : 'negative'}
-            className='[&>div:nth-child(2)]:text-2xl'
           />
-        </div>
+        </StatStrip>
       ) : (
         <Stat
           size='hero'

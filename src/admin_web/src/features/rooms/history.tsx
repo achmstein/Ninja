@@ -1,30 +1,12 @@
 import { useEffect, useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getRouteApi, Link } from '@tanstack/react-router'
+import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { ArrowLeft } from 'lucide-react'
 import { type ReservationViewModel } from '@/api/spaces'
 import {
   getSessionHistoryOptions,
   listRoomsOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Main } from '@/components/layout/main'
-import {
-  createAppColumnHelper,
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
-import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   useLanguage,
   useLocale,
@@ -32,6 +14,23 @@ import {
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
+import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  createAppColumnHelper,
+  DataTable,
+  DataTablePagination,
+  dataTableFeatures,
+} from '@/components/data-table'
+import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
 import {
   formatBillingHours,
   formatDuration,
@@ -79,9 +78,7 @@ export function SessionsHistory() {
 
   const fromDate = useMemo(() => rangeToFromDate(search.range), [search.range])
 
-  const { data: rooms = [] } = useQuery(
-    listRoomsOptions()
-  )
+  const { data: rooms = [] } = useQuery(listRoomsOptions())
 
   const historyQuery = useQuery({
     ...getSessionHistoryOptions({
@@ -110,7 +107,9 @@ export function SessionsHistory() {
         columnHelper.accessor((row) => localized(row.roomName), {
           id: 'room',
           header: t('room'),
-          cell: ({ row }) => <span>{localized(row.original.roomName) || '—'}</span>,
+          cell: ({ row }) => (
+            <span>{localized(row.original.roomName) || '—'}</span>
+          ),
         }),
         columnHelper.accessor('customerName', {
           id: 'customer',
@@ -155,8 +154,7 @@ export function SessionsHistory() {
           id: 'status',
           header: t('status'),
           cell: ({ row }) => {
-            const status =
-              sessionStatusConfig[Number(row.original.status ?? 0)]
+            const status = sessionStatusConfig[Number(row.original.status ?? 0)]
             return status ? (
               <Badge variant={status.variant}>{t(status.key)}</Badge>
             ) : null
@@ -188,75 +186,60 @@ export function SessionsHistory() {
 
   return (
     <>
+      <Main>
+        <PageHeader back={{ to: '/rooms' }} title={t('sessionHistory')}>
+          <div className='flex items-center gap-2'>
+            <Select
+              value={search.room != null ? String(search.room) : 'all'}
+              onValueChange={(value) =>
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    page: undefined,
+                    room: value === 'all' ? undefined : Number(value),
+                  }),
+                })
+              }
+            >
+              <SelectTrigger size='sm' className='h-8 w-[160px]'>
+                <SelectValue placeholder={t('allRooms')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>{t('allRooms')}</SelectItem>
+                {rooms.map((room) => (
+                  <SelectItem key={String(room.id)} value={String(room.id)}>
+                    {localized(room.name)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <Main className='flex flex-col gap-4'>
-        <div className='flex items-center gap-2'>
-          <Button size='icon' variant='ghost' className='-ms-2' asChild>
-            <Link to='/rooms' aria-label={t('rooms')}>
-              <ArrowLeft size={20} className='rtl:rotate-180' />
-            </Link>
-          </Button>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              {t('sessionHistory')}
-            </h1>
-            <p className='text-muted-foreground'>
-              {t('sessionHistorySubtitle')}
-            </p>
+            <Select
+              value={search.range ?? 'all'}
+              onValueChange={(value) =>
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    page: undefined,
+                    range: value === 'all' ? undefined : (value as DateRange),
+                  }),
+                })
+              }
+            >
+              <SelectTrigger size='sm' className='h-8 w-[140px]'>
+                <SelectValue placeholder={t('allTime')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>{t('allTime')}</SelectItem>
+                {dateRanges.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {t(r.key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <Select
-            value={search.room != null ? String(search.room) : 'all'}
-            onValueChange={(value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  page: undefined,
-                  room: value === 'all' ? undefined : Number(value),
-                }),
-              })
-            }
-          >
-            <SelectTrigger size='sm' className='h-8 w-[160px]'>
-              <SelectValue placeholder={t('allRooms')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{t('allRooms')}</SelectItem>
-              {rooms.map((room) => (
-                <SelectItem key={String(room.id)} value={String(room.id)}>
-                  {localized(room.name)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={search.range ?? 'all'}
-            onValueChange={(value) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  page: undefined,
-                  range: value === 'all' ? undefined : (value as DateRange),
-                }),
-              })
-            }
-          >
-            <SelectTrigger size='sm' className='h-8 w-[140px]'>
-              <SelectValue placeholder={t('allTime')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{t('allTime')}</SelectItem>
-              {dateRanges.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {t(r.key)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        </PageHeader>
 
         <DataTable
           table={table}

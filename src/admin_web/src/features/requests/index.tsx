@@ -112,7 +112,7 @@ export function ServiceRequests() {
     .filter((type) => (counts.get(type) ?? 0) > 0 || type === search.type)
 
   return (
-    <Main className='flex flex-col gap-4'>
+    <Main>
       <PageHeader
         title={t('requests')}
         badge={
@@ -175,10 +175,7 @@ export function ServiceRequests() {
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <EmptyState
-          icon={CheckCircle2}
-          title={t('allClear')}
-        />
+        <EmptyState icon={CheckCircle2} title={t('allClear')} />
       ) : (
         <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3'>
           {visible.map((request) => (

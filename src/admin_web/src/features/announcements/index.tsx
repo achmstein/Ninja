@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Send, Users } from 'lucide-react'
 import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
 import { announcementsService } from './service'
 
 export function AnnouncementsManagement() {
@@ -51,7 +51,7 @@ export function AnnouncementsManagement() {
 
   return (
     <>
-      <Main className='flex flex-col gap-6'>
+      <Main>
         <PageHeader title={t('announcements')} />
         <section className='flex flex-col gap-3'>
           <h2 className='text-sm font-semibold'>{t('sendAnnouncement')}</h2>
@@ -93,11 +93,11 @@ export function AnnouncementsManagement() {
                 </Button>
               </div>
             </form>
-            </div>
-            </section>
+          </div>
+        </section>
 
         <div className='flex flex-col gap-3'>
-          <h2 className='text-muted-foreground tracking-wide uppercase text-sm font-semibold'>
+          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
             {t('sentSection')}
           </h2>
           {isLoading ? (
@@ -112,24 +112,27 @@ export function AnnouncementsManagement() {
             </p>
           ) : (
             announcements.map((announcement) => (
-              <div key={announcement.id} className='flex flex-col gap-1 px-4 py-3'>
-                  <div className='flex items-baseline justify-between gap-2'>
-                    <span className='font-semibold'>{announcement.title}</span>
-                    <span className='text-muted-foreground shrink-0 text-xs'>
-                      {new Date(announcement.sentAt).toLocaleString(locale)}
-                    </span>
-                  </div>
-                  <p className='text-sm'>{announcement.body}</p>
-                  <div className='text-muted-foreground flex items-center gap-3 text-xs'>
-                    <span>{t('byAuthor', { name: announcement.sentBy })}</span>
-                    <span className='flex items-center gap-1'>
-                      <Users className='h-3 w-3' />
-                      {t('devicesCount', {
-                        count: announcement.recipientCount,
-                      })}
-                    </span>
-                  </div>
+              <div
+                key={announcement.id}
+                className='flex flex-col gap-1 px-4 py-3'
+              >
+                <div className='flex items-baseline justify-between gap-2'>
+                  <span className='font-semibold'>{announcement.title}</span>
+                  <span className='text-muted-foreground shrink-0 text-xs'>
+                    {new Date(announcement.sentAt).toLocaleString(locale)}
+                  </span>
                 </div>
+                <p className='text-sm'>{announcement.body}</p>
+                <div className='text-muted-foreground flex items-center gap-3 text-xs'>
+                  <span>{t('byAuthor', { name: announcement.sentBy })}</span>
+                  <span className='flex items-center gap-1'>
+                    <Users className='h-3 w-3' />
+                    {t('devicesCount', {
+                      count: announcement.recipientCount,
+                    })}
+                  </span>
+                </div>
+              </div>
             ))
           )}
         </div>

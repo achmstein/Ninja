@@ -17,10 +17,8 @@ type HistoryPageProps = {
 export function HistoryPage({ tab, children }: HistoryPageProps) {
   const t = useT()
   return (
-    <Main className='flex flex-col gap-4'>
-      <PageHeader
-        title={t('inventoryHistory')}
-      >
+    <Main>
+      <PageHeader title={t('inventoryHistory')}>
         <PageTabs
           value={tab}
           tabs={[

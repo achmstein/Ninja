@@ -43,7 +43,7 @@ export function ReceiveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[760px]'>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-3xl'>
         <DialogHeader>
           <DialogTitle>{t('receiveStock')}</DialogTitle>
         </DialogHeader>

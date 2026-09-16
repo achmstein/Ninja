@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Gamepad2, Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type RoomViewModel } from '@/api/spaces'
 import { startWalkInSessionMutation } from '@/api/spaces/@tanstack/react-query.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,10 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { useLocalized, useT } from '@/lib/i18n'
+import { Textarea } from '@/components/ui/textarea'
 import { PlayerModeToggle, type PlayerMode } from './player-mode-toggle'
 
 interface StartSessionDialogProps {
@@ -51,7 +51,7 @@ export function StartSessionDialog({
 
   return (
     <Dialog open={!!room} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[400px]'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Gamepad2 className='h-5 w-5' />
@@ -65,7 +65,8 @@ export function StartSessionDialog({
             <p className='text-primary text-2xl font-bold tabular-nums'>
               {Number(room.singleRate ?? 0)} / {Number(room.multiRate ?? 0)}{' '}
               <span className='text-muted-foreground text-sm font-normal'>
-                {t('currency')}{t('perHour')}
+                {t('currency')}
+                {t('perHour')}
               </span>
             </p>
           </div>

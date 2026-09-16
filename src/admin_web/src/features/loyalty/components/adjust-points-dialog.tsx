@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { useLocale, useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,11 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useLocale, useT } from '@/lib/i18n'
 import { useAdjustPoints } from '../hooks/use-loyalty'
 
 interface AdjustPointsDialogProps {
@@ -71,7 +71,7 @@ export function AdjustPointsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className='sm:max-w-md'>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
@@ -81,7 +81,7 @@ export function AdjustPointsDialog({
           </DialogHeader>
 
           <div className='grid gap-4 py-4'>
-            <div className='rounded-lg bg-muted p-3'>
+            <div className='bg-muted rounded-lg p-3'>
               <div className='flex justify-between text-sm'>
                 <span className='text-muted-foreground'>
                   {t('currentBalance')}
@@ -92,7 +92,7 @@ export function AdjustPointsDialog({
               </div>
               {pointsValue !== 0 && (
                 <>
-                  <div className='flex justify-between text-sm mt-1'>
+                  <div className='mt-1 flex justify-between text-sm'>
                     <span className='text-muted-foreground'>
                       {t('transactionTypeAdjustment')}
                     </span>
@@ -105,7 +105,7 @@ export function AdjustPointsDialog({
                       {pointsValue.toLocaleString(locale)} {t('points')}
                     </span>
                   </div>
-                  <div className='border-t mt-2 pt-2 flex justify-between text-sm'>
+                  <div className='mt-2 flex justify-between border-t pt-2 text-sm'>
                     <span className='text-muted-foreground'>
                       {t('newBalance')}
                     </span>
@@ -127,7 +127,7 @@ export function AdjustPointsDialog({
                 onChange={(e) => setPoints(e.target.value)}
                 required
               />
-              <p className='text-xs text-muted-foreground'>
+              <p className='text-muted-foreground text-xs'>
                 {t('usePositiveToAdd')}
               </p>
             </div>
@@ -154,7 +154,9 @@ export function AdjustPointsDialog({
             </Button>
             <Button
               type='submit'
-              disabled={adjustPoints.isPending || pointsValue === 0 || !reason.trim()}
+              disabled={
+                adjustPoints.isPending || pointsValue === 0 || !reason.trim()
+              }
             >
               {adjustPoints.isPending ? t('saving') : t('adjustPoints')}
             </Button>

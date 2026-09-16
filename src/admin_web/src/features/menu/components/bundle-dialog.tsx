@@ -69,7 +69,7 @@ export function BundleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[560px]'>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-xl'>
         <DialogHeader>
           <DialogTitle>
             {bundle ? t('editBundle') : t('createBundle')}

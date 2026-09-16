@@ -41,7 +41,7 @@ export function BranchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-[480px]'>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t('editBranch') : t('createBranch')}

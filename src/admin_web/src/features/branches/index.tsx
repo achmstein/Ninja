@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
 import { BranchDialog } from './components/branch-dialog'
 import { PricingDialog } from './components/pricing-dialog'
 
@@ -54,23 +55,21 @@ export function BranchesManagement() {
   return (
     <>
       <Main>
-        <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              {t('branches')}
-            </h1>
-            <p className='text-muted-foreground'>{t('branchesSubtitle')}</p>
-          </div>
-          <Button
-            onClick={() => {
-              setEditingBranch(null)
-              setDialogOpen(true)
-            }}
-          >
-            <Plus className='me-2 h-4 w-4' />
-            {t('createBranch')}
-          </Button>
-        </div>
+        <PageHeader
+          title={t('branches')}
+          actions={
+            <Button
+              size='sm'
+              onClick={() => {
+                setEditingBranch(null)
+                setDialogOpen(true)
+              }}
+            >
+              <Plus className='me-2 h-4 w-4' />
+              {t('createBranch')}
+            </Button>
+          }
+        />
         {isLoading ? (
           <div className='grid gap-4 md:grid-cols-2'>
             {[...Array(2)].map((_, i) => (

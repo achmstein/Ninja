@@ -8,7 +8,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
@@ -29,7 +29,6 @@ type BranchOverrideSectionProps = {
  * Availability at the branch is the switch on the menu row, not here.
  */
 export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
-  const localized = useLocalized()
   const queryClient = useQueryClient()
   const branchId = useBranchStore((s) => s.branchId)
   const { branches } = useAllowedBranches()
@@ -57,7 +56,6 @@ export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
   return (
     <OverrideForm
       key={key}
-      branchName={localized(branch.name)}
       branchId={toNumber(branch.id)}
       catalogItemId={catalogItemId}
       basePrice={toNumber(base.price)}
@@ -92,7 +90,6 @@ export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
 }
 
 type OverrideFormProps = {
-  branchName: string
   branchId: number
   catalogItemId: number
   basePrice: number
@@ -104,7 +101,6 @@ type OverrideFormProps = {
 }
 
 function OverrideForm({
-  branchName,
   branchId,
   catalogItemId,
   basePrice,

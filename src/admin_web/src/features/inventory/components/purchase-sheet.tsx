@@ -7,6 +7,7 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -55,8 +56,8 @@ export function PurchaseSheet({
 
   return (
     <Sheet open={purchaseId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-xl print:max-w-none print:border-0 print:shadow-none'>
-        <SheetHeader className='flex-row items-start justify-between gap-4 border-b'>
+      <SheetContent className='sm:max-w-xl print:max-w-none print:border-0 print:shadow-none'>
+        <SheetHeader className='flex-row items-start justify-between gap-4'>
           <div>
             <SheetTitle>
               {t('purchaseHash', {
@@ -75,7 +76,7 @@ export function PurchaseSheet({
           </Button>
         </SheetHeader>
 
-        <div className='flex-1 space-y-5 p-4'>
+        <SheetBody>
           {isLoading || !purchase ? (
             <div className='space-y-3'>
               {[...Array(4)].map((_, i) => (
@@ -133,7 +134,7 @@ export function PurchaseSheet({
               </Table>
             </>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   )

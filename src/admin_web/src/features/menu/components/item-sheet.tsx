@@ -2,7 +2,6 @@ import { Trash2 } from 'lucide-react'
 import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { Section } from '@/components/section'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -10,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { Section } from '@/components/section'
 import { BranchOverrideSection } from './branch-override-section'
 import { CustomizationsSection } from './customizations-section'
 import { ItemDetailsForm } from './item-details-form'
@@ -58,8 +58,8 @@ export function ItemSheet({
       }}
     >
       {/* 2xl: the recipe editor needs an option set and a stock item name side by side */}
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-2xl'>
+        <SheetHeader>
           <SheetTitle>
             {item ? localized(item.name) : t('addMenuItem')}
           </SheetTitle>
@@ -90,9 +90,7 @@ export function ItemSheet({
                 onSaved={() => {}}
               />
             </Section>
-            <Section
-              title={t('customizations')}
-            >
+            <Section title={t('customizations')}>
               <CustomizationsSection item={item} />
             </Section>
             <Section title={t('stock')}>
@@ -118,4 +116,3 @@ export function ItemSheet({
     </Sheet>
   )
 }
-

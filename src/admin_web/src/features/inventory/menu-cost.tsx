@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { ChefHat, CircleAlert, Percent, TriangleAlert } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
 import {
   deleteItemMutation,
@@ -12,9 +11,7 @@ import {
 import { getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,6 +22,8 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
+import { Stat, StatStrip } from '@/components/stat-strip'
 import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
 import {
   ItemSheet,
@@ -120,88 +119,77 @@ export function MenuCost() {
   const loading = costs.isPending || items.isPending
 
   return (
-    <Main className='flex flex-col gap-4'>
-      <div className='flex flex-wrap items-end justify-between gap-3'>
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight'>{t('menuCost')}</h1>
-        </div>
-        <div className='flex items-center gap-2'>
-          <Label htmlFor='food-cost-target' className='whitespace-nowrap'>
-            {t('foodCostTarget')}
-          </Label>
-          <div className='relative'>
-            <Input
-              id='food-cost-target'
-              type='number'
-              min='1'
-              max='99'
-              inputMode='numeric'
-              className='w-20 pe-6 text-end tabular-nums'
-              value={target}
-              onChange={(e) => {
-                const next = Math.round(Number(e.target.value))
-                navigate({
-                  search: (prev) => ({
-                    ...prev,
-                    page: undefined,
-                    target:
-                      next > 0 &&
-                      next < 100 &&
-                      next !== DEFAULT_FOOD_COST_TARGET
-                        ? next
-                        : undefined,
-                  }),
-                })
-              }}
-            />
-            <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-sm'>
-              %
-            </span>
+    <Main>
+      <PageHeader
+        title={t('menuCost')}
+        actions={
+          <div className='flex items-center gap-2'>
+            <Label htmlFor='food-cost-target' className='whitespace-nowrap'>
+              {t('foodCostTarget')}
+            </Label>
+            <div className='relative'>
+              <Input
+                id='food-cost-target'
+                type='number'
+                min='1'
+                max='99'
+                inputMode='numeric'
+                className='w-20 pe-6 text-end tabular-nums'
+                value={target}
+                onChange={(e) => {
+                  const next = Math.round(Number(e.target.value))
+                  navigate({
+                    search: (prev) => ({
+                      ...prev,
+                      page: undefined,
+                      target:
+                        next > 0 &&
+                        next < 100 &&
+                        next !== DEFAULT_FOOD_COST_TARGET
+                          ? next
+                          : undefined,
+                    }),
+                  })
+                }}
+              />
+              <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-sm'>
+                %
+              </span>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {loading ? (
-        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className='h-28' />
-          ))}
-        </div>
+        <Skeleton className='h-24' />
       ) : (
-        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-          <StatCard
-            label={t('trackedItems')}
-            value={String(summary.tracked)}
-            icon={ChefHat}
-          />
-          <StatCard
+        <StatStrip>
+          <Stat label={t('trackedItems')} value={String(summary.tracked)} />
+          <Stat
             label={t('averageFoodCost')}
             value={
               summary.averageFoodCost === null
                 ? '—'
                 : `${summary.averageFoodCost}%`
             }
-            icon={Percent}
-            className={
+            tone={
               summary.averageFoodCost !== null &&
               summary.averageFoodCost > target
-                ? 'text-destructive'
-                : ''
+                ? 'negative'
+                : 'default'
             }
           />
-          <StatCard
+          <Stat
             label={t('itemsOverTarget', { target })}
             value={String(summary.over)}
-            icon={TriangleAlert}
-            className={summary.over > 0 ? 'text-destructive' : ''}
+            tone={summary.over > 0 ? 'negative' : 'default'}
           />
-          <StatCard
+          <Stat
             label={t('itemsWithUncostedIngredients')}
             value={String(summary.incomplete)}
-            icon={CircleAlert}
-            className={summary.incomplete > 0 ? 'text-warning' : ''}
+            tone={summary.incomplete > 0 ? 'warning' : 'default'}
           />
-        </div>
+        </StatStrip>
       )}
 
       <DataTableToolbar
@@ -239,31 +227,5 @@ export function MenuCost() {
         isLoading={deleteItemMut.isPending}
       />
     </Main>
-  )
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  className,
-}: {
-  label: string
-  value: string
-  icon: React.ComponentType<{ className?: string }>
-  className?: string
-}) {
-  return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-        <CardTitle className='text-sm font-medium'>{label}</CardTitle>
-        <Icon className='text-muted-foreground h-4 w-4' />
-      </CardHeader>
-      <CardContent>
-        <div className={cn('text-2xl font-bold tabular-nums', className)}>
-          {value}
-        </div>
-      </CardContent>
-    </Card>
   )
 }

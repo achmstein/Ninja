@@ -111,13 +111,14 @@ export function Stock() {
 
   return (
     <>
-      <Main fixed className='gap-4'>
+      <Main fixed>
         <PageHeader
           title={t('inventoryStock')}
           actions={
             <>
               {branches.length > 1 && (
                 <Button
+                  size='sm'
                   variant='outline'
                   onClick={() => setTransferOpen(true)}
                   disabled={counting}
@@ -127,6 +128,7 @@ export function Stock() {
                 </Button>
               )}
               <Button
+                size='sm'
                 variant={counting ? 'secondary' : 'outline'}
                 onClick={() => setCounting((c) => !c)}
                 aria-pressed={counting}
@@ -136,6 +138,7 @@ export function Stock() {
               </Button>
               {/* One Receive for the page; starts on the open item when there is one */}
               <Button
+                size='sm'
                 onClick={() =>
                   setReceiveFor(
                     selected ? toNumber(selected.stockItemId) : null
@@ -356,7 +359,7 @@ export function Stock() {
           {/* Detail */}
           {!counting &&
             (selected ? (
-              <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border shadow-xs sm:static sm:z-auto sm:rounded-md'>
+              <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border sm:static sm:z-auto sm:rounded-lg'>
                 <StockItemPanel
                   key={String(selected.stockItemId)}
                   level={selected}
@@ -364,11 +367,8 @@ export function Stock() {
                 />
               </div>
             ) : (
-              <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-md border shadow-xs sm:flex'>
-                <EmptyState
-                  icon={Boxes}
-                  title={t('selectStockItem')}
-                />
+              <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-lg border sm:flex'>
+                <EmptyState icon={Boxes} title={t('selectStockItem')} />
               </div>
             ))}
         </section>

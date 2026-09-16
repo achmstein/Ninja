@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -50,7 +51,7 @@ export function OrderDetailsSheet({
 
   return (
     <Sheet open={orderId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
+      <SheetContent className='sm:max-w-lg'>
         <SheetHeader>
           <div className='flex items-center gap-2'>
             <SheetTitle>
@@ -68,7 +69,7 @@ export function OrderDetailsSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className='flex-1 space-y-4 px-4 pb-4'>
+        <SheetBody>
           {isLoading ? (
             <div className='space-y-3'>
               <Skeleton className='h-5 w-2/3' />
@@ -182,10 +183,10 @@ export function OrderDetailsSheet({
           ) : (
             <p className='text-muted-foreground text-sm'>{t('failedToLoad')}</p>
           )}
-        </div>
+        </SheetBody>
 
         {order && isSubmitted(order.status) && orderId != null && (
-          <SheetFooter className='flex-row gap-2 border-t'>
+          <SheetFooter className='flex-row gap-2'>
             <Button
               variant='outline'
               className='flex-1'

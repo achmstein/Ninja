@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Loader2, Search, X } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type RoomViewModel } from '@/api/spaces'
 import {
   assignCustomerToSessionMutation,
   reserveRoomMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -15,12 +17,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { CustomerSearchDialog } from '@/features/accounts/components/customer-search-dialog'
 import type { KeycloakUser } from '@/features/accounts/types'
-import { useLocalized, useT } from '@/lib/i18n'
 
 interface ReserveRoomDialogProps {
   room: RoomViewModel | null
@@ -99,7 +99,7 @@ export function ReserveRoomDialog({
   return (
     <>
       <Dialog open={!!room} onOpenChange={onOpenChange}>
-        <DialogContent className='sm:max-w-[400px]'>
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <CalendarClock className='h-5 w-5' />
@@ -111,7 +111,7 @@ export function ReserveRoomDialog({
             <div className='space-y-2'>
               <Label>{t('customer')}</Label>
               {customer ? (
-                <div className='flex items-center justify-between rounded-md border px-3 py-2 text-sm'>
+                <div className='flex items-center justify-between rounded-lg border px-3 py-2 text-sm'>
                   <div className='min-w-0'>
                     <p className='truncate font-medium'>
                       {displayName(customer)}

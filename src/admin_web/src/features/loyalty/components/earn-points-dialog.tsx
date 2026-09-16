@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { type TranslationKey, useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -17,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { type TranslationKey, useT } from '@/lib/i18n'
 import { useEarnPoints } from '../hooks/use-loyalty'
 
 interface EarnPointsDialogProps {
@@ -86,7 +86,7 @@ export function EarnPointsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className='sm:max-w-md'>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>

@@ -24,7 +24,7 @@ export function QueueCard({
   return (
     <div
       className={cn(
-        'bg-card flex flex-col rounded-lg border p-4 shadow-sm transition-[border-color,box-shadow] duration-500 ease-out',
+        'bg-card flex flex-col rounded-lg border p-4 transition-[border-color,box-shadow] duration-500 ease-out',
         animate && 'animate-in fade-in-0 zoom-in-95 slide-in-from-top-4',
         urgency === 'delayed' &&
           'border-destructive/70 shadow-[0_0_12px_3px_color-mix(in_oklch,var(--destructive)_35%,transparent)]',

@@ -2,22 +2,20 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { Gamepad2, History, Plus, QrCode, Wrench } from 'lucide-react'
-import {
-  type ReservationViewModel,
-  type RoomViewModel,
-} from '@/api/spaces'
+import { type ReservationViewModel, type RoomViewModel } from '@/api/spaces'
 import {
   getActiveSessionsOptions,
   listRoomsOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
-import { cn } from '@/lib/utils'
 import {
   useLocalized,
   useT,
   type TranslationKey,
   type TranslateParams,
 } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -25,12 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/empty-state'
 import { Main } from '@/components/layout/main'
 import { ReserveRoomDialog } from './components/reserve-room-dialog'
-import { RoomDialog } from './components/room-dialog'
 import { RoomDetailPanel } from './components/room-detail-panel'
+import { RoomDialog } from './components/room-dialog'
 import { StartReservedDialog } from './components/start-reserved-dialog'
 import { StartSessionDialog } from './components/start-session-dialog'
 import {
@@ -92,9 +90,8 @@ export function RoomsManagement() {
   const [status, setStatus] = useState('all')
   const [addRoomOpen, setAddRoomOpen] = useState(false)
 
-  const { data: rooms = [], isLoading: loadingRooms } = useQuery(
-    listRoomsOptions()
-  )
+  const { data: rooms = [], isLoading: loadingRooms } =
+    useQuery(listRoomsOptions())
 
   const { data: activeSessions = [] } = useQuery({
     ...getActiveSessionsOptions(),
@@ -129,7 +126,6 @@ export function RoomsManagement() {
 
   return (
     <>
-
       <Main fixed>
         <section className='relative flex h-full gap-6'>
           {/* Master: room list */}
@@ -229,7 +225,7 @@ export function RoomsManagement() {
           {selectedRoom ? (
             <div
               className={cn(
-                'absolute inset-0 start-full z-50 hidden w-full flex-1 flex-col border bg-background shadow-xs transition-all duration-200 sm:static sm:z-auto sm:flex sm:rounded-md',
+                'bg-background absolute inset-0 start-full z-50 hidden w-full flex-1 flex-col border transition-all duration-200 sm:static sm:z-auto sm:flex sm:rounded-lg',
                 // start-0 (NOT the nonexistent inset-s-0) pulls the panel
                 // on-screen — on mobile it overlays the list full-screen
                 'start-0 flex'
@@ -246,15 +242,8 @@ export function RoomsManagement() {
               />
             </div>
           ) : (
-            <div className='absolute inset-0 start-full z-50 hidden w-full flex-1 flex-col justify-center rounded-md border bg-card shadow-xs sm:static sm:z-auto sm:flex'>
-              <div className='flex flex-col items-center space-y-6'>
-                <div className='border-border flex size-16 items-center justify-center rounded-full border-2'>
-                  <Gamepad2 className='size-8' />
-                </div>
-                <div className='space-y-2 text-center'>
-                  <h2 className='text-sm font-semibold'>{t('selectRoom')}</h2>
-                </div>
-              </div>
+            <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-lg border sm:flex'>
+              <EmptyState icon={Gamepad2} title={t('selectRoom')} />
             </div>
           )}
         </section>

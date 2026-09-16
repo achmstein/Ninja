@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -87,7 +88,7 @@ export function TableSheet({
   return (
     <>
       <Sheet open={table != null} onOpenChange={onOpenChange}>
-        <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
+        <SheetContent className='sm:max-w-lg'>
           <SheetHeader>
             <SheetTitle className='flex items-center gap-2'>
               <Armchair className='text-muted-foreground size-5' />
@@ -101,7 +102,7 @@ export function TableSheet({
           </SheetHeader>
 
           {table && (
-            <div className='flex flex-1 flex-col gap-4 px-4 pb-4'>
+            <SheetBody>
               {orders.length === 0 ? (
                 <EmptyState
                   compact
@@ -165,7 +166,7 @@ export function TableSheet({
                   {t('delete')}
                 </Button>
               </div>
-            </div>
+            </SheetBody>
           )}
         </SheetContent>
       </Sheet>

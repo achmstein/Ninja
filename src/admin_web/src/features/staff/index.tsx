@@ -16,6 +16,7 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
   type Customer,
@@ -190,21 +191,18 @@ export function StaffManagement() {
 
   return (
     <>
-      <Main className='flex flex-col gap-4'>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              {t('staffAccounts')}
-            </h1>
-            <p className='text-muted-foreground'>{t('staffSubtitle')}</p>
-          </div>
-          {isOwner && (
-            <Button onClick={() => setAddOpen(true)}>
-              <UserPlus className='me-2 h-4 w-4' />
-              {t('addStaff')}
-            </Button>
-          )}
-        </div>
+      <Main>
+        <PageHeader
+          title={t('staffAccounts')}
+          actions={
+            isOwner && (
+              <Button size='sm' onClick={() => setAddOpen(true)}>
+                <UserPlus className='me-2 h-4 w-4' />
+                {t('addStaff')}
+              </Button>
+            )
+          }
+        />
 
         <DataTable
           table={table}

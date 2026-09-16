@@ -337,10 +337,7 @@ export function MenuManagement() {
                 />
               </>
             )}
-            <Button
-              variant='outline'
-              onClick={() => setTrackOpen(true)}
-            >
+            <Button variant='outline' onClick={() => setTrackOpen(true)}>
               <CookingPot className='me-2 h-4 w-4' />
               {t('trackItems')}
               {untracked.length > 0 && (
@@ -426,7 +423,7 @@ export function MenuManagement() {
               )}
               strategy={verticalListSortingStrategy}
             >
-              <div className='flex flex-col gap-8'>
+              <div className='flex flex-col gap-6'>
                 {sections.map((section) => {
                   const category = section.category
                   const categoryId =

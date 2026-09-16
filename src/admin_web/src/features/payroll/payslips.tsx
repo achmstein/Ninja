@@ -15,7 +15,6 @@ import { downloadCsv } from '@/lib/csv'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,6 +41,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
+import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
@@ -189,13 +189,13 @@ export function Payslips() {
 
   return (
     <>
-      <Main className='flex flex-col gap-6'>
+      <Main>
         <PageHeader
           title={t('navPayrollPayslips')}
           actions={
             <div className='flex gap-2'>
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
-              <Button onClick={() => generate()} disabled={isPending}>
+              <Button size='sm' onClick={() => generate()} disabled={isPending}>
                 {isPending ? (
                   <Spinner className='me-2' />
                 ) : (

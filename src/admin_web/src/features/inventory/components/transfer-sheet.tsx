@@ -6,6 +6,7 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -45,7 +46,7 @@ export function TransferSheet({
 
   return (
     <Sheet open={transferId != null} onOpenChange={onOpenChange}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-lg'>
+      <SheetContent className='sm:max-w-lg'>
         <SheetHeader>
           <SheetTitle>
             {t('transferHash', { id: toNumber(transfer?.id ?? transferId) })}
@@ -57,7 +58,7 @@ export function TransferSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className='flex-1 px-4 pb-4'>
+        <SheetBody>
           {isLoading || !transfer ? (
             <div className='space-y-3'>
               {[...Array(4)].map((_, i) => (
@@ -93,7 +94,7 @@ export function TransferSheet({
               </div>
             </>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   )

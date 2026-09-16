@@ -164,7 +164,7 @@ export function Dashboard() {
   }
 
   return (
-    <Main className='flex flex-col gap-8'>
+    <Main>
       <PageHeader
         title={localized(branch?.name) || t('dashboard')}
         description={
@@ -230,7 +230,7 @@ export function Dashboard() {
         />
       </StatStrip>
 
-      <div className='grid gap-10 lg:grid-cols-2'>
+      <div className='grid gap-6 lg:grid-cols-2'>
         <LiveFloor
           sessions={sessions}
           rooms={rooms}

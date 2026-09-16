@@ -82,7 +82,7 @@ function IngredientSummary({
   const u = unit(baseId)
 
   return (
-    <div className='rounded-md border px-3 py-2'>
+    <div className='rounded-lg border px-3 py-2'>
       {/* The item, and the table of bags when the choices decide it */}
       {itemGroups.length === 0 ? (
         <div className='font-medium'>{label(spec.item.fixed)}</div>
@@ -200,7 +200,7 @@ function CustomSlot({
 }) {
   const t = useT()
   return (
-    <div className='rounded-md border border-dashed px-3 py-2'>
+    <div className='rounded-lg border border-dashed px-3 py-2'>
       {slot.hasDefault && (
         <div>
           <span className='text-muted-foreground tabular-nums'>

@@ -44,6 +44,7 @@ import { ErrorState } from '@/components/error-state'
 import { ExportButton } from '@/components/export-button'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { Section } from '@/components/section'
 import { LedgerList } from './components/ledger-list'
 import { PARTNER_ENTRY, partnerEntryLabel, sourceLabel } from './format'
 import { partnerLedgerQueryOptions, partnersQueryOptions } from './queries'
@@ -84,11 +85,11 @@ export function Partners() {
 
   return (
     <>
-      <Main className='flex flex-col gap-6'>
+      <Main>
         <PageHeader
           title={t('navFinancePartners')}
           actions={
-            <Button onClick={() => setAdding(true)}>
+            <Button size='sm' onClick={() => setAdding(true)}>
               <Plus className='me-2 h-4 w-4' />
               {t('addPartner')}
             </Button>
@@ -195,33 +196,29 @@ function PartnerSheet({
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-xl'>
+        <SheetHeader>
           <SheetTitle>
             {isNew ? t('addPartner') : (partner?.name ?? '')}
           </SheetTitle>
         </SheetHeader>
 
         {isNew ? (
-          <section className='space-y-3 border-b p-4'>
+          <Section title={t('details')}>
             <PartnerForm key='new' partner={null} onSaved={onClose} />
-          </section>
+          </Section>
         ) : partner ? (
           <>
-            <section className='space-y-3 border-b p-4'>
-              <h3 className='text-sm font-medium'>{t('details')}</h3>
+            <Section title={t('details')}>
               <PartnerForm
                 key={String(partner.id)}
                 partner={partner}
                 onSaved={() => {}}
               />
-            </section>
-            <section className='space-y-3 border-b p-4'>
-              <div>
-                <h3 className='text-sm font-medium'>{t('account')}</h3>
-              </div>
+            </Section>
+            <Section title={t('account')}>
               <PartnerLedger partner={partner} />
-            </section>
+            </Section>
           </>
         ) : null}
       </SheetContent>

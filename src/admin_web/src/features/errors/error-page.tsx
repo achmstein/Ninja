@@ -6,7 +6,6 @@ import { ErrorState } from '@/components/error-state'
 type ErrorPageProps = {
   code: 401 | 403 | 404 | 500 | 503
   title: TranslationKey
-  message: TranslationKey
 }
 
 /**
@@ -14,7 +13,7 @@ type ErrorPageProps = {
  * the code, what happened, and the way out. 503 offers a reload instead of
  * "go back", since going back lands on the same outage.
  */
-function ErrorPage({ code, title, message }: ErrorPageProps) {
+function ErrorPage({ code, title }: ErrorPageProps) {
   const t = useT()
   const { history } = useRouter()
   const outage = code === 503
@@ -23,7 +22,6 @@ function ErrorPage({ code, title, message }: ErrorPageProps) {
       size='screen'
       code={code}
       title={t(title)}
-      description={t(message)}
       home={!outage}
       actions={
         outage ? (
@@ -41,43 +39,21 @@ function ErrorPage({ code, title, message }: ErrorPageProps) {
 }
 
 export function UnauthorisedError() {
-  return (
-    <ErrorPage
-      code={401}
-      title='unauthorizedTitle'
-      message='unauthorizedMessage'
-    />
-  )
+  return <ErrorPage code={401} title='unauthorizedTitle' />
 }
 
 export function ForbiddenError() {
-  return (
-    <ErrorPage code={403} title='forbiddenTitle' message='forbiddenMessage' />
-  )
+  return <ErrorPage code={403} title='forbiddenTitle' />
 }
 
 export function NotFoundError() {
-  return (
-    <ErrorPage code={404} title='notFoundTitle' message='notFoundMessage' />
-  )
+  return <ErrorPage code={404} title='notFoundTitle' />
 }
 
 export function GeneralError() {
-  return (
-    <ErrorPage
-      code={500}
-      title='generalErrorTitle'
-      message='generalErrorMessage'
-    />
-  )
+  return <ErrorPage code={500} title='generalErrorTitle' />
 }
 
 export function MaintenanceError() {
-  return (
-    <ErrorPage
-      code={503}
-      title='maintenanceTitle'
-      message='maintenanceMessage'
-    />
-  )
+  return <ErrorPage code={503} title='maintenanceTitle' />
 }

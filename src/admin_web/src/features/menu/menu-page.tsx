@@ -1,5 +1,4 @@
 import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { PageTabs } from '@/components/page-tabs'
@@ -21,11 +20,8 @@ type MenuPageProps = {
 export function MenuPage({ tab, actions, fixed, children }: MenuPageProps) {
   const t = useT()
   return (
-    <Main fixed={fixed} className={cn('flex flex-col gap-4')}>
-      <PageHeader
-        title={t('menu')}
-        actions={actions}
-      >
+    <Main fixed={fixed}>
+      <PageHeader title={t('menu')} actions={actions}>
         <PageTabs
           value={tab}
           tabs={[

@@ -3,13 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { getRealmRoles } from '@/config/oidc-config'
-import {
-  ClipboardCheck,
-  PackagePlus,
-  ReceiptText,
-  Trash2,
-  Warehouse,
-} from 'lucide-react'
+import { ClipboardCheck } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { getProfitOptions } from '@/api/finance/@tanstack/react-query.gen'
 import { getVarianceReportOptions } from '@/api/inventory/@tanstack/react-query.gen'
@@ -20,7 +14,6 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   DataTable,
@@ -29,7 +22,10 @@ import {
   dataTableFeatures,
 } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
+import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
+import { PageHeader } from '@/components/page-header'
+import { Stat, StatStrip } from '@/components/stat-strip'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { getReportColumns } from './report-columns'
 
@@ -112,92 +108,70 @@ export function Reports() {
 
   return (
     <>
-      <Main className='flex flex-col gap-4'>
-        <div>
-          <h1 className='text-2xl font-bold tracking-tight'>
-            {t('inventoryReports')}
-          </h1>
-          <p className='text-muted-foreground'>{t('reportsSubtitle')}</p>
-        </div>
-
-        <div className='flex flex-wrap items-center gap-2'>
-          <DateRangePicker
-            search={search}
-            dayWindow={dayWindow}
-            onChange={(next) =>
-              navigate({
-                search: (prev) => ({ ...prev, page: undefined, ...next }),
-              })
-            }
-          />
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => {
-              const now = new Date()
-              const first = new Date(now.getFullYear(), now.getMonth(), 1)
-              const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  page: undefined,
-                  range: 'custom',
-                  from: formatDay(first),
-                  to: formatDay(last),
-                }),
-              })
-            }}
-          >
-            {t('thisMonth')}
-          </Button>
-        </div>
+      <Main>
+        <PageHeader title={t('inventoryReports')}>
+          <div className='flex flex-wrap items-center gap-2'>
+            <DateRangePicker
+              search={search}
+              dayWindow={dayWindow}
+              onChange={(next) =>
+                navigate({
+                  search: (prev) => ({ ...prev, page: undefined, ...next }),
+                })
+              }
+            />
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={() => {
+                const now = new Date()
+                const first = new Date(now.getFullYear(), now.getMonth(), 1)
+                const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    page: undefined,
+                    range: 'custom',
+                    from: formatDay(first),
+                    to: formatDay(last),
+                  }),
+                })
+              }}
+            >
+              {t('thisMonth')}
+            </Button>
+          </div>
+        </PageHeader>
 
         {!dayWindow || report.isPending ? (
-          <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className='h-28' />
-            ))}
-          </div>
+          <Skeleton className='h-24' />
         ) : (
           <>
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-5'>
-              <StatCard
+            <StatStrip>
+              <Stat
                 label={t('openingStock')}
                 value={formatEgp(data?.openingValue)}
-                icon={Warehouse}
               />
-              <StatCard
+              <Stat
                 label={t('purchased')}
                 value={formatEgp(data?.receivedValue)}
-                icon={PackagePlus}
               />
-              <StatCard
+              <Stat
                 label={t('costOfGoodsSold')}
                 value={formatEgp(data?.theoreticalValue)}
-                icon={ReceiptText}
-                hint={
-                  cogsPercent !== null
-                    ? t('percentOfNetSales', { percent: cogsPercent })
-                    : isOwner && !month
-                      ? t('pickAMonthForSalesShare')
-                      : undefined
-                }
+                hint={cogsPercent !== null ? `${cogsPercent}%` : undefined}
               />
-              <StatCard
+              <Stat
                 label={t('waste')}
                 value={formatEgp(data?.wastedValue)}
-                icon={Trash2}
-                className={
-                  toNumber(data?.wastedValue) > 0 ? 'text-destructive' : ''
-                }
+                tone={toNumber(data?.wastedValue) > 0 ? 'negative' : 'default'}
               />
-              <StatCard
+              <Stat
                 label={t('closingStock')}
                 value={formatEgp(data?.closingValue)}
-                icon={Warehouse}
               />
-            </div>
+            </StatStrip>
             <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
               <ClipboardCheck className='h-4 w-4' />
               {t('countVariance')}
@@ -209,7 +183,7 @@ export function Reports() {
               >
                 {formatEgp(countVariance)}
               </span>
-              <span>· {t('countVarianceHint')}</span>
+              <InfoTip>{t('countVarianceHint')}</InfoTip>
             </p>
           </>
         )}
@@ -250,33 +224,4 @@ function calendarMonthOf(search: {
   return isMonth
     ? { year: from.getFullYear(), month: from.getMonth() + 1 }
     : null
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  className,
-  hint,
-}: {
-  label: string
-  value: string
-  icon: React.ComponentType<{ className?: string }>
-  className?: string
-  hint?: string
-}) {
-  return (
-    <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-        <CardTitle className='text-sm font-medium'>{label}</CardTitle>
-        <Icon className='text-muted-foreground h-4 w-4' />
-      </CardHeader>
-      <CardContent>
-        <div className={cn('text-2xl font-bold tabular-nums', className)}>
-          {value}
-        </div>
-        {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
-      </CardContent>
-    </Card>
-  )
 }

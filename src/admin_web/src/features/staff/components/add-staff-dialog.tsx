@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAllBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { InfoTip } from '@/components/info-tip'
 import {
   customersService,
   type StaffRole,
@@ -129,7 +129,7 @@ export function AddStaffDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[440px]'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('addStaffAccount')}</DialogTitle>
         </DialogHeader>

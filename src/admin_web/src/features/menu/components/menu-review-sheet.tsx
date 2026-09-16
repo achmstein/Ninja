@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -181,8 +182,8 @@ export function MenuReviewSheet({
 
   return (
     <Sheet open onOpenChange={(open) => !creating && onOpenChange(open)}>
-      <SheetContent className='flex w-full flex-col gap-0 overflow-y-auto sm:max-w-3xl'>
-        <SheetHeader className='border-b'>
+      <SheetContent className='sm:max-w-3xl'>
+        <SheetHeader>
           <SheetTitle className='flex items-center gap-2'>
             <Sparkles className='text-primary size-4' aria-hidden />
             {t('reviewMenuScan')}
@@ -190,7 +191,7 @@ export function MenuReviewSheet({
         </SheetHeader>
 
         <LocalizedFields>
-          <div className='space-y-4 p-4'>
+          <SheetBody>
             {(proposal.warnings.length > 0 || proposal.notes) && (
               <Alert>
                 <AlertTriangle />
@@ -332,10 +333,10 @@ export function MenuReviewSheet({
                 </section>
               )
             })}
-          </div>
+          </SheetBody>
         </LocalizedFields>
 
-        <SheetFooter className='mt-auto flex-row items-center border-t'>
+        <SheetFooter className='flex-row items-center'>
           <span className='text-muted-foreground me-auto text-sm'>
             {creating
               ? t('creatingItems', {

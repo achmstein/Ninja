@@ -136,7 +136,7 @@ export function BundleDeals() {
               return (
                 <li
                   key={String(bundle.id)}
-                  className='flex flex-col overflow-hidden rounded-lg border hover:shadow-md'
+                  className='flex flex-col overflow-hidden rounded-lg border'
                 >
                   <ImageWithFallback
                     src={

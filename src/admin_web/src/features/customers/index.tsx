@@ -199,7 +199,7 @@ export function Customers() {
   ]
 
   return (
-    <Main fixed className='gap-4'>
+    <Main fixed>
       <PageHeader title={t('customers')}>
         <CustomerStats />
       </PageHeader>
@@ -294,7 +294,7 @@ export function Customers() {
         </div>
 
         {search.customer ? (
-          <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border shadow-xs sm:static sm:z-auto sm:rounded-md'>
+          <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border sm:static sm:z-auto sm:rounded-lg'>
             <CustomerPanel
               key={search.customer}
               customerId={search.customer}
@@ -302,11 +302,8 @@ export function Customers() {
             />
           </div>
         ) : (
-          <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-md border shadow-xs sm:flex'>
-            <EmptyState
-              icon={Users}
-              title={t('selectCustomer')}
-            />
+          <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-lg border sm:flex'>
+            <EmptyState icon={Users} title={t('selectCustomer')} />
           </div>
         )}
       </section>

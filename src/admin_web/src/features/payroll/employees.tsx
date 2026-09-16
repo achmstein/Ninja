@@ -137,11 +137,11 @@ export function Employees() {
 
   return (
     <>
-      <Main className='flex flex-col gap-6'>
+      <Main>
         <PageHeader
           title={t('navPayrollEmployees')}
           actions={
-            <Button onClick={() => open(undefined, true)}>
+            <Button size='sm' onClick={() => open(undefined, true)}>
               <UserPlus className='me-2 h-4 w-4' />
               {t('addEmployee')}
             </Button>

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Play } from 'lucide-react'
-import { toast } from '@/lib/toast'
 import { type ReservationViewModel } from '@/api/spaces'
 import { startSessionMutation } from '@/api/spaces/@tanstack/react-query.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -13,8 +15,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { useLocalized, useT } from '@/lib/i18n'
 import { PlayerModeToggle, type PlayerMode } from './player-mode-toggle'
 
 interface StartReservedDialogProps {
@@ -50,7 +50,7 @@ export function StartReservedDialog({
 
   return (
     <Dialog open={!!session} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[380px]'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Play className='h-5 w-5 rtl:rotate-180' />

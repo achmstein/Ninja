@@ -11,7 +11,6 @@ import { downloadCsv } from '@/lib/csv'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/error-state'
+import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
@@ -166,13 +166,13 @@ export function Profit() {
   )
 
   return (
-    <Main className='flex flex-col gap-6'>
+    <Main>
       <PageHeader
         title={t('navFinanceProfit')}
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='outline' disabled={!p}>
+              <Button size='sm' variant='outline' disabled={!p}>
                 <Download className='me-2 h-4 w-4' />
                 {t('exportCsv')}
               </Button>
@@ -228,9 +228,7 @@ export function Profit() {
               tone={toNumber(p.profit) < 0 ? 'negative' : 'positive'}
               hint={
                 p.margin != null
-                  ? t('marginOfSales', {
-                      pct: percent.format(toNumber(p.margin)),
-                    })
+                  ? percent.format(toNumber(p.margin))
                   : undefined
               }
             />
