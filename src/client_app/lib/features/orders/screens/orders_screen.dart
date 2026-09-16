@@ -368,6 +368,7 @@ class _OrderTile extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  _PaidPill(order: order),
                 ],
               ),
             ],
@@ -487,6 +488,51 @@ class _StatusDot extends StatelessWidget {
       width: 10,
       height: 10,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+/// What the till did with the bill this order was on, projected by Ordering
+/// from Sales' receipt: paid (and on which receipt), on the customer's tab,
+/// refunded, voided — or still unpaid once staff confirmed it. A submitted
+/// or cancelled order carries no pill.
+class _PaidPill extends StatelessWidget {
+  final Order order;
+
+  const _PaidPill({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (order.paidAt == null) {
+      if (order.voidedAt != null) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: FBadge(variant: FBadgeVariant.outline, child: Text(l10n.voided)),
+        );
+      }
+      if (order.status != OrderStatus.confirmed) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: FBadge(variant: FBadgeVariant.outline, child: Text(l10n.unpaid)),
+      );
+    }
+    final receipt = order.receiptNumber != null ? ' ${l10n.receiptShort(order.receiptNumber!)}' : '';
+    final label = order.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(
+        spacing: 4,
+        alignment: WrapAlignment.end,
+        children: [
+          FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt')),
+          if (order.refundedAmount > 0)
+            FBadge(
+              variant: FBadgeVariant.outline,
+              child: Text('${l10n.refunded} −${l10n.priceFormat(order.refundedAmount.toStringAsFixed(2))}'),
+            ),
+        ],
+      ),
     );
   }
 }

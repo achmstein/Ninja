@@ -153,6 +153,13 @@ class RoomSession {
   final List<SessionMember> members;
   final List<SessionSegment> segments;
 
+  /// The till's receipt, projected by Spaces: null while the bill is open
+  final int? receiptNumber;
+  final DateTime? paidAt;
+
+  /// "Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed"
+  final String? paidWith;
+
   RoomSession({
     required this.id,
     required this.roomId,
@@ -169,6 +176,9 @@ class RoomSession {
     this.customerId,
     this.members = const [],
     this.segments = const [],
+    this.receiptNumber,
+    this.paidAt,
+    this.paidWith,
   });
 
   /// When the reservation was created
@@ -196,6 +206,9 @@ class RoomSession {
       id: json['id'] as int,
       roomId: json['roomId'] as int,
       roomName: Room._parseLocalizedText(json['roomName'] ?? 'Room ${json['roomId']}'),
+      receiptNumber: (json['receiptNumber'] as num?)?.toInt(),
+      paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt'] as String) : null,
+      paidWith: json['paidWith'] as String?,
       singleRate: (json['singleRate'] as num?)?.toDouble() ?? 0,
       multiRate: (json['multiRate'] as num?)?.toDouble() ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),

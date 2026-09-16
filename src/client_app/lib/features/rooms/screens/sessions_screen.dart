@@ -437,7 +437,7 @@ class _SessionTileState extends State<SessionTile> {
                   ),
                 ),
               ),
-              _buildStatusBadge(session.status),
+              session.paidAt != null ? _buildPaidBadge(session, l10n) : _buildStatusBadge(session.status),
             ],
           ),
           const SizedBox(height: 8),
@@ -458,6 +458,13 @@ class _SessionTileState extends State<SessionTile> {
                 AppText(
                   session.formattedDuration,
                   style: TextStyle(color: colors.mutedForeground, fontSize: 13),
+                ),
+              ],
+              if (session.totalCost != null) ...[
+                const Spacer(),
+                AppText(
+                  l10n.priceFormat(session.totalCost!.toStringAsFixed(2)),
+                  style: TextStyle(color: colors.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
             ],
@@ -578,6 +585,13 @@ class _SessionTileState extends State<SessionTile> {
         ],
       ),
     );
+  }
+
+  /// Sales' receipt, projected onto the session by Spaces
+  Widget _buildPaidBadge(RoomSession session, AppLocalizations l10n) {
+    final receipt = session.receiptNumber != null ? ' ${l10n.receiptShort(session.receiptNumber!)}' : '';
+    final label = session.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
+    return FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt'));
   }
 
   Widget _buildStatusBadge(SessionStatus status) {

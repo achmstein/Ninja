@@ -92,6 +92,19 @@ class Order {
   final List<OrderItem> items;
   final OrderRating? rating;
 
+  /// The till's receipt, projected by Ordering: null while the bill is open
+  final DateTime? paidAt;
+  final int? receiptNumber;
+
+  /// "Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed"
+  final String? paidWith;
+  final double refundedAmount;
+
+  /// The open bill was voided; it will never be paid
+  final DateTime? voidedAt;
+
+  bool get isPaid => paidAt != null;
+
   Order({
     required this.id,
     required this.date,
@@ -105,6 +118,11 @@ class Order {
     this.loyaltyDiscount = 0,
     this.items = const [],
     this.rating,
+    this.paidAt,
+    this.receiptNumber,
+    this.paidWith,
+    this.refundedAmount = 0,
+    this.voidedAt,
   });
 
   /// Check if order can be rated (must be confirmed and not already rated)
@@ -139,6 +157,11 @@ class Order {
       rating: json['rating'] != null
           ? OrderRating.fromJson(json['rating'] as Map<String, dynamic>)
           : null,
+      paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt'] as String) : null,
+      receiptNumber: (json['receiptNumber'] as num?)?.toInt(),
+      paidWith: json['paidWith'] as String?,
+      refundedAmount: ((json['refundedAmount'] ?? 0) as num).toDouble(),
+      voidedAt: json['voidedAt'] != null ? DateTime.parse(json['voidedAt'] as String) : null,
     );
   }
 }
