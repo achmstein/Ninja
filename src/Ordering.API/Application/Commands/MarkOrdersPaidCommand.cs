@@ -12,7 +12,8 @@ public record MarkOrdersPaidCommand(
     [property: DataMember] IReadOnlyCollection<int> OrderNumbers,
     [property: DataMember] int ReceiptNumber,
     [property: DataMember] string Tender,
-    [property: DataMember] DateTime PaidAt) : IRequest<bool>;
+    [property: DataMember] DateTime PaidAt,
+    [property: DataMember] int? TicketId = null) : IRequest<bool>;
 
 public class MarkOrdersPaidCommandHandler(
     IOrderRepository orderRepository,
@@ -30,7 +31,7 @@ public class MarkOrdersPaidCommandHandler(
                     orderNumber, command.ReceiptNumber);
                 continue;
             }
-            order.MarkPaid(command.ReceiptNumber, command.Tender, command.PaidAt);
+            order.MarkPaid(command.ReceiptNumber, command.Tender, command.PaidAt, command.TicketId);
         }
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }

@@ -33,6 +33,8 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         builder.OwnsOne(t => t.LocationName, b => b.ToJson());
 
         builder.Property(t => t.Label).HasMaxLength(200);
+        // The customers who sat in the room, as a text array
+        builder.Property(t => t.MemberIds);
         builder.Property(t => t.GuestPhone).HasMaxLength(30);
         builder.Property(t => t.SettledBy).HasMaxLength(64);
         builder.Property(t => t.ProvisionalReceiptNumber).HasMaxLength(32);

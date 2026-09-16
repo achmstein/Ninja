@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Clock, Gamepad2, Timer, Users } from 'lucide-react'
 import {
@@ -273,12 +273,18 @@ function SessionTile({ session }: { session: ReservationViewModel }) {
           {localized(session.roomName)}
         </span>
         {session.paidAt != null ? (
-          // Sales' receipt, projected onto the session by Spaces
-          <Badge variant='secondary' className='tabular-nums'>
-            {session.paidWith === 'Account' ? t('onYourTab') : t('paid')}
-            {session.receiptNumber != null &&
-              ` ${t('receiptShort', { number: Number(session.receiptNumber) })}`}
-          </Badge>
+          // Sales' receipt, projected onto the session by Spaces; a tap opens it
+          <Link
+            to='/receipts/$ticketId'
+            params={{ ticketId: String(session.ticketId ?? '') }}
+            disabled={session.ticketId == null}
+          >
+            <Badge variant='secondary' className='tabular-nums'>
+              {session.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+              {session.receiptNumber != null &&
+                ` ${t('receiptShort', { number: Number(session.receiptNumber) })}`}
+            </Badge>
+          </Link>
         ) : (
           status && <Badge className={status.className}>{t(status.key)}</Badge>
         )}

@@ -76,6 +76,7 @@ export type ReservationViewModel = {
     totalCost?: null | number | string;
     receiptNumber?: null | number | string;
     paidAt?: null | string;
+    ticketId?: null | number | string;
     paidWith?: null | string;
     currentPlayerMode?: null | string;
     singleRoundedHours?: number | string;

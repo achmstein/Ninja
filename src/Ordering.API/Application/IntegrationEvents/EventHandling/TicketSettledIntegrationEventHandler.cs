@@ -25,6 +25,7 @@ public class TicketSettledIntegrationEventHandler(
             orderIds,
             @event.ReceiptNumber,
             @event.Tender ?? "Mixed",
-            @event.SettledAt == default ? @event.CreationDate : @event.SettledAt));
+            @event.SettledAt == default ? @event.CreationDate : @event.SettledAt,
+            @event.TicketId));
     }
 }

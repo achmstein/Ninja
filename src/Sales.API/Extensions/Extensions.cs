@@ -63,6 +63,9 @@ public static class Extensions
         // Tickets are assembled from the bus and announce themselves back on it
         builder.AddRabbitMqEventBus("eventbus")
             .AddSubscription<SessionStartedIntegrationEvent, SessionStartedIntegrationEventHandler>()
+            // Who sat in the room: they may read the receipt later
+            .AddSubscription<SessionMemberJoinedIntegrationEvent, SessionMemberJoinedIntegrationEventHandler>()
+            .AddSubscription<SessionCustomerAssignedIntegrationEvent, SessionCustomerAssignedIntegrationEventHandler>()
             .AddSubscription<SessionCompletedIntegrationEvent, SessionCompletedIntegrationEventHandler>()
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
@@ -73,6 +76,8 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
+[JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
+[JsonSerializable(typeof(SessionCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]

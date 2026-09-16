@@ -448,13 +448,16 @@ public class Order
     /// (the bus redelivers); a different receipt overwrites, since an order
     /// can only ever be on one bill.
     /// </summary>
-    public void MarkPaid(int receiptNumber, string tender, DateTime at)
+    public void MarkPaid(int receiptNumber, string tender, DateTime at, int? ticketId = null)
     {
         if (ReceiptNumber == receiptNumber)
             return;
         ReceiptNumber = receiptNumber;
         PaidWith = tender;
         PaidAt = at;
+        // The bill it landed on, when the cashier did not say so up front —
+        // it is what the customer's receipt link opens
+        TicketId ??= ticketId;
     }
 
     /// <summary>The open bill this order was on was voided; a paid order never is.</summary>

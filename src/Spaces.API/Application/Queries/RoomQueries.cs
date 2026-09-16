@@ -149,6 +149,7 @@ public class RoomQueries : IRoomQueries
             EndTime = reservation.EndTime,
             TotalCost = reservation.TotalCost,
             ReceiptNumber = reservation.ReceiptNumber,
+            TicketId = reservation.TicketId,
             PaidAt = reservation.PaidAt,
             PaidWith = reservation.PaidWith,
             CurrentPlayerMode = reservation.CurrentPlayerMode?.ToString(),

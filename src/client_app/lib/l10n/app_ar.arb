@@ -268,5 +268,60 @@
         "type": "int"
       }
     }
+  },
+  "receipt": "الإيصال",
+  "receiptNumber": "إيصال #{number}",
+  "@receiptNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptUnavailable": "الإيصال مش متاح",
+  "serviceCharge": "خدمة {rate}%",
+  "@serviceCharge": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vat": "ضريبة {rate}%",
+  "@vat": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vatIncluded": "شامل ضريبة {rate}%",
+  "@vatIncluded": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "discount": "الخصم",
+  "cash": "كاش",
+  "card": "بطاقة",
+  "instapay": "إنستاباي",
+  "creditNote": "إشعار استرجاع #{number}",
+  "@creditNote": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "changeDue": "الباقي",
+  "taxNumber": "الرقم الضريبي {number}",
+  "@taxNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -43,6 +43,8 @@ public record ReservationViewModel
     /// <summary>The receipt the till settled the time on; null while unpaid.</summary>
     public int? ReceiptNumber { get; init; }
     public DateTime? PaidAt { get; init; }
+    /// <summary>The Sales ticket the time was billed on — what the receipt link opens.</summary>
+    public int? TicketId { get; init; }
     /// <summary>"Cash", "Card", "InstaPay", "Account" (on the customer's tab) or "Mixed".</summary>
     public string? PaidWith { get; init; }
     public string? CurrentPlayerMode { get; init; }

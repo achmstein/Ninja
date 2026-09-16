@@ -131,6 +131,9 @@ namespace Spaces.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal?>("TotalCost")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");

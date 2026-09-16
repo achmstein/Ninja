@@ -591,7 +591,10 @@ class _SessionTileState extends State<SessionTile> {
   Widget _buildPaidBadge(RoomSession session, AppLocalizations l10n) {
     final receipt = session.receiptNumber != null ? ' ${l10n.receiptShort(session.receiptNumber!)}' : '';
     final label = session.paidWith == 'Account' ? l10n.onYourTab : l10n.paid;
-    return FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt'));
+    return GestureDetector(
+      onTap: session.ticketId != null ? () => context.push('/receipts/${session.ticketId}') : null,
+      child: FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt')),
+    );
   }
 
   Widget _buildStatusBadge(SessionStatus status) {

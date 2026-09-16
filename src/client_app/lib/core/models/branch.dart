@@ -10,6 +10,8 @@ class Branch {
   final String dayEndTime;
   final bool isOrderingEnabled;
   final bool isReservationsEnabled;
+  final String? taxNumber;
+  final LocalizedText? receiptFooter;
 
   const Branch({
     required this.id,
@@ -21,6 +23,8 @@ class Branch {
     this.dayEndTime = '05:00',
     this.isOrderingEnabled = true,
     this.isReservationsEnabled = true,
+    this.taxNumber,
+    this.receiptFooter,
   });
 
   int get dayStartHour => int.tryParse(dayStartTime.split(':').first) ?? 17;
@@ -40,6 +44,8 @@ class Branch {
       dayEndTime: json['dayEndTime'] as String? ?? '05:00',
       isOrderingEnabled: json['isOrderingEnabled'] as bool? ?? true,
       isReservationsEnabled: json['isReservationsEnabled'] as bool? ?? true,
+      taxNumber: json['taxNumber'] as String?,
+      receiptFooter: LocalizedText.parseNullable(json['receiptFooter']),
     );
   }
 }

@@ -97,6 +97,46 @@ public record TicketDetail
 }
 
 /// <summary>A credit note as the ticket screen lists it.</summary>
+/// <summary>
+/// A settled bill as the customer who was on it may read it: the receipt the
+/// till printed, without the till's own fields (who rang it up, the shift,
+/// the audit trail).
+/// </summary>
+public record ReceiptView(
+    int TicketId,
+    int ReceiptNumber,
+    int BranchId,
+    string Type,
+    LocalizedText? LocationName,
+    DateTime SettledAt,
+    List<ReceiptLineView> Lines,
+    decimal Subtotal,
+    decimal Discount,
+    decimal? DiscountRate,
+    decimal ServiceCharge,
+    decimal ServiceChargeRate,
+    decimal Vat,
+    decimal VatRate,
+    bool VatIncluded,
+    decimal Total,
+    decimal ChangeGiven,
+    List<ReceiptPaymentView> Payments,
+    List<ReceiptRefundView> Refunds,
+    decimal RefundedTotal);
+
+public record ReceiptLineView(
+    LocalizedText Description,
+    LocalizedText? Details,
+    decimal Qty,
+    decimal UnitPrice,
+    decimal Discount,
+    decimal Total,
+    string? CustomerName);
+
+public record ReceiptPaymentView(string Tender, decimal Amount, string? CustomerName);
+
+public record ReceiptRefundView(int Number, decimal Amount, string Reason, string Tender, DateTime RefundedAt);
+
 public record RefundView(
     int Id,
     int Number,

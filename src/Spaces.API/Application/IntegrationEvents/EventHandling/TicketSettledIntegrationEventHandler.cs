@@ -30,7 +30,7 @@ public class TicketSettledIntegrationEventHandler(
             return;
         }
         var at = @event.SettledAt == default ? @event.CreationDate : @event.SettledAt;
-        if (!reservation.MarkPaid(@event.ReceiptNumber, @event.Tender ?? "Mixed", at))
+        if (!reservation.MarkPaid(@event.ReceiptNumber, @event.Tender ?? "Mixed", at, @event.TicketId))
         {
             return;
         }

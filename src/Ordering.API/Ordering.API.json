@@ -1666,6 +1666,15 @@
             ],
             "format": "date-time"
           },
+          "ticketId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "rating": {
             "oneOf": [
               {
@@ -1986,6 +1995,15 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "ticketId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "roomName": {
             "oneOf": [

@@ -103,6 +103,9 @@ class Order {
   /// The open bill was voided; it will never be paid
   final DateTime? voidedAt;
 
+  /// The Sales ticket the order landed on — what the receipt opens
+  final int? ticketId;
+
   bool get isPaid => paidAt != null;
 
   Order({
@@ -123,6 +126,7 @@ class Order {
     this.paidWith,
     this.refundedAmount = 0,
     this.voidedAt,
+    this.ticketId,
   });
 
   /// Check if order can be rated (must be confirmed and not already rated)
@@ -162,6 +166,7 @@ class Order {
       paidWith: json['paidWith'] as String?,
       refundedAmount: ((json['refundedAmount'] ?? 0) as num).toDouble(),
       voidedAt: json['voidedAt'] != null ? DateTime.parse(json['voidedAt'] as String) : null,
+      ticketId: (json['ticketId'] as num?)?.toInt(),
     );
   }
 }

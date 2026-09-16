@@ -857,4 +857,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String receiptShort(int number) {
     return '#$number';
   }
+
+  @override
+  String get receipt => 'Receipt';
+
+  @override
+  String receiptNumber(int number) {
+    return 'Receipt #$number';
+  }
+
+  @override
+  String get receiptUnavailable => 'Receipt unavailable';
+
+  @override
+  String serviceCharge(String rate) {
+    return 'Service $rate%';
+  }
+
+  @override
+  String vat(String rate) {
+    return 'VAT $rate%';
+  }
+
+  @override
+  String vatIncluded(String rate) {
+    return 'Includes VAT $rate%';
+  }
+
+  @override
+  String get discount => 'Discount';
+
+  @override
+  String get cash => 'Cash';
+
+  @override
+  String get card => 'Card';
+
+  @override
+  String get instapay => 'InstaPay';
+
+  @override
+  String creditNote(int number) {
+    return 'Credit note #$number';
+  }
+
+  @override
+  String get changeDue => 'Change';
+
+  @override
+  String taxNumber(String number) {
+    return 'Tax no. $number';
+  }
 }

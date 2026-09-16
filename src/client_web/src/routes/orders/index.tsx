@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { CircleAlert, Loader2, ReceiptText, Star } from 'lucide-react'
 import {
@@ -425,10 +425,20 @@ function PaidPill({ order }: { order: OrderSummary }) {
       : ''
   return (
     <div className='mt-1 flex flex-wrap items-center justify-end gap-1'>
-      <Badge variant='secondary' className='tabular-nums'>
-        {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
-        {receipt}
-      </Badge>
+      {/* The receipt is a tap away once there is one */}
+      {order.ticketId != null ? (
+        <Link to='/receipts/$ticketId' params={{ ticketId: String(order.ticketId) }}>
+          <Badge variant='secondary' className='tabular-nums'>
+            {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+            {receipt}
+          </Badge>
+        </Link>
+      ) : (
+        <Badge variant='secondary' className='tabular-nums'>
+          {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+          {receipt}
+        </Badge>
+      )}
       {refunded > 0 && (
         <Badge variant='outline' className='text-destructive tabular-nums'>
           {t('refunded')} −{price(refunded)}

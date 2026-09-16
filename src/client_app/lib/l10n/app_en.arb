@@ -501,5 +501,60 @@
         "type": "int"
       }
     }
+  },
+  "receipt": "Receipt",
+  "receiptNumber": "Receipt #{number}",
+  "@receiptNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptUnavailable": "Receipt unavailable",
+  "serviceCharge": "Service {rate}%",
+  "@serviceCharge": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vat": "VAT {rate}%",
+  "@vat": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "vatIncluded": "Includes VAT {rate}%",
+  "@vatIncluded": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "discount": "Discount",
+  "cash": "Cash",
+  "card": "Card",
+  "instapay": "InstaPay",
+  "creditNote": "Credit note #{number}",
+  "@creditNote": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "changeDue": "Change",
+  "taxNumber": "Tax no. {number}",
+  "@taxNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -1627,6 +1627,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'#{number}'**
   String receiptShort(int number);
+
+  /// No description provided for @receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get receipt;
+
+  /// No description provided for @receiptNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt #{number}'**
+  String receiptNumber(int number);
+
+  /// No description provided for @receiptUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt unavailable'**
+  String get receiptUnavailable;
+
+  /// No description provided for @serviceCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Service {rate}%'**
+  String serviceCharge(String rate);
+
+  /// No description provided for @vat.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT {rate}%'**
+  String vat(String rate);
+
+  /// No description provided for @vatIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes VAT {rate}%'**
+  String vatIncluded(String rate);
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get discount;
+
+  /// No description provided for @cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get cash;
+
+  /// No description provided for @card.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get card;
+
+  /// No description provided for @instapay.
+  ///
+  /// In en, this message translates to:
+  /// **'InstaPay'**
+  String get instapay;
+
+  /// No description provided for @creditNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit note #{number}'**
+  String creditNote(int number);
+
+  /// No description provided for @changeDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get changeDue;
+
+  /// No description provided for @taxNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax no. {number}'**
+  String taxNumber(String number);
 }
 
 class _AppLocalizationsDelegate

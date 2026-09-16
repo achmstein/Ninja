@@ -1,3 +1,4 @@
+using System.Security.Claims;
 #nullable enable
 using Chillax.Sales.API.Application.Commands;
 using Chillax.Sales.API.Application.Queries;
@@ -15,6 +16,18 @@ public static class TicketsApi
             .MapGroup("api/tickets")
             .HasApiVersion(1.0)
             .RequireAuthorization("Pos");
+
+        // The customer's side of a bill: anyone signed in may ask for a
+        // receipt, and gets it only if they were on that bill
+        var receipts = app.NewVersionedApi("Receipts")
+            .MapGroup("api/tickets")
+            .HasApiVersion(1.0)
+            .RequireAuthorization();
+
+        receipts.MapGet("/{id:int}/receipt", GetReceipt)
+            .WithName("GetTicketReceipt")
+            .WithSummary("A settled bill's receipt, for a customer who was on it")
+            .WithDescription("The customer's own copy of the printed receipt. Allowed for whoever sat in the room, ordered a line, or paid a share; 404 until the bill is settled.");
 
         api.MapGet("/open", GetOpenTickets)
             .WithName("GetOpenTickets")
@@ -267,6 +280,50 @@ public static class TicketsApi
         {
             return TypedResults.BadRequest(ex.Message);
         }
+    }
+
+    public static async Task<Results<Ok<ReceiptView>, NotFound, ForbidHttpResult>> GetReceipt(
+        int id,
+        ClaimsPrincipal user,
+        [FromServices] ITicketRepository tickets,
+        [FromServices] ITicketQueries queries)
+    {
+        var userId = user.GetUserId();
+        var ticket = await tickets.GetAsync(id);
+        if (ticket is null || ticket.SettledAt is null)
+        {
+            return TypedResults.NotFound();
+        }
+        if (userId is null || !ticket.Involves(userId))
+        {
+            return TypedResults.Forbid();
+        }
+        var detail = await queries.GetTicketAsync(id);
+        if (detail?.ReceiptNumber is null || detail.SettledAt is null)
+        {
+            return TypedResults.NotFound();
+        }
+        return TypedResults.Ok(new ReceiptView(
+            detail.Id,
+            detail.ReceiptNumber.Value,
+            detail.BranchId,
+            detail.Type,
+            detail.LocationName,
+            detail.SettledAt.Value,
+            detail.Lines.Select(l => new ReceiptLineView(l.Description, l.Details, l.Qty, l.UnitPrice, l.Discount, l.Total, l.CustomerName)).ToList(),
+            detail.Subtotal,
+            detail.Discount,
+            detail.DiscountRate,
+            detail.ServiceCharge,
+            detail.ServiceChargeRate,
+            detail.Vat,
+            detail.VatRate,
+            detail.VatIncluded,
+            detail.Total,
+            detail.ChangeGiven,
+            detail.Payments.Select(p => new ReceiptPaymentView(p.Tender, p.Amount, p.CustomerName)).ToList(),
+            detail.Refunds.Select(r => new ReceiptRefundView(r.Number, r.Amount, r.Reason, r.Tender, r.RefundedAt)).ToList(),
+            detail.RefundedTotal));
     }
 
     public static async Task<Results<Ok<TicketDetail>, NotFound>> GetTicket(

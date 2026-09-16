@@ -849,4 +849,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String receiptShort(int number) {
     return '#$number';
   }
+
+  @override
+  String get receipt => 'الإيصال';
+
+  @override
+  String receiptNumber(int number) {
+    return 'إيصال #$number';
+  }
+
+  @override
+  String get receiptUnavailable => 'الإيصال مش متاح';
+
+  @override
+  String serviceCharge(String rate) {
+    return 'خدمة $rate%';
+  }
+
+  @override
+  String vat(String rate) {
+    return 'ضريبة $rate%';
+  }
+
+  @override
+  String vatIncluded(String rate) {
+    return 'شامل ضريبة $rate%';
+  }
+
+  @override
+  String get discount => 'الخصم';
+
+  @override
+  String get cash => 'كاش';
+
+  @override
+  String get card => 'بطاقة';
+
+  @override
+  String get instapay => 'إنستاباي';
+
+  @override
+  String creditNote(int number) {
+    return 'إشعار استرجاع #$number';
+  }
+
+  @override
+  String get changeDue => 'الباقي';
+
+  @override
+  String taxNumber(String number) {
+    return 'الرقم الضريبي $number';
+  }
 }

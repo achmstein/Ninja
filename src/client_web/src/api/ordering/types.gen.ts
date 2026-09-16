@@ -107,6 +107,7 @@ export type Order = {
     paidWith?: null | string;
     refundedAmount?: number | string;
     voidedAt?: null | string;
+    ticketId?: null | number | string;
     rating?: null | OrderRatingDto;
 };
 
@@ -171,6 +172,7 @@ export type OrderSummary = {
     paidWith?: null | string;
     refundedAmount?: number | string;
     voidedAt?: null | string;
+    ticketId?: null | number | string;
     roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;

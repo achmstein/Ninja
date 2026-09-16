@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -525,7 +526,11 @@ class _PaidPill extends StatelessWidget {
         spacing: 4,
         alignment: WrapAlignment.end,
         children: [
-          FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt')),
+          // The receipt is a tap away once there is one
+          GestureDetector(
+            onTap: order.ticketId != null ? () => context.push('/receipts/${order.ticketId}') : null,
+            child: FBadge(variant: FBadgeVariant.secondary, child: Text('$label$receipt')),
+          ),
           if (order.refundedAmount > 0)
             FBadge(
               variant: FBadgeVariant.outline,

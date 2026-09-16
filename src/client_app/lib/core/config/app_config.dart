@@ -13,6 +13,7 @@ class AppConfig {
   // API endpoints (through BFF) - trailing slash required for Dio path resolution
   static String get catalogApiUrl => '$bffBaseUrl/api/catalog/';
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
+  static String get ticketsApiUrl => '$bffBaseUrl/api/tickets/';
   static String get roomsApiUrl => '$bffBaseUrl/api/rooms/';
   static String get sessionsApiUrl => '$bffBaseUrl/api/sessions/';
   static String get tablesApiUrl => '$bffBaseUrl/api/tables/';

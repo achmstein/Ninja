@@ -45,6 +45,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             PaidWith = order.PaidWith,
             RefundedAmount = order.RefundedAmount,
             VoidedAt = order.VoidedAt,
+            TicketId = order.TicketId,
             OrderItems = order.OrderItems.Select(oi => new Orderitem
             {
                 ProductName = oi.ProductName,
@@ -118,6 +119,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
+                TicketId = o.TicketId,
                 RoomName = o.RoomName,
                 TableId = o.TableId,
                 TableName = o.TableName,
@@ -192,6 +194,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
+                TicketId = o.TicketId,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
@@ -303,6 +306,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PaidWith = o.PaidWith,
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
+                TicketId = o.TicketId,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),

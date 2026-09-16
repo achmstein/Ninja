@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../auth/auth_service.dart';
+import '../../features/receipts/screens/receipt_screen.dart';
 import '../../features/menu/screens/menu_screen.dart';
 import '../../features/cart/screens/cart_screen.dart';
 import '../../features/orders/screens/orders_screen.dart';
@@ -192,6 +193,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Transactions route (separate from shell for push navigation)
+      GoRoute(
+        path: '/receipts/:ticketId',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: ReceiptScreen(ticketId: int.parse(state.pathParameters['ticketId']!)),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+
       GoRoute(
         path: '/transactions',
         pageBuilder: (context, state) => CustomTransitionPage(

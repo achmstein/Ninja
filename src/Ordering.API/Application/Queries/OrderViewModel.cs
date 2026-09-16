@@ -57,6 +57,8 @@ public record Order
     public decimal RefundedAmount { get; init; }
     /// <summary>When the open bill it was on was voided; it will never be paid.</summary>
     public DateTime? VoidedAt { get; init; }
+    /// <summary>The Sales ticket the order landed on — what the receipt link opens.</summary>
+    public int? TicketId { get; init; }
     public OrderRatingDto? Rating { get; init; }
 }
 
@@ -132,6 +134,8 @@ public record OrderSummary
     public decimal RefundedAmount { get; init; }
     /// <summary>When the open bill it was on was voided; it will never be paid.</summary>
     public DateTime? VoidedAt { get; init; }
+    /// <summary>The Sales ticket the order landed on — what the receipt link opens.</summary>
+    public int? TicketId { get; init; }
     public LocalizedText? RoomName { get; init; }
     /// <summary>The room session the order was placed into, when ordered from a room.</summary>
     public int? SessionId { get; init; }

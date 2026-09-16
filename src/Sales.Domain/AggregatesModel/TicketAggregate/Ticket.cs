@@ -24,6 +24,14 @@ public class Ticket : Entity, IAggregateRoot
     public int? SessionId { get; private set; }
 
     /// <summary>
+    /// The customers who sat in the room: the session's customer and everyone
+    /// who joined by its QR, noted from Spaces' events. Together with the
+    /// customers on the lines and payments, these are the people the bill
+    /// belongs to — the ones who may read its receipt.
+    /// </summary>
+    public List<string> MemberIds { get; private set; } = [];
+
+    /// <summary>
     /// When the Room ticket's session stopped running: its time landed, or it
     /// was cancelled. Null while it runs — and while it runs the ticket can be
     /// neither settled nor voided, because the time is not on the bill yet.
@@ -474,6 +482,24 @@ public class Ticket : Entity, IAggregateRoot
     /// the caller's ceiling as a share of the bill — the branch's cashier cap,
     /// or null for an owner, who has none.
     /// </summary>
+    /// <summary>Note a customer who sat in the room. Returns whether they were new.</summary>
+    public bool AddMember(string customerId)
+    {
+        if (string.IsNullOrWhiteSpace(customerId) || MemberIds.Contains(customerId))
+            return false;
+        MemberIds.Add(customerId);
+        return true;
+    }
+
+    /// <summary>
+    /// Whether this customer was on the bill: in the room, on a line, or
+    /// paying a share — the test for reading the receipt.
+    /// </summary>
+    public bool Involves(string customerId)
+        => MemberIds.Contains(customerId)
+           || _lines.Any(l => l.CustomerId == customerId)
+           || _payments.Any(p => p.CustomerId == customerId);
+
     public void ApplyDiscount(decimal? rate, decimal? amount, string? reason, string by, decimal? maxRate)
     {
         EnsureOpen();

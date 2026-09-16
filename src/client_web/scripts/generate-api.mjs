@@ -11,6 +11,7 @@ const services = [
   ['loyalty', '../Loyalty.API/Loyalty.API.json'],
   ['branch', '../Branch.API/Branch.API.json'],
   ['accounts', '../Accounts.API/Accounts.API.json'],
+  ['sales', '../Sales.API/Sales.API.json'],
 ]
 
 for (const [name, input] of services) {

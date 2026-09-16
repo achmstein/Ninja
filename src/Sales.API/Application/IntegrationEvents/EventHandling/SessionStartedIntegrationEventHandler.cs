@@ -25,6 +25,10 @@ public class SessionStartedIntegrationEventHandler(
         if (existing is not null)
         {
             logger.LogInformation("Ticket {TicketId} already open for session {SessionId}", existing.Id, @event.ReservationId);
+            if (@event.CustomerId is not null && existing.AddMember(@event.CustomerId))
+            {
+                await ticketRepository.UnitOfWork.SaveEntitiesAsync();
+            }
             return;
         }
 
@@ -34,6 +38,11 @@ public class SessionStartedIntegrationEventHandler(
             @event.RoomName,
             @event.BranchId);
 
+        // The reserving customer sat in the room from the start
+        if (@event.CustomerId is not null)
+        {
+            ticket.AddMember(@event.CustomerId);
+        }
         ticketRepository.Add(ticket);
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
 

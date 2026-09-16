@@ -160,6 +160,9 @@ class RoomSession {
   /// "Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed"
   final String? paidWith;
 
+  /// The Sales ticket the time was billed on — what the receipt opens
+  final int? ticketId;
+
   RoomSession({
     required this.id,
     required this.roomId,
@@ -179,6 +182,7 @@ class RoomSession {
     this.receiptNumber,
     this.paidAt,
     this.paidWith,
+    this.ticketId,
   });
 
   /// When the reservation was created
@@ -209,6 +213,7 @@ class RoomSession {
       receiptNumber: (json['receiptNumber'] as num?)?.toInt(),
       paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt'] as String) : null,
       paidWith: json['paidWith'] as String?,
+      ticketId: (json['ticketId'] as num?)?.toInt(),
       singleRate: (json['singleRate'] as num?)?.toDouble() ?? 0,
       multiRate: (json['multiRate'] as num?)?.toDouble() ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),

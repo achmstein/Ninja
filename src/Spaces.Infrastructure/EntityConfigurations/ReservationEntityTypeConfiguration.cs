@@ -45,6 +45,7 @@ class ReservationEntityTypeConfiguration : IEntityTypeConfiguration<Reservation>
 
         // Projected from Sales' receipt: what the customer's session list shows as paid
         builder.Property(r => r.ReceiptNumber);
+        builder.Property(r => r.TicketId);
         builder.Property(r => r.PaidAt);
         builder.Property(r => r.PaidWith)
             .HasMaxLength(20);

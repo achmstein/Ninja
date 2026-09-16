@@ -83,6 +83,9 @@ public class Reservation : Entity, IAggregateRoot
 
     public DateTime? PaidAt { get; private set; }
 
+    /// <summary>The Sales ticket the time was billed on — what the receipt link opens.</summary>
+    public int? TicketId { get; private set; }
+
     /// <summary>"Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed".</summary>
     public string? PaidWith { get; private set; }
 
@@ -288,13 +291,14 @@ public class Reservation : Entity, IAggregateRoot
     /// The receipt that covered this session. Idempotent on the receipt
     /// number (the bus redelivers); returns whether anything changed.
     /// </summary>
-    public bool MarkPaid(int receiptNumber, string tender, DateTime at)
+    public bool MarkPaid(int receiptNumber, string tender, DateTime at, int? ticketId = null)
     {
         if (ReceiptNumber == receiptNumber)
             return false;
         ReceiptNumber = receiptNumber;
         PaidWith = tender;
         PaidAt = at;
+        TicketId = ticketId ?? TicketId;
         return true;
     }
 
