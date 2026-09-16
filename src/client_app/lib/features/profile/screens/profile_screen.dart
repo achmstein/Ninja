@@ -239,8 +239,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     showAdaptiveDialog(
       context: context,
       builder: (context) => FDialog(
-        title: AppText(l10n.signOut, style: TextStyle(fontWeight: FontWeight.bold)),
-        body: AppText(l10n.signOutConfirmation),
+        title: AppText(l10n.signOutQuestion, style: TextStyle(fontWeight: FontWeight.bold)),
         direction: Axis.horizontal,
         actions: [
           FButton(
@@ -493,15 +492,6 @@ class _AboutSheet extends StatelessWidget {
                       fontSize: 14,
                       color: colors.mutedForeground,
                       letterSpacing: Localizations.localeOf(context).languageCode == 'ar' ? 0 : 2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AppText(
-                    l10n.aboutDescription,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colors.mutedForeground,
                     ),
                   ),
                   const SizedBox(height: 16),

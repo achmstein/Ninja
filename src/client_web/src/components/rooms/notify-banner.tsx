@@ -58,9 +58,6 @@ export function NotifyBanner() {
       <Bell className='h-5 w-5 shrink-0' />
       <div className='min-w-0 flex-1'>
         <div className='text-sm font-bold'>{t('allRoomsBusy')}</div>
-        <div className='text-muted-foreground text-xs'>
-          {t('getNotifiedWhenAvailable')}
-        </div>
       </div>
       {busy || subscriptionQuery.isLoading ? (
         <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />

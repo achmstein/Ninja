@@ -145,7 +145,7 @@ class _TodaySessionsList extends StatelessWidget {
         }).toList();
 
         if (sessions.isEmpty) {
-          return _buildEmpty(l10n.noSessionsToday, l10n.reserveRoomToStart);
+          return _buildEmpty(l10n.noSessionsToday);
         }
 
         return RefreshIndicator(
@@ -182,7 +182,7 @@ class _TodaySessionsList extends StatelessWidget {
     );
   }
 
-  Widget _buildEmpty(String message, String subtitle) {
+  Widget _buildEmpty(String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -190,8 +190,6 @@ class _TodaySessionsList extends StatelessWidget {
           Icon(FIcons.gamepad2, size: 80, color: colors.mutedForeground),
           const SizedBox(height: 16),
           AppText(message, style: TextStyle(fontSize: 18, color: colors.foreground)),
-          const SizedBox(height: 8),
-          AppText(subtitle, style: TextStyle(color: colors.mutedForeground)),
         ],
       ),
     );
@@ -242,8 +240,6 @@ class _HistorySessionsList extends ConsumerWidget {
                 Icon(FIcons.gamepad2, size: 80, color: colors.mutedForeground),
                 const SizedBox(height: 16),
                 AppText(l10n.noSessionsYet, style: TextStyle(fontSize: 18, color: colors.foreground)),
-                const SizedBox(height: 8),
-                AppText(l10n.reserveRoomToStart, style: TextStyle(color: colors.mutedForeground)),
               ],
             ),
           );

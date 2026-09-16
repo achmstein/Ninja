@@ -138,15 +138,6 @@ class _EmptyState extends StatelessWidget {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            l10n.noFavoritesDescription,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: colors.mutedForeground,
-            ),
-          ),
           const SizedBox(height: 24),
           FButton(
             onPress: () => context.go('/menu'),

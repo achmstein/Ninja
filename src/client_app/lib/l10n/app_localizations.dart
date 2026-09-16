@@ -122,12 +122,6 @@ abstract class AppLocalizations {
   /// **'Sign In'**
   String get signIn;
 
-  /// No description provided for @signUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign Up'**
-  String get signUp;
-
   /// No description provided for @register.
   ///
   /// In en, this message translates to:
@@ -139,18 +133,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign Out'**
   String get signOut;
-
-  /// No description provided for @username.
-  ///
-  /// In en, this message translates to:
-  /// **'Username'**
-  String get username;
-
-  /// No description provided for @usernameOrEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Username or Email'**
-  String get usernameOrEmail;
 
   /// No description provided for @email.
   ///
@@ -176,18 +158,6 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get name;
 
-  /// No description provided for @enterUsername.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your username'**
-  String get enterUsername;
-
-  /// No description provided for @enterUsernameOrEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your username or email'**
-  String get enterUsernameOrEmail;
-
   /// No description provided for @enterEmail.
   ///
   /// In en, this message translates to:
@@ -211,12 +181,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm your password'**
   String get confirmYourPassword;
-
-  /// No description provided for @chooseUsername.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a username'**
-  String get chooseUsername;
 
   /// No description provided for @yourDisplayName.
   ///
@@ -440,12 +404,6 @@ abstract class AppLocalizations {
   /// **'Your cart is empty'**
   String get yourCartIsEmpty;
 
-  /// No description provided for @addItemsFromMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Add items from the menu'**
-  String get addItemsFromMenu;
-
   /// No description provided for @orderNoteOptional.
   ///
   /// In en, this message translates to:
@@ -500,12 +458,6 @@ abstract class AppLocalizations {
   /// **'Clear Cart'**
   String get clearCart;
 
-  /// No description provided for @removeAllItemsFromCart.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove all items from your cart?'**
-  String get removeAllItemsFromCart;
-
   /// No description provided for @orderPlacedSuccessfully.
   ///
   /// In en, this message translates to:
@@ -536,12 +488,6 @@ abstract class AppLocalizations {
   /// **'No orders today'**
   String get noOrdersToday;
 
-  /// No description provided for @orderFromMenuToStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Order from the menu to get started'**
-  String get orderFromMenuToStart;
-
   /// No description provided for @todayOrdersCount.
   ///
   /// In en, this message translates to:
@@ -554,59 +500,17 @@ abstract class AppLocalizations {
   /// **'Total: {amount}'**
   String totalSpent(String amount);
 
-  /// No description provided for @orderStatusPending.
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get orderStatusPending;
-
-  /// No description provided for @orderStatusConfirmed.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirmed'**
-  String get orderStatusConfirmed;
-
-  /// No description provided for @orderStatusCancelled.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancelled'**
-  String get orderStatusCancelled;
-
   /// No description provided for @failedToLoadOrders.
   ///
   /// In en, this message translates to:
   /// **'Failed to load orders'**
   String get failedToLoadOrders;
 
-  /// No description provided for @pullDownToRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Pull down to retry'**
-  String get pullDownToRetry;
-
   /// No description provided for @noOrdersYet.
   ///
   /// In en, this message translates to:
   /// **'No orders yet'**
   String get noOrdersYet;
-
-  /// No description provided for @previousOrdersWillAppearHere.
-  ///
-  /// In en, this message translates to:
-  /// **'Your order history will appear here'**
-  String get previousOrdersWillAppearHere;
-
-  /// No description provided for @orderNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Order #{id}'**
-  String orderNumber(String id);
-
-  /// No description provided for @noItems.
-  ///
-  /// In en, this message translates to:
-  /// **'No items'**
-  String get noItems;
 
   /// No description provided for @yourRating.
   ///
@@ -637,12 +541,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load rooms'**
   String get failedToLoadRooms;
-
-  /// No description provided for @needSomething.
-  ///
-  /// In en, this message translates to:
-  /// **'Need something?'**
-  String get needSomething;
 
   /// No description provided for @callWaiter.
   ///
@@ -698,24 +596,6 @@ abstract class AppLocalizations {
   /// **'Cancel Reservation?'**
   String get cancelReservationQuestion;
 
-  /// No description provided for @confirmCancelReservation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to cancel your reservation?'**
-  String get confirmCancelReservation;
-
-  /// No description provided for @noKeep.
-  ///
-  /// In en, this message translates to:
-  /// **'No, Keep'**
-  String get noKeep;
-
-  /// No description provided for @yesCancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Yes, Cancel'**
-  String get yesCancel;
-
   /// No description provided for @reservationCancelled.
   ///
   /// In en, this message translates to:
@@ -733,18 +613,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All rooms are currently busy'**
   String get allRoomsBusy;
-
-  /// No description provided for @getNotifiedWhenAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Get notified when a room becomes available'**
-  String get getNotifiedWhenAvailable;
-
-  /// No description provided for @willBeNotifiedWhenAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'You will be notified when a room is available'**
-  String get willBeNotifiedWhenAvailable;
 
   /// No description provided for @unsubscribedFromNotifications.
   ///
@@ -764,35 +632,17 @@ abstract class AppLocalizations {
   /// **'Failed to subscribe'**
   String get failedToSubscribe;
 
-  /// No description provided for @notifyMe.
-  ///
-  /// In en, this message translates to:
-  /// **'Notify Me'**
-  String get notifyMe;
-
   /// No description provided for @fifteenMinutesToArrive.
   ///
   /// In en, this message translates to:
   /// **'10 minutes to arrive'**
   String get fifteenMinutesToArrive;
 
-  /// No description provided for @reservationCancelledIfNoCheckIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Your reservation will be automatically cancelled if you don\'t check in within 10 minutes.'**
-  String get reservationCancelledIfNoCheckIn;
-
   /// No description provided for @reserveRoomName.
   ///
   /// In en, this message translates to:
   /// **'Reserve {roomName}'**
   String reserveRoomName(String roomName);
-
-  /// No description provided for @perHour.
-  ///
-  /// In en, this message translates to:
-  /// **'/hr'**
-  String get perHour;
 
   /// No description provided for @reserveNow.
   ///
@@ -926,12 +776,6 @@ abstract class AppLocalizations {
   /// **'Version {version}'**
   String version(String version);
 
-  /// No description provided for @signOutConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to sign out?'**
-  String get signOutConfirmation;
-
   /// No description provided for @needHelpContactUs.
   ///
   /// In en, this message translates to:
@@ -943,12 +787,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'5:00 PM - 5:00 AM'**
   String get supportHours;
-
-  /// No description provided for @aboutDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Order delicious food & drinks, or reserve a PlayStation room for an amazing gaming experience.'**
-  String get aboutDescription;
 
   /// No description provided for @notifications.
   ///
@@ -962,23 +800,11 @@ abstract class AppLocalizations {
   /// **'Order Status Updates'**
   String get orderStatusUpdates;
 
-  /// No description provided for @orderStatusUpdatesDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Get notified when your order status changes'**
-  String get orderStatusUpdatesDescription;
-
   /// No description provided for @promotionsAndOffers.
   ///
   /// In en, this message translates to:
   /// **'Promotions & Offers'**
   String get promotionsAndOffers;
-
-  /// No description provided for @promotionsDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Receive special deals and discounts'**
-  String get promotionsDescription;
 
   /// No description provided for @appearance.
   ///
@@ -1010,12 +836,6 @@ abstract class AppLocalizations {
   /// **'Delete Account'**
   String get deleteAccount;
 
-  /// No description provided for @deleteAccountConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete your account? This action cannot be undone.'**
-  String get deleteAccountConfirmation;
-
   /// No description provided for @accountDeletedSuccessfully.
   ///
   /// In en, this message translates to:
@@ -1040,35 +860,17 @@ abstract class AppLocalizations {
   /// **'Light'**
   String get light;
 
-  /// No description provided for @lightThemeDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Always use light theme'**
-  String get lightThemeDescription;
-
   /// No description provided for @dark.
   ///
   /// In en, this message translates to:
   /// **'Dark'**
   String get dark;
 
-  /// No description provided for @darkThemeDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Always use dark theme'**
-  String get darkThemeDescription;
-
   /// No description provided for @systemDefault.
   ///
   /// In en, this message translates to:
   /// **'System Default'**
   String get systemDefault;
-
-  /// No description provided for @systemDefaultDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Follow your device settings'**
-  String get systemDefaultDescription;
 
   /// No description provided for @language.
   ///
@@ -1172,12 +974,6 @@ abstract class AppLocalizations {
   /// **'No loyalty account yet'**
   String get noLoyaltyAccountYet;
 
-  /// No description provided for @makePurchaseToEarn.
-  ///
-  /// In en, this message translates to:
-  /// **'Make a purchase to start earning points!'**
-  String get makePurchaseToEarn;
-
   /// No description provided for @noTransactionsYet.
   ///
   /// In en, this message translates to:
@@ -1250,24 +1046,6 @@ abstract class AppLocalizations {
   /// **'Credit Balance'**
   String get creditBalance;
 
-  /// No description provided for @pleasePayAtCounter.
-  ///
-  /// In en, this message translates to:
-  /// **'Please pay at the counter'**
-  String get pleasePayAtCounter;
-
-  /// No description provided for @willBeAppliedToNextPurchase.
-  ///
-  /// In en, this message translates to:
-  /// **'Will be applied to your next purchase'**
-  String get willBeAppliedToNextPurchase;
-
-  /// No description provided for @noOutstandingBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'No outstanding balance'**
-  String get noOutstandingBalance;
-
   /// No description provided for @transactions.
   ///
   /// In en, this message translates to:
@@ -1297,12 +1075,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join our Loyalty Program'**
   String get joinOurLoyaltyProgram;
-
-  /// No description provided for @earnPointsDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Earn points on every purchase and unlock exclusive rewards!'**
-  String get earnPointsDescription;
 
   /// No description provided for @joinNow.
   ///
@@ -1418,12 +1190,6 @@ abstract class AppLocalizations {
   /// **'Failed to change password. Please try again.'**
   String get failedToChangePassword;
 
-  /// No description provided for @supportEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'support@chillax.com'**
-  String get supportEmail;
-
   /// No description provided for @supportPhone.
   ///
   /// In en, this message translates to:
@@ -1460,23 +1226,11 @@ abstract class AppLocalizations {
   /// **'No favorites yet'**
   String get noFavoritesYet;
 
-  /// No description provided for @noFavoritesDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Items you love will appear here'**
-  String get noFavoritesDescription;
-
   /// No description provided for @createStrongPassword.
   ///
   /// In en, this message translates to:
   /// **'Create a strong password'**
   String get createStrongPassword;
-
-  /// No description provided for @passwordRequirements.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password must be at least 8 characters long. We recommend using a mix of letters, numbers, and symbols.'**
-  String get passwordRequirements;
 
   /// No description provided for @failedToLoadSessions.
   ///
@@ -1489,12 +1243,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sessions yet'**
   String get noSessionsYet;
-
-  /// No description provided for @reserveRoomToStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Reserve a room to get started'**
-  String get reserveRoomToStart;
 
   /// No description provided for @durationLabel.
   ///
@@ -1513,12 +1261,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your phone number'**
   String get enterPhoneNumber;
-
-  /// No description provided for @yourPhoneNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Your phone number'**
-  String get yourPhoneNumber;
 
   /// No description provided for @transactionTypePurchase.
   ///
@@ -1634,12 +1376,6 @@ abstract class AppLocalizations {
   /// **'Leave Room'**
   String get leaveSession;
 
-  /// No description provided for @leaveSessionConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to leave this room?'**
-  String get leaveSessionConfirmation;
-
   /// No description provided for @yesLeave.
   ///
   /// In en, this message translates to:
@@ -1657,36 +1393,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to leave room'**
   String get failedToLeaveSession;
-
-  /// No description provided for @updateName.
-  ///
-  /// In en, this message translates to:
-  /// **'Update Name'**
-  String get updateName;
-
-  /// No description provided for @enterNewName.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your new display name'**
-  String get enterNewName;
-
-  /// No description provided for @nameUpdatedSuccessfully.
-  ///
-  /// In en, this message translates to:
-  /// **'Name updated successfully'**
-  String get nameUpdatedSuccessfully;
-
-  /// No description provided for @newName.
-  ///
-  /// In en, this message translates to:
-  /// **'New name'**
-  String get newName;
-
-  /// No description provided for @failedToUpdateName.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update name. Please try again.'**
-  String get failedToUpdateName;
 
   /// No description provided for @updateProfile.
   ///
@@ -1729,12 +1435,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fast Order'**
   String get fastOrder;
-
-  /// No description provided for @fastOrderConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick order {itemName}?'**
-  String fastOrderConfirmation(String itemName);
 
   /// No description provided for @fastOrderPlaced.
   ///
@@ -1790,35 +1490,17 @@ abstract class AppLocalizations {
   /// **'Select Branch'**
   String get selectBranch;
 
-  /// No description provided for @switchBranch.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch Branch'**
-  String get switchBranch;
-
   /// No description provided for @cannotSwitchBranchDuringSession.
   ///
   /// In en, this message translates to:
   /// **'You can\'t switch branches during an active session'**
   String get cannotSwitchBranchDuringSession;
 
-  /// No description provided for @scanQr.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan QR'**
-  String get scanQr;
-
   /// No description provided for @scanToJoin.
   ///
   /// In en, this message translates to:
   /// **'Scan to Join'**
   String get scanToJoin;
-
-  /// No description provided for @pointCameraAtQr.
-  ///
-  /// In en, this message translates to:
-  /// **'Point camera at room QR code'**
-  String get pointCameraAtQr;
 
   /// No description provided for @alreadyInSession.
   ///
@@ -1850,12 +1532,6 @@ abstract class AppLocalizations {
   /// **'You\'re at {tableName}'**
   String youAreAtTable(String tableName);
 
-  /// No description provided for @orderDeliveredToTable.
-  ///
-  /// In en, this message translates to:
-  /// **'Your order will be brought to your table.'**
-  String get orderDeliveredToTable;
-
   /// No description provided for @tableUnavailable.
   ///
   /// In en, this message translates to:
@@ -1873,12 +1549,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter a valid phone number (01xxxxxxxxx).'**
   String get invalidPhone;
-
-  /// No description provided for @profileRequiredMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'We\'ll save your info so you won\'t need to enter it again'**
-  String get profileRequiredMessage;
 
   /// No description provided for @completeYourInfo.
   ///
@@ -1927,6 +1597,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count}s'**
   String secondsShort(int count);
+
+  /// No description provided for @leaveRoomQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave room?'**
+  String get leaveRoomQuestion;
+
+  /// No description provided for @clearCartQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cart?'**
+  String get clearCartQuestion;
+
+  /// No description provided for @deleteAccountQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account?'**
+  String get deleteAccountQuestion;
+
+  /// No description provided for @signOutQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out?'**
+  String get signOutQuestion;
+
+  /// No description provided for @cannotBeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be undone.'**
+  String get cannotBeUndone;
 }
 
 class _AppLocalizationsDelegate

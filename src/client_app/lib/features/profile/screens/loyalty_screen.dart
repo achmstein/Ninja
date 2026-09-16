@@ -127,11 +127,6 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            AppLocalizations.of(context)!.makePurchaseToEarn,
-            style: TextStyle(color: colors.mutedForeground),
-          ),
         ],
       ),
     );

@@ -21,19 +21,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signIn => 'دخول';
 
   @override
-  String get signUp => 'تسجيل';
-
-  @override
   String get register => 'تسجيل';
 
   @override
   String get signOut => 'خروج';
-
-  @override
-  String get username => 'اليوزر';
-
-  @override
-  String get usernameOrEmail => 'اليوزر أو الايميل';
 
   @override
   String get email => 'الايميل';
@@ -48,12 +39,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get name => 'الاسم';
 
   @override
-  String get enterUsername => 'دخل اليوزر';
-
-  @override
-  String get enterUsernameOrEmail => 'دخل اليوزر أو الايميل';
-
-  @override
   String get enterEmail => 'دخل الايميل';
 
   @override
@@ -64,9 +49,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get confirmYourPassword => 'أكد الباسورد';
-
-  @override
-  String get chooseUsername => 'اختار يوزر';
 
   @override
   String get yourDisplayName => 'اسمك';
@@ -185,9 +167,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yourCartIsEmpty => 'السلة فاضية';
 
   @override
-  String get addItemsFromMenu => 'ضيف حاجات من المنيو';
-
-  @override
   String get orderNoteOptional => 'ملاحظة (اختياري)';
 
   @override
@@ -215,9 +194,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get clearCart => 'فضي السلة';
 
   @override
-  String get removeAllItemsFromCart => 'تمسح كل الحاجات من السلة؟';
-
-  @override
   String get orderPlacedSuccessfully => 'استلمنا طلبك!';
 
   @override
@@ -233,9 +209,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noOrdersToday => 'مفيش طلبات النهاردة';
-
-  @override
-  String get orderFromMenuToStart => 'اطلب من المنيو عشان تبدأ';
 
   @override
   String todayOrdersCount(int count) {
@@ -254,33 +227,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get orderStatusPending => 'قيد الانتظار';
-
-  @override
-  String get orderStatusConfirmed => 'تم التأكيد';
-
-  @override
-  String get orderStatusCancelled => 'ملغي';
-
-  @override
   String get failedToLoadOrders => 'الطلبات مش بتحمل';
 
   @override
-  String get pullDownToRetry => 'اسحب لتحت تجرب تاني';
-
-  @override
   String get noOrdersYet => 'مفيش طلبات لسه';
-
-  @override
-  String get previousOrdersWillAppearHere => 'طلباتك هتظهر هنا';
-
-  @override
-  String orderNumber(String id) {
-    return 'طلب #$id';
-  }
-
-  @override
-  String get noItems => 'مفيش حاجات';
 
   @override
   String get yourRating => 'تقييمك: ';
@@ -296,9 +246,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get failedToLoadRooms => 'الاوض مش بتحمل';
-
-  @override
-  String get needSomething => 'عايز حاجة؟';
 
   @override
   String get callWaiter => 'الويتر';
@@ -328,15 +275,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancelReservationQuestion => 'تلغي الحجز؟';
 
   @override
-  String get confirmCancelReservation => 'متأكد انك عايز تلغي الحجز؟';
-
-  @override
-  String get noKeep => 'لا، خليه';
-
-  @override
-  String get yesCancel => 'أيوه، الغي';
-
-  @override
   String get reservationCancelled => 'الحجز اتلغى';
 
   @override
@@ -344,12 +282,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allRoomsBusy => 'كل الاوض مشغولة دلوقتي';
-
-  @override
-  String get getNotifiedWhenAvailable => 'هنبلغك لما اوضة تفضى';
-
-  @override
-  String get willBeNotifiedWhenAvailable => 'هنبلغك لما اوضة تفضى';
 
   @override
   String get unsubscribedFromNotifications => 'الاشعارات اتلغت';
@@ -361,22 +293,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToSubscribe => 'الاشتراك فشل';
 
   @override
-  String get notifyMe => 'بلغني';
-
-  @override
   String get fifteenMinutesToArrive => 'عندك 10 دقايق توصل';
-
-  @override
-  String get reservationCancelledIfNoCheckIn =>
-      'الحجز هيتلغي لو موصلتش خلال 10 دقايق.';
 
   @override
   String reserveRoomName(String roomName) {
     return 'احجز $roomName';
   }
-
-  @override
-  String get perHour => '/ساعة';
 
   @override
   String get reserveNow => 'احجز دلوقتي';
@@ -455,17 +377,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get signOutConfirmation => 'متأكد انك عايز تخرج؟';
-
-  @override
   String get needHelpContactUs => 'محتاج مساعدة؟ كلمنا:';
 
   @override
   String get supportHours => '5 بليل - 5 الصبح';
-
-  @override
-  String get aboutDescription =>
-      'اطلب مشروبات وأكل حلو، أو احجز اوضة بلايستيشن وانبسط.';
 
   @override
   String get notifications => 'الاشعارات';
@@ -474,13 +389,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orderStatusUpdates => 'تحديثات الطلب';
 
   @override
-  String get orderStatusUpdatesDescription => 'هنبلغك لما الطلب يتغير';
-
-  @override
   String get promotionsAndOffers => 'العروض';
-
-  @override
-  String get promotionsDescription => 'هنبلغك بالعروض والخصومات';
 
   @override
   String get appearance => 'الشكل';
@@ -498,10 +407,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteAccount => 'امسح الحساب';
 
   @override
-  String get deleteAccountConfirmation =>
-      'متأكد انك عايز تمسح حسابك؟ مش هتقدر ترجعه.';
-
-  @override
   String get accountDeletedSuccessfully => 'الحساب اتمسح';
 
   @override
@@ -514,19 +419,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get light => 'فاتح';
 
   @override
-  String get lightThemeDescription => 'الثيم الفاتح دايماً';
-
-  @override
   String get dark => 'غامق';
 
   @override
-  String get darkThemeDescription => 'الثيم الغامق دايماً';
-
-  @override
   String get systemDefault => 'تلقائي';
-
-  @override
-  String get systemDefaultDescription => 'زي الموبايل';
 
   @override
   String get language => 'اللغة';
@@ -590,9 +486,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noLoyaltyAccountYet => 'معندكش حساب ولاء لسه';
 
   @override
-  String get makePurchaseToEarn => 'اشتري حاجة وابدأ تجمع نقط!';
-
-  @override
   String get noTransactionsYet => 'مفيش معاملات لسه';
 
   @override
@@ -639,15 +532,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get creditBalance => 'فلوس ليك';
 
   @override
-  String get pleasePayAtCounter => 'ادفع في الكاشير';
-
-  @override
-  String get willBeAppliedToNextPurchase => 'هيتخصم من طلبك الجاي';
-
-  @override
-  String get noOutstandingBalance => 'مفيش رصيد';
-
-  @override
   String get transactions => 'المعاملات';
 
   @override
@@ -663,10 +547,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinOurLoyaltyProgram => 'اشترك في برنامج الولاء';
-
-  @override
-  String get earnPointsDescription =>
-      'اجمع نقط من كل طلب واستمتع بمكافآت حصرية!';
 
   @override
   String get joinNow => 'اشترك دلوقتي';
@@ -730,9 +610,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failedToChangePassword => 'الباسورد مش بيتغير. جرب تاني.';
 
   @override
-  String get supportEmail => 'support@chillax.com';
-
-  @override
   String get supportPhone => '0100 469 8 469';
 
   @override
@@ -751,23 +628,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noFavoritesYet => 'مفيش مفضلة لسه';
 
   @override
-  String get noFavoritesDescription => 'الحاجات اللي بتحبها هتظهر هنا';
-
-  @override
   String get createStrongPassword => 'اعمل باسورد قوي';
-
-  @override
-  String get passwordRequirements =>
-      'الباسورد لازم يكون 8 حروف على الأقل. نفضل خلط حروف وأرقام ورموز.';
 
   @override
   String get failedToLoadSessions => 'الجلسات مش بتحمل';
 
   @override
   String get noSessionsYet => 'مفيش حجوزات لسه';
-
-  @override
-  String get reserveRoomToStart => 'احجز اوضة عشان تبدأ';
 
   @override
   String durationLabel(String duration) {
@@ -779,9 +646,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get enterPhoneNumber => 'دخل رقم الموبايل';
-
-  @override
-  String get yourPhoneNumber => 'رقمك';
 
   @override
   String get transactionTypePurchase => 'شراء';
@@ -849,9 +713,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leaveSession => 'اخرج من الاوضة';
 
   @override
-  String get leaveSessionConfirmation => 'متأكد انك عايز تخرج من الاوضة؟';
-
-  @override
   String get yesLeave => 'أيوه، اخرج';
 
   @override
@@ -859,21 +720,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get failedToLeaveSession => 'مقدرناش نخرجك من الاوضة';
-
-  @override
-  String get updateName => 'تحديث الاسم';
-
-  @override
-  String get enterNewName => 'دخل اسمك الجديد';
-
-  @override
-  String get nameUpdatedSuccessfully => 'تم تحديث الاسم بنجاح';
-
-  @override
-  String get newName => 'الاسم الجديد';
-
-  @override
-  String get failedToUpdateName => 'الاسم مش بيتغير. جرب تاني.';
 
   @override
   String get updateProfile => 'تعديل الملف الشخصي';
@@ -895,11 +741,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fastOrder => 'طلب سريع';
-
-  @override
-  String fastOrderConfirmation(String itemName) {
-    return 'طلب سريع $itemName؟';
-  }
 
   @override
   String get fastOrderPlaced => 'تم الطلب!';
@@ -929,20 +770,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectBranch => 'اختار الفرع';
 
   @override
-  String get switchBranch => 'غيّر الفرع';
-
-  @override
   String get cannotSwitchBranchDuringSession =>
       'مينفعش تغيّر الفرع وانت في اوضة';
 
   @override
-  String get scanQr => 'امسح الكود';
-
-  @override
   String get scanToJoin => 'سكان QR';
-
-  @override
-  String get pointCameraAtQr => 'وجه الكاميرا على كود الاوضة';
 
   @override
   String get alreadyInSession => 'انت في الاوضه دي اصلا';
@@ -962,9 +794,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get orderDeliveredToTable => 'طلبك هيوصلك على الترابيزة.';
-
-  @override
   String get tableUnavailable => 'الترابيزة دي مش متاحة';
 
   @override
@@ -973,9 +802,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get invalidPhone => 'دخل رقم موبايل صحيح (01xxxxxxxxx).';
-
-  @override
-  String get profileRequiredMessage => 'هنحفظ بياناتك ومش هنسألك تاني';
 
   @override
   String get completeYourInfo => 'كمّل بياناتك';
@@ -1006,4 +832,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String secondsShort(int count) {
     return '$countث';
   }
+
+  @override
+  String get leaveRoomQuestion => 'تسيب الأوضة؟';
+
+  @override
+  String get clearCartQuestion => 'تفضّي السلة؟';
+
+  @override
+  String get deleteAccountQuestion => 'تحذف الحساب؟';
+
+  @override
+  String get signOutQuestion => 'تسجل خروج؟';
+
+  @override
+  String get cannotBeUndone => 'مفيش رجوع.';
 }

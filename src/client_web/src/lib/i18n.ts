@@ -20,10 +20,6 @@ const webExtras = {
   },
   // Guest checkout: web only. The mobile app always signs in first, so these
   // have no ARB counterpart to share.
-  guestCheckoutMessage: {
-    en: 'Leave your name and number so we can bring your order over.',
-    ar: 'سيب اسمك ورقمك عشان نعرف نوصلك الأوردر',
-  },
   orderAsGuest: { en: 'Order as guest', ar: 'اطلب كضيف' },
   signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
   // Shown when a guest has no table: ordering without one means ordering
@@ -31,18 +27,6 @@ const webExtras = {
   scanTableToOrder: {
     en: 'Scan the QR code on your table to order',
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
-  },
-  scanTableOrSignIn: {
-    en: 'Or sign in to order from anywhere',
-    ar: 'أو سجل دخول عشان تطلب من أي مكان',
-  },
-  guestOrderNoPoints: {
-    en: 'Sign in to earn points on your orders',
-    ar: 'سجل دخول عشان تجمع نقط على طلباتك',
-  },
-  guestOrdersKeptOnThisDevice: {
-    en: 'Guest orders are only kept on this device',
-    ar: 'طلبات الضيف محفوظة على الجهاز ده بس',
   },
   noGuestOrdersYet: {
     en: 'Sign in to see your orders, or place one as a guest',

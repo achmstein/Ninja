@@ -184,7 +184,6 @@ export function ActiveSessionView({
       </div>
 
       {/* Quick service requests */}
-      <h2 className="text-sm font-semibold">{t("needSomething")}</h2>
       <div className="grid grid-cols-2 gap-3">
         {quickActions.map((action) => {
           const remaining = cooldownRemaining(action.type);
@@ -227,12 +226,10 @@ export function ActiveSessionView({
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                {t("leaveSessionConfirmation")}
-              </AlertDialogTitle>
+              <AlertDialogTitle>{t("leaveRoomQuestion")}</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t("noKeep")}</AlertDialogCancel>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-white hover:bg-destructive/90"
                 onClick={() =>
@@ -241,7 +238,7 @@ export function ActiveSessionView({
                   })
                 }
               >
-                {t("yesLeave")}
+                {t("leaveSession")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

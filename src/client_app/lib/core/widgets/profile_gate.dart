@@ -165,14 +165,6 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
                 color: colors.foreground,
               ),
             ),
-            const SizedBox(height: 4),
-            AppText(
-              l10n.profileRequiredMessage,
-              style: TextStyle(
-                fontSize: 13,
-                color: colors.mutedForeground,
-              ),
-            ),
             const SizedBox(height: 16),
 
             // Error

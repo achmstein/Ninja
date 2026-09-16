@@ -21,19 +21,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signIn => 'Sign In';
 
   @override
-  String get signUp => 'Sign Up';
-
-  @override
   String get register => 'Register';
 
   @override
   String get signOut => 'Sign Out';
-
-  @override
-  String get username => 'Username';
-
-  @override
-  String get usernameOrEmail => 'Username or Email';
 
   @override
   String get email => 'Email';
@@ -48,12 +39,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get name => 'Name';
 
   @override
-  String get enterUsername => 'Enter your username';
-
-  @override
-  String get enterUsernameOrEmail => 'Enter your username or email';
-
-  @override
   String get enterEmail => 'Enter your email';
 
   @override
@@ -64,9 +49,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmYourPassword => 'Confirm your password';
-
-  @override
-  String get chooseUsername => 'Choose a username';
 
   @override
   String get yourDisplayName => 'Your display name';
@@ -188,9 +170,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourCartIsEmpty => 'Your cart is empty';
 
   @override
-  String get addItemsFromMenu => 'Add items from the menu';
-
-  @override
   String get orderNoteOptional => 'Order Note (optional)';
 
   @override
@@ -218,9 +197,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearCart => 'Clear Cart';
 
   @override
-  String get removeAllItemsFromCart => 'Remove all items from your cart?';
-
-  @override
   String get orderPlacedSuccessfully => 'Order placed successfully!';
 
   @override
@@ -236,9 +212,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noOrdersToday => 'No orders today';
-
-  @override
-  String get orderFromMenuToStart => 'Order from the menu to get started';
 
   @override
   String todayOrdersCount(int count) {
@@ -257,34 +230,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get orderStatusPending => 'Pending';
-
-  @override
-  String get orderStatusConfirmed => 'Confirmed';
-
-  @override
-  String get orderStatusCancelled => 'Cancelled';
-
-  @override
   String get failedToLoadOrders => 'Failed to load orders';
 
   @override
-  String get pullDownToRetry => 'Pull down to retry';
-
-  @override
   String get noOrdersYet => 'No orders yet';
-
-  @override
-  String get previousOrdersWillAppearHere =>
-      'Your order history will appear here';
-
-  @override
-  String orderNumber(String id) {
-    return 'Order #$id';
-  }
-
-  @override
-  String get noItems => 'No items';
 
   @override
   String get yourRating => 'Your rating: ';
@@ -300,9 +249,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToLoadRooms => 'Failed to load rooms';
-
-  @override
-  String get needSomething => 'Need something?';
 
   @override
   String get callWaiter => 'Waiter';
@@ -332,16 +278,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelReservationQuestion => 'Cancel Reservation?';
 
   @override
-  String get confirmCancelReservation =>
-      'Are you sure you want to cancel your reservation?';
-
-  @override
-  String get noKeep => 'No, Keep';
-
-  @override
-  String get yesCancel => 'Yes, Cancel';
-
-  @override
   String get reservationCancelled => 'Reservation cancelled';
 
   @override
@@ -349,14 +285,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allRoomsBusy => 'All rooms are currently busy';
-
-  @override
-  String get getNotifiedWhenAvailable =>
-      'Get notified when a room becomes available';
-
-  @override
-  String get willBeNotifiedWhenAvailable =>
-      'You will be notified when a room is available';
 
   @override
   String get unsubscribedFromNotifications => 'Unsubscribed from notifications';
@@ -368,22 +296,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToSubscribe => 'Failed to subscribe';
 
   @override
-  String get notifyMe => 'Notify Me';
-
-  @override
   String get fifteenMinutesToArrive => '10 minutes to arrive';
-
-  @override
-  String get reservationCancelledIfNoCheckIn =>
-      'Your reservation will be automatically cancelled if you don\'t check in within 10 minutes.';
 
   @override
   String reserveRoomName(String roomName) {
     return 'Reserve $roomName';
   }
-
-  @override
-  String get perHour => '/hr';
 
   @override
   String get reserveNow => 'Reserve Now';
@@ -463,17 +381,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get signOutConfirmation => 'Are you sure you want to sign out?';
-
-  @override
   String get needHelpContactUs => 'Need help? Contact us:';
 
   @override
   String get supportHours => '5:00 PM - 5:00 AM';
-
-  @override
-  String get aboutDescription =>
-      'Order delicious food & drinks, or reserve a PlayStation room for an amazing gaming experience.';
 
   @override
   String get notifications => 'Notifications';
@@ -482,14 +393,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderStatusUpdates => 'Order Status Updates';
 
   @override
-  String get orderStatusUpdatesDescription =>
-      'Get notified when your order status changes';
-
-  @override
   String get promotionsAndOffers => 'Promotions & Offers';
-
-  @override
-  String get promotionsDescription => 'Receive special deals and discounts';
 
   @override
   String get appearance => 'Appearance';
@@ -507,10 +411,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccount => 'Delete Account';
 
   @override
-  String get deleteAccountConfirmation =>
-      'Are you sure you want to delete your account? This action cannot be undone.';
-
-  @override
   String get accountDeletedSuccessfully => 'Account deleted successfully';
 
   @override
@@ -523,19 +423,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get light => 'Light';
 
   @override
-  String get lightThemeDescription => 'Always use light theme';
-
-  @override
   String get dark => 'Dark';
 
   @override
-  String get darkThemeDescription => 'Always use dark theme';
-
-  @override
   String get systemDefault => 'System Default';
-
-  @override
-  String get systemDefaultDescription => 'Follow your device settings';
 
   @override
   String get language => 'Language';
@@ -599,9 +490,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noLoyaltyAccountYet => 'No loyalty account yet';
 
   @override
-  String get makePurchaseToEarn => 'Make a purchase to start earning points!';
-
-  @override
   String get noTransactionsYet => 'No transactions yet';
 
   @override
@@ -648,16 +536,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditBalance => 'Credit Balance';
 
   @override
-  String get pleasePayAtCounter => 'Please pay at the counter';
-
-  @override
-  String get willBeAppliedToNextPurchase =>
-      'Will be applied to your next purchase';
-
-  @override
-  String get noOutstandingBalance => 'No outstanding balance';
-
-  @override
   String get transactions => 'Transactions';
 
   @override
@@ -673,10 +551,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinOurLoyaltyProgram => 'Join our Loyalty Program';
-
-  @override
-  String get earnPointsDescription =>
-      'Earn points on every purchase and unlock exclusive rewards!';
 
   @override
   String get joinNow => 'Join Now';
@@ -741,9 +615,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to change password. Please try again.';
 
   @override
-  String get supportEmail => 'support@chillax.com';
-
-  @override
   String get supportPhone => '0100 469 8 469';
 
   @override
@@ -762,23 +633,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFavoritesYet => 'No favorites yet';
 
   @override
-  String get noFavoritesDescription => 'Items you love will appear here';
-
-  @override
   String get createStrongPassword => 'Create a strong password';
-
-  @override
-  String get passwordRequirements =>
-      'Your password must be at least 8 characters long. We recommend using a mix of letters, numbers, and symbols.';
 
   @override
   String get failedToLoadSessions => 'Failed to load sessions';
 
   @override
   String get noSessionsYet => 'No sessions yet';
-
-  @override
-  String get reserveRoomToStart => 'Reserve a room to get started';
 
   @override
   String durationLabel(String duration) {
@@ -790,9 +651,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterPhoneNumber => 'Enter your phone number';
-
-  @override
-  String get yourPhoneNumber => 'Your phone number';
 
   @override
   String get transactionTypePurchase => 'Purchase';
@@ -861,10 +719,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leaveSession => 'Leave Room';
 
   @override
-  String get leaveSessionConfirmation =>
-      'Are you sure you want to leave this room?';
-
-  @override
   String get yesLeave => 'Yes, Leave';
 
   @override
@@ -872,21 +726,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToLeaveSession => 'Failed to leave room';
-
-  @override
-  String get updateName => 'Update Name';
-
-  @override
-  String get enterNewName => 'Enter your new display name';
-
-  @override
-  String get nameUpdatedSuccessfully => 'Name updated successfully';
-
-  @override
-  String get newName => 'New name';
-
-  @override
-  String get failedToUpdateName => 'Failed to update name. Please try again.';
 
   @override
   String get updateProfile => 'Update Profile';
@@ -909,11 +748,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fastOrder => 'Fast Order';
-
-  @override
-  String fastOrderConfirmation(String itemName) {
-    return 'Quick order $itemName?';
-  }
 
   @override
   String get fastOrderPlaced => 'Order placed!';
@@ -943,20 +777,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectBranch => 'Select Branch';
 
   @override
-  String get switchBranch => 'Switch Branch';
-
-  @override
   String get cannotSwitchBranchDuringSession =>
       'You can\'t switch branches during an active session';
 
   @override
-  String get scanQr => 'Scan QR';
-
-  @override
   String get scanToJoin => 'Scan to Join';
-
-  @override
-  String get pointCameraAtQr => 'Point camera at room QR code';
 
   @override
   String get alreadyInSession => 'You\'re already in this session';
@@ -976,10 +801,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get orderDeliveredToTable =>
-      'Your order will be brought to your table.';
-
-  @override
   String get tableUnavailable => 'This table is not available';
 
   @override
@@ -988,10 +809,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidPhone => 'Please enter a valid phone number (01xxxxxxxxx).';
-
-  @override
-  String get profileRequiredMessage =>
-      'We\'ll save your info so you won\'t need to enter it again';
 
   @override
   String get completeYourInfo => 'Complete Your Info';
@@ -1023,4 +840,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String secondsShort(int count) {
     return '${count}s';
   }
+
+  @override
+  String get leaveRoomQuestion => 'Leave room?';
+
+  @override
+  String get clearCartQuestion => 'Clear cart?';
+
+  @override
+  String get deleteAccountQuestion => 'Delete account?';
+
+  @override
+  String get signOutQuestion => 'Sign out?';
+
+  @override
+  String get cannotBeUndone => 'Cannot be undone.';
 }

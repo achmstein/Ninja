@@ -80,11 +80,7 @@ function TableLinkPage() {
       branchId: Number(table.branchId),
     })
 
-    // Not a "Success" - the table name is the headline, and the description
-    // says what it means for the order they are about to place.
-    toast.info(t('youAreAtTable', { tableName: localized(table.name) }), {
-      description: t('orderDeliveredToTable'),
-    })
+    toast.info(t('youAreAtTable', { tableName: localized(table.name) }))
     resume()
   }, [
     tableQuery.isLoading,

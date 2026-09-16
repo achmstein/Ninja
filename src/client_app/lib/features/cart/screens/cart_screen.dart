@@ -565,13 +565,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            l10n.addItemsFromMenu,
-            style: TextStyle(
-              color: colors.mutedForeground,
-            ),
-          ),
         ],
       ),
     );
@@ -584,8 +577,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       builder: (context, style, animation) => FDialog(
         style: style,
         animation: animation,
-        title: Text(l10n.clearCart),
-        body: Text(l10n.removeAllItemsFromCart),
+        title: Text(l10n.clearCartQuestion),
         direction: Axis.horizontal,
         actions: [
           FButton(

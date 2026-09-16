@@ -11,7 +11,6 @@ import { useT } from '@/lib/i18n'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -110,7 +109,6 @@ function ProfileGateDialog({
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
-          <DialogDescription>{t('profileRequiredMessage')}</DialogDescription>
         </DialogHeader>
         <div className='flex flex-col gap-4'>
           <div className='space-y-2'>

@@ -40,13 +40,6 @@ export function BalanceCard({
       <div className='text-[28px] leading-tight font-bold tabular-nums'>
         {price(Math.abs(balance))}
       </div>
-      <p className={`text-xs ${softText}`}>
-        {owes
-          ? t('pleasePayAtCounter')
-          : hasCredit
-            ? t('willBeAppliedToNextPurchase')
-            : t('noOutstandingBalance')}
-      </p>
     </div>
   )
 }

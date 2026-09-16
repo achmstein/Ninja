@@ -85,9 +85,6 @@ export function ReserveSheet({ room, onOpenChange }: ReserveSheetProps) {
             <div className='text-[15px] font-semibold'>
               {t('fifteenMinutesToArrive')}
             </div>
-            <div className='text-muted-foreground text-[13px]'>
-              {t('reservationCancelledIfNoCheckIn')}
-            </div>
           </div>
         </div>
 

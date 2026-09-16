@@ -5,7 +5,6 @@ import { useT } from '@/lib/i18n'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -97,7 +96,6 @@ function GuestGateDialog({
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t('completeYourInfo')}</DialogTitle>
-          <DialogDescription>{t('guestCheckoutMessage')}</DialogDescription>
         </DialogHeader>
         <div className='flex flex-col gap-4'>
           <div className='space-y-2'>

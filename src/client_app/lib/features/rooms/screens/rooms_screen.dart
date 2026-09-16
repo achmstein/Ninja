@@ -449,13 +449,6 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
             const SizedBox(height: 24),
 
             // Quick actions
-            AppText(
-              AppLocalizations.of(context)!.needSomething,
-              style: TextStyle(
-                color: context.theme.colors.mutedForeground,
-                fontSize: 14,
-              ),
-            ),
             const SizedBox(height: 16),
 
             // Action buttons grid - row 1
@@ -600,8 +593,7 @@ class _ActiveSessionViewState extends ConsumerState<_ActiveSessionView> {
       builder: (dialogContext, style, animation) => FDialog(
         style: style,
         animation: animation,
-        title: AppText(l10n.leaveSession),
-        body: AppText(l10n.leaveSessionConfirmation),
+        title: AppText(l10n.leaveRoomQuestion),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
@@ -843,17 +835,16 @@ class _ReservedSessionBanner extends ConsumerWidget {
       builder: (context) => FDialog(
         direction: Axis.horizontal,
         title: Text(l10n.cancelReservationQuestion),
-        body: Text(l10n.confirmCancelReservation),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
             onPress: () => Navigator.pop(context, false),
-            child: Text(l10n.noKeep),
+            child: Text(l10n.cancel),
           ),
           FButton(
             variant: FButtonVariant.destructive,
             onPress: () => Navigator.pop(context, true),
-            child: Text(l10n.yesCancel),
+            child: Text(l10n.cancelReservation),
           ),
         ],
       ),
@@ -916,14 +907,6 @@ class NotifyMeBanner extends ConsumerWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                AppText(
-                  l10n.getNotifiedWhenAvailable,
-                  style: TextStyle(
-                    color: context.theme.colors.mutedForeground,
-                    fontSize: 12,
                   ),
                 ),
               ],
@@ -1266,14 +1249,6 @@ class _ReservationSheetState extends ConsumerState<ReservationSheet> {
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                               color: colors.foreground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          AppText(
-                            l10n.reservationCancelledIfNoCheckIn,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: colors.mutedForeground,
                             ),
                           ),
                         ],

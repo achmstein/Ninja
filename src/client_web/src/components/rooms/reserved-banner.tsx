@@ -9,7 +9,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -83,12 +82,9 @@ export function ReservedBanner({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('cancelReservationQuestion')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('confirmCancelReservation')}
-            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('noKeep')}</AlertDialogCancel>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className='bg-destructive text-white hover:bg-destructive/90'
               onClick={() =>
@@ -97,7 +93,7 @@ export function ReservedBanner({
                 })
               }
             >
-              {t('yesCancel')}
+              {t('cancelReservation')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

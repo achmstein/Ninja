@@ -1,28 +1,12 @@
 import { sileo } from 'sileo'
-import { translate, type TranslationKey } from '@/lib/i18n'
-
 type ToastType = 'success' | 'error' | 'info' | 'warning'
 
 type ToastOptions = { description?: string }
 
-const titleKeys: Record<ToastType, TranslationKey> = {
-  success: 'toastSuccess',
-  error: 'toastError',
-  info: 'toastInfo',
-  warning: 'toastWarning',
-}
-
-// Sileo demo-style toasts: a short status title on the pill, the specific
-// message as the description autopilot expands into view. Call sites keep
-// the sonner shape — toast.success('Order placed') renders title "Success"
-// with "Order placed" as the message. Passing an explicit description
-// instead promotes the first argument to the title.
+// The message is the title; the kind of toast is its colour and icon, so
+// no "Success" / "Something went wrong" line sits above it.
 const show = (type: ToastType, message: string, options?: ToastOptions) =>
-  sileo[type](
-    options?.description
-      ? { title: message, description: options.description }
-      : { title: translate(titleKeys[type]), description: message }
-  )
+  sileo[type]({ title: message, description: options?.description })
 
 export const toast = {
   success: (message: string, options?: ToastOptions) =>

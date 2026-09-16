@@ -30,7 +30,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -281,7 +280,6 @@ function CartPage() {
       <div className='flex h-[70svh] flex-col items-center justify-center gap-3 text-center'>
         <ShoppingBag className='text-muted-foreground/40 h-10 w-10' />
         <p className='text-muted-foreground'>{t('yourCartIsEmpty')}</p>
-        <p className='text-muted-foreground text-sm'>{t('addItemsFromMenu')}</p>
         <Button asChild className='rounded-full px-8'>
           <Link to='/'>{t('browseMenu')}</Link>
         </Button>
@@ -301,12 +299,7 @@ function CartPage() {
     <div className='flex flex-col gap-3 border-t pt-4'>
       <div className='flex items-start gap-2 text-sm'>
         <QrCode className='text-primary mt-0.5 h-4 w-4 shrink-0' />
-        <div className='flex flex-col gap-0.5'>
-          <span>{t('scanTableToOrder')}</span>
-          <span className='text-muted-foreground text-xs'>
-            {t('scanTableOrSignIn')}
-          </span>
-        </div>
+        <span>{t('scanTableToOrder')}</span>
       </div>
       <Button
         size='lg'
@@ -485,16 +478,6 @@ function CartPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
-        {/* Where the points slider sits for a signed-in customer — the one
-            place the upsell lands without nagging. Suppressed when they are
-            already being asked to sign in below, which would say it twice. */}
-        {isGuest && !guestNeedsTable && (
-          <div className='text-muted-foreground flex items-center gap-2 border-t pt-4 text-sm'>
-            <Award className='text-primary h-4 w-4 shrink-0' />
-            {t('guestOrderNoPoints')}
-          </div>
-        )}
-
         {auth.isAuthenticated && maxRedeemable > 0 && (
           <div className='flex flex-col gap-3 border-t pt-4'>
             <div className='flex items-center justify-between'>
@@ -560,10 +543,7 @@ function CartPage() {
       <AlertDialog open={clearConfirmOpen} onOpenChange={setClearConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('clearCart')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('removeAllItemsFromCart')}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t('clearCartQuestion')}</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>

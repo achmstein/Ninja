@@ -120,9 +120,6 @@ function SettingsPage() {
                 <div className='text-[15px] font-medium'>
                   {t('orderStatusUpdates')}
                 </div>
-                <p className='text-muted-foreground text-[13px]'>
-                  {t('orderStatusUpdatesDescription')}
-                </p>
               </div>
               <Switch
                 checked={preferences.orderStatusUpdates}
@@ -139,9 +136,6 @@ function SettingsPage() {
                 <div className='text-[15px] font-medium'>
                   {t('promotionsAndOffers')}
                 </div>
-                <p className='text-muted-foreground text-[13px]'>
-                  {t('promotionsDescription')}
-                </p>
               </div>
               <Switch
                 checked={preferences.promotionsAndOffers}
@@ -214,9 +208,9 @@ function SettingsPage() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>{t('deleteAccount')}</AlertDialogTitle>
+                  <AlertDialogTitle>{t('deleteAccountQuestion')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t('deleteAccountConfirmation')}
+                    {t('cannotBeUndone')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

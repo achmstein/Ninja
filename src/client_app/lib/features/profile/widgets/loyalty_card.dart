@@ -256,15 +256,6 @@ class LoyaltyEmptyCard extends StatelessWidget {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            l10n.earnPointsDescription,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: colors.mutedForeground,
-            ),
-          ),
           if (onJoin != null) ...[
             const SizedBox(height: 16),
             SizedBox(

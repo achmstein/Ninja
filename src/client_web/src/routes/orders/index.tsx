@@ -94,8 +94,6 @@ function OrdersPage() {
   const t = useT()
   const price = usePrice()
   const branch = useSelectedBranch()
-  const auth = useAuth()
-  const isGuest = !auth.isAuthenticated
 
   // Today = the branch's current business day (overnight shifts included).
   // Guests get the same live updates as anyone else: the hub puts them in a
@@ -143,14 +141,6 @@ function OrdersPage() {
     <div className='flex flex-col gap-4 p-4'>
       <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('orders')}</h1>
 
-      {/* Said once, plainly: clearing site data loses this list, and an
-          account is what makes it survive */}
-      {isGuest && (
-        <p className='text-muted-foreground text-xs'>
-          {t('guestOrdersKeptOnThisDevice')}
-        </p>
-      )}
-
       <Tabs defaultValue='today'>
         <TabsList className='w-full'>
           <TabsTrigger value='today' className='flex-1'>
@@ -167,10 +157,7 @@ function OrdersPage() {
           ) : todayQuery.isError ? (
             <ErrorState onRetry={() => todayQuery.refetch()} />
           ) : todayOrders.length === 0 ? (
-            <EmptyState
-              title={t('noOrdersToday')}
-              subtitle={t('orderFromMenuToStart')}
-            />
+            <EmptyState title={t('noOrdersToday')} />
           ) : (
             <div className='flex flex-col'>
               {/* Count + total spent summary (mobile parity) */}
@@ -197,10 +184,7 @@ function OrdersPage() {
           ) : historyQuery.isError ? (
             <ErrorState onRetry={() => historyQuery.refetch()} />
           ) : historyOrders.length === 0 ? (
-            <EmptyState
-              title={t('noOrdersYet')}
-              subtitle={t('previousOrdersWillAppearHere')}
-            />
+            <EmptyState title={t('noOrdersYet')} />
           ) : (
             <HistoryList
               orders={historyOrders}
@@ -236,12 +220,11 @@ function OrdersSkeleton() {
   )
 }
 
-function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
+function EmptyState({ title }: { title: string }) {
   return (
     <div className='flex h-[40svh] flex-col items-center justify-center gap-2 text-center'>
       <ReceiptText className='text-muted-foreground h-16 w-16' />
       <p className='text-lg'>{title}</p>
-      <p className='text-muted-foreground text-sm'>{subtitle}</p>
     </div>
   )
 }

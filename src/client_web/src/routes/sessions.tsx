@@ -140,7 +140,6 @@ function SessionList({
       <div className='text-muted-foreground flex h-[40svh] flex-col items-center justify-center gap-2 text-center'>
         <Gamepad2 className='text-muted-foreground/40 h-10 w-10' />
         <p>{emptyTitle}</p>
-        <p className='text-sm'>{t('reserveRoomToStart')}</p>
       </div>
     )
   }

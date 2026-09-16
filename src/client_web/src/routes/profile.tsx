@@ -177,9 +177,6 @@ function ProfilePage() {
                 <div className='text-[15px] font-medium'>
                   {t('joinOurLoyaltyProgram')}
                 </div>
-                <div className='text-muted-foreground truncate text-xs'>
-                  {t('earnPointsDescription')}
-                </div>
               </div>
               <ChevronRight className='text-muted-foreground h-5 w-5 shrink-0 rtl:rotate-180' />
             </div>
@@ -251,7 +248,7 @@ function SignOutButton() {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('signOutConfirmation')}</AlertDialogTitle>
+          <AlertDialogTitle>{t('signOutQuestion')}</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
@@ -289,9 +286,6 @@ function AboutDialog({
           <div className='text-muted-foreground text-xs tracking-widest uppercase rtl:tracking-normal'>
             {t('cafeAndGaming')}
           </div>
-          <p className='text-muted-foreground text-sm'>
-            {t('aboutDescription')}
-          </p>
           <Badge variant='secondary'>
             {t('version', { version: __APP_VERSION__ })}
           </Badge>

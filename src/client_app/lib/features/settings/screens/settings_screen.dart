@@ -62,7 +62,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         FTile(
                           title: AppText(l10n.orderStatusUpdates),
-                          subtitle: AppText(l10n.orderStatusUpdatesDescription, style: TextStyle(color: context.theme.colors.mutedForeground, fontSize: 12)),
                           suffix: FSwitch(
                             value: settingsState.preferences.orderStatusUpdates,
                             onChange: (value) {
@@ -74,7 +73,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         FTile(
                           title: AppText(l10n.promotionsAndOffers),
-                          subtitle: AppText(l10n.promotionsDescription, style: TextStyle(color: context.theme.colors.mutedForeground, fontSize: 12)),
                           suffix: FSwitch(
                             value: settingsState.preferences.promotionsAndOffers,
                             onChange: (value) {
@@ -270,8 +268,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogContext, style, animation) => FDialog(
         style: style,
         animation: animation,
-        title: AppText(l10n.deleteAccount, style: TextStyle(fontWeight: FontWeight.bold)),
-        body: AppText(l10n.deleteAccountConfirmation),
+        title: AppText(l10n.deleteAccountQuestion, style: TextStyle(fontWeight: FontWeight.bold)),
+        body: AppText(l10n.cannotBeUndone),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
@@ -415,14 +413,6 @@ class _ThemeSelectorSheet extends StatelessWidget {
                                 color: colors.foreground,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            AppText(
-                              _getThemeModeDescription(mode),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.mutedForeground,
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -460,16 +450,6 @@ class _ThemeSelectorSheet extends StatelessWidget {
     }
   }
 
-  String _getThemeModeDescription(AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.light:
-        return l10n.lightThemeDescription;
-      case AppThemeMode.dark:
-        return l10n.darkThemeDescription;
-      case AppThemeMode.system:
-        return l10n.systemDefaultDescription;
-    }
-  }
 }
 
 /// Bottom sheet for selecting language
@@ -949,15 +929,6 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       ),
                       const SizedBox(height: 16),
                     ],
-
-                    AppText(
-                      widget.l10n.passwordRequirements,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.mutedForeground,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
 
                     FTextField.password(
                       control: FTextFieldControl.managed(controller: _newPasswordController),

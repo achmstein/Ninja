@@ -200,18 +200,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
-          AppText(
-            isOwed
-                ? AppLocalizations.of(context)!.pleasePayAtCounter
-                : hasCredit
-                    ? AppLocalizations.of(context)!.willBeAppliedToNextPurchase
-                    : AppLocalizations.of(context)!.noOutstandingBalance,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
-          ),
         ],
       ),
     );

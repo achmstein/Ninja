@@ -132,8 +132,6 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with WidgetsBinding
                   Icon(FIcons.circleAlert, size: 48, color: colors.mutedForeground),
                   const SizedBox(height: 16),
                   AppText(l10n.failedToLoadOrders, style: TextStyle(color: colors.foreground)),
-                  const SizedBox(height: 8),
-                  AppText(l10n.pullDownToRetry, style: TextStyle(color: colors.mutedForeground)),
                 ],
               ),
             ),
@@ -162,11 +160,6 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with WidgetsBinding
                   AppText(
                     isToday ? l10n.noOrdersToday : l10n.noOrdersYet,
                     style: TextStyle(fontSize: 18, color: colors.foreground),
-                  ),
-                  const SizedBox(height: 8),
-                  AppText(
-                    isToday ? l10n.orderFromMenuToStart : l10n.previousOrdersWillAppearHere,
-                    style: TextStyle(color: colors.mutedForeground),
                   ),
                 ],
               ),

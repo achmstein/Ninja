@@ -81,16 +81,6 @@ class BalanceCard extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
-            AppText(
-              account.owesAmount
-                  ? l10n.pleasePayAtCounter
-                  : l10n.willBeAppliedToNextPurchase,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-              ),
-            ),
           ],
         ),
       ),

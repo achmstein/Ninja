@@ -117,9 +117,6 @@ function LoyaltyPage() {
         <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
         <Award className='text-muted-foreground/40 h-12 w-12' />
         <h1 className='text-xl font-bold'>{t('joinOurLoyaltyProgram')}</h1>
-        <p className='text-muted-foreground text-sm'>
-          {t('earnPointsDescription')}
-        </p>
         <Button
           size='lg'
           className='rounded-full px-8'

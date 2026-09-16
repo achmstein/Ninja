@@ -1,48 +1,35 @@
 {
   "@@locale": "en",
-
   "appTitle": "Chillax",
   "cafeAndGaming": "Cafe & Gaming",
-
   "done": "Done",
-
   "signIn": "Sign In",
-  "signUp": "Sign Up",
   "register": "Register",
   "signOut": "Sign Out",
-
-  "username": "Username",
-  "usernameOrEmail": "Username or Email",
   "email": "Email",
   "password": "Password",
   "confirmPassword": "Confirm Password",
   "name": "Name",
-
-  "enterUsername": "Enter your username",
-  "enterUsernameOrEmail": "Enter your username or email",
   "enterEmail": "Enter your email",
   "enterPassword": "Enter your password",
   "createPassword": "Create a password",
   "confirmYourPassword": "Confirm your password",
-  "chooseUsername": "Choose a username",
   "yourDisplayName": "Your display name",
-
   "orContinueWith": "or continue with",
   "google": "Google",
   "apple": "Apple",
-
   "dontHaveAccount": "Don't have an account? ",
   "alreadyHaveAccount": "Already have an account? ",
-
   "createAccount": "Create Account",
   "guestUser": "Guest User",
-
   "enterBothEmailAndPassword": "Please enter both email and password.",
   "invalidCredentials": "Invalid email or password. Please try again.",
   "anErrorOccurred": "An error occurred: {error}",
   "@anErrorOccurred": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "socialSignInFailed": "Social sign in failed. Please try again.",
@@ -51,7 +38,6 @@
   "passwordTooShort": "Password must be at least 6 characters.",
   "registrationSuccessful": "Registration successful! Please sign in.",
   "registrationFailed": "Registration failed. Email may already exist.",
-
   "success": "Success",
   "error": "Error",
   "cancel": "Cancel",
@@ -60,27 +46,25 @@
   "retry": "Retry",
   "join": "Join",
   "close": "Close",
-
   "menu": "Menu",
   "orders": "Orders",
   "rooms": "Rooms",
   "profile": "Profile",
   "cart": "Cart",
   "settings": "Settings",
-
   "searchMenu": "Search menu...",
   "noItemsAvailable": "No items available",
   "failedToLoadMenu": "Failed to load menu: {error}",
   "@failedToLoadMenu": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "viewCart": "View Cart",
   "addToCart": "Add to Cart",
-
   "yourCartIsEmpty": "Your cart is empty",
-  "addItemsFromMenu": "Add items from the menu",
   "orderNoteOptional": "Order Note (optional)",
   "anySpecialRequests": "Any special requests",
   "useLoyaltyPoints": "Use Loyalty Points",
@@ -90,52 +74,41 @@
   "total": "Total",
   "placeOrder": "Place Order",
   "clearCart": "Clear Cart",
-  "removeAllItemsFromCart": "Remove all items from your cart?",
   "orderPlacedSuccessfully": "Order placed successfully!",
   "failedToPlaceOrder": "Failed to place order",
   "noteWithText": "Note: {notes}",
   "@noteWithText": {
     "placeholders": {
-      "notes": {"type": "String"}
+      "notes": {
+        "type": "String"
+      }
     }
   },
-
   "todaysOrders": "Today's Orders",
   "noOrdersToday": "No orders today",
-  "orderFromMenuToStart": "Order from the menu to get started",
   "todayOrdersCount": "{count, plural, =1{1 order} other{{count} orders}}",
   "@todayOrdersCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "totalSpent": "Total: {amount}",
   "@totalSpent": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "orderStatusPending": "Pending",
-  "orderStatusConfirmed": "Confirmed",
-  "orderStatusCancelled": "Cancelled",
   "failedToLoadOrders": "Failed to load orders",
-  "pullDownToRetry": "Pull down to retry",
   "noOrdersYet": "No orders yet",
-  "previousOrdersWillAppearHere": "Your order history will appear here",
-  "orderNumber": "Order #{id}",
-  "@orderNumber": {
-    "placeholders": {
-      "id": {"type": "String"}
-    }
-  },
-  "noItems": "No items",
   "yourRating": "Your rating: ",
   "rateThisOrder": "Rate This Order",
   "failedToLoadDetails": "Failed to load details",
-
   "joinedSession": "Joined session!",
   "failedToLoadRooms": "Failed to load rooms",
-  "needSomething": "Need something?",
   "callWaiter": "Waiter",
   "controller": "Controller",
   "getBill": "Get Bill",
@@ -145,27 +118,21 @@
   "reserved": "Reserved",
   "cancelReservation": "Cancel Reservation",
   "cancelReservationQuestion": "Cancel Reservation?",
-  "confirmCancelReservation": "Are you sure you want to cancel your reservation?",
-  "noKeep": "No, Keep",
-  "yesCancel": "Yes, Cancel",
   "reservationCancelled": "Reservation cancelled",
   "failedToCancelReservation": "Failed to cancel reservation",
   "allRoomsBusy": "All rooms are currently busy",
-  "getNotifiedWhenAvailable": "Get notified when a room becomes available",
-  "willBeNotifiedWhenAvailable": "You will be notified when a room is available",
   "unsubscribedFromNotifications": "Unsubscribed from notifications",
   "youWillBeNotified": "You will be notified!",
   "failedToSubscribe": "Failed to subscribe",
-  "notifyMe": "Notify Me",
   "fifteenMinutesToArrive": "10 minutes to arrive",
-  "reservationCancelledIfNoCheckIn": "Your reservation will be automatically cancelled if you don't check in within 10 minutes.",
   "reserveRoomName": "Reserve {roomName}",
   "@reserveRoomName": {
     "placeholders": {
-      "roomName": {"type": "String"}
+      "roomName": {
+        "type": "String"
+      }
     }
   },
-  "perHour": "/hr",
   "reserveNow": "Reserve Now",
   "roomReservedSuccess": "Room reserved! You have 10 minutes to arrive.",
   "roomReservedSuccessQr": "Room reserved!",
@@ -173,38 +140,45 @@
   "available": "Available",
   "occupied": "Occupied",
   "maintenance": "Maintenance",
-
   "statusReserved": "Reserved",
   "statusActive": "Active",
   "statusCompleted": "Completed",
   "statusCancelled": "Cancelled",
-
   "hourlyRateFormat": "£{rate}/hour",
   "@hourlyRateFormat": {
     "placeholders": {
-      "rate": {"type": "String"}
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "dualRateFormat": "£{singleRate} · £{multiRate} /hr",
   "@dualRateFormat": {
     "placeholders": {
-      "singleRate": {"type": "String"},
-      "multiRate": {"type": "String"}
+      "singleRate": {
+        "type": "String"
+      },
+      "multiRate": {
+        "type": "String"
+      }
     }
   },
   "singlePlayerRate": "Single: £{rate}/hr",
   "@singlePlayerRate": {
     "placeholders": {
-      "rate": {"type": "String"}
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "multiPlayerRate": "Multi: £{rate}/hr",
   "@multiPlayerRate": {
     "placeholders": {
-      "rate": {"type": "String"}
+      "rate": {
+        "type": "String"
+      }
     }
   },
-
   "previousOrders": "Previous Orders",
   "sessions": "Sessions",
   "previousSessions": "Previous Sessions",
@@ -214,106 +188,112 @@
   "version": "Version {version}",
   "@version": {
     "placeholders": {
-      "version": {"type": "String"}
+      "version": {
+        "type": "String"
+      }
     }
   },
-  "signOutConfirmation": "Are you sure you want to sign out?",
   "needHelpContactUs": "Need help? Contact us:",
   "supportHours": "5:00 PM - 5:00 AM",
-  "aboutDescription": "Order delicious food & drinks, or reserve a PlayStation room for an amazing gaming experience.",
-
   "notifications": "Notifications",
   "orderStatusUpdates": "Order Status Updates",
-  "orderStatusUpdatesDescription": "Get notified when your order status changes",
   "promotionsAndOffers": "Promotions & Offers",
-  "promotionsDescription": "Receive special deals and discounts",
   "appearance": "Appearance",
   "theme": "Theme",
   "account": "Account",
   "changePassword": "Change Password",
   "deleteAccount": "Delete Account",
-  "deleteAccountConfirmation": "Are you sure you want to delete your account? This action cannot be undone.",
   "accountDeletedSuccessfully": "Account deleted successfully",
   "failedToDeleteAccount": "Failed to delete account",
   "selectTheme": "Select Theme",
   "light": "Light",
-  "lightThemeDescription": "Always use light theme",
   "dark": "Dark",
-  "darkThemeDescription": "Always use dark theme",
   "systemDefault": "System Default",
-  "systemDefaultDescription": "Follow your device settings",
-
   "language": "Language",
   "selectLanguage": "Select Language",
   "english": "English",
   "arabic": "Arabic",
-
   "currency": "EGP",
   "priceFormat": "£{price}",
   "@priceFormat": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "priceAdjustmentPlus": "(+£{price})",
   "@priceAdjustmentPlus": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "priceAdjustmentMinus": "(-£{price})",
   "@priceAdjustmentMinus": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "discountFormat": "-£{price}",
   "@discountFormat": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
-
   "basePrice": "Base price: £{price}",
   "@basePrice": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "specialInstructions": "Special Instructions",
   "anySpecialRequestsOptional": "Any special requests?",
   "required": "Required",
   "outOfStock": "Out of stock",
-
   "loyaltyRewards": "Loyalty Rewards",
   "recentActivity": "Recent Activity",
   "noLoyaltyAccountYet": "No loyalty account yet",
-  "makePurchaseToEarn": "Make a purchase to start earning points!",
   "noTransactionsYet": "No transactions yet",
   "charge": "Charge",
   "payment": "Payment",
   "posReceipt": "POS receipt #{number}",
   "@posReceipt": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "posCreditNote": "POS credit note #{number}",
   "@posCreditNote": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "posTabPayment": "Tab payment #{number}",
   "@posTabPayment": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "byPerson": "by {name}",
   "@byPerson": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "today": "Today",
@@ -321,41 +301,46 @@
   "daysAgo": "{days}d ago",
   "@daysAgo": {
     "placeholders": {
-      "days": {"type": "int"}
+      "days": {
+        "type": "int"
+      }
     }
   },
   "amountDue": "Amount Due",
   "creditBalance": "Credit Balance",
-  "pleasePayAtCounter": "Please pay at the counter",
-  "willBeAppliedToNextPurchase": "Will be applied to your next purchase",
-  "noOutstandingBalance": "No outstanding balance",
   "transactions": "Transactions",
   "failedToLoadTransactions": "Failed to load transactions",
   "failedToLoadFavorites": "Failed to load favorites: {error}",
   "@failedToLoadFavorites": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "browseMenu": "Browse Menu",
   "joinOurLoyaltyProgram": "Join our Loyalty Program",
-  "earnPointsDescription": "Earn points on every purchase and unlock exclusive rewards!",
   "joinNow": "Join Now",
   "viewHistory": "View history",
   "lifetimePoints": "Lifetime: {points} pts",
   "@lifetimePoints": {
     "placeholders": {
-      "points": {"type": "String"}
+      "points": {
+        "type": "String"
+      }
     }
   },
   "pointsToNextTier": "{points} pts to {tier}",
   "@pointsToNextTier": {
     "placeholders": {
-      "points": {"type": "String"},
-      "tier": {"type": "String"}
+      "points": {
+        "type": "String"
+      },
+      "tier": {
+        "type": "String"
+      }
     }
   },
-
   "rateYourOrder": "Rate Your Order",
   "yourReviewOptional": "Your Review (optional)",
   "shareYourExperience": "Share your experience...",
@@ -365,75 +350,72 @@
   "ratingGood": "Good",
   "ratingVeryGood": "Very Good",
   "ratingExcellent": "Excellent",
-
   "newPassword": "New Password",
   "enterNewPassword": "Please enter a new password",
   "passwordMustBe8Chars": "Password must be at least 8 characters",
   "pleaseConfirmPassword": "Please confirm your password",
   "passwordChangedSuccessfully": "Password changed successfully",
   "failedToChangePassword": "Failed to change password. Please try again.",
-
-  "supportEmail": "support@chillax.com",
   "supportPhone": "0100 469 8 469",
-
   "tierBronze": "BRONZE",
   "tierSilver": "SILVER",
   "tierGold": "GOLD",
   "tierPlatinum": "PLATINUM",
-
   "noFavoritesYet": "No favorites yet",
-  "noFavoritesDescription": "Items you love will appear here",
-
   "createStrongPassword": "Create a strong password",
-  "passwordRequirements": "Your password must be at least 8 characters long. We recommend using a mix of letters, numbers, and symbols.",
   "failedToLoadSessions": "Failed to load sessions",
   "noSessionsYet": "No sessions yet",
-  "reserveRoomToStart": "Reserve a room to get started",
   "durationLabel": "Duration: {duration}",
   "@durationLabel": {
     "placeholders": {
-      "duration": {"type": "String"}
+      "duration": {
+        "type": "String"
+      }
     }
   },
-
   "phoneNumber": "Phone Number",
   "enterPhoneNumber": "Enter your phone number",
-  "yourPhoneNumber": "Your phone number",
-
   "transactionTypePurchase": "Purchase",
   "transactionTypeBonus": "Bonus",
   "transactionTypeReferral": "Referral",
   "transactionTypePromotion": "Promotion",
   "transactionTypeRedemption": "Redemption",
   "transactionTypeAdjustment": "Adjustment",
-
   "pointsEarnedFromOrder": "Points earned from order #{orderId}",
   "@pointsEarnedFromOrder": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "pointsRedeemedForOrder": "Points redeemed for order #{orderId}",
   "@pointsRedeemedForOrder": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "balanceAmount": "{amount} {currency}",
   "@balanceAmount": {
     "placeholders": {
-      "amount": {"type": "String"},
-      "currency": {"type": "String"}
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
     }
   },
-
   "customizable": "Customizable",
-
   "failedToJoinSession": "Failed to join session",
   "memberCountFormat": "{count} members",
   "@memberCountFormat": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "pleaseWaitBeforeRequest": "Please wait before making another request",
@@ -443,92 +425,74 @@
   "switchToSingle": "Single",
   "switchToSingleRequestSent": "Single request sent",
   "leaveSession": "Leave Room",
-  "leaveSessionConfirmation": "Are you sure you want to leave this room?",
   "yesLeave": "Yes, Leave",
   "leftSession": "Left room",
   "failedToLeaveSession": "Failed to leave room",
-
-  "updateName": "Update Name",
-  "enterNewName": "Enter your new display name",
-  "nameUpdatedSuccessfully": "Name updated successfully",
-  "newName": "New name",
-  "failedToUpdateName": "Failed to update name. Please try again.",
-
   "updateProfile": "Update Profile",
   "profileUpdatedSuccessfully": "Profile updated successfully",
   "failedToUpdateProfile": "Failed to update profile. Please try again.",
-
   "callUs": "Call Us",
   "mostPopular": "Most Popular",
   "yourUsuals": "Your usual",
-
   "fastOrder": "Fast Order",
-  "fastOrderConfirmation": "Quick order {itemName}?",
-  "@fastOrderConfirmation": {
-    "placeholders": {
-      "itemName": {"type": "String"}
-    }
-  },
   "fastOrderPlaced": "Order placed!",
   "confirm": "Confirm",
-
   "offer": "Offer",
   "deals": "Deals",
   "specialOffers": "Special Offers",
   "bundleIncludes": "Includes",
-
   "playerModeSingle": "Single",
   "playerModeMulti": "Multi",
-
   "selectBranch": "Select Branch",
-  "switchBranch": "Switch Branch",
   "cannotSwitchBranchDuringSession": "You can't switch branches during an active session",
-
-  "scanQr": "Scan QR",
   "scanToJoin": "Scan to Join",
-  "pointCameraAtQr": "Point camera at room QR code",
   "alreadyInSession": "You're already in this session",
   "reserveThisRoom": "Reserve",
   "invalidQrCode": "Invalid QR code",
   "roomNotAvailable": "Room not available",
-
   "youAreAtTable": "You're at {tableName}",
   "@youAreAtTable": {
     "placeholders": {
-      "tableName": {"type": "String"}
+      "tableName": {
+        "type": "String"
+      }
     }
   },
-  "orderDeliveredToTable": "Your order will be brought to your table.",
   "tableUnavailable": "This table is not available",
   "pointCameraAtRoomOrTableQr": "Point camera at a room or table QR code",
-
   "invalidPhone": "Please enter a valid phone number (01xxxxxxxxx).",
-
-  "profileRequiredMessage": "We'll save your info so you won't need to enter it again",
   "completeYourInfo": "Complete Your Info",
-
   "orderingUnavailable": "Ordering is currently unavailable",
   "reservationsUnavailable": "Reservations are currently unavailable",
-
   "todaysSessions": "Today's Sessions",
   "noSessionsToday": "No sessions today",
-
   "hoursShort": "{count}h",
   "@hoursShort": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "minutesShort": "{count}m",
   "@minutesShort": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "secondsShort": "{count}s",
   "@secondsShort": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "leaveRoomQuestion": "Leave room?",
+  "clearCartQuestion": "Clear cart?",
+  "deleteAccountQuestion": "Delete account?",
+  "signOutQuestion": "Sign out?",
+  "cannotBeUndone": "Cannot be undone."
 }
