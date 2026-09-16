@@ -51,6 +51,7 @@ internal static class Extensions
 
         services.AddScoped<IOrderQueries, OrderQueries>();
         services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
+        services.AddScoped<IPlaceQueries, PlaceQueries>();
         services.AddScoped<IBuyerRepository, BuyerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
@@ -68,6 +69,10 @@ internal static class Extensions
         // Branch.API's flags, projected locally so a paused branch refuses
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
+
+        // Spaces' places, projected locally: an order names a place and a
+        // deactivated one is refused without a call across services
+        eventBus.AddSubscription<PlaceUpdatedIntegrationEvent, PlaceUpdatedIntegrationEventHandler>();
 
         // Sales' receipts, projected onto the orders they covered: "paid" and
         // "refunded" reach the customer's list without a call to Sales

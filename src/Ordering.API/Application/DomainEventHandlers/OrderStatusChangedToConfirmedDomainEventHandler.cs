@@ -92,7 +92,10 @@ public class OrderStatusChangedToConfirmedDomainEventHandler
                 oi.UnitPrice,
                 oi.Discount,
                 oi.CustomizationsDescription,
-                oi.OptionIds)).ToList())
+                oi.OptionIds)).ToList(),
+            order.PlaceId,
+            order.PlaceKind,
+            order.PlaceName)
         {
             PlacedAt = order.OrderDate,
         };

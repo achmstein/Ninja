@@ -32,11 +32,14 @@ public class SessionStartedIntegrationEventHandler(
             return;
         }
 
+        // A publisher older than the Places remodel sends no place fields;
+        // its room id and name are the place's
         var ticket = Ticket.OpenForSession(
             @event.ReservationId,
-            @event.RoomId,
-            @event.RoomName,
-            @event.BranchId);
+            @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            @event.PlaceName ?? @event.RoomName,
+            @event.BranchId,
+            @event.PlaceKind);
 
         // The reserving customer sat in the room from the start
         if (@event.CustomerId is not null)
@@ -46,6 +49,6 @@ public class SessionStartedIntegrationEventHandler(
         ticketRepository.Add(ticket);
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
 
-        logger.LogInformation("Opened ticket {TicketId} for session {SessionId} in room {RoomId}", ticket.Id, @event.ReservationId, @event.RoomId);
+        logger.LogInformation("Opened ticket {TicketId} for session {SessionId} at place {PlaceId}", ticket.Id, @event.ReservationId, ticket.PlaceId);
     }
 }

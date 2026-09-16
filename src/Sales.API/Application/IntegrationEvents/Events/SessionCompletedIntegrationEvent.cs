@@ -20,4 +20,17 @@ public record SessionCompletedIntegrationEvent(
     DateTime StartTime,
     DateTime EndTime,
     TimeSpan Duration,
-    int BranchId = 0) : IntegrationEvent;
+    int BranchId = 0,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null,
+    /// <summary>One line per rate option of the stay's tariff; null from a publisher older than the Places remodel.</summary>
+    List<SessionCostLine>? Costs = null) : IntegrationEvent;
+
+/// <summary>What one rate option of a stay cost: the line the bill prints.</summary>
+public record SessionCostLine(
+    string OptionCode,
+    LocalizedText OptionName,
+    decimal HourlyRate,
+    decimal Hours,
+    decimal Cost);

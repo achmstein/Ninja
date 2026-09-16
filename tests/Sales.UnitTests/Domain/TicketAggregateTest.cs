@@ -103,7 +103,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Room_time_carries_no_service_charge()
+    public void Session_time_carries_no_service_charge()
     {
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         ticket.AppendSessionTime(singleHours: 2m, singleCost: 100, multiHours: 0, multiCost: 0);
@@ -220,7 +220,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Room_tickets_cannot_be_split_by_moving_lines()
+    public void Session_tickets_cannot_be_split_by_moving_lines()
     {
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         ticket.AppendOrder(41, [Line("Latte", 1, 50), Line("Mocha", 1, 60)], 0);
@@ -340,7 +340,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Room_tickets_cannot_be_discarded()
+    public void Session_tickets_cannot_be_discarded_while_the_clock_runs()
     {
         // Empty only because the session is still running: its time lands at the end
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
@@ -349,7 +349,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void A_cancelled_session_drops_its_empty_room_ticket()
+    public void A_cancelled_session_drops_its_empty_ticket()
     {
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         ticket.ClearDomainEvents();
@@ -360,7 +360,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void A_cancelled_session_keeps_a_room_ticket_that_already_has_lines()
+    public void A_cancelled_session_keeps_a_ticket_that_already_has_lines()
     {
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
         ticket.AppendOrder(41, [Line("Latte", 1, 50)], 0);
@@ -497,7 +497,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Room_ticket_cannot_be_voided_or_settled_while_its_session_runs()
+    public void Session_ticket_cannot_be_voided_or_settled_while_its_session_runs()
     {
         var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
@@ -537,7 +537,7 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
-    public void Room_ticket_is_discardable_only_after_its_session_ends_empty()
+    public void Session_ticket_is_discardable_only_after_its_session_ends_empty()
     {
         var running = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);
 
@@ -552,6 +552,60 @@ public class TicketAggregateTest
         var withTime = Ticket.OpenForSession(8, 2, new LocalizedText("VIP"), branchId: 1);
         withTime.AppendSessionTime(singleHours: 1m, singleCost: 50, multiHours: 0, multiCost: 0);
         Assert.ThrowsExactly<SalesDomainException>(() => withTime.Discard());
+    }
+
+    [TestMethod]
+    public void Time_lines_are_named_after_the_place_and_its_option()
+    {
+        var room = Ticket.OpenForSession(7, 4, new LocalizedText("Room 4", "اوضة ٤"), branchId: 1);
+        room.AppendSessionTime([
+            new SessionTimeLine(new LocalizedText("Single", "سنجل"), 0.75m, 45m),
+            new SessionTimeLine(new LocalizedText("Multi", "ملتي"), 1.75m, 157.5m),
+        ]);
+
+        Assert.AreEqual(2, room.Lines.Count);
+        Assert.AreEqual("Room 4 time — Single", room.Lines.First().Description.En);
+        Assert.AreEqual("وقت اوضة ٤ — سنجل", room.Lines.First().Description.Ar);
+        Assert.AreEqual("Room 4 time — Multi", room.Lines.Last().Description.En);
+        Assert.AreEqual(60m, room.Lines.First().UnitPrice);
+        Assert.AreEqual(202.5m, room.GetSubtotal());
+
+        // One option: no dash, nothing to tell apart
+        var table = Ticket.OpenForSession(8, 51, new LocalizedText("Table 4", "ترابيزة ٤"), branchId: 1, placeKind: "Table");
+        table.AppendSessionTime([new SessionTimeLine(new LocalizedText("Standard", "عادي"), 1m, 40m)]);
+
+        Assert.AreEqual("Table 4 time", table.Lines.Single().Description.En);
+        Assert.AreEqual("وقت ترابيزة ٤", table.Lines.Single().Description.Ar);
+    }
+
+    [TestMethod]
+    public void A_timed_table_follows_its_session_like_a_room()
+    {
+        var table = Ticket.OpenForSession(8, 51, new LocalizedText("Table 4"), branchId: 1, placeKind: "Table");
+
+        Assert.AreEqual(TicketType.Table, table.Type, "the reports still group it with the tables");
+        Assert.IsTrue(table.HasSession);
+        Assert.AreEqual(51, table.PlaceId);
+        Assert.IsNull(table.RoomId);
+        Assert.IsNull(table.TableId, "the order-side table id is not the place id");
+
+        // The session rules apply regardless of the type
+        Assert.ThrowsExactly<SalesDomainException>(() => table.Discard());
+        Assert.ThrowsExactly<SalesDomainException>(() => table.Void("wrong table", "owner"));
+        table.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+        Assert.ThrowsExactly<SalesDomainException>(() => table.MoveLines([table.Lines.Single().Id]));
+
+        table.AppendSessionTime([new SessionTimeLine(new LocalizedText("Standard"), 1m, 40m)]);
+        table.Void("comp", "owner");
+        Assert.AreEqual(TicketStatus.Voided, table.Status);
+
+        // A plain table bill has no session: it opens on its first order and
+        // knows both the id the order named and the place behind it
+        var plain = Ticket.OpenForTable(3, new LocalizedText("Table 3"), branchId: 1, placeId: 41);
+        Assert.IsFalse(plain.HasSession);
+        Assert.AreEqual(41, plain.PlaceId);
+        Assert.AreEqual(3, plain.TableId);
+        Assert.AreEqual("Table", plain.PlaceKind);
     }
 
     private static TicketLine Line(string name, int qty, decimal unitPrice)

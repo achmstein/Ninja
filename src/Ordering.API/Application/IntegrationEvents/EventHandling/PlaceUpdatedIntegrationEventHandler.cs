@@ -1,0 +1,62 @@
+#nullable enable
+using Chillax.Ordering.Domain.Seedwork;
+using Chillax.Ordering.Infrastructure.Projections;
+
+namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+
+/// <summary>
+/// Keeps Ordering's projection of the places: an upsert keyed by place id,
+/// guarded against out-of-order delivery — an event older than what the row
+/// already holds is dropped. A deleted place loses its row.
+/// </summary>
+public class PlaceUpdatedIntegrationEventHandler(
+    OrderingContext context,
+    ILogger<PlaceUpdatedIntegrationEventHandler> logger)
+    : IIntegrationEventHandler<PlaceUpdatedIntegrationEvent>
+{
+    public async Task Handle(PlaceUpdatedIntegrationEvent @event)
+    {
+        logger.LogInformation("Handling integration event: {IntegrationEventId} - ({@IntegrationEvent})", @event.Id, @event);
+
+        var row = await context.Places.FindAsync(@event.PlaceId);
+
+        if (row is not null && @event.CreationDate <= row.UpdatedAt)
+        {
+            logger.LogInformation(
+                "Place {PlaceId} event from {EventAt} is not newer than the projection ({RowAt}) - skipped",
+                @event.PlaceId, @event.CreationDate, row.UpdatedAt);
+            return;
+        }
+
+        if (@event.Deleted)
+        {
+            if (row is not null)
+            {
+                context.Places.Remove(row);
+                await context.SaveChangesAsync();
+            }
+            logger.LogInformation("Place {PlaceId} projection dropped", @event.PlaceId);
+            return;
+        }
+
+        if (row is null)
+        {
+            row = new Place { PlaceId = @event.PlaceId };
+            context.Places.Add(row);
+        }
+
+        row.Kind = @event.Kind;
+        row.Name = new LocalizedText(@event.Name.En, @event.Name.Ar);
+        row.BranchId = @event.BranchId;
+        row.IsTimed = @event.IsTimed;
+        row.HasOptions = @event.HasOptions;
+        row.IsActive = @event.IsActive;
+        row.LegacyRoomId = @event.LegacyRoomId;
+        row.LegacyTableId = @event.LegacyTableId;
+        row.UpdatedAt = @event.CreationDate;
+
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Place {PlaceId} projection: {Kind} {Name}, active {Active}", @event.PlaceId, @event.Kind, @event.Name.En, @event.IsActive);
+    }
+}

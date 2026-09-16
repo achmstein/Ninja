@@ -14,4 +14,7 @@ public record ReservationCancelledIntegrationEvent(
     LocalizedText RoomName,
     string? CustomerId,
     string? CustomerName,
-    int BranchId = 1) : IntegrationEvent;
+    int BranchId = 1,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null) : IntegrationEvent;

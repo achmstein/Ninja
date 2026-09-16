@@ -14,4 +14,7 @@ public record SessionStartedIntegrationEvent(
     DateTime? ActualStartTime,
     string? PlayerMode,
     int BranchId = 0,
-    string? CustomerId = null) : IntegrationEvent;
+    string? CustomerId = null,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null) : IntegrationEvent;

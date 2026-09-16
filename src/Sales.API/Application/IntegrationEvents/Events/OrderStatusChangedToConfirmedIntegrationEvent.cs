@@ -36,7 +36,14 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     /// Who the order is for — an account holder, or a name the till was given
     /// for a walk-in. Null when nobody was named.
     /// </summary>
-    string? CustomerName = null) : IntegrationEvent;
+    string? CustomerName = null,
+    /// <summary>
+    /// The Spaces place the order is for, as newer Ordering builds send it
+    /// alongside the older RoomId/TableId. Null from older publishers.
+    /// </summary>
+    int? PlaceId = null,
+    string? PlaceKind = null,
+    LocalizedText? PlaceName = null) : IntegrationEvent;
 
 public record OrderConfirmedItem(
     int ProductId,

@@ -176,10 +176,21 @@ public static partial class OrdersApi
             // Ordering without saying where to bring it is ordering ahead, and
             // that is for account holders — there is nobody to hand a guest's
             // order to and nothing tying it to a visit
-            if (request.TableId is null && request.RoomName is null)
+            if (request.PlaceId is null && request.TableId is null && request.RoomName is null)
             {
                 return TypedResults.BadRequest("A table or room is required to order as a guest.");
             }
+        }
+
+        // The place behind the order, from Spaces' projection: a client on
+        // the new vocabulary names it; an older one names a room or a table
+        // id and the place is looked up. A place taken out of service
+        // refuses the order — nobody would bring it.
+        var place = await services.Places.ResolveAsync(request.PlaceId, request.RoomId, request.TableId);
+        if (place is { IsActive: false })
+        {
+            services.Logger.LogWarning("Order rejected - place {PlaceId} ({Name}) is not taking customers", place.PlaceId, place.Name.En);
+            return TypedResults.BadRequest("This place is not taking orders right now.");
         }
 
         // Both the command validator and the Buyer aggregate refuse a blank
@@ -227,7 +238,10 @@ public static partial class OrdersApi
                 isGuest ? request.GuestName : null,
                 isGuest ? request.GuestPhone : null,
                 sessionId: request.SessionId,
-                roomId: request.RoomId);
+                roomId: request.RoomId,
+                placeId: request.PlaceId ?? place?.PlaceId,
+                placeKind: request.PlaceKind ?? place?.Kind,
+                placeName: request.PlaceName ?? place?.Name);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
@@ -297,6 +311,10 @@ public static partial class OrdersApi
             services.IdentityService.GetUserIdentity(),
             attachCustomer ? request.CustomerUserId : "walk-in");
 
+        // The till may name a place by either vocabulary; never gated — the
+        // cashier standing there knows whether the place takes customers
+        var posPlace = await services.Places.ResolveAsync(request.PlaceId, null, request.TableId);
+
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
             var command = new CreateOrderCommand(
@@ -313,7 +331,10 @@ public static partial class OrdersApi
                 source: OrderSource.Pos,
                 ticketId: request.TicketId,
                 placedAt: request.PlacedAt,
-                replay: request.Replay);
+                replay: request.Replay,
+                placeId: request.PlaceId ?? posPlace?.PlaceId,
+                placeKind: request.PlaceKind ?? posPlace?.Kind,
+                placeName: request.PlaceName ?? posPlace?.Name);
 
             try
             {
@@ -688,8 +709,9 @@ public static partial class OrdersApi
 /// </param>
 /// <param name="GuestName">Required when ordering without an account.</param>
 /// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
-/// <param name="SessionId">The active room session the order belongs to, when ordering from a room.</param>
-/// <param name="RoomId">The room behind <paramref name="SessionId"/>.</param>
+/// <param name="SessionId">The active stay the order belongs to, when ordering from a timed place.</param>
+/// <param name="RoomId">The room behind <paramref name="SessionId"/> (older clients; newer ones send <paramref name="PlaceId"/>).</param>
+/// <param name="PlaceId">The Spaces place the order goes to. Newer clients send this instead of a room or table id.</param>
 public record CreateOrderRequest(
     string UserId,
     string UserName,
@@ -703,7 +725,10 @@ public record CreateOrderRequest(
     string? GuestName = null,
     string? GuestPhone = null,
     int? SessionId = null,
-    int? RoomId = null);
+    int? RoomId = null,
+    int? PlaceId = null,
+    string? PlaceKind = null,
+    LocalizedText? PlaceName = null);
 
 /// <summary>
 /// Request model for a counter sale keyed in at the POS. The cashier is the
@@ -728,6 +753,10 @@ public record PosOrderRequest(
     /// up while offline. Dates the order then instead of now.
     /// </summary>
     DateTime? PlacedAt = null,
+    /// <summary>The Spaces place the order goes to; newer tills send this instead of a table id.</summary>
+    int? PlaceId = null,
+    string? PlaceKind = null,
+    LocalizedText? PlaceName = null,
     /// <summary>
     /// The customer already left with the items: the order lands confirmed
     /// straight away, with no stock check and nothing for the kitchen to

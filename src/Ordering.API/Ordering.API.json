@@ -1386,6 +1386,31 @@
               "string"
             ],
             "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           }
         }
       },
@@ -1420,6 +1445,31 @@
           },
           "source": {
             "type": "string"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           },
           "roomName": {
             "oneOf": [
@@ -1529,6 +1579,31 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
             ]
           },
           "roomName": {
@@ -2005,6 +2080,31 @@
             ],
             "format": "int32"
           },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
           "roomName": {
             "oneOf": [
               {
@@ -2228,6 +2328,31 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           },
           "replay": {
             "type": "boolean",

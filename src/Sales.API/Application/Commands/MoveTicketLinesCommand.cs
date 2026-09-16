@@ -51,7 +51,7 @@ public class MoveTicketLinesCommandHandler(
         // Emptied, a table or counter bill has nothing left to be: its lines
         // live on with their order ids on the target, so it goes the way an
         // untouched empty ticket does. A room ticket stays for its session.
-        var emptied = ticket.Lines.Count == 0 && ticket.Type != TicketType.Room;
+        var emptied = ticket.Lines.Count == 0 && !ticket.HasSession;
         if (emptied)
         {
             ticket.Discard();

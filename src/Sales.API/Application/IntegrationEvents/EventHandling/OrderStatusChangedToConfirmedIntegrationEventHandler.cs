@@ -110,16 +110,17 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             // the order still has to land somewhere, so open the ticket now
             return sessionTicket ?? ticketRepository.Add(Ticket.OpenForSession(
                 sessionId,
-                @event.RoomId ?? 0,
-                @event.RoomName ?? new LocalizedText("Room"),
-                @event.BranchId));
+                @event.PlaceId ?? @event.RoomId ?? 0,
+                @event.PlaceName ?? @event.RoomName ?? new LocalizedText("Room"),
+                @event.BranchId,
+                @event.PlaceKind ?? "Room"));
         }
 
         if (@event.TableId is int tableId)
         {
             var tableTicket = await ticketRepository.FindOpenByTableAsync(tableId, @event.BranchId);
 
-            return tableTicket ?? ticketRepository.Add(Ticket.OpenForTable(tableId, @event.TableName, @event.BranchId));
+            return tableTicket ?? ticketRepository.Add(Ticket.OpenForTable(tableId, @event.PlaceName ?? @event.TableName, @event.BranchId, @event.PlaceId));
         }
 
         // A room order from an older customer app build names its room but

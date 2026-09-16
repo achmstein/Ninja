@@ -42,6 +42,11 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .Property(o => o.GuestPhone)
             .HasMaxLength(30);
 
+        // The Spaces place, alongside the older room/table columns
+        orderConfiguration.Property(o => o.PlaceKind).HasMaxLength(20);
+        orderConfiguration.OwnsOne(o => o.PlaceName, b => b.ToJson());
+        orderConfiguration.Ignore(o => o.Destination);
+
         // Configure RoomName as JSON column (localized text)
         orderConfiguration.OwnsOne(o => o.RoomName, b => b.ToJson());
 
@@ -81,5 +86,8 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         // Sales assembles a session's bill by this
         orderConfiguration.HasIndex(o => o.SessionId);
+
+        // Open orders are counted per place
+        orderConfiguration.HasIndex(o => o.PlaceId);
     }
 }

@@ -56,7 +56,7 @@ public class TicketRepository : ITicketRepository
         // so the name match is done in memory.
         if (roomId is int id)
         {
-            var byId = open.FirstOrDefault(t => t.RoomId == id);
+            var byId = open.FirstOrDefault(t => t.PlaceId == id || t.RoomId == id);
             if (byId is not null) return byId;
         }
 

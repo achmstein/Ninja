@@ -24,6 +24,16 @@ public class CreateOrderCommand : IRequest<int>
     [DataMember]
     public string UserName { get; private set; } = string.Empty;
 
+    /// <summary>The Spaces place the order goes to, when the client named one.</summary>
+    [DataMember]
+    public int? PlaceId { get; private set; }
+
+    [DataMember]
+    public string? PlaceKind { get; private set; }
+
+    [DataMember]
+    public LocalizedText? PlaceName { get; private set; }
+
     /// <summary>
     /// Room name for the session (e.g., "VIP") - localized
     /// </summary>
@@ -134,7 +144,7 @@ public class CreateOrderCommand : IRequest<int>
     /// Whether the order says where it goes. Mirrors Order.HasDestination —
     /// the aggregate is the one that enforces it.
     /// </summary>
-    public bool HasDestination => RoomName is not null || TableId.HasValue;
+    public bool HasDestination => PlaceId.HasValue || RoomName is not null || TableId.HasValue;
 
     public CreateOrderCommand()
     {
@@ -159,9 +169,15 @@ public class CreateOrderCommand : IRequest<int>
         int? roomId = null,
         int? ticketId = null,
         DateTime? placedAt = null,
-        bool replay = false)
+        bool replay = false,
+        int? placeId = null,
+        string? placeKind = null,
+        LocalizedText? placeName = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        PlaceId = placeId;
+        PlaceKind = placeKind;
+        PlaceName = placeName;
         PlacedAt = placedAt;
         Replay = replay;
         UserId = userId;

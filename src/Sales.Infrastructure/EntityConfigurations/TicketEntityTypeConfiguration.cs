@@ -32,6 +32,9 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.OwnsOne(t => t.LocationName, b => b.ToJson());
 
+        builder.Property(t => t.PlaceKind).HasMaxLength(20);
+        builder.Ignore(t => t.HasSession);
+
         builder.Property(t => t.Label).HasMaxLength(200);
         // The customers who sat in the room, as a text array
         builder.Property(t => t.MemberIds);
@@ -75,5 +78,6 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasIndex(t => new { t.BranchId, t.Status });
         builder.HasIndex(t => t.SessionId);
         builder.HasIndex(t => new { t.TableId, t.Status });
+        builder.HasIndex(t => new { t.PlaceId, t.Status });
     }
 }

@@ -38,13 +38,30 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public DateTime? SessionEndedAt { get; private set; }
 
+    /// <summary>
+    /// The Spaces place this bill is for — a room, a table, a station. Null
+    /// on a counter sale. RoomId and TableId below are the ids the older
+    /// events carried and keep being filled for one release.
+    /// </summary>
+    public int? PlaceId { get; private set; }
+
+    /// <summary>"Room", "Table" or "Station", as Spaces names it.</summary>
+    public string? PlaceKind { get; private set; }
+
     public int? RoomId { get; private set; }
 
-    /// <summary>The café table a Table ticket accumulates for.</summary>
+    /// <summary>The café table a Table ticket accumulates for (the id the order named).</summary>
     public int? TableId { get; private set; }
 
-    /// <summary>Room or table name snapshot for display and receipts.</summary>
+    /// <summary>Place name snapshot for display and receipts.</summary>
     public LocalizedText? LocationName { get; private set; }
+
+    /// <summary>
+    /// A bill with a Spaces stay on it: its time lands when the clock stops.
+    /// Every rule about "the session" keys on this, not on the ticket type,
+    /// so a timed table follows the same rules as a room.
+    /// </summary>
+    public bool HasSession => SessionId != null;
 
     /// <summary>
     /// What the bill is called, for humans: the session owner's name at open
@@ -218,24 +235,32 @@ public class Ticket : Entity, IAggregateRoot
     }
 
     /// <summary>
-    /// Opened when a room session starts (or lazily, if Sales missed the
-    /// start). A room ticket is named by its room, like a table's by its
-    /// table — never by a person: who is in the room is the session's
-    /// roster, and whose share is whose is decided at settle.
+    /// Opened when a stay's clock starts (or lazily, if Sales missed the
+    /// start). Named by its place, like a table's bill by its table — never
+    /// by a person: who is there is the stay's roster, and whose share is
+    /// whose is decided at settle. A room's stay is a Room ticket; a timed
+    /// table's is a Table ticket that follows its session all the same.
     /// </summary>
-    public static Ticket OpenForSession(int sessionId, int roomId, LocalizedText roomName, int branchId)
-        => new(TicketType.Room, branchId)
+    public static Ticket OpenForSession(int sessionId, int placeId, LocalizedText placeName, int branchId, string placeKind = "Room")
+    {
+        var isRoom = string.Equals(placeKind, "Room", StringComparison.OrdinalIgnoreCase);
+        return new(isRoom ? TicketType.Room : TicketType.Table, branchId)
         {
             SessionId = sessionId,
-            RoomId = roomId,
-            LocationName = roomName,
+            PlaceId = placeId,
+            PlaceKind = placeKind,
+            RoomId = isRoom ? placeId : null,
+            LocationName = placeName,
         };
+    }
 
     /// <summary>Opened lazily by a table's first confirmed order (Q7: one open ticket per table).</summary>
-    public static Ticket OpenForTable(int tableId, LocalizedText? tableName, int branchId)
+    public static Ticket OpenForTable(int tableId, LocalizedText? tableName, int branchId, int? placeId = null)
         => new(TicketType.Table, branchId)
         {
             TableId = tableId,
+            PlaceId = placeId,
+            PlaceKind = "Table",
             LocationName = tableName,
         };
 
@@ -296,17 +321,15 @@ public class Ticket : Entity, IAggregateRoot
     }
 
     /// <summary>
-    /// Append the authoritative time lines when the session completes.
-    /// Idempotent — time lands exactly once, rounding stays owned by Spaces.
-    /// The time is the room's, not anyone's: it carries no customer, sits
-    /// under the room's own heading, and is split at settle however the
-    /// group agrees, each share going onto its own tab.
+    /// Append the authoritative time lines when the stay ends, one per rate
+    /// option of its tariff (zero-hour options are skipped). Idempotent —
+    /// time lands exactly once, rounding stays owned by Spaces. The time is
+    /// the place's, not anyone's: it carries no customer, sits under the
+    /// place's own heading, and is split at settle however the group agrees.
+    /// A tariff with one option reads "Table 4 time"; with several, each line
+    /// reads "Room 4 time — Single".
     /// </summary>
-    public void AppendSessionTime(
-        decimal singleHours,
-        decimal singleCost,
-        decimal multiHours,
-        decimal multiCost)
+    public void AppendSessionTime(IReadOnlyList<SessionTimeLine> lines)
     {
         EnsureOpen();
 
@@ -315,26 +338,37 @@ public class Ticket : Entity, IAggregateRoot
         if (_lines.Any(l => l.Source == TicketLineSource.SessionTime))
             return;
 
-        if (singleHours > 0)
-        {
-            _lines.Add(new TicketLine(
-                TicketLineSource.SessionTime,
-                new LocalizedText("Room time — Single", "وقت الأوضة — سنجل"),
-                qty: singleHours,
-                unitPrice: singleHours == 0 ? 0 : singleCost / singleHours));
-        }
+        var place = LocationName ?? new LocalizedText("Place");
+        var placeAr = string.IsNullOrWhiteSpace(place.Ar) ? place.En : place.Ar;
+        var perOption = lines.Count > 1;
 
-        if (multiHours > 0)
+        foreach (var line in lines.Where(l => l.Hours > 0))
         {
+            var optionAr = string.IsNullOrWhiteSpace(line.OptionName.Ar) ? line.OptionName.En : line.OptionName.Ar;
+            var description = perOption
+                ? new LocalizedText($"{place.En} time — {line.OptionName.En}", $"وقت {placeAr} — {optionAr}")
+                : new LocalizedText($"{place.En} time", $"وقت {placeAr}");
+
             _lines.Add(new TicketLine(
                 TicketLineSource.SessionTime,
-                new LocalizedText("Room time — Multi", "وقت الأوضة — ملتي"),
-                qty: multiHours,
-                unitPrice: multiHours == 0 ? 0 : multiCost / multiHours));
+                description,
+                qty: line.Hours,
+                unitPrice: line.Cost / line.Hours));
         }
 
         Touch();
     }
+
+    /// <summary>The two-option room tariff as the older SessionCompleted event carries it.</summary>
+    public void AppendSessionTime(
+        decimal singleHours,
+        decimal singleCost,
+        decimal multiHours,
+        decimal multiCost)
+        => AppendSessionTime([
+            new SessionTimeLine(new LocalizedText("Single", "سنجل"), singleHours, singleCost),
+            new SessionTimeLine(new LocalizedText("Multi", "ملتي"), multiHours, multiCost),
+        ]);
 
     public void AddManualLine(LocalizedText description, decimal qty, decimal unitPrice, decimal discount, string addedBy, string? customerName = null)
     {
@@ -589,8 +623,8 @@ public class Ticket : Entity, IAggregateRoot
         // A room ticket follows its session while it runs. Once the session has
         // ended and nothing ever landed — no time billed, no orders — there is
         // nothing to bill and it is thrown away like any other empty ticket.
-        if (Type == TicketType.Room && SessionEndedAt == null)
-            throw new SalesDomainException("A room ticket cannot be discarded while its session is running.");
+        if (HasSession && SessionEndedAt == null)
+            throw new SalesDomainException("A ticket cannot be discarded while its session is running.");
 
         DiscardEmpty();
     }
@@ -602,8 +636,8 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public void MarkSessionCancelled()
     {
-        if (Type != TicketType.Room)
-            throw new SalesDomainException("Only a room ticket follows a session.");
+        if (!HasSession)
+            throw new SalesDomainException("Only a ticket with a session follows one.");
 
         EnsureOpen();
         SessionEndedAt ??= DateTime.UtcNow;
@@ -618,13 +652,12 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     private void EnsureSessionEnded()
     {
-        var running = Type == TicketType.Room
-            && SessionId != null
+        var running = HasSession
             && SessionEndedAt == null
             && !_lines.Any(l => l.Source == TicketLineSource.SessionTime);
 
         if (running)
-            throw new SalesDomainException("The room's session is still running — end it first so its time lands on the bill.");
+            throw new SalesDomainException("The session is still running — end it first so its time lands on the bill.");
     }
 
     /// <summary>
@@ -635,8 +668,8 @@ public class Ticket : Entity, IAggregateRoot
     /// </summary>
     public void DiscardForCancelledSession()
     {
-        if (Type != TicketType.Room)
-            throw new SalesDomainException("Only a room ticket follows a session.");
+        if (!HasSession)
+            throw new SalesDomainException("Only a ticket with a session follows one.");
 
         DiscardEmpty();
     }
@@ -661,8 +694,8 @@ public class Ticket : Entity, IAggregateRoot
     {
         EnsureOpen();
 
-        if (Type == TicketType.Room)
-            throw new SalesDomainException("Room tickets follow their session and cannot be split this way.");
+        if (HasSession)
+            throw new SalesDomainException("A ticket with a session follows it and cannot be split this way.");
 
         var moving = _lines.Where(l => lineIds.Contains(l.Id)).ToList();
 
@@ -681,7 +714,8 @@ public class Ticket : Entity, IAggregateRoot
             TicketType.Table => OpenForTable(
                 TableId!.Value,
                 LocationName is null ? null : new LocalizedText(LocationName.En, LocationName.Ar),
-                BranchId),
+                BranchId,
+                PlaceId),
             _ => OpenForCounter(BranchId),
         };
 

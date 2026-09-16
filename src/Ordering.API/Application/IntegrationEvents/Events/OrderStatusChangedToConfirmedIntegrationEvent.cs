@@ -37,6 +37,14 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     public LocalizedText? TableName { get; }
 
+    /// <summary>The Spaces place the order goes to; null for an order-ahead or a counter sale.</summary>
+    public int? PlaceId { get; }
+
+    /// <summary>"Room", "Table" or "Station".</summary>
+    public string? PlaceKind { get; }
+
+    public LocalizedText? PlaceName { get; }
+
     /// <summary>
     /// The exact ticket this order must land on, set when a cashier added
     /// items to an already-open bill. Takes precedence over the session/table
@@ -88,7 +96,10 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         string source = "Customer",
         string? guestPhone = null,
         double loyaltyDiscount = 0,
-        IReadOnlyList<OrderConfirmedItem>? items = null)
+        IReadOnlyList<OrderConfirmedItem>? items = null,
+        int? placeId = null,
+        string? placeKind = null,
+        LocalizedText? placeName = null)
     {
         OrderId = orderId;
         OrderStatus = orderStatus;
@@ -109,6 +120,9 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         GuestPhone = guestPhone;
         LoyaltyDiscount = loyaltyDiscount;
         Items = items ?? [];
+        PlaceId = placeId;
+        PlaceKind = placeKind;
+        PlaceName = placeName;
     }
 }
 

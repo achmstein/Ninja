@@ -52,7 +52,10 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             sessionId: message.SessionId,
             roomId: message.RoomId,
             ticketId: message.TicketId,
-            placedAt: message.PlacedAt);
+            placedAt: message.PlacedAt,
+            placeId: message.PlaceId,
+            placeKind: message.PlaceKind,
+            placeName: message.PlaceName);
 
         foreach (var item in message.OrderItems)
         {

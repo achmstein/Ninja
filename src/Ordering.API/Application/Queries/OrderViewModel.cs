@@ -30,8 +30,13 @@ public record Order
     public DateTime Date { get; init; }
     public string Status { get; init; } = string.Empty;
     public string? Description { get; init; }
+    /// <summary>The Spaces place the order goes to; null for an order-ahead or a counter sale.</summary>
+    public int? PlaceId { get; init; }
+    /// <summary>"Room", "Table" or "Station".</summary>
+    public string? PlaceKind { get; init; }
+    public LocalizedText? PlaceName { get; init; }
     public LocalizedText? RoomName { get; init; }
-    /// <summary>The room session the order was placed into, when ordered from a room.</summary>
+    /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
     public int? RoomId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
@@ -76,6 +81,9 @@ public record KitchenOrder
     public DateTime? ReadyAt { get; init; }
     /// <summary>Who placed it: Customer, Guest, or Pos.</summary>
     public string Source { get; init; } = string.Empty;
+    public int? PlaceId { get; init; }
+    public string? PlaceKind { get; init; }
+    public LocalizedText? PlaceName { get; init; }
     public LocalizedText? RoomName { get; init; }
     public LocalizedText? TableName { get; init; }
     /// <summary>The buyer's name, or the name a guest or the cashier left.</summary>
@@ -136,8 +144,11 @@ public record OrderSummary
     public DateTime? VoidedAt { get; init; }
     /// <summary>The Sales ticket the order landed on — what the receipt link opens.</summary>
     public int? TicketId { get; init; }
+    public int? PlaceId { get; init; }
+    public string? PlaceKind { get; init; }
+    public LocalizedText? PlaceName { get; init; }
     public LocalizedText? RoomName { get; init; }
-    /// <summary>The room session the order was placed into, when ordered from a room.</summary>
+    /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
     public string Source { get; init; } = string.Empty;

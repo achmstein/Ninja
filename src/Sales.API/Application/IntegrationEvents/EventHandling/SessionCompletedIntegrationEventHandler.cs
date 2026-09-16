@@ -29,9 +29,10 @@ public class SessionCompletedIntegrationEventHandler(
             // because the start event was missed
             ticket = ticketRepository.Add(Ticket.OpenForSession(
                 @event.ReservationId,
-                @event.RoomId,
-                @event.RoomName,
-                @event.BranchId));
+                @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                @event.PlaceName ?? @event.RoomName,
+                @event.BranchId,
+                @event.PlaceKind));
 
             logger.LogWarning("No open ticket for completed session {SessionId} - opened one late", @event.ReservationId);
         }
@@ -40,8 +41,18 @@ public class SessionCompletedIntegrationEventHandler(
         // heading on the bill, and the group splits it at settle however they
         // agree, each share typed onto its own tab. Stamping the owner on it
         // used to put the whole room on one person with a single tap.
-        ticket.AppendSessionTime(
-            @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
+        if (@event.Costs is { Count: > 0 } costs)
+        {
+            ticket.AppendSessionTime(costs
+                .Select(c => new SessionTimeLine(c.OptionName, c.Hours, c.Cost))
+                .ToList());
+        }
+        else
+        {
+            // A publisher older than the Places remodel: the two room rates
+            ticket.AppendSessionTime(
+                @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
+        }
 
         // Nothing ever landed — no time billed, no orders. An empty room ticket
         // left open would keep the room busy on the floor and block the next

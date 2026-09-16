@@ -21,6 +21,23 @@ public class Order
     public string? Description { get; private set; }
 
     /// <summary>
+    /// The Spaces place the order goes to — a room, a table, a station.
+    /// Null for an order-ahead or a counter sale. RoomName/RoomId/TableId/
+    /// TableName below are what the older clients and events carry; they
+    /// keep being filled, both ways, for one release.
+    /// </summary>
+    public int? PlaceId { get; private set; }
+
+    /// <summary>"Room", "Table" or "Station", as Spaces names it.</summary>
+    public string? PlaceKind { get; private set; }
+
+    /// <summary>Place name snapshot at order time - localized.</summary>
+    public LocalizedText? PlaceName { get; private set; }
+
+    /// <summary>Where the order goes, as one value: the place and, when its clock runs, the stay.</summary>
+    public OrderDestination Destination => new(PlaceId, PlaceKind, PlaceName, SessionId);
+
+    /// <summary>
     /// Room name for the session (e.g., "VIP", "Room 1") - localized
     /// </summary>
     public LocalizedText? RoomName { get; private set; }
@@ -91,7 +108,7 @@ public class Order
     /// Whether the order says where it is going. A running room session wins
     /// over a scanned table on the way in, so at most one of the two is set.
     /// </summary>
-    public bool HasDestination => RoomName is not null || TableId.HasValue;
+    public bool HasDestination => PlaceId.HasValue || RoomName is not null || TableId.HasValue;
 
     /// <summary>
     /// Special instructions or notes from the customer
@@ -195,7 +212,7 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null) : this()
     {
         BuyerId = buyerId;
         OrderStatus = OrderStatus.AwaitingValidation;
@@ -207,6 +224,38 @@ public class Order
         TableId = tableId;
         TableName = tableName;
         TicketId = ticketId;
+
+        // The place and the older room/table fields are filled from each
+        // other, so a client on either vocabulary lands the same order.
+        if (placeId is not null)
+        {
+            PlaceId = placeId;
+            PlaceKind = placeKind ?? (tableId is not null ? "Table" : "Room");
+            PlaceName = placeName ?? roomName ?? tableName;
+            if (string.Equals(PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
+            {
+                RoomId ??= placeId;
+                RoomName ??= PlaceName;
+            }
+            else
+            {
+                TableName ??= PlaceName;
+            }
+        }
+        else if (roomName is not null || roomId is not null)
+        {
+            // Rooms kept their ids in the Places remodel
+            PlaceId = roomId;
+            PlaceKind = "Room";
+            PlaceName = roomName;
+        }
+        else if (tableId is not null)
+        {
+            // The table id a printed sticker carries is not the place id;
+            // the place, when known, is resolved before the order is created
+            PlaceKind = "Table";
+            PlaceName = tableName;
+        }
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;
         LoyaltyDiscount = loyaltyDiscount;

@@ -4531,6 +4531,21 @@
             ],
             "format": "date-time"
           },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "roomId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -4956,6 +4971,21 @@
               "string"
             ],
             "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "roomId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",

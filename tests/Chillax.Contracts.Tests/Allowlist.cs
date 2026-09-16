@@ -12,8 +12,6 @@ public static class Allowlist
     [
         "OrderStartedIntegrationEvent",
         "ProductPriceChangedIntegrationEvent",
-        // Spaces publishes the places projection; Ordering and Notification subscribe in the next steps of the Places plan
-        "PlaceUpdatedIntegrationEvent",
     ];
 
     /// <summary>Subscribed to, but no service publishes (eShop leftovers in Catalog).</summary>

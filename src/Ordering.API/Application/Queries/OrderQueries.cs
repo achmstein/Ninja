@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 namespace Chillax.Ordering.API.Application.Queries;
 
 using System.Linq.Expressions;
@@ -24,6 +24,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             OrderNumber = order.Id,
             Date = order.OrderDate,
             Description = order.Description,
+            PlaceId = order.PlaceId,
+            PlaceKind = order.PlaceKind,
+            PlaceName = order.PlaceName,
             RoomName = order.RoomName,
             SessionId = order.SessionId,
             RoomId = order.RoomId,
@@ -156,6 +159,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 ConfirmedAt = o.ConfirmedAt,
                 ReadyAt = o.ReadyAt,
                 Source = o.Source.ToString(),
+                PlaceId = o.PlaceId,
+                PlaceKind = o.PlaceKind,
+                PlaceName = o.PlaceName,
                 RoomName = o.RoomName,
                 TableName = o.TableName,
                 CustomerName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
@@ -195,6 +201,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
                 TicketId = o.TicketId,
+                PlaceId = o.PlaceId,
+                PlaceKind = o.PlaceKind,
+                PlaceName = o.PlaceName,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
@@ -307,6 +316,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
                 TicketId = o.TicketId,
+                PlaceId = o.PlaceId,
+                PlaceKind = o.PlaceKind,
+                PlaceName = o.PlaceName,
                 RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
