@@ -5,8 +5,14 @@ public class ServiceRequest
     public int Id { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
-    /// <summary>The room session the request came from; null for a table.</summary>
+    /// <summary>The stay the request came from; null when no clock runs at the place.</summary>
     public int? SessionId { get; set; }
+    /// <summary>The Spaces place the request came from.</summary>
+    public int? PlaceId { get; set; }
+    /// <summary>"Room", "Table" or "Station".</summary>
+    public string? PlaceKind { get; set; }
+    /// <summary>The rate option asked for by a <see cref="ServiceRequestType.ChangeOption"/> request ("multi", "single", ...).</summary>
+    public string? OptionCode { get; set; }
     public int? RoomId { get; set; }
     public int BranchId { get; set; }
     /// <summary>The place the till goes to: the room, or the table's name for a table request.</summary>
@@ -27,7 +33,9 @@ public enum ServiceRequestType
     ControllerChange = 2,
     ReceiptToPay = 3,
     SwitchToMulti = 4,
-    SwitchToSingle = 5
+    SwitchToSingle = 5,
+    /// <summary>Switch the stay to another rate option of the place's tariff; the option travels in OptionCode. SwitchToMulti/SwitchToSingle are the two-option room case of this.</summary>
+    ChangeOption = 6,
 }
 
 public enum ServiceRequestStatus

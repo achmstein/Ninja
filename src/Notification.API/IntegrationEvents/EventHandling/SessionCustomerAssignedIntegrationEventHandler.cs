@@ -24,6 +24,8 @@ public class SessionCustomerAssignedIntegrationEventHandler(
         {
             type = "customer_assigned",
             roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         };
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", payload);

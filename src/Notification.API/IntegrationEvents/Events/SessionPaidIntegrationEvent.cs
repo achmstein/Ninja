@@ -1,3 +1,4 @@
+using Chillax.Notification.API.Model;
 using Chillax.EventBus.Events;
 
 namespace Chillax.Notification.API.IntegrationEvents.Events;
@@ -12,4 +13,7 @@ public record SessionPaidIntegrationEvent(
     int RoomId,
     IReadOnlyCollection<string> MemberIds,
     int ReceiptNumber,
-    int BranchId) : IntegrationEvent;
+    int BranchId,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null) : IntegrationEvent;

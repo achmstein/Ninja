@@ -52,6 +52,11 @@ public static class NotificationMessages
         new($"{roomName.GetText("en")} - {userName} wants to switch to single",
             $"{roomName.GetText("ar")} - {userName} عايز يحول سنجل");
 
+    public static readonly LocalizedText ChangeOptionTitle = new("Rate Change", "عايز يغير التعريفة");
+    public static LocalizedText ChangeOptionBody(LocalizedText roomName, string userName, string option) =>
+        new($"{roomName.GetText("en")} - {userName} wants to switch to {option}",
+            $"{roomName.GetText("ar")} - {userName} عايز يحول {option}");
+
     public static readonly LocalizedText ServiceRequestTitle = new("Service Request", "محتاج مساعدة");
     public static LocalizedText ServiceRequestBody(LocalizedText roomName, string userName) =>
         new($"{roomName.GetText("en")} - {userName} needs assistance",

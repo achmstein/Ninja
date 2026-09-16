@@ -23,6 +23,8 @@ public class SessionStartedIntegrationEventHandler(
         {
             type = "session_started",
             roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
 
@@ -33,6 +35,8 @@ public class SessionStartedIntegrationEventHandler(
             {
                 type = "session_started",
                 roomId = @event.RoomId,
+                placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                placeKind = @event.PlaceKind,
                 reservationId = @event.ReservationId
             });
 

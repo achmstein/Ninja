@@ -11,4 +11,7 @@ public record ServiceRequestCreatedIntegrationEvent(
     DateTime CreatedAt,
     int BranchId = 1,
     int? TableId = null,
-    LocalizedText? TableName = null) : IntegrationEvent;
+    LocalizedText? TableName = null,
+    int? PlaceId = null,
+    string? PlaceKind = null,
+    string? OptionCode = null) : IntegrationEvent;

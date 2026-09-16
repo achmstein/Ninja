@@ -8,6 +8,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
     public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
     public DbSet<NotificationPreferences> Preferences => Set<NotificationPreferences>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<Place> Places => Set<Place>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,8 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.Property(e => e.Status).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.AcknowledgedBy).HasMaxLength(256);
+            entity.Property(e => e.PlaceKind).HasMaxLength(20);
+            entity.Property(e => e.OptionCode).HasMaxLength(40);
 
             // Index for efficient lookups by user and status
             entity.HasIndex(e => new { e.UserId, e.Status });
@@ -56,12 +59,26 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
 
             // Index for efficient lookups by room and status
             entity.HasIndex(e => new { e.RoomId, e.Status });
+            entity.HasIndex(e => new { e.PlaceId, e.Status });
 
             // Index for ordering by created date
             entity.HasIndex(e => e.CreatedAt);
 
             // Index for pending requests
             entity.HasIndex(e => e.Status);
+        });
+
+        // Spaces' places, keyed by Spaces' id — never generated here
+        modelBuilder.Entity<Place>(entity =>
+        {
+            entity.ToTable("Places");
+            entity.HasKey(e => e.PlaceId);
+            entity.Property(e => e.PlaceId).ValueGeneratedNever();
+            entity.Property(e => e.Kind).IsRequired().HasMaxLength(20);
+            entity.OwnsOne(e => e.Name, b => b.ToJson());
+            entity.Ignore(e => e.TakesControllerRequests);
+            entity.HasIndex(e => e.LegacyRoomId);
+            entity.HasIndex(e => e.LegacyTableId);
         });
 
         modelBuilder.Entity<Announcement>(entity =>

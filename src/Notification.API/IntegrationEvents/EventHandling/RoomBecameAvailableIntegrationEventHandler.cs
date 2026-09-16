@@ -72,7 +72,9 @@ public class RoomBecameAvailableIntegrationEventHandler(
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
         {
             type = "room_available",
-            roomId = @event.RoomId
+            roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind
         });
     }
 }

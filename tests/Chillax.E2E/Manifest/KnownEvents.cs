@@ -33,7 +33,7 @@ public static class KnownEvents
         new("OrderStatusChangedToSubmitted", "Ordering", ["Notification"]),
         new("OrderStockConfirmed", "Catalog", ["Ordering"]),
         new("OrderStockRejected", "Catalog", ["Ordering"]),
-        new("PlaceUpdated", "Spaces", ["Ordering"]),
+        new("PlaceUpdated", "Spaces", ["Ordering", "Notification"]),
         new("ProductPriceChanged", "Catalog", []),                      // dead publisher
         new("PurchaseReceived", "Inventory", ["Finance"]),
         new("ReservationCancelled", "Spaces", ["Sales", "Notification"]),

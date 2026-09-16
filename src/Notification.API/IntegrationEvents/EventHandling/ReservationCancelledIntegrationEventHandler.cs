@@ -25,6 +25,8 @@ public class ReservationCancelledIntegrationEventHandler(
         {
             type = "reservation_cancelled",
             roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
 
@@ -34,6 +36,8 @@ public class ReservationCancelledIntegrationEventHandler(
             {
                 type = "reservation_cancelled",
                 roomId = @event.RoomId,
+                placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                placeKind = @event.PlaceKind,
                 reservationId = @event.ReservationId
             });
         }

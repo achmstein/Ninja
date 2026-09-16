@@ -13,4 +13,8 @@ public record RoomReservedIntegrationEvent(
     string? CustomerId,
     string? CustomerName,
     DateTime? ExpiresAt,
-    int BranchId = 1) : IntegrationEvent;
+    int BranchId = 1,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null,
+    bool StartOnConfirm = false) : IntegrationEvent;

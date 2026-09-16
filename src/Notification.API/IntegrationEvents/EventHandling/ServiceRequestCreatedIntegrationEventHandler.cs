@@ -29,6 +29,9 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             requestType = @event.RequestType.ToString(),
             roomId = @event.RoomId,
             tableId = @event.TableId,
+            placeId = @event.PlaceId,
+            placeKind = @event.PlaceKind,
+            optionCode = @event.OptionCode,
             branchId = @event.BranchId
         });
 
@@ -64,7 +67,10 @@ public class ServiceRequestCreatedIntegrationEventHandler(
                     { "requestId", @event.RequestId.ToString() },
                     { "requestType", @event.RequestType.ToString() },
                     { "roomId", @event.RoomId.ToString() },
-                    { "roomName", @event.RoomName.GetText(lang) }
+                    { "roomName", @event.RoomName.GetText(lang) },
+                    { "placeId", (@event.PlaceId ?? @event.RoomId).ToString() },
+                    { "placeKind", @event.PlaceKind ?? (@event.TableId is null ? "Room" : "Table") },
+                    { "optionCode", @event.OptionCode ?? string.Empty }
                 });
 
             totalSuccess += result.SuccessCount;
@@ -110,6 +116,16 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             ServiceRequestType.SwitchToSingle => (
                 NotificationMessages.SwitchToSingleTitle.GetText(lang),
                 NotificationMessages.SwitchToSingleBody(@event.RoomName, @event.UserName).GetText(lang)),
+            // The two-option room words when they fit; the option's code otherwise
+            ServiceRequestType.ChangeOption when @event.OptionCode == "multi" => (
+                NotificationMessages.SwitchToMultiTitle.GetText(lang),
+                NotificationMessages.SwitchToMultiBody(@event.RoomName, @event.UserName).GetText(lang)),
+            ServiceRequestType.ChangeOption when @event.OptionCode == "single" => (
+                NotificationMessages.SwitchToSingleTitle.GetText(lang),
+                NotificationMessages.SwitchToSingleBody(@event.RoomName, @event.UserName).GetText(lang)),
+            ServiceRequestType.ChangeOption => (
+                NotificationMessages.ChangeOptionTitle.GetText(lang),
+                NotificationMessages.ChangeOptionBody(@event.RoomName, @event.UserName, @event.OptionCode ?? "?").GetText(lang)),
             _ => (
                 NotificationMessages.ServiceRequestTitle.GetText(lang),
                 NotificationMessages.ServiceRequestBody(@event.RoomName, @event.UserName).GetText(lang))

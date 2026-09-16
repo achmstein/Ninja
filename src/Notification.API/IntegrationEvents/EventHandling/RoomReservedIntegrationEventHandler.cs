@@ -25,6 +25,8 @@ public class RoomReservedIntegrationEventHandler(
         {
             type = "room_reserved",
             roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
 

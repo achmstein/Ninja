@@ -11,4 +11,7 @@ public record SessionEndedIntegrationEvent(
     int ReservationId,
     int RoomId,
     LocalizedText RoomName,
-    List<string> MemberUserIds) : IntegrationEvent;
+    List<string> MemberUserIds,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null) : IntegrationEvent;

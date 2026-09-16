@@ -13,4 +13,8 @@ public record SessionMemberJoinedIntegrationEvent(
     LocalizedText RoomName,
     string MemberUserId,
     DateTime? ActualStartTime,
-    string? PlayerMode) : IntegrationEvent;
+    string? PlayerMode,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null,
+    string? OptionCode = null) : IntegrationEvent;

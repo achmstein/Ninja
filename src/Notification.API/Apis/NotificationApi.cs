@@ -663,17 +663,51 @@ public static class NotificationApi
         var userName = user.GetUserName() ?? "Guest";
         var branchId = httpContext.GetRequiredBranchId();
 
-        // A request names a room session, or a table — and a table can only
-        // ask for a waiter or the bill
-        var atTable = request.TableId is not null;
-        if (atTable
-            ? request.TableName is null || request.RequestType is not (ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay)
-            : request.SessionId is null || request.RoomId is null || request.RoomName is null)
+        // The place the request comes from, by whichever id the client sent
+        // (place first; older clients send a room or a table id), looked up
+        // in Spaces' projection. What a place can take follows from what it
+        // is: a waiter and the bill anywhere, a controller in a room, a rate
+        // change where the tariff has options and a clock is running. A
+        // place the projection has never heard of falls back to the old
+        // rule: a table asks for a waiter or the bill, a room session for
+        // anything.
+        var atTable = request.PlaceId is null && request.SessionId is null && request.TableId is not null;
+        var place = await ResolvePlaceAsync(context, request.PlaceId, request.RoomId, request.TableId);
+        var placeName = request.PlaceName ?? (atTable ? request.TableName : request.RoomName) ?? place?.Name;
+        if (placeName is null)
         {
-            return TypedResults.BadRequest("A request names a room session, or a table for a waiter or the bill.");
+            return TypedResults.BadRequest("A request names the place it comes from.");
         }
-        // What the till and the push show as the place: the room, or the table
-        var placeName = atTable ? request.TableName! : request.RoomName!;
+        var allowed = place is null
+            ? atTable
+                ? request.RequestType is ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay
+                : request.SessionId is not null
+            : request.RequestType switch
+            {
+                ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
+                ServiceRequestType.ControllerChange => place.TakesControllerRequests,
+                _ => place.HasOptions && request.SessionId is not null,
+            };
+        if (!allowed)
+        {
+            return TypedResults.BadRequest("This place cannot take that kind of request.");
+        }
+        // A rate change names the option wanted; the two old room types are
+        // the two-option case of it
+        var optionCode = request.RequestType switch
+        {
+            ServiceRequestType.SwitchToMulti => "multi",
+            ServiceRequestType.SwitchToSingle => "single",
+            ServiceRequestType.ChangeOption => request.OptionCode?.Trim().ToLowerInvariant(),
+            _ => null,
+        };
+        if (request.RequestType == ServiceRequestType.ChangeOption && string.IsNullOrEmpty(optionCode))
+        {
+            return TypedResults.BadRequest("A rate change names the option wanted.");
+        }
+        var placeId = request.PlaceId ?? place?.PlaceId;
+        var placeKind = request.PlaceKind ?? place?.Kind ?? (atTable ? "Table" : "Room");
+        var roomId = request.RoomId ?? (placeKind == "Room" ? placeId : null);
 
         // Check for recent duplicate request (within 30 seconds)
         var recentRequest = await context.ServiceRequests
@@ -695,7 +729,10 @@ public static class NotificationApi
             UserId = userId,
             UserName = userName,
             SessionId = request.SessionId,
-            RoomId = request.RoomId,
+            PlaceId = placeId,
+            PlaceKind = placeKind,
+            OptionCode = optionCode,
+            RoomId = roomId,
             BranchId = branchId,
             RoomName = placeName,
             TableId = request.TableId,
@@ -718,7 +755,10 @@ public static class NotificationApi
             serviceRequest.CreatedAt,
             branchId,
             serviceRequest.TableId,
-            serviceRequest.TableName));
+            serviceRequest.TableName,
+            serviceRequest.PlaceId,
+            serviceRequest.PlaceKind,
+            serviceRequest.OptionCode));
 
         return TypedResults.Created(
             $"/api/notifications/service-requests/{serviceRequest.Id}",
@@ -731,7 +771,25 @@ public static class NotificationApi
                 serviceRequest.Status,
                 serviceRequest.CreatedAt,
                 serviceRequest.TableId,
-                serviceRequest.TableName));
+                serviceRequest.TableName,
+                serviceRequest.PlaceId,
+                serviceRequest.PlaceKind,
+                serviceRequest.OptionCode));
+    }
+
+    /// <summary>The projected place behind whichever id the client sent: place, then room, then table.</summary>
+    private static async Task<Place?> ResolvePlaceAsync(NotificationContext context, int? placeId, int? roomId, int? tableId)
+    {
+        var places = context.Places.AsNoTracking();
+        if (placeId is int id)
+            return await places.FirstOrDefaultAsync(p => p.PlaceId == id);
+        if (roomId is int room)
+            return await places.FirstOrDefaultAsync(p => p.LegacyRoomId == room)
+                ?? await places.FirstOrDefaultAsync(p => p.PlaceId == room && p.Kind == "Room");
+        if (tableId is int table)
+            return await places.FirstOrDefaultAsync(p => p.LegacyTableId == table)
+                ?? await places.FirstOrDefaultAsync(p => p.PlaceId == table && p.Kind == "Table");
+        return null;
     }
 
     public static async Task<Ok<List<ServiceRequestResponse>>> GetPendingServiceRequests(
@@ -754,7 +812,10 @@ public static class NotificationApi
                 r.Status,
                 r.CreatedAt,
                 r.TableId,
-                r.TableName))
+                r.TableName,
+                r.PlaceId,
+                r.PlaceKind,
+                r.OptionCode))
             .ToListAsync();
 
         return TypedResults.Ok(requests);
@@ -890,7 +951,11 @@ public record CreateServiceRequestDto(
     [property: Description("The room, for a request from a room")] int? RoomId = null,
     [property: Description("The room name (localized)")] LocalizedText? RoomName = null,
     [property: Description("The table, for a waiter or the bill at a table")] int? TableId = null,
-    [property: Description("The table name (localized)")] LocalizedText? TableName = null
+    [property: Description("The table name (localized)")] LocalizedText? TableName = null,
+    [property: Description("The Spaces place the request comes from; newer clients send this instead of a room or table id")] int? PlaceId = null,
+    [property: Description("Room, Table or Station")] string? PlaceKind = null,
+    [property: Description("The place name (localized)")] LocalizedText? PlaceName = null,
+    [property: Description("The rate option wanted, for a ChangeOption request")] string? OptionCode = null
 );
 
 public record ServiceRequestResponse(
@@ -902,7 +967,10 @@ public record ServiceRequestResponse(
     ServiceRequestStatus Status,
     DateTime CreatedAt,
     int? TableId = null,
-    LocalizedText? TableName = null
+    LocalizedText? TableName = null,
+    int? PlaceId = null,
+    string? PlaceKind = null,
+    string? OptionCode = null
 );
 
 public record NotificationPreferencesResponse(

@@ -40,6 +40,7 @@ public static class Extensions
             .AddSubscription<SessionCustomerAssignedIntegrationEvent, SessionCustomerAssignedIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderConfirmedIntegrationEventHandler>()
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
+            .AddSubscription<PlaceUpdatedIntegrationEvent, PlaceUpdatedIntegrationEventHandler>()
             .AddSubscription<OrderReminderIntegrationEvent, OrderReminderIntegrationEventHandler>()
             .AddSubscription<TicketUpdatedIntegrationEvent, TicketUpdatedIntegrationEventHandler>()
             // A bill paid, voided or refunded: the customer's own screens refetch
@@ -52,6 +53,7 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderReadyChangedIntegrationEvent))]
 [JsonSerializable(typeof(RoomBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToSubmittedIntegrationEvent))]

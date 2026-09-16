@@ -25,6 +25,8 @@ public class SessionPaidIntegrationEventHandler(
                 type = "session_paid",
                 sessionId = @event.ReservationId,
                 roomId = @event.RoomId,
+                placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                placeKind = @event.PlaceKind,
                 receiptNumber = @event.ReceiptNumber
             });
         }

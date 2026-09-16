@@ -23,6 +23,8 @@ public class SessionEndedIntegrationEventHandler(
         {
             type = "session_ended",
             roomId = @event.RoomId,
+            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
 

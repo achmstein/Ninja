@@ -12,4 +12,9 @@ public record SessionStartedIntegrationEvent(
     LocalizedText RoomName,
     string? CustomerId,
     DateTime? ActualStartTime,
-    string? PlayerMode) : IntegrationEvent;
+    string? PlayerMode,
+    int BranchId = 0,
+    int PlaceId = 0,
+    string PlaceKind = "Room",
+    LocalizedText? PlaceName = null,
+    string? OptionCode = null) : IntegrationEvent;
