@@ -122,7 +122,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         children: [
           // Header
           FHeader(
-            title: AppText(l10n.rooms, style: TextStyle(fontSize: 18)),
+            title: AppText(placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []), style: TextStyle(fontSize: 18)),
             suffixes: [
               // Scanning moved to the Menu header: a scanned code may be a
               // room or a table, so it does not belong under Rooms.

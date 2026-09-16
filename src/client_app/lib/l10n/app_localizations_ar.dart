@@ -135,7 +135,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orders => 'الطلبات';
 
   @override
-  String get rooms => 'الأوض والترابيزات';
+  String get rooms => 'احجز';
+
+  @override
+  String get yourRoom => 'اوضتك';
+
+  @override
+  String get yourTable => 'ترابيزتك';
+
+  @override
+  String get yourStation => 'لعبتك';
 
   @override
   String optionRateFormat(String option, String rate) {

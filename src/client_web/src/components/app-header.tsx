@@ -5,6 +5,7 @@ import { LogIn, LogOut, ShoppingBag, User } from 'lucide-react'
 import { cartCount, useCart } from '@/lib/cart'
 import { unregisterPush } from '@/lib/use-push'
 import { useT, type TranslationKey } from '@/lib/i18n'
+import { usePlacesTabLabel } from '@/lib/stays'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ const navLinks: ReadonlyArray<{
 
 export function AppHeader() {
   const t = useT()
+  const placesLabel = usePlacesTabLabel()
   const auth = useAuth()
   const count = useCart((s) => cartCount(s.lines))
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -78,7 +80,7 @@ export function AppHeader() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                {t(key)}
+                {key === 'rooms' ? placesLabel : t(key)}
               </Link>
             )
           })}

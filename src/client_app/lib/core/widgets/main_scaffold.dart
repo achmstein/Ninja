@@ -98,7 +98,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           FBottomNavigationBarItem(
             icon: const Icon(FIcons.gamepad2),
             label: AppText(
-              l10n.rooms,
+              placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
               style: TextStyle(
                 fontWeight: currentIndex == 1 ? FontWeight.bold : FontWeight.normal,
               ),

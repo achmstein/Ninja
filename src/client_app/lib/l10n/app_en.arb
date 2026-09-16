@@ -49,6 +49,9 @@
   "menu": "Menu",
   "orders": "Orders",
   "rooms": "Rooms & Tables",
+  "yourRoom": "Your room",
+  "yourTable": "Your table",
+  "yourStation": "Your station",
   "optionRateFormat": "{option} £{rate}",
   "@optionRateFormat": {
     "placeholders": {

@@ -1,12 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
+import '../../../l10n/app_localizations.dart';
 
 import '../../../core/models/localized_text.dart';
 
 /// What a place is, for icons and words. What it *does* comes from its
 /// tariff (a timed place has one), not from its kind.
 enum PlaceKind {
-  room(1, 'Place', FIcons.gamepad2),
+  room(1, 'Room', FIcons.gamepad2),
   table(2, 'Table', FIcons.armchair),
   station(3, 'Station', FIcons.trophy);
 
@@ -432,4 +433,16 @@ class JoinStayResult {
       startTime: DateTime.parse(json['startTime'] as String),
     );
   }
+}
+
+/// What the places tab is called right now: "Book" until a clock runs for
+/// the customer, then the place they are at — their room, their table.
+String placesTabLabel(AppLocalizations l10n, List<Stay> stays) {
+  final running = stays.where((s) => s.status == StayStatus.active).firstOrNull;
+  if (running == null) return l10n.rooms;
+  return switch (running.placeKind) {
+    PlaceKind.table => l10n.yourTable,
+    PlaceKind.station => l10n.yourStation,
+    PlaceKind.room => l10n.yourRoom,
+  };
 }

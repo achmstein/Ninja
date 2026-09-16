@@ -141,6 +141,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rooms => 'Rooms & Tables';
 
   @override
+  String get yourRoom => 'Your room';
+
+  @override
+  String get yourTable => 'Your table';
+
+  @override
+  String get yourStation => 'Your station';
+
+  @override
   String optionRateFormat(String option, String rate) {
     return '$option £$rate';
   }

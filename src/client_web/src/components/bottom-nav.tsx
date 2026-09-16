@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Coffee, Gamepad2, ReceiptText, User } from 'lucide-react'
 import { useT } from '@/lib/i18n'
+import { usePlacesTabLabel } from '@/lib/stays'
 import { cn } from '@/lib/utils'
 
 // Same four tabs as the mobile app: Menu / Rooms / Orders / Profile
@@ -13,6 +14,7 @@ const tabs = [
 
 export function BottomNav() {
   const t = useT()
+  const placesLabel = usePlacesTabLabel()
   // Track the *resolved* (committed) location, not the pending one. On a slow
   // navigation the pending location flips to /cart before the heavy cart page
   // paints; reading it here would hide the tab bar while the menu (and its
@@ -46,7 +48,7 @@ export function BottomNav() {
               )}
             >
               <Icon className='h-5 w-5' />
-              {t(key)}
+              {key === 'rooms' ? placesLabel : t(key)}
             </Link>
           )
         })}

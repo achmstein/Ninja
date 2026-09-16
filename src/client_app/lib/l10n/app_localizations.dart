@@ -350,6 +350,24 @@ abstract class AppLocalizations {
   /// **'Rooms & Tables'**
   String get rooms;
 
+  /// No description provided for @yourRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Your room'**
+  String get yourRoom;
+
+  /// No description provided for @yourTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your table'**
+  String get yourTable;
+
+  /// No description provided for @yourStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your station'**
+  String get yourStation;
+
   /// No description provided for @optionRateFormat.
   ///
   /// In en, this message translates to:
