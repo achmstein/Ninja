@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { Armchair, Check, MapPin } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
-import { type ReservationViewModel, type RoomViewModel } from '@/api/spaces'
+import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import {
   urgencyTextClass,
 } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
+import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 
 const MAX_ROWS = 6
 
@@ -26,8 +27,9 @@ function elapsed(since: string | null | undefined, nowMs: number): string {
 }
 
 type LiveFloorProps = {
-  sessions: ReservationViewModel[]
-  rooms: RoomViewModel[]
+  /** Stays whose clock is running */
+  stays: StayViewModel[]
+  places: PlaceViewModel[]
   pending: OrderSummary[]
   nowMs: number
   isLoading: boolean
@@ -36,13 +38,13 @@ type LiveFloorProps = {
 }
 
 /**
- * What is happening on the floor right now: rooms with a running clock, and
- * the orders waiting with Confirm in reach. Rows, not cards — each links to
- * the page that owns it.
+ * What is happening on the floor right now: places with a running clock,
+ * and the orders waiting with Confirm in reach. Rows, not cards — each
+ * links to the page that owns it.
  */
 export function LiveFloor({
-  sessions,
-  rooms,
+  stays,
+  places,
   pending,
   nowMs,
   isLoading,
@@ -63,15 +65,15 @@ export function LiveFloor({
       <div>
         <div className='mb-2 flex items-center justify-between'>
           <h2 className='text-sm font-semibold'>
-            {t('activeSessions')}
-            {sessions.length > 0 && (
+            {t('timeRunning')}
+            {stays.length > 0 && (
               <span className='text-muted-foreground ms-2 font-normal tabular-nums'>
-                {sessions.length}
+                {stays.length}
               </span>
             )}
           </h2>
           <Button variant='link' size='sm' className='h-auto p-0' asChild>
-            <Link to='/rooms'>{t('viewAll')}</Link>
+            <Link to='/places'>{t('viewAll')}</Link>
           </Button>
         </div>
         {isLoading ? (
@@ -79,40 +81,36 @@ export function LiveFloor({
             <Skeleton className='h-10' />
             <Skeleton className='h-10' />
           </div>
-        ) : sessions.length === 0 ? (
+        ) : stays.length === 0 ? (
           <p className='text-muted-foreground py-3 text-sm'>
-            {t('noActiveSessions')}
+            {t('noTimeRunning')}
           </p>
         ) : (
           <ul className='divide-y'>
-            {sessions.slice(0, MAX_ROWS).map((session) => {
-              const room = rooms.find(
-                (r) => Number(r.id) === Number(session.roomId)
+            {stays.slice(0, MAX_ROWS).map((stay) => {
+              const place = places.find(
+                (p) => Number(p.id) === Number(stay.placeId)
               )
+              const option = localized(stay.currentOptionName)
               return (
-                <li key={String(session.id)}>
+                <li key={String(stay.id)}>
                   <Link
-                    to='/rooms'
-                    search={{ room: Number(session.roomId) }}
+                    to='/places'
+                    search={{ place: Number(stay.placeId) }}
                     className='hover:bg-accent/50 -mx-2 flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors'
                   >
                     <span className='bg-success size-2 shrink-0 rounded-full' />
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate font-medium'>
-                        {localized(room?.name) || localized(session.roomName)}
+                        {localized(place?.name) || localized(stay.placeName)}
                       </span>
                       <span className='text-muted-foreground block truncate text-xs'>
-                        {session.customerName || t('walkIn')}
-                        {session.currentPlayerMode &&
-                          ` · ${t(
-                            session.currentPlayerMode === 'Multi'
-                              ? 'playerModeMulti'
-                              : 'playerModeSingle'
-                          )}`}
+                        {stay.customerName || t('walkIn')}
+                        {option && ` · ${option}`}
                       </span>
                     </span>
                     <span className='font-mono text-sm tabular-nums'>
-                      {elapsed(session.actualStartTime, nowMs)}
+                      {elapsed(stay.startedAt, nowMs)}
                     </span>
                   </Link>
                 </li>
@@ -149,9 +147,7 @@ export function LiveFloor({
           <ul className='divide-y'>
             {pending.slice(0, MAX_ROWS).map((order) => {
               const urgency = orderUrgency(order.date, nowMs)
-              const place =
-                localized(order.roomName) || localized(order.tableName)
-              const PlaceIcon = localized(order.roomName) ? MapPin : Armchair
+              const place = localized(order.placeName)
               const acting =
                 Number(actingOrderNumber) === Number(order.orderNumber)
               return (
@@ -167,7 +163,10 @@ export function LiveFloor({
                           variant='outline'
                           className='h-5 gap-1 px-1.5 text-[11px] font-normal'
                         >
-                          <PlaceIcon className='size-3' />
+                          <PlaceKindIcon
+                            kind={order.placeKind}
+                            className='size-3'
+                          />
                           {place}
                         </Badge>
                       )}

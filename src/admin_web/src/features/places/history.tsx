@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { type ReservationViewModel } from '@/api/spaces'
+import { type StayViewModel } from '@/api/spaces'
 import {
-  getSessionHistoryOptions,
-  listRoomsOptions,
+  getStayHistoryOptions,
+  listPlacesOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import {
   useLanguage,
@@ -31,15 +31,15 @@ import {
 } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { formatEgp } from '@/features/orders/status'
 import {
-  formatBillingHours,
+  comparePlaces,
   formatDuration,
-  sessionBilledHours,
-  sessionStatusConfig,
-  sessionStartTime,
+  STAY_CANCELLED,
+  stayBreakdown,
 } from './status'
 
-const route = getRouteApi('/_authenticated/rooms/history')
+const route = getRouteApi('/_authenticated/places/history')
 
 type DateRange = 'today' | '7d' | '30d'
 
@@ -58,9 +58,10 @@ function rangeToFromDate(range: DateRange | undefined): string | undefined {
   return from.toISOString()
 }
 
-const columnHelper = createAppColumnHelper<ReservationViewModel>()
+const columnHelper = createAppColumnHelper<StayViewModel>()
 
-export function SessionsHistory() {
+/** Every ended or cancelled stay of the branch, by place and date range. */
+export function StayHistory() {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
@@ -78,86 +79,121 @@ export function SessionsHistory() {
 
   const fromDate = useMemo(() => rangeToFromDate(search.range), [search.range])
 
-  const { data: rooms = [] } = useQuery(listRoomsOptions())
+  // Only a timed place has stays to look back on
+  const { data: places = [] } = useQuery(
+    listPlacesOptions({ query: { timed: true } })
+  )
+  const timedPlaces = useMemo(
+    () => [...places].sort(comparePlaces(localized)),
+    [places, localized]
+  )
 
   const historyQuery = useQuery({
-    ...getSessionHistoryOptions({
+    ...getStayHistoryOptions({
       query: {
         pageIndex: pagination.pageIndex,
         pageSize: pagination.pageSize,
-        roomId: search.room,
+        placeId: search.place,
         fromDate,
       },
     }),
     placeholderData: keepPreviousData,
   })
 
-  const sessions = historyQuery.data?.items ?? []
+  const stays = historyQuery.data?.items ?? []
 
   const historyColumns = useMemo(
     () =>
       columnHelper.columns([
-        columnHelper.accessor('id', {
-          id: 'id',
-          header: t('sessionNumber'),
-          cell: (info) => (
-            <span className='font-medium'>#{info.getValue()}</span>
-          ),
-        }),
-        columnHelper.accessor((row) => localized(row.roomName), {
-          id: 'room',
-          header: t('room'),
+        columnHelper.accessor((row) => localized(row.placeName), {
+          id: 'place',
+          header: t('place'),
           cell: ({ row }) => (
-            <span>{localized(row.original.roomName) || '—'}</span>
+            <span className='font-medium'>
+              {localized(row.original.placeName) || '—'}
+            </span>
           ),
         }),
         columnHelper.accessor('customerName', {
           id: 'customer',
           header: t('customer'),
-          cell: (info) => info.getValue() || '—',
+          cell: (info) => info.getValue() || t('walkIn'),
         }),
-        columnHelper.accessor((row) => sessionStartTime(row) ?? '', {
+        columnHelper.accessor((row) => row.startedAt ?? row.createdAt ?? '', {
           id: 'started',
           header: t('started'),
           cell: ({ row }) => {
-            const start = sessionStartTime(row.original)
+            const start = row.original.startedAt ?? row.original.createdAt
             return start ? new Date(start).toLocaleString(locale) : '—'
+          },
+        }),
+        columnHelper.accessor((row) => row.endedAt ?? '', {
+          id: 'ended',
+          header: t('ended'),
+          cell: ({ row }) => {
+            const end = row.original.endedAt
+            return end
+              ? new Date(end).toLocaleTimeString(locale, {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : '—'
           },
         }),
         columnHelper.display({
           id: 'duration',
           header: t('duration'),
           cell: ({ row }) => {
-            const start = row.original.actualStartTime
-            const end = row.original.endTime
+            const start = row.original.startedAt
+            const end = row.original.endedAt
             if (!start || !end) return '—'
-            return formatDuration(start, end)
-          },
-        }),
-        // Rounded quarter-hour steps, exactly what gets entered into the POS
-        columnHelper.accessor((row) => sessionBilledHours(row), {
-          meta: { align: 'end' },
-          id: 'billedHours',
-          header: () => <div className='text-end'>{t('billedHours')}</div>,
-          cell: ({ row }) => {
-            const hours = sessionBilledHours(row.original)
-            return hours > 0 ? (
-              <div className='text-end font-medium tabular-nums'>
-                {formatBillingHours(hours, t)}
-              </div>
-            ) : (
-              <div className='text-end'>—</div>
+            return (
+              <span className='font-mono tabular-nums'>
+                {formatDuration(start, end)}
+              </span>
             )
           },
         }),
-        columnHelper.accessor((row) => Number(row.status ?? 0), {
-          id: 'status',
-          header: t('status'),
+        // Rounded steps per rate, exactly what went on the bill
+        columnHelper.display({
+          id: 'rates',
+          header: t('rateOptions'),
+          cell: ({ row }) => (
+            <span className='tabular-nums'>
+              {stayBreakdown(row.original, t, localized) || '—'}
+            </span>
+          ),
+        }),
+        columnHelper.accessor((row) => Number(row.totalCost ?? 0), {
+          meta: { align: 'end' },
+          id: 'total',
+          header: () => <div className='text-end'>{t('total')}</div>,
+          cell: ({ row }) =>
+            row.original.totalCost != null ? (
+              <div className='text-end font-medium tabular-nums'>
+                {formatEgp(row.original.totalCost)}
+              </div>
+            ) : (
+              <div className='text-end'>—</div>
+            ),
+        }),
+        columnHelper.display({
+          id: 'paid',
+          header: t('paid'),
           cell: ({ row }) => {
-            const status = sessionStatusConfig[Number(row.original.status ?? 0)]
-            return status ? (
-              <Badge variant={status.variant}>{t(status.key)}</Badge>
-            ) : null
+            const stay = row.original
+            if (Number(stay.status) === STAY_CANCELLED) {
+              return <Badge variant='destructive'>{t('cancelled')}</Badge>
+            }
+            return stay.paidAt ? (
+              <Badge variant='secondary'>
+                {stay.receiptNumber != null
+                  ? `#${stay.receiptNumber}`
+                  : t('paid')}
+              </Badge>
+            ) : (
+              <Badge variant='outline'>{t('notPaid')}</Badge>
+            )
           },
         }),
       ]),
@@ -167,7 +203,7 @@ export function SessionsHistory() {
 
   const table = useTable({
     features: dataTableFeatures,
-    data: sessions,
+    data: stays,
     columns: historyColumns,
     getRowId: (row) => String(row.id),
     enableSorting: false,
@@ -187,28 +223,28 @@ export function SessionsHistory() {
   return (
     <>
       <Main>
-        <PageHeader back={{ to: '/rooms' }} title={t('sessionHistory')}>
+        <PageHeader back={{ to: '/places' }} title={t('timeHistory')}>
           <div className='flex items-center gap-2'>
             <Select
-              value={search.room != null ? String(search.room) : 'all'}
+              value={search.place != null ? String(search.place) : 'all'}
               onValueChange={(value) =>
                 navigate({
                   search: (prev) => ({
                     ...prev,
                     page: undefined,
-                    room: value === 'all' ? undefined : Number(value),
+                    place: value === 'all' ? undefined : Number(value),
                   }),
                 })
               }
             >
               <SelectTrigger size='sm' className='h-8 w-[160px]'>
-                <SelectValue placeholder={t('allRooms')} />
+                <SelectValue placeholder={t('allPlaces')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='all'>{t('allRooms')}</SelectItem>
-                {rooms.map((room) => (
-                  <SelectItem key={String(room.id)} value={String(room.id)}>
-                    {localized(room.name)}
+                <SelectItem value='all'>{t('allPlaces')}</SelectItem>
+                {timedPlaces.map((place) => (
+                  <SelectItem key={String(place.id)} value={String(place.id)}>
+                    {localized(place.name)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -244,7 +280,7 @@ export function SessionsHistory() {
         <DataTable
           table={table}
           isLoading={historyQuery.isLoading}
-          emptyMessage={t('noCompletedSessions')}
+          emptyMessage={t('noTimeHistory')}
         />
 
         <DataTablePagination table={table} />

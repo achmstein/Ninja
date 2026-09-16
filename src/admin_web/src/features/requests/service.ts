@@ -14,7 +14,8 @@ export const REQUEST_STATUS_PENDING = 1
 export interface ServiceRequest {
   id: number
   userName: string
-  roomId: number
+  placeId?: number | null
+  // Notification.API still names the place under roomName for every kind
   roomName: { en?: string | null; ar?: string | null }
   requestType: number
   status: number

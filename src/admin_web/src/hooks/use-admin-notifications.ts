@@ -36,7 +36,7 @@ function isForActiveBranch(event: OrderStatusChangedEvent): boolean {
 
 /**
  * One SignalR connection for the whole admin session (mounted in the
- * authenticated layout). Joins the admin and rooms groups and maps hub events
+ * authenticated layout). Joins the admin and rooms hub groups and maps hub events
  * to query invalidations and toasts, so lists stay live without polling.
  */
 export function useAdminNotifications() {
@@ -68,8 +68,14 @@ export function useAdminNotifications() {
     const invalidateOrders = () =>
       refresh('getAllOrders', 'getPendingOrders', 'getOrder')
 
-    const invalidateRooms = () =>
-      refresh('listRooms', 'getActiveSessions', 'getSessionHistory')
+    const invalidatePlaces = () =>
+      refresh(
+        'listPlaces',
+        'getOpenStays',
+        'getStay',
+        'getStayHistory',
+        'getPlaceStayHistory'
+      )
 
     connection.on('OrderStatusChanged', (event: OrderStatusChangedEvent) => {
       invalidateOrders()
@@ -102,7 +108,7 @@ export function useAdminNotifications() {
     })
 
     connection.on('RoomStatusChanged', () => {
-      invalidateRooms()
+      invalidatePlaces()
     })
 
     // Inventory.API raises this when a movement takes an item to or below
@@ -182,7 +188,7 @@ export function useAdminNotifications() {
       // while offline refetched.
       joinGroups().catch(() => {})
       invalidateOrders()
-      invalidateRooms()
+      invalidatePlaces()
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

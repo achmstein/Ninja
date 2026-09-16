@@ -192,7 +192,7 @@ export function ServiceRequests() {
               }
               onAcknowledge={() => acknowledge.mutate(request.id)}
               onComplete={() => complete.mutate(request.id)}
-              roomName={localized(request.roomName)}
+              placeName={localized(request.roomName)}
               age={relativeTime(request.createdAt, now, t, locale)}
             />
           ))}
@@ -209,7 +209,7 @@ function RequestCard({
   completing,
   onAcknowledge,
   onComplete,
-  roomName,
+  placeName,
   age,
 }: {
   request: ServiceRequest
@@ -218,7 +218,7 @@ function RequestCard({
   completing: boolean
   onAcknowledge: () => void
   onComplete: () => void
-  roomName: string
+  placeName: string
   age: string
 }) {
   const t = useT()
@@ -236,13 +236,13 @@ function RequestCard({
   return (
     <QueueCard urgency={urgency}>
       <div className='flex items-start justify-between gap-2'>
-        {/* The room is what staff walk to — it leads, and it links */}
+        {/* The place is what staff walk to — it leads, and it links */}
         <Link
-          to='/rooms'
-          search={{ room: request.roomId }}
+          to='/places'
+          search={{ place: request.placeId ?? undefined }}
           className='text-lg font-semibold underline-offset-4 hover:underline'
         >
-          {roomName || t('room')}
+          {placeName || t('place')}
         </Link>
         <span className={`text-xs ${urgencyTextClass(urgency)}`}>{age}</span>
       </div>

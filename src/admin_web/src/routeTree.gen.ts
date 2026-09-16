@@ -20,11 +20,10 @@ import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as authSignedOutRouteImport } from './routes/(auth)/signed-out'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as AuthenticatedTillIndexRouteImport } from './routes/_authenticated/till/index'
-import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
+import { Route as AuthenticatedPlacesIndexRouteImport } from './routes/_authenticated/places/index'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authenticated/menu/index'
@@ -38,9 +37,8 @@ import { Route as AuthenticatedTillShiftsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedTillRefundsRouteImport } from './routes/_authenticated/till/refunds'
 import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authenticated/till/payments'
 import { Route as AuthenticatedTillBreakdownRouteImport } from './routes/_authenticated/till/breakdown'
-import { Route as AuthenticatedTablesPrintRouteImport } from './routes/_authenticated/tables/print'
-import { Route as AuthenticatedRoomsPrintRouteImport } from './routes/_authenticated/rooms/print'
-import { Route as AuthenticatedRoomsHistoryRouteImport } from './routes/_authenticated/rooms/history'
+import { Route as AuthenticatedPlacesPrintRouteImport } from './routes/_authenticated/places/print'
+import { Route as AuthenticatedPlacesHistoryRouteImport } from './routes/_authenticated/places/history'
 import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll/payslips'
 import { Route as AuthenticatedPayrollEmployeesRouteImport } from './routes/_authenticated/payroll/employees'
 import { Route as AuthenticatedPayrollAttendanceRouteImport } from './routes/_authenticated/payroll/attendance'
@@ -112,12 +110,6 @@ const AuthenticatedTillIndexRoute = AuthenticatedTillIndexRouteImport.update({
   path: '/till/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTablesIndexRoute =
-  AuthenticatedTablesIndexRouteImport.update({
-    id: '/tables/',
-    path: '/tables/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -129,15 +121,16 @@ const AuthenticatedSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRoomsIndexRoute = AuthenticatedRoomsIndexRouteImport.update({
-  id: '/rooms/',
-  path: '/rooms/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedRequestsIndexRoute =
   AuthenticatedRequestsIndexRouteImport.update({
     id: '/requests/',
     path: '/requests/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlacesIndexRoute =
+  AuthenticatedPlacesIndexRouteImport.update({
+    id: '/places/',
+    path: '/places/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOrdersIndexRoute =
@@ -216,21 +209,16 @@ const AuthenticatedTillBreakdownRoute =
     path: '/till/breakdown',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTablesPrintRoute =
-  AuthenticatedTablesPrintRouteImport.update({
-    id: '/tables/print',
-    path: '/tables/print',
+const AuthenticatedPlacesPrintRoute =
+  AuthenticatedPlacesPrintRouteImport.update({
+    id: '/places/print',
+    path: '/places/print',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRoomsPrintRoute = AuthenticatedRoomsPrintRouteImport.update({
-  id: '/rooms/print',
-  path: '/rooms/print',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRoomsHistoryRoute =
-  AuthenticatedRoomsHistoryRouteImport.update({
-    id: '/rooms/history',
-    path: '/rooms/history',
+const AuthenticatedPlacesHistoryRoute =
+  AuthenticatedPlacesHistoryRouteImport.update({
+    id: '/places/history',
+    path: '/places/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPayrollPayslipsRoute =
@@ -352,9 +340,8 @@ export interface FileRoutesByFullPath {
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
-  '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
-  '/rooms/print': typeof AuthenticatedRoomsPrintRoute
-  '/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/places/history': typeof AuthenticatedPlacesHistoryRoute
+  '/places/print': typeof AuthenticatedPlacesPrintRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -368,11 +355,10 @@ export interface FileRoutesByFullPath {
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/places': typeof AuthenticatedPlacesIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
-  '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
-  '/tables': typeof AuthenticatedTablesIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -401,9 +387,8 @@ export interface FileRoutesByTo {
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
-  '/rooms/history': typeof AuthenticatedRoomsHistoryRoute
-  '/rooms/print': typeof AuthenticatedRoomsPrintRoute
-  '/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/places/history': typeof AuthenticatedPlacesHistoryRoute
+  '/places/print': typeof AuthenticatedPlacesPrintRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -417,11 +402,10 @@ export interface FileRoutesByTo {
   '/menu': typeof AuthenticatedMenuIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/places': typeof AuthenticatedPlacesIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
-  '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
-  '/tables': typeof AuthenticatedTablesIndexRoute
   '/till': typeof AuthenticatedTillIndexRoute
   '/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -452,9 +436,8 @@ export interface FileRoutesById {
   '/_authenticated/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/_authenticated/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
   '/_authenticated/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
-  '/_authenticated/rooms/history': typeof AuthenticatedRoomsHistoryRoute
-  '/_authenticated/rooms/print': typeof AuthenticatedRoomsPrintRoute
-  '/_authenticated/tables/print': typeof AuthenticatedTablesPrintRoute
+  '/_authenticated/places/history': typeof AuthenticatedPlacesHistoryRoute
+  '/_authenticated/places/print': typeof AuthenticatedPlacesPrintRoute
   '/_authenticated/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/_authenticated/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/_authenticated/till/refunds': typeof AuthenticatedTillRefundsRoute
@@ -468,11 +451,10 @@ export interface FileRoutesById {
   '/_authenticated/menu/': typeof AuthenticatedMenuIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/places/': typeof AuthenticatedPlacesIndexRoute
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
-  '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
-  '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
   '/_authenticated/till/': typeof AuthenticatedTillIndexRoute
   '/_authenticated/inventory/history/counts': typeof AuthenticatedInventoryHistoryCountsRoute
   '/_authenticated/inventory/history/purchases': typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -503,9 +485,8 @@ export interface FileRouteTypes {
     | '/payroll/attendance'
     | '/payroll/employees'
     | '/payroll/payslips'
-    | '/rooms/history'
-    | '/rooms/print'
-    | '/tables/print'
+    | '/places/history'
+    | '/places/print'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
@@ -519,11 +500,10 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/places'
     | '/requests'
-    | '/rooms'
     | '/settings'
     | '/staff'
-    | '/tables'
     | '/till'
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
@@ -552,9 +532,8 @@ export interface FileRouteTypes {
     | '/payroll/attendance'
     | '/payroll/employees'
     | '/payroll/payslips'
-    | '/rooms/history'
-    | '/rooms/print'
-    | '/tables/print'
+    | '/places/history'
+    | '/places/print'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
@@ -568,11 +547,10 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/places'
     | '/requests'
-    | '/rooms'
     | '/settings'
     | '/staff'
-    | '/tables'
     | '/till'
     | '/inventory/history/counts'
     | '/inventory/history/purchases'
@@ -602,9 +580,8 @@ export interface FileRouteTypes {
     | '/_authenticated/payroll/attendance'
     | '/_authenticated/payroll/employees'
     | '/_authenticated/payroll/payslips'
-    | '/_authenticated/rooms/history'
-    | '/_authenticated/rooms/print'
-    | '/_authenticated/tables/print'
+    | '/_authenticated/places/history'
+    | '/_authenticated/places/print'
     | '/_authenticated/till/breakdown'
     | '/_authenticated/till/payments'
     | '/_authenticated/till/refunds'
@@ -618,11 +595,10 @@ export interface FileRouteTypes {
     | '/_authenticated/menu/'
     | '/_authenticated/notifications/'
     | '/_authenticated/orders/'
+    | '/_authenticated/places/'
     | '/_authenticated/requests/'
-    | '/_authenticated/rooms/'
     | '/_authenticated/settings/'
     | '/_authenticated/staff/'
-    | '/_authenticated/tables/'
     | '/_authenticated/till/'
     | '/_authenticated/inventory/history/counts'
     | '/_authenticated/inventory/history/purchases'
@@ -721,13 +697,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTillIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tables/': {
-      id: '/_authenticated/tables/'
-      path: '/tables'
-      fullPath: '/tables'
-      preLoaderRoute: typeof AuthenticatedTablesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/staff/': {
       id: '/_authenticated/staff/'
       path: '/staff'
@@ -742,18 +711,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/rooms/': {
-      id: '/_authenticated/rooms/'
-      path: '/rooms'
-      fullPath: '/rooms'
-      preLoaderRoute: typeof AuthenticatedRoomsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/requests/': {
       id: '/_authenticated/requests/'
       path: '/requests'
       fullPath: '/requests'
       preLoaderRoute: typeof AuthenticatedRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/places/': {
+      id: '/_authenticated/places/'
+      path: '/places'
+      fullPath: '/places'
+      preLoaderRoute: typeof AuthenticatedPlacesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/orders/': {
@@ -847,25 +816,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTillBreakdownRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tables/print': {
-      id: '/_authenticated/tables/print'
-      path: '/tables/print'
-      fullPath: '/tables/print'
-      preLoaderRoute: typeof AuthenticatedTablesPrintRouteImport
+    '/_authenticated/places/print': {
+      id: '/_authenticated/places/print'
+      path: '/places/print'
+      fullPath: '/places/print'
+      preLoaderRoute: typeof AuthenticatedPlacesPrintRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/rooms/print': {
-      id: '/_authenticated/rooms/print'
-      path: '/rooms/print'
-      fullPath: '/rooms/print'
-      preLoaderRoute: typeof AuthenticatedRoomsPrintRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rooms/history': {
-      id: '/_authenticated/rooms/history'
-      path: '/rooms/history'
-      fullPath: '/rooms/history'
-      preLoaderRoute: typeof AuthenticatedRoomsHistoryRouteImport
+    '/_authenticated/places/history': {
+      id: '/_authenticated/places/history'
+      path: '/places/history'
+      fullPath: '/places/history'
+      preLoaderRoute: typeof AuthenticatedPlacesHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payroll/payslips': {
@@ -997,9 +959,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPayrollAttendanceRoute: typeof AuthenticatedPayrollAttendanceRoute
   AuthenticatedPayrollEmployeesRoute: typeof AuthenticatedPayrollEmployeesRoute
   AuthenticatedPayrollPayslipsRoute: typeof AuthenticatedPayrollPayslipsRoute
-  AuthenticatedRoomsHistoryRoute: typeof AuthenticatedRoomsHistoryRoute
-  AuthenticatedRoomsPrintRoute: typeof AuthenticatedRoomsPrintRoute
-  AuthenticatedTablesPrintRoute: typeof AuthenticatedTablesPrintRoute
+  AuthenticatedPlacesHistoryRoute: typeof AuthenticatedPlacesHistoryRoute
+  AuthenticatedPlacesPrintRoute: typeof AuthenticatedPlacesPrintRoute
   AuthenticatedTillBreakdownRoute: typeof AuthenticatedTillBreakdownRoute
   AuthenticatedTillPaymentsRoute: typeof AuthenticatedTillPaymentsRoute
   AuthenticatedTillRefundsRoute: typeof AuthenticatedTillRefundsRoute
@@ -1013,11 +974,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMenuIndexRoute: typeof AuthenticatedMenuIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedPlacesIndexRoute: typeof AuthenticatedPlacesIndexRoute
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
-  AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
-  AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
   AuthenticatedTillIndexRoute: typeof AuthenticatedTillIndexRoute
   AuthenticatedInventoryHistoryCountsRoute: typeof AuthenticatedInventoryHistoryCountsRoute
   AuthenticatedInventoryHistoryPurchasesRoute: typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -1039,9 +999,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPayrollAttendanceRoute: AuthenticatedPayrollAttendanceRoute,
   AuthenticatedPayrollEmployeesRoute: AuthenticatedPayrollEmployeesRoute,
   AuthenticatedPayrollPayslipsRoute: AuthenticatedPayrollPayslipsRoute,
-  AuthenticatedRoomsHistoryRoute: AuthenticatedRoomsHistoryRoute,
-  AuthenticatedRoomsPrintRoute: AuthenticatedRoomsPrintRoute,
-  AuthenticatedTablesPrintRoute: AuthenticatedTablesPrintRoute,
+  AuthenticatedPlacesHistoryRoute: AuthenticatedPlacesHistoryRoute,
+  AuthenticatedPlacesPrintRoute: AuthenticatedPlacesPrintRoute,
   AuthenticatedTillBreakdownRoute: AuthenticatedTillBreakdownRoute,
   AuthenticatedTillPaymentsRoute: AuthenticatedTillPaymentsRoute,
   AuthenticatedTillRefundsRoute: AuthenticatedTillRefundsRoute,
@@ -1055,11 +1014,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMenuIndexRoute: AuthenticatedMenuIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedPlacesIndexRoute: AuthenticatedPlacesIndexRoute,
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
-  AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
-  AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
   AuthenticatedTillIndexRoute: AuthenticatedTillIndexRoute,
   AuthenticatedInventoryHistoryCountsRoute:
     AuthenticatedInventoryHistoryCountsRoute,

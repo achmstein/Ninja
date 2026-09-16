@@ -14,7 +14,7 @@ type QrCard = {
 
 type QrSheetProps = {
   /** Where the back arrow returns to */
-  backTo: '/tables' | '/rooms'
+  backTo: '/places'
   subtitle: string
   /** Call to action printed under every code, in both languages */
   caption: { en: string; ar: string }
@@ -33,7 +33,7 @@ const CENTER_MARK = {
   excavate: true,
 }
 
-/** Print-ready QR cards, one per table or room.
+/** Print-ready QR cards, one per place.
  *
  *  Portalled to <body> so the printed page can hide #root wholesale: the admin
  *  shell, the toasts and the devtools all live in there, and so does the scroll

@@ -1,5 +1,4 @@
 import {
-  Armchair,
   Banknote,
   BarChart3,
   Building2,
@@ -36,8 +35,7 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        { title: 'rooms', url: '/rooms', icon: Gamepad2 },
-        { title: 'tables', url: '/tables', icon: Armchair },
+        { title: 'placesNav', url: '/places', icon: Gamepad2 },
         { title: 'requests', url: '/requests', icon: ConciergeBell },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],

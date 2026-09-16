@@ -5,11 +5,6 @@ import { isOwner } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
-import {
-  getActiveSessionsOptions,
-  listRoomsOptions,
-  listTablesOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -19,8 +14,13 @@ import { urgencyTextClass } from '@/components/queue-card'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { stockLevelsQueryOptions } from '@/features/inventory/queries'
 import { formatEgp, orderUrgency, relativeTime } from '@/features/orders/status'
+import {
+  isRunning,
+  PLACE_OUT_OF_SERVICE,
+  PLACE_TABLE,
+} from '@/features/places/status'
+import { orderIsAt, usePlaces } from '@/features/places/use-places'
 import { serviceRequestsService } from '@/features/requests/service'
-import { ROOM_MAINTENANCE, SESSION_ACTIVE } from '@/features/rooms/status'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { LiveFloor } from './components/live-floor'
 import { MonthMoney } from './components/month-money'
@@ -73,15 +73,7 @@ export function Dashboard() {
     ...stockLevelsQueryOptions({ low: true }),
     refetchInterval: 60_000,
   })
-  const roomsQuery = useQuery({
-    ...listRoomsOptions(),
-    refetchInterval: 60_000,
-  })
-  const sessionsQuery = useQuery({
-    ...getActiveSessionsOptions(),
-    refetchInterval: 60_000,
-  })
-  const tablesQuery = useQuery(listTablesOptions())
+  const floor = usePlaces()
   const reportQuery = useQuery({
     ...getRangeReportOptions({
       query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
@@ -103,22 +95,19 @@ export function Dashboard() {
   const requestCount = requestsQuery.data?.length ?? 0
   const lowCount = lowStockQuery.data?.length ?? 0
 
-  const rooms = roomsQuery.data ?? []
-  const sessions = (sessionsQuery.data ?? []).filter(
-    (s) => Number(s.status) === SESSION_ACTIVE
-  )
-  const roomsInService = rooms.filter(
-    (r) => Number(r.displayStatus) !== ROOM_MAINTENANCE
+  const { places } = floor
+  const running = floor.stays.filter(isRunning)
+  // Timed places run a clock; an untimed table only takes orders
+  const timedInService = places.filter(
+    (p) => p.isTimed && Number(p.status) !== PLACE_OUT_OF_SERVICE
   ).length
-  const tables = tablesQuery.data ?? []
+  const tables = places.filter(
+    (p) => Number(p.kind) === PLACE_TABLE && !p.isTimed
+  )
   const activeTables = tables.filter((table) => table.isActive).length
-  const busyTables = new Set(
-    pending
-      .map((o) => o.tableId)
-      .filter((id): id is number | string => id != null)
-      .map(Number)
-      .filter((id) => tables.some((table) => Number(table.id) === id))
-  ).size
+  const busyTables = tables.filter((table) =>
+    pending.some((order) => orderIsAt(order, table))
+  ).length
 
   const report = reportQuery.data
   const dateTime = new Intl.DateTimeFormat(locale, {
@@ -214,33 +203,33 @@ export function Dashboard() {
           to='/orders'
         />
         <Stat
-          label={t('roomsInUse')}
+          label={t('placesInUse')}
           value={t('ofTotal', {
-            count: sessions.length,
-            total: roomsInService,
+            count: running.length,
+            total: timedInService,
           })}
-          loading={roomsQuery.isPending || sessionsQuery.isPending}
-          to='/rooms'
+          loading={floor.isPending}
+          to='/places'
         />
         <Stat
           label={t('tablesInUse')}
           value={t('ofTotal', { count: busyTables, total: activeTables })}
-          loading={tablesQuery.isPending}
-          to='/tables'
+          loading={floor.isPending}
+          to='/places'
         />
       </StatStrip>
 
       <div className='grid gap-6 lg:grid-cols-2'>
         <LiveFloor
-          sessions={sessions}
-          rooms={rooms}
+          stays={running}
+          places={places}
           pending={pending}
           nowMs={nowMs}
-          isLoading={pendingQuery.isLoading || sessionsQuery.isLoading}
-          error={pendingQuery.error ?? sessionsQuery.error}
+          isLoading={pendingQuery.isLoading || floor.isLoading}
+          error={pendingQuery.error ?? floor.error}
           onRetry={() => {
             pendingQuery.refetch()
-            sessionsQuery.refetch()
+            floor.refetch()
           }}
         />
         <TodaysTill

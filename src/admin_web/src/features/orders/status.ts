@@ -54,15 +54,14 @@ export const orderSourceKeys: Record<string, TranslationKey> = {
 // Where an order was placed from, for grouping the live board
 export type OrderPlace = 'rooms' | 'tables' | 'counter'
 
+/** The board's lane: café tables, everything timed (rooms, stations), or
+ *  the counter for an order with no place at all. */
 export function orderPlace(order: {
-  roomName?: { en?: string | null; ar?: string | null } | null
-  sessionId?: number | string | null
-  tableId?: number | string | null
+  placeId?: number | string | null
+  placeKind?: string | null
 }): OrderPlace {
-  if (order.sessionId != null || order.roomName?.en || order.roomName?.ar) {
-    return 'rooms'
-  }
-  if (order.tableId != null) return 'tables'
+  if (order.placeKind === 'Table') return 'tables'
+  if (order.placeId != null) return 'rooms'
   return 'counter'
 }
 

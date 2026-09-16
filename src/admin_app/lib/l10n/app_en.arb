@@ -675,5 +675,113 @@
   "noBranchTitle": "No branch assigned",
   "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one.",
   "cashierRole": "Cashier",
-  "retry": "Retry"
+  "retry": "Retry",
+
+  "placesNav": "Rooms & Tables",
+  "stations": "Stations",
+  "ordersOnly": "Orders only",
+  "timed": "Timed",
+  "scanToOrderOrJoin": "Scan to order or start your time",
+  "placeQrSheetSubtitle": "Cut along the cards and put one on each room, table and station.",
+  "noPlacesYet": "No rooms or tables yet. Add your first one.",
+  "selectPlace": "Pick a room or table",
+  "allPlaces": "All places",
+  "newPlace": "New place",
+  "editPlace": "Edit place",
+  "kind": "Kind",
+  "placeKindRoom": "Room",
+  "placeKindTable": "Table",
+  "placeKindStation": "Station",
+  "rateOptions": "Rates",
+  "addRateOption": "Add rate",
+  "optionCode": "Code",
+  "hourlyRate": "Per hour",
+  "roundingMinutes": "Round to (minutes)",
+  "placeSaved": "Saved",
+  "failedToSavePlace": "Couldn't save",
+  "placeDeleted": "Deleted",
+  "deletePlaceQuestion": "Delete this place?",
+  "failedToDeletePlace": "Couldn't delete",
+  "outOfService": "Out of service",
+  "backInService": "Back in service",
+  "held": "Held",
+  "heldFor": "Held for {name}",
+  "@heldFor": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "hold": "Hold",
+  "holdPlaceTitle": "Hold {name}",
+  "@holdPlaceTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "placeHeld": "{name} held",
+  "@placeHeld": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "failedToHold": "Couldn't hold it",
+  "holdCancelled": "Hold cancelled",
+  "cancelHold": "Cancel hold",
+  "cancelHoldQuestion": "Cancel this hold?",
+  "failedToCancelHold": "Couldn't cancel",
+  "startOnConfirm": "Start the clock when they arrive",
+  "startsOnConfirm": "Starts on confirm",
+  "failedToConfirm": "Couldn't confirm",
+  "startClockAt": "Start the clock at {name}",
+  "@startClockAt": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "clockStarted": "Clock started",
+  "failedToStartClock": "Couldn't start the clock",
+  "rate": "Rate",
+  "rateChanged": "Rate changed",
+  "failedToChangeRate": "Couldn't change the rate",
+  "switchToRateQuestion": "Switch to {option}?",
+  "@switchToRateQuestion": {
+    "placeholders": {
+      "option": {"type": "String"}
+    }
+  },
+  "keepRate": "Keep {option}",
+  "@keepRate": {
+    "placeholders": {
+      "option": {"type": "String"}
+    }
+  },
+  "switchRate": "Switch",
+  "endTimeQuestion": "End the time?",
+  "endTimeEstimate": "About {amount} on the bill.",
+  "@endTimeEstimate": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "keepGoing": "Keep going",
+  "timeEnded": "Time ended",
+  "failedToEndTime": "Couldn't end the time",
+  "cancelTime": "Cancel time",
+  "cancelTimeQuestion": "Cancel the time? Nothing goes on the bill.",
+  "timeCancelled": "Time cancelled",
+  "estimate": "So far",
+  "noTimeYet": "No time yet",
+  "timeHistory": "Time history",
+  "noTimeHistory": "Nothing here for this range.",
+  "ended": "Ended",
+  "paid": "Paid",
+  "notPaid": "Not paid",
+  "timeRunning": "Time running",
+  "noTimeRunning": "No time running",
+  "placesInUse": "In use",
+  "timeByPlace": "Time sold by place",
+  "visitsLabel": "visits",
+  "copyPlaceLink": "Copy QR link",
+  "placeLinkCopied": "Link copied",
+  "acceptingCustomers": "Open"
 }

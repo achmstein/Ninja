@@ -504,5 +504,113 @@
   "noBranchTitle": "مفيش فرع متعين ليك",
   "noBranchDescription": "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.",
   "cashierRole": "كاشير",
-  "retry": "حاول تاني"
+  "retry": "حاول تاني",
+
+  "placesNav": "الأوض والترابيزات",
+  "stations": "الألعاب",
+  "ordersOnly": "طلبات بس",
+  "timed": "بالوقت",
+  "scanToOrderOrJoin": "امسح تطلب أو تبدأ وقتك",
+  "placeQrSheetSubtitle": "قص الكروت وحط واحد على كل اوضة وترابيزة ولعبة.",
+  "noPlacesYet": "مفيش اوض ولا ترابيزات لسه. ضيف أول واحدة.",
+  "selectPlace": "اختار اوضة أو ترابيزة",
+  "allPlaces": "كل الأماكن",
+  "newPlace": "مكان جديد",
+  "editPlace": "تعديل المكان",
+  "kind": "النوع",
+  "placeKindRoom": "اوضة",
+  "placeKindTable": "ترابيزة",
+  "placeKindStation": "لعبة",
+  "rateOptions": "الأسعار",
+  "addRateOption": "ضيف سعر",
+  "optionCode": "الكود",
+  "hourlyRate": "في الساعة",
+  "roundingMinutes": "التقريب (دقايق)",
+  "placeSaved": "اتحفظ",
+  "failedToSavePlace": "مقدرناش نحفظ",
+  "placeDeleted": "اتحذف",
+  "deletePlaceQuestion": "حذف المكان ده؟",
+  "failedToDeletePlace": "مقدرناش نحذف",
+  "outOfService": "خارج الخدمة",
+  "backInService": "رجّع للخدمة",
+  "held": "محجوز",
+  "heldFor": "محجوز لـ {name}",
+  "@heldFor": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "hold": "حجز",
+  "holdPlaceTitle": "حجز {name}",
+  "@holdPlaceTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "placeHeld": "اتحجز {name}",
+  "@placeHeld": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "failedToHold": "مقدرناش نحجز",
+  "holdCancelled": "الحجز اتلغى",
+  "cancelHold": "إلغاء الحجز",
+  "cancelHoldQuestion": "نلغي الحجز ده؟",
+  "failedToCancelHold": "مقدرناش نلغي",
+  "startOnConfirm": "ابدأ الوقت لما يوصلوا",
+  "startsOnConfirm": "يبدأ لما يتأكد",
+  "failedToConfirm": "مقدرناش نأكد",
+  "startClockAt": "ابدأ الوقت في {name}",
+  "@startClockAt": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "clockStarted": "الوقت بدأ",
+  "failedToStartClock": "مقدرناش نبدأ الوقت",
+  "rate": "السعر",
+  "rateChanged": "السعر اتغير",
+  "failedToChangeRate": "مقدرناش نغير السعر",
+  "switchToRateQuestion": "نحوّل لـ {option}؟",
+  "@switchToRateQuestion": {
+    "placeholders": {
+      "option": {"type": "String"}
+    }
+  },
+  "keepRate": "خلي {option}",
+  "@keepRate": {
+    "placeholders": {
+      "option": {"type": "String"}
+    }
+  },
+  "switchRate": "حوّل",
+  "endTimeQuestion": "ننهي الوقت؟",
+  "endTimeEstimate": "حوالي {amount} على الفاتورة.",
+  "@endTimeEstimate": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "keepGoing": "كمّلوا",
+  "timeEnded": "الوقت خلص",
+  "failedToEndTime": "مقدرناش ننهي الوقت",
+  "cancelTime": "إلغاء الوقت",
+  "cancelTimeQuestion": "نلغي الوقت؟ مفيش حاجة هتتحسب.",
+  "timeCancelled": "الوقت اتلغى",
+  "estimate": "لحد دلوقتي",
+  "noTimeYet": "مفيش وقت لسه",
+  "timeHistory": "سجل الوقت",
+  "noTimeHistory": "مفيش حاجة في الفترة دي.",
+  "ended": "خلص",
+  "paid": "اتدفع",
+  "notPaid": "لسه ما اتدفعش",
+  "timeRunning": "الوقت شغال",
+  "noTimeRunning": "مفيش وقت شغال",
+  "placesInUse": "مشغول",
+  "timeByPlace": "الوقت المتباع حسب المكان",
+  "visitsLabel": "زيارة",
+  "copyPlaceLink": "انسخ لينك الكود",
+  "placeLinkCopied": "اتنسخ اللينك",
+  "acceptingCustomers": "شغال"
 }

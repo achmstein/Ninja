@@ -117,15 +117,9 @@ export function getOrdersColumns({
       enableSorting: false,
       cell: (info) => info.getValue() || '—',
     }),
-    columnHelper.accessor((row) => localized(row.roomName), {
-      id: 'room',
-      header: t('room'),
-      enableSorting: false,
-      cell: (info) => info.getValue() || '—',
-    }),
-    columnHelper.accessor((row) => localized(row.tableName), {
-      id: 'table',
-      header: t('tables'),
+    columnHelper.accessor((row) => localized(row.placeName), {
+      id: 'place',
+      header: t('place'),
       enableSorting: false,
       cell: (info) => info.getValue() || '—',
     }),

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Armchair, Check, Coffee, MapPin, MessageSquare, X } from 'lucide-react'
+import { Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -18,6 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ImageWithFallback } from '@/components/image-fallback'
+import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 import { formatEgp, getOrderStatus, isSubmitted } from '../status'
 
 type OrderDetailsSheetProps = {
@@ -78,20 +79,15 @@ export function OrderDetailsSheet({
             </div>
           ) : order ? (
             <>
-              {(localized(order.roomName) ||
-                localized(order.tableName) ||
-                order.customerNote) && (
+              {(localized(order.placeName) || order.customerNote) && (
                 <div className='flex flex-col gap-2'>
-                  {localized(order.roomName) && (
+                  {localized(order.placeName) && (
                     <div className='flex items-center gap-2 text-sm'>
-                      <MapPin className='text-muted-foreground h-4 w-4' />
-                      <span>{localized(order.roomName)}</span>
-                    </div>
-                  )}
-                  {localized(order.tableName) && (
-                    <div className='flex items-center gap-2 text-sm'>
-                      <Armchair className='text-muted-foreground h-4 w-4' />
-                      <span>{localized(order.tableName)}</span>
+                      <PlaceKindIcon
+                        kind={order.placeKind}
+                        className='text-muted-foreground h-4 w-4'
+                      />
+                      <span>{localized(order.placeName)}</span>
                     </div>
                   )}
                   {order.customerNote && (

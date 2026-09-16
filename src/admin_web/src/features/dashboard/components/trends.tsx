@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { getOrderStatsOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { getSessionStatsOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { getStayStatsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import {
@@ -39,7 +39,8 @@ function localDayKey(date: Date): string {
 
 /**
  * How the last weeks went: revenue as one area chart, then the top items
- * and the busiest rooms as ranked lists you can read without hovering.
+ * and the places that sold the most time as ranked lists you can read
+ * without hovering.
  * Range lives in the URL.
  */
 export function Trends() {
@@ -74,8 +75,8 @@ export function Trends() {
     }),
     refetchInterval: 5 * 60_000,
   })
-  const sessionStats = useQuery({
-    ...getSessionStatsOptions({ query: statsQuery }),
+  const stayStats = useQuery({
+    ...getStayStatsOptions({ query: statsQuery }),
     refetchInterval: 5 * 60_000,
   })
 
@@ -111,13 +112,13 @@ export function Trends() {
     hint: formatEgp(item.revenue),
   }))
 
-  const roomRows = [...(sessionStats.data?.rooms ?? [])]
-    .map((room, index) => ({
+  const placeRows = [...(stayStats.data?.places ?? [])]
+    .map((place, index) => ({
       key: `${index}`,
-      label: localized(room.roomName) || '—',
-      value: Number(room.hours ?? 0),
-      display: t('billedHoursFormat', { hours: Number(room.hours ?? 0) }),
-      hint: `${Number(room.sessions ?? 0)} ${t('sessionsLabel')}`,
+      label: localized(place.placeName) || '—',
+      value: Number(place.hours ?? 0),
+      display: t('billedHoursFormat', { hours: Number(place.hours ?? 0) }),
+      hint: `${Number(place.stays ?? 0)} ${t('visitsLabel')}`,
     }))
     .sort((a, b) => b.value - a.value)
 
@@ -250,20 +251,20 @@ export function Trends() {
           )}
         </div>
         <div>
-          <h3 className='mb-1 text-sm font-medium'>{t('roomsByHours')}</h3>
-          {sessionStats.isError ? (
+          <h3 className='mb-1 text-sm font-medium'>{t('timeByPlace')}</h3>
+          {stayStats.isError ? (
             <ErrorState
-              error={sessionStats.error}
-              onRetry={() => sessionStats.refetch()}
+              error={stayStats.error}
+              onRetry={() => stayStats.refetch()}
             />
-          ) : sessionStats.isLoading ? (
+          ) : stayStats.isLoading ? (
             <Skeleton className='h-40 w-full' />
-          ) : roomRows.length === 0 ? (
+          ) : placeRows.length === 0 ? (
             <p className='text-muted-foreground py-3 text-sm'>
               {t('noAnalyticsData')}
             </p>
           ) : (
-            <RankedList items={roomRows} />
+            <RankedList items={placeRows} />
           )}
         </div>
       </div>

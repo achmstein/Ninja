@@ -6,7 +6,7 @@ import { sidebarData } from '@/components/layout/data/sidebar-data'
 // Pages not present in the sidebar
 const extraTitles: Record<string, TranslationKey> = {
   '/settings': 'settings',
-  '/rooms/history': 'sessionHistory',
+  '/places/history': 'timeHistory',
   '/orders/history': 'orderHistory',
 }
 

@@ -1,14 +1,10 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Loader2, Search, X } from 'lucide-react'
-import { type RoomViewModel } from '@/api/spaces'
-import {
-  assignCustomerToSessionMutation,
-  reserveRoomMutation,
-} from '@/api/spaces/@tanstack/react-query.gen'
+import { type PlaceViewModel } from '@/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -21,9 +17,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { CustomerSearchDialog } from '@/features/accounts/components/customer-search-dialog'
 import type { KeycloakUser } from '@/features/accounts/types'
+import { useStayActions } from '../use-places'
 
-interface ReserveRoomDialogProps {
-  room: RoomViewModel | null
+interface HoldDialogProps {
+  place: PlaceViewModel | null
   onOpenChange: (open: boolean) => void
 }
 
@@ -32,78 +29,72 @@ function displayName(user: KeycloakUser): string {
   return fullName || user.username
 }
 
-export function ReserveRoomDialog({
-  room,
-  onOpenChange,
-}: ReserveRoomDialogProps) {
+/**
+ * Holds a free timed place for someone on their way: a picked account or a
+ * typed name, and whether the clock should start the moment the counter
+ * confirms they arrived.
+ */
+export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
   const t = useT()
   const localized = useLocalized()
-  const queryClient = useQueryClient()
+  const actions = useStayActions()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [customer, setCustomer] = useState<KeycloakUser | null>(null)
   const [customerName, setCustomerName] = useState('')
   const [notes, setNotes] = useState('')
-
-  const reserve = useMutation(reserveRoomMutation())
-  const assignCustomer = useMutation(assignCustomerToSessionMutation())
-  const isSaving = reserve.isPending || assignCustomer.isPending
+  const [startOnConfirm, setStartOnConfirm] = useState(false)
 
   const reset = () => {
     setCustomer(null)
     setCustomerName('')
     setNotes('')
+    setStartOnConfirm(false)
   }
 
-  const handleReserve = async () => {
-    // A picked customer's account name is the reservation name; the free-text
-    // field only applies to walk-in guests
-    const reservationName = customer
-      ? displayName(customer)
-      : customerName.trim()
-
-    try {
-      const reservationId = await reserve.mutateAsync({
-        path: { roomId: Number(room!.id) },
-        body: {
-          customerName: reservationName || null,
-          notes: notes.trim() || null,
+  const handleHold = () => {
+    if (!place) return
+    // A picked customer's account name is the hold's name; the free-text
+    // field only applies to guests without an account
+    const holdName = customer ? displayName(customer) : customerName.trim()
+    const placeName = localized(place.name)
+    actions.hold(
+      Number(place.id),
+      {
+        customerName: holdName || null,
+        notes: notes.trim() || null,
+        startOnConfirm,
+      },
+      {
+        onSuccess: (stayId) => {
+          const finish = () => {
+            toast.success(t('placeHeld', { name: placeName }))
+            reset()
+            onOpenChange(false)
+          }
+          // Link the hold to the picked account so it shows up in their
+          // app and history
+          if (customer) {
+            actions.assignCustomer(stayId, customer.id, holdName, {
+              onSuccess: finish,
+            })
+          } else {
+            finish()
+          }
         },
-      })
-
-      // Link the reservation to the picked account so it shows up in their
-      // app and history
-      if (customer) {
-        await assignCustomer.mutateAsync({
-          path: { sessionId: Number(reservationId) },
-          body: {
-            customerId: customer.id,
-            customerName: reservationName,
-          },
-        })
       }
-
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
-      queryClient.invalidateQueries({
-        queryKey: [{ _id: 'getActiveSessions' }],
-      })
-      toast.success(t('roomReserved', { name: localized(room?.name) }))
-      reset()
-      onOpenChange(false)
-    } catch {
-      toast.error(t('failedToReserveRoom'))
-    }
+    )
   }
 
-  if (!room) return null
+  if (!place) return null
 
   return (
     <>
-      <Dialog open={!!room} onOpenChange={onOpenChange}>
+      <Dialog open={!!place} onOpenChange={onOpenChange}>
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
               <CalendarClock className='h-5 w-5' />
-              {t('reserveRoomTitle', { name: localized(room.name) })}
+              {t('holdPlaceTitle', { name: localized(place.name) })}
             </DialogTitle>
           </DialogHeader>
 
@@ -146,9 +137,9 @@ export function ReserveRoomDialog({
 
             {!customer && (
               <div className='space-y-2'>
-                <Label htmlFor='reserveName'>{t('guestName')}</Label>
+                <Label htmlFor='holdName'>{t('guestName')}</Label>
                 <Input
-                  id='reserveName'
+                  id='holdName'
                   placeholder={t('guestNamePlaceholder')}
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
@@ -156,10 +147,23 @@ export function ReserveRoomDialog({
               </div>
             )}
 
+            <div className='flex items-center gap-2'>
+              <Checkbox
+                id='holdStartOnConfirm'
+                checked={startOnConfirm}
+                onCheckedChange={(checked) =>
+                  setStartOnConfirm(checked === true)
+                }
+              />
+              <Label htmlFor='holdStartOnConfirm' className='font-normal'>
+                {t('startOnConfirm')}
+              </Label>
+            </div>
+
             <div className='space-y-2'>
-              <Label htmlFor='reserveNotes'>{t('notesOptional')}</Label>
+              <Label htmlFor='holdNotes'>{t('notesOptional')}</Label>
               <Textarea
-                id='reserveNotes'
+                id='holdNotes'
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
@@ -175,9 +179,11 @@ export function ReserveRoomDialog({
             >
               {t('cancel')}
             </Button>
-            <Button onClick={handleReserve} disabled={isSaving}>
-              {isSaving && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
-              {t('reserve')}
+            <Button onClick={handleHold} disabled={actions.isBusy}>
+              {actions.isBusy && (
+                <Loader2 className='me-2 h-4 w-4 animate-spin' />
+              )}
+              {t('hold')}
             </Button>
           </DialogFooter>
         </DialogContent>

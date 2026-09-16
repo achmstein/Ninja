@@ -1,7 +1,5 @@
 import {
-  Armchair,
   Check,
-  MapPin,
   MessageSquare,
   MoreHorizontal,
   Phone,
@@ -21,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { QueueCard } from '@/components/queue-card'
+import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 import {
   formatEgp,
   orderSourceKeys,
@@ -108,16 +107,10 @@ export function PendingOrderCard({
             {summary.guestPhone}
           </a>
         )}
-        {localized(summary.roomName) && (
+        {localized(summary.placeName) && (
           <span className='flex items-center gap-1'>
-            <MapPin className='h-3 w-3' />
-            {localized(summary.roomName)}
-          </span>
-        )}
-        {localized(summary.tableName) && (
-          <span className='flex items-center gap-1'>
-            <Armchair className='h-3 w-3' />
-            {localized(summary.tableName)}
+            <PlaceKindIcon kind={summary.placeKind} className='h-3 w-3' />
+            {localized(summary.placeName)}
           </span>
         )}
       </div>
