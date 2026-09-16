@@ -556,5 +556,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "receiptThanks": "Thank you!",
+  "receiptDate": "Date"
 }

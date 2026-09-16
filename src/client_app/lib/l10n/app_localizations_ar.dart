@@ -900,4 +900,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String taxNumber(String number) {
     return 'الرقم الضريبي $number';
   }
+
+  @override
+  String get receiptThanks => 'شكراً لحضرتك!';
+
+  @override
+  String get receiptDate => 'التاريخ';
 }

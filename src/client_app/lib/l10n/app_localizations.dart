@@ -1705,6 +1705,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tax no. {number}'**
   String taxNumber(String number);
+
+  /// No description provided for @receiptThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you!'**
+  String get receiptThanks;
+
+  /// No description provided for @receiptDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get receiptDate;
 }
 
 class _AppLocalizationsDelegate

@@ -81,57 +81,62 @@ class _ReceiptBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
     final locale = Localizations.localeOf(context).languageCode;
     final branch = ref.watch(branchProvider).branches.where((b) => b.id == receipt.branchId).firstOrNull;
-    final money = (double v) => l10n.priceFormat(v.toStringAsFixed(2));
-    final muted = TextStyle(fontSize: 12, color: colors.mutedForeground);
+    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    // The paper the till prints: black on white whatever the theme
+    const ink = Colors.black;
+    const base = TextStyle(fontSize: 12, color: ink, height: 1.3);
+    const muted = TextStyle(fontSize: 11, color: ink, height: 1.3);
     const tabular = [FontFeature.tabularFigures()];
     final hasBreakdown = receipt.discount > 0 || receipt.serviceCharge > 0 || receipt.vat > 0;
 
-    Widget row(String label, String value, {TextStyle? style}) => Row(
+    Widget row(String label, String value, {TextStyle style = base}) => Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
             Expanded(child: AppText(label, style: style)),
-            const SizedBox(width: 16),
-            AppText(value, style: (style ?? const TextStyle()).copyWith(fontFeatures: tabular)),
+            const SizedBox(width: 8),
+            AppText(value, style: style.copyWith(fontFeatures: tabular)),
           ],
         );
-    final rule = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: CustomPaint(size: const Size(double.infinity, 1), painter: _DashedLine(colors.border)),
+    const rule = Padding(
+      padding: EdgeInsets.symmetric(vertical: 6),
+      child: CustomPaint(size: Size(double.infinity, 1), painter: _DashedLine(ink)),
     );
+    final footer = branch?.receiptFooter?.localized(context).trim();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.background,
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
+    return Center(
+      child: Container(
+        width: 300,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 4, offset: const Offset(0, 1))],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Column(
             children: [
+              // The wordmark, about half the paper wide, as the till prints it
+              Image.asset('assets/images/logo.png', width: 136),
+              const SizedBox(height: 8),
               if (branch != null) ...[
-                AppText(branch.name.localized(context), style: const TextStyle(fontWeight: FontWeight.w600)),
+                AppText(branch.name.localized(context), style: base.copyWith(fontWeight: FontWeight.w600)),
                 if (branch.address != null) AppText(branch.address!.localized(context), style: muted, textAlign: TextAlign.center),
                 if (branch.phone != null)
                   Directionality(textDirection: TextDirection.ltr, child: AppText(branch.phone!, style: muted)),
                 if (branch.taxNumber != null) AppText(l10n.taxNumber(branch.taxNumber!), style: muted),
+                const SizedBox(height: 6),
               ],
-              const SizedBox(height: 4),
-              AppText(l10n.receiptNumber(receipt.receiptNumber), style: const TextStyle(fontWeight: FontWeight.w600)),
+              AppText(l10n.receiptNumber(receipt.receiptNumber), style: base.copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
               AppText(
-                [
-                  DateFormat.yMMMd(locale).add_jm().format(receipt.settledAt.toLocal()),
-                  if (receipt.locationName != null) receipt.locationName!.localized(context),
-                ].join(' · '),
+                '${l10n.receiptDate}: ${DateFormat.yMd(locale).add_jm().format(receipt.settledAt.toLocal())}',
                 style: muted.copyWith(fontFeatures: tabular),
                 textAlign: TextAlign.center,
               ),
+              if (receipt.locationName != null) AppText(receipt.locationName!.localized(context), style: muted),
             ],
           ),
           rule,
@@ -141,9 +146,9 @@ class _ReceiptBody extends ConsumerWidget {
               '${line.qty % 1 == 0 ? line.qty.toInt() : line.qty} × ${money(line.unitPrice)}'
               '${line.discount > 0 ? ' − ${money(line.discount)} (${l10n.discount})' : ''}'
               '${line.customerName != null ? ' · ${line.customerName}' : ''}',
-              style: muted.copyWith(fontFeatures: tabular),
+              style: muted.copyWith(fontSize: 10, fontFeatures: tabular),
             ),
-            if (line.details != null) AppText(line.details!.localized(context), style: muted),
+            if (line.details != null) AppText(line.details!.localized(context), style: muted.copyWith(fontSize: 10)),
             const SizedBox(height: 6),
           ],
           rule,
@@ -161,9 +166,9 @@ class _ReceiptBody extends ConsumerWidget {
               row(l10n.vat(_pct(receipt.vatRate)), money(receipt.vat), style: muted),
             const SizedBox(height: 4),
           ],
-          row(l10n.total, money(receipt.total), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          row(l10n.total, money(receipt.total), style: base.copyWith(fontSize: 15, fontWeight: FontWeight.w700)),
           if (receipt.vat > 0 && receipt.vatIncluded)
-            row(l10n.vatIncluded(_pct(receipt.vatRate)), money(receipt.vat), style: muted),
+            row(l10n.vatIncluded(_pct(receipt.vatRate)), money(receipt.vat), style: muted.copyWith(fontSize: 10)),
           const SizedBox(height: 8),
           for (final payment in receipt.payments)
             row(
@@ -173,22 +178,19 @@ class _ReceiptBody extends ConsumerWidget {
               money(payment.amount),
             ),
           if (receipt.changeGiven > 0)
-            row(l10n.changeDue, money(receipt.changeGiven), style: const TextStyle(fontWeight: FontWeight.w500)),
+            row(l10n.changeDue, money(receipt.changeGiven), style: base.copyWith(fontWeight: FontWeight.w600)),
           if (receipt.refunds.isNotEmpty) ...[
             rule,
             for (final refund in receipt.refunds) ...[
-              row(l10n.creditNote(refund.number), '−${money(refund.amount)}',
-                  style: TextStyle(color: colors.destructive)),
-              if (refund.reason.isNotEmpty) AppText(refund.reason, style: muted),
+              row(l10n.creditNote(refund.number), '−${money(refund.amount)}'),
+              if (refund.reason.isNotEmpty) AppText(refund.reason, style: muted.copyWith(fontSize: 10)),
             ],
-            row(l10n.refunded, '−${money(receipt.refundedTotal)}',
-                style: TextStyle(color: colors.destructive, fontWeight: FontWeight.w500)),
+            row(l10n.refunded, '−${money(receipt.refundedTotal)}', style: base.copyWith(fontWeight: FontWeight.w600)),
           ],
-          if (branch?.receiptFooter != null) ...[
-            const SizedBox(height: 12),
-            AppText(branch!.receiptFooter!.localized(context), style: muted, textAlign: TextAlign.center),
-          ],
+          const SizedBox(height: 12),
+          AppText(footer != null && footer.isNotEmpty ? footer : l10n.receiptThanks, style: base, textAlign: TextAlign.center),
         ],
+      ),
       ),
     );
   }

@@ -323,5 +323,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "receiptThanks": "شكراً لحضرتك!",
+  "receiptDate": "التاريخ"
 }

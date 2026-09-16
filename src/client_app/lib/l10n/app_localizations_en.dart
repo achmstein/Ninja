@@ -908,4 +908,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String taxNumber(String number) {
     return 'Tax no. $number';
   }
+
+  @override
+  String get receiptThanks => 'Thank you!';
+
+  @override
+  String get receiptDate => 'Date';
 }

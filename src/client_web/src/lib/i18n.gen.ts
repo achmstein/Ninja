@@ -276,4 +276,6 @@ export const messages = {
   creditNote: { en: "Credit note #{number}", ar: "إشعار استرجاع #{number}" },
   changeDue: { en: "Change", ar: "الباقي" },
   taxNumber: { en: "Tax no. {number}", ar: "الرقم الضريبي {number}" },
+  receiptThanks: { en: "Thank you!", ar: "شكراً لحضرتك!" },
+  receiptDate: { en: "Date", ar: "التاريخ" },
 } as const satisfies Record<string, Message>
