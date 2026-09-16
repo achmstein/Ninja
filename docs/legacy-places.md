@@ -6,24 +6,23 @@ The Places remodel (branch `feature/places`, 2026‑09‑16) replaced Rooms, Tab
 LEGACY(places): <what it is> — remove when <condition>.
 ```
 
-`grep -rn "LEGACY(places)" src` lists all of them (319 markers at the branch head). This file is the same list, grouped, with the condition that lets each one go. Nothing here is needed by the new model; it exists only for something old that is still out there.
+`grep -rn "LEGACY(places)" src` lists all of them. **The staff apps carry none**: admin_web, admin_app, pos_web, pos_app, kds_web and kds_app speak only place and stay. Legacy lives in the services (for tills and phones not yet updated, and for old stickers) and in the two customer apps (for printed stickers). This file is the same list, grouped, with the condition that lets each one go. Nothing here is needed by the new model; it exists only for something old that is still out there.
 
 ## The conditions
 
 | Id | Condition | What has to be true first |
 | --- | --- | --- |
-| **C1** | every till and customer app is on `/api/places` and `/api/stays` | pos_web, pos_app, client_web, client_app are switched (done on the branch). **admin_web and admin_app are not yet** — they still call `/api/rooms` and `/api/tables`. Migrate them, then release. |
+| **C1** | every till and customer app is on `/api/places` and `/api/stays` | Every app in the repo is switched (done on the branch). The condition is about what is *installed*: once the tills and phones in the field run this release, nothing calls the aliases or reads the old fields. The E2E suite's `CashierActor` still exercises `/api/rooms`; move it to `/api/places` before deleting the aliases. |
 | **C2** | the printed room/table stickers are reprinted with `/p/{id}` | New sheets print `https://chillax.site/p/{placeId}`. Once no sticker with `/room/{id}` or `/table/{id}` is on a table, the old links and every legacy‑id lookup can go. |
-| **C3** | Sales, Ordering and Notification stop sending the old room/table fields | Once every client is on the new fields (C1), the services stop filling `RoomId/RoomName/TableId/TableName`; the release after, the clients' fallbacks that read them go too. |
+| **C3** | Sales, Ordering and Notification stop sending the old room/table fields | Once every installed client is on the new fields (C1), the services stop filling `RoomId/RoomName/TableId/TableName`; the release after, the customer apps' fallbacks that read them go too. |
 | **C4** | one release after `/places` and `/stays` ship | Customer web bookmarks and old push payloads that still open `/rooms` or `/sessions`. |
 | **C5** | the Live Activity / native channel is updated to place keys | client_app's iOS/Android Live Activity reads `roomId` / `roomName…` keys and `active_session_room_*` prefs. The native side changes first, then the Dart side. |
 
 ## Removal order
 
-1. **admin_web + admin_app to `/api/places` and `/api/stays`** — they are the last callers of the aliases. This closes C1.
-2. Release. Reprint stickers as `/p/{id}` during that release (C2). Update the native Live Activity keys (C5).
-3. Next release: delete everything under C1 and C2 — alias routes, `RoomViewModel`, legacy ids and columns, old request fields — and stop filling the old event fields (C3, services side). Drop the client redirects (C4).
-4. Release after that: delete the clients' fallbacks that read the old fields (C3, client side).
+1. Release this branch; every app in it is on places and stays. Reprint stickers as `/p/{id}` during that release (C2). Update the native Live Activity keys (C5).
+2. Next release, once the installed tills and phones are on it (C1): move the E2E `CashierActor` to `/api/places`, then delete everything under C1 and C2 — alias routes, `RoomViewModel`, legacy ids and columns, old request fields — and stop filling the old event fields (C3, services side). Drop the customer web redirects (C4).
+3. Release after that: delete the customer apps' fallbacks that read the old fields (C3, client side).
 
 Migrations under `*/Migrations/` are history and are never edited; dropping a column is a new migration. Consumer copies of an event must drop a field in the same release as the producer, or keep the default.
 
@@ -108,32 +107,6 @@ The tables are the `LEGACY(places)` markers as of the branch head. Line numbers 
 | src/Notification.API/IntegrationEvents/Events/*.cs | — | consumer copies: `RoomId/RoomName`, `PlayerMode` on every Spaces event, `RoomName` on OrderStatusChangedToConfirmed, old four on ServiceRequestCreated, legacy ids on PlaceUpdated | C1 / C2 |
 | src/Notification.API/IntegrationEvents/EventHandling/*Handler.cs | — | hub payloads send `roomId`/`tableId` beside `placeId` (with `RoomId` fallback); FCM data `playerMode`, `roomId/roomName`; SwitchTo* switch arms; projection of legacy ids | C1 / C2 |
 
-### Till web (pos_web)
-
-| File | Line | What | When |
-| --- | --- | --- | --- |
-| src/features/requests/service.ts | 23, 27 | `ServiceRequest.roomId`, `tableId/tableName` beside `placeId/placeKind` | C3 |
-| src/features/requests/service-requests-strip.tsx | 77, 83 | `atTable` and label fallbacks on the old fields | C3 |
-| src/features/orders/use-pending-orders.ts | 41, 46 | `pendingForTicket` matches on the old `tableId` | C3 |
-| src/features/orders/pending-orders.tsx, order-detail-dialog.tsx | 37 / 59 | title from `roomName`/`tableName` | C3 |
-| src/features/ticket/move-target-dialog.tsx | 44, 307 | `MoveTarget` table variant sends `tableId: legacyTableId`, `tableName` | C1 |
-| src/features/ticket/index.tsx | 428, 524 | `pendingForTicket`; move‑lines sends `tableId/tableName` beside `placeId` | C3 / C1 |
-| src/features/floor/index.tsx | 254, 299 | sort fallback on `ticket.roomId`; open bill sends `tableId: legacyTableId` | C1 |
-| src/features/floor/place-list.tsx | 71 | `hasBill` matches rooms on `ticket.roomId` | C1 |
-
-### Till app (pos_app)
-
-| File | Line | What | When |
-| --- | --- | --- | --- |
-| lib/features/tables/models/cafe_table.dart, lib/features/places/models/place.dart | 11, 20 / 106, 145 | `legacyTableId` (printed sticker id) | C1 + C2 |
-| lib/features/tickets/models/open_ticket.dart, move_lines.dart | 12, 24 / 29, 54 | `tableId/tableName` beside `placeId` in open‑ticket and move requests | C1 |
-| lib/features/tickets/models/ticket_summary.dart, ticket_detail.dart | 13, 49 / 151, 243 | `roomId/tableId` beside `placeId` | C1 |
-| lib/features/service_requests/models/service_request.dart, widgets/service_requests_strip.dart | 50–91 / 124–131 | old fields and their fallbacks | C3 |
-| lib/features/orders/models/order.dart, providers/pending_orders_provider.dart, widgets/pending_orders.dart, widgets/order_detail_dialog.dart | 101–176 / 65 / 132 / 49 | `roomName`, `tableId/tableName`; `pendingForTicket` on the old table id; titles | C3 |
-| lib/features/ticket/screens/ticket_screen.dart, lib/features/floor/screens/floor_screen.dart | 339 / 425 | `pendingForTicket(..., tableId:)` | C3 |
-| lib/features/floor/screens/floor_screen.dart, lib/features/ticket/dialogs/move_target_dialog.dart | 177 / 234 | open bill and move target send `legacyTableId`/name beside `placeId` | C1 |
-| lib/core/demo/demo.dart | 217–1083 | demo data and matching that exist only to fill the old fields | C1 / C3 |
-
 ### Customer web (client_web)
 
 | File | Line | What | When |
@@ -159,6 +132,8 @@ The tables are the `LEGACY(places)` markers as of the branch head. Line numbers 
 | lib/core/services/session_notification_service.dart 119–352, lib/core/services/firebase_service.dart 29, 44 | — | native channel keys and `active_session_room_*` prefs | C5 |
 
 ### Not legacy, in case it looks like it
+
+- The staff apps: nothing under `src/admin_*`, `src/pos_*`, `src/kds_*` is legacy; they send `placeId`/`placeName` and read `placeKind`/`placeName` only.
 
 - The SignalR group named `rooms` and the `useRoomsGroup` hook: the group name is a channel id, not the model.
 - i18n keys `rooms`, `sessions`, `noSessionsYet` and the like: text ids shared with the ARB; the strings behind them are what the owner sees.
