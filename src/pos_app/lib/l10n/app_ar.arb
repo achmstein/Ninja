@@ -145,9 +145,7 @@
     }
   },
   "readyToStart": "جاهز للبدء",
-  "playerModeSingle": "سنجل",
-  "playerModeMulti": "مالتي",
-  "playerMode": "وضع اللعب",
+  "rate": "السعر",
   "startSession": "إبدا الوقت",
   "reserve": "احجز",
   "roomReserved": "الأوضة اتحجزت",
@@ -156,8 +154,6 @@
   "requestCallWaiter": "نداء الجرسون",
   "requestControllerChange": "تغيير الدراع",
   "requestReceiptToPay": "هات الحساب",
-  "requestSwitchToMulti": "تحويل لمالتي",
-  "requestSwitchToSingle": "تحويل لسنجل",
   "acknowledgeRequest": "استلمنا",
   "failedToUpdateRequest": "معرفناش نحدث الطلب",
   "newServiceRequestToast": "طلب جديد من أوضة",
@@ -217,8 +213,8 @@
       }
     }
   },
-  "playerModeUpdated": "اتغير وضع اللعب",
-  "failedToChangePlayerMode": "معرفناش نغير وضع اللعب",
+  "rateChanged": "السعر اتغير",
+  "failedToChangeRate": "مقدرناش نغير السعر",
   "addCustomer": "إضافة عميل",
   "assignCustomer": "تعيين عميل",
   "customerAdded": "اتضاف العميل",

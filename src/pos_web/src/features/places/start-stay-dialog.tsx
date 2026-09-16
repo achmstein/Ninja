@@ -108,7 +108,7 @@ export function StartStayDialog({
 
         {hasOptions(place?.tariff) && (
           <div className='grid gap-2'>
-            <Label>{t('playerMode')}</Label>
+            <Label>{t('rate')}</Label>
             <RateOptionToggle
               options={options}
               value={chosen?.code ?? null}

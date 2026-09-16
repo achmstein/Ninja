@@ -137,7 +137,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           ),
           if (room.hasOptions) ...[
             const SizedBox(height: 16),
-            Text(l10n.playerMode, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+            Text(l10n.rate, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             RateOptionToggle(
               options: room.options,

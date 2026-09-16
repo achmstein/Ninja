@@ -512,23 +512,11 @@ abstract class AppLocalizations {
   /// **'Ready to start'**
   String get readyToStart;
 
-  /// No description provided for @playerModeSingle.
+  /// No description provided for @rate.
   ///
   /// In en, this message translates to:
-  /// **'Single'**
-  String get playerModeSingle;
-
-  /// No description provided for @playerModeMulti.
-  ///
-  /// In en, this message translates to:
-  /// **'Multi'**
-  String get playerModeMulti;
-
-  /// No description provided for @playerMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Player mode'**
-  String get playerMode;
+  /// **'Rate'**
+  String get rate;
 
   /// No description provided for @startSession.
   ///
@@ -577,18 +565,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bring the bill'**
   String get requestReceiptToPay;
-
-  /// No description provided for @requestSwitchToMulti.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to multiplayer'**
-  String get requestSwitchToMulti;
-
-  /// No description provided for @requestSwitchToSingle.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to single player'**
-  String get requestSwitchToSingle;
 
   /// No description provided for @acknowledgeRequest.
   ///
@@ -776,17 +752,17 @@ abstract class AppLocalizations {
   /// **'Keep {mode}'**
   String keepCurrent(String mode);
 
-  /// No description provided for @playerModeUpdated.
+  /// No description provided for @rateChanged.
   ///
   /// In en, this message translates to:
-  /// **'Player mode updated'**
-  String get playerModeUpdated;
+  /// **'Rate changed'**
+  String get rateChanged;
 
-  /// No description provided for @failedToChangePlayerMode.
+  /// No description provided for @failedToChangeRate.
   ///
   /// In en, this message translates to:
-  /// **'Failed to change player mode'**
-  String get failedToChangePlayerMode;
+  /// **'Couldn\'t change the rate'**
+  String get failedToChangeRate;
 
   /// No description provided for @addCustomer.
   ///

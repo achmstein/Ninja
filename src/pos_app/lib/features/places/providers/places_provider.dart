@@ -98,9 +98,9 @@ class PlacesNotifier extends Notifier<PlacesState> {
     }
   }
 
-  Future<bool> holdPlace(int roomId) async {
+  Future<bool> holdPlace(int placeId) async {
     try {
-      await _repository.holdPlace(roomId);
+      await _repository.holdPlace(placeId);
       await loadPlaces();
       return true;
     } catch (e) {
@@ -206,9 +206,9 @@ class PlacesNotifier extends Notifier<PlacesState> {
   }
 
   /// Start a walk-in directly (without a hold)
-  Future<bool> startWalkIn(int roomId, {String? optionCode}) async {
+  Future<bool> startWalkIn(int placeId, {String? optionCode}) async {
     try {
-      await _repository.startWalkIn(roomId, optionCode: optionCode);
+      await _repository.startWalkIn(placeId, optionCode: optionCode);
       await loadPlaces();
       return true;
     } catch (e) {
@@ -220,7 +220,7 @@ class PlacesNotifier extends Notifier<PlacesState> {
   static const int _historyPageSize = 20;
 
   /// Load session history for a specific room
-  Future<void> loadStayHistory(int roomId, {bool loadMore = false}) async {
+  Future<void> loadStayHistory(int placeId, {bool loadMore = false}) async {
     final currentPage = loadMore ? state.historyPage + 1 : 0;
     final currentHistory = loadMore ? (state.stayHistory ?? []) : <Stay>[];
 
@@ -231,7 +231,7 @@ class PlacesNotifier extends Notifier<PlacesState> {
     );
 
     try {
-      final newHistory = await _repository.getStayHistory(roomId, limit: _historyPageSize);
+      final newHistory = await _repository.getStayHistory(placeId, limit: _historyPageSize);
 
       state = state.copyWith(
         isLoadingHistory: false,

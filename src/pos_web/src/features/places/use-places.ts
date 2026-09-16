@@ -172,7 +172,7 @@ export function useStayActions() {
   })
   const changeOption = useMutation({
     ...changeStayOptionMutation(),
-    ...feedback('playerModeUpdated', 'failedToChangePlayerMode'),
+    ...feedback('rateChanged', 'failedToChangeRate'),
   })
   const assignCustomer = useMutation({
     ...assignStayCustomerMutation(),

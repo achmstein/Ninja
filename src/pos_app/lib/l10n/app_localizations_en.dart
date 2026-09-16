@@ -248,13 +248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readyToStart => 'Ready to start';
 
   @override
-  String get playerModeSingle => 'Single';
-
-  @override
-  String get playerModeMulti => 'Multi';
-
-  @override
-  String get playerMode => 'Player mode';
+  String get rate => 'Rate';
 
   @override
   String get startSession => 'Start session';
@@ -279,12 +273,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestReceiptToPay => 'Bring the bill';
-
-  @override
-  String get requestSwitchToMulti => 'Switch to multiplayer';
-
-  @override
-  String get requestSwitchToSingle => 'Switch to single player';
 
   @override
   String get acknowledgeRequest => 'Acknowledge';
@@ -388,10 +376,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get playerModeUpdated => 'Player mode updated';
+  String get rateChanged => 'Rate changed';
 
   @override
-  String get failedToChangePlayerMode => 'Failed to change player mode';
+  String get failedToChangeRate => 'Couldn\'t change the rate';
 
   @override
   String get addCustomer => 'Add customer';

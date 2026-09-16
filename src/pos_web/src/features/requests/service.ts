@@ -8,8 +8,6 @@ import { apiClient } from '@/lib/api-client'
 export const REQUEST_CALL_WAITER = 1
 export const REQUEST_CONTROLLER_CHANGE = 2
 export const REQUEST_RECEIPT_TO_PAY = 3
-export const REQUEST_SWITCH_TO_MULTI = 4
-export const REQUEST_SWITCH_TO_SINGLE = 5
 /** Switch the stay to another rate option; the option's code travels in optionCode */
 export const REQUEST_CHANGE_OPTION = 6
 

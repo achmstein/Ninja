@@ -193,8 +193,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   // the rate choice, no panel in between; the panel still opens for a
   // place with a running clock or a hold, where there is more to see. A
   // place with no clock opens a bill.
-  Future<void> _pickPlace(int roomId) async {
-    final room = ref.read(placesProvider).places.where((r) => r.id == roomId).firstOrNull;
+  Future<void> _pickPlace(int placeId) async {
+    final room = ref.read(placesProvider).places.where((r) => r.id == placeId).firstOrNull;
     if (room != null && !room.isTimed) {
       await _pickTable(room);
       return;
@@ -208,22 +208,22 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       }
       started = outcome == StartOutcome.started;
     } else {
-      started = await showPlacePanel(context, roomId);
+      started = await showPlacePanel(context, placeId);
     }
-    if (started && mounted) await _openStartedPlaceTicket(roomId);
+    if (started && mounted) await _openStartedPlaceTicket(placeId);
   }
 
   // A session just started in this room: Sales opens its bill on the event,
   // so it is not there the instant the start returns. Poll quickly until it
   // shows up and go there; give up after a while (Sales down, event lost)
   // and leave the cashier on the floor, where the room now shows occupied.
-  Future<void> _openStartedPlaceTicket(int roomId) async {
+  Future<void> _openStartedPlaceTicket(int placeId) async {
     final deadline = DateTime.now().add(const Duration(seconds: 15));
     while (mounted && DateTime.now().isBefore(deadline)) {
       await ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
       final bill = (ref.read(openTicketsProvider).value ?? const [])
-          .where((t) => t.placeId == roomId && t.sessionId != null)
+          .where((t) => t.placeId == placeId && t.sessionId != null)
           .firstOrNull;
       if (bill != null) {
         context.go('/ticket/${bill.id}');

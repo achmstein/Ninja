@@ -112,13 +112,6 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             ServiceRequestType.ReceiptToPay => (
                 NotificationMessages.BillRequestedTitle.GetText(lang),
                 NotificationMessages.BillRequestedBody(@event.RoomName, @event.UserName).GetText(lang)),
-            // LEGACY(places): the SwitchToMulti/SwitchToSingle arms duplicate the ChangeOption("multi"/"single") ones below — remove when every till and customer app is on /api/places and /api/stays.
-            ServiceRequestType.SwitchToMulti => (
-                NotificationMessages.SwitchToMultiTitle.GetText(lang),
-                NotificationMessages.SwitchToMultiBody(@event.RoomName, @event.UserName).GetText(lang)),
-            ServiceRequestType.SwitchToSingle => (
-                NotificationMessages.SwitchToSingleTitle.GetText(lang),
-                NotificationMessages.SwitchToSingleBody(@event.RoomName, @event.UserName).GetText(lang)),
             // The two-option room words when they fit; the option's code otherwise
             ServiceRequestType.ChangeOption when @event.OptionCode == "multi" => (
                 NotificationMessages.SwitchToMultiTitle.GetText(lang),

@@ -713,8 +713,8 @@ class _DemoPlaceRepository implements PlaceRepository {
   Place _place(int id) => _places.firstWhere((r) => r.id == id);
   Stay _session(int id) => _sessions.firstWhere((s) => s.id == id);
 
-  void _setStatus(int roomId, PlaceStatus status) {
-    final i = _places.indexWhere((r) => r.id == roomId);
+  void _setStatus(int placeId, PlaceStatus status) {
+    final i = _places.indexWhere((r) => r.id == placeId);
     final r = _places[i];
     _places[i] = Place(
       id: r.id, kind: r.kind, name: r.name, description: r.description, status: status, isActive: r.isActive,
@@ -755,19 +755,19 @@ class _DemoPlaceRepository implements PlaceRepository {
   Future<({List<Place> places, List<Stay> openStays})> loadPlaces() async => (places: List.of(_places), openStays: List.of(_sessions));
 
   @override
-  Future<void> holdPlace(int roomId) async {
-    final room = _place(roomId);
+  Future<void> holdPlace(int placeId) async {
+    final place = _place(placeId);
     _sessions.add(Stay(
       id: _nextSession++,
-      placeId: roomId,
-      placeKind: room.kind,
-      placeName: room.name,
+      placeId: placeId,
+      placeKind: place.kind,
+      placeName: place.name,
       createdAt: DateTime.now(),
       status: StayStatus.held,
-      options: room.options,
+      options: place.options,
       expiresAt: DateTime.now().add(const Duration(minutes: 15)),
     ));
-    _setStatus(roomId, PlaceStatus.held);
+    _setStatus(placeId, PlaceStatus.held);
   }
 
   @override
@@ -786,24 +786,24 @@ class _DemoPlaceRepository implements PlaceRepository {
   }
 
   @override
-  Future<void> startWalkIn(int roomId, {String? optionCode}) async {
-    final room = _place(roomId);
+  Future<void> startWalkIn(int placeId, {String? optionCode}) async {
+    final place = _place(placeId);
     final now = DateTime.now();
-    final option = room.option(optionCode) ?? room.options.first;
+    final option = place.option(optionCode) ?? place.options.first;
     _sessions.add(Stay(
       id: _nextSession++,
-      placeId: roomId,
-      placeKind: room.kind,
-      placeName: room.name,
+      placeId: placeId,
+      placeKind: place.kind,
+      placeName: place.name,
       createdAt: now,
       startedAt: now,
       status: StayStatus.running,
-      options: room.options,
+      options: place.options,
       currentOptionCode: option.code,
       currentOptionName: option.name,
       segments: [StaySegment(optionCode: option.code, optionName: option.name, hourlyRate: option.hourlyRate, startTime: now)],
     ));
-    _setStatus(roomId, PlaceStatus.occupied);
+    _setStatus(placeId, PlaceStatus.occupied);
   }
 
   @override
@@ -854,7 +854,7 @@ class _DemoPlaceRepository implements PlaceRepository {
   Future<Stay?> getStay(int sessionId) async => _sessions.where((s) => s.id == sessionId).firstOrNull;
 
   @override
-  Future<List<Stay>> getStayHistory(int roomId, {int limit = 20}) async => const [];
+  Future<List<Stay>> getStayHistory(int placeId, {int limit = 20}) async => const [];
 }
 
 class _DemoServiceRequestsRepository implements ServiceRequestsRepository {

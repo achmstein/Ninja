@@ -34,8 +34,8 @@ class StayActions {
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
-  Future<bool> startWalkIn(int roomId, String? optionCode) => _run(
-        () => _places.startWalkIn(roomId, optionCode: optionCode),
+  Future<bool> startWalkIn(int placeId, String? optionCode) => _run(
+        () => _places.startWalkIn(placeId, optionCode: optionCode),
         success: _l10n.sessionStarted,
         failure: _l10n.failedToStartSession,
       );
@@ -69,8 +69,8 @@ class StayActions {
 
   Future<bool> changeOption(int sessionId, String optionCode) => _run(
         () => _places.changeOption(sessionId, optionCode),
-        success: _l10n.playerModeUpdated,
-        failure: _l10n.failedToChangePlayerMode,
+        success: _l10n.rateChanged,
+        failure: _l10n.failedToChangeRate,
       );
 
   Future<bool> assignCustomer(int sessionId, String customerId, String customerName) => _run(
@@ -91,8 +91,8 @@ class StayActions {
         failure: _l10n.failedToRemoveMember,
       );
 
-  Future<bool> reserve(int roomId) => _run(
-        () => _places.holdPlace(roomId),
+  Future<bool> reserve(int placeId) => _run(
+        () => _places.holdPlace(placeId),
         success: _l10n.roomReserved,
         failure: _l10n.failedToReserveRoom,
       );

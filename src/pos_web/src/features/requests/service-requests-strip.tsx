@@ -8,7 +8,6 @@ import {
   Loader2,
   Receipt,
   User,
-  Users,
   type LucideIcon,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +20,6 @@ import {
   REQUEST_CONTROLLER_CHANGE,
   REQUEST_RECEIPT_TO_PAY,
   REQUEST_STATUS_ACKNOWLEDGED,
-  REQUEST_SWITCH_TO_MULTI,
   REQUEST_CHANGE_OPTION,
 } from './service'
 import { useServiceRequests } from './use-service-requests'
@@ -30,8 +28,6 @@ const requestIcon: Record<number, LucideIcon> = {
   [REQUEST_CALL_WAITER]: Bell,
   [REQUEST_CONTROLLER_CHANGE]: Gamepad2,
   [REQUEST_RECEIPT_TO_PAY]: Receipt,
-  [REQUEST_SWITCH_TO_MULTI]: Users,
-  // switch-to-single (5) falls through to the single-player icon
   [REQUEST_CHANGE_OPTION]: RefreshCw,
 }
 
@@ -39,13 +35,11 @@ const requestLabelKey: Record<number, TranslationKey> = {
   [REQUEST_CALL_WAITER]: 'requestCallWaiter',
   [REQUEST_CONTROLLER_CHANGE]: 'requestControllerChange',
   [REQUEST_RECEIPT_TO_PAY]: 'requestReceiptToPay',
-  [REQUEST_SWITCH_TO_MULTI]: 'requestSwitchToMulti',
-  5: 'requestSwitchToSingle',
 }
 
 /**
  * Live room requests waiting on staff — call a waiter, change a controller,
- * bring the bill, switch player mode. A strip on the floor, like the pending
+ * bring the bill, change the rate. A strip on the floor, like the pending
  * orders one, gone when nothing is waiting. Acknowledge marks a request seen;
  * Done clears it. The hub's ServiceRequestCreated nudge and a chime bring new
  * ones in (see use-pos-notifications).
@@ -79,8 +73,7 @@ export function ServiceRequestsStrip() {
           const room =
             localized(request.placeName) ||
             `${atTable ? t('table') : t('room')} ${request.placeId ?? ''}`
-          // A rate change names the option wanted; the two old room types
-          // read as before
+          // A rate change names the option wanted
           const requestText =
             request.requestType === REQUEST_CHANGE_OPTION
               ? t('requestChangeOption', { option: request.optionCode ?? '' })

@@ -252,13 +252,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get readyToStart => 'جاهز للبدء';
 
   @override
-  String get playerModeSingle => 'سنجل';
-
-  @override
-  String get playerModeMulti => 'مالتي';
-
-  @override
-  String get playerMode => 'وضع اللعب';
+  String get rate => 'السعر';
 
   @override
   String get startSession => 'إبدا الوقت';
@@ -283,12 +277,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get requestReceiptToPay => 'هات الحساب';
-
-  @override
-  String get requestSwitchToMulti => 'تحويل لمالتي';
-
-  @override
-  String get requestSwitchToSingle => 'تحويل لسنجل';
 
   @override
   String get acknowledgeRequest => 'استلمنا';
@@ -392,10 +380,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get playerModeUpdated => 'اتغير وضع اللعب';
+  String get rateChanged => 'السعر اتغير';
 
   @override
-  String get failedToChangePlayerMode => 'معرفناش نغير وضع اللعب';
+  String get failedToChangeRate => 'مقدرناش نغير السعر';
 
   @override
   String get addCustomer => 'إضافة عميل';

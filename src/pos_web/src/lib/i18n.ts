@@ -53,7 +53,10 @@ const dictionary = {
   newBill: { en: 'New bill', ar: 'حساب جديد' },
   moveToBill: { en: 'Move to…', ar: 'انقل لحساب' },
   searchBills: { en: 'Search open bills', ar: 'دور في الحسابات المفتوحة' },
-  noBillsToMoveTo: { en: 'No other open bills', ar: 'مفيش حسابات مفتوحة تانية' },
+  noBillsToMoveTo: {
+    en: 'No other open bills',
+    ar: 'مفيش حسابات مفتوحة تانية',
+  },
   newSale: { en: 'New sale', ar: 'بيع جديد' },
   addItems: { en: 'Add items', ar: 'ضيف أصناف' },
   addToTicket: { en: 'Add to ticket', ar: 'ضيف للحساب' },
@@ -94,8 +97,14 @@ const dictionary = {
   keepOrder: { en: 'Keep it', ar: 'سيبه' },
   orderConfirmed: { en: 'Order confirmed', ar: 'الطلب اتأكد' },
   orderCancelled: { en: 'Order cancelled', ar: 'الطلب اتلغى' },
-  failedToConfirmOrder: { en: 'Could not confirm the order', ar: 'مقدرناش نأكد الطلب' },
-  failedToCancelOrder: { en: 'Could not cancel the order', ar: 'مقدرناش نلغي الطلب' },
+  failedToConfirmOrder: {
+    en: 'Could not confirm the order',
+    ar: 'مقدرناش نأكد الطلب',
+  },
+  failedToCancelOrder: {
+    en: 'Could not cancel the order',
+    ar: 'مقدرناش نلغي الطلب',
+  },
   newOrderToast: { en: 'New order #{orderId}', ar: 'طلب جديد #{orderId}' },
   newOrderToastFrom: {
     en: 'New order #{orderId} from {name}',
@@ -122,13 +131,19 @@ const dictionary = {
       other: 'فيه {count} طلب للحساب ده مستنيين تأكيد',
     },
   },
-  settleWithPendingTitle: { en: 'An order is still waiting', ar: 'لسه فيه طلب مستني' },
+  settleWithPendingTitle: {
+    en: 'An order is still waiting',
+    ar: 'لسه فيه طلب مستني',
+  },
   settleAnyway: { en: 'Settle anyway', ar: 'اقفل على أي حال' },
   goBack: { en: 'Back', ar: 'رجوع' },
 
   // Rooms — session control at the till (hours here; the money is the ticket's)
   rooms: { en: 'Rooms', ar: 'الاوض' },
-  noRooms: { en: 'No rooms configured for this branch', ar: 'مفيش اوض متضافة للفرع ده' },
+  noRooms: {
+    en: 'No rooms configured for this branch',
+    ar: 'مفيش اوض متضافة للفرع ده',
+  },
   statusAvailable: { en: 'Available', ar: 'متاحة' },
   statusReserved: { en: 'Reserved', ar: 'محجوزة' },
   underMaintenance: { en: 'Under maintenance', ar: 'في الصيانة' },
@@ -137,9 +152,7 @@ const dictionary = {
   reservedFor: { en: 'Reserved for {name}', ar: 'محجوزة لـ {name}' },
   expiresIn: { en: 'Expires in {countdown}', ar: 'بينتهي في {countdown}' },
   readyToStart: { en: 'Ready to start', ar: 'جاهز للبدء' },
-  playerModeSingle: { en: 'Single', ar: 'سنجل' },
-  playerModeMulti: { en: 'Multi', ar: 'مالتي' },
-  playerMode: { en: 'Player mode', ar: 'وضع اللعب' },
+  rate: { en: 'Rate', ar: 'السعر' },
   time: { en: 'Time', ar: 'الوقت' },
   billOnly: { en: 'Bill only', ar: 'شيك بس' },
   confirmArrival: { en: 'Confirm arrival', ar: 'وصل' },
@@ -148,22 +161,29 @@ const dictionary = {
   startSession: { en: 'Start session', ar: 'إبدا الوقت' },
   reserve: { en: 'Reserve', ar: 'احجز' },
   roomReserved: { en: 'Room reserved', ar: 'الأوضة اتحجزت' },
-  failedToReserveRoom: { en: 'Could not reserve the room', ar: 'معرفناش نحجز الأوضة' },
+  failedToReserveRoom: {
+    en: 'Could not reserve the room',
+    ar: 'معرفناش نحجز الأوضة',
+  },
 
   // Service requests (from a customer in a room)
   serviceRequests: { en: 'Requests', ar: 'الطلبات' },
   requestCallWaiter: { en: 'Call waiter', ar: 'نداء الجرسون' },
   requestControllerChange: { en: 'Change controller', ar: 'تغيير الدراع' },
   requestReceiptToPay: { en: 'Bring the bill', ar: 'هات الحساب' },
-  requestSwitchToMulti: { en: 'Switch to multiplayer', ar: 'تحويل لمالتي' },
-  requestSwitchToSingle: { en: 'Switch to single player', ar: 'تحويل لسنجل' },
   requestChangeOption: { en: 'Switch to {option}', ar: 'عايز يحوّل {option}' },
   acknowledgeRequest: { en: 'Acknowledge', ar: 'استلمنا' },
-  failedToUpdateRequest: { en: 'Could not update the request', ar: 'معرفناش نحدث الطلب' },
+  failedToUpdateRequest: {
+    en: 'Could not update the request',
+    ar: 'معرفناش نحدث الطلب',
+  },
   newServiceRequestToast: { en: 'New room request', ar: 'طلب جديد من أوضة' },
   startWalkInSession: { en: 'Start walk-in session', ar: 'بدء جلسة فورية' },
   sessionStarted: { en: 'Session started', ar: 'الجلسة بدأت' },
-  failedToStartSession: { en: 'Failed to start session', ar: 'معرفناش نبدأ الجلسة' },
+  failedToStartSession: {
+    en: 'Failed to start session',
+    ar: 'معرفناش نبدأ الجلسة',
+  },
   sessionRunning: { en: 'Session running', ar: 'الوقت شغال' },
   timeSoFar: { en: 'Time so far', ar: 'الوقت لحد دلوقتي' },
   roomTimeRunning: { en: 'Room time · running', ar: 'وقت الأوضة · شغال' },
@@ -175,32 +195,56 @@ const dictionary = {
   endSessionBilledAt: { en: '{hours} on the bill.', ar: '{hours} على الحساب.' },
   keepPlaying: { en: 'Keep playing', ar: 'كمّلوا لعب' },
   sessionEnded: { en: 'Session ended', ar: 'الجلسة خلصت' },
-  failedToEndSession: { en: 'Failed to end session', ar: 'معرفناش ننهي الجلسة' },
+  failedToEndSession: {
+    en: 'Failed to end session',
+    ar: 'معرفناش ننهي الجلسة',
+  },
   cancelSessionButton: { en: 'Cancel, no charge', ar: 'إلغاء من غير حساب' },
   cancelThisSession: { en: 'Cancel this session?', ar: 'تلغي الجلسة دي؟' },
   cancelSessionHint: { en: 'No charge.', ar: 'من غير حساب.' },
   sessionCancelled: { en: 'Session cancelled', ar: 'الجلسة اتلغت' },
   cancelReservation: { en: 'Cancel reservation', ar: 'إلغاء الحجز' },
-  cancelThisReservation: { en: 'Cancel this reservation?', ar: 'إلغاء الحجز ده؟' },
+  cancelThisReservation: {
+    en: 'Cancel this reservation?',
+    ar: 'إلغاء الحجز ده؟',
+  },
   reservationCancelled: { en: 'Reservation cancelled', ar: 'الحجز اتلغى' },
   failedToCancelSession: { en: 'Failed to cancel', ar: 'معرفناش نلغي' },
   keepIt: { en: 'Keep it', ar: 'خليه' },
   switchToModeQuestion: { en: 'Switch to {mode}?', ar: 'التحويل لوضع {mode}؟' },
   switchMode: { en: 'Switch mode', ar: 'غيّر الوضع' },
   keepCurrent: { en: 'Keep {mode}', ar: 'خلي {mode}' },
-  playerModeUpdated: { en: 'Player mode updated', ar: 'اتغير وضع اللعب' },
-  failedToChangePlayerMode: { en: 'Failed to change player mode', ar: 'معرفناش نغير وضع اللعب' },
+  rateChanged: { en: 'Rate changed', ar: 'السعر اتغير' },
+  failedToChangeRate: {
+    en: "Couldn't change the rate",
+    ar: 'مقدرناش نغير السعر',
+  },
   addCustomer: { en: 'Add customer', ar: 'إضافة عميل' },
   assignCustomer: { en: 'Assign customer', ar: 'تعيين عميل' },
   customerAdded: { en: 'Customer added', ar: 'اتضاف العميل' },
   customerAssigned: { en: 'Customer assigned', ar: 'تم تعيين العميل' },
-  failedToAddCustomer: { en: 'Failed to add customer', ar: 'معرفناش نضيف العميل' },
-  failedToAssignCustomer: { en: 'Failed to assign customer', ar: 'معرفناش نعين العميل' },
+  failedToAddCustomer: {
+    en: 'Failed to add customer',
+    ar: 'معرفناش نضيف العميل',
+  },
+  failedToAssignCustomer: {
+    en: 'Failed to assign customer',
+    ar: 'معرفناش نعين العميل',
+  },
   memberRemove: { en: 'Remove member', ar: 'شيل العضو' },
   memberRemoved: { en: 'Member removed', ar: 'العضو اتشال' },
-  failedToRemoveMember: { en: 'Failed to remove member', ar: 'معرفناش نشيل العضو' },
-  settleWithSessionTitle: { en: 'The session is still running', ar: 'الوقت لسه شغال' },
-  voidWithSessionTitle: { en: 'The session is still running', ar: 'الوقت لسه شغال' },
+  failedToRemoveMember: {
+    en: 'Failed to remove member',
+    ar: 'معرفناش نشيل العضو',
+  },
+  settleWithSessionTitle: {
+    en: 'The session is still running',
+    ar: 'الوقت لسه شغال',
+  },
+  voidWithSessionTitle: {
+    en: 'The session is still running',
+    ar: 'الوقت لسه شغال',
+  },
 
   // Money on the bill, and credit notes
   subtotal: { en: 'Subtotal', ar: 'المجموع قبل الإضافات' },
@@ -208,7 +252,10 @@ const dictionary = {
   vat: { en: 'VAT {rate}%', ar: 'ضريبة {rate}%' },
   vatIncluded: { en: 'Includes VAT {rate}%', ar: 'شامل ضريبة {rate}%' },
   refundTicket: { en: 'Refund', ar: 'استرجاع' },
-  refundTitle: { en: 'Refund against receipt #{number}', ar: 'استرجاع على إيصال #{number}' },
+  refundTitle: {
+    en: 'Refund against receipt #{number}',
+    ar: 'استرجاع على إيصال #{number}',
+  },
   refundHint: {
     en: '{amount} left',
     ar: 'الباقي {amount}',
@@ -216,12 +263,26 @@ const dictionary = {
   leftToRefund: {
     plural: 'count',
     en: { '=1': '1 left', other: '{count} left' },
-    ar: { one: 'باقي واحد', two: 'باقي اتنين', few: 'باقي {count}', other: 'باقي {count}' },
+    ar: {
+      one: 'باقي واحد',
+      two: 'باقي اتنين',
+      few: 'باقي {count}',
+      other: 'باقي {count}',
+    },
   },
   refundEverything: { en: 'Refund everything', ar: 'رجّع الكل' },
-  nothingLeftToRefund: { en: 'Nothing is left to refund on this receipt', ar: 'مفيش حاجة باقية تترجع على الإيصال ده' },
-  confirmRefund: { en: 'Issue credit note · {amount}', ar: 'اعمل إشعار استرجاع · {amount}' },
-  ticketRefunded: { en: 'Credit note #{number} issued for {amount}', ar: 'اتعمل إشعار استرجاع #{number} بقيمة {amount}' },
+  nothingLeftToRefund: {
+    en: 'Nothing is left to refund on this receipt',
+    ar: 'مفيش حاجة باقية تترجع على الإيصال ده',
+  },
+  confirmRefund: {
+    en: 'Issue credit note · {amount}',
+    ar: 'اعمل إشعار استرجاع · {amount}',
+  },
+  ticketRefunded: {
+    en: 'Credit note #{number} issued for {amount}',
+    ar: 'اتعمل إشعار استرجاع #{number} بقيمة {amount}',
+  },
   refundsTitle: { en: 'Refunds', ar: 'الاسترجاعات' },
   creditNote: { en: 'Credit note #{number}', ar: 'إشعار استرجاع #{number}' },
   refundedSoFar: { en: 'Refunded', ar: 'مرتجع' },
@@ -233,9 +294,15 @@ const dictionary = {
   openPlace: { en: 'Open', ar: 'افتح' },
   hidePlaces: { en: 'Hide places', ar: 'إخفاء الأماكن' },
   showPlaces: { en: 'Show places', ar: 'إظهار الأماكن' },
-  searchPlaces: { en: 'Search rooms and tables', ar: 'دوّر على اوضة أو ترابيزة' },
+  searchPlaces: {
+    en: 'Search rooms and tables',
+    ar: 'دوّر على اوضة أو ترابيزة',
+  },
   noPlaceMatches: { en: 'Nothing matches', ar: 'مفيش حاجة بالاسم ده' },
-  everyPlaceHasABill: { en: 'Every room and table already has a bill', ar: 'كل الاوض والترابيزات عليها حسابات' },
+  everyPlaceHasABill: {
+    en: 'Every room and table already has a bill',
+    ar: 'كل الاوض والترابيزات عليها حسابات',
+  },
   tables: { en: 'Tables', ar: 'الترابيزات' },
   stations: { en: 'Stations', ar: 'الألعاب' },
   counterTabs: { en: 'Counter tabs', ar: 'حسابات الكاونتر' },
@@ -254,7 +321,10 @@ const dictionary = {
   ticketNumber: { en: 'Ticket #{id}', ar: 'حساب #{id}' },
   ticketNotFound: { en: 'Ticket not found', ar: 'الحساب مش موجود' },
   backToFloor: { en: 'Floor', ar: 'الصالة' },
-  emptyTicket: { en: 'No items on this ticket yet', ar: 'مفيش أصناف على الحساب لسه' },
+  emptyTicket: {
+    en: 'No items on this ticket yet',
+    ar: 'مفيش أصناف على الحساب لسه',
+  },
   total: { en: 'Total', ar: 'الإجمالي' },
   settleAction: { en: 'Settle', ar: 'اقفل الحساب' },
   settledBadge: { en: 'Settled', ar: 'متقفل' },
@@ -276,8 +346,14 @@ const dictionary = {
   },
   linesMoved: { en: 'Lines moved', ar: 'البنود اتنقلت' },
   moveTo: { en: 'Move to', ar: 'انقل إلى' },
-  newTicketForPlace: { en: 'New ticket for this place', ar: 'حساب جديد لنفس المكان' },
-  noOtherOpenTickets: { en: 'No other open tickets', ar: 'مفيش حسابات مفتوحة تانية' },
+  newTicketForPlace: {
+    en: 'New ticket for this place',
+    ar: 'حساب جديد لنفس المكان',
+  },
+  noOtherOpenTickets: {
+    en: 'No other open tickets',
+    ar: 'مفيش حسابات مفتوحة تانية',
+  },
 
   // Sale pad (counter sale)
   currentSale: { en: 'Current sale', ar: 'البيع الحالي' },
@@ -314,7 +390,10 @@ const dictionary = {
   chooseCustomer: { en: 'Choose customer', ar: 'اختار العميل' },
   removeCustomer: { en: 'Remove customer', ar: 'شيل العميل' },
   useNameAction: { en: 'Use "{name}"', ar: 'استخدم "{name}"' },
-  noAccountNeeded: { en: 'Just a name — no account', ar: 'اسم بس — من غير حساب' },
+  noAccountNeeded: {
+    en: 'Just a name — no account',
+    ar: 'اسم بس — من غير حساب',
+  },
   searchCustomersPlaceholder: {
     en: 'Name, phone, or email',
     ar: 'الاسم أو الموبايل أو الإيميل',
@@ -333,7 +412,7 @@ const dictionary = {
   account: { en: 'On account', ar: 'على الحساب' },
   whoseAccount: { en: 'Whose account?', ar: 'حساب مين؟' },
   inTheRoom: { en: 'In the room', ar: 'اللي في الأوضة' },
-  whoseRound: { en: "Whose round?", ar: 'الطلب ده لمين؟' },
+  whoseRound: { en: 'Whose round?', ar: 'الطلب ده لمين؟' },
   usuals: { en: 'Usuals', ar: 'على مزاجه' },
   preferenceLoaded: { en: 'Usual', ar: 'على مزاجه' },
   someoneElse: { en: 'Someone else', ar: 'حد تاني' },
@@ -367,7 +446,10 @@ const dictionary = {
   tierSilver: { en: 'Silver', ar: 'فضي' },
   tierGold: { en: 'Gold', ar: 'دهبي' },
   tierPlatinum: { en: 'Platinum', ar: 'بلاتيني' },
-  notEnrolled: { en: 'Not in the loyalty program', ar: 'مش مشترك في برنامج الولاء' },
+  notEnrolled: {
+    en: 'Not in the loyalty program',
+    ar: 'مش مشترك في برنامج الولاء',
+  },
   joinsFromApp: {
     en: 'Customers join and use their points from the app.',
     ar: 'العميل بيشترك ويستخدم نقطه من الأبلكيشن.',
@@ -544,8 +626,8 @@ export const useLanguage = create<LanguageState>()(
       onRehydrateStorage: () => (state) => {
         applyLanguage(state?.language ?? 'en')
       },
-    }
-  )
+    },
+  ),
 )
 
 export type TranslateParams = Record<string, string | number>
@@ -561,7 +643,7 @@ const pluralRules: Record<Language, Intl.PluralRules> = {
 function format(
   entry: Message,
   language: Language,
-  params?: TranslateParams
+  params?: TranslateParams,
 ): string {
   let template: string
   if ('plural' in entry) {
@@ -577,7 +659,7 @@ function format(
   }
   if (!params) return template
   return template.replace(/\{(\w+)\}/g, (whole, name) =>
-    name in params ? String(params[name]) : whole
+    name in params ? String(params[name]) : whole,
   )
 }
 
@@ -590,7 +672,7 @@ export function useT() {
 // For code living outside the React tree (query-cache error handlers)
 export function translate(
   key: TranslationKey,
-  params?: TranslateParams
+  params?: TranslateParams,
 ): string {
   return format(dictionary[key], useLanguage.getState().language, params)
 }

@@ -26,7 +26,7 @@ import 'start_stay_dialog.dart';
 /// while it is open. Resolves to true when a session was started from it:
 /// the panel closes on that, and the floor takes the till to the bill,
 /// where the running session's card lives.
-Future<bool> showPlacePanel(BuildContext context, int roomId) async {
+Future<bool> showPlacePanel(BuildContext context, int placeId) async {
   final started = await showFDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -34,7 +34,7 @@ Future<bool> showPlacePanel(BuildContext context, int roomId) async {
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _PlacePanel(placeId: roomId),
+      builder: (context, _) => _PlacePanel(placeId: placeId),
     ),
   );
   return started ?? false;

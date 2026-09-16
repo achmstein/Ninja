@@ -5,8 +5,6 @@ enum ServiceRequestType {
   callWaiter(1, 'Call Waiter'),
   controllerChange(2, 'Controller Change'),
   receiptToPay(3, 'Receipt to Pay'),
-  switchToMulti(4, 'Switch to Multi'),
-  switchToSingle(5, 'Switch to Single'),
 
   /// Switch the stay to another rate option; the option's code travels in optionCode
   changeOption(6, 'Change rate');

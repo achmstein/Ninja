@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import '../../core/models/localized_text.dart';
-import '../../l10n/app_localizations.dart';
 import 'models/place.dart';
 
 /// `hh:mm:ss`, never negative
@@ -103,5 +102,3 @@ String tariffLine(BuildContext context, List<RateOption> options, String Functio
   return options.map((o) => '${o.name.localized(context)} ${money(o.hourlyRate)}').join(' · ');
 }
 
-/// Kept for the older two-rate words; new screens read option names
-String modeLabel(AppLocalizations l10n, String? mode) => mode == 'Multi' ? l10n.playerModeMulti : l10n.playerModeSingle;

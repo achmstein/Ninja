@@ -707,6 +707,10 @@ public static class NotificationApi
         {
             return TypedResults.BadRequest("A rate change names the option wanted.");
         }
+        // LEGACY(places): an old SwitchTo* request is stored as the ChangeOption it means, so the tills only ever see one type — remove when every till and customer app is on /api/places and /api/stays.
+        var requestType = request.RequestType is ServiceRequestType.SwitchToMulti or ServiceRequestType.SwitchToSingle
+            ? ServiceRequestType.ChangeOption
+            : request.RequestType;
         var placeId = request.PlaceId ?? place?.PlaceId;
         var placeKind = request.PlaceKind ?? place?.Kind ?? (atTable ? "Table" : "Room");
         // LEGACY(places): fills the old RoomId from the place so older tills still see it — remove when every till and customer app is on /api/places and /api/stays.
@@ -717,7 +721,7 @@ public static class NotificationApi
             .Where(r => r.UserId == userId
                 && r.SessionId == request.SessionId
                 && r.TableId == request.TableId
-                && r.RequestType == request.RequestType
+                && r.RequestType == requestType
                 && r.Status == ServiceRequestStatus.Pending
                 && r.CreatedAt > DateTime.UtcNow.AddSeconds(-30))
             .FirstOrDefaultAsync();
@@ -743,7 +747,7 @@ public static class NotificationApi
             RoomName = new LocalizedText(placeName.En, placeName.Ar),
             TableId = request.TableId,
             TableName = request.TableName is null ? null : new LocalizedText(request.TableName.En, request.TableName.Ar),
-            RequestType = request.RequestType,
+            RequestType = requestType,
             Status = ServiceRequestStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };

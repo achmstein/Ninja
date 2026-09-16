@@ -145,9 +145,7 @@
     }
   },
   "readyToStart": "Ready to start",
-  "playerModeSingle": "Single",
-  "playerModeMulti": "Multi",
-  "playerMode": "Player mode",
+  "rate": "Rate",
   "startSession": "Start session",
   "reserve": "Reserve",
   "roomReserved": "Room reserved",
@@ -156,8 +154,6 @@
   "requestCallWaiter": "Call waiter",
   "requestControllerChange": "Change controller",
   "requestReceiptToPay": "Bring the bill",
-  "requestSwitchToMulti": "Switch to multiplayer",
-  "requestSwitchToSingle": "Switch to single player",
   "acknowledgeRequest": "Acknowledge",
   "failedToUpdateRequest": "Could not update the request",
   "newServiceRequestToast": "New room request",
@@ -217,8 +213,8 @@
       }
     }
   },
-  "playerModeUpdated": "Player mode updated",
-  "failedToChangePlayerMode": "Failed to change player mode",
+  "rateChanged": "Rate changed",
+  "failedToChangeRate": "Couldn't change the rate",
   "addCustomer": "Add customer",
   "assignCustomer": "Assign customer",
   "customerAdded": "Customer added",

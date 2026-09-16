@@ -128,13 +128,11 @@ class _RequestCard extends StatelessWidget {
         : atTable
             ? '${l10n.table} ${request.placeId ?? ''}'
             : '${l10n.room} ${request.placeId ?? ''}';
-    // A rate change names the option wanted; the two old room types read as before
+    // A rate change names the option wanted
     final (icon, label) = switch (request.requestType) {
       ServiceRequestType.callWaiter => (FIcons.bell, l10n.requestCallWaiter),
       ServiceRequestType.controllerChange => (FIcons.gamepad2, l10n.requestControllerChange),
       ServiceRequestType.receiptToPay => (FIcons.receipt, l10n.requestReceiptToPay),
-      ServiceRequestType.switchToMulti => (FIcons.users, l10n.requestSwitchToMulti),
-      ServiceRequestType.switchToSingle => (FIcons.user, l10n.requestSwitchToSingle),
       ServiceRequestType.changeOption => (FIcons.refreshCw, l10n.requestChangeOption(request.optionCode ?? '')),
     };
 

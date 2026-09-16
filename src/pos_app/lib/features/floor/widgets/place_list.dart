@@ -62,9 +62,9 @@ class _PlaceListState extends State<PlaceList> {
     }
   }
 
-  Stay? _stayForPlace(int roomId) {
+  Stay? _stayForPlace(int placeId) {
     for (final session in widget.sessions) {
-      if (session.placeId == roomId) return session;
+      if (session.placeId == placeId) return session;
     }
     return null;
   }
