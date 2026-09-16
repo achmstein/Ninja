@@ -488,5 +488,17 @@
   "clearCartQuestion": "Clear cart?",
   "deleteAccountQuestion": "Delete account?",
   "signOutQuestion": "Sign out?",
-  "cannotBeUndone": "Cannot be undone."
+  "cannotBeUndone": "Cannot be undone.",
+  "paid": "Paid",
+  "unpaid": "Unpaid",
+  "onYourTab": "On your tab",
+  "refunded": "Refunded",
+  "receiptShort": "#{number}",
+  "@receiptShort": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  }
 }

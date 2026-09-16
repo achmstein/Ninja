@@ -59,6 +59,9 @@ public static class Extensions
             // Branch.API's flags, projected locally: a branch with reservations
             // paused refuses customer bookings without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
+            // Sales' receipt, projected onto the session it covered: the
+            // customer sees the cost as paid without a call to Sales
+            .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SpacesIntegrationEventContext.Default));
     }
@@ -71,6 +74,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext
 {
 }

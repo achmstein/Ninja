@@ -102,6 +102,10 @@ export type Order = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    paidAt?: null | string;
+    receiptNumber?: null | number | string;
+    paidWith?: null | string;
+    refundedAmount?: number | string;
     rating?: null | OrderRatingDto;
 };
 
@@ -161,6 +165,10 @@ export type OrderSummary = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    paidAt?: null | string;
+    receiptNumber?: null | number | string;
+    paidWith?: null | string;
+    refundedAmount?: number | string;
     roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;

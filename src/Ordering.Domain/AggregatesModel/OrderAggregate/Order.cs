@@ -64,6 +64,24 @@ public class Order
     public int? TicketId { get; private set; }
 
     /// <summary>
+    /// When the till settled the bill this order was on — projected from
+    /// Sales' TicketSettled event, never set here. Null until then: an order
+    /// is confirmed long before it is paid.
+    /// </summary>
+    public DateTime? PaidAt { get; private set; }
+
+    /// <summary>The receipt that covered the order; the same number the tab and the till show.</summary>
+    public int? ReceiptNumber { get; private set; }
+
+    /// <summary>"Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed".</summary>
+    public string? PaidWith { get; private set; }
+
+    /// <summary>What credit notes have given back against this order, capped at its total.</summary>
+    public decimal RefundedAmount { get; private set; }
+
+    public bool IsPaid => PaidAt != null;
+
+    /// <summary>
     /// Whether the order says where it is going. A running room session wins
     /// over a scanned table on the way in, so at most one of the two is set.
     /// </summary>
@@ -417,6 +435,28 @@ public class Order
     {
         ReminderCount++;
         LastReminderSentAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// The receipt that covered this order. Idempotent on the receipt number
+    /// (the bus redelivers); a different receipt overwrites, since an order
+    /// can only ever be on one bill.
+    /// </summary>
+    public void MarkPaid(int receiptNumber, string tender, DateTime at)
+    {
+        if (ReceiptNumber == receiptNumber)
+            return;
+        ReceiptNumber = receiptNumber;
+        PaidWith = tender;
+        PaidAt = at;
+    }
+
+    /// <summary>A credit note gave part of this order back; never more than it cost.</summary>
+    public void RecordRefund(decimal amount)
+    {
+        if (amount <= 0)
+            return;
+        RefundedAmount = Math.Min(GetTotal(), RefundedAmount + amount);
     }
 
     /// <summary>

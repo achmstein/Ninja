@@ -25,6 +25,22 @@ public class Payment : Entity
 
     public DateTime RecordedAt { get; private set; }
 
+    /// <summary>
+    /// How a bill was paid, in one word for the customer's own screens: the
+    /// tender when every payment used the same one, "Mixed" otherwise, "None"
+    /// for a bill that needed no money.
+    /// </summary>
+    public static string DescribeTenders(IEnumerable<Payment> payments)
+    {
+        var tenders = payments.Select(p => p.Tender).Distinct().ToList();
+        return tenders.Count switch
+        {
+            0 => "None",
+            1 => tenders[0].ToString(),
+            _ => "Mixed",
+        };
+    }
+
     protected Payment() { }
 
     public Payment(

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   useLanguage,
   useLocalized,
+  usePrice,
   useT,
   type TranslationKey,
 } from '@/lib/i18n'
@@ -123,6 +124,7 @@ function SessionList({
 }) {
   const t = useT()
   const localized = useLocalized()
+  const price = usePrice()
   const language = useLanguage((s) => s.language)
 
   if (isLoading) {
@@ -158,8 +160,17 @@ function SessionList({
               <span className='font-semibold'>
                 {localized(session.roomName)}
               </span>
-              {status && (
-                <Badge className={status.className}>{t(status.key)}</Badge>
+              {session.paidAt != null ? (
+                // Sales' receipt, projected onto the session by Spaces
+                <Badge variant='secondary' className='tabular-nums'>
+                  {session.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+                  {session.receiptNumber != null &&
+                    ` ${t('receiptShort', { number: Number(session.receiptNumber) })}`}
+                </Badge>
+              ) : (
+                status && (
+                  <Badge className={status.className}>{t(status.key)}</Badge>
+                )
               )}
             </div>
             <div className='text-muted-foreground flex items-center justify-between text-xs'>
@@ -170,8 +181,14 @@ function SessionList({
                     { dateStyle: 'medium', timeStyle: 'short' }
                   )}
               </span>
-              {/* Mobile parity: time + duration only, no cost */}
-              {duration && <span>{t('durationLabel', { duration })}</span>}
+              <span className='tabular-nums'>
+                {[
+                  duration && t('durationLabel', { duration }),
+                  session.totalCost != null && price(Number(session.totalCost)),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
             </div>
           </Card>
         )

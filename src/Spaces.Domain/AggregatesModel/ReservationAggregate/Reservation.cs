@@ -75,6 +75,17 @@ public class Reservation : Entity, IAggregateRoot
     /// </summary>
     public decimal? TotalCost { get; private set; }
 
+    /// <summary>
+    /// The receipt the till settled this session's time on — projected from
+    /// Sales' TicketSettled event, never set here. Null until the bill is paid.
+    /// </summary>
+    public int? ReceiptNumber { get; private set; }
+
+    public DateTime? PaidAt { get; private set; }
+
+    /// <summary>"Cash", "Card", "InstaPay", "Account" (the customer's tab) or "Mixed".</summary>
+    public string? PaidWith { get; private set; }
+
     public ReservationStatus Status { get; private set; }
 
     public string? Notes { get; private set; }
@@ -271,6 +282,20 @@ public class Reservation : Entity, IAggregateRoot
         CurrentPlayerMode = null;
 
         AddDomainEvent(new SessionEndedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// The receipt that covered this session. Idempotent on the receipt
+    /// number (the bus redelivers); returns whether anything changed.
+    /// </summary>
+    public bool MarkPaid(int receiptNumber, string tender, DateTime at)
+    {
+        if (ReceiptNumber == receiptNumber)
+            return false;
+        ReceiptNumber = receiptNumber;
+        PaidWith = tender;
+        PaidAt = at;
+        return true;
     }
 
     /// <summary>

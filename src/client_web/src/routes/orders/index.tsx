@@ -34,6 +34,7 @@ import {
 } from '@/lib/i18n'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -376,6 +377,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
               {t('discountFormat', { price: discount.toFixed(2) })}
             </div>
           )}
+          <PaidPill order={order} />
         </div>
       </div>
 
@@ -387,6 +389,42 @@ function OrderTile({ order }: { order: OrderSummary }) {
         </p>
       ) : (
         detailQuery.data && <OrderTileDetails order={detailQuery.data} />
+      )}
+    </div>
+  )
+}
+
+/**
+ * What the till did with the bill this order was on, projected by Ordering
+ * from Sales' receipt: paid (and on which receipt), on the customer's tab,
+ * refunded — or still unpaid once staff confirmed it. A submitted or
+ * cancelled order carries no pill.
+ */
+function PaidPill({ order }: { order: OrderSummary }) {
+  const t = useT()
+  const price = usePrice()
+  const refunded = Number(order.refundedAmount ?? 0)
+  if (order.paidAt == null) {
+    return order.status?.toLowerCase() === 'confirmed' ? (
+      <Badge variant='outline' className='mt-1'>
+        {t('unpaid')}
+      </Badge>
+    ) : null
+  }
+  const receipt =
+    order.receiptNumber != null
+      ? ` ${t('receiptShort', { number: Number(order.receiptNumber) })}`
+      : ''
+  return (
+    <div className='mt-1 flex flex-wrap items-center justify-end gap-1'>
+      <Badge variant='secondary' className='tabular-nums'>
+        {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+        {receipt}
+      </Badge>
+      {refunded > 0 && (
+        <Badge variant='outline' className='text-destructive tabular-nums'>
+          {t('refunded')} −{price(refunded)}
+        </Badge>
       )}
     </div>
   )

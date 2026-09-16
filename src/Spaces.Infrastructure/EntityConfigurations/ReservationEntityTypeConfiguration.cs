@@ -43,6 +43,12 @@ class ReservationEntityTypeConfiguration : IEntityTypeConfiguration<Reservation>
         builder.Property(r => r.TotalCost)
             .HasPrecision(18, 2);
 
+        // Projected from Sales' receipt: what the customer's session list shows as paid
+        builder.Property(r => r.ReceiptNumber);
+        builder.Property(r => r.PaidAt);
+        builder.Property(r => r.PaidWith)
+            .HasMaxLength(20);
+
         builder.Property(r => r.Status)
             .HasConversion<string>()
             .HasMaxLength(20)

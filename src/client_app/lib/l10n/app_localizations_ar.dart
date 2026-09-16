@@ -829,4 +829,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'مفيش رجوع.';
+
+  @override
+  String get paid => 'مدفوع';
+
+  @override
+  String get unpaid => 'غير مدفوع';
+
+  @override
+  String get onYourTab => 'على حسابك';
+
+  @override
+  String get refunded => 'اترجع';
+
+  @override
+  String receiptShort(int number) {
+    return '#$number';
+  }
 }

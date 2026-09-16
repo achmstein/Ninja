@@ -18,6 +18,12 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// lines. Nothing accrues loyalty from it: points are earned by ordering, not
 /// by booking a room (the item portion accrues when each order is confirmed).
 /// </param>
+/// <param name="OrderIds">
+/// The orders the receipt covered, so Ordering can stamp each as paid for
+/// the customer who placed it. Empty for a bill of counter lines only.
+/// </param>
+/// <param name="SessionId">The room session (Spaces reservation) the bill was for, if any.</param>
+/// <param name="Tender">"Cash", "Card", "InstaPay", "Account", or "Mixed" — one word for the customer's screens.</param>
 public record TicketSettledIntegrationEvent(
     int TicketId,
     int BranchId,
@@ -28,7 +34,11 @@ public record TicketSettledIntegrationEvent(
     IReadOnlyCollection<TicketAccountCharge>? AccountCharges = null,
     decimal Subtotal = 0,
     decimal ServiceCharge = 0,
-    decimal Vat = 0) : IntegrationEvent;
+    decimal Vat = 0,
+    IReadOnlyCollection<int>? OrderIds = null,
+    int? SessionId = null,
+    string? Tender = null,
+    DateTime SettledAt = default) : IntegrationEvent;
 
 /// <summary>What one account holder's share of a settled ticket came to.</summary>
 public record TicketAccountCharge(string CustomerId, string? CustomerName, decimal Amount);

@@ -1591,6 +1591,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cannot be undone.'**
   String get cannotBeUndone;
+
+  /// No description provided for @paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paid;
+
+  /// No description provided for @unpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get unpaid;
+
+  /// No description provided for @onYourTab.
+  ///
+  /// In en, this message translates to:
+  /// **'On your tab'**
+  String get onYourTab;
+
+  /// No description provided for @refunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get refunded;
+
+  /// No description provided for @receiptShort.
+  ///
+  /// In en, this message translates to:
+  /// **'#{number}'**
+  String receiptShort(int number);
 }
 
 class _AppLocalizationsDelegate

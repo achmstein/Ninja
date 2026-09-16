@@ -1983,6 +1983,28 @@
             ],
             "format": "double"
           },
+          "receiptNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paidAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "paidWith": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "currentPlayerMode": {
             "type": [
               "null",

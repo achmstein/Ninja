@@ -47,6 +47,14 @@ public record Order
     public decimal Total { get; set; }
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
+    /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
+    public DateTime? PaidAt { get; init; }
+    /// <summary>The receipt that covered it — the number the tab and the till show.</summary>
+    public int? ReceiptNumber { get; init; }
+    /// <summary>"Cash", "Card", "InstaPay", "Account" (on the customer's tab) or "Mixed".</summary>
+    public string? PaidWith { get; init; }
+    /// <summary>What credit notes have given back against it.</summary>
+    public decimal RefundedAmount { get; init; }
     public OrderRatingDto? Rating { get; init; }
 }
 
@@ -112,6 +120,14 @@ public record OrderSummary
     public double Total { get; init; }
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
+    /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
+    public DateTime? PaidAt { get; init; }
+    /// <summary>The receipt that covered it — the number the tab and the till show.</summary>
+    public int? ReceiptNumber { get; init; }
+    /// <summary>"Cash", "Card", "InstaPay", "Account" (on the customer's tab) or "Mixed".</summary>
+    public string? PaidWith { get; init; }
+    /// <summary>What credit notes have given back against it.</summary>
+    public decimal RefundedAmount { get; init; }
     public LocalizedText? RoomName { get; init; }
     /// <summary>The room session the order was placed into, when ordered from a room.</summary>
     public int? SessionId { get; init; }

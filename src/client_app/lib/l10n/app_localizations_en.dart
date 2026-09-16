@@ -837,4 +837,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cannotBeUndone => 'Cannot be undone.';
+
+  @override
+  String get paid => 'Paid';
+
+  @override
+  String get unpaid => 'Unpaid';
+
+  @override
+  String get onYourTab => 'On your tab';
+
+  @override
+  String get refunded => 'Refunded';
+
+  @override
+  String receiptShort(int number) {
+    return '#$number';
+  }
 }

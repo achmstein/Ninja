@@ -62,6 +62,15 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
 
         orderConfiguration.Property(o => o.LastReminderSentAt);
 
+        // Projected from Sales' receipt: what the customer's list shows as paid
+        orderConfiguration.Property(o => o.PaidAt);
+        orderConfiguration.Property(o => o.ReceiptNumber);
+        orderConfiguration.Property(o => o.PaidWith)
+            .HasMaxLength(20);
+        orderConfiguration.Property(o => o.RefundedAmount)
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0m);
+
         orderConfiguration.HasIndex(o => o.BranchId);
         orderConfiguration.HasIndex(o => o.OrderStatus);
         orderConfiguration.HasIndex(o => o.OrderDate);

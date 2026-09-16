@@ -68,5 +68,10 @@ internal static class Extensions
         // Branch.API's flags, projected locally so a paused branch refuses
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
+
+        // Sales' receipts, projected onto the orders they covered: "paid" and
+        // "refunded" reach the customer's list without a call to Sales
+        eventBus.AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
+        eventBus.AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
     }
 }

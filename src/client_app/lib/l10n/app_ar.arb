@@ -255,5 +255,17 @@
   "clearCartQuestion": "تفضّي السلة؟",
   "deleteAccountQuestion": "تحذف الحساب؟",
   "signOutQuestion": "تسجل خروج؟",
-  "cannotBeUndone": "مفيش رجوع."
+  "cannotBeUndone": "مفيش رجوع.",
+  "paid": "مدفوع",
+  "unpaid": "غير مدفوع",
+  "onYourTab": "على حسابك",
+  "refunded": "اترجع",
+  "receiptShort": "#{number}",
+  "@receiptShort": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  }
 }

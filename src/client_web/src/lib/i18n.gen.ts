@@ -257,4 +257,9 @@ export const messages = {
   deleteAccountQuestion: { en: "Delete account?", ar: "تحذف الحساب؟" },
   signOutQuestion: { en: "Sign out?", ar: "تسجل خروج؟" },
   cannotBeUndone: { en: "Cannot be undone.", ar: "مفيش رجوع." },
+  paid: { en: "Paid", ar: "مدفوع" },
+  unpaid: { en: "Unpaid", ar: "غير مدفوع" },
+  onYourTab: { en: "On your tab", ar: "على حسابك" },
+  refunded: { en: "Refunded", ar: "اترجع" },
+  receiptShort: { en: "#{number}", ar: "#{number}" },
 } as const satisfies Record<string, Message>
