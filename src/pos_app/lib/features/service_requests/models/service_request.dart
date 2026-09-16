@@ -44,8 +44,12 @@ enum ServiceRequestStatus {
 class ServiceRequest {
   final int id;
   final String userName;
-  final int roomId;
+  final int? roomId;
+
+  /// The place: the room, or the table's name for a table request
   final LocalizedText roomName;
+  final int? tableId;
+  final LocalizedText? tableName;
   final ServiceRequestType requestType;
   final ServiceRequestStatus status;
   final DateTime createdAt;
@@ -53,8 +57,10 @@ class ServiceRequest {
   ServiceRequest({
     required this.id,
     required this.userName,
-    required this.roomId,
+    this.roomId,
     required this.roomName,
+    this.tableId,
+    this.tableName,
     required this.requestType,
     required this.status,
     required this.createdAt,
@@ -64,8 +70,10 @@ class ServiceRequest {
     return ServiceRequest(
       id: json['id'] as int,
       userName: json['userName'] as String,
-      roomId: json['roomId'] as int,
+      roomId: json['roomId'] as int?,
       roomName: LocalizedText.fromJson(json['roomName'] as Map<String, dynamic>),
+      tableId: json['tableId'] as int?,
+      tableName: json['tableName'] != null ? LocalizedText.fromJson(json['tableName'] as Map<String, dynamic>) : null,
       requestType: ServiceRequestType.fromValue(json['requestType'] as int),
       status: ServiceRequestStatus.fromValue(json['status'] as int),
       createdAt: DateTime.parse(json['createdAt'] as String),

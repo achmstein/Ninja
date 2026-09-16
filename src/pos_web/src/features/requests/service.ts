@@ -18,8 +18,11 @@ export const REQUEST_STATUS_COMPLETED = 3
 export type ServiceRequest = {
   id: number
   userName: string
-  roomId: number
+  roomId: number | null
+  /** The place: the room, or the table's name for a table request */
   roomName: { en?: string | null; ar?: string | null }
+  tableId?: number | null
+  tableName?: { en?: string | null; ar?: string | null } | null
   requestType: number
   status: number
   createdAt: string

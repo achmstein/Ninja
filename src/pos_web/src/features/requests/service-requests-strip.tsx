@@ -1,4 +1,5 @@
 import {
+  Armchair,
   Bell,
   Check,
   DoorOpen,
@@ -68,8 +69,14 @@ export function ServiceRequestsStrip() {
           const Icon = requestIcon[request.requestType] ?? User
           const label = requestLabelKey[request.requestType]
           const acked = request.status === REQUEST_STATUS_ACKNOWLEDGED
+          // A table asks for a waiter or the bill the same way a room does
+          const atTable = request.tableId != null
+          const PlaceIcon = atTable ? Armchair : DoorOpen
           const room =
-            localized(request.roomName) || `${t('room')} ${request.roomId}`
+            localized(request.tableName ?? request.roomName) ||
+            (atTable
+              ? `${t('table')} ${request.tableId}`
+              : `${t('room')} ${request.roomId}`)
           return (
             <div
               key={request.id}
@@ -82,7 +89,7 @@ export function ServiceRequestsStrip() {
                 </div>
                 <div className='min-w-0 flex-1'>
                   <div className='flex items-center gap-1 text-base font-semibold'>
-                    <DoorOpen className='text-muted-foreground size-4 shrink-0' />
+                    <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
                     <span className='truncate'>{room}</span>
                   </div>
                   <div className='text-muted-foreground truncate text-sm'>

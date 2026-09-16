@@ -9,4 +9,6 @@ public record ServiceRequestCreatedIntegrationEvent(
     LocalizedText RoomName,
     ServiceRequestType RequestType,
     DateTime CreatedAt,
-    int BranchId = 1) : IntegrationEvent;
+    int BranchId = 1,
+    int? TableId = null,
+    LocalizedText? TableName = null) : IntegrationEvent;

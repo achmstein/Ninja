@@ -97,11 +97,15 @@ export const SERVICE_REQUEST = {
 export type ServiceRequestType =
   (typeof SERVICE_REQUEST)[keyof typeof SERVICE_REQUEST]
 
+/** From a room session, or from a table (waiter or bill only). A guest at a
+ *  table is known by the guest id header the api client already sends. */
 export async function createServiceRequest(request: {
-  sessionId: number
-  roomId: number
-  roomName: LocalizedText
   requestType: ServiceRequestType
+  sessionId?: number
+  roomId?: number
+  roomName?: LocalizedText
+  tableId?: number
+  tableName?: LocalizedText
 }): Promise<void> {
   await apiClient.post(`${BASE}/service-requests`, request)
 }

@@ -7,6 +7,8 @@ using Chillax.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using static Chillax.ServiceDefaults.BranchHeaderExtensions;
 
+using Chillax.Notification.API.Extensions;
+
 namespace Chillax.Notification.API.Apis;
 
 public static class NotificationApi
@@ -106,7 +108,10 @@ public static class NotificationApi
             .RequireAuthorization("Admin");
 
         // Service request endpoints (for users)
+        // A guest at a table has no account: the endpoint takes the guest
+        // id header instead, the way Ordering does for guest orders
         api.MapPost("/service-requests", CreateServiceRequest)
+            .AllowAnonymous()
             .WithName("CreateServiceRequest")
             .WithSummary("Create a service request")
             .WithDescription("Request waiter, controller change, or receipt")
@@ -640,21 +645,41 @@ public static class NotificationApi
     }
 
     // Service request handlers
-    public static async Task<Results<Created<ServiceRequestResponse>, BadRequest<string>>> CreateServiceRequest(
+    public static async Task<Results<Created<ServiceRequestResponse>, BadRequest<string>, UnauthorizedHttpResult>> CreateServiceRequest(
         NotificationContext context,
         IEventBus eventBus,
         ClaimsPrincipal user,
         HttpContext httpContext,
         CreateServiceRequestDto request)
     {
-        var userId = user.GetUserId()!;
+        // A signed-in customer, or a guest at a table known only by the id
+        // their browser keeps (Ordering identifies guests the same way)
+        var guestId = httpContext.GetGuestId();
+        var userId = user.GetUserId() ?? (guestId is not null ? $"guest:{guestId}" : null);
+        if (userId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
         var userName = user.GetUserName() ?? "Guest";
         var branchId = httpContext.GetRequiredBranchId();
+
+        // A request names a room session, or a table — and a table can only
+        // ask for a waiter or the bill
+        var atTable = request.TableId is not null;
+        if (atTable
+            ? request.TableName is null || request.RequestType is not (ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay)
+            : request.SessionId is null || request.RoomId is null || request.RoomName is null)
+        {
+            return TypedResults.BadRequest("A request names a room session, or a table for a waiter or the bill.");
+        }
+        // What the till and the push show as the place: the room, or the table
+        var placeName = atTable ? request.TableName! : request.RoomName!;
 
         // Check for recent duplicate request (within 30 seconds)
         var recentRequest = await context.ServiceRequests
             .Where(r => r.UserId == userId
                 && r.SessionId == request.SessionId
+                && r.TableId == request.TableId
                 && r.RequestType == request.RequestType
                 && r.Status == ServiceRequestStatus.Pending
                 && r.CreatedAt > DateTime.UtcNow.AddSeconds(-30))
@@ -672,7 +697,9 @@ public static class NotificationApi
             SessionId = request.SessionId,
             RoomId = request.RoomId,
             BranchId = branchId,
-            RoomName = request.RoomName,
+            RoomName = placeName,
+            TableId = request.TableId,
+            TableName = request.TableName,
             RequestType = request.RequestType,
             Status = ServiceRequestStatus.Pending,
             CreatedAt = DateTime.UtcNow
@@ -685,11 +712,13 @@ public static class NotificationApi
         await eventBus.PublishAsync(new ServiceRequestCreatedIntegrationEvent(
             serviceRequest.Id,
             serviceRequest.UserName,
-            serviceRequest.RoomId,
+            serviceRequest.RoomId ?? 0,
             serviceRequest.RoomName,
             serviceRequest.RequestType,
             serviceRequest.CreatedAt,
-            branchId));
+            branchId,
+            serviceRequest.TableId,
+            serviceRequest.TableName));
 
         return TypedResults.Created(
             $"/api/notifications/service-requests/{serviceRequest.Id}",
@@ -700,7 +729,9 @@ public static class NotificationApi
                 serviceRequest.RoomName,
                 serviceRequest.RequestType,
                 serviceRequest.Status,
-                serviceRequest.CreatedAt));
+                serviceRequest.CreatedAt,
+                serviceRequest.TableId,
+                serviceRequest.TableName));
     }
 
     public static async Task<Ok<List<ServiceRequestResponse>>> GetPendingServiceRequests(
@@ -721,7 +752,9 @@ public static class NotificationApi
                 r.RoomName,
                 r.RequestType,
                 r.Status,
-                r.CreatedAt))
+                r.CreatedAt,
+                r.TableId,
+                r.TableName))
             .ToListAsync();
 
         return TypedResults.Ok(requests);
@@ -852,20 +885,24 @@ public record SubscriptionResponse(
 );
 
 public record CreateServiceRequestDto(
-    [property: Description("The user's active session ID")] int SessionId,
-    [property: Description("The room ID")] int RoomId,
-    [property: Description("The room name (localized)")] LocalizedText RoomName,
-    [property: Description("The type of request")] ServiceRequestType RequestType
+    [property: Description("The type of request")] ServiceRequestType RequestType,
+    [property: Description("The room session, for a request from a room")] int? SessionId = null,
+    [property: Description("The room, for a request from a room")] int? RoomId = null,
+    [property: Description("The room name (localized)")] LocalizedText? RoomName = null,
+    [property: Description("The table, for a waiter or the bill at a table")] int? TableId = null,
+    [property: Description("The table name (localized)")] LocalizedText? TableName = null
 );
 
 public record ServiceRequestResponse(
     int Id,
     string UserName,
-    int RoomId,
+    int? RoomId,
     LocalizedText RoomName,
     ServiceRequestType RequestType,
     ServiceRequestStatus Status,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int? TableId = null,
+    LocalizedText? TableName = null
 );
 
 public record NotificationPreferencesResponse(

@@ -37,25 +37,37 @@ enum ServiceRequestStatus {
 }
 
 /// Request payload for creating a service request
+/// From a room session, or from a table (waiter or bill only)
 class CreateServiceRequest {
-  final int sessionId;
-  final int roomId;
-  final LocalizedText roomName;
+  final int? sessionId;
+  final int? roomId;
+  final LocalizedText? roomName;
+  final int? tableId;
+  final LocalizedText? tableName;
   final ServiceRequestType requestType;
 
   CreateServiceRequest({
-    required this.sessionId,
-    required this.roomId,
-    required this.roomName,
+    this.sessionId,
+    this.roomId,
+    this.roomName,
+    this.tableId,
+    this.tableName,
     required this.requestType,
   });
 
+  CreateServiceRequest.forTable({required int this.tableId, required LocalizedText this.tableName, required this.requestType})
+      : sessionId = null,
+        roomId = null,
+        roomName = null;
+
   Map<String, dynamic> toJson() {
     return {
-      'sessionId': sessionId,
-      'roomId': roomId,
-      'roomName': roomName.toJson(),
       'requestType': requestType.value,
+      if (sessionId != null) 'sessionId': sessionId,
+      if (roomId != null) 'roomId': roomId,
+      if (roomName != null) 'roomName': roomName!.toJson(),
+      if (tableId != null) 'tableId': tableId,
+      if (tableName != null) 'tableName': tableName!.toJson(),
     };
   }
 }

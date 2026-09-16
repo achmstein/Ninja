@@ -28,6 +28,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             requestId = @event.RequestId,
             requestType = @event.RequestType.ToString(),
             roomId = @event.RoomId,
+            tableId = @event.TableId,
             branchId = @event.BranchId
         });
 

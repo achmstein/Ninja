@@ -40,6 +40,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(256);
             entity.Property(e => e.UserName).IsRequired().HasMaxLength(256);
             entity.OwnsOne(e => e.RoomName, b => b.ToJson());
+            entity.OwnsOne(e => e.TableName, b => b.ToJson());
             entity.Property(e => e.RequestType).IsRequired();
             entity.Property(e => e.Status).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();

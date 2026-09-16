@@ -119,8 +119,14 @@ class _RequestCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final amber = AppColors.amber(theme.colors.brightness);
     final acked = request.status == ServiceRequestStatus.acknowledged;
-    final roomName = request.roomName.localized(context);
-    final room = roomName.isNotEmpty ? roomName : '${l10n.room} ${request.roomId}';
+    // A table asks for a waiter or the bill the same way a room does
+    final atTable = request.tableId != null;
+    final placeName = (request.tableName ?? request.roomName).localized(context);
+    final room = placeName.isNotEmpty
+        ? placeName
+        : atTable
+            ? '${l10n.table} ${request.tableId}'
+            : '${l10n.room} ${request.roomId}';
     final (icon, label) = switch (request.requestType) {
       ServiceRequestType.callWaiter => (FIcons.bell, l10n.requestCallWaiter),
       ServiceRequestType.controllerChange => (FIcons.gamepad2, l10n.requestControllerChange),
@@ -156,7 +162,7 @@ class _RequestCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(FIcons.doorOpen, size: 16, color: theme.colors.mutedForeground),
+                        Icon(atTable ? FIcons.armchair : FIcons.doorOpen, size: 16, color: theme.colors.mutedForeground),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(room,
