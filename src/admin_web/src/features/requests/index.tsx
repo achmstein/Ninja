@@ -192,7 +192,7 @@ export function ServiceRequests() {
               }
               onAcknowledge={() => acknowledge.mutate(request.id)}
               onComplete={() => complete.mutate(request.id)}
-              placeName={localized(request.roomName)}
+              placeName={localized(request.placeName)}
               age={relativeTime(request.createdAt, now, t, locale)}
             />
           ))}

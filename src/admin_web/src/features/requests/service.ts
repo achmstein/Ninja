@@ -15,8 +15,9 @@ export interface ServiceRequest {
   id: number
   userName: string
   placeId?: number | null
-  // Notification.API still names the place under roomName for every kind
-  roomName: { en?: string | null; ar?: string | null }
+  placeKind?: string | null
+  placeName?: { en?: string | null; ar?: string | null } | null
+  optionCode?: string | null
   requestType: number
   status: number
   createdAt: string

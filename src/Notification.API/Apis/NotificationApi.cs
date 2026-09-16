@@ -780,7 +780,8 @@ public static class NotificationApi
                 serviceRequest.TableName,
                 serviceRequest.PlaceId,
                 serviceRequest.PlaceKind,
-                serviceRequest.OptionCode));
+                serviceRequest.OptionCode,
+                serviceRequest.TableName ?? serviceRequest.RoomName));
     }
 
     /// <summary>
@@ -825,7 +826,8 @@ public static class NotificationApi
                 r.TableName,
                 r.PlaceId,
                 r.PlaceKind,
-                r.OptionCode))
+                r.OptionCode,
+                r.TableName ?? r.RoomName))
             .ToListAsync();
 
         return TypedResults.Ok(requests);
@@ -856,7 +858,13 @@ public static class NotificationApi
             request.RoomName,
             request.RequestType,
             request.Status,
-            request.CreatedAt));
+            request.CreatedAt,
+            request.TableId,
+            request.TableName,
+            request.PlaceId,
+            request.PlaceKind,
+            request.OptionCode,
+            request.TableName ?? request.RoomName));
     }
 
     public static async Task<Results<Ok<ServiceRequestResponse>, NotFound>> CompleteServiceRequest(
@@ -880,7 +888,13 @@ public static class NotificationApi
             request.RoomName,
             request.RequestType,
             request.Status,
-            request.CreatedAt));
+            request.CreatedAt,
+            request.TableId,
+            request.TableName,
+            request.PlaceId,
+            request.PlaceKind,
+            request.OptionCode,
+            request.TableName ?? request.RoomName));
     }
 
     // Notification preferences handlers
@@ -982,7 +996,8 @@ public record ServiceRequestResponse(
     LocalizedText? TableName = null,
     int? PlaceId = null,
     string? PlaceKind = null,
-    string? OptionCode = null
+    string? OptionCode = null,
+    LocalizedText? PlaceName = null
 );
 
 public record NotificationPreferencesResponse(
