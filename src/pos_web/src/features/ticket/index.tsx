@@ -608,7 +608,13 @@ export function TicketScreen({
               onClick={() => setDiscountOpen(true)}
             >
               <BadgePercent className='size-5' />
-              <span className='hidden sm:inline'>{t('discount')}</span>
+              {/* Once applied, the button reads the amount so the discount
+                  is never missed — the bar repeats it under the total */}
+              {toNumber(ticket.discount) > 0 ? (
+                <span className='tabular-nums'>−{money(ticket.discount)}</span>
+              ) : (
+                <span className='hidden sm:inline'>{t('discount')}</span>
+              )}
             </Button>
             {/* Both ways out live up here, deliberately far from the Settle
                 button in the bottom bar, so neither can be fat-fingered.
@@ -848,8 +854,15 @@ export function TicketScreen({
             <div className='text-2xl font-bold tabular-nums'>
               {money(ticket.total)}
             </div>
-            {/* The bill's parts (menu money, discount, service, VAT, what
-                went back) are one tap away; the bar carries the total only */}
+            {toNumber(ticket.discount) > 0 && (
+              <div className='text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+                {t('discount')} −{money(ticket.discount)}
+                {ticket.discountRate != null && ` (${percent(ticket.discountRate)}%)`}
+              </div>
+            )}
+            {/* The rest of the bill's parts (menu money, service, VAT, what
+                went back) are one tap away; the bar carries the total and
+                the discount, which the cashier must not miss */}
             {(toNumber(ticket.discount) > 0 ||
               toNumber(ticket.serviceCharge) > 0 ||
               toNumber(ticket.vat) > 0 ||

@@ -65,7 +65,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
 
   double? get _number => double.tryParse(_value.text.trim());
 
-  bool get _canApply => (_number ?? 0) > 0 && _reason.text.trim().isNotEmpty && !_pending;
+  bool get _canApply => (_number ?? 0) > 0 && !_pending;
 
   Future<void> _run(Future<void> Function() action) async {
     final l10n = AppLocalizations.of(context)!;

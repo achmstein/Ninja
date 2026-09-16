@@ -1385,7 +1385,7 @@
           "Tickets"
         ],
         "summary": "Take a percent or an amount off the whole bill, with a reason",
-        "description": "Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.",
+        "description": "Exactly one of rate (a fraction, 0.1 is 10%) or amount; the reason is optional. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.",
         "operationId": "ApplyTicketDiscount",
         "parameters": [
           {
@@ -2562,13 +2562,13 @@
         }
       },
       "DiscountRequest": {
-        "required": [
-          "reason"
-        ],
         "type": "object",
         "properties": {
           "reason": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "rate": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",

@@ -38,16 +38,26 @@ public class TicketDiscountTest
     }
 
     [TestMethod]
-    public void Discount_needs_a_reason_and_exactly_one_shape()
+    public void Discount_is_exactly_one_shape()
     {
         var ticket = Counter(100);
 
-        Assert.ThrowsExactly<SalesDomainException>(() => ticket.ApplyDiscount(0.1m, null, " ", "Sara", CashierCap));
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.ApplyDiscount(0.1m, 5m, "Both", "Sara", CashierCap));
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.ApplyDiscount(null, null, "Neither", "Sara", CashierCap));
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.ApplyDiscount(1.5m, null, "Too much", "Sara", CashierCap));
         Assert.ThrowsExactly<SalesDomainException>(() => ticket.ApplyDiscount(null, 150m, "More than the bill", "Sara", null));
         Assert.IsFalse(ticket.HasDiscount);
+    }
+
+    [TestMethod]
+    public void A_reason_is_optional_and_a_blank_one_is_none()
+    {
+        var ticket = Counter(100);
+
+        ticket.ApplyDiscount(0.1m, null, " ", "Sara", CashierCap);
+
+        Assert.IsTrue(ticket.HasDiscount);
+        Assert.IsNull(ticket.DiscountReason);
     }
 
     [TestMethod]

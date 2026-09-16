@@ -74,8 +74,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
 
   const number = Number(value)
   const pending = apply.isPending || remove.isPending
-  const canApply =
-    Number.isFinite(number) && number > 0 && reason.trim().length > 0 && !pending
+  const canApply = Number.isFinite(number) && number > 0 && !pending
 
   const doApply = () =>
     apply.mutate({

@@ -474,12 +474,9 @@ public class Ticket : Entity, IAggregateRoot
     /// the caller's ceiling as a share of the bill — the branch's cashier cap,
     /// or null for an owner, who has none.
     /// </summary>
-    public void ApplyDiscount(decimal? rate, decimal? amount, string reason, string by, decimal? maxRate)
+    public void ApplyDiscount(decimal? rate, decimal? amount, string? reason, string by, decimal? maxRate)
     {
         EnsureOpen();
-
-        if (string.IsNullOrWhiteSpace(reason))
-            throw new SalesDomainException("A discount needs a reason — that is the whole audit trail.");
 
         if ((rate is null) == (amount is null))
             throw new SalesDomainException("A discount is a percent or an amount, not both.");
@@ -505,7 +502,7 @@ public class Ticket : Entity, IAggregateRoot
 
         DiscountRate = rate;
         Discount = amount ?? 0m;
-        DiscountReason = reason.Trim();
+        DiscountReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         DiscountBy = by;
         DiscountAt = DateTime.UtcNow;
 

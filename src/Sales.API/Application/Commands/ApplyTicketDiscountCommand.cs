@@ -12,7 +12,7 @@ public record ApplyTicketDiscountCommand(
     int TicketId,
     decimal? Rate,
     decimal? Amount,
-    string Reason,
+    string? Reason,
     string By,
     bool Uncapped) : IRequest<bool>;
 

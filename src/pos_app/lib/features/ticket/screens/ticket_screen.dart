@@ -687,7 +687,10 @@ class _Header extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               onPress: canSelect ? onDiscount : null,
               prefix: const Icon(FIcons.badgePercent, size: 20),
-              child: Text(l10n.discount, style: theme.typography.base.forButton),
+              // Once applied, the button reads the amount so the discount is
+              // never missed — the bar repeats it under the total
+              child: Text(ticket.discount > 0 ? '−${money(context, ticket.discount)}' : l10n.discount,
+                  style: theme.typography.base.forButton),
             ),
           ),
           // Both ways out live up here, deliberately far from the Settle
@@ -1132,6 +1135,16 @@ class _ActionBar extends StatelessWidget {
                     Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                     Text(money(context, ticket.total),
                         style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                    if (ticket.discount > 0)
+                      Text(
+                        '${l10n.discount} −${money(context, ticket.discount)}'
+                        '${ticket.discountRate != null ? ' (${rateText(ticket.discountRate)}%)' : ''}',
+                        style: theme.typography.xs.copyWith(
+                          color: AppColors.successColor,
+                          fontWeight: FontWeight.w500,
+                          fontFeatures: tabular,
+                        ),
+                      ),
                     if (hasParts)
                       SizedBox(
                         height: 32,

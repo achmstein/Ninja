@@ -100,7 +100,7 @@ public static class TicketsApi
         api.MapPost("/{id:int}/discount", ApplyDiscount)
             .WithName("ApplyTicketDiscount")
             .WithSummary("Take a percent or an amount off the whole bill, with a reason")
-            .WithDescription("Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.");
+            .WithDescription("Exactly one of rate (a fraction, 0.1 is 10%) or amount; the reason is optional. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.");
 
         api.MapDelete("/{id:int}/discount", RemoveDiscount)
             .WithName("RemoveTicketDiscount")
@@ -581,7 +581,7 @@ public record NewTicketRequest(TicketType Type, int? TableId = null, LocalizedTe
 public record VoidTicketRequest(string Reason);
 
 /// <summary>One of Rate (a fraction: 0.1 is 10%) or Amount (money off the bill).</summary>
-public record DiscountRequest(string Reason, decimal? Rate = null, decimal? Amount = null);
+public record DiscountRequest(string? Reason = null, decimal? Rate = null, decimal? Amount = null);
 
 public record RefundRequest(List<RefundLineRequest> Lines, string Reason, PaymentTender Tender, string? CustomerId = null, string? CustomerName = null);
 
