@@ -12,6 +12,8 @@ public record MarkOrdersVoidedCommand(
 
 public class MarkOrdersVoidedCommandHandler(
     IOrderRepository orderRepository,
+    IBuyerRepository buyerRepository,
+    IOrderingIntegrationEventService integrationEvents,
     ILogger<MarkOrdersVoidedCommandHandler> logger) : IRequestHandler<MarkOrdersVoidedCommand, bool>
 {
     public async Task<bool> Handle(MarkOrdersVoidedCommand command, CancellationToken cancellationToken)
@@ -25,6 +27,7 @@ public class MarkOrdersVoidedCommandHandler(
                 continue;
             }
             order.MarkVoided(command.VoidedAt);
+            await PaymentNotice.QueueAsync(order, "Voided", buyerRepository, integrationEvents);
         }
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }

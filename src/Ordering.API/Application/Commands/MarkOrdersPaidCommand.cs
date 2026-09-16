@@ -17,6 +17,8 @@ public record MarkOrdersPaidCommand(
 
 public class MarkOrdersPaidCommandHandler(
     IOrderRepository orderRepository,
+    IBuyerRepository buyerRepository,
+    IOrderingIntegrationEventService integrationEvents,
     ILogger<MarkOrdersPaidCommandHandler> logger) : IRequestHandler<MarkOrdersPaidCommand, bool>
 {
     public async Task<bool> Handle(MarkOrdersPaidCommand command, CancellationToken cancellationToken)
@@ -32,6 +34,7 @@ public class MarkOrdersPaidCommandHandler(
                 continue;
             }
             order.MarkPaid(command.ReceiptNumber, command.Tender, command.PaidAt, command.TicketId);
+            await PaymentNotice.QueueAsync(order, "Paid", buyerRepository, integrationEvents);
         }
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }

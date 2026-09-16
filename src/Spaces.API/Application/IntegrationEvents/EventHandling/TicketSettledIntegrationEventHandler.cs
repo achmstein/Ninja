@@ -14,6 +14,7 @@ namespace Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class TicketSettledIntegrationEventHandler(
     IReservationRepository reservations,
+    IEventBus eventBus,
     ILogger<TicketSettledIntegrationEventHandler> logger)
     : IIntegrationEventHandler<TicketSettledIntegrationEvent>
 {
@@ -23,7 +24,7 @@ public class TicketSettledIntegrationEventHandler(
         {
             return;
         }
-        var reservation = await reservations.GetAsync(sessionId);
+        var reservation = await reservations.GetWithMembersAsync(sessionId);
         if (reservation is null)
         {
             logger.LogWarning("Ticket {TicketId} settled session {SessionId}, which Spaces does not know", @event.TicketId, sessionId);
@@ -37,5 +38,14 @@ public class TicketSettledIntegrationEventHandler(
         reservations.Update(reservation);
         await reservations.UnitOfWork.SaveEntitiesAsync();
         logger.LogInformation("Session {SessionId} paid on receipt #{Receipt} ({Tender})", sessionId, @event.ReceiptNumber, @event.Tender);
+
+        // Everyone who sat in the room gets their session list refreshed
+        var members = reservation.SessionMembers.Select(m => m.CustomerId)
+            .Concat(reservation.CustomerId is { } owner ? [owner] : [])
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Distinct()
+            .ToList();
+        await eventBus.PublishAsync(new SessionPaidIntegrationEvent(
+            reservation.Id, reservation.RoomId, members, @event.ReceiptNumber, @event.BranchId));
     }
 }

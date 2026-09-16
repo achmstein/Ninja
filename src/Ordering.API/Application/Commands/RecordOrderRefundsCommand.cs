@@ -14,6 +14,8 @@ public record RecordOrderRefundsCommand(
 
 public class RecordOrderRefundsCommandHandler(
     IOrderRepository orderRepository,
+    IBuyerRepository buyerRepository,
+    IOrderingIntegrationEventService integrationEvents,
     ILogger<RecordOrderRefundsCommandHandler> logger) : IRequestHandler<RecordOrderRefundsCommand, bool>
 {
     public async Task<bool> Handle(RecordOrderRefundsCommand command, CancellationToken cancellationToken)
@@ -27,6 +29,7 @@ public class RecordOrderRefundsCommandHandler(
                 continue;
             }
             order.RecordRefund(refund.Amount);
+            await PaymentNotice.QueueAsync(order, "Refunded", buyerRepository, integrationEvents);
         }
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }

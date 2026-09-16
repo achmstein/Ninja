@@ -42,6 +42,9 @@ public static class Extensions
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             .AddSubscription<OrderReminderIntegrationEvent, OrderReminderIntegrationEventHandler>()
             .AddSubscription<TicketUpdatedIntegrationEvent, TicketUpdatedIntegrationEventHandler>()
+            // A bill paid, voided or refunded: the customer's own screens refetch
+            .AddSubscription<OrderPaymentChangedIntegrationEvent, OrderPaymentChangedIntegrationEventHandler>()
+            .AddSubscription<SessionPaidIntegrationEvent, SessionPaidIntegrationEventHandler>()
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
             .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
             .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>();
@@ -63,6 +66,8 @@ public static class Extensions
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderReminderIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(OrderPaymentChangedIntegrationEvent))]
+[JsonSerializable(typeof(SessionPaidIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemAvailabilityChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]
 public partial class NotificationIntegrationEventContext : JsonSerializerContext
