@@ -125,7 +125,6 @@ class _DemoTicketsRepository implements TicketsRepository {
               type: t.type,
               sessionId: t.sessionId,
               placeId: t.placeId,
-              tableId: t.tableId,
               locationName: t.locationName,
               label: t.label,
               lineCount: t.lines.length,
@@ -196,7 +195,7 @@ class _DemoTicketsRepository implements TicketsRepository {
     _tickets[id] = TicketDetail(
       id: id,
       type: target?.type ?? TicketType.counter,
-      tableId: target?.tableId,
+      placeId: target?.placeId,
       locationName: target?.locationName,
       label: target?.label ?? request.customer?.name,
       openedAt: target?.openedAt ?? DateTime.now(),
@@ -214,9 +213,8 @@ class _DemoTicketsRepository implements TicketsRepository {
     _tickets[id] = TicketDetail(
       id: id,
       type: request.type,
-      // LEGACY(places): demo bill named by the request's old tableId — remove when every till and customer app is on /api/places and /api/stays.
-      tableId: request.tableId,
-      locationName: request.tableName,
+      placeId: request.placeId,
+      locationName: request.placeName,
       label: request.label,
       openedAt: DateTime.now(),
     );
@@ -240,13 +238,12 @@ class _DemoTicketsRepository implements TicketsRepository {
     final target = switch (request.target) {
       MoveToTicket(:final ticketId) => _tickets[ticketId] ?? (throw const TicketNotFound()),
       MoveToCounter(:final label) => TicketDetail(id: _nextTicketId(), type: TicketType.counter, label: label, openedAt: DateTime.now()),
-      // LEGACY(places): demo target bill named by the old tableId — remove when every till and customer app is on /api/places and /api/stays.
-      MoveToTable(:final tableId, :final tableName) =>
-        TicketDetail(id: _nextTicketId(), type: TicketType.table, tableId: tableId, locationName: tableName, openedAt: DateTime.now()),
+      MoveToTable(:final placeId, :final placeName) =>
+        TicketDetail(id: _nextTicketId(), type: TicketType.table, placeId: placeId, locationName: placeName, openedAt: DateTime.now()),
       MoveToSplit() => TicketDetail(
           id: _nextTicketId(),
           type: source.type,
-          tableId: source.tableId,
+          placeId: source.placeId,
           locationName: source.locationName,
           label: source.label,
           openedAt: DateTime.now(),
@@ -292,7 +289,7 @@ class _DemoTicketsRepository implements TicketsRepository {
       id: ticket.id,
       type: ticket.type,
       status: TicketStatus.voided,
-      tableId: ticket.tableId,
+      placeId: ticket.placeId,
       locationName: ticket.locationName,
       label: ticket.label,
       openedAt: ticket.openedAt,
@@ -329,7 +326,7 @@ class _DemoTicketsRepository implements TicketsRepository {
         id: t.id,
         type: t.type,
         status: t.status,
-        tableId: t.tableId,
+        placeId: t.placeId,
         locationName: t.locationName,
         label: t.label,
         openedAt: t.openedAt,
@@ -371,7 +368,7 @@ class _DemoTicketsRepository implements TicketsRepository {
       id: ticket.id,
       type: ticket.type,
       status: ticket.status,
-      tableId: ticket.tableId,
+      placeId: ticket.placeId,
       locationName: ticket.locationName,
       label: ticket.label,
       openedAt: ticket.openedAt,
@@ -412,7 +409,6 @@ class _DemoTicketsRepository implements TicketsRepository {
       status: t.status,
       sessionId: t.sessionId,
       placeId: t.placeId,
-      tableId: t.tableId,
       locationName: t.locationName,
       label: t.label,
       openedAt: t.openedAt,
@@ -464,9 +460,8 @@ class _DemoOrderRepository implements OrderRepository {
       date: _now.subtract(const Duration(minutes: 4)),
       status: OrderStatus.submitted,
       total: 115,
-      // LEGACY(places): demo order carries the old tableId/tableName, not placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-      tableId: 5,
-      tableName: _lt('Table 5', 'ترابيزة 5'),
+      placeId: 25,
+      placeName: _lt('Table 5', 'ترابيزة 5'),
       customerNote: 'No ice please',
       items: [
         OrderItem(productId: 6, productName: _lt('Iced Americano', 'أمريكانو مثلج'), unitPrice: 45, units: 1),
@@ -479,8 +474,9 @@ class _DemoOrderRepository implements OrderRepository {
       status: OrderStatus.submitted,
       total: 110,
       sessionId: 7,
-      // LEGACY(places): demo order carries the old roomName, not placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-      roomName: _lt('Room 3', 'اوضة 3'),
+      placeId: 3,
+      placeKind: 'Room',
+      placeName: _lt('Room 3', 'اوضة 3'),
       guestPhone: '0100 123 4567',
       items: [OrderItem(productId: 1, productName: _lt('Latte', 'لاتيه'), unitPrice: 55, units: 2, customizationsDescription: _lt('Large', 'كبير'))],
     ),
@@ -495,8 +491,7 @@ class _DemoOrderRepository implements OrderRepository {
     if (order == null) return false;
     _pending.remove(order);
     // Confirmed, the lines land on the table's or session's bill
-    // LEGACY(places): demo order matched to its bill by the old tableId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-    final target = tickets._tickets.values.where((t) => t.isOpen && (order.tableId != null && t.tableId == order.tableId || order.sessionId != null && t.sessionId == order.sessionId)).firstOrNull;
+    final target = tickets._tickets.values.where((t) => t.isOpen && (order.sessionId != null ? t.sessionId == order.sessionId : order.placeId != null && t.placeId == order.placeId)).firstOrNull;
     if (target != null) {
       tickets._tickets[target.id] = _DemoTicketsRepository._withLines(target, [
         ...target.lines,
@@ -677,14 +672,11 @@ class _DemoPlaceRepository implements PlaceRepository {
     Place(id: 3, name: _lt('Room 3', 'اوضة 3'), status: PlaceStatus.occupied, options: _vipTariff),
     Place(id: 4, name: _lt('Room 4', 'اوضة 4'), status: PlaceStatus.outOfService, options: _roomTariff),
     for (var n = 1; n <= 3; n++)
-      // LEGACY(places): demo places carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available),
     // Table 4 runs a clock, at one rate
-    // LEGACY(places): demo place carries a legacy sticker id — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-    Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'ترابيزة 4'), status: PlaceStatus.available, options: _tableTariff, legacyTableId: 4),
+    Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'ترابيزة 4'), status: PlaceStatus.available, options: _tableTariff),
     for (var n = 5; n <= 8; n++)
-      // LEGACY(places): demo places carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available),
     Place(id: 29, kind: PlaceKind.table, name: _lt('Garden 1', 'الجنينة 1'), status: PlaceStatus.available),
     Place(id: 30, kind: PlaceKind.table, name: _lt('Garden 2', 'الجنينة 2'), status: PlaceStatus.available, isActive: false),
   ];
@@ -726,7 +718,7 @@ class _DemoPlaceRepository implements PlaceRepository {
     final r = _places[i];
     _places[i] = Place(
       id: r.id, kind: r.kind, name: r.name, description: r.description, status: status, isActive: r.isActive,
-      options: r.options, roundingMinutes: r.roundingMinutes, canReserve: r.canReserve, legacyTableId: r.legacyTableId,
+      options: r.options, roundingMinutes: r.roundingMinutes, canReserve: r.canReserve,
     );
   }
 
@@ -871,7 +863,7 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
       id: 51,
       userName: 'Ahmed',
       placeId: 3,
-      roomName: _lt('Room 3', 'اوضة 3'),
+      placeName: _lt('Room 3', 'اوضة 3'),
       requestType: ServiceRequestType.controllerChange,
       status: ServiceRequestStatus.pending,
       createdAt: _now.subtract(const Duration(minutes: 2)),
@@ -890,7 +882,7 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
       id: r.id,
       userName: r.userName,
       placeId: r.placeId,
-      roomName: r.roomName,
+      placeName: r.placeName,
       requestType: r.requestType,
       status: ServiceRequestStatus.acknowledged,
       createdAt: r.createdAt,
@@ -905,8 +897,7 @@ class _DemoTablesRepository implements TablesRepository {
   @override
   Future<List<CafeTable>> getTables() async => [
         for (var n = 1; n <= 8; n++)
-          // LEGACY(places): demo tables carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-          if (n != 4) CafeTable(id: 20 + n, legacyTableId: n, name: _lt('Table $n', 'ترابيزة $n')),
+          if (n != 4) CafeTable(id: 20 + n, name: _lt('Table $n', 'ترابيزة $n')),
         CafeTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
         CafeTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
       ];
@@ -1021,8 +1012,7 @@ final List<TicketDetail> _sampleTickets = [
     id: 99,
     type: TicketType.table,
     status: TicketStatus.settled,
-    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
-    tableId: 1,
+    placeId: 21,
     locationName: _lt('Table 1', 'ترابيزة 1'),
     openedAt: _now.subtract(const Duration(hours: 2)),
     settledAt: _now.subtract(const Duration(hours: 1, minutes: 10)),
@@ -1053,8 +1043,7 @@ final List<TicketDetail> _sampleTickets = [
   TicketDetail(
     id: 102,
     type: TicketType.table,
-    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
-    tableId: 5,
+    placeId: 25,
     locationName: _lt('Table 5', 'ترابيزة 5'),
     openedAt: _now.subtract(const Duration(minutes: 18)),
     subtotal: 170,
@@ -1080,8 +1069,7 @@ final List<TicketDetail> _sampleTickets = [
   TicketDetail(
     id: 104,
     type: TicketType.table,
-    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
-    tableId: 2,
+    placeId: 22,
     locationName: _lt('Table 2', 'ترابيزة 2'),
     openedAt: _now.subtract(const Duration(minutes: 3)),
     subtotal: 60,

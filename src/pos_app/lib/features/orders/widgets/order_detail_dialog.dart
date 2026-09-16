@@ -46,8 +46,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
     final order = ref.watch(orderDetailsProvider(widget.orderId)).value;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
-    // LEGACY(places): old roomName/tableName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-    final place = order?.roomName?.localized(context) ?? order?.tableName?.localized(context) ?? '';
+    final place = order?.placeName?.localized(context) ?? '';
     final who = order?.guestName ?? '';
     final subtitle = [if (place.isNotEmpty) place, if (who.isNotEmpty) who].join(' · ');
 

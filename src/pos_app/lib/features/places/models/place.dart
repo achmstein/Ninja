@@ -103,9 +103,6 @@ class Place {
   final int roundingMinutes;
   final bool canReserve;
 
-  /// LEGACY(places): the id a printed table sticker carries; what an older bill names — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-  final int? legacyTableId;
-
   Place({
     required this.id,
     this.kind = PlaceKind.room,
@@ -116,7 +113,6 @@ class Place {
     this.options = const [],
     this.roundingMinutes = 15,
     this.canReserve = true,
-    this.legacyTableId,
   });
 
   /// A place with a clock
@@ -142,8 +138,6 @@ class Place {
       options: _parseOptions(json['tariff']),
       roundingMinutes: _parseRounding(json['tariff']),
       canReserve: json['canReserve'] as bool? ?? true,
-      // LEGACY(places): legacy sticker id read off the place — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
-      legacyTableId: (json['legacyTableId'] as num?)?.toInt(),
     );
   }
 }

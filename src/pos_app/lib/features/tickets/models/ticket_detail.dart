@@ -148,9 +148,6 @@ class TicketDetail {
   final int? sessionId;
   final DateTime? sessionEndedAt;
   final int? placeId;
-  // LEGACY(places): the old room/table ids a bill opened before the remodel names, next to placeId — remove when every till and customer app is on /api/places and /api/stays.
-  final int? roomId;
-  final int? tableId;
   final LocalizedText? locationName;
   final String? label;
   final String? guestPhone;
@@ -192,8 +189,6 @@ class TicketDetail {
     this.sessionId,
     this.sessionEndedAt,
     this.placeId,
-    this.roomId,
-    this.tableId,
     this.locationName,
     this.label,
     this.guestPhone,
@@ -240,9 +235,6 @@ class TicketDetail {
       sessionId: json['sessionId'] == null ? null : toInt(json['sessionId']),
       sessionEndedAt: date('sessionEndedAt'),
       placeId: json['placeId'] == null ? null : toInt(json['placeId']),
-      // LEGACY(places): old roomId/tableId read next to placeId — remove when every till and customer app is on /api/places and /api/stays.
-      roomId: json['roomId'] == null ? null : toInt(json['roomId']),
-      tableId: json['tableId'] == null ? null : toInt(json['tableId']),
       locationName: LocalizedText.parseNullable(json['locationName']),
       label: json['label'] as String?,
       guestPhone: json['guestPhone'] as String?,

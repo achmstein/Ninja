@@ -6,24 +6,19 @@ import 'enums.dart';
 class OpenTicketRequest {
   final TicketType type;
 
-  /// The Spaces place of a table bill
+  /// The Spaces place of a table bill, and its name for the bill's header
   final int? placeId;
-
-  /// LEGACY(places): the id the table's printed sticker carries, for bills older tills opened; tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-  final int? tableId;
-  final LocalizedText? tableName;
+  final LocalizedText? placeName;
 
   /// What to call a counter tab — a name for humans, not a customer
   final String? label;
 
-  const OpenTicketRequest({required this.type, this.placeId, this.tableId, this.tableName, this.label});
+  const OpenTicketRequest({required this.type, this.placeId, this.placeName, this.label});
 
   Map<String, dynamic> toJson() => {
         'type': type.value,
         'placeId': placeId,
-        // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-        'tableId': tableId,
-        'tableName': tableName?.toJson(),
+        'placeName': placeName?.toJson(),
         'label': label,
       };
 }

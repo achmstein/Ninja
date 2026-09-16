@@ -98,8 +98,6 @@ class Order {
   final DateTime date;
   final OrderStatus status;
   final String? description;
-  // LEGACY(places): the old room name, still read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  final LocalizedText? roomName;
   final String? customerNote;
   final double total;
   final int pointsToRedeem;
@@ -108,11 +106,13 @@ class Order {
   final int? ratingValue;
   final OrderRating? rating;
 
-  /// The room session or café table the order is for (a counter order has neither)
+  /// The stay whose bill the order joins, when a clock is running for the customer
   final int? sessionId;
-  // LEGACY(places): the old table id and name, still read instead of placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  final int? tableId;
-  final LocalizedText? tableName;
+
+  /// The Spaces place the order is for (a counter order has none); kind 'Room', 'Table' or 'Station'
+  final int? placeId;
+  final String? placeKind;
+  final LocalizedText? placeName;
   final String? guestName;
   final String? guestPhone;
   final String? source;
@@ -124,7 +124,6 @@ class Order {
     required this.date,
     required this.status,
     this.description,
-    this.roomName,
     this.customerNote,
     required this.total,
     this.pointsToRedeem = 0,
@@ -133,8 +132,9 @@ class Order {
     this.ratingValue,
     this.rating,
     this.sessionId,
-    this.tableId,
-    this.tableName,
+    this.placeId,
+    this.placeKind,
+    this.placeName,
     this.guestName,
     this.guestPhone,
     this.source,
@@ -149,8 +149,6 @@ class Order {
 
     // Handle both camelCase and PascalCase property names
     final orderItems = json['orderItems'] ?? json['OrderItems'];
-    // LEGACY(places): old roomName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-    final roomNameValue = json['roomName'] ?? json['RoomName'];
     final ratingJson = json['rating'] ?? json['Rating'];
     final ratingValueRaw = json['ratingValue'] ?? json['RatingValue'];
 
@@ -161,7 +159,6 @@ class Order {
       date: DateTime.parse((json['date'] ?? json['Date']) as String),
       status: status,
       description: json['description'] ?? json['Description'] as String?,
-      roomName: LocalizedText.parseNullable(roomNameValue),
       customerNote: json['customerNote'] ?? json['CustomerNote'] as String?,
       total: ((json['total'] ?? json['Total']) as num).toDouble(),
       pointsToRedeem: (json['pointsToRedeem'] ?? json['PointsToRedeem'] ?? 0) as int,
@@ -173,9 +170,9 @@ class Order {
       ratingValue: ratingValueRaw as int?,
       rating: ratingJson != null ? OrderRating.fromJson(ratingJson as Map<String, dynamic>) : null,
       sessionId: (json['sessionId'] ?? json['SessionId']) as int?,
-      // LEGACY(places): old tableId/tableName read instead of placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-      tableId: (json['tableId'] ?? json['TableId']) as int?,
-      tableName: LocalizedText.parseNullable(json['tableName'] ?? json['TableName']),
+      placeId: (json['placeId'] ?? json['PlaceId']) as int?,
+      placeKind: (json['placeKind'] ?? json['PlaceKind']) as String?,
+      placeName: LocalizedText.parseNullable(json['placeName'] ?? json['PlaceName']),
       guestName: (json['guestName'] ?? json['GuestName']) as String?,
       guestPhone: (json['guestPhone'] ?? json['GuestPhone']) as String?,
       source: (json['source'] ?? json['Source']) as String?,

@@ -23,13 +23,10 @@ class MoveToCounter extends MoveTarget {
 }
 
 class MoveToTable extends MoveTarget {
-  /// The Spaces place
+  /// The Spaces place, and its name for the new bill's header
   final int placeId;
-
-  /// LEGACY(places): the id the table's printed sticker carries, when it has one; tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-  final int? tableId;
-  final LocalizedText? tableName;
-  const MoveToTable(this.placeId, this.tableId, this.tableName);
+  final LocalizedText? placeName;
+  const MoveToTable(this.placeId, this.placeName);
 }
 
 /// `POST /api/tickets/{id}/move-lines`. Both destinations null is the
@@ -48,12 +45,10 @@ class MoveLinesRequest {
         },
         'newTicket': switch (target) {
           MoveToCounter(:final label) => {'type': TicketType.counter.value, 'label': label},
-          MoveToTable(:final placeId, :final tableId, :final tableName) => {
+          MoveToTable(:final placeId, :final placeName) => {
               'type': TicketType.table.value,
               'placeId': placeId,
-              // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-              'tableId': tableId,
-              'tableName': tableName?.toJson(),
+              'placeName': placeName?.toJson(),
             },
           _ => null,
         },

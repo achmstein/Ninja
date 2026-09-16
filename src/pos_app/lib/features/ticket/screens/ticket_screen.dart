@@ -336,8 +336,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // App orders for this table or session that have not been accepted yet —
     // they are not on the bill until someone taps Confirm
     final waiting = ticket.isOpen
-        // LEGACY(places): matched on the bill's old tableId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-        ? pendingForTicket(ref.watch(pendingOrdersProvider).value ?? const [], sessionId: ticket.sessionId, tableId: ticket.tableId)
+        ? pendingForTicket(ref.watch(pendingOrdersProvider).value ?? const [], sessionId: ticket.sessionId, placeId: ticket.placeId)
         : const <Order>[];
     // A room ticket's time only lands when its session ends, so the screen
     // shows the running clock and guards the settle until then. The session

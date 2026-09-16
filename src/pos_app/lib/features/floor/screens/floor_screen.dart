@@ -174,8 +174,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     setState(() => _openingTable = true);
     try {
       final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
-            // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-            OpenTicketRequest(type: TicketType.table, placeId: table.id, tableId: table.legacyTableId, tableName: table.name),
+            OpenTicketRequest(type: TicketType.table, placeId: table.id, placeName: table.name),
             // A retry on café Wi-Fi must not become a second command
             requestId: const Uuid().v4(),
           );
@@ -422,8 +421,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       // An order still waiting lights the bill it will land on
                       waitingIds: {
                         for (final b in list)
-                          // LEGACY(places): matched on the bill's old tableId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-                          if (pendingForTicket(pending, sessionId: b.sessionId, tableId: b.tableId).isNotEmpty) b.id,
+                          if (pendingForTicket(pending, sessionId: b.sessionId, placeId: b.placeId).isNotEmpty) b.id,
                       },
                       // A running room shows its clock on the bill
                       clocks: {
