@@ -47,10 +47,12 @@ enum ServiceRequestStatus {
 class ServiceRequest {
   final int id;
   final String userName;
+  // LEGACY(places): the old room id, read next to placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   final int? roomId;
 
   /// The place: the room, or the table's name for a table request
   final LocalizedText roomName;
+  // LEGACY(places): the old table id and name, read next to placeId/placeKind — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   final int? tableId;
   final LocalizedText? tableName;
 
@@ -83,8 +85,10 @@ class ServiceRequest {
     return ServiceRequest(
       id: json['id'] as int,
       userName: json['userName'] as String,
+      // LEGACY(places): old roomId read next to placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
       roomId: json['roomId'] as int?,
       roomName: LocalizedText.parse(json['roomName']),
+      // LEGACY(places): old tableId/tableName read next to placeId/placeKind — remove when Sales, Ordering and Notification stop sending the old room/table fields.
       tableId: json['tableId'] as int?,
       tableName: json['tableName'] != null ? LocalizedText.fromJson(json['tableName'] as Map<String, dynamic>) : null,
       placeId: json['placeId'] as int?,

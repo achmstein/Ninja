@@ -8,7 +8,7 @@ class CafeTable {
   /// The Spaces place id — what the bill names
   final int id;
 
-  /// The id a printed sticker carries, for bills opened before the remodel
+  /// LEGACY(places): the id a printed sticker carries, for bills opened before the remodel — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
   final int? legacyTableId;
   final LocalizedText name;
   final bool isActive;
@@ -17,6 +17,7 @@ class CafeTable {
 
   factory CafeTable.fromJson(Map<String, dynamic> json) => CafeTable(
         id: toInt(json['id']),
+        // LEGACY(places): legacy sticker id read off the place — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
         legacyTableId: json['legacyTableId'] != null ? toInt(json['legacyTableId']) : null,
         name: LocalizedText.parse(json['name']),
         isActive: json['isActive'] as bool? ?? true,

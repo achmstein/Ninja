@@ -80,6 +80,9 @@ class CreateServiceRequest {
 class ServiceRequestResponse {
   final int id;
   final String userName;
+  /// LEGACY(places): reads the older roomId/roomName fields of the response
+  /// — remove when Ordering and Notification stop reading the old room/table
+  /// fields.
   final int? roomId;
   final LocalizedText roomName;
   final ServiceRequestType requestType;
@@ -100,6 +103,7 @@ class ServiceRequestResponse {
     return ServiceRequestResponse(
       id: json['id'] as int,
       userName: json['userName'] as String,
+      // LEGACY(places): parses the older roomId/roomName fields — remove when Ordering and Notification stop reading the old room/table fields.
       roomId: json['roomId'] as int?,
       roomName: LocalizedText.parse(json['roomName']),
       requestType: ServiceRequestType.fromValue(json['requestType'] as int)!,

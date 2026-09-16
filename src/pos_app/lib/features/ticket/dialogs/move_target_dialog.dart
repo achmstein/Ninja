@@ -231,6 +231,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
+                    // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
                     onPress: () => _pick(MoveToTable(table.id, table.legacyTableId, table.name)),
                     prefix: Icon(FIcons.armchair, size: 16, color: theme.colors.mutedForeground),
                     child: Text(table.name.localized(context), style: theme.typography.base.forButton),

@@ -74,11 +74,13 @@ export function ServiceRequestsStrip() {
           const acked = request.status === REQUEST_STATUS_ACKNOWLEDGED
           // The place is what the request names; a table asks for a waiter
           // or the bill the same way a room does
+          // LEGACY(places): the old tableId decides the kind when placeKind is missing — remove when Sales, Ordering and Notification stop sending the old room/table fields.
           const atTable = request.placeKind
             ? request.placeKind !== 'Room'
             : request.tableId != null
           const PlaceIcon = atTable ? Armchair : DoorOpen
           const room =
+            // LEGACY(places): the old tableName read before roomName, old tableId/roomId tried before placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
             localized(request.tableName ?? request.roomName) ||
             (atTable
               ? `${t('table')} ${request.tableId ?? request.placeId ?? ''}`

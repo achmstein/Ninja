@@ -32,8 +32,7 @@ public class SessionStartedIntegrationEventHandler(
             return;
         }
 
-        // A publisher older than the Places remodel sends no place fields;
-        // its room id and name are the place's
+        // LEGACY(places): a publisher older than the Places remodel sends no place fields; its RoomId/RoomName are the place's — remove when every till and customer app is on /api/places and /api/stays.
         var ticket = Ticket.OpenForSession(
             @event.ReservationId,
             @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,

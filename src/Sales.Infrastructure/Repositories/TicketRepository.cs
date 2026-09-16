@@ -25,6 +25,7 @@ public class TicketRepository : ITicketRepository
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.SessionId == sessionId && t.Status == TicketStatus.Open);
 
+    // LEGACY(places): finder by the old TableId — remove when every till and customer app is on /api/places and /api/stays.
     public async Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId)
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.TableId == tableId && t.BranchId == branchId && t.Status == TicketStatus.Open);
@@ -60,6 +61,7 @@ public class TicketRepository : ITicketRepository
         // so the name match is done in memory.
         if (roomId is int id)
         {
+            // LEGACY(places): also matches the old RoomId column — remove when every till and customer app is on /api/places and /api/stays.
             var byId = open.FirstOrDefault(t => t.PlaceId == id || t.RoomId == id);
             if (byId is not null) return byId;
         }

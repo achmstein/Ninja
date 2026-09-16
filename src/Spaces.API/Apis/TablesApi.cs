@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Chillax.Spaces.API.Apis;
 
 /// <summary>
+/// LEGACY(places): the /api/tables alias routes — remove when every till and customer app is on /api/places and /api/stays.
 /// The /api/tables routes, kept for one release as aliases over places of
 /// kind Table. Tables got new place ids in the remodel, so an id here is
 /// first tried as the id a printed table sticker carries (LegacyTableId),
@@ -22,6 +23,7 @@ public static class TablesApi
 {
     public static IEndpointRouteBuilder MapTablesApi(this IEndpointRouteBuilder app)
     {
+        // LEGACY(places): the api/tables route group — remove when every till and customer app is on /api/places and /api/stays.
         var api = app.MapGroup("api/tables").WithTags("Tables");
 
         api.MapGet("/", GetAllTables).WithName("ListTables").WithSummary("List all tables");
@@ -34,6 +36,7 @@ public static class TablesApi
         return app;
     }
 
+    // LEGACY(places): resolves an id first as a printed sticker's LegacyTableId, then as a place id — remove when the printed room/table stickers are reprinted with /p/{id}.
     private static async Task<Place?> Resolve(IPlaceRepository places, int id)
         => await places.GetByLegacyTableIdAsync(id) ?? await places.GetAsync(id);
 
@@ -46,6 +49,7 @@ public static class TablesApi
     public static async Task<Results<Ok<TableViewModel>, NotFound>> GetTableById(
         [FromServices] IPlaceQueries queries, [Description("The table ID")] int id)
     {
+        // LEGACY(places): looks the table up by the printed sticker's LegacyTableId before the place id — remove when the printed room/table stickers are reprinted with /p/{id}.
         var place = await queries.GetPlaceByLegacyTableIdAsync(id) ?? await queries.GetPlaceByIdAsync(id);
         return place is null || place.Kind != PlaceKind.Table ? TypedResults.NotFound() : TypedResults.Ok(place.ToTable());
     }
@@ -105,8 +109,11 @@ public static class TablesApi
     }
 }
 
+// LEGACY(places): old /api/tables create request shape — remove when every till and customer app is on /api/places and /api/stays.
 public record CreateTableRequest(LocalizedText Name);
 
+// LEGACY(places): old /api/tables rename request shape — remove when every till and customer app is on /api/places and /api/stays.
 public record UpdateTableRequest(LocalizedText Name);
 
+// LEGACY(places): old /api/tables activate request shape — remove when every till and customer app is on /api/places and /api/stays.
 public record SetTableActiveRequest(bool IsActive);

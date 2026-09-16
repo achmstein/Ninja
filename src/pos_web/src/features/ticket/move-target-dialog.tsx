@@ -41,6 +41,7 @@ export type MoveTarget =
   | { kind: 'split' }
   | { kind: 'ticket'; ticketId: number }
   | { kind: 'counter'; label: string | null }
+  // LEGACY(places): tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
   | { kind: 'table'; placeId: number; tableId: number | null; tableName: LocalizedText | undefined }
 
 type MoveTargetDialogProps = {
@@ -303,6 +304,7 @@ export function MoveTargetDialog({
                     onPick({
                       kind: 'table',
                       placeId: toNumber(table.id),
+                      // LEGACY(places): legacy sticker id sent as tableId alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
                       tableId: table.legacyTableId != null ? toNumber(table.legacyTableId) : null,
                       tableName: table.name,
                     })

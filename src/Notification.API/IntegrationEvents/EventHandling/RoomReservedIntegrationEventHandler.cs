@@ -24,6 +24,7 @@ public class RoomReservedIntegrationEventHandler(
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
         {
             type = "room_reserved",
+            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
             roomId = @event.RoomId,
             placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
             placeKind = @event.PlaceKind,

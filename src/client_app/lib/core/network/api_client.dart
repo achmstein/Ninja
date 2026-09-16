@@ -103,6 +103,7 @@ final staysApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.staysApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
+// LEGACY(places): the /api/tables client behind the old table stickers — remove when the printed room/table stickers are reprinted with /p/{id}.
 final tablesApiClientProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
   return ApiClient(authService, baseUrl: AppConfig.tablesApiUrl, branchIdGetter: _branchIdGetter(ref));

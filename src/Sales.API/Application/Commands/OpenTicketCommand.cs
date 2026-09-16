@@ -10,6 +10,7 @@ namespace Chillax.Sales.API.Application.Commands;
 public record OpenTicketCommand(
     TicketType Type,
     int BranchId,
+    // LEGACY(places): the old TableId/TableName from older tills — remove when every till and customer app is on /api/places and /api/stays.
     int? TableId,
     LocalizedText? TableName,
     string? Label,
@@ -35,6 +36,7 @@ public class OpenTicketCommandHandler(
                 var existing = command.PlaceId is int byPlace
                     ? await ticketRepository.FindOpenByPlaceAsync(byPlace, command.BranchId)
                     : null;
+                // LEGACY(places): falls back to the old TableId — remove when every till and customer app is on /api/places and /api/stays.
                 existing ??= command.TableId is int byTable
                     ? await ticketRepository.FindOpenByTableAsync(byTable, command.BranchId)
                     : null;

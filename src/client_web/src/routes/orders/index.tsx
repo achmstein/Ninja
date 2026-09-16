@@ -362,6 +362,9 @@ function OrderTile({ order }: { order: OrderSummary }) {
               { hour: 'numeric', minute: '2-digit' }
             )}
         </span>
+        {/* LEGACY(places): reads the older roomName field instead of placeName —
+            remove when Ordering and Notification stop reading the old
+            room/table fields. */}
         {order.roomName && (
           <span className='text-muted-foreground truncate text-[13px]'>
             • {localized(order.roomName)}

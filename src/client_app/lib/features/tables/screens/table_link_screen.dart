@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/table_service.dart';
 
+/// LEGACY(places): the /table/{id} sticker landing (resolves the old table id
+/// through /api/tables) — remove when the printed room/table stickers are
+/// reprinted with /p/{id}.
+///
 /// Landing for an older table QR that opened the app as an App Link
 /// (https://chillax.site/table/{id}, with the id the table had before the
 /// Places remodel). It resolves the place behind it and continues on the

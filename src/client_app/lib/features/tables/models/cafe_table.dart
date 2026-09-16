@@ -1,5 +1,8 @@
 import '../../../core/models/localized_text.dart';
 
+/// LEGACY(places): the old table sticker's resolution (sticker id -> placeId)
+/// — remove when the printed room/table stickers are reprinted with /p/{id}.
+///
 /// A café table customers sit at and order from.
 /// Named CafeTable because `Table` is a Flutter widget.
 class CafeTable {

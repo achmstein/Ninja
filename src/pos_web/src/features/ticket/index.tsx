@@ -425,6 +425,7 @@ export function TicketScreen({
   // renders its tombstone even if the status enum ever gains states
   const isVoided = ticket.voidedAt != null
   const lines = ticket.lines ?? []
+  // LEGACY(places): matched on the bill's old tableId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   const waiting = isSettled || isVoided ? [] : pendingForTicket(pending, ticket)
   const liveStay = isSettled || isVoided ? undefined : stay
   const runningStay = liveStay && isRunning(liveStay) ? liveStay : undefined
@@ -520,6 +521,7 @@ export function TicketScreen({
               ? {
                   type: TICKET_TYPE_TABLE,
                   placeId: target.placeId,
+                  // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
                   tableId: target.tableId,
                   tableName: target.tableName,
                 }

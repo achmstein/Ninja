@@ -9,9 +9,11 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// </summary>
 public record SessionStartedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): the old RoomId/RoomName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     DateTime? ActualStartTime,
+    // LEGACY(places): the old "Single"/"Multi" word — remove when every till and customer app is on /api/places and /api/stays.
     string? PlayerMode,
     int BranchId = 0,
     string? CustomerId = null,

@@ -45,12 +45,14 @@ class PlaceEntityTypeConfiguration : IEntityTypeConfiguration<Place>
             .IsRequired()
             .HasDefaultValue(1);
 
+        // LEGACY(places): the old sticker id columns — remove when the printed room/table stickers are reprinted with /p/{id}.
         builder.Property(p => p.LegacyRoomId);
         builder.Property(p => p.LegacyTableId);
 
         builder.HasIndex(p => p.BranchId);
         builder.HasIndex(p => p.Kind);
         builder.HasIndex(p => p.PhysicalStatus);
+        // LEGACY(places): unique indexes on the old sticker id columns — remove when the printed room/table stickers are reprinted with /p/{id}.
         builder.HasIndex(p => p.LegacyRoomId).IsUnique();
         builder.HasIndex(p => p.LegacyTableId).IsUnique();
     }

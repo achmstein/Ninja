@@ -93,6 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // just remembers where the customer is sitting, and bouncing them to
       // login would lose it. The page sends them on itself; a timed place
       // asks for sign-in only when they join or hold.
+      // LEGACY(places): the '/table/' prefix — remove when the printed room/table stickers are reprinted with /p/{id}.
       final isTableLink = currentLocation.startsWith('/table/') || currentLocation.startsWith('/p/');
 
       // While initializing, stay on or go to splash
@@ -107,6 +108,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Redirect to login if not authenticated
       if (!isAuthenticated && !isLoggingIn && !isRegistering && !isTableLink) {
+        // LEGACY(places): remembers an old /room/{id} sticker link across sign-in — remove when the printed room/table stickers are reprinted with /p/{id}.
         if (currentLocation.startsWith('/room/')) {
           _pendingLink = state.uri.toString();
         }
@@ -142,6 +144,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
 
+      // LEGACY(places): the /table/{id} sticker route — remove when the printed room/table stickers are reprinted with /p/{id}.
       // Printed table QR opened as an App Link (chillax.site/table/{id})
       GoRoute(
         path: '/table/:tableId',
@@ -158,6 +161,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // LEGACY(places): the /room/{id} sticker redirect — remove when the printed room/table stickers are reprinted with /p/{id}.
       // The older room stickers (chillax.site/room/{id}); rooms kept their ids
       GoRoute(
         path: '/room/:roomId',

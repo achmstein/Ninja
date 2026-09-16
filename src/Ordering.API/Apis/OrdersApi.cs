@@ -186,6 +186,7 @@ public static partial class OrdersApi
         // the new vocabulary names it; an older one names a room or a table
         // id and the place is looked up. A place taken out of service
         // refuses the order — nobody would bring it.
+        // LEGACY(places): the RoomId/TableId arguments resolve an old room/table id — remove when the printed room/table stickers are reprinted with /p/{id}.
         var place = await services.Places.ResolveAsync(request.PlaceId, request.RoomId, request.TableId);
         if (place is { IsActive: false })
         {
@@ -313,6 +314,7 @@ public static partial class OrdersApi
 
         // The till may name a place by either vocabulary; never gated — the
         // cashier standing there knows whether the place takes customers
+        // LEGACY(places): the TableId argument resolves an old table id — remove when the printed room/table stickers are reprinted with /p/{id}.
         var posPlace = await services.Places.ResolveAsync(request.PlaceId, null, request.TableId);
 
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
@@ -710,7 +712,10 @@ public static partial class OrdersApi
 /// <param name="GuestName">Required when ordering without an account.</param>
 /// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
 /// <param name="SessionId">The active stay the order belongs to, when ordering from a timed place.</param>
-/// <param name="RoomId">The room behind <paramref name="SessionId"/> (older clients; newer ones send <paramref name="PlaceId"/>).</param>
+/// <param name="RoomName">LEGACY(places): old room name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
+/// <param name="TableId">LEGACY(places): old table id field beside <paramref name="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
+/// <param name="TableName">LEGACY(places): old table name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
+/// <param name="RoomId">LEGACY(places): the room behind <paramref name="SessionId"/> (older clients; newer ones send <paramref name="PlaceId"/>) — remove when every till and customer app is on /api/places and /api/stays.</param>
 /// <param name="PlaceId">The Spaces place the order goes to. Newer clients send this instead of a room or table id.</param>
 public record CreateOrderRequest(
     string UserId,
@@ -737,6 +742,9 @@ public record CreateOrderRequest(
 /// </summary>
 /// <param name="CustomerUserId">Attach the sale to a customer account (optional).</param>
 /// <param name="CustomerUserName">Display name for <paramref name="CustomerUserId"/>.</param>
+/// <param name="TableId">LEGACY(places): old table id field beside <paramref name="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
+/// <param name="TableName">LEGACY(places): old table name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
+/// <param name="RoomName">LEGACY(places): old room name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
 public record PosOrderRequest(
     List<BasketItem> Items,
     string? CustomerNote = null,

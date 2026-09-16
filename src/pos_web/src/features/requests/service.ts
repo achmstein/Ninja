@@ -20,9 +20,11 @@ export const REQUEST_STATUS_COMPLETED = 3
 export type ServiceRequest = {
   id: number
   userName: string
+  // LEGACY(places): the old room id, read next to placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   roomId: number | null
   /** The place: the room, or the table's name for a table request */
   roomName: { en?: string | null; ar?: string | null }
+  // LEGACY(places): the old table id and name, read next to placeId/placeKind — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   tableId?: number | null
   tableName?: { en?: string | null; ar?: string | null } | null
   /** The Spaces place; 'Room', 'Table' or 'Station' */

@@ -12,7 +12,10 @@ public interface IPlaceQueries
 
     Task<PlaceViewModel?> GetPlaceByIdAsync(int placeId);
 
-    /// <summary>The place a printed table sticker (/table/{id}) points at.</summary>
+    /// <summary>
+    /// LEGACY(places): lookup by the old table sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The place a printed table sticker (/table/{id}) points at.
+    /// </summary>
     Task<PlaceViewModel?> GetPlaceByLegacyTableIdAsync(int tableId);
 
     /// <summary>The customer's stays (owner or member), newest first, paged.</summary>

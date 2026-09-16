@@ -77,6 +77,7 @@ class TicketEntityTypeConfiguration : IEntityTypeConfiguration<Ticket>
         // up by session or table to append to them
         builder.HasIndex(t => new { t.BranchId, t.Status });
         builder.HasIndex(t => t.SessionId);
+        // LEGACY(places): index on the old TableId column — remove when every till and customer app is on /api/places and /api/stays.
         builder.HasIndex(t => new { t.TableId, t.Status });
         builder.HasIndex(t => new { t.PlaceId, t.Status });
     }

@@ -618,7 +618,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           placeKind: destination?.placeKind.wireName,
           placeName: destination?.name.toJson(),
           sessionId: destination?.sessionId,
-          // The older room/table fields, for one release
+          // LEGACY(places): the older roomName/roomId/tableName fields ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
           roomName: destination != null && destination.isStay && destination.isRoom
               ? destination.name.toJson()
               : null,

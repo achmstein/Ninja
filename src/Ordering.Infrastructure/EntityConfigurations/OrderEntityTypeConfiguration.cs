@@ -47,10 +47,10 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
         orderConfiguration.OwnsOne(o => o.PlaceName, b => b.ToJson());
         orderConfiguration.Ignore(o => o.Destination);
 
-        // Configure RoomName as JSON column (localized text)
+        // LEGACY(places): the old RoomName JSON column beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
         orderConfiguration.OwnsOne(o => o.RoomName, b => b.ToJson());
 
-        // Configure TableName as JSON column (localized text)
+        // LEGACY(places): the old TableName JSON column beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
         orderConfiguration.OwnsOne(o => o.TableName, b => b.ToJson());
 
         orderConfiguration.HasOne(o => o.Buyer)

@@ -38,10 +38,12 @@ export function pendingForTicket(
   pending: OrderSummary[],
   ticket: {
     sessionId?: null | number | string
+    // LEGACY(places): a table order is matched to its bill by the old tableId, not placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     tableId?: null | number | string
   }
 ): OrderSummary[] {
   const sessionId = ticket.sessionId == null ? null : toNumber(ticket.sessionId)
+  // LEGACY(places): old tableId match — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   const tableId = ticket.tableId == null ? null : toNumber(ticket.tableId)
 
   return pending.filter(

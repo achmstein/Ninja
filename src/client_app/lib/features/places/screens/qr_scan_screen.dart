@@ -16,6 +16,9 @@ import 'places_screen.dart';
 /// A scanned chillax.site QR: a place (/p/{id}), or one of the older room
 /// (/room/{id}) and table (/table/{id}) stickers.
 class _ScannedTarget {
+  /// LEGACY(places): the old table sticker flag — remove when the printed
+  /// room/table stickers are reprinted with /p/{id}.
+  ///
   /// The older table stickers carry the id the table had before the Places
   /// remodel, which is not the place id; it is resolved first.
   final bool isLegacyTable;
@@ -49,6 +52,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     if (uri.host != 'chillax.site') return null;
     final segments = uri.pathSegments;
     if (segments.length != 2) return null;
+    // LEGACY(places): accepting the old 'room' and 'table' segments — remove when the printed room/table stickers are reprinted with /p/{id}.
     if (segments[0] != 'p' && segments[0] != 'room' && segments[0] != 'table') return null;
     final id = int.tryParse(segments[1]);
     if (id == null) return null;
@@ -70,6 +74,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     _scannerController.stop();
 
     try {
+      // LEGACY(places): resolving an old table sticker id through /api/tables — remove when the printed room/table stickers are reprinted with /p/{id}.
       final placeId = target.isLegacyTable
           ? (await ref.read(tableRepositoryProvider).getTable(target.id)).placeId
           : target.id;

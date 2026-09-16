@@ -40,6 +40,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(256);
             entity.Property(e => e.UserName).IsRequired().HasMaxLength(256);
+            // LEGACY(places): the old RoomName/TableName JSON columns — remove when every till and customer app is on /api/places and /api/stays.
             entity.OwnsOne(e => e.RoomName, b => b.ToJson());
             entity.OwnsOne(e => e.TableName, b => b.ToJson());
             entity.Property(e => e.RequestType).IsRequired();
@@ -57,7 +58,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             // Index for efficient lookups by branch and status
             entity.HasIndex(e => new { e.BranchId, e.Status });
 
-            // Index for efficient lookups by room and status
+            // LEGACY(places): index on the old RoomId column beside the PlaceId one — remove when every till and customer app is on /api/places and /api/stays.
             entity.HasIndex(e => new { e.RoomId, e.Status });
             entity.HasIndex(e => new { e.PlaceId, e.Status });
 
@@ -77,6 +78,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.Property(e => e.Kind).IsRequired().HasMaxLength(20);
             entity.OwnsOne(e => e.Name, b => b.ToJson());
             entity.Ignore(e => e.TakesControllerRequests);
+            // LEGACY(places): lookup indexes for the old room/table ids — remove when the printed room/table stickers are reprinted with /p/{id}.
             entity.HasIndex(e => e.LegacyRoomId);
             entity.HasIndex(e => e.LegacyTableId);
         });

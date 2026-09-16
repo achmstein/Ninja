@@ -84,6 +84,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             SessionId = t.SessionId,
             PlaceId = t.PlaceId,
             PlaceKind = t.PlaceKind,
+            // LEGACY(places): the old RoomId/TableId on the summary — remove when every till and customer app is on /api/places and /api/stays.
             RoomId = t.RoomId,
             TableId = t.TableId,
             Label = t.Label,
@@ -240,6 +241,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             SessionEndedAt = ticket.SessionEndedAt,
             PlaceId = ticket.PlaceId,
             PlaceKind = ticket.PlaceKind,
+            // LEGACY(places): the old RoomId/TableId on the detail — remove when every till and customer app is on /api/places and /api/stays.
             RoomId = ticket.RoomId,
             TableId = ticket.TableId,
             Label = ticket.Label,

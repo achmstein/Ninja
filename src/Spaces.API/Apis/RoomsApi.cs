@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Chillax.Spaces.API.Apis;
 
 /// <summary>
+/// LEGACY(places): the /api/rooms alias routes — remove when every till and customer app is on /api/places and /api/stays.
 /// The routes the tills and the customer apps called before the Places
 /// remodel, kept for one release as thin aliases over the same commands and
 /// queries as <see cref="PlacesApi"/>. Rooms kept their ids, so a room id
@@ -23,6 +24,7 @@ public static class RoomsApi
 {
     public static IEndpointRouteBuilder MapRoomsApi(this IEndpointRouteBuilder app)
     {
+        // LEGACY(places): the api/rooms route group — remove when every till and customer app is on /api/places and /api/stays.
         var api = app.MapGroup("api/rooms");
 
         api.MapGet("/", GetAllRooms).WithName("ListRooms").WithTags("Rooms")
@@ -274,7 +276,10 @@ public static class RoomsApi
     }
 }
 
-/// <summary>The old status words; same numbers as <see cref="PlaceStatus"/>.</summary>
+/// <summary>
+/// LEGACY(places): the old room status words the /api/rooms alias accepts — remove when every till and customer app is on /api/places and /api/stays.
+/// The old status words; same numbers as <see cref="PlaceStatus"/>.
+/// </summary>
 public enum RoomPhysicalStatus
 {
     Available = 1,
@@ -282,18 +287,26 @@ public enum RoomPhysicalStatus
     Maintenance = 3,
 }
 
+// LEGACY(places): old /api/rooms reserve request shape — remove when every till and customer app is on /api/places and /api/stays.
 public record ReserveRoomRequest(string? CustomerName = null, string? Notes = null, bool StartOnConfirm = false);
 
+// LEGACY(places): old walk-in request with the PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
 public record WalkInSessionRequest(string? Notes = null, string? PlayerMode = null);
 
+// LEGACY(places): old walk-in result naming the stay a ReservationId — remove when every till and customer app is on /api/places and /api/stays.
 public record StartWalkInSessionResult(int ReservationId);
 
+// LEGACY(places): old start/confirm request with the PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
 public record StartSessionRequest(string? PlayerMode = null);
 
+// LEGACY(places): old player-mode switch request — remove when every till and customer app is on /api/places and /api/stays.
 public record ChangePlayerModeRequest(string PlayerMode);
 
+// LEGACY(places): old join result carrying RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
 public record JoinSessionResult(int ReservationId, int RoomId, LocalizedText RoomName, bool IsOwner, DateTime StartTime);
 
+// LEGACY(places): old create-room request with SingleRate/MultiRate — remove when every till and customer app is on /api/places and /api/stays.
 public record CreateRoomRequest(LocalizedText Name, LocalizedText? Description, decimal SingleRate, decimal MultiRate);
 
+// LEGACY(places): old update-room request with SingleRate/MultiRate — remove when every till and customer app is on /api/places and /api/stays.
 public record UpdateRoomRequest(LocalizedText Name, LocalizedText? Description, decimal SingleRate, decimal MultiRate);

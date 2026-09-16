@@ -45,6 +45,7 @@ public class PlaceUpdatedIntegrationEventHandler(
         row.IsTimed = @event.IsTimed;
         row.HasOptions = @event.HasOptions;
         row.IsActive = @event.IsActive;
+        // LEGACY(places): projects the old room/table ids — remove when the printed room/table stickers are reprinted with /p/{id}.
         row.LegacyRoomId = @event.LegacyRoomId;
         row.LegacyTableId = @event.LegacyTableId;
         row.UpdatedAt = @event.CreationDate;

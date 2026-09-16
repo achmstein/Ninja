@@ -26,6 +26,7 @@ abstract class OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
+    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName,
     int? sessionId,
     int? roomId,
@@ -42,6 +43,7 @@ abstract class OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
+    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName,
     int? sessionId,
     int? roomId,
@@ -106,6 +108,7 @@ class ApiOrderRepository implements OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
+    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName,
     int? sessionId,
     int? roomId,
@@ -121,10 +124,11 @@ class ApiOrderRepository implements OrderRepository {
         'userId': userId,
         'userName': userName,
         // Where the order goes; the server lands it on the place's bill, or
-        // the stay's when a clock runs there. The older fields ride along.
+        // the stay's when a clock runs there.
         'placeId': placeId,
         'placeKind': placeKind,
         'placeName': placeName,
+        // LEGACY(places): the older roomName/roomId/tableId/tableName fields ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
         'roomName': roomName,
         'sessionId': sessionId,
         'roomId': roomId,
@@ -149,6 +153,7 @@ class ApiOrderRepository implements OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
+    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName,
     int? sessionId,
     int? roomId,
@@ -230,6 +235,7 @@ class ApiOrderRepository implements OrderRepository {
       placeId: placeId,
       placeKind: placeKind,
       placeName: placeName,
+      // LEGACY(places): the older roomName/roomId/tableId/tableName arguments — remove when Ordering and Notification stop reading the old room/table fields.
       roomName: roomName,
       sessionId: sessionId,
       roomId: roomId,
@@ -480,6 +486,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
+    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName,
     int? sessionId,
     int? roomId,
@@ -496,6 +503,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       'items': items.map((item) => item.toJson()).toList(),
       'placeId': placeId,
       'sessionId': sessionId,
+      // LEGACY(places): the older tableId in the retry signature — remove when Ordering and Notification stop reading the old room/table fields.
       'tableId': tableId,
       'customerNote': customerNote,
       'pointsToRedeem': pointsToRedeem,
@@ -515,6 +523,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         placeId: placeId,
         placeKind: placeKind,
         placeName: placeName,
+        // LEGACY(places): the older roomName/roomId/tableId/tableName arguments — remove when Ordering and Notification stop reading the old room/table fields.
         roomName: roomName,
         sessionId: sessionId,
         roomId: roomId,

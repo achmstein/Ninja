@@ -4,6 +4,7 @@ using Chillax.Spaces.Domain.SeedWork;
 namespace Chillax.Spaces.API.Application.IntegrationEvents.Events;
 
 // ---------------------------------------------------------------------------
+// LEGACY(places): the old RoomId/RoomName, PlayerMode and Single/Multi fields on every event below — remove when every till and customer app is on /api/places and /api/stays.
 // Spaces' events keep their names and positions from before the Places
 // remodel (the routing key is the type name; consumers are positional
 // records). Each gains PlaceId / PlaceKind / PlaceName with defaults, and
@@ -20,6 +21,7 @@ public record PlaceUpdatedIntegrationEvent(
     bool IsTimed,
     bool HasOptions,
     bool IsActive,
+    // LEGACY(places): the old sticker ids projected to other services — remove when the printed room/table stickers are reprinted with /p/{id}.
     int? LegacyRoomId = null,
     int? LegacyTableId = null,
     bool Deleted = false) : IntegrationEvent;
@@ -27,6 +29,7 @@ public record PlaceUpdatedIntegrationEvent(
 /// <summary>A customer holds a place; staff see it and the hold's expiry.</summary>
 public record RoomReservedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string? CustomerId,
@@ -41,10 +44,12 @@ public record RoomReservedIntegrationEvent(
 /// <summary>The clock started (from a hold or as a walk-in). PlayerMode carries the option's English name; OptionCode its code.</summary>
 public record SessionStartedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string? CustomerId,
     DateTime? ActualStartTime,
+    // LEGACY(places): the old "Single"/"Multi" word, superseded by OptionCode — remove when every till and customer app is on /api/places and /api/stays.
     string? PlayerMode,
     int BranchId = 0,
     int PlaceId = 0,
@@ -55,6 +60,7 @@ public record SessionStartedIntegrationEvent(
 /// <summary>The clock stopped; the party's devices drop their stay notification.</summary>
 public record SessionEndedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     List<string> MemberUserIds,
@@ -64,6 +70,7 @@ public record SessionEndedIntegrationEvent(
 
 /// <summary>A place is free again: whoever asked to be told, is told.</summary>
 public record RoomBecameAvailableIntegrationEvent(
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     int BranchId = 1,
@@ -89,11 +96,14 @@ public record SessionCostLine(
 public record SessionCompletedIntegrationEvent(
     int ReservationId,
     string? CustomerId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
+    // LEGACY(places): the old two-rate SingleCost/MultiCost figures, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
     decimal SingleCost,
     decimal MultiCost,
     decimal TotalCost,
+    // LEGACY(places): the old two-rate SingleDuration/MultiDuration hours, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
     decimal SingleDuration,
     decimal MultiDuration,
     DateTime StartTime,
@@ -108,10 +118,12 @@ public record SessionCompletedIntegrationEvent(
 /// <summary>Someone joined the party; their phone gets the stay notification.</summary>
 public record SessionMemberJoinedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string MemberUserId,
     DateTime? ActualStartTime,
+    // LEGACY(places): the old "Single"/"Multi" word, superseded by OptionCode — remove when every till and customer app is on /api/places and /api/stays.
     string? PlayerMode,
     int PlaceId = 0,
     string PlaceKind = "Room",
@@ -121,6 +133,7 @@ public record SessionMemberJoinedIntegrationEvent(
 /// <summary>A walk-in got its owner; every screen showing the place has a name to put on it.</summary>
 public record SessionCustomerAssignedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId, same value as PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     string CustomerId,
     string? CustomerName,
@@ -132,6 +145,7 @@ public record SessionCustomerAssignedIntegrationEvent(
 /// <summary>A hold was given up or a running stay cut short; nothing is billed.</summary>
 public record ReservationCancelledIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId/RoomName, same values as PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string? CustomerId,
@@ -149,6 +163,7 @@ public record ReservationCancelledIntegrationEvent(
 /// </summary>
 public record SessionPaidIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): old RoomId, same value as PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     IReadOnlyCollection<string> MemberIds,
     int ReceiptNumber,

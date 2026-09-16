@@ -48,9 +48,13 @@ public class Ticket : Entity, IAggregateRoot
     /// <summary>"Room", "Table" or "Station", as Spaces names it.</summary>
     public string? PlaceKind { get; private set; }
 
+    // LEGACY(places): the old RoomId column kept next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     public int? RoomId { get; private set; }
 
-    /// <summary>The café table a Table ticket accumulates for (the id the order named).</summary>
+    /// <summary>
+    /// LEGACY(places): the old TableId column kept next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
+    /// The café table a Table ticket accumulates for (the id the order named).
+    /// </summary>
     public int? TableId { get; private set; }
 
     /// <summary>Place name snapshot for display and receipts.</summary>
@@ -249,6 +253,7 @@ public class Ticket : Entity, IAggregateRoot
             SessionId = sessionId,
             PlaceId = placeId,
             PlaceKind = placeKind,
+            // LEGACY(places): fills the old RoomId from the place id — remove when every till and customer app is on /api/places and /api/stays.
             RoomId = isRoom ? placeId : null,
             LocationName = placeName,
         };
@@ -266,6 +271,7 @@ public class Ticket : Entity, IAggregateRoot
             throw new SalesDomainException("A table ticket names its table.");
         return new(TicketType.Table, branchId)
         {
+            // LEGACY(places): the old table id an older sticker or client named — remove when every till and customer app is on /api/places and /api/stays.
             TableId = tableId,
             PlaceId = placeId,
             PlaceKind = "Table",
@@ -368,7 +374,10 @@ public class Ticket : Entity, IAggregateRoot
         Touch();
     }
 
-    /// <summary>The two-option room tariff as the older SessionCompleted event carries it.</summary>
+    /// <summary>
+    /// LEGACY(places): the Single/Multi overload for a SessionCompleted event without Costs — remove when every till and customer app is on /api/places and /api/stays.
+    /// The two-option room tariff as the older SessionCompleted event carries it.
+    /// </summary>
     public void AppendSessionTime(
         decimal singleHours,
         decimal singleCost,
@@ -721,6 +730,7 @@ public class Ticket : Entity, IAggregateRoot
         var target = Type switch
         {
             TicketType.Table => OpenForTable(
+                // LEGACY(places): carries the old TableId onto the turnover ticket — remove when every till and customer app is on /api/places and /api/stays.
                 TableId,
                 LocationName is null ? null : new LocalizedText(LocationName.En, LocationName.Ar),
                 BranchId,

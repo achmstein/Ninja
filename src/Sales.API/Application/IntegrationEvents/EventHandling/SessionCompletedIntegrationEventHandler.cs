@@ -29,6 +29,7 @@ public class SessionCompletedIntegrationEventHandler(
             // because the start event was missed
             ticket = ticketRepository.Add(Ticket.OpenForSession(
                 @event.ReservationId,
+                // LEGACY(places): falls back to the old RoomId/RoomName from a publisher older than the remodel — remove when every till and customer app is on /api/places and /api/stays.
                 @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
                 @event.PlaceName ?? @event.RoomName,
                 @event.BranchId,
@@ -49,7 +50,7 @@ public class SessionCompletedIntegrationEventHandler(
         }
         else
         {
-            // A publisher older than the Places remodel: the two room rates
+            // LEGACY(places): a publisher older than the Places remodel sends no Costs, only the two room rates — remove when every till and customer app is on /api/places and /api/stays.
             ticket.AppendSessionTime(
                 @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
         }

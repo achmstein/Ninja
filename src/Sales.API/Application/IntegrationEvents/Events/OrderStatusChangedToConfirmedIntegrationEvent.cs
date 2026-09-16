@@ -12,12 +12,14 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     int OrderId,
     string BuyerName,
     string BuyerIdentityGuid,
+    // LEGACY(places): the old RoomName, superseded by PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     LocalizedText? RoomName,
     decimal OrderTotal,
     int PointsToRedeem,
     string? GuestId,
     int BranchId,
     int? SessionId,
+    // LEGACY(places): the old RoomId/TableId/TableName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int? RoomId,
     int? TableId,
     LocalizedText? TableName,

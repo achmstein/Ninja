@@ -129,6 +129,7 @@ class _PendingOrderCard extends StatelessWidget {
 
     // Named the way the floor names its tiles: the room or table the order
     // is for, or — for an order with neither — the person who placed it
+    // LEGACY(places): old roomName/tableName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     final room = order.roomName?.localized(context) ?? '';
     final table = order.tableName?.localized(context) ?? '';
     final who = (order.userName ?? '').isNotEmpty ? order.userName! : l10n.guest;

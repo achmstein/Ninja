@@ -18,8 +18,9 @@ class AppConfig {
   static String get placesApiUrl => '$bffBaseUrl/api/places/';
   /// Spaces' stays: the customer's holds and running clocks
   static String get staysApiUrl => '$bffBaseUrl/api/stays/';
-  /// The older table stickers (/table/{id}) resolve through this
-
+  /// LEGACY(places): the older table stickers (/table/{id}) resolve through
+  /// this — remove when the printed room/table stickers are reprinted with
+  /// /p/{id}.
   static String get tablesApiUrl => '$bffBaseUrl/api/tables/';
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';

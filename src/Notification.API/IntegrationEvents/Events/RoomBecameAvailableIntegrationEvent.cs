@@ -4,6 +4,7 @@ using Chillax.Notification.API.Model;
 namespace Chillax.Notification.API.IntegrationEvents.Events;
 
 public record RoomBecameAvailableIntegrationEvent(
+    // LEGACY(places): old RoomId/RoomName Spaces still fills beside PlaceId/PlaceKind/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     int BranchId = 1,

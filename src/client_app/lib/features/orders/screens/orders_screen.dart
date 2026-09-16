@@ -342,6 +342,7 @@ class _OrderTile extends ConsumerWidget {
                 timeFormat.format(order.date.toLocal()),
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: colors.foreground),
               ),
+              // LEGACY(places): shows the older roomName/tableName fields instead of placeName — remove when Ordering and Notification stop reading the old room/table fields.
               if (order.roomName != null || order.tableName != null) ...[
                 const SizedBox(width: 6),
                 AppText(

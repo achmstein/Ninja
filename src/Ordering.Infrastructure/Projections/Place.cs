@@ -26,10 +26,16 @@ public class Place
 
     public bool IsActive { get; set; }
 
-    /// <summary>The id a printed room sticker (/room/{id}) carries.</summary>
+    /// <summary>
+    /// LEGACY(places): resolves an old room id to its place — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The id a printed room sticker (/room/{id}) carries.
+    /// </summary>
     public int? LegacyRoomId { get; set; }
 
-    /// <summary>The id a printed table sticker (/table/{id}) carries.</summary>
+    /// <summary>
+    /// LEGACY(places): resolves an old table id to its place — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The id a printed table sticker (/table/{id}) carries.
+    /// </summary>
     public int? LegacyTableId { get; set; }
 
     /// <summary>CreationDate of the last event applied — the out-of-order guard.</summary>

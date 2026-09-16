@@ -3,6 +3,7 @@ using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
+// LEGACY(places): the old TableId/TableName from older tills — remove when every till and customer app is on /api/places and /api/stays.
 public record NewTicketTarget(TicketType Type, int? TableId, LocalizedText? TableName, string? Label, int? PlaceId = null);
 
 /// <summary>
@@ -89,6 +90,7 @@ public class MoveTicketLinesCommandHandler(
                 var open = wanted.PlaceId is int byPlace
                     ? await ticketRepository.FindOpenByPlaceAsync(byPlace, source.BranchId)
                     : null;
+                // LEGACY(places): falls back to the old TableId — remove when every till and customer app is on /api/places and /api/stays.
                 open ??= wanted.TableId is int byTable
                     ? await ticketRepository.FindOpenByTableAsync(byTable, source.BranchId)
                     : null;

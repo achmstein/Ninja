@@ -5,6 +5,7 @@ namespace Chillax.Notification.API.IntegrationEvents.Events;
 public record ServiceRequestCreatedIntegrationEvent(
     int RequestId,
     string UserName,
+    // LEGACY(places): old RoomId/RoomName (and TableId/TableName below) beside PlaceId/PlaceKind — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     ServiceRequestType RequestType,

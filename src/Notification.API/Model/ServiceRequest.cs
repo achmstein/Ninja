@@ -13,12 +13,20 @@ public class ServiceRequest
     public string? PlaceKind { get; set; }
     /// <summary>The rate option asked for by a <see cref="ServiceRequestType.ChangeOption"/> request ("multi", "single", ...).</summary>
     public string? OptionCode { get; set; }
+    // LEGACY(places): old room id column beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     public int? RoomId { get; set; }
     public int BranchId { get; set; }
-    /// <summary>The place the till goes to: the room, or the table's name for a table request.</summary>
+    /// <summary>
+    /// LEGACY(places): old room name column, doubling as the place name — remove when every till and customer app is on /api/places and /api/stays.
+    /// The place the till goes to: the room, or the table's name for a table request.
+    /// </summary>
     public LocalizedText RoomName { get; set; } = new LocalizedText(string.Empty);
-    /// <summary>The table the request came from; null for a room.</summary>
+    /// <summary>
+    /// LEGACY(places): old table id column beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
+    /// The table the request came from; null for a room.
+    /// </summary>
     public int? TableId { get; set; }
+    // LEGACY(places): old table name column beside PlaceId/PlaceKind — remove when every till and customer app is on /api/places and /api/stays.
     public LocalizedText? TableName { get; set; }
     public ServiceRequestType RequestType { get; set; }
     public ServiceRequestStatus Status { get; set; }
@@ -32,6 +40,7 @@ public enum ServiceRequestType
     CallWaiter = 1,
     ControllerChange = 2,
     ReceiptToPay = 3,
+    // LEGACY(places): the two-option room request types, mapped onto ChangeOption("multi"/"single") — remove when every till and customer app is on /api/places and /api/stays.
     SwitchToMulti = 4,
     SwitchToSingle = 5,
     /// <summary>Switch the stay to another rate option of the place's tariff; the option travels in OptionCode. SwitchToMulti/SwitchToSingle are the two-option room case of this.</summary>

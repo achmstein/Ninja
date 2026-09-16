@@ -116,6 +116,7 @@ class SessionNotificationService {
       if (accessToken != null) 'accessToken': accessToken,
       'apiBaseUrl': AppConfig.notificationsApiUrl,
       'sessionId': session.id,
+      // LEGACY(places): the native channel's 'roomId'/'roomNameEn'/'roomNameAr' keys carry the place — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
       'roomId': session.placeId,
       if (branchId != null) 'branchId': branchId,
       'roomNameEn': session.placeName.en,
@@ -126,6 +127,7 @@ class SessionNotificationService {
     try {
       final cached = _cachedDrinks ?? [];
       await _channel.invokeMethod('show', {
+        // LEGACY(places): the native channel's 'roomName' key carries the place name — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
         'roomName': roomName,
         'duration': session.formattedDuration,
         'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
@@ -155,6 +157,7 @@ class SessionNotificationService {
 
         try {
           await _channel.invokeMethod('show', {
+            // LEGACY(places): the native channel's 'roomName' key carries the place name — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
             'roomName': roomName,
             'duration': session.formattedDuration,
             'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
@@ -280,6 +283,7 @@ class SessionNotificationService {
 
       await dio.post('service-requests', data: {
         'sessionId': _activeSession!.id,
+        // LEGACY(places): the notification action sends the older roomId/roomName fields (no placeId yet) — remove when Ordering and Notification stop reading the old room/table fields.
         'roomId': _activeSession!.placeId,
         'roomName': _activeSession!.placeName.toJson(),
         'requestType': requestType,
@@ -305,6 +309,7 @@ class SessionNotificationService {
         item: item,
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
+        // LEGACY(places): the notification's drink order sends the older roomName/roomId fields (no placeId yet) — remove when Ordering and Notification stop reading the old room/table fields.
         roomName: _activeSession!.placeName.toJson(),
         sessionId: _activeSession!.id,
         roomId: _activeSession!.placeId,
@@ -327,6 +332,7 @@ class SessionNotificationService {
     final branchId = _ref.read(selectedBranchIdProvider);
 
     await prefs.setInt('active_session_id', session.id);
+    // LEGACY(places): the native side reads the place from the 'active_session_room_id'/'active_session_room_name_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
     await prefs.setInt('active_session_room_id', session.placeId);
     await prefs.setString('active_session_room_name_en', session.placeName.en);
     if (session.placeName.ar != null) {
@@ -343,6 +349,7 @@ class SessionNotificationService {
   Future<void> _clearSessionInfo() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('active_session_id');
+    // LEGACY(places): the native side's 'active_session_room_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
     await prefs.remove('active_session_room_id');
     await prefs.remove('active_session_room_name_en');
     await prefs.remove('active_session_room_name_ar');

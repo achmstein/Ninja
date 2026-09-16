@@ -49,6 +49,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         return place.ToViewModel(open);
     }
 
+    // LEGACY(places): lookup by the old table sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
     public async Task<PlaceViewModel?> GetPlaceByLegacyTableIdAsync(int tableId)
     {
         var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.LegacyTableId == tableId);

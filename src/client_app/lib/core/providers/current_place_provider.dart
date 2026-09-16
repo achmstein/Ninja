@@ -152,7 +152,9 @@ class OrderDestination {
 
   bool get isStay => kind == OrderDestinationKind.stay;
 
-  /// Whether the older room fields apply (the order carries them for one release)
+  /// LEGACY(places): whether the older room fields apply (the order carries
+  /// them beside the place fields) — remove when Ordering and Notification
+  /// stop reading the old room/table fields.
   bool get isRoom => placeKind == PlaceKind.room;
 }
 

@@ -671,6 +671,7 @@ public static class NotificationApi
         // place the projection has never heard of falls back to the old
         // rule: a table asks for a waiter or the bill, a room session for
         // anything.
+        // LEGACY(places): atTable, the RoomId/TableId lookup and the TableName/RoomName fallbacks serve a request on the old fields — remove when every till and customer app is on /api/places and /api/stays.
         var atTable = request.PlaceId is null && request.SessionId is null && request.TableId is not null;
         var place = await ResolvePlaceAsync(context, request.PlaceId, request.RoomId, request.TableId);
         var placeName = request.PlaceName ?? (atTable ? request.TableName : request.RoomName) ?? place?.Name;
@@ -696,6 +697,7 @@ public static class NotificationApi
         // the two-option case of it
         var optionCode = request.RequestType switch
         {
+            // LEGACY(places): SwitchToMulti/SwitchToSingle mapped onto the ChangeOption codes — remove when every till and customer app is on /api/places and /api/stays.
             ServiceRequestType.SwitchToMulti => "multi",
             ServiceRequestType.SwitchToSingle => "single",
             ServiceRequestType.ChangeOption => request.OptionCode?.Trim().ToLowerInvariant(),
@@ -707,6 +709,7 @@ public static class NotificationApi
         }
         var placeId = request.PlaceId ?? place?.PlaceId;
         var placeKind = request.PlaceKind ?? place?.Kind ?? (atTable ? "Table" : "Room");
+        // LEGACY(places): fills the old RoomId from the place so older tills still see it — remove when every till and customer app is on /api/places and /api/stays.
         var roomId = request.RoomId ?? (placeKind == "Room" ? placeId : null);
 
         // Check for recent duplicate request (within 30 seconds)
@@ -732,6 +735,7 @@ public static class NotificationApi
             PlaceId = placeId,
             PlaceKind = placeKind,
             OptionCode = optionCode,
+            // LEGACY(places): RoomId, RoomName, TableId and TableName fill the old columns beside the place — remove when every till and customer app is on /api/places and /api/stays.
             RoomId = roomId,
             BranchId = branchId,
             // Own copies: both names are owned JSON columns, and EF refuses one
@@ -779,12 +783,16 @@ public static class NotificationApi
                 serviceRequest.OptionCode));
     }
 
-    /// <summary>The projected place behind whichever id the client sent: place, then room, then table.</summary>
+    /// <summary>
+    /// LEGACY(places): the roomId/tableId fallbacks resolve an old room/table id — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The projected place behind whichever id the client sent: place, then room, then table.
+    /// </summary>
     private static async Task<Place?> ResolvePlaceAsync(NotificationContext context, int? placeId, int? roomId, int? tableId)
     {
         var places = context.Places.AsNoTracking();
         if (placeId is int id)
             return await places.FirstOrDefaultAsync(p => p.PlaceId == id);
+        // LEGACY(places): old room/table id fallbacks — remove when the printed room/table stickers are reprinted with /p/{id}.
         if (roomId is int room)
             return await places.FirstOrDefaultAsync(p => p.LegacyRoomId == room)
                 ?? await places.FirstOrDefaultAsync(p => p.PlaceId == room && p.Kind == "Room");
@@ -950,6 +958,7 @@ public record SubscriptionResponse(
 public record CreateServiceRequestDto(
     [property: Description("The type of request")] ServiceRequestType RequestType,
     [property: Description("The room session, for a request from a room")] int? SessionId = null,
+    // LEGACY(places): old RoomId/RoomName/TableId/TableName request fields beside PlaceId/PlaceKind/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     [property: Description("The room, for a request from a room")] int? RoomId = null,
     [property: Description("The room name (localized)")] LocalizedText? RoomName = null,
     [property: Description("The table, for a waiter or the bill at a table")] int? TableId = null,
@@ -963,6 +972,7 @@ public record CreateServiceRequestDto(
 public record ServiceRequestResponse(
     int Id,
     string UserName,
+    // LEGACY(places): old RoomId/RoomName (and TableId/TableName below) beside PlaceId/PlaceKind — remove when every till and customer app is on /api/places and /api/stays.
     int? RoomId,
     LocalizedText RoomName,
     ServiceRequestType RequestType,

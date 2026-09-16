@@ -5,12 +5,14 @@ using Chillax.Spaces.Domain.SeedWork;
 namespace Chillax.Spaces.API.Application.Queries;
 
 // ---------------------------------------------------------------------------
+// LEGACY(places): the old /api/rooms and /api/tables view models and their mapping from Place/Stay — remove when every till and customer app is on /api/places and /api/stays.
 // The shapes /api/rooms and /api/tables served before the Places remodel.
 // Served for one release by the alias routes, mapped from Place and Stay, so
 // the installed tills and the printed QR stickers keep working while the
 // clients move to /api/places and /api/stays. Remove with the aliases.
 // ---------------------------------------------------------------------------
 
+// LEGACY(places): old room display status words — remove when every till and customer app is on /api/places and /api/stays.
 public enum RoomDisplayStatus
 {
     Available = 1,
@@ -19,7 +21,10 @@ public enum RoomDisplayStatus
     Maintenance = 4,
 }
 
-/// <summary>The old reservation life, by the old names; same numbers as <see cref="StayStatus"/>.</summary>
+/// <summary>
+/// LEGACY(places): old reservation status words — remove when every till and customer app is on /api/places and /api/stays.
+/// The old reservation life, by the old names; same numbers as <see cref="StayStatus"/>.
+/// </summary>
 public enum ReservationStatus
 {
     Reserved = 1,
@@ -28,6 +33,7 @@ public enum ReservationStatus
     Cancelled = 4,
 }
 
+// LEGACY(places): RoomViewModel, the old /api/rooms room shape with SingleRate/MultiRate — remove when every till and customer app is on /api/places and /api/stays.
 public record RoomViewModel
 {
     public int Id { get; init; }
@@ -38,6 +44,7 @@ public record RoomViewModel
     public RoomDisplayStatus DisplayStatus { get; init; }
 }
 
+// LEGACY(places): ReservationViewModel, the old session shape with RoomId/RoomName, Single/Multi rates, hours and costs and the PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
 public record ReservationViewModel
 {
     public int Id { get; init; }
@@ -67,12 +74,14 @@ public record ReservationViewModel
     public List<SessionSegmentViewModel> Segments { get; init; } = new();
 }
 
+// LEGACY(places): old session stats shape (Rooms instead of Places) — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionStats
 {
     public List<SessionStatsDay> Days { get; init; } = new();
     public List<SessionStatsRoom> Rooms { get; init; } = new();
 }
 
+// LEGACY(places): old per-day stats row (Sessions instead of Stays) — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionStatsDay
 {
     public DateOnly Date { get; init; }
@@ -81,6 +90,7 @@ public record SessionStatsDay
     public decimal Revenue { get; init; }
 }
 
+// LEGACY(places): old per-room stats row with RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionStatsRoom
 {
     public int RoomId { get; init; }
@@ -90,6 +100,7 @@ public record SessionStatsRoom
     public decimal Revenue { get; init; }
 }
 
+// LEGACY(places): old session member shape served inside ReservationViewModel — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionMemberViewModel
 {
     public string CustomerId { get; init; } = "";
@@ -98,6 +109,7 @@ public record SessionMemberViewModel
     public string Role { get; init; } = "Member";
 }
 
+// LEGACY(places): old session segment shape with the PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionSegmentViewModel
 {
     public string PlayerMode { get; init; } = "";
@@ -106,6 +118,7 @@ public record SessionSegmentViewModel
     public DateTime? EndTime { get; init; }
 }
 
+// LEGACY(places): old scan session preview with RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
 public record SessionPreviewViewModel
 {
     public int SessionId { get; init; }
@@ -115,6 +128,7 @@ public record SessionPreviewViewModel
     public int MemberCount { get; init; }
 }
 
+// LEGACY(places): old /api/rooms/{id}/scan shape with RoomId/RoomName and Single/Multi rates — remove when every till and customer app is on /api/places and /api/stays.
 public record RoomScanViewModel
 {
     public int BranchId { get; init; }
@@ -128,6 +142,7 @@ public record RoomScanViewModel
     public bool IsAlreadyMember { get; init; }
 }
 
+// LEGACY(places): LegacyMapping, Place/Stay/Tariff to the old Room/Table/Reservation shapes — remove when every till and customer app is on /api/places and /api/stays.
 public static class LegacyMapping
 {
     /// <summary>The rate the old two-rate shape shows for an option; zero when the tariff has no such option.</summary>
@@ -154,6 +169,7 @@ public static class LegacyMapping
 
     public static TableViewModel ToTable(this PlaceViewModel place) => new()
     {
+        // LEGACY(places): the table's public id is the printed sticker's LegacyTableId when it has one — remove when the printed room/table stickers are reprinted with /p/{id}.
         Id = place.LegacyTableId ?? place.Id,
         PlaceId = place.Id,
         Name = place.Name,

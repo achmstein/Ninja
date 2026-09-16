@@ -121,11 +121,14 @@ class _RequestCard extends StatelessWidget {
     final acked = request.status == ServiceRequestStatus.acknowledged;
     // The place is what the request names; a table asks for a waiter or
     // the bill the same way a room does
+    // LEGACY(places): the old tableId decides the kind when placeKind is missing — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     final atTable = request.placeKind != null ? request.placeKind != 'Room' : request.tableId != null;
+    // LEGACY(places): the old tableName read before roomName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     final placeName = (request.tableName ?? request.roomName).localized(context);
     final room = placeName.isNotEmpty
         ? placeName
         : atTable
+            // LEGACY(places): the old tableId/roomId tried before placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
             ? '${l10n.table} ${request.tableId ?? request.placeId ?? ''}'
             : '${l10n.room} ${request.roomId ?? request.placeId ?? ''}';
     // A rate change names the option wanted; the two old room types read as before

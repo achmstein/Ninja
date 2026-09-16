@@ -17,6 +17,7 @@ public record PlaceUpdatedIntegrationEvent(
     bool IsTimed,
     bool HasOptions,
     bool IsActive,
+    // LEGACY(places): the old room/table ids Spaces still sends so a sticker id can be resolved — remove when the printed room/table stickers are reprinted with /p/{id}.
     int? LegacyRoomId = null,
     int? LegacyTableId = null,
     bool Deleted = false) : IntegrationEvent;

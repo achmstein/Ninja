@@ -13,7 +13,10 @@ public interface ITicketRepository : IRepository<Ticket>
     /// <summary>The open ticket billing a room session, if one exists.</summary>
     Task<Ticket?> FindOpenBySessionAsync(int sessionId);
 
-    /// <summary>The open ticket accumulating for a table, by the id an older sticker or client named.</summary>
+    /// <summary>
+    /// LEGACY(places): finder by the old TableId — remove when every till and customer app is on /api/places and /api/stays.
+    /// The open ticket accumulating for a table, by the id an older sticker or client named.
+    /// </summary>
     Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId);
 
     /// <summary>The open ticket accumulating for a place (a table with no clock running), if one exists.</summary>

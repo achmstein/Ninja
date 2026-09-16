@@ -214,6 +214,7 @@ class _DemoTicketsRepository implements TicketsRepository {
     _tickets[id] = TicketDetail(
       id: id,
       type: request.type,
+      // LEGACY(places): demo bill named by the request's old tableId — remove when every till and customer app is on /api/places and /api/stays.
       tableId: request.tableId,
       locationName: request.tableName,
       label: request.label,
@@ -239,6 +240,7 @@ class _DemoTicketsRepository implements TicketsRepository {
     final target = switch (request.target) {
       MoveToTicket(:final ticketId) => _tickets[ticketId] ?? (throw const TicketNotFound()),
       MoveToCounter(:final label) => TicketDetail(id: _nextTicketId(), type: TicketType.counter, label: label, openedAt: DateTime.now()),
+      // LEGACY(places): demo target bill named by the old tableId — remove when every till and customer app is on /api/places and /api/stays.
       MoveToTable(:final tableId, :final tableName) =>
         TicketDetail(id: _nextTicketId(), type: TicketType.table, tableId: tableId, locationName: tableName, openedAt: DateTime.now()),
       MoveToSplit() => TicketDetail(
@@ -462,6 +464,7 @@ class _DemoOrderRepository implements OrderRepository {
       date: _now.subtract(const Duration(minutes: 4)),
       status: OrderStatus.submitted,
       total: 115,
+      // LEGACY(places): demo order carries the old tableId/tableName, not placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
       tableId: 5,
       tableName: _lt('Table 5', 'ترابيزة 5'),
       customerNote: 'No ice please',
@@ -476,6 +479,7 @@ class _DemoOrderRepository implements OrderRepository {
       status: OrderStatus.submitted,
       total: 110,
       sessionId: 7,
+      // LEGACY(places): demo order carries the old roomName, not placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
       roomName: _lt('Room 3', 'اوضة 3'),
       guestPhone: '0100 123 4567',
       items: [OrderItem(productId: 1, productName: _lt('Latte', 'لاتيه'), unitPrice: 55, units: 2, customizationsDescription: _lt('Large', 'كبير'))],
@@ -491,6 +495,7 @@ class _DemoOrderRepository implements OrderRepository {
     if (order == null) return false;
     _pending.remove(order);
     // Confirmed, the lines land on the table's or session's bill
+    // LEGACY(places): demo order matched to its bill by the old tableId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     final target = tickets._tickets.values.where((t) => t.isOpen && (order.tableId != null && t.tableId == order.tableId || order.sessionId != null && t.sessionId == order.sessionId)).firstOrNull;
     if (target != null) {
       tickets._tickets[target.id] = _DemoTicketsRepository._withLines(target, [
@@ -672,10 +677,13 @@ class _DemoPlaceRepository implements PlaceRepository {
     Place(id: 3, name: _lt('Room 3', 'اوضة 3'), status: PlaceStatus.occupied, options: _vipTariff),
     Place(id: 4, name: _lt('Room 4', 'اوضة 4'), status: PlaceStatus.outOfService, options: _roomTariff),
     for (var n = 1; n <= 3; n++)
+      // LEGACY(places): demo places carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
       Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
     // Table 4 runs a clock, at one rate
+    // LEGACY(places): demo place carries a legacy sticker id — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
     Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'ترابيزة 4'), status: PlaceStatus.available, options: _tableTariff, legacyTableId: 4),
     for (var n = 5; n <= 8; n++)
+      // LEGACY(places): demo places carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
       Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
     Place(id: 29, kind: PlaceKind.table, name: _lt('Garden 1', 'الجنينة 1'), status: PlaceStatus.available),
     Place(id: 30, kind: PlaceKind.table, name: _lt('Garden 2', 'الجنينة 2'), status: PlaceStatus.available, isActive: false),
@@ -897,6 +905,7 @@ class _DemoTablesRepository implements TablesRepository {
   @override
   Future<List<CafeTable>> getTables() async => [
         for (var n = 1; n <= 8; n++)
+          // LEGACY(places): demo tables carry legacy sticker ids — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
           if (n != 4) CafeTable(id: 20 + n, legacyTableId: n, name: _lt('Table $n', 'ترابيزة $n')),
         CafeTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
         CafeTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
@@ -1012,6 +1021,7 @@ final List<TicketDetail> _sampleTickets = [
     id: 99,
     type: TicketType.table,
     status: TicketStatus.settled,
+    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
     tableId: 1,
     locationName: _lt('Table 1', 'ترابيزة 1'),
     openedAt: _now.subtract(const Duration(hours: 2)),
@@ -1043,6 +1053,7 @@ final List<TicketDetail> _sampleTickets = [
   TicketDetail(
     id: 102,
     type: TicketType.table,
+    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
     tableId: 5,
     locationName: _lt('Table 5', 'ترابيزة 5'),
     openedAt: _now.subtract(const Duration(minutes: 18)),
@@ -1069,6 +1080,7 @@ final List<TicketDetail> _sampleTickets = [
   TicketDetail(
     id: 104,
     type: TicketType.table,
+    // LEGACY(places): demo bill named by the old tableId only, no placeId — remove when every till and customer app is on /api/places and /api/stays.
     tableId: 2,
     locationName: _lt('Table 2', 'ترابيزة 2'),
     openedAt: _now.subtract(const Duration(minutes: 3)),

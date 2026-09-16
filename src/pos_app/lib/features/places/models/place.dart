@@ -103,7 +103,7 @@ class Place {
   final int roundingMinutes;
   final bool canReserve;
 
-  /// The id a printed table sticker carries; what an older bill names
+  /// LEGACY(places): the id a printed table sticker carries; what an older bill names — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
   final int? legacyTableId;
 
   Place({
@@ -142,6 +142,7 @@ class Place {
       options: _parseOptions(json['tariff']),
       roundingMinutes: _parseRounding(json['tariff']),
       canReserve: json['canReserve'] as bool? ?? true,
+      // LEGACY(places): legacy sticker id read off the place — remove when every till and customer app is on /api/places and /api/stays and the printed room/table stickers are reprinted with /p/{id}.
       legacyTableId: (json['legacyTableId'] as num?)?.toInt(),
     );
   }

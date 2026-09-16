@@ -98,6 +98,7 @@ class Order {
   final DateTime date;
   final OrderStatus status;
   final String? description;
+  // LEGACY(places): the old room name, still read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   final LocalizedText? roomName;
   final String? customerNote;
   final double total;
@@ -109,6 +110,7 @@ class Order {
 
   /// The room session or café table the order is for (a counter order has neither)
   final int? sessionId;
+  // LEGACY(places): the old table id and name, still read instead of placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   final int? tableId;
   final LocalizedText? tableName;
   final String? guestName;
@@ -147,6 +149,7 @@ class Order {
 
     // Handle both camelCase and PascalCase property names
     final orderItems = json['orderItems'] ?? json['OrderItems'];
+    // LEGACY(places): old roomName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
     final roomNameValue = json['roomName'] ?? json['RoomName'];
     final ratingJson = json['rating'] ?? json['Rating'];
     final ratingValueRaw = json['ratingValue'] ?? json['RatingValue'];
@@ -170,6 +173,7 @@ class Order {
       ratingValue: ratingValueRaw as int?,
       rating: ratingJson != null ? OrderRating.fromJson(ratingJson as Map<String, dynamic>) : null,
       sessionId: (json['sessionId'] ?? json['SessionId']) as int?,
+      // LEGACY(places): old tableId/tableName read instead of placeId/placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
       tableId: (json['tableId'] ?? json['TableId']) as int?,
       tableName: LocalizedText.parseNullable(json['tableName'] ?? json['TableName']),
       guestName: (json['guestName'] ?? json['GuestName']) as String?,

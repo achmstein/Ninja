@@ -26,7 +26,7 @@ class MoveToTable extends MoveTarget {
   /// The Spaces place
   final int placeId;
 
-  /// The id the table's printed sticker carries, when it has one
+  /// LEGACY(places): the id the table's printed sticker carries, when it has one; tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
   final int? tableId;
   final LocalizedText? tableName;
   const MoveToTable(this.placeId, this.tableId, this.tableName);
@@ -51,6 +51,7 @@ class MoveLinesRequest {
           MoveToTable(:final placeId, :final tableId, :final tableName) => {
               'type': TicketType.table.value,
               'placeId': placeId,
+              // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
               'tableId': tableId,
               'tableName': tableName?.toJson(),
             },

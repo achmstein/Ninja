@@ -22,10 +22,16 @@ public class Place : Entity, IAggregateRoot
     /// <summary>How time here is charged; null for a place that only receives orders.</summary>
     public Tariff? Tariff { get; private set; }
 
-    /// <summary>The id a printed room sticker carries (/room/{id}); null for places that were never rooms.</summary>
+    /// <summary>
+    /// LEGACY(places): the old room sticker id kept on the place — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The id a printed room sticker carries (/room/{id}); null for places that were never rooms.
+    /// </summary>
     public int? LegacyRoomId { get; private set; }
 
-    /// <summary>The id a printed table sticker carries (/table/{id}); null for places that were never tables.</summary>
+    /// <summary>
+    /// LEGACY(places): the old table sticker id kept on the place — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// The id a printed table sticker carries (/table/{id}); null for places that were never tables.
+    /// </summary>
     public int? LegacyTableId { get; private set; }
 
     // ---- capabilities: derived, never stored
@@ -105,7 +111,10 @@ public class Place : Entity, IAggregateRoot
 
     public bool IsPhysicallyAvailable() => PhysicalStatus == PlaceStatus.Available;
 
-    /// <summary>Remembered at migration time so printed stickers keep resolving.</summary>
+    /// <summary>
+    /// LEGACY(places): sets the old sticker ids — remove when the printed room/table stickers are reprinted with /p/{id}.
+    /// Remembered at migration time so printed stickers keep resolving.
+    /// </summary>
     public void RememberLegacyIds(int? roomId, int? tableId)
     {
         LegacyRoomId = roomId;

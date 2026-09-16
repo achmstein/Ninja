@@ -110,6 +110,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             // the order still has to land somewhere, so open the ticket now
             return sessionTicket ?? ticketRepository.Add(Ticket.OpenForSession(
                 sessionId,
+                // LEGACY(places): falls back to the old RoomId/RoomName from older publishers — remove when every till and customer app is on /api/places and /api/stays.
                 @event.PlaceId ?? @event.RoomId ?? 0,
                 @event.PlaceName ?? @event.RoomName ?? new LocalizedText("Room"),
                 @event.BranchId,
@@ -121,11 +122,13 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (@event.PlaceId is int placeId && !string.Equals(@event.PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
         {
             var placeTicket = await ticketRepository.FindOpenByPlaceAsync(placeId, @event.BranchId)
+                // LEGACY(places): falls back to a ticket an older till opened by TableId — remove when every till and customer app is on /api/places and /api/stays.
                 ?? (@event.TableId is int namedTable ? await ticketRepository.FindOpenByTableAsync(namedTable, @event.BranchId) : null);
 
             return placeTicket ?? ticketRepository.Add(Ticket.OpenForTable(@event.TableId, @event.PlaceName ?? @event.TableName, @event.BranchId, placeId));
         }
 
+        // LEGACY(places): the TableId-only route for orders from older publishers without a PlaceId — remove when every till and customer app is on /api/places and /api/stays.
         if (@event.TableId is int tableId)
         {
             var tableTicket = await ticketRepository.FindOpenByTableAsync(tableId, @event.BranchId);
@@ -138,6 +141,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         // above). Land it on the room's open ticket by name so it joins the
         // session's bill instead of opening a stray counter tab in the
         // customer's name.
+        // LEGACY(places): matches the room's open ticket by the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
         if (@event.SessionId is null && @event.TableId is null &&
             (@event.RoomId is not null || @event.RoomName is not null))
         {

@@ -10,6 +10,7 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// </summary>
 public record ReservationCancelledIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): the old RoomId/RoomName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string? CustomerId,

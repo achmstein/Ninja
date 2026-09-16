@@ -9,7 +9,7 @@ class OpenTicketRequest {
   /// The Spaces place of a table bill
   final int? placeId;
 
-  /// The id the table's printed sticker carries, for bills older tills opened
+  /// LEGACY(places): the id the table's printed sticker carries, for bills older tills opened; tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
   final int? tableId;
   final LocalizedText? tableName;
 
@@ -21,6 +21,7 @@ class OpenTicketRequest {
   Map<String, dynamic> toJson() => {
         'type': type.value,
         'placeId': placeId,
+        // LEGACY(places): tableId/tableName sent alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
         'tableId': tableId,
         'tableName': tableName?.toJson(),
         'label': label,

@@ -15,6 +15,7 @@ public record TicketSummary
     public int? PlaceId { get; init; }
     /// <summary>"Room", "Table" or "Station".</summary>
     public string? PlaceKind { get; init; }
+    // LEGACY(places): the old RoomId/TableId next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     public int? RoomId { get; init; }
     public int? TableId { get; init; }
 
@@ -59,6 +60,7 @@ public record TicketDetail
     public DateTime? SessionEndedAt { get; init; }
     public int? PlaceId { get; init; }
     public string? PlaceKind { get; init; }
+    // LEGACY(places): the old RoomId/TableId next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
     public int? RoomId { get; init; }
     public int? TableId { get; init; }
     /// <summary>What the bill is called: a counter tab's name, a room's session owner. Not a customer.</summary>

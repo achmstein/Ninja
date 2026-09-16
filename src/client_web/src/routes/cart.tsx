@@ -223,14 +223,16 @@ function CartPage() {
         guestName: guestContact?.name ?? null,
         guestPhone: guestContact?.phone ?? null,
         // Where the order goes: the place, and the customer's running clock
-        // there if any, so the server lands it on the right bill. The older
-        // room/table fields ride along for one release.
+        // there if any, so the server lands it on the right bill.
         placeId: destination?.placeId ?? null,
         placeKind: destination ? placeKindName(destination.placeKind) : null,
         placeName: destination
           ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
           : null,
         sessionId: destination?.sessionId ?? null,
+        // LEGACY(places): the older roomName/roomId/tableId/tableName fields
+        // ride along beside placeId/placeKind/placeName — remove when Ordering
+        // and Notification stop reading the old room/table fields.
         roomName:
           destination?.kind === 'stay' && destination.placeKind === PLACE_ROOM
             ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }

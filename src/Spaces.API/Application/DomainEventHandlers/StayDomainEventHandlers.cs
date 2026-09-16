@@ -20,6 +20,7 @@ internal static class StayEventFields
     public static string PlaceKind(this Stay stay) => (stay.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Room).ToString();
     public static LocalizedText PlaceName(this Stay stay) => stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}");
     public static int BranchId(this Stay stay) => stay.Place?.BranchId ?? 1;
+    // LEGACY(places): the old PlayerMode word ("Single"/"Multi") the events carry next to OptionCode — remove when every till and customer app is on /api/places and /api/stays.
     public static string? OptionWord(this Stay stay) => stay.CurrentOption?.Name.En;
 
     /// <summary>Everyone in the party, owner included, each once.</summary>
@@ -42,6 +43,7 @@ public class StayHeldDomainEventHandler(IEventBus eventBus, ILogger<StayHeldDoma
 
         await eventBus.PublishAsync(new RoomReservedIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             stay.PlaceName(),
             stay.CustomerId,
@@ -65,10 +67,12 @@ public class StayStartedDomainEventHandler(IEventBus eventBus, ILogger<StayStart
 
         await eventBus.PublishAsync(new SessionStartedIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             stay.PlaceName(),
             stay.CustomerId,
             stay.StartedAt,
+            // LEGACY(places): fills the old PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
             stay.OptionWord(),
             stay.BranchId(),
             stay.PlaceId,
@@ -87,11 +91,13 @@ public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDo
         logger.LogInformation("Stay ended: {StayId} at place {PlaceId}, cost {Cost}", stay.Id, stay.PlaceId, stay.TotalCost);
 
         // The party's devices drop their stay notification
+        // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
         await eventBus.PublishAsync(new SessionEndedIntegrationEvent(
             stay.Id, stay.PlaceId, stay.PlaceName(), stay.PartyIds(),
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
 
         // Whoever asked to be told the place is free
+        // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
         await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
             stay.PlaceId, stay.PlaceName(), stay.BranchId(),
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
@@ -107,11 +113,14 @@ public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDo
             await eventBus.PublishAsync(new SessionCompletedIntegrationEvent(
                 stay.Id,
                 stay.CustomerId,
+                // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
                 stay.PlaceId,
                 stay.PlaceName(),
+                // LEGACY(places): fills the old SingleCost/MultiCost from the options of those codes — remove when every till and customer app is on /api/places and /api/stays.
                 stay.CostFor(Tariff.SingleCode),
                 stay.CostFor(Tariff.MultiCode),
                 stay.TotalCost ?? 0,
+                // LEGACY(places): fills the old SingleDuration/MultiDuration from the options of those codes — remove when every till and customer app is on /api/places and /api/stays.
                 stay.HoursFor(Tariff.SingleCode),
                 stay.HoursFor(Tariff.MultiCode),
                 started,
@@ -136,6 +145,7 @@ public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCan
 
         await eventBus.PublishAsync(new ReservationCancelledIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             stay.PlaceName(),
             stay.CustomerId,
@@ -149,6 +159,7 @@ public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCan
         // A hold and a running stay both kept the place; either way it is free now
         if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
         {
+            // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
                 stay.PlaceId, stay.PlaceName(), stay.BranchId(),
                 stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
@@ -166,10 +177,12 @@ public class StayMemberJoinedDomainEventHandler(IEventBus eventBus, ILogger<Stay
 
         await eventBus.PublishAsync(new SessionMemberJoinedIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             stay.PlaceName(),
             notification.MemberUserId,
             stay.StartedAt,
+            // LEGACY(places): fills the old PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
             stay.OptionWord(),
             stay.PlaceId,
             stay.PlaceKind(),
@@ -188,6 +201,7 @@ public class StayCustomerAssignedDomainEventHandler(IEventBus eventBus, ILogger<
 
         await eventBus.PublishAsync(new SessionCustomerAssignedIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             notification.CustomerId,
             stay.CustomerName,
@@ -220,6 +234,7 @@ public static class PlaceEventMapping
         place.IsTimed,
         place.HasOptions,
         place.IsActive,
+        // LEGACY(places): projects the old sticker ids to other services — remove when the printed room/table stickers are reprinted with /p/{id}.
         place.LegacyRoomId,
         place.LegacyTableId,
         deleted);

@@ -26,6 +26,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Show notification natively from background
     try {
       await _nativeChannel.invokeMethod('show', {
+        // LEGACY(places): the push's older 'roomName' field, passed on the native channel's 'roomName' key — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
         'roomName': data['roomName'] ?? '',
         'duration': '00:00:00',
         'startTimeMs': int.tryParse(data['startTimeMs'] ?? ''),
@@ -40,6 +41,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     if (data['sessionId'] != null) {
       await prefs.setInt('active_session_id', int.parse(data['sessionId']));
     }
+    // LEGACY(places): the push's older roomId/roomName fields, stored under the native side's 'active_session_room_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
     if (data['roomId'] != null) {
       await prefs.setInt('active_session_room_id', int.parse(data['roomId']));
     }

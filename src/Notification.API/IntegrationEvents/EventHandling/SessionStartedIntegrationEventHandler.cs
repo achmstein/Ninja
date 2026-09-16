@@ -22,6 +22,7 @@ public class SessionStartedIntegrationEventHandler(
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
         {
             type = "session_started",
+            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
             roomId = @event.RoomId,
             placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
             placeKind = @event.PlaceKind,
@@ -34,6 +35,7 @@ public class SessionStartedIntegrationEventHandler(
             await hubContext.Clients.Group($"user:{@event.CustomerId}").SendAsync("RoomStatusChanged", new
             {
                 type = "session_started",
+                // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
                 roomId = @event.RoomId,
                 placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
                 placeKind = @event.PlaceKind,
@@ -78,6 +80,7 @@ public class SessionStartedIntegrationEventHandler(
                 { "roomNameAr", @event.RoomName.GetText("ar") ?? @event.RoomName.GetText("en") },
                 { "startTimeMs", startTimeMs },
                 { "locale", lang },
+                // LEGACY(places): the option's English name; the customer app will read an option code — remove when every till and customer app is on /api/places and /api/stays.
                 { "playerMode", @event.PlayerMode ?? "Single" }
             };
 

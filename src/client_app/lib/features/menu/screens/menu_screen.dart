@@ -777,6 +777,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
     int? placeId;
     String? placeKind;
     Map<String, dynamic>? placeName;
+    // LEGACY(places): the older roomName/roomId fields ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
     Map<String, dynamic>? roomName;
     int? sessionId;
     int? roomId;
@@ -790,6 +791,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
         placeKind = activeSession.placeKind.wireName;
         placeName = activeSession.placeName.toJson();
         sessionId = activeSession.id;
+        // LEGACY(places): fills the older room fields — remove when Ordering and Notification stop reading the old room/table fields.
         if (activeSession.placeKind == PlaceKind.room) {
           roomName = activeSession.placeName.toJson();
           roomId = activeSession.placeId;
@@ -805,6 +807,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
         placeId: placeId,
         placeKind: placeKind,
         placeName: placeName,
+        // LEGACY(places): the older roomName/roomId arguments — remove when Ordering and Notification stop reading the old room/table fields.
         roomName: roomName,
         sessionId: sessionId,
         roomId: roomId,

@@ -10,11 +10,14 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 public record SessionCompletedIntegrationEvent(
     int ReservationId,
     string? CustomerId,
+    // LEGACY(places): the old RoomId/RoomName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
+    // LEGACY(places): the old two-rate SingleCost/MultiCost, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
     decimal SingleCost,
     decimal MultiCost,
     decimal TotalCost,
+    // LEGACY(places): the old two-rate SingleDuration/MultiDuration, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
     decimal SingleDuration,
     decimal MultiDuration,
     DateTime StartTime,

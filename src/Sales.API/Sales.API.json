@@ -2803,6 +2803,15 @@
               "null",
               "string"
             ]
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2871,6 +2880,15 @@
               "null",
               "string"
             ]
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

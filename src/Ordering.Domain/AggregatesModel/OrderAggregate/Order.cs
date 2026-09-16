@@ -38,6 +38,7 @@ public class Order
     public OrderDestination Destination => new(PlaceId, PlaceKind, PlaceName, SessionId);
 
     /// <summary>
+    /// LEGACY(places): old room name column kept beside <see cref="PlaceName"/> for older clients and events — remove when every till and customer app is on /api/places and /api/stays.
     /// Room name for the session (e.g., "VIP", "Room 1") - localized
     /// </summary>
     public LocalizedText? RoomName { get; private set; }
@@ -50,6 +51,7 @@ public class Order
     public int? SessionId { get; private set; }
 
     /// <summary>
+    /// LEGACY(places): old room id column kept beside <see cref="PlaceId"/> for older clients and events — remove when every till and customer app is on /api/places and /api/stays.
     /// The room behind <see cref="SessionId"/>, captured so per-room queries
     /// don't need to resolve the session.
     /// </summary>
@@ -62,12 +64,14 @@ public class Order
     public OrderSource Source { get; private set; }
 
     /// <summary>
+    /// LEGACY(places): old table id column (the id a printed sticker carries) kept beside <see cref="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.
     /// The café table the order is delivered to, when the customer is not in a room.
     /// Kept as an id as well as a name so open orders can be counted per table.
     /// </summary>
     public int? TableId { get; private set; }
 
     /// <summary>
+    /// LEGACY(places): old table name column kept beside <see cref="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.
     /// Table name captured at order time (e.g., "Table 3") - localized
     /// </summary>
     public LocalizedText? TableName { get; private set; }
@@ -108,6 +112,7 @@ public class Order
     /// Whether the order says where it is going. A running room session wins
     /// over a scanned table on the way in, so at most one of the two is set.
     /// </summary>
+    // LEGACY(places): the RoomName/TableId fallbacks answer for an order that only carries the old fields — remove when every till and customer app is on /api/places and /api/stays.
     public bool HasDestination => PlaceId.HasValue || RoomName is not null || TableId.HasValue;
 
     /// <summary>
@@ -228,8 +233,9 @@ public class Order
         TableName = tableName;
         TicketId = ticketId;
 
-        // The place and the older room/table fields are filled from each
-        // other, so a client on either vocabulary lands the same order.
+        // LEGACY(places): the place and the older room/table fields are filled from each
+        // other, so a client on either vocabulary lands the same order — remove when
+        // every till and customer app is on /api/places and /api/stays.
         // Each name is its own copy: the names are owned JSON columns, and EF
         // refuses one LocalizedText instance hanging off two of them.
         if (placeId is not null)
@@ -247,6 +253,7 @@ public class Order
                 TableName ??= Copy(PlaceName);
             }
         }
+        // LEGACY(places): an order named only by the old room or table fields — remove when every till and customer app is on /api/places and /api/stays.
         else if (roomName is not null || roomId is not null)
         {
             // Rooms kept their ids in the Places remodel

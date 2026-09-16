@@ -11,8 +11,10 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// </summary>
 public record SessionMemberJoinedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): the old RoomId/RoomName, the same values as the place id and name — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     LocalizedText RoomName,
     string MemberUserId,
     DateTime? ActualStartTime = null,
+    // LEGACY(places): the old "Single"/"Multi" word — remove when every till and customer app is on /api/places and /api/stays.
     string? PlayerMode = null) : IntegrationEvent;

@@ -47,6 +47,7 @@ public class TicketSettledIntegrationEventHandler(
             .ToList();
         await eventBus.PublishAsync(new SessionPaidIntegrationEvent(
             stay.Id,
+            // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
             members,
             @event.ReceiptNumber,

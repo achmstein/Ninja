@@ -10,6 +10,7 @@ class TicketSummary {
 
   /// The Spaces place the bill is for; null on a counter sale
   final int? placeId;
+  // LEGACY(places): the old room/table ids a bill opened before the remodel names, next to placeId — remove when every till and customer app is on /api/places and /api/stays.
   final int? roomId;
   final int? tableId;
   final LocalizedText? locationName;
@@ -45,6 +46,7 @@ class TicketSummary {
       type: TicketType.fromName(json['type'] as String?),
       sessionId: json['sessionId'] == null ? null : toInt(json['sessionId']),
       placeId: json['placeId'] == null ? null : toInt(json['placeId']),
+      // LEGACY(places): old roomId/tableId read next to placeId — remove when every till and customer app is on /api/places and /api/stays.
       roomId: json['roomId'] == null ? null : toInt(json['roomId']),
       tableId: json['tableId'] == null ? null : toInt(json['tableId']),
       locationName: LocalizedText.parseNullable(json['locationName']),

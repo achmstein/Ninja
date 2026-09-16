@@ -27,6 +27,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             type = "service_request",
             requestId = @event.RequestId,
             requestType = @event.RequestType.ToString(),
+            // LEGACY(places): roomId/tableId beside placeId/placeKind — remove when every till and customer app is on /api/places and /api/stays.
             roomId = @event.RoomId,
             tableId = @event.TableId,
             placeId = @event.PlaceId,
@@ -66,6 +67,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
                     { "type", "service_request" },
                     { "requestId", @event.RequestId.ToString() },
                     { "requestType", @event.RequestType.ToString() },
+                    // LEGACY(places): roomId/roomName beside placeId/placeKind, and the RoomId/TableId fallbacks for a request without a place — remove when every till and customer app is on /api/places and /api/stays.
                     { "roomId", @event.RoomId.ToString() },
                     { "roomName", @event.RoomName.GetText(lang) },
                     { "placeId", (@event.PlaceId ?? @event.RoomId).ToString() },
@@ -110,6 +112,7 @@ public class ServiceRequestCreatedIntegrationEventHandler(
             ServiceRequestType.ReceiptToPay => (
                 NotificationMessages.BillRequestedTitle.GetText(lang),
                 NotificationMessages.BillRequestedBody(@event.RoomName, @event.UserName).GetText(lang)),
+            // LEGACY(places): the SwitchToMulti/SwitchToSingle arms duplicate the ChangeOption("multi"/"single") ones below — remove when every till and customer app is on /api/places and /api/stays.
             ServiceRequestType.SwitchToMulti => (
                 NotificationMessages.SwitchToMultiTitle.GetText(lang),
                 NotificationMessages.SwitchToMultiBody(@event.RoomName, @event.UserName).GetText(lang)),

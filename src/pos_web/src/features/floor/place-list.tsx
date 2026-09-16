@@ -68,7 +68,7 @@ export function hasBill(
   return tickets.some(
     (ticket) =>
       toNumber(ticket.placeId) === id ||
-      // Bills opened before the remodel name the room by its id
+      // LEGACY(places): bills opened before the remodel name the room by its old roomId — remove when every till and customer app is on /api/places and /api/stays.
       (Number(place.kind ?? PLACE_ROOM) === PLACE_ROOM &&
         toNumber(ticket.roomId) === id),
   )

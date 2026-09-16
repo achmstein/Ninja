@@ -56,6 +56,7 @@ export function OrderDetailDialog({
   })
 
   const loyaltyDiscount = toNumber(order?.loyaltyDiscount)
+  // LEGACY(places): old roomName/tableName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
   const place = localized(order?.roomName) || localized(order?.tableName)
   const who = order?.guestName || null
 

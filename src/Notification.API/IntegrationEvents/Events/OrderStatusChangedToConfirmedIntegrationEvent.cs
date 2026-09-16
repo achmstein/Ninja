@@ -9,6 +9,7 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     public OrderStatus OrderStatus { get; }
     public string BuyerName { get; }
     public string BuyerIdentityGuid { get; }
+    // LEGACY(places): old room name from Ordering's event; the copy does not read PlaceName — remove when every till and customer app is on /api/places and /api/stays.
     public LocalizedText? RoomName { get; }
     public decimal OrderTotal { get; }
     public int PointsToRedeem { get; }

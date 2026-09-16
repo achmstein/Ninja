@@ -62,5 +62,6 @@ final orderDetailsProvider = FutureProvider.autoDispose.family<Order, int>((ref,
 /// never match — nothing orders into them from an app.
 List<Order> pendingForTicket(List<Order> pending, {int? sessionId, int? tableId}) => [
       for (final order in pending)
+        // LEGACY(places): a table order is matched to its bill by the old tableId, not placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
         if ((sessionId != null && order.sessionId == sessionId) || (tableId != null && order.tableId == tableId)) order,
     ];

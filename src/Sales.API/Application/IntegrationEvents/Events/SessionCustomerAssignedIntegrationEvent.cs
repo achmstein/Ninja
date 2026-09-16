@@ -10,6 +10,7 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// </summary>
 public record SessionCustomerAssignedIntegrationEvent(
     int ReservationId,
+    // LEGACY(places): the old RoomId, the same value as the place id — remove when every till and customer app is on /api/places and /api/stays.
     int RoomId,
     string CustomerId,
     string? CustomerName = null,
