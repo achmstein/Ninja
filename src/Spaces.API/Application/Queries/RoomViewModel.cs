@@ -155,6 +155,7 @@ public static class LegacyMapping
     public static TableViewModel ToTable(this PlaceViewModel place) => new()
     {
         Id = place.LegacyTableId ?? place.Id,
+        PlaceId = place.Id,
         Name = place.Name,
         BranchId = place.BranchId,
         IsActive = place.IsActive,

@@ -1,68 +1,74 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
-import { type RoomViewModel } from '@/api/spaces'
-import { listRoomsOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { type PlaceViewModel } from '@/api/spaces'
+import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
-import { useActiveSession, useMyReservation } from '@/lib/session'
+import { PLACE_AVAILABLE } from '@/lib/places'
+import { useActiveStay, useMyHold } from '@/lib/session'
 import { useT } from '@/lib/i18n'
 import { useProfileGate } from '@/components/profile-gate'
-import { ActiveSessionView } from '@/components/rooms/active-session'
+import { ActiveStayView } from '@/components/rooms/active-session'
 import { NotifyBanner } from '@/components/rooms/notify-banner'
 import { ReserveSheet } from '@/components/rooms/reserve-sheet'
 import { ReservedBanner } from '@/components/rooms/reserved-banner'
-import {
-  RoomRow,
-  RoomRowSkeleton,
-  ROOM_AVAILABLE,
-} from '@/components/rooms/room-row'
+import { PlaceRow, PlaceRowSkeleton } from '@/components/rooms/room-row'
 import { SignInSheet } from '@/components/sign-in-options'
 
 export const Route = createFileRoute('/rooms')({
-  component: RoomsPage,
+  component: PlacesPage,
 })
 
-function RoomsPage() {
+/**
+ * The timed places of the branch — the PlayStation rooms and any table or
+ * station with a clock — and the customer's own place in them: the list to
+ * pick from, the hold while they walk over, the running clock once the
+ * counter starts it. The whole tab changes with that state, so its name
+ * never promises something already done.
+ */
+function PlacesPage() {
   const t = useT()
   const auth = useAuth()
   const branch = useSelectedBranch()
-  const activeSession = useActiveSession()
-  const reservation = useMyReservation()
+  const activeStay = useActiveStay()
+  const hold = useMyHold()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
-  const [reserveRoom, setReserveRoom] = useState<RoomViewModel | null>(null)
+  const [reservePlace, setReservePlace] = useState<PlaceViewModel | null>(null)
   const [signInOpen, setSignInOpen] = useState(false)
 
-  // Live RoomStatusChanged updates + 30s fallback poll (mobile parity)
+  // Live RoomStatusChanged updates + 30s fallback poll (app parity)
   useRoomsGroup()
-  const { data: rooms = [], isLoading } = useQuery({
-    ...listRoomsOptions(),
+  const { data: places = [], isLoading } = useQuery({
+    ...listPlacesOptions({ query: { timed: true } }),
     refetchInterval: 30_000,
+    // A place taken out of service is not on the customer's list
+    select: (list) => list.filter((p) => p.isActive !== false),
   })
 
-  // While playing, the whole tab is the session view (mobile parity)
-  if (activeSession) {
-    return <ActiveSessionView session={activeSession} />
+  // While the clock runs, the whole tab is the stay view (app parity)
+  if (activeStay) {
+    return <ActiveStayView stay={activeStay} />
   }
 
   const reservationsEnabled = branch?.isReservationsEnabled ?? true
-  const canReserve = auth.isAuthenticated && !reservation && reservationsEnabled
+  const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
   const allBusy =
-    rooms.length > 0 &&
-    rooms.every((room) => Number(room.displayStatus) !== ROOM_AVAILABLE)
+    places.length > 0 &&
+    places.every((p) => Number(p.status) !== PLACE_AVAILABLE)
 
-  const handleReserve = async (room: RoomViewModel) => {
+  const handleReserve = async (place: PlaceViewModel) => {
     if (!auth.isAuthenticated) {
       setSignInOpen(true)
       return
     }
-    // One reservation at a time (mobile parity; the backend enforces it too)
-    if (reservation || activeSession) return
+    // One hold at a time (app parity; the backend enforces it too)
+    if (hold || activeStay) return
     if (!(await ensureProfileComplete())) return
-    setReserveRoom(room)
+    setReservePlace(place)
   }
 
   return (
@@ -76,21 +82,21 @@ function RoomsPage() {
         </div>
       )}
 
-      {reservation && <ReservedBanner session={reservation} />}
-      {allBusy && !reservation && auth.isAuthenticated && <NotifyBanner />}
+      {hold && <ReservedBanner stay={hold} />}
+      {allBusy && !hold && auth.isAuthenticated && <NotifyBanner />}
 
       {isLoading ? (
         <div className='flex flex-col'>
           {[...Array(4)].map((_, i) => (
-            <RoomRowSkeleton key={i} />
+            <PlaceRowSkeleton key={i} />
           ))}
         </div>
       ) : (
         <div className='md:grid md:grid-cols-2 md:gap-x-10'>
-          {rooms.map((room) => (
-            <RoomRow
-              key={String(room.id)}
-              room={room}
+          {places.map((place) => (
+            <PlaceRow
+              key={String(place.id)}
+              place={place}
               canReserve={canReserve}
               onReserve={handleReserve}
             />
@@ -99,9 +105,9 @@ function RoomsPage() {
       )}
 
       <ReserveSheet
-        room={reserveRoom}
+        place={reservePlace}
         onOpenChange={(open) => {
-          if (!open) setReserveRoom(null)
+          if (!open) setReservePlace(null)
         }}
       />
       {profileGateDialog}

@@ -20,6 +20,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
 import { Route as OrdersIndexRouteImport } from './routes/orders/index'
+import { Route as PPlaceIdRouteImport } from './routes/p/$placeId'
 import { Route as ReceiptsTicketIdRouteImport } from './routes/receipts/$ticketId'
 import { Route as RoomRoomIdRouteImport } from './routes/room/$roomId'
 import { Route as TableTableIdRouteImport } from './routes/table/$tableId'
@@ -79,6 +80,11 @@ const OrdersIndexRoute = OrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PPlaceIdRoute = PPlaceIdRouteImport.update({
+  id: '/p/$placeId',
+  path: '/p/$placeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReceiptsTicketIdRoute = ReceiptsTicketIdRouteImport.update({
   id: '/receipts/$ticketId',
   path: '/receipts/$ticketId',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/p/$placeId': typeof PPlaceIdRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
   '/table/$tableId': typeof TableTableIdRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/p/$placeId': typeof PPlaceIdRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
   '/table/$tableId': typeof TableTableIdRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/p/$placeId': typeof PPlaceIdRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
   '/room/$roomId': typeof RoomRoomIdRoute
   '/table/$tableId': typeof TableTableIdRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/p/$placeId'
     | '/receipts/$ticketId'
     | '/room/$roomId'
     | '/table/$tableId'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/p/$placeId'
     | '/receipts/$ticketId'
     | '/room/$roomId'
     | '/table/$tableId'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/p/$placeId'
     | '/receipts/$ticketId'
     | '/room/$roomId'
     | '/table/$tableId'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
+  PPlaceIdRoute: typeof PPlaceIdRoute
   ReceiptsTicketIdRoute: typeof ReceiptsTicketIdRoute
   RoomRoomIdRoute: typeof RoomRoomIdRoute
   TableTableIdRoute: typeof TableTableIdRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$placeId': {
+      id: '/p/$placeId'
+      path: '/p/$placeId'
+      fullPath: '/p/$placeId'
+      preLoaderRoute: typeof PPlaceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/receipts/$ticketId': {
       id: '/receipts/$ticketId'
       path: '/receipts/$ticketId'
@@ -326,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
+  PPlaceIdRoute: PPlaceIdRoute,
   ReceiptsTicketIdRoute: ReceiptsTicketIdRoute,
   RoomRoomIdRoute: RoomRoomIdRoute,
   TableTableIdRoute: TableTableIdRoute,

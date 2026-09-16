@@ -4906,6 +4906,14 @@
             ],
             "format": "int32"
           },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "name": {
             "$ref": "#/components/schemas/LocalizedText"
           },

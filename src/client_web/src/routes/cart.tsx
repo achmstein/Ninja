@@ -4,10 +4,8 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import {
   ArrowLeft,
-  Armchair,
   Award,
   Coffee,
-  Gamepad2,
   Loader2,
   LogIn,
   Minus,
@@ -45,6 +43,7 @@ import { useGuestGate } from '@/components/guest-gate'
 import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useOrderDestination } from '@/lib/order-destination'
+import { PLACE_ROOM, PLACE_TABLE, PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
 import { useTableStore } from '@/stores/table-store'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -109,7 +108,7 @@ function CartPage() {
   // Mobile parity: at most 100 points per EGP of the order total
   const maxRedeemable = Math.min(
     pointsBalance,
-    Math.floor(subtotal * POINTS_PER_EGP)
+    Math.floor(subtotal * POINTS_PER_EGP),
   )
 
   const effectivePoints = redeemEnabled ? pointsToRedeem : 0
@@ -155,7 +154,7 @@ function CartPage() {
       // Preferences hang off an account, so there is nothing to save for a guest.
       const customized = auth.isAuthenticated
         ? lines.filter(
-            (line) => !line.bundleId && line.customizations.length > 0
+            (line) => !line.bundleId && line.customizations.length > 0,
           )
         : []
       if (customized.length > 0) {
@@ -208,13 +207,10 @@ function CartPage() {
       // Moving between a table and a room makes it a different order, not a
       // retry of the previous one
       destination: destination
-        ? [destination.kind, destination.kind === 'table' ? destination.id : 0]
+        ? [destination.kind, destination.placeId, destination.sessionId ?? 0]
         : null,
     })
-    if (
-      !requestIdRef.current ||
-      requestIdRef.current.signature !== signature
-    ) {
+    if (!requestIdRef.current || requestIdRef.current.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
     }
 
@@ -226,24 +222,27 @@ function CartPage() {
         userName: profile?.name || profile?.preferred_username || '',
         guestName: guestContact?.name ?? null,
         guestPhone: guestContact?.phone ?? null,
-        // Deliver to the customer's running room session, if any. The ids
-        // let the server group the session's orders into one bill.
+        // Where the order goes: the place, and the customer's running clock
+        // there if any, so the server lands it on the right bill. The older
+        // room/table fields ride along for one release.
+        placeId: destination?.placeId ?? null,
+        placeKind: destination ? placeKindName(destination.placeKind) : null,
+        placeName: destination
+          ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
+          : null,
+        sessionId: destination?.sessionId ?? null,
         roomName:
-          destination?.kind === 'room'
-            ? {
-                en: destination.name.en ?? '',
-                ar: destination.name.ar ?? null,
-              }
+          destination?.kind === 'stay' && destination.placeKind === PLACE_ROOM
+            ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
             : null,
-        sessionId: destination?.kind === 'room' ? destination.sessionId : null,
-        roomId: destination?.kind === 'room' ? destination.roomId : null,
-        tableId: destination?.kind === 'table' ? destination.id : null,
+        roomId:
+          destination?.kind === 'stay' && destination.placeKind === PLACE_ROOM
+            ? destination.placeId
+            : null,
+        tableId: null,
         tableName:
-          destination?.kind === 'table'
-            ? {
-                en: destination.name.en ?? '',
-                ar: destination.name.ar ?? null,
-              }
+          destination?.placeKind === PLACE_TABLE
+            ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
             : null,
         customerNote: note.trim() || null,
         // Loyalty needs an account to redeem against; the server rejects a
@@ -373,7 +372,7 @@ function CartPage() {
             .map((c) =>
               language === 'ar' && c.optionNameAr
                 ? c.optionNameAr
-                : c.optionNameEn
+                : c.optionNameEn,
             )
             .join(' · ')
           return (
@@ -459,17 +458,12 @@ function CartPage() {
       {/* One flat summary section (bordered card only on desktop); mt-auto
           sinks it to the bottom on mobile, mirroring the app's spaceBetween */}
       <div className='mt-auto flex flex-col gap-4 md:mt-0 md:rounded-xl md:border md:p-4 md:pt-4'>
-        {destination?.kind === 'room' ? (
+        {destination && (
           <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-            <Gamepad2 className='h-4 w-4' />
+            <PlaceIcon kind={destination.placeKind} className='h-4 w-4' />
             {localized(destination.name)}
           </div>
-        ) : destination ? (
-          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-            <Armchair className='h-4 w-4' />
-            {localized(destination.name)}
-          </div>
-        ) : null}
+        )}
 
         <Textarea
           rows={2}
@@ -490,7 +484,7 @@ function CartPage() {
                 onCheckedChange={(checked) => {
                   setRedeemEnabled(checked)
                   setPointsToRedeem(
-                    checked ? Math.min(POINTS_STEP, maxRedeemable) : 0
+                    checked ? Math.min(POINTS_STEP, maxRedeemable) : 0,
                   )
                 }}
               />

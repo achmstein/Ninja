@@ -106,11 +106,13 @@ export function useHub() {
       }
     }
     const onRoom = () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getPlace' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'scanPlace' }] })
       queryClient.invalidateQueries({
-        queryKey: [{ _id: 'getAvailableRooms' }],
+        queryKey: [{ _id: 'getAvailablePlaces' }],
       })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getMySessions' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
     }
     const onBranchSettings = () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })

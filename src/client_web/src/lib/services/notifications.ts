@@ -11,9 +11,7 @@ const BASE = '/api/notifications'
 // --- Push subscriptions -----------------------------------------------------
 
 export type SubscriptionKind =
-  | 'user-orders'
-  | 'user-sessions'
-  | 'room-availability'
+  'user-orders' | 'user-sessions' | 'room-availability'
 
 export type SubscriptionStatus = {
   id?: number
@@ -26,7 +24,7 @@ export async function subscribe(
   kind: SubscriptionKind,
   fcmToken: string,
   preferredLanguage: string,
-  branchId?: number
+  branchId?: number,
 ): Promise<boolean> {
   try {
     await apiClient.post(`${BASE}/subscriptions/${kind}`, {
@@ -53,7 +51,7 @@ export async function unsubscribe(kind: SubscriptionKind): Promise<boolean> {
 export async function getRoomAvailabilitySubscription(): Promise<SubscriptionStatus> {
   try {
     const response = await apiClient.get<SubscriptionStatus>(
-      `${BASE}/subscriptions/room-availability`
+      `${BASE}/subscriptions/room-availability`,
     )
     return response.data
   } catch {
@@ -70,7 +68,7 @@ export type NotificationPreferences = {
 
 export async function getNotificationPreferences(): Promise<NotificationPreferences> {
   const response = await apiClient.get<NotificationPreferences>(
-    `${BASE}/preferences`
+    `${BASE}/preferences`,
   )
   return {
     orderStatusUpdates: response.data.orderStatusUpdates ?? true,
@@ -79,7 +77,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
 }
 
 export async function updateNotificationPreferences(
-  preferences: NotificationPreferences
+  preferences: NotificationPreferences,
 ): Promise<void> {
   await apiClient.put(`${BASE}/preferences`, preferences)
 }
@@ -92,20 +90,26 @@ export const SERVICE_REQUEST = {
   receiptToPay: 3,
   switchToMulti: 4,
   switchToSingle: 5,
+  /** Switch the stay to another rate option; the option travels in optionCode */
+  changeOption: 6,
 } as const
 
 export type ServiceRequestType =
   (typeof SERVICE_REQUEST)[keyof typeof SERVICE_REQUEST]
 
-/** From a room session, or from a table (waiter or bill only). A guest at a
- *  table is known by the guest id header the api client already sends. */
+/** From a place: the customer's running stay, or a table they scanned. The
+ *  server allows the request by what the place can do. A guest at a table is
+ *  known by the guest id header the api client already sends. */
 export async function createServiceRequest(request: {
   requestType: ServiceRequestType
-  sessionId?: number
-  roomId?: number
-  roomName?: LocalizedText
-  tableId?: number
-  tableName?: LocalizedText
+  placeId: number
+  /** "Room", "Table" or "Station" */
+  placeKind: string
+  placeName: LocalizedText
+  /** The running stay, when the request comes from one */
+  sessionId?: number | null
+  /** The rate option wanted, for a changeOption request */
+  optionCode?: string
 }): Promise<void> {
   await apiClient.post(`${BASE}/service-requests`, request)
 }

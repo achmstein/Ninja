@@ -1,26 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { getMySessionsOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { getMyStaysOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { STAY_HELD, STAY_RUNNING } from '@/lib/places'
 
-export const SESSION_RESERVED = 1
-export const SESSION_ACTIVE = 2
+export { STAY_HELD, STAY_RUNNING } from '@/lib/places'
 
-export function useMySessions() {
+/** The customer's stays, newest first: holds, running clocks, history. */
+export function useMyStays() {
   const auth = useAuth()
   return useQuery({
-    ...getMySessionsOptions(),
+    ...getMyStaysOptions(),
     enabled: auth.isAuthenticated,
   })
 }
 
-/** The customer's currently running room session, if any */
-export function useActiveSession() {
-  const { data: sessions = [] } = useMySessions()
-  return sessions.find((s) => Number(s.status) === SESSION_ACTIVE)
+/** The customer's running stay, if any: a clock is ticking somewhere for them */
+export function useActiveStay() {
+  const { data: stays = [] } = useMyStays()
+  return stays.find((s) => Number(s.status) === STAY_RUNNING)
 }
 
-/** The customer's pending reservation, if any */
-export function useMyReservation() {
-  const { data: sessions = [] } = useMySessions()
-  return sessions.find((s) => Number(s.status) === SESSION_RESERVED)
+/** The customer's pending hold, if any */
+export function useMyHold() {
+  const { data: stays = [] } = useMyStays()
+  return stays.find((s) => Number(s.status) === STAY_HELD)
 }

@@ -1,9 +1,8 @@
-﻿import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
+import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronDown, MapPin } from 'lucide-react'
 import { toast } from '@/lib/toast'
-import { getMySessionsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useBranches } from '@/lib/branch'
+import { useActiveStay } from '@/lib/session'
 import { useBranchStore } from '@/stores/branch-store'
 import { useTableStore } from '@/stores/table-store'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -17,21 +16,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-const SESSION_ACTIVE = 2
-
 export function BranchSwitcher() {
   const t = useT()
   const localized = useLocalized()
-  const auth = useAuth()
   const queryClient = useQueryClient()
   const { branchId, setBranchId } = useBranchStore()
   const clearTable = useTableStore((s) => s.clearTable)
 
   const { data: branches = [] } = useBranches()
-  const { data: mySessions = [] } = useQuery({
-    ...getMySessionsOptions(),
-    enabled: auth.isAuthenticated,
-  })
+  const activeStay = useActiveStay()
 
   // Single-branch setups don't need a switcher
   if (branches.length < 2) return null
@@ -40,11 +33,8 @@ export function BranchSwitcher() {
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
-    // Same rule as mobile: no switching while a session is running
-    const hasActiveSession = mySessions.some(
-      (s) => Number(s.status) === SESSION_ACTIVE
-    )
-    if (hasActiveSession) {
+    // Same rule as mobile: no switching while a clock is running
+    if (activeStay) {
       toast.error(t('cannotSwitchBranchDuringSession'))
       return
     }
@@ -80,7 +70,7 @@ export function BranchSwitcher() {
               size={14}
               className={cn(
                 'ms-auto',
-                Number(branch.id) !== branchId && 'hidden'
+                Number(branch.id) !== branchId && 'hidden',
               )}
             />
           </DropdownMenuItem>

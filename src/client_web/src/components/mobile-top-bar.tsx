@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { Armchair, Bell, Gamepad2, Receipt, X } from 'lucide-react'
+import { Bell, Receipt, X } from 'lucide-react'
 import {
   createServiceRequest,
   SERVICE_REQUEST,
@@ -14,18 +14,20 @@ import {
 } from '@/components/ui/popover'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
+import { PlaceIcon, placeKindName } from '@/lib/places'
 import { useTableStore } from '@/stores/table-store'
 import { BranchSwitcher } from './branch-switcher'
 
 const tabPaths = ['/', '/rooms', '/orders', '/profile']
 
-/** Scanning a table code drops the customer straight on the menu, so this is
- *  the standing reminder of where their order is going - and the way out of a
- *  table if they moved or scanned the wrong sticker.
+/** Scanning a place's code drops the customer straight on the menu, so this
+ *  is the standing reminder of where their order is going - and the way out
+ *  of a table if they moved or scanned the wrong sticker.
  *
- *  It follows the same rule checkout does, so joining a room switches it to the
- *  room rather than leaving a stale table on screen. A room is not clearable
- *  here: you leave it by ending the session, not by dismissing a chip. */
+ *  It follows the same rule checkout does, so a clock starting for them
+ *  switches it to that place rather than leaving a stale table on screen. A
+ *  running clock is not clearable here: you leave it by the counter ending
+ *  it, not by dismissing a chip. */
 function DestinationChip() {
   const localized = useLocalized()
   const destination = useOrderDestination()
@@ -36,7 +38,8 @@ function DestinationChip() {
   if (destination.kind === 'table') {
     return (
       <TableChip
-        tableId={destination.id}
+        placeId={destination.placeId}
+        placeKind={destination.placeKind}
         name={localized(destination.name)}
         onLeave={clearTable}
       />
@@ -45,7 +48,10 @@ function DestinationChip() {
 
   return (
     <span className='bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium'>
-      <Gamepad2 className='h-3.5 w-3.5 shrink-0' />
+      <PlaceIcon
+        kind={destination.placeKind}
+        className='h-3.5 w-3.5 shrink-0'
+      />
       <span className='max-w-20 truncate'>{localized(destination.name)}</span>
     </span>
   )
@@ -57,11 +63,13 @@ const REQUEST_COOLDOWN_MS = 60_000
  *  Same cooldown as the room's quick actions, so a nervous tap does not
  *  ring the till twice. */
 function TableChip({
-  tableId,
+  placeId,
+  placeKind,
   name,
   onLeave,
 }: {
-  tableId: number
+  placeId: number
+  placeKind: number
   name: string
   onLeave: () => void
 }) {
@@ -69,12 +77,12 @@ function TableChip({
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState<ServiceRequestType | null>(null)
   const [cooldownUntil, setCooldownUntil] = useState<Map<number, number>>(
-    () => new Map()
+    () => new Map(),
   )
 
   const send = async (
     type: ServiceRequestType,
-    successKey: 'waiterNotified' | 'billRequestSent'
+    successKey: 'waiterNotified' | 'billRequestSent',
   ) => {
     if ((cooldownUntil.get(type) ?? 0) > Date.now()) {
       toast.info(t('pleaseWaitBeforeRequest'))
@@ -84,10 +92,13 @@ function TableChip({
     try {
       await createServiceRequest({
         requestType: type,
-        tableId,
-        tableName: { en: name, ar: name },
+        placeId,
+        placeKind: placeKindName(placeKind),
+        placeName: { en: name, ar: name },
       })
-      setCooldownUntil((map) => new Map(map).set(type, Date.now() + REQUEST_COOLDOWN_MS))
+      setCooldownUntil((map) =>
+        new Map(map).set(type, Date.now() + REQUEST_COOLDOWN_MS),
+      )
       toast.success(t(successKey))
       setOpen(false)
     } catch {
@@ -97,7 +108,8 @@ function TableChip({
     }
   }
 
-  const item = 'flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent disabled:opacity-50'
+  const item =
+    'flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent disabled:opacity-50'
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -106,7 +118,7 @@ function TableChip({
           type='button'
           className='bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium'
         >
-          <Armchair className='h-3.5 w-3.5 shrink-0' />
+          <PlaceIcon kind={placeKind} className='h-3.5 w-3.5 shrink-0' />
           <span className='max-w-20 truncate'>{name}</span>
         </button>
       </PopoverTrigger>

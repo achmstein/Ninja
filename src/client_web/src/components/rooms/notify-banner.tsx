@@ -39,7 +39,7 @@ export function NotifyBanner() {
           token != null &&
           (await subscribe('room-availability', token, language, branchId))
         toast[ok ? 'success' : 'error'](
-          ok ? t('youWillBeNotified') : t('failedToSubscribe')
+          ok ? t('youWillBeNotified') : t('failedToSubscribe'),
         )
       } else {
         await unsubscribe('room-availability')

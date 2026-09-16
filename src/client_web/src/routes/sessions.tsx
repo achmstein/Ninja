@@ -2,21 +2,11 @@ import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Clock, Gamepad2, Timer, Users } from 'lucide-react'
-import {
-  type ReservationViewModel,
-  type SessionSegmentViewModel,
-} from '@/api/spaces'
-import {
-  dayStartHour,
-  isOvernightShift,
-  useSelectedBranch,
-} from '@/lib/branch'
+import { type StayViewModel, type StaySegmentViewModel } from '@/api/spaces'
+import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
 import { businessDayStart } from '@/lib/business-day'
-import {
-  SESSION_ACTIVE,
-  SESSION_RESERVED,
-  useMySessions,
-} from '@/lib/session'
+import { hasOptions, optionColor, PlaceIcon } from '@/lib/places'
+import { STAY_HELD, STAY_RUNNING, useMyStays } from '@/lib/session'
 import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Badge } from '@/components/ui/badge'
@@ -39,21 +29,21 @@ export const Route = createFileRoute('/sessions')({
   ),
 })
 
-const statusMeta: Record<
-  number,
-  { key: TranslationKey; className: string }
-> = {
-  [SESSION_RESERVED]: {
+const statusMeta: Record<number, { key: TranslationKey; className: string }> = {
+  [STAY_HELD]: {
     key: 'statusReserved',
     className:
       'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
   },
-  [SESSION_ACTIVE]: {
+  [STAY_RUNNING]: {
     key: 'statusActive',
     className:
       'border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
   },
-  3: { key: 'statusCompleted', className: 'border-transparent bg-muted text-muted-foreground' },
+  3: {
+    key: 'statusCompleted',
+    className: 'border-transparent bg-muted text-muted-foreground',
+  },
   4: {
     key: 'statusCancelled',
     className:
@@ -61,9 +51,9 @@ const statusMeta: Record<
   },
 }
 
-/** When the session's clock started: the real start, or the booking for one never started */
-function startOf(session: ReservationViewModel): Date | null {
-  const raw = session.actualStartTime ?? session.createdAt
+/** When the stay's clock started: the real start, or the hold for one never started */
+function startOf(session: StayViewModel): Date | null {
+  const raw = session.startedAt ?? session.createdAt
   return raw ? new Date(raw) : null
 }
 
@@ -81,7 +71,7 @@ function useNow(on: boolean): number {
 function SessionsPage() {
   const t = useT()
   const branch = useSelectedBranch()
-  const { data: sessions = [], isLoading } = useMySessions()
+  const { data: sessions = [], isLoading } = useMyStays()
 
   const dayStart = businessDayStart(branch).getTime()
   const todaySessions = sessions.filter((s) => {
@@ -133,7 +123,7 @@ function SessionList({
   emptyTitle,
   grouped = false,
 }: {
-  sessions: ReservationViewModel[]
+  sessions: StayViewModel[]
   isLoading: boolean
   emptyTitle: string
   /** History: one heading per shift day (Today, Yesterday, a date), like the app */
@@ -194,7 +184,7 @@ function SessionList({
     })
   }
 
-  const groups: Array<{ label: string; sessions: ReservationViewModel[] }> = []
+  const groups: Array<{ label: string; sessions: StayViewModel[] }> = []
   for (const session of sessions) {
     const start = startOf(session)
     const label = start ? labelFor(shiftDay(start)) : ''
@@ -221,46 +211,52 @@ function SessionList({
   )
 }
 
-// ── Session tile (mobile parity): room + status, time + live duration,
-//    the mode timeline, the other people in the room ──
+// ── Stay tile (app parity): place + status, time + live duration, the
+//    rate-option timeline, the other people there ──
 
-function SessionTile({ session }: { session: ReservationViewModel }) {
+function SessionTile({ session }: { session: StayViewModel }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const language = useLanguage((s) => s.language)
   const auth = useAuth()
-  const active = Number(session.status ?? 0) === SESSION_ACTIVE
+  const active = Number(session.status ?? 0) === STAY_RUNNING
   const now = useNow(active)
 
   const timeOf = (raw: string | null | undefined) =>
     raw
-      ? new Date(raw).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        })
+      ? new Date(raw).toLocaleTimeString(
+          language === 'ar' ? 'ar-EG' : 'en-US',
+          {
+            hour: 'numeric',
+            minute: '2-digit',
+          },
+        )
       : ''
-  const durationOf = (start: string | null | undefined, end: string | null | undefined) => {
+  const durationOf = (
+    start: string | null | undefined,
+    end: string | null | undefined,
+  ) => {
     if (!start) return ''
     const endMs = end ? new Date(end).getTime() : now
-    const minutes = Math.max(0, Math.floor((endMs - new Date(start).getTime()) / 60000))
+    const minutes = Math.max(
+      0,
+      Math.floor((endMs - new Date(start).getTime()) / 60000),
+    )
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
     return h > 0
       ? `${t('hoursShort', { count: h })} ${t('minutesShort', { count: m })}`
       : t('minutesShort', { count: m })
   }
-  const modeLabel = (mode: string | undefined) =>
-    mode === 'Single' ? t('playerModeSingle') : mode === 'Multi' ? t('playerModeMulti') : (mode ?? '')
-  const modeClass = (mode: string | undefined) =>
-    mode === 'Single' ? 'text-primary' : 'text-orange-500'
-  const dotClass = (mode: string | undefined) =>
-    mode === 'Single' ? 'bg-primary' : 'bg-orange-500'
+  const color = (code: string | undefined) => optionColor(session.tariff, code)
 
   const start = startOf(session)
-  const started = session.actualStartTime != null
-  const duration = started ? durationOf(session.actualStartTime, session.endTime) : ''
-  const segments: SessionSegmentViewModel[] = session.segments ?? []
+  const started = session.startedAt != null
+  const duration = started ? durationOf(session.startedAt, session.endedAt) : ''
+  const segments: StaySegmentViewModel[] = session.segments ?? []
+  // A one-rate place has nothing to tell apart: no option pill, no timeline
+  const showOptions = hasOptions(session.tariff)
   const myId = auth.user?.profile?.sub
   const others = (session.members ?? []).filter((m) => m.customerId !== myId)
   const status = statusMeta[Number(session.status ?? 0)]
@@ -268,9 +264,12 @@ function SessionTile({ session }: { session: ReservationViewModel }) {
   return (
     <div className='flex flex-col gap-2 py-3'>
       <div className='flex items-center gap-2'>
-        <Gamepad2 className='h-5 w-5 shrink-0' />
+        <PlaceIcon
+          kind={Number(session.placeKind)}
+          className='h-5 w-5 shrink-0'
+        />
         <span className='min-w-0 flex-1 truncate font-bold'>
-          {localized(session.roomName)}
+          {localized(session.placeName)}
         </span>
         {session.paidAt != null ? (
           // Sales' receipt, projected onto the session by Spaces; a tap opens it
@@ -302,26 +301,44 @@ function SessionTile({ session }: { session: ReservationViewModel }) {
           </span>
         )}
         {session.totalCost != null && (
-          <span className='ms-auto font-medium'>{price(Number(session.totalCost))}</span>
+          <span className='ms-auto font-medium'>
+            {price(Number(session.totalCost))}
+          </span>
         )}
       </div>
 
-      {segments.length > 1 ? (
+      {showOptions && segments.length > 1 ? (
         <ol className='flex flex-col'>
           {segments.map((segment, i) => {
             const last = i === segments.length - 1
             return (
               <li key={i} className='flex items-stretch gap-2'>
                 <span className='flex w-3 flex-col items-center'>
-                  <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', dotClass(segment.playerMode))} />
+                  <span
+                    className={cn(
+                      'mt-1.5 h-2 w-2 shrink-0 rounded-full',
+                      color(segment.optionCode).dot,
+                    )}
+                  />
                   {!last && <span className='bg-border w-px flex-1' />}
                 </span>
-                <span className={cn('flex items-baseline gap-2 text-[13px]', !last && 'pb-1.5')}>
-                  <span className={cn('font-medium', modeClass(segment.playerMode))}>
-                    {modeLabel(segment.playerMode)}
+                <span
+                  className={cn(
+                    'flex items-baseline gap-2 text-[13px]',
+                    !last && 'pb-1.5',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'font-medium',
+                      color(segment.optionCode).text,
+                    )}
+                  >
+                    {localized(segment.optionName)}
                   </span>
                   <span className='text-muted-foreground text-xs tabular-nums'>
-                    {timeOf(segment.startTime)} · {durationOf(segment.startTime, segment.endTime)}
+                    {timeOf(segment.startTime)} ·{' '}
+                    {durationOf(segment.startTime, segment.endTime)}
                   </span>
                 </span>
               </li>
@@ -329,16 +346,15 @@ function SessionTile({ session }: { session: ReservationViewModel }) {
           })}
         </ol>
       ) : (
+        showOptions &&
         segments.length === 1 && (
           <span
             className={cn(
               'w-fit rounded px-1.5 py-0.5 text-[11px] font-semibold',
-              segments[0].playerMode === 'Single'
-                ? 'bg-primary/10 text-primary'
-                : 'bg-orange-500/10 text-orange-500'
+              color(segments[0].optionCode).chip,
             )}
           >
-            {modeLabel(segments[0].playerMode)}
+            {localized(segments[0].optionName)}
           </span>
         )
       )}
@@ -346,7 +362,9 @@ function SessionTile({ session }: { session: ReservationViewModel }) {
       {others.length > 0 && (
         <div className='text-muted-foreground flex items-center gap-1 text-[13px]'>
           <Users className='h-3.5 w-3.5 shrink-0' />
-          <span className='truncate'>{others.map((m) => m.customerName ?? '?').join(', ')}</span>
+          <span className='truncate'>
+            {others.map((m) => m.customerName ?? '?').join(', ')}
+          </span>
         </div>
       )}
     </div>

@@ -48,7 +48,25 @@
   "close": "Close",
   "menu": "Menu",
   "orders": "Orders",
-  "rooms": "Rooms",
+  "rooms": "Rooms & Tables",
+  "optionRateFormat": "{option} £{rate}",
+  "@optionRateFormat": {
+    "placeholders": {
+      "option": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  },
+  "perHourShort": "/hr",
+  "startTimerOnArrival": "Start the timer as soon as I arrive",
+  "timerStartsOnArrival": "The timer starts when you arrive",
+  "switchToOption": "Switch to {option}",
+  "@switchToOption": {
+    "placeholders": {
+      "option": { "type": "String" }
+    }
+  },
+  "switchRequestSent": "Switch request sent",
+  "orderHere": "Order here",
   "profile": "Profile",
   "cart": "Cart",
   "settings": "Settings",

@@ -1,79 +1,65 @@
-import { CalendarPlus, Gamepad2 } from 'lucide-react'
-import { type RoomViewModel } from '@/api/spaces'
-import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
+import { CalendarPlus } from 'lucide-react'
+import { type PlaceViewModel } from '@/api/spaces'
+import { useLocalized, useT } from '@/lib/i18n'
+import {
+  canHold,
+  hasOptions,
+  PlaceIcon,
+  placeStatusMeta,
+  tariffOptions,
+} from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export const ROOM_AVAILABLE = 1
-export const ROOM_OCCUPIED = 2
-export const ROOM_RESERVED = 3
-export const ROOM_MAINTENANCE = 4
-
-const statusMeta: Record<number, { key: TranslationKey; className: string }> = {
-  [ROOM_AVAILABLE]: {
-    key: 'available',
-    className: 'text-green-600 dark:text-green-500',
-  },
-  [ROOM_OCCUPIED]: { key: 'occupied', className: 'text-destructive' },
-  [ROOM_RESERVED]: {
-    key: 'reserved',
-    className: 'text-amber-600 dark:text-amber-500',
-  },
-  [ROOM_MAINTENANCE]: {
-    key: 'maintenance',
-    className: 'text-muted-foreground',
-  },
-}
-
-interface RoomRowProps {
-  room: RoomViewModel
+interface PlaceRowProps {
+  place: PlaceViewModel
   canReserve: boolean
-  onReserve: (room: RoomViewModel) => void
+  onReserve: (place: PlaceViewModel) => void
 }
 
-/** Room list row mirroring the mobile app: icon tile, name/description,
- *  hourly rate + status, and a reserve button when bookable. */
-export function RoomRow({ room, canReserve, onReserve }: RoomRowProps) {
+/** One timed place as the list shows it, mirroring the app: icon tile by
+ *  kind, name/description, the rates + status, and a reserve button when
+ *  it can be held. */
+export function PlaceRow({ place, canReserve, onReserve }: PlaceRowProps) {
   const t = useT()
   const localized = useLocalized()
 
-  const status = statusMeta[Number(room.displayStatus ?? 0)] ?? statusMeta[1]
-  const isAvailable =
-    Number(room.displayStatus) === ROOM_AVAILABLE && canReserve
+  const status =
+    placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
+  const isAvailable = canHold(place) && canReserve
 
   return (
     <button
       type='button'
       className='flex w-full items-center gap-3 border-b py-3.5 text-start last:border-b-0'
       disabled={!isAvailable}
-      onClick={() => onReserve(room)}
+      onClick={() => onReserve(place)}
     >
       <div
         className={cn(
           'flex size-16 shrink-0 items-center justify-center rounded-lg',
-          isAvailable ? 'bg-primary/10' : 'bg-muted'
+          isAvailable ? 'bg-primary/10' : 'bg-muted',
         )}
       >
-        <Gamepad2
+        <PlaceIcon
+          kind={Number(place.kind)}
           className={cn(
             'h-7 w-7',
-            isAvailable ? 'text-primary' : 'text-muted-foreground'
+            isAvailable ? 'text-primary' : 'text-muted-foreground',
           )}
         />
       </div>
 
       <div className='min-w-0 flex-1'>
-        <div className='text-[15px] font-semibold'>{localized(room.name)}</div>
-        {room.description && (
+        <div className='text-[15px] font-semibold'>{localized(place.name)}</div>
+        {place.description && (
           <p className='text-muted-foreground line-clamp-2 text-[13px]'>
-            {localized(room.description)}
+            {localized(place.description)}
           </p>
         )}
         <div className='mt-1 flex items-center gap-2 text-sm'>
           <span className='font-bold'>
-            {t('hourlyRateFormat', {
-              rate: String(Number(room.singleRate ?? 0)),
-            })}
+            <TariffLine place={place} />
           </span>
           <span className={cn('text-[13px]', status.className)}>
             • {t(status.key)}
@@ -90,9 +76,44 @@ export function RoomRow({ room, canReserve, onReserve }: RoomRowProps) {
   )
 }
 
-/** Loading placeholder for RoomRow, repeating its container classes so the
+/** The rate: one figure for a one-rate place, one per option when there is
+ *  a choice ("Single £50 · Multi £80 /hr"). */
+export function TariffLine({
+  place,
+}: {
+  place: Pick<PlaceViewModel, 'tariff'>
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const options = tariffOptions(place.tariff)
+  if (options.length === 0) return null
+  if (!hasOptions(place.tariff)) {
+    return (
+      <>
+        {t('hourlyRateFormat', {
+          rate: String(Number(options[0].hourlyRate ?? 0)),
+        })}
+      </>
+    )
+  }
+  return (
+    <>
+      {options
+        .map((o) =>
+          t('optionRateFormat', {
+            option: localized(o.name),
+            rate: String(Number(o.hourlyRate ?? 0)),
+          }),
+        )
+        .join(' · ')}{' '}
+      {t('perHourShort')}
+    </>
+  )
+}
+
+/** Loading placeholder for PlaceRow, repeating its container classes so the
  *  list does not resize when the real rows arrive. */
-export function RoomRowSkeleton() {
+export function PlaceRowSkeleton() {
   return (
     <div className='flex w-full items-center gap-3 border-b py-3.5 last:border-b-0'>
       <Skeleton className='size-16 shrink-0 rounded-lg' />
