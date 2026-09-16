@@ -42,7 +42,7 @@ import { SessionBar } from '@/features/rooms/session-bar'
 import { SessionMembers } from '@/features/rooms/session-members'
 import { isActive, isReserved, sessionRoster } from '@/features/rooms/status'
 import { TimeSoFar } from '@/features/rooms/time-so-far'
-import { useRooms, useSession, useSessionActions } from '@/features/rooms/use-rooms'
+import { useStay, useStayActions } from '@/features/rooms/use-rooms'
 import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
@@ -268,16 +268,16 @@ export function TicketScreen({
   // they are not on the bill until someone taps Confirm
   const { pending } = usePendingOrders()
 
-  // A room ticket's time only lands when its session ends, so the screen
-  // shows the running clock and guards the settle until then. The session
-  // is read by id, not off the active list: once it has ended the bill is
-  // still open, and the people in the room are still its account holders
-  const { rooms } = useRooms({ enabled: ticket?.type === 'Room' })
-  const session = useSession(
+  // A bill with a stay on it — a room's, or a timed table's — gets its time
+  // only when the clock stops, so the screen shows the running clock and
+  // guards the settle until then. The stay is read by id, not off the open
+  // list: once it has ended the bill is still open, and the people there
+  // are still its account holders
+  const session = useStay(
     ticket?.sessionId,
-    ticket?.type === 'Room' && ticket?.settledAt == null && ticket?.voidedAt == null
+    ticket?.sessionId != null && ticket?.settledAt == null && ticket?.voidedAt == null
   )
-  const sessionActions = useSessionActions()
+  const sessionActions = useStayActions()
 
   // Arriving from the sale pad (?settle): the walk-in is standing at the
   // till, so jump straight into taking payment. Once only, and only after
@@ -420,7 +420,6 @@ export function TicketScreen({
     liveSession && !isActive(liveSession) && !isReserved(liveSession)
       ? liveSession
       : undefined
-  const room = rooms.find((r) => toNumber(r.id) === toNumber(ticket.roomId))
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
   // order keeps the first person named at the top instead of reshuffling the
@@ -504,6 +503,7 @@ export function TicketScreen({
             : target.kind === 'table'
               ? {
                   type: TICKET_TYPE_TABLE,
+                  placeId: target.placeId,
                   tableId: target.tableId,
                   tableName: target.tableName,
                 }
@@ -655,7 +655,7 @@ export function TicketScreen({
 
       {activeSession && (
         <div className='mb-4'>
-          <SessionBar session={activeSession} room={room} />
+          <SessionBar session={activeSession} />
         </div>
       )}
 
@@ -684,12 +684,12 @@ export function TicketScreen({
       {/* The time is not a line until the session ends; until then the
           bill shows it as the row it will become, so the running cost is
           read where the rest of the bill is */}
-      {activeSession && room && (
+      {activeSession && (
         <div className='text-muted-foreground flex items-center gap-3 border-b border-dashed py-3'>
           <Timer className='size-5 shrink-0' />
           <span className='min-w-0 flex-1 truncate'>{t('roomTimeRunning')}</span>
           <span className='shrink-0 tabular-nums'>
-            ≈ <TimeSoFar session={activeSession} room={room} />
+            ≈ <TimeSoFar session={activeSession} />
           </span>
         </div>
       )}
@@ -876,9 +876,9 @@ export function TicketScreen({
                 {t('breakdown')}
               </Button>
             )}
-            {activeSession && room && (
+            {activeSession && (
               <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                + {t('timeSoFar')} ≈ <TimeSoFar session={activeSession} room={room} />
+                + {t('timeSoFar')} ≈ <TimeSoFar session={activeSession} />
               </div>
             )}
           </div>

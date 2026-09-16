@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Clock, Loader2, Play } from 'lucide-react'
-import type { ReservationViewModel, RoomViewModel } from '@/api/spaces/types.gen'
+import { Clock, Loader2, Play, ReceiptText } from 'lucide-react'
+import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,61 +13,68 @@ import {
 import { Label } from '@/components/ui/label'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { PlayerModeToggle } from './player-mode-toggle'
-import type { PlayerMode } from './status'
-import { useSessionActions } from './use-rooms'
+import { OptionToggle } from './player-mode-toggle'
+import { findOption, hasOptions, isRoom, tariffOptions } from './status'
+import { useStayActions } from './use-rooms'
 
 type StartSessionDialogProps = {
-  /** The room to start; null keeps the dialog closed. */
-  room: RoomViewModel | null
-  /** A reservation to start the timer on; without one, a walk-in starts. */
-  session?: ReservationViewModel | null
+  /** The place to start the clock on; null keeps the dialog closed. */
+  place: PlaceViewModel | null
+  /** A hold to start the clock on; without one, a walk-in starts. */
+  stay?: StayViewModel | null
   onOpenChange: (open: boolean) => void
-  /** The session started; the caller decides where the till goes next. */
+  /** The clock started; the caller decides where the till goes next. */
   onStarted?: () => void
+  /** A table with a tariff can also just take a bill, with no clock */
+  onBillOnly?: () => void
 }
 
 /**
- * Starts the clock: a walk-in from an available room, or the reserved
- * session of a customer who just arrived. The player mode can wait — the
- * server bills at the single rate until one is chosen.
+ * Starts the clock: a walk-in on a free place, or the hold of a customer
+ * who just arrived. Where the tariff has options the cashier picks one;
+ * where it has one rate there is nothing to pick.
  */
 export function StartSessionDialog({
-  room,
-  session,
+  place,
+  stay,
   onOpenChange,
   onStarted,
+  onBillOnly,
 }: StartSessionDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
-  const actions = useSessionActions()
-  const [playerMode, setPlayerMode] = useState<PlayerMode>('Single')
+  const actions = useStayActions()
+  const options = tariffOptions(place?.tariff)
+  const [optionCode, setOptionCode] = useState<string | null>(null)
 
-  const open = room != null
+  const open = place != null
   useEffect(() => {
-    if (!open) setPlayerMode('Single')
+    if (!open) setOptionCode(null)
   }, [open])
 
-  // The room panel used to offer Reserve beside Start; a free room now
+  const chosen = findOption(place?.tariff, optionCode) ?? options[0]
+
+  // The place panel used to offer Reserve beside Start; a free place now
   // opens this dialog directly, so it lives here for a walk-in
   const reserve = () => {
-    if (!room) return
-    actions.reserve(toNumber(room.id), null, {
+    if (!place) return
+    actions.reserve(toNumber(place.id), null, {
       onSuccess: () => onOpenChange(false),
     })
   }
 
   const start = () => {
-    if (!room) return
+    if (!place) return
     const done = {
       onSuccess: () => {
         onOpenChange(false)
         onStarted?.()
       },
     }
-    if (session) actions.startReserved(toNumber(session.id), playerMode, done)
-    else actions.startWalkIn(toNumber(room.id), playerMode, done)
+    const code = chosen?.code ?? null
+    if (stay) actions.startReserved(toNumber(stay.id), code, done)
+    else actions.startWalkIn(toNumber(place.id), code, done)
   }
 
   return (
@@ -76,53 +83,73 @@ export function StartSessionDialog({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2 text-xl'>
             <Play className='size-5 rtl:rotate-180' />
-            {session ? t('startSession') : t('startWalkInSession')}
+            {stay ? t('startSession') : t('startWalkInSession')}
           </DialogTitle>
-          {session && (
+          {stay && (
             <DialogDescription className='text-base'>
-              {[localized(room?.name), session.customerName]
+              {[localized(place?.name), stay.customerName]
                 .filter(Boolean)
                 .join(' · ')}
             </DialogDescription>
           )}
         </DialogHeader>
 
-        {/* The card prices the mode picked below; the toggle carries both
-            rates so the other one stays in view */}
+        {/* The card prices the option picked below; the toggle carries every
+            rate so the others stay in view */}
         <div className='bg-muted rounded-xl p-4 text-center'>
-          <div className='text-lg font-semibold'>{localized(room?.name)}</div>
+          <div className='text-lg font-semibold'>{localized(place?.name)}</div>
           <div className='text-primary flex items-baseline justify-center gap-1 text-2xl font-bold tabular-nums'>
-            <span>{money(playerMode === 'Multi' ? room?.multiRate : room?.singleRate)}</span>
+            <span>{money(chosen?.hourlyRate)}</span>
             <span className='text-muted-foreground text-sm font-normal'>
               {t('perHour')}
             </span>
           </div>
         </div>
 
-        <div className='grid gap-2'>
-          <Label>{t('playerMode')}</Label>
-          <PlayerModeToggle
-            value={playerMode}
-            onChange={(mode) => mode && setPlayerMode(mode)}
-            rates={{
-              Single: money(room?.singleRate),
-              Multi: money(room?.multiRate),
-            }}
-          />
-        </div>
+        {hasOptions(place?.tariff) && (
+          <div className='grid gap-2'>
+            <Label>{t('playerMode')}</Label>
+            <OptionToggle
+              options={options}
+              value={chosen?.code ?? null}
+              onChange={setOptionCode}
+              rates={Object.fromEntries(
+                options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
+              )}
+            />
+          </div>
+        )}
 
         <DialogFooter className='gap-2'>
-          {!session && (
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-12 sm:me-auto'
-              disabled={actions.isBusy}
-              onClick={reserve}
-            >
-              <Clock className='size-5' />
-              {t('reserve')}
-            </Button>
+          {!stay && (
+            <div className='flex gap-2 sm:me-auto'>
+              <Button
+                variant='outline'
+                size='lg'
+                className='h-12'
+                disabled={actions.isBusy}
+                onClick={reserve}
+              >
+                <Clock className='size-5' />
+                {t('reserve')}
+              </Button>
+              {/* A timed table still seats people who only order */}
+              {onBillOnly && !isRoom(place) && (
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-12'
+                  disabled={actions.isBusy}
+                  onClick={() => {
+                    onOpenChange(false)
+                    onBillOnly()
+                  }}
+                >
+                  <ReceiptText className='size-5' />
+                  {t('billOnly')}
+                </Button>
+              )}
+            </div>
           )}
           <Button
             variant='outline'

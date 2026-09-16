@@ -10,6 +10,8 @@ export const REQUEST_CONTROLLER_CHANGE = 2
 export const REQUEST_RECEIPT_TO_PAY = 3
 export const REQUEST_SWITCH_TO_MULTI = 4
 export const REQUEST_SWITCH_TO_SINGLE = 5
+/** Switch the stay to another rate option; the option's code travels in optionCode */
+export const REQUEST_CHANGE_OPTION = 6
 
 export const REQUEST_STATUS_PENDING = 1
 export const REQUEST_STATUS_ACKNOWLEDGED = 2
@@ -23,6 +25,11 @@ export type ServiceRequest = {
   roomName: { en?: string | null; ar?: string | null }
   tableId?: number | null
   tableName?: { en?: string | null; ar?: string | null } | null
+  /** The Spaces place; 'Room', 'Table' or 'Station' */
+  placeId?: number | null
+  placeKind?: string | null
+  /** The rate option a ChangeOption request asks for */
+  optionCode?: string | null
   requestType: number
   status: number
   createdAt: string

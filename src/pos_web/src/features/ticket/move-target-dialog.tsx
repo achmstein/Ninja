@@ -15,7 +15,7 @@ import type {
   TicketDetail,
   TicketSummary,
 } from '@/api/sales/types.gen'
-import { listTablesOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -41,7 +41,7 @@ export type MoveTarget =
   | { kind: 'split' }
   | { kind: 'ticket'; ticketId: number }
   | { kind: 'counter'; label: string | null }
-  | { kind: 'table'; tableId: number; tableName: LocalizedText | undefined }
+  | { kind: 'table'; placeId: number; tableId: number | null; tableName: LocalizedText | undefined }
 
 type MoveTargetDialogProps = {
   open: boolean
@@ -102,8 +102,10 @@ export function MoveTargetDialog({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     enabled: open,
   })
+  // Places with no clock: a table's bill can move to one; a timed place's
+  // bill follows its stay
   const { data: tables = [] } = useQuery({
-    ...listTablesOptions(),
+    ...listPlacesOptions({ query: { timed: false } }),
     enabled: open,
   })
 
@@ -130,10 +132,10 @@ export function MoveTargetDialog({
     (table) =>
       table.isActive !== false &&
       !tickets.some(
-        (open) => open.type === 'Table' && toNumber(open.tableId) === toNumber(table.id)
+        (open) => open.type === 'Table' && toNumber(open.placeId) === toNumber(table.id)
       )
   )
-  const canSplit = ticket.type !== 'Room' && !allSelected
+  const canSplit = ticket.sessionId == null && !allSelected
 
   const typeLabel = (target: TicketSummary) =>
     target.type === 'Room'
@@ -300,7 +302,8 @@ export function MoveTargetDialog({
                   onClick={() =>
                     onPick({
                       kind: 'table',
-                      tableId: toNumber(table.id),
+                      placeId: toNumber(table.id),
+                      tableId: table.legacyTableId != null ? toNumber(table.legacyTableId) : null,
                       tableName: table.name,
                     })
                   }

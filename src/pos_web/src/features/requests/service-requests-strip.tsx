@@ -1,5 +1,6 @@
 import {
   Armchair,
+  RefreshCw,
   Bell,
   Check,
   DoorOpen,
@@ -21,6 +22,7 @@ import {
   REQUEST_RECEIPT_TO_PAY,
   REQUEST_STATUS_ACKNOWLEDGED,
   REQUEST_SWITCH_TO_MULTI,
+  REQUEST_CHANGE_OPTION,
 } from './service'
 import { useServiceRequests } from './use-service-requests'
 
@@ -30,6 +32,7 @@ const requestIcon: Record<number, LucideIcon> = {
   [REQUEST_RECEIPT_TO_PAY]: Receipt,
   [REQUEST_SWITCH_TO_MULTI]: Users,
   // switch-to-single (5) falls through to the single-player icon
+  [REQUEST_CHANGE_OPTION]: RefreshCw,
 }
 
 const requestLabelKey: Record<number, TranslationKey> = {
@@ -69,14 +72,25 @@ export function ServiceRequestsStrip() {
           const Icon = requestIcon[request.requestType] ?? User
           const label = requestLabelKey[request.requestType]
           const acked = request.status === REQUEST_STATUS_ACKNOWLEDGED
-          // A table asks for a waiter or the bill the same way a room does
-          const atTable = request.tableId != null
+          // The place is what the request names; a table asks for a waiter
+          // or the bill the same way a room does
+          const atTable = request.placeKind
+            ? request.placeKind !== 'Room'
+            : request.tableId != null
           const PlaceIcon = atTable ? Armchair : DoorOpen
           const room =
             localized(request.tableName ?? request.roomName) ||
             (atTable
-              ? `${t('table')} ${request.tableId}`
-              : `${t('room')} ${request.roomId}`)
+              ? `${t('table')} ${request.tableId ?? request.placeId ?? ''}`
+              : `${t('room')} ${request.roomId ?? request.placeId ?? ''}`)
+          // A rate change names the option wanted; the two old room types
+          // read as before
+          const requestText =
+            request.requestType === REQUEST_CHANGE_OPTION
+              ? t('requestChangeOption', { option: request.optionCode ?? '' })
+              : label
+                ? t(label)
+                : t('requestCallWaiter')
           return (
             <div
               key={request.id}
@@ -93,7 +107,7 @@ export function ServiceRequestsStrip() {
                     <span className='truncate'>{room}</span>
                   </div>
                   <div className='text-muted-foreground truncate text-sm'>
-                    {label ? t(label) : t('requestCallWaiter')} ·{' '}
+                    {requestText} ·{' '}
                     {relativeTime(request.createdAt, nowMs, t, locale)}
                   </div>
                 </div>

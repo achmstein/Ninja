@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Star, User, UserPlus, X } from 'lucide-react'
-import type { ReservationViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@/api/spaces/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { useSessionActions } from './use-rooms'
+import { useStayActions } from './use-rooms'
 
 /**
  * Who is in the room: the owner starred, members removable, and a dashed
@@ -15,9 +15,9 @@ import { useSessionActions } from './use-rooms'
  * on — which is why the till keeps naming people after the time has
  * landed: someone who never scanned the QR still owes their share.
  */
-export function SessionMembers({ session }: { session: ReservationViewModel }) {
+export function SessionMembers({ session }: { session: StayViewModel }) {
   const t = useT()
-  const actions = useSessionActions()
+  const actions = useStayActions()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const sessionId = toNumber(session.id)

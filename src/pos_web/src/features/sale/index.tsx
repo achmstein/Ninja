@@ -23,7 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { useLoyalty } from '@/features/customer/use-customer-card'
 import { sessionRoster } from '@/features/rooms/status'
-import { useSession, useSessionActions } from '@/features/rooms/use-rooms'
+import { useStay, useStayActions } from '@/features/rooms/use-rooms'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -228,15 +228,15 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }),
     enabled: addingToTicket,
   })
-  const roomSession = useSession(
+  const roomSession = useStay(
     ticketQuery.data?.sessionId,
-    ticketQuery.data?.type === 'Room'
+    ticketQuery.data?.sessionId != null
   )
   const roster = sessionRoster(roomSession)
   const ownerId = (roomSession?.members ?? []).find((m) => m.role === 'Owner')?.customerId
   const sessionId = roomSession?.id != null ? Number(roomSession.id) : null
   const lastKey = sessionId != null ? `pos.session.${sessionId}.lastCustomer` : null
-  const sessionActions = useSessionActions()
+  const sessionActions = useStayActions()
   const rememberLast = (picked: SaleCustomer) => {
     if (!lastKey || !picked.id) return
     try {

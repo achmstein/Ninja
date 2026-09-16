@@ -1,29 +1,31 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  addMemberToSessionMutation,
-  assignCustomerToSessionMutation,
-  cancelSessionMutation,
-  changePlayerModeMutation,
-  endSessionMutation,
-  getActiveSessionsOptions,
-  getSessionOptions,
-  listRoomsOptions,
-  removeMemberFromSessionMutation,
-  reserveRoomMutation,
-  startSessionMutation,
-  startWalkInSessionMutation,
+  addStayMemberMutation,
+  assignStayCustomerMutation,
+  cancelStayMutation,
+  changeStayOptionMutation,
+  confirmStayMutation,
+  endStayMutation,
+  getOpenStaysOptions,
+  getStayOptions,
+  holdPlaceMutation,
+  listPlacesOptions,
+  removeStayMemberMutation,
+  startStayMutation,
+  startWalkInMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
-import type { ReservationViewModel } from '@/api/spaces/types.gen'
+import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
-import { type PlayerMode, SESSION_ACTIVE, SESSION_RESERVED } from './status'
+import { PLACE_ROOM, STAY_HELD, STAY_RUNNING } from './status'
 
 /**
- * The branch's rooms and whatever is reserved or running in them, the two
- * reads behind every room screen. SignalR's RoomStatusChanged is the
- * primary update path (see use-pos-notifications); the polls are fallbacks.
+ * The branch's places — rooms, tables, stations — and whatever is held or
+ * running on them, the two reads behind every floor screen. SignalR's
+ * RoomStatusChanged is the primary update path (see use-pos-notifications);
+ * the polls are fallbacks.
  */
 /** Orders names the way people read them: digit runs compare by value, so
  *  "Room 2" comes before "Room 10", and letter case does not matter. */
@@ -31,79 +33,78 @@ export function naturalCompare(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 }
 
-export function useRooms({ enabled = true }: { enabled?: boolean } = {}) {
-  const roomsQuery = useQuery({
-    ...listRoomsOptions(),
+export function usePlaces({ enabled = true }: { enabled?: boolean } = {}) {
+  const placesQuery = useQuery({
+    ...listPlacesOptions(),
     enabled,
     refetchInterval: 60_000,
   })
-  const sessionsQuery = useQuery({
-    ...getActiveSessionsOptions(),
+  const staysQuery = useQuery({
+    ...getOpenStaysOptions(),
     enabled,
     refetchInterval: 30_000,
   })
 
-  // In the order people count them: Room 2 before Room 10
+  // In the order people count them: Room 2 before Room 10; rooms first,
+  // then tables, then stations
   const localized = useLocalized()
-  const rooms = useMemo(
+  const places = useMemo(
     () =>
-      [...(roomsQuery.data ?? [])].sort((a, b) =>
-        naturalCompare(localized(a.name), localized(b.name))
+      [...(placesQuery.data ?? [])].sort(
+        (a, b) =>
+          Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) ||
+          naturalCompare(localized(a.name), localized(b.name)),
       ),
-    [roomsQuery.data, localized]
+    [placesQuery.data, localized],
   )
-  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
+  const stays = useMemo(() => staysQuery.data ?? [], [staysQuery.data])
 
-  const sessionForRoom = (
-    roomId: number | string | undefined
-  ): ReservationViewModel | undefined =>
-    sessions.find(
+  const stayForPlace = (
+    placeId: number | string | undefined,
+  ): StayViewModel | undefined =>
+    stays.find(
       (s) =>
-        toNumber(s.roomId) === toNumber(roomId) &&
-        (Number(s.status) === SESSION_ACTIVE ||
-          Number(s.status) === SESSION_RESERVED)
+        toNumber(s.placeId) === toNumber(placeId) &&
+        (Number(s.status) === STAY_RUNNING || Number(s.status) === STAY_HELD),
     )
 
-  const activeSessionById = (
-    sessionId: number | string
-  ): ReservationViewModel | undefined =>
-    sessions.find(
+  const runningStayById = (
+    stayId: number | string,
+  ): StayViewModel | undefined =>
+    stays.find(
       (s) =>
-        toNumber(s.id) === toNumber(sessionId) &&
-        Number(s.status) === SESSION_ACTIVE
+        toNumber(s.id) === toNumber(stayId) &&
+        Number(s.status) === STAY_RUNNING,
     )
+
+  const placeById = (placeId: number | string | undefined): PlaceViewModel | undefined =>
+    places.find((p) => toNumber(p.id) === toNumber(placeId))
 
   return {
-    rooms,
-    sessions,
-    sessionForRoom,
-    activeSessionById,
-    isLoading: roomsQuery.isLoading,
+    places,
+    stays,
+    stayForPlace,
+    runningStayById,
+    placeById,
+    isLoading: placesQuery.isLoading,
   }
 }
 
 type Done = { onSuccess?: () => void }
 
 /**
- * Every session control the till has, each the same call admin_web makes.
- * Success refetches rooms, sessions and tickets (ending a session lands its
- * time on the ticket through the completed event) and toasts; failure
- * toasts. Callers pass `onSuccess` for what only they know, like closing
- * their own dialog.
+ * One stay by id, whatever its state. The open list stops carrying a stay
+ * the moment it ends, but the ticket keeps reading it until the bill is
+ * settled: the people there are still being named, and their shares still
+ * go on their tabs.
  */
-/**
- * One session by id, whatever its state. The active list stops carrying a
- * session the moment it ends, but the ticket keeps reading it until the
- * bill is settled: the people in the room are still being named, and
- * their shares still go on their tabs.
- */
-export function useSession(
-  sessionId: number | string | null | undefined,
-  enabled = true
-): ReservationViewModel | undefined {
+export function useStay(
+  stayId: number | string | null | undefined,
+  enabled = true,
+): StayViewModel | undefined {
   const query = useQuery({
-    ...getSessionOptions({ path: { sessionId: Number(sessionId) } }),
-    enabled: enabled && sessionId != null,
+    ...getStayOptions({ path: { id: Number(stayId) } }),
+    enabled: enabled && stayId != null,
     refetchInterval: 30_000,
     // Always fetch fresh when a screen opens: a member added on another screen
     // (or just now, before navigating straight into a new sale) must be on the
@@ -114,14 +115,21 @@ export function useSession(
   return query.data
 }
 
-export function useSessionActions() {
+/**
+ * Every stay control the till has, each the same call admin_web makes.
+ * Success refetches places, stays and tickets (ending a stay lands its
+ * time on the ticket through the completed event) and toasts; failure
+ * toasts. Callers pass `onSuccess` for what only they know, like closing
+ * their own dialog.
+ */
+export function useStayActions() {
   const t = useT()
   const queryClient = useQueryClient()
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'listRooms' }] })
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getActiveSessions' }] })
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getSession' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenStays' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getStay' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
   }
@@ -135,90 +143,107 @@ export function useSessionActions() {
   })
 
   const startWalkIn = useMutation({
-    ...startWalkInSessionMutation(),
+    ...startWalkInMutation(),
     ...feedback('sessionStarted', 'failedToStartSession'),
   })
-  const startReserved = useMutation({
-    ...startSessionMutation(),
+  const startHeld = useMutation({
+    ...startStayMutation(),
     ...feedback('sessionStarted', 'failedToStartSession'),
   })
-  const endSession = useMutation({
-    ...endSessionMutation(),
+  // Confirming a hold that asked for it starts the clock; one that did not
+  // just stays held, and the toast says which
+  const confirm = useMutation({
+    ...confirmStayMutation(),
+    ...feedback(null, 'failedToStartSession'),
+  })
+  const endStay = useMutation({
+    ...endStayMutation(),
     ...feedback('sessionEnded', 'failedToEndSession'),
   })
-  // Cancel toasts per call: a reservation and a running session read differently
-  const cancelSession = useMutation({
-    ...cancelSessionMutation(),
+  // Cancel toasts per call: a hold and a running stay read differently
+  const cancelStay = useMutation({
+    ...cancelStayMutation(),
     ...feedback(null, 'failedToCancelSession'),
   })
-  const changeMode = useMutation({
-    ...changePlayerModeMutation(),
+  const changeOption = useMutation({
+    ...changeStayOptionMutation(),
     ...feedback('playerModeUpdated', 'failedToChangePlayerMode'),
   })
   const assignCustomer = useMutation({
-    ...assignCustomerToSessionMutation(),
+    ...assignStayCustomerMutation(),
     ...feedback('customerAssigned', 'failedToAssignCustomer'),
   })
   const addMember = useMutation({
-    ...addMemberToSessionMutation(),
+    ...addStayMemberMutation(),
     ...feedback('customerAdded', 'failedToAddCustomer'),
   })
   const removeMember = useMutation({
-    ...removeMemberFromSessionMutation(),
+    ...removeStayMemberMutation(),
     ...feedback('memberRemoved', 'failedToRemoveMember'),
   })
-  const reserve = useMutation({
-    ...reserveRoomMutation(),
+  const hold = useMutation({
+    ...holdPlaceMutation(),
     ...feedback('roomReserved', 'failedToReserveRoom'),
   })
 
   const isBusy =
     startWalkIn.isPending ||
-    startReserved.isPending ||
-    endSession.isPending ||
-    cancelSession.isPending ||
-    changeMode.isPending ||
+    startHeld.isPending ||
+    confirm.isPending ||
+    endStay.isPending ||
+    cancelStay.isPending ||
+    changeOption.isPending ||
     assignCustomer.isPending ||
     addMember.isPending ||
     removeMember.isPending ||
-    reserve.isPending
+    hold.isPending
 
   return {
     isBusy,
-    startWalkIn: (roomId: number, playerMode: PlayerMode | null, done?: Done) =>
+    startWalkIn: (placeId: number, optionCode: string | null, done?: Done) =>
       startWalkIn.mutate(
-        { path: { roomId }, body: { notes: null, playerMode } },
-        done
+        { path: { id: placeId }, body: { notes: null, optionCode } },
+        done,
       ),
-    startReserved: (sessionId: number, playerMode: PlayerMode | null, done?: Done) =>
-      startReserved.mutate({ path: { sessionId }, body: { playerMode } }, done),
-    endSession: (sessionId: number, done?: Done) =>
-      endSession.mutate({ path: { sessionId } }, done),
-    cancelSession: (sessionId: number, wasActive: boolean, done?: Done) =>
-      cancelSession.mutate(
-        { path: { sessionId } },
+    startReserved: (stayId: number, optionCode: string | null, done?: Done) =>
+      startHeld.mutate({ path: { id: stayId }, body: { optionCode } }, done),
+    confirm: (stayId: number, startsClock: boolean, done?: Done) =>
+      confirm.mutate(
+        { path: { id: stayId }, body: {} },
         {
           onSuccess: () => {
-            toast.success(t(wasActive ? 'sessionCancelled' : 'reservationCancelled'))
+            toast.success(t(startsClock ? 'sessionStarted' : 'arrivalConfirmed'))
             done?.onSuccess?.()
           },
-        }
+        },
       ),
-    changeMode: (sessionId: number, playerMode: PlayerMode) =>
-      changeMode.mutate({ path: { sessionId }, body: { playerMode } }),
-    assignCustomer: (sessionId: number, customerId: string, customerName: string) =>
+    endSession: (stayId: number, done?: Done) =>
+      endStay.mutate({ path: { id: stayId } }, done),
+    cancelSession: (stayId: number, wasRunning: boolean, done?: Done) =>
+      cancelStay.mutate(
+        { path: { id: stayId } },
+        {
+          onSuccess: () => {
+            toast.success(t(wasRunning ? 'sessionCancelled' : 'reservationCancelled'))
+            done?.onSuccess?.()
+          },
+        },
+      ),
+    changeOption: (stayId: number, optionCode: string) =>
+      changeOption.mutate({ path: { id: stayId }, body: { optionCode } }),
+    assignCustomer: (stayId: number, customerId: string, customerName: string) =>
       assignCustomer.mutate({
-        path: { sessionId },
+        path: { id: stayId },
         body: { customerId, customerName },
       }),
-    addMember: (sessionId: number, customerId: string, customerName: string) =>
-      addMember.mutate({ path: { sessionId }, body: { customerId, customerName } }),
-    removeMember: (sessionId: number, customerId: string) =>
-      removeMember.mutate({ path: { sessionId, customerId } }),
-    reserve: (roomId: number, customerName: string | null, done?: Done) =>
-      reserve.mutate(
-        { path: { roomId }, body: { customerName, notes: null } },
-        done
+    addMember: (stayId: number, customerId: string, customerName: string) =>
+      addMember.mutate({ path: { id: stayId }, body: { customerId, customerName } }),
+    removeMember: (stayId: number, customerId: string) =>
+      removeMember.mutate({ path: { id: stayId, customerId } }),
+    reserve: (placeId: number, customerName: string | null, done?: Done) =>
+      hold.mutate(
+        { path: { id: placeId }, body: { customerName, notes: null, startOnConfirm: false } },
+        done,
       ),
   }
 }

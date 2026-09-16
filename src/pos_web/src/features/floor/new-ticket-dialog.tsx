@@ -12,7 +12,7 @@ import {
   openTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { SaleCustomer } from '@/features/sale/cart'
-import { useRooms } from '@/features/rooms/use-rooms'
+import { usePlaces } from '@/features/rooms/use-rooms'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,7 +28,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
-import { SESSION_ACTIVE } from '@/features/rooms/status'
+import { STAY_RUNNING } from '@/features/rooms/status'
 
 type NewTicketDialogProps = {
   open: boolean
@@ -111,7 +111,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     enabled: open,
   })
-  const { sessions } = useRooms({ enabled: open })
+  const { stays } = usePlaces({ enabled: open })
   const busy = new Map<string, string>()
   for (const ticket of openTickets) {
     const where =
@@ -122,9 +122,9 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
       if (pendingId) busy.set(pendingId, where)
     }
   }
-  for (const session of sessions) {
-    if (Number(session.status) !== SESSION_ACTIVE) continue
-    const where = localized(session.roomName) || t('room')
+  for (const session of stays) {
+    if (Number(session.status) !== STAY_RUNNING) continue
+    const where = localized(session.placeName) || t('room')
     for (const member of session.members ?? []) {
       if (member.customerId) busy.set(member.customerId, where)
     }

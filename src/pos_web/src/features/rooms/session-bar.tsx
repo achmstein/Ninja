@@ -1,53 +1,52 @@
 import { useState } from 'react'
 import { Square, Timer } from 'lucide-react'
-import type { ReservationViewModel, RoomViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@/api/spaces/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { PlayerModeToggle } from './player-mode-toggle'
+import { OptionToggle } from './player-mode-toggle'
 import { SessionMembers } from './session-members'
 import {
   elapsedSeconds,
   estimateSessionCost,
+  findOption,
   formatBillingHours,
   formatClock,
-  modeLabel,
-  modeSeconds,
-  type PlayerMode,
+  hasOptions,
+  optionSeconds,
+  tariffOptions,
 } from './status'
-import { useSecondsClock, useSessionActions } from './use-rooms'
+import { useSecondsClock, useStayActions } from './use-rooms'
 
 /**
- * The running clock on a room ticket. Its time is not on the bill yet — it
- * lands as lines when the session ends — so the card answers the two
- * questions the cashier has while it runs: how long, and how much so far.
- * The mode switches right here (the customers' most common mid-session
- * ask), the people in the room are listed and added right here, and the
- * session ends from here. On the bill itself, customers go on lines with
- * the ticket's own Assign customer.
+ * The running clock on a bill. Its time is not on the bill yet — it lands
+ * as lines when the clock stops — so the card answers the two questions
+ * the cashier has while it runs: how long, and how much so far. The rate
+ * option switches right here (the customers' most common mid-stay ask,
+ * where the tariff has options), the people there are listed and added
+ * right here, and the clock stops from here. On the bill itself,
+ * customers go on lines with the ticket's own Assign customer.
  */
-export function SessionBar({
-  session,
-  room,
-}: {
-  session: ReservationViewModel
-  room: RoomViewModel | undefined
-}) {
+export function SessionBar({ session }: { session: StayViewModel }) {
   const t = useT()
+  const localized = useLocalized()
   const money = useMoney()
-  const actions = useSessionActions()
+  const actions = useStayActions()
   const now = useSecondsClock(true)
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
-  const [pendingMode, setPendingMode] = useState<PlayerMode | null>(null)
+  const [pendingOption, setPendingOption] = useState<string | null>(null)
 
-  const sessionId = toNumber(session.id)
-  const currentMode = (session.currentPlayerMode ?? null) as PlayerMode | null
-  const singleSeconds = modeSeconds(session, 'Single', now)
-  const multiSeconds = modeSeconds(session, 'Multi', now)
-  const estimate = room ? estimateSessionCost(session, room, now) : null
-  const hoursLabel = formatBillingHours(estimate?.hours ?? 0, t)
+  const stayId = toNumber(session.id)
+  const currentCode = session.currentOptionCode ?? null
+  const options = tariffOptions(session.tariff)
+  const estimate = estimateSessionCost(session, now)
+  const hoursLabel = formatBillingHours(estimate.hours, t)
+  // Per-option split only once more than one option has been used
+  const used = options.filter((o) => optionSeconds(session, o.code, now) > 0)
+  const optionName = (code: string | null) =>
+    localized(findOption(session.tariff, code)?.name) || code || ''
 
   return (
     <>
@@ -59,45 +58,46 @@ export function SessionBar({
             <div className='font-mono text-3xl tabular-nums'>
               {formatClock(elapsedSeconds(session, now))}
             </div>
-            {/* Per-mode split only once both modes have been used */}
-            {singleSeconds > 0 && multiSeconds > 0 && (
+            {used.length > 1 && (
               <div className='text-muted-foreground truncate text-sm tabular-nums'>
-                {t('playerModeSingle')} {formatClock(singleSeconds)}
-                {' · '}
-                {t('playerModeMulti')} {formatClock(multiSeconds)}
+                {used
+                  .map(
+                    (o) =>
+                      `${localized(o.name)} ${formatClock(optionSeconds(session, o.code, now))}`,
+                  )
+                  .join(' · ')}
               </div>
             )}
           </div>
-          {estimate && (
-            <div className='shrink-0 text-end'>
-              <div className='text-muted-foreground text-sm'>{t('timeSoFar')}</div>
-              <div className='text-2xl font-bold tabular-nums'>
-                {money(estimate.amount)}
-              </div>
-              <div className='text-muted-foreground text-xs tabular-nums'>
-                {hoursLabel}
-              </div>
+          <div className='shrink-0 text-end'>
+            <div className='text-muted-foreground text-sm'>{t('timeSoFar')}</div>
+            <div className='text-2xl font-bold tabular-nums'>
+              {money(estimate.amount)}
             </div>
-          )}
+            <div className='text-muted-foreground text-xs tabular-nums'>
+              {hoursLabel}
+            </div>
+          </div>
         </div>
 
         <SessionMembers session={session} />
 
-        {/* Switching mode is the common ask; ending is the last one */}
+        {/* Switching the rate is the common ask; ending is the last one */}
         <div className='flex items-center gap-2'>
-          <PlayerModeToggle
-            className='min-w-0 flex-1'
-            value={currentMode}
-            disabled={actions.isBusy}
-            onChange={(mode) => {
-              if (mode && mode !== currentMode) setPendingMode(mode)
-            }}
-            rates={
-              room
-                ? { Single: money(room.singleRate), Multi: money(room.multiRate) }
-                : undefined
-            }
-          />
+          {hasOptions(session.tariff) && (
+            <OptionToggle
+              className='min-w-0 flex-1'
+              options={options}
+              value={currentCode}
+              disabled={actions.isBusy}
+              onChange={(code) => {
+                if (code !== currentCode) setPendingOption(code)
+              }}
+              rates={Object.fromEntries(
+                options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
+              )}
+            />
+          )}
           <Button
             variant='outline'
             className='h-12 shrink-0 gap-2 px-3'
@@ -111,19 +111,19 @@ export function SessionBar({
       </div>
 
       <ConfirmDialog
-        open={pendingMode != null}
+        open={pendingOption != null}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPendingMode(null)
+          if (!isOpen) setPendingOption(null)
         }}
-        title={t('switchToModeQuestion', { mode: modeLabel(pendingMode, t) })}
-        cancelLabel={t('keepCurrent', { mode: modeLabel(currentMode, t) })}
+        title={t('switchToModeQuestion', { mode: optionName(pendingOption) })}
+        cancelLabel={t('keepCurrent', { mode: optionName(currentCode) })}
         actionLabel={t('switchMode')}
         onAction={() => {
-          if (pendingMode) actions.changeMode(sessionId, pendingMode)
+          if (pendingOption) actions.changeOption(stayId, pendingOption)
         }}
       />
 
-      {/* Ending bills the time; the quiet third answer is the session that
+      {/* Ending bills the time; the quiet third answer is the clock that
           should never have started, which still gets its own confirmation */}
       <ConfirmDialog
         open={confirmEnd}
@@ -132,7 +132,7 @@ export function SessionBar({
         description={t('endSessionBilledAt', { hours: hoursLabel })}
         cancelLabel={t('keepPlaying')}
         actionLabel={t('endSessionButton')}
-        onAction={() => actions.endSession(sessionId)}
+        onAction={() => actions.endSession(stayId)}
         secondaryLabel={t('cancelSessionButton')}
         onSecondary={() => setConfirmCancel(true)}
       />
@@ -145,7 +145,7 @@ export function SessionBar({
         cancelLabel={t('keepIt')}
         actionLabel={t('cancelSessionButton')}
         destructive
-        onAction={() => actions.cancelSession(sessionId, true)}
+        onAction={() => actions.cancelSession(stayId, true)}
       />
     </>
   )

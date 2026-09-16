@@ -13,8 +13,11 @@ public interface ITicketRepository : IRepository<Ticket>
     /// <summary>The open ticket billing a room session, if one exists.</summary>
     Task<Ticket?> FindOpenBySessionAsync(int sessionId);
 
-    /// <summary>The open ticket accumulating for a table, if one exists.</summary>
+    /// <summary>The open ticket accumulating for a table, by the id an older sticker or client named.</summary>
     Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId);
+
+    /// <summary>The open ticket accumulating for a place (a table with no clock running), if one exists.</summary>
+    Task<Ticket?> FindOpenByPlaceAsync(int placeId, int branchId);
 
     /// <summary>
     /// The open room ticket for a room in a branch, matched by room id when

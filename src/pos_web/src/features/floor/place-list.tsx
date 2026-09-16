@@ -1,7 +1,15 @@
 import { useState } from 'react'
-import { Armchair, DoorOpen, Plus, Search, ShoppingBag } from 'lucide-react'
+import {
+  Armchair,
+  DoorOpen,
+  Plus,
+  Search,
+  ShoppingBag,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react'
 import type { TicketSummary } from '@/api/sales/types.gen'
-import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
+import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -9,8 +17,12 @@ import {
   formatClock,
   isActive,
   isReserved,
-  ROOM_MAINTENANCE,
-  roomStatusDot,
+  isTimed,
+  PLACE_OUT_OF_SERVICE,
+  PLACE_ROOM,
+  PLACE_STATION,
+  PLACE_TABLE,
+  placeStatusDot,
 } from '@/features/rooms/status'
 import { useSecondsClock } from '@/features/rooms/use-rooms'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -18,15 +30,13 @@ import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
 type PlaceListProps = {
-  rooms: RoomViewModel[]
-  sessionForRoom: (roomId: number | string | undefined) => ReservationViewModel | undefined
-  tables: TableViewModel[]
+  places: PlaceViewModel[]
+  stayForPlace: (placeId: number | string | undefined) => StayViewModel | undefined
   tickets: TicketSummary[]
   busy: boolean
   loading: boolean
   onNewTab: () => void
-  onPickRoom: (room: RoomViewModel) => void
-  onPickTable: (table: TableViewModel) => void
+  onPick: (place: PlaceViewModel) => void
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
@@ -40,23 +50,39 @@ function Heading({ children }: { children: React.ReactNode }) {
 const rowClass =
   'hover:bg-accent/50 flex h-12 w-full items-center gap-3 rounded-lg px-3 text-start disabled:opacity-50'
 
+const kindIcon: Record<number, LucideIcon> = {
+  [PLACE_ROOM]: DoorOpen,
+  [PLACE_TABLE]: Armchair,
+  [PLACE_STATION]: Trophy,
+}
+
+/** Whether a place already has a bill on the floor: a stay's bill names the
+ *  stay, a table's bill names the place. */
+export function hasBill(place: PlaceViewModel, tickets: TicketSummary[]): boolean {
+  const id = toNumber(place.id)
+  return tickets.some(
+    (ticket) =>
+      toNumber(ticket.placeId) === id ||
+      // Bills opened before the remodel name the room by its id
+      (Number(place.kind ?? PLACE_ROOM) === PLACE_ROOM && toNumber(ticket.roomId) === id),
+  )
+}
+
 /**
  * Every place that has no bill yet, as a narrow column beside the bills so
  * opening one is a single tap. It stays a list, searchable, so forty tables
  * and twelve rooms cost a scroll or a couple of letters, never the screen.
- * A room opens its controls (start a walk-in, start the reservation that
- * just arrived); a table opens a bill.
+ * A place with a clock opens its controls (start a walk-in, start the hold
+ * that just arrived); a place without one opens a bill.
  */
 export function PlaceList({
-  rooms,
-  sessionForRoom,
-  tables,
+  places,
+  stayForPlace,
   tickets,
   busy,
   loading,
   onNewTab,
-  onPickRoom,
-  onPickTable,
+  onPick,
 }: PlaceListProps) {
   const t = useT()
   const localized = useLocalized()
@@ -69,21 +95,19 @@ export function PlaceList({
     (name?.en ?? '').toLowerCase().includes(needle) ||
     (name?.ar ?? '').toLowerCase().includes(needle)
 
-  // A room with a bill is among the bills already; one without is here, in
+  // A place with a bill is among the bills already; one without is here, in
   // whatever state it is in
-  const freeRooms = rooms.filter(
-    (room) =>
-      matches(room.name) &&
-      !tickets.some((ticket) => toNumber(ticket.roomId) === toNumber(room.id))
+  const free = places.filter(
+    (place) => place.isActive !== false && matches(place.name) && !hasBill(place, tickets),
   )
-  const freeTables = tables.filter(
-    (table) =>
-      table.isActive !== false &&
-      matches(table.name) &&
-      !tickets.some(
-        (ticket) => ticket.type === 'Table' && toNumber(ticket.tableId) === toNumber(table.id)
-      )
-  )
+  const groups = [
+    { kind: PLACE_ROOM, label: t('rooms') },
+    { kind: PLACE_TABLE, label: t('tables') },
+    { kind: PLACE_STATION, label: t('stations') },
+  ].map((group) => ({
+    ...group,
+    places: free.filter((p) => Number(p.kind ?? PLACE_ROOM) === group.kind),
+  }))
 
   return (
     <div className='flex flex-col gap-1'>
@@ -106,7 +130,7 @@ export function PlaceList({
         </button>
       )}
 
-      {loading && freeRooms.length === 0 && freeTables.length === 0 && (
+      {loading && free.length === 0 && (
         <>
           <Heading>{t('rooms')}</Heading>
           {Array.from({ length: 5 }).map((_, i) => (
@@ -119,72 +143,58 @@ export function PlaceList({
         </>
       )}
 
-      {freeRooms.length > 0 && (
-        <>
-          <Heading>{t('rooms')}</Heading>
-          {freeRooms.map((room) => {
-            const session = sessionForRoom(room.id)
-            const maintenance = Number(room.displayStatus) === ROOM_MAINTENANCE
-            // The dot already says free (tables show nothing either); text only
-            // when there is something to add
-            const detail = isActive(session)
-              ? formatClock(elapsedSeconds(session, nowMs))
-              : isReserved(session)
-                ? session.customerName || t('statusReserved')
-                : maintenance
-                  ? t('underMaintenance')
-                  : null
-            return (
-              <button
-                key={String(room.id)}
-                type='button'
-                disabled={maintenance || busy}
-                onClick={() => onPickRoom(room)}
-                className={rowClass}
-              >
-                <span
-                  className={cn(
-                    'size-2.5 shrink-0 rounded-full',
-                    roomStatusDot[Number(room.displayStatus ?? 0)] ?? 'bg-muted'
-                  )}
-                />
-                <span className='min-w-0 flex-1 truncate font-medium'>
-                  {localized(room.name)}
-                </span>
-                {detail && (
-                  <span className='text-muted-foreground truncate text-sm'>
-                    {detail}
-                  </span>
-                )}
-                <DoorOpen className='text-muted-foreground size-4 shrink-0' />
-              </button>
-            )
-          })}
-        </>
+      {groups.map(
+        (group) =>
+          group.places.length > 0 && (
+            <div key={group.kind} className='contents'>
+              <Heading>{group.label}</Heading>
+              {group.places.map((place) => {
+                const Icon = kindIcon[group.kind] ?? DoorOpen
+                const timed = isTimed(place)
+                const stay = timed ? stayForPlace(place.id) : undefined
+                const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
+                // The dot already says free; text only when there is
+                // something to add
+                const detail = isActive(stay)
+                  ? formatClock(elapsedSeconds(stay, nowMs))
+                  : isReserved(stay)
+                    ? stay.customerName || t('statusReserved')
+                    : outOfService
+                      ? t('underMaintenance')
+                      : null
+                return (
+                  <button
+                    key={String(place.id)}
+                    type='button'
+                    disabled={outOfService || busy}
+                    onClick={() => onPick(place)}
+                    className={rowClass}
+                  >
+                    <span
+                      className={cn(
+                        'size-2.5 shrink-0 rounded-full',
+                        timed
+                          ? (placeStatusDot[Number(place.status ?? 0)] ?? 'bg-muted')
+                          : 'bg-green-500',
+                      )}
+                    />
+                    <span className='min-w-0 flex-1 truncate font-medium'>
+                      {localized(place.name)}
+                    </span>
+                    {detail && (
+                      <span className='text-muted-foreground truncate text-sm'>
+                        {detail}
+                      </span>
+                    )}
+                    <Icon className='text-muted-foreground size-4 shrink-0' />
+                  </button>
+                )
+              })}
+            </div>
+          ),
       )}
 
-      {freeTables.length > 0 && (
-        <>
-          <Heading>{t('tables')}</Heading>
-          {freeTables.map((table) => (
-            <button
-              key={String(table.id)}
-              type='button'
-              disabled={busy}
-              onClick={() => onPickTable(table)}
-              className={rowClass}
-            >
-              <span className='size-2.5 shrink-0 rounded-full bg-green-500' />
-              <span className='min-w-0 flex-1 truncate font-medium'>
-                {localized(table.name)}
-              </span>
-              <Armchair className='text-muted-foreground size-4 shrink-0' />
-            </button>
-          ))}
-        </>
-      )}
-
-      {freeRooms.length === 0 && freeTables.length === 0 && (
+      {free.length === 0 && !loading && (
         <p className='text-muted-foreground py-6 text-center text-sm'>
           {needle ? t('noPlaceMatches') : t('everyPlaceHasABill')}
         </p>

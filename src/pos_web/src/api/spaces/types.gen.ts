@@ -368,6 +368,7 @@ export type StayViewModel = {
 
 export type TableViewModel = {
     id?: number | string;
+    placeId?: number | string;
     name?: LocalizedText;
     branchId?: number | string;
     isActive?: boolean;

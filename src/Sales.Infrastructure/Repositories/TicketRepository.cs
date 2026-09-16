@@ -29,6 +29,10 @@ public class TicketRepository : ITicketRepository
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.TableId == tableId && t.BranchId == branchId && t.Status == TicketStatus.Open);
 
+    public async Task<Ticket?> FindOpenByPlaceAsync(int placeId, int branchId)
+        => await _context.Tickets
+            .FirstOrDefaultAsync(t => t.PlaceId == placeId && t.SessionId == null && t.BranchId == branchId && t.Status == TicketStatus.Open);
+
     public async Task<Ticket?> FindOpenCounterForCustomerAsync(int branchId, string? customerId, string? guestId)
     {
         if (customerId is null && guestId is null) return null;

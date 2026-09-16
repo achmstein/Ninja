@@ -12,7 +12,8 @@ public record OpenTicketCommand(
     int BranchId,
     int? TableId,
     LocalizedText? TableName,
-    string? Label) : IRequest<int>;
+    string? Label,
+    int? PlaceId = null) : IRequest<int>;
 
 public class OpenTicketCommandHandler(
     ITicketRepository ticketRepository,
@@ -28,13 +29,19 @@ public class OpenTicketCommandHandler(
                 ticket = Ticket.OpenForCounter(command.BranchId, command.Label);
                 break;
 
-            case TicketType.Table when command.TableId is int tableId:
-                // Q7: one open ticket per table — reuse an existing one
-                var existing = await ticketRepository.FindOpenByTableAsync(tableId, command.BranchId);
+            case TicketType.Table when command.PlaceId is int placeId || command.TableId is int:
+                // Q7: one open ticket per table — reuse an existing one, by
+                // the place or by the older table id
+                var existing = command.PlaceId is int byPlace
+                    ? await ticketRepository.FindOpenByPlaceAsync(byPlace, command.BranchId)
+                    : null;
+                existing ??= command.TableId is int byTable
+                    ? await ticketRepository.FindOpenByTableAsync(byTable, command.BranchId)
+                    : null;
                 if (existing is not null)
                     return existing.Id;
 
-                ticket = Ticket.OpenForTable(tableId, command.TableName, command.BranchId);
+                ticket = Ticket.OpenForTable(command.TableId, command.TableName, command.BranchId, command.PlaceId);
                 break;
 
             case TicketType.Table:

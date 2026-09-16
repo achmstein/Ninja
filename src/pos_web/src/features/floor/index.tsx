@@ -21,28 +21,24 @@ import {
   openTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketSummary } from '@/api/sales/types.gen'
-import { listTablesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import type { ReservationViewModel, RoomViewModel, TableViewModel } from '@/api/spaces/types.gen'
+import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
-import { RoomPanel } from '@/features/rooms/room-panel'
+import { PlacePanel } from '@/features/rooms/room-panel'
 import { StartSessionDialog } from '@/features/rooms/start-session-dialog'
 import {
-  ROOM_AVAILABLE,
+  PLACE_AVAILABLE,
   elapsedSeconds,
   formatClock,
   isActive,
   isReserved,
+  isTimed,
 } from '@/features/rooms/status'
-import {
-  naturalCompare,
-  useRooms,
-  useSecondsClock,
-} from '@/features/rooms/use-rooms'
+import { usePlaces, useSecondsClock } from '@/features/rooms/use-rooms'
 import { API_VERSION } from '@/lib/api-client'
 import {
   pendingForTicket,
@@ -55,6 +51,7 @@ import { CustomerCard, type CardCustomer } from '@/features/customer/customer-ca
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList } from './place-list'
+import { TimerReset } from 'lucide-react'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -80,7 +77,7 @@ function BillCard({
   onClick,
 }: {
   ticket: TicketSummary
-  session: ReservationViewModel | undefined
+  session: StayViewModel | undefined
   waiting: boolean
   nowMs: number
   onClick: () => void
@@ -149,13 +146,13 @@ export function Floor() {
   const [newTabOpen, setNewTabOpen] = useState(false)
   const [findOpen, setFindOpen] = useState(false)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
-  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
-  // A free room has one thing to do: start the clock. It opens the
-  // single/multi choice directly; the panel is for rooms with more to see
-  const [startRoomId, setStartRoomId] = useState<number | null>(null)
-  // A session just started in this room: its bill is being opened by Sales
+  const [selectedPlaceId, setSelectedPlaceId] = useState<number | null>(null)
+  // A free timed place has one thing to do: start the clock. It opens the
+  // rate choice directly; the panel is for places with more to see
+  const [startPlaceId, setStartPlaceId] = useState<number | null>(null)
+  // A clock just started at this place: its bill is being opened by Sales
   // on the event, and the till goes there the moment it shows up
-  const [startedRoomId, setStartedRoomId] = useState<number | null>(null)
+  const [startedPlaceId, setStartedPlaceId] = useState<number | null>(null)
   const [billSearch, setBillSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   // The places column collapses so a busy floor gets the whole width; the
@@ -186,16 +183,10 @@ export function Floor() {
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     // Poll fallback in case the SignalR connection is silently dead; a
     // quick poll while a just-started session's bill is on its way
-    refetchInterval: startedRoomId != null ? 600 : 20_000,
+    refetchInterval: startedPlaceId != null ? 600 : 20_000,
   })
-  const { rooms, sessions, sessionForRoom, isLoading: roomsLoading } = useRooms()
+  const { places, stays, stayForPlace, placeById, isLoading: placesLoading } = usePlaces()
   const { pending } = usePendingOrders()
-  const { data: unsortedTables = [], isLoading: tablesLoading } = useQuery(
-    listTablesOptions()
-  )
-  const tables = [...unsortedTables].sort((a, b) =>
-    naturalCompare(localized(a.name), localized(b.name))
-  )
 
   const openTable = useMutation({
     ...openTicketMutation(),
@@ -215,46 +206,43 @@ export function Floor() {
     })
 
   useEffect(() => {
-    if (startedRoomId == null) return
+    if (startedPlaceId == null) return
     const bill = tickets.find(
       (ticket) =>
-        toNumber(ticket.roomId) === startedRoomId && ticket.sessionId != null
+        toNumber(ticket.placeId) === startedPlaceId && ticket.sessionId != null
     )
     if (bill) {
-      setStartedRoomId(null)
+      setStartedPlaceId(null)
       toTicket(bill)
       return
     }
     // The bill never came (Sales down, event lost): stop the quick poll and
-    // leave the cashier on the floor, where the room now shows as occupied
-    const giveUp = setTimeout(() => setStartedRoomId(null), 15_000)
+    // leave the cashier on the floor, where the place now shows as occupied
+    const giveUp = setTimeout(() => setStartedPlaceId(null), 15_000)
     return () => clearTimeout(giveUp)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startedRoomId, tickets])
+  }, [startedPlaceId, tickets])
 
   const sessionForTicket = (ticket: TicketSummary) =>
     ticket.sessionId == null
       ? undefined
-      : sessions.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
+      : stays.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
 
-  // Reservations are the one thing not yet a bill that the cashier must not
+  // Holds are the one thing not yet a bill that the cashier must not
   // miss: somebody is on their way
-  const reserved = sessions.filter((session) => isReserved(session))
+  const reserved = stays.filter((stay) => isReserved(stay))
   const running = tickets.some((ticket) => isActive(sessionForTicket(ticket)))
   const nowMs = useSecondsClock(running || reserved.length > 0)
 
   // Bills in the order of their places: rooms, then tables, then counter
   // tabs, each in place order, oldest first within a place
-  const roomRank = new Map(rooms.map((r, i) => [toNumber(r.id), i]))
-  const tableRank = new Map(tables.map((tb, i) => [toNumber(tb.id), i]))
+  const placeOrder = new Map(places.map((p, i) => [toNumber(p.id), i]))
   const typeRank = (type?: string) =>
     type === 'Room' ? 0 : type === 'Table' ? 1 : 2
   const placeRank = (ticket: TicketSummary) =>
-    ticket.type === 'Room'
-      ? (roomRank.get(toNumber(ticket.roomId)) ?? rooms.length)
-      : ticket.type === 'Table'
-        ? (tableRank.get(toNumber(ticket.tableId)) ?? tables.length)
-        : 0
+    ticket.type === 'Counter'
+      ? 0
+      : (placeOrder.get(toNumber(ticket.placeId ?? ticket.roomId)) ?? places.length)
   const bills = [...tickets].sort(
     (a, b) =>
       typeRank(a.type) - typeRank(b.type) ||
@@ -282,31 +270,30 @@ export function Floor() {
       .map((b) => toNumber(b.id))
   )
 
-  const selectedRoom =
-    rooms.find((room) => toNumber(room.id) === selectedRoomId) ?? null
-  const startRoom =
-    rooms.find((room) => toNumber(room.id) === startRoomId) ?? null
-  const pickRoom = (room: RoomViewModel) => {
-    const id = toNumber(room.id)
-    if (
-      Number(room.displayStatus) === ROOM_AVAILABLE &&
-      !sessionForRoom(room.id)
-    )
-      setStartRoomId(id)
-    else setSelectedRoomId(id)
-  }
+  const selectedPlace = placeById(selectedPlaceId ?? undefined) ?? null
+  const startPlace = placeById(startPlaceId ?? undefined) ?? null
 
-  const pickTable = (table: TableViewModel) =>
+  // A place with no clock opens a bill; one with a clock and nothing on it
+  // starts the clock; one with a hold or a running clock opens its panel
+  const openBill = (place: PlaceViewModel) =>
     openTable.mutate({
       // A retry on café Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       query: { 'api-version': API_VERSION },
       body: {
         type: TICKET_TYPE_TABLE,
-        tableId: toNumber(table.id),
-        tableName: table.name,
+        placeId: toNumber(place.id),
+        tableId: place.legacyTableId != null ? toNumber(place.legacyTableId) : null,
+        tableName: place.name,
       },
     })
+  const pickPlace = (place: PlaceViewModel) => {
+    const id = toNumber(place.id)
+    if (!isTimed(place)) openBill(place)
+    else if (Number(place.status) === PLACE_AVAILABLE && !stayForPlace(place.id))
+      setStartPlaceId(id)
+    else setSelectedPlaceId(id)
+  }
 
   return (
     <div
@@ -327,15 +314,13 @@ export function Floor() {
       >
         <Heading>{t('openPlace')}</Heading>
         <PlaceList
-          rooms={rooms}
-          sessionForRoom={sessionForRoom}
-          tables={tables}
+          places={places}
+          stayForPlace={stayForPlace}
           tickets={tickets}
           busy={openTable.isPending}
           onNewTab={() => setNewTabOpen(true)}
-          loading={roomsLoading || tablesLoading}
-          onPickRoom={pickRoom}
-          onPickTable={pickTable}
+          loading={placesLoading}
+          onPick={pickPlace}
         />
       </aside>
 
@@ -413,7 +398,7 @@ export function Floor() {
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
               {reserved.map((session) => {
-                const room = rooms.find((r) => toNumber(r.id) === toNumber(session.roomId))
+                const place = placeById(session.placeId)
                 const expiresIn = session.expiresAt
                   ? Math.max(0, (new Date(session.expiresAt).getTime() - nowMs) / 1000)
                   : null
@@ -421,15 +406,21 @@ export function Floor() {
                   <button
                     key={String(session.id)}
                     type='button'
-                    onClick={() => setSelectedRoomId(toNumber(session.roomId))}
+                    onClick={() => setSelectedPlaceId(toNumber(session.placeId))}
                     className='bg-card hover:bg-accent/50 flex w-[240px] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
                   >
                     <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
-                      <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+                      {/* The customer asked for the clock to start on arrival:
+                          Confirm in the panel does both */}
+                      {session.startOnConfirm ? (
+                        <TimerReset className='size-5 text-amber-600 dark:text-amber-500' />
+                      ) : (
+                        <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+                      )}
                     </div>
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate text-base font-semibold'>
-                        {localized(room?.name ?? session.roomName)}
+                        {localized(place?.name ?? session.placeName)}
                       </span>
                       <span className='text-muted-foreground block truncate text-sm'>
                         {session.customerName || t('statusReserved')}
@@ -570,25 +561,29 @@ export function Floor() {
       />
       <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
       <StartSessionDialog
-        room={startRoom}
+        place={startPlace}
         onOpenChange={(open) => {
-          if (!open) setStartRoomId(null)
+          if (!open) setStartPlaceId(null)
         }}
         onStarted={() => {
-          if (startRoomId == null) return
-          setStartedRoomId(startRoomId)
-          setStartRoomId(null)
+          if (startPlaceId == null) return
+          setStartedPlaceId(startPlaceId)
+          setStartPlaceId(null)
+        }}
+        onBillOnly={() => {
+          if (startPlace) openBill(startPlace)
+          setStartPlaceId(null)
         }}
       />
-      <RoomPanel
-        room={selectedRoom}
-        session={selectedRoom ? sessionForRoom(selectedRoom.id) : undefined}
+      <PlacePanel
+        place={selectedPlace}
+        stay={selectedPlace ? stayForPlace(selectedPlace.id) : undefined}
         onOpenChange={(open) => {
-          if (!open) setSelectedRoomId(null)
+          if (!open) setSelectedPlaceId(null)
         }}
-        onStarted={(roomId) => {
-          setSelectedRoomId(null)
-          setStartedRoomId(roomId)
+        onStarted={(placeId) => {
+          setSelectedPlaceId(null)
+          setStartedPlaceId(placeId)
         }}
       />
     </div>

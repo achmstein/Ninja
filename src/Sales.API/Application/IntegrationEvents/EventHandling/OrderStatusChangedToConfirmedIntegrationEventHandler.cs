@@ -116,6 +116,16 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
                 @event.PlaceKind ?? "Room"));
         }
 
+        // A place with no clock running (a table, timed or not, between
+        // stays): the newer clients name it by its place id
+        if (@event.PlaceId is int placeId && !string.Equals(@event.PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
+        {
+            var placeTicket = await ticketRepository.FindOpenByPlaceAsync(placeId, @event.BranchId)
+                ?? (@event.TableId is int namedTable ? await ticketRepository.FindOpenByTableAsync(namedTable, @event.BranchId) : null);
+
+            return placeTicket ?? ticketRepository.Add(Ticket.OpenForTable(@event.TableId, @event.PlaceName ?? @event.TableName, @event.BranchId, placeId));
+        }
+
         if (@event.TableId is int tableId)
         {
             var tableTicket = await ticketRepository.FindOpenByTableAsync(tableId, @event.BranchId);

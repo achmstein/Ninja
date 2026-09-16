@@ -254,15 +254,24 @@ public class Ticket : Entity, IAggregateRoot
         };
     }
 
-    /// <summary>Opened lazily by a table's first confirmed order (Q7: one open ticket per table).</summary>
-    public static Ticket OpenForTable(int tableId, LocalizedText? tableName, int branchId, int? placeId = null)
-        => new(TicketType.Table, branchId)
+    /// <summary>
+    /// Opened lazily by a table's first confirmed order, or by the till (Q7:
+    /// one open ticket per table). The place id is the table as Spaces knows
+    /// it; the table id is what an older sticker or client named. One of
+    /// the two is required.
+    /// </summary>
+    public static Ticket OpenForTable(int? tableId, LocalizedText? tableName, int branchId, int? placeId = null)
+    {
+        if (tableId is null && placeId is null)
+            throw new SalesDomainException("A table ticket names its table.");
+        return new(TicketType.Table, branchId)
         {
             TableId = tableId,
             PlaceId = placeId,
             PlaceKind = "Table",
             LocationName = tableName,
         };
+    }
 
     /// <summary>
     /// One counter sale — a POS walk-in, or an order-ahead paid at the
@@ -712,7 +721,7 @@ public class Ticket : Entity, IAggregateRoot
         var target = Type switch
         {
             TicketType.Table => OpenForTable(
-                TableId!.Value,
+                TableId,
                 LocationName is null ? null : new LocalizedText(LocationName.En, LocationName.Ar),
                 BranchId,
                 PlaceId),

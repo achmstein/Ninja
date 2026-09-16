@@ -3,7 +3,7 @@ using Chillax.Sales.Infrastructure.Idempotency;
 namespace Chillax.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
-public record NewTicketTarget(TicketType Type, int? TableId, LocalizedText? TableName, string? Label);
+public record NewTicketTarget(TicketType Type, int? TableId, LocalizedText? TableName, string? Label, int? PlaceId = null);
 
 /// <summary>
 /// Move lines off a ticket. Three destinations: none given is the turnover
@@ -83,11 +83,16 @@ public class MoveTicketLinesCommandHandler(
             case TicketType.Counter:
                 return ticketRepository.Add(Ticket.OpenForCounter(source.BranchId, wanted.Label));
 
-            case TicketType.Table when wanted.TableId is int tableId:
+            case TicketType.Table when wanted.PlaceId is int || wanted.TableId is int:
                 // Q7: one open ticket per table — a table that already has a
                 // bill takes the lines onto it rather than growing a second
-                var open = await ticketRepository.FindOpenByTableAsync(tableId, source.BranchId);
-                return open ?? ticketRepository.Add(Ticket.OpenForTable(tableId, wanted.TableName, source.BranchId));
+                var open = wanted.PlaceId is int byPlace
+                    ? await ticketRepository.FindOpenByPlaceAsync(byPlace, source.BranchId)
+                    : null;
+                open ??= wanted.TableId is int byTable
+                    ? await ticketRepository.FindOpenByTableAsync(byTable, source.BranchId)
+                    : null;
+                return open ?? ticketRepository.Add(Ticket.OpenForTable(wanted.TableId, wanted.TableName, source.BranchId, wanted.PlaceId));
 
             case TicketType.Table:
                 throw new SalesDomainException("Moving to a table takes the table.");
