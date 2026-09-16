@@ -499,7 +499,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get refundedSoFar => 'مسترجع';
+  String get refundedSoFar => 'مرتجع';
 
   @override
   String get breakdown => 'التفاصيل';
