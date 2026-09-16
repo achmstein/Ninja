@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/kiosk_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/widgets/info_tip.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Per-tablet settings: kiosk mode (language and theme live in the header
@@ -66,8 +67,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 16),
               // The tablet as a kitchen display and nothing else
               FCard(
-                title: Text(l10n.kiosk),
-                subtitle: Text(l10n.kioskHint),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [Text(l10n.kiosk), const SizedBox(width: 4), InfoTip(text: l10n.kioskHint)],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Builder(builder: (context) {

@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -50,9 +49,6 @@ export function HistoryDialog() {
       <DialogContent className='flex h-[85svh] flex-col gap-0 p-0 sm:max-w-5xl'>
         <DialogHeader className='border-b px-4 py-3'>
           <DialogTitle className='text-xl'>{t('history')}</DialogTitle>
-          <DialogDescription className='text-base'>
-            {t('historyHint')}
-          </DialogDescription>
         </DialogHeader>
         <div className='min-h-0 flex-1 overflow-y-auto p-3'>
           {finished.length === 0 ? (

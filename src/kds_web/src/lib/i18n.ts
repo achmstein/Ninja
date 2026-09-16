@@ -43,45 +43,27 @@ const dictionary = {
     ar: 'بنحولك لتسجيل الدخول...',
   },
   signedOutTitle: { en: 'Signed out', ar: 'تم تسجيل الخروج' },
-  signedOutDescription: {
-    en: 'You have been signed out of the kitchen display.',
-    ar: 'انت سجلت خروج من شاشة المطبخ.',
-  },
   signInAgain: { en: 'Sign in again', ar: 'سجل دخول تاني' },
   backToBoard: { en: 'Back to the board', ar: 'ارجع للشاشة' },
   accessDeniedTitle: { en: 'Access denied', ar: 'مفيش صلاحية' },
-  accessDeniedDescription: {
-    en: 'Your account does not have access to the kitchen display.',
-    ar: 'حسابك معندوش صلاحية يدخل شاشة المطبخ.',
-  },
+  accessDeniedDescription: { en: 'No access.', ar: 'مفيش صلاحية.' },
   noBranchTitle: { en: 'No branch assigned', ar: 'مفيش فرع متعين ليك' },
   noBranchDescription: {
-    en: 'Your account is not assigned to any branch yet. Ask the owner to assign you one.',
-    ar: 'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.',
+    en: 'Ask the owner to assign a branch.',
+    ar: 'اطلب من المالك يعينك على فرع.',
   },
   retry: { en: 'Retry', ar: 'حاول تاني' },
 
   // Board
   noOrders: { en: 'Nothing to prepare', ar: 'مفيش حاجة تتعمل' },
-  noOrdersHint: {
-    en: 'New orders show up here the moment they are confirmed.',
-    ar: 'الطلبات الجديدة هتظهر هنا أول ما تتأكد.',
-  },
   ready: { en: 'Ready', ar: 'جاهز' },
   counter: { en: 'Counter', ar: 'الكاشير' },
   pickup: { en: 'Pickup', ar: 'استلام' },
   walkIn: { en: 'Walk-in', ar: 'زبون' },
-  soundBanner: {
-    en: 'Tap anywhere once to enable sound alerts',
-    ar: 'دوس في أي حتة مرة واحدة عشان يشتغل صوت التنبيه',
-  },
+  soundBanner: { en: 'Enable sound', ar: 'شغّل الصوت' },
 
   // History
   history: { en: 'History', ar: 'السجل' },
-  historyHint: {
-    en: 'Orders marked ready today, newest first. Bring one back to put it on the board again.',
-    ar: 'الطلبات اللي اتعلمت جاهزة النهارده، الأحدث الأول. رجّع أي طلب عشان يرجع على الشاشة تاني.',
-  },
   noHistory: { en: 'Nothing ready yet today', ar: 'لسه مفيش طلبات جاهزة النهارده' },
   bringBack: { en: 'Bring back', ar: 'رجّعه' },
 

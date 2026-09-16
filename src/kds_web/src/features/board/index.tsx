@@ -1,12 +1,10 @@
 import { useMemo } from 'react'
-import { ChefHat, Volume2 } from 'lucide-react'
-import { Alert, AlertTitle } from '@/components/ui/alert'
+import { ChefHat } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/lib/i18n'
 import { OrderCard } from './order-card'
 import { useKitchenOrders, useNowMs } from './use-kitchen-orders'
 import { useReady } from './use-ready'
-import { useSoundUnlock } from './use-sound-unlock'
 
 /**
  * The kitchen board: one grid of open orders, oldest first, as many across
@@ -21,7 +19,6 @@ export function Board() {
   const nowMs = useNowMs()
   const { orders, isLoading } = useKitchenOrders()
   const { setReady, actingOrderNumber } = useReady()
-  const soundUnlocked = useSoundUnlock()
 
   const open = useMemo(
     () => orders.filter((order) => order.readyAt == null),
@@ -32,18 +29,10 @@ export function Board() {
     // The header is 4rem; the rest of the viewport is the board, which
     // scrolls on its own so the header never leaves the screen
     <div className='flex h-[calc(100svh-4rem)] flex-col'>
-      {!soundUnlocked && (
-        <Alert className='mx-3 mt-3 w-auto border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'>
-          <Volume2 />
-          <AlertTitle className='text-base'>{t('soundBanner')}</AlertTitle>
-        </Alert>
-      )}
-
       {!isLoading && open.length === 0 ? (
         <div className='text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center'>
           <ChefHat className='size-16 opacity-40' />
           <p className='text-2xl font-semibold'>{t('noOrders')}</p>
-          <p className='text-base'>{t('noOrdersHint')}</p>
         </div>
       ) : (
         <div className='min-h-0 flex-1 overflow-y-auto p-3'>

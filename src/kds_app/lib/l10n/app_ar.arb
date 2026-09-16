@@ -11,13 +11,11 @@
   "themeDark": "غامق",
   "signInFailed": "تسجيل الدخول فشل",
   "accessDeniedTitle": "مفيش صلاحية",
-  "accessDeniedDescription": "حسابك معندوش صلاحية يدخل شاشة المطبخ.",
+  "accessDeniedDescription": "مفيش صلاحية.",
   "retry": "حاول تاني",
   "noOrders": "مفيش حاجة تتعمل",
-  "noOrdersHint": "الطلبات الجديدة هتظهر هنا أول ما تتأكد.",
   "ready": "جاهز",
   "history": "السجل",
-  "historyHint": "الطلبات اللي اتعلمت جاهزة النهارده، الأحدث الأول. رجّع أي طلب عشان يرجع على الشاشة تاني.",
   "noHistory": "لسه مفيش طلبات جاهزة النهارده",
   "bringBack": "رجّعه",
   "counter": "الكاشير",
@@ -65,5 +63,5 @@
   "startKiosk": "شغّل الكشك",
   "stopKiosk": "اقفل الكشك",
   "noBranchTitle": "مفيش فرع متعين ليك",
-  "noBranchDescription": "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع."
+  "noBranchDescription": "اطلب من المالك يعينك على فرع."
 }

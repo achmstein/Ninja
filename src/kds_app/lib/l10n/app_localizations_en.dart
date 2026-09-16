@@ -42,8 +42,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessDeniedTitle => 'Access denied';
 
   @override
-  String get accessDeniedDescription =>
-      'Your account does not have access to the kitchen display.';
+  String get accessDeniedDescription => 'No access.';
 
   @override
   String get retry => 'Retry';
@@ -52,18 +51,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noOrders => 'Nothing to prepare';
 
   @override
-  String get noOrdersHint =>
-      'New orders show up here the moment they are confirmed.';
-
-  @override
   String get ready => 'Ready';
 
   @override
   String get history => 'History';
-
-  @override
-  String get historyHint =>
-      'Orders marked ready today, newest first. Bring one back to put it on the board again.';
 
   @override
   String get noHistory => 'Nothing ready yet today';
@@ -163,6 +154,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBranchTitle => 'No branch assigned';
 
   @override
-  String get noBranchDescription =>
-      'Your account is not assigned to any branch yet. Ask the owner to assign you one.';
+  String get noBranchDescription => 'Ask the owner to assign a branch.';
 }

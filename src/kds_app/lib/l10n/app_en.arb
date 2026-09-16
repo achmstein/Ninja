@@ -11,13 +11,11 @@
   "themeDark": "Dark",
   "signInFailed": "Sign-in failed",
   "accessDeniedTitle": "Access denied",
-  "accessDeniedDescription": "Your account does not have access to the kitchen display.",
+  "accessDeniedDescription": "No access.",
   "retry": "Retry",
   "noOrders": "Nothing to prepare",
-  "noOrdersHint": "New orders show up here the moment they are confirmed.",
   "ready": "Ready",
   "history": "History",
-  "historyHint": "Orders marked ready today, newest first. Bring one back to put it on the board again.",
   "noHistory": "Nothing ready yet today",
   "bringBack": "Bring back",
   "counter": "Counter",
@@ -65,5 +63,5 @@
   "startKiosk": "Start kiosk",
   "stopKiosk": "Stop kiosk",
   "noBranchTitle": "No branch assigned",
-  "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one."
+  "noBranchDescription": "Ask the owner to assign a branch."
 }

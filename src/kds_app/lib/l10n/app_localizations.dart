@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessDeniedDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your account does not have access to the kitchen display.'**
+  /// **'No access.'**
   String get accessDeniedDescription;
 
   /// No description provided for @retry.
@@ -182,12 +182,6 @@ abstract class AppLocalizations {
   /// **'Nothing to prepare'**
   String get noOrders;
 
-  /// No description provided for @noOrdersHint.
-  ///
-  /// In en, this message translates to:
-  /// **'New orders show up here the moment they are confirmed.'**
-  String get noOrdersHint;
-
   /// No description provided for @ready.
   ///
   /// In en, this message translates to:
@@ -199,12 +193,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'History'**
   String get history;
-
-  /// No description provided for @historyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders marked ready today, newest first. Bring one back to put it on the board again.'**
-  String get historyHint;
 
   /// No description provided for @noHistory.
   ///
@@ -389,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @noBranchDescription.
   ///
   /// In en, this message translates to:
-  /// **'Your account is not assigned to any branch yet. Ask the owner to assign you one.'**
+  /// **'Ask the owner to assign a branch.'**
   String get noBranchDescription;
 }
 

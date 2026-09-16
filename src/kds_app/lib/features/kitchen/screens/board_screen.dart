@@ -120,8 +120,6 @@ class _EmptyBoard extends StatelessWidget {
             Icon(FIcons.chefHat, size: 64, color: muted.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
             Text(l10n.noOrders, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600, color: muted), textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            Text(l10n.noOrdersHint, style: theme.typography.base.copyWith(color: muted), textAlign: TextAlign.center),
           ],
         ),
       ),

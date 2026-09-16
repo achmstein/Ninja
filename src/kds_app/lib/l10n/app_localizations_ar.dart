@@ -42,7 +42,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accessDeniedTitle => 'مفيش صلاحية';
 
   @override
-  String get accessDeniedDescription => 'حسابك معندوش صلاحية يدخل شاشة المطبخ.';
+  String get accessDeniedDescription => 'مفيش صلاحية.';
 
   @override
   String get retry => 'حاول تاني';
@@ -51,17 +51,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noOrders => 'مفيش حاجة تتعمل';
 
   @override
-  String get noOrdersHint => 'الطلبات الجديدة هتظهر هنا أول ما تتأكد.';
-
-  @override
   String get ready => 'جاهز';
 
   @override
   String get history => 'السجل';
-
-  @override
-  String get historyHint =>
-      'الطلبات اللي اتعلمت جاهزة النهارده، الأحدث الأول. رجّع أي طلب عشان يرجع على الشاشة تاني.';
 
   @override
   String get noHistory => 'لسه مفيش طلبات جاهزة النهارده';
@@ -159,6 +152,5 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noBranchTitle => 'مفيش فرع متعين ليك';
 
   @override
-  String get noBranchDescription =>
-      'حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.';
+  String get noBranchDescription => 'اطلب من المالك يعينك على فرع.';
 }

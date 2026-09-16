@@ -50,8 +50,6 @@ class _HistoryDialog extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l10n.history, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text(l10n.historyHint, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                   ],
                 ),
               ),

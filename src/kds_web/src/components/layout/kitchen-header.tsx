@@ -8,6 +8,7 @@ import {
   Moon,
   Settings,
   Sun,
+  VolumeX,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
 import { HistoryDialog } from '@/features/board/history-dialog'
+import { useSoundUnlock } from '@/features/board/use-sound-unlock'
 import { useFullscreen } from '@/hooks/use-fullscreen'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -39,6 +41,7 @@ export function KitchenHeader() {
   const { resolvedTheme, setTheme } = useTheme()
   const fullscreen = useFullscreen()
   const installPrompt = useInstallPrompt()
+  const soundUnlocked = useSoundUnlock()
 
   // Chromium: the native prompt. iPad: no prompt exists, only the hint.
   // Installed already, or a browser that offers neither: nothing to show.
@@ -58,6 +61,14 @@ export function KitchenHeader() {
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3'>
       <BranchSwitcher />
       <div className='ms-auto flex items-center gap-1'>
+        {/* Browsers keep audio muted until a tap; the crossed speaker is
+            that tap, and it leaves once sound is unlocked */}
+        {!soundUnlocked && (
+          <Button variant='ghost' size='icon' className='size-12 text-amber-600 dark:text-amber-400'>
+            <VolumeX className='size-5' />
+            <span className='sr-only'>{t('soundBanner')}</span>
+          </Button>
+        )}
         <HistoryDialog />
         {fullscreen.supported && (
           <Button
