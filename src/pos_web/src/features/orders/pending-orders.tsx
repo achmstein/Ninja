@@ -34,13 +34,15 @@ function PendingOrderCard({
 
   // Named the way the floor names its tiles: the room or table the order is
   // for, or — for an order with neither — the person who placed it
-  // LEGACY(places): old roomName/tableName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  const room = localized(order.roomName)
-  const table = localized(order.tableName)
+  const place = localized(order.placeName)
   const who = order.userName || t('guest')
-  const title = room || table || who
-  const subtitle = room || table ? who : order.guestPhone
-  const PlaceIcon = room ? DoorOpen : table ? Armchair : User
+  const title = place || who
+  const subtitle = place ? who : order.guestPhone
+  const PlaceIcon = !place
+    ? User
+    : order.placeKind === 'Room'
+      ? DoorOpen
+      : Armchair
 
   return (
     <div
@@ -51,7 +53,7 @@ function PendingOrderCard({
           ? 'border-destructive/70'
           : urgency === 'warning'
             ? 'border-amber-500/70'
-            : ''
+            : '',
       )}
     >
       {/* The body opens the items; a separate button confirms, so neither
@@ -69,7 +71,12 @@ function PendingOrderCard({
           #{toNumber(order.orderNumber)}
           {subtitle && ` · ${subtitle}`}
         </div>
-        <div className={cn('mt-0.5 text-sm tabular-nums', urgencyTextClass(urgency))}>
+        <div
+          className={cn(
+            'mt-0.5 text-sm tabular-nums',
+            urgencyTextClass(urgency),
+          )}
+        >
           {relativeTime(order.date, nowMs, t, locale)} · {money(order.total)}
         </div>
       </button>
@@ -110,7 +117,7 @@ export function PendingOrders({
         className={cn(
           horizontal
             ? 'flex gap-3 overflow-x-auto pb-1'
-            : 'flex flex-col gap-2'
+            : 'flex flex-col gap-2',
         )}
       >
         {orders.map((order) => {

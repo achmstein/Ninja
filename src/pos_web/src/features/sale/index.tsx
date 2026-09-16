@@ -546,7 +546,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           })),
         })),
         customerNote: note.trim() || null,
-        // No tableId/roomName: a counter sale settles at the till. When the
+        // No place: a counter sale settles at the till. When the
         // cashier is adding to an open bill, the ticket is named outright —
         // Sales appends to it instead of inferring a destination.
         ticketId: ticketId ?? null,

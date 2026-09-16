@@ -251,9 +251,7 @@ export function Floor() {
   const placeRank = (ticket: TicketSummary) =>
     ticket.type === 'Counter'
       ? 0
-      // LEGACY(places): the old roomId as the fallback place of a bill opened before the remodel — remove when every till and customer app is on /api/places and /api/stays.
-      : (placeOrder.get(toNumber(ticket.placeId ?? ticket.roomId)) ??
-        places.length)
+      : (placeOrder.get(toNumber(ticket.placeId)) ?? places.length)
   const bills = [...tickets].sort(
     (a, b) =>
       typeRank(a.type) - typeRank(b.type) ||
@@ -296,10 +294,7 @@ export function Floor() {
       body: {
         type: TICKET_TYPE_TABLE,
         placeId: toNumber(place.id),
-        // LEGACY(places): legacy sticker id sent as tableId alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-        tableId:
-          place.legacyTableId != null ? toNumber(place.legacyTableId) : null,
-        tableName: place.name,
+        placeName: place.name,
       },
     })
   const pickPlace = (place: PlaceViewModel) => {

@@ -21,39 +21,38 @@ export function usePendingOrders() {
     () =>
       [...(query.data ?? [])].sort(
         (a, b) =>
-          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
+          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime(),
       ),
-    [query.data]
+    [query.data],
   )
 
   return { pending, isLoading: query.isLoading }
 }
 
 /**
- * The pending orders that will land on this ticket once confirmed: a room
- * order carries its session, a table order its table. Counter tickets never
+ * The pending orders that will land on this ticket once confirmed: an order
+ * with a stay joins the stay's bill, one without joins its place's bill. Counter tickets never
  * match — nothing orders into them from an app.
  */
 export function pendingForTicket(
   pending: OrderSummary[],
   ticket: {
     sessionId?: null | number | string
-    // LEGACY(places): a table order is matched to its bill by the old tableId, not placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-    tableId?: null | number | string
-  }
+    placeId?: null | number | string
+  },
 ): OrderSummary[] {
   const sessionId = ticket.sessionId == null ? null : toNumber(ticket.sessionId)
-  // LEGACY(places): old tableId match — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  const tableId = ticket.tableId == null ? null : toNumber(ticket.tableId)
+  const placeId = ticket.placeId == null ? null : toNumber(ticket.placeId)
 
   return pending.filter(
     (order) =>
       (sessionId != null &&
         order.sessionId != null &&
         toNumber(order.sessionId) === sessionId) ||
-      (tableId != null &&
-        order.tableId != null &&
-        toNumber(order.tableId) === tableId)
+      (placeId != null &&
+        order.sessionId == null &&
+        order.placeId != null &&
+        toNumber(order.placeId) === placeId),
   )
 }
 

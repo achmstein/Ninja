@@ -56,8 +56,7 @@ export function OrderDetailDialog({
   })
 
   const loyaltyDiscount = toNumber(order?.loyaltyDiscount)
-  // LEGACY(places): old roomName/tableName read instead of placeName — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  const place = localized(order?.roomName) || localized(order?.tableName)
+  const place = localized(order?.placeName)
   const who = order?.guestName || null
 
   return (
@@ -120,7 +119,9 @@ export function OrderDetailDialog({
               {loyaltyDiscount > 0 && (
                 <div className='text-muted-foreground flex justify-between text-sm'>
                   <span>{t('loyaltyDiscount')}</span>
-                  <span className='tabular-nums'>−{money(loyaltyDiscount)}</span>
+                  <span className='tabular-nums'>
+                    −{money(loyaltyDiscount)}
+                  </span>
                 </div>
               )}
               <div className='flex justify-between text-lg font-semibold'>
@@ -133,7 +134,9 @@ export function OrderDetailDialog({
 
         {cancelling ? (
           <>
-            <p className='text-destructive text-base'>{t('cancelOrderConfirm')}</p>
+            <p className='text-destructive text-base'>
+              {t('cancelOrderConfirm')}
+            </p>
             <DialogFooter className='gap-2'>
               <Button
                 variant='outline'

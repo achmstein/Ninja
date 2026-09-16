@@ -14,7 +14,8 @@ public record OpenTicketCommand(
     int? TableId,
     LocalizedText? TableName,
     string? Label,
-    int? PlaceId = null) : IRequest<int>;
+    int? PlaceId = null,
+    LocalizedText? PlaceName = null) : IRequest<int>;
 
 public class OpenTicketCommandHandler(
     ITicketRepository ticketRepository,
@@ -43,7 +44,7 @@ public class OpenTicketCommandHandler(
                 if (existing is not null)
                     return existing.Id;
 
-                ticket = Ticket.OpenForTable(command.TableId, command.TableName, command.BranchId, command.PlaceId);
+                ticket = Ticket.OpenForTable(command.TableId, command.TableName ?? command.PlaceName, command.BranchId, command.PlaceId);
                 break;
 
             case TicketType.Table:

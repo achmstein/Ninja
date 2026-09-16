@@ -20,16 +20,10 @@ export const REQUEST_STATUS_COMPLETED = 3
 export type ServiceRequest = {
   id: number
   userName: string
-  // LEGACY(places): the old room id, read next to placeId — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  roomId: number | null
-  /** The place: the room, or the table's name for a table request */
-  roomName: { en?: string | null; ar?: string | null }
-  // LEGACY(places): the old table id and name, read next to placeId/placeKind — remove when Sales, Ordering and Notification stop sending the old room/table fields.
-  tableId?: number | null
-  tableName?: { en?: string | null; ar?: string | null } | null
   /** The Spaces place; 'Room', 'Table' or 'Station' */
   placeId?: number | null
   placeKind?: string | null
+  placeName?: { en?: string | null; ar?: string | null } | null
   /** The rate option a ChangeOption request asks for */
   optionCode?: string | null
   requestType: number
@@ -40,21 +34,21 @@ export type ServiceRequest = {
 export const serviceRequestsService = {
   async pending(): Promise<ServiceRequest[]> {
     const response = await apiClient.get<ServiceRequest[]>(
-      '/api/notifications/service-requests/pending'
+      '/api/notifications/service-requests/pending',
     )
     return response.data
   },
 
   async acknowledge(id: number): Promise<ServiceRequest> {
     const response = await apiClient.put<ServiceRequest>(
-      `/api/notifications/service-requests/${id}/acknowledge`
+      `/api/notifications/service-requests/${id}/acknowledge`,
     )
     return response.data
   },
 
   async complete(id: number): Promise<ServiceRequest> {
     const response = await apiClient.put<ServiceRequest>(
-      `/api/notifications/service-requests/${id}/complete`
+      `/api/notifications/service-requests/${id}/complete`,
     )
     return response.data
   },

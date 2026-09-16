@@ -41,8 +41,7 @@ export type MoveTarget =
   | { kind: 'split' }
   | { kind: 'ticket'; ticketId: number }
   | { kind: 'counter'; label: string | null }
-  // LEGACY(places): tableId/tableName travel alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-  | { kind: 'table'; placeId: number; tableId: number | null; tableName: LocalizedText | undefined }
+  | { kind: 'table'; placeId: number; placeName: LocalizedText | undefined }
 
 type MoveTargetDialogProps = {
   open: boolean
@@ -111,7 +110,7 @@ export function MoveTargetDialog({
   })
 
   const others = tickets.filter(
-    (candidate) => toNumber(candidate.id) !== toNumber(ticket.id)
+    (candidate) => toNumber(candidate.id) !== toNumber(ticket.id),
   )
   const q = search.trim().toLowerCase()
   const visibleOthers = q
@@ -133,8 +132,10 @@ export function MoveTargetDialog({
     (table) =>
       table.isActive !== false &&
       !tickets.some(
-        (open) => open.type === 'Table' && toNumber(open.placeId) === toNumber(table.id)
-      )
+        (open) =>
+          open.type === 'Table' &&
+          toNumber(open.placeId) === toNumber(table.id),
+      ),
   )
   const canSplit = ticket.sessionId == null && !allSelected
 
@@ -150,7 +151,7 @@ export function MoveTargetDialog({
       <DialogContent
         className={cn(
           'max-h-[90svh] gap-3 overflow-y-auto',
-          mode === 'move' ? 'sm:max-w-3xl' : 'sm:max-w-md'
+          mode === 'move' ? 'sm:max-w-3xl' : 'sm:max-w-md',
         )}
       >
         <DialogHeader>
@@ -249,75 +250,73 @@ export function MoveTargetDialog({
         )}
 
         {mode === 'new' && (
-        <>
-        <Heading>{t('newTicket')}</Heading>
-        <div className='flex flex-col gap-2'>
-          {/* A counter tab, named for whoever is taking their lines to the
-              counter; the name is optional, like any tab's */}
-          <div className='flex gap-2'>
-            <Input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder={t('tabName')}
-              className='h-14 text-base'
-              autoComplete='off'
-            />
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-14 shrink-0 gap-2'
-              disabled={isPending}
-              onClick={() =>
-                onPick({ kind: 'counter', label: label.trim() || null })
-              }
-            >
-              <Plus className='size-5' />
-              {t('newTab')}
-            </Button>
-          </div>
-
-          {canSplit && (
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-14 justify-start gap-3 text-base'
-              disabled={isPending}
-              onClick={() => onPick({ kind: 'split' })}
-            >
-              <Split className='text-muted-foreground size-5' />
-              {t('newTicketForPlace')}
-            </Button>
-          )}
-        </div>
-
-        {freeTables.length > 0 && (
           <>
-            <Heading>{t('freeTables')}</Heading>
-            <div className='flex flex-wrap gap-2'>
-              {freeTables.map((table) => (
+            <Heading>{t('newTicket')}</Heading>
+            <div className='flex flex-col gap-2'>
+              {/* A counter tab, named for whoever is taking their lines to the
+              counter; the name is optional, like any tab's */}
+              <div className='flex gap-2'>
+                <Input
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder={t('tabName')}
+                  className='h-14 text-base'
+                  autoComplete='off'
+                />
                 <Button
-                  key={String(table.id)}
                   variant='outline'
-                  className='h-11 gap-2 rounded-full px-4'
+                  size='lg'
+                  className='h-14 shrink-0 gap-2'
                   disabled={isPending}
                   onClick={() =>
-                    onPick({
-                      kind: 'table',
-                      placeId: toNumber(table.id),
-                      // LEGACY(places): legacy sticker id sent as tableId alongside placeId — remove when every till and customer app is on /api/places and /api/stays.
-                      tableId: table.legacyTableId != null ? toNumber(table.legacyTableId) : null,
-                      tableName: table.name,
-                    })
+                    onPick({ kind: 'counter', label: label.trim() || null })
                   }
                 >
-                  <Armchair className='text-muted-foreground size-4' />
-                  {localized(table.name)}
+                  <Plus className='size-5' />
+                  {t('newTab')}
                 </Button>
-              ))}
+              </div>
+
+              {canSplit && (
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-14 justify-start gap-3 text-base'
+                  disabled={isPending}
+                  onClick={() => onPick({ kind: 'split' })}
+                >
+                  <Split className='text-muted-foreground size-5' />
+                  {t('newTicketForPlace')}
+                </Button>
+              )}
             </div>
+
+            {freeTables.length > 0 && (
+              <>
+                <Heading>{t('freeTables')}</Heading>
+                <div className='flex flex-wrap gap-2'>
+                  {freeTables.map((table) => (
+                    <Button
+                      key={String(table.id)}
+                      variant='outline'
+                      className='h-11 gap-2 rounded-full px-4'
+                      disabled={isPending}
+                      onClick={() =>
+                        onPick({
+                          kind: 'table',
+                          placeId: toNumber(table.id),
+                          placeName: table.name,
+                        })
+                      }
+                    >
+                      <Armchair className='text-muted-foreground size-4' />
+                      {localized(table.name)}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
-        )}
-        </>
         )}
       </DialogContent>
     </Dialog>

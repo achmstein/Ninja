@@ -2812,6 +2812,16 @@
               "string"
             ],
             "format": "int32"
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           }
         }
       },
@@ -2889,6 +2899,16 @@
               "string"
             ],
             "format": "int32"
+          },
+          "placeName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           }
         }
       },
