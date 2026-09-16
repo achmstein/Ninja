@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentsResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -234,7 +234,7 @@ export const removeTicketDiscount = <ThrowOnError extends boolean = false>(optio
 /**
  * Take a percent or an amount off the whole bill, with a reason
  *
- * Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.
+ * Exactly one of rate (a fraction, 0.1 is 10%) or amount; the reason is optional. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.
  */
 export const applyTicketDiscount = <ThrowOnError extends boolean = false>(options: Options<ApplyTicketDiscountData, ThrowOnError>): RequestResult<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError> => (options.client ?? client).post<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError>({
     url: '/api/tickets/{id}/discount',
@@ -295,6 +295,17 @@ export const setBranchPricing = <ThrowOnError extends boolean = false>(options: 
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * A settled bill's receipt, for a customer who was on it
+ *
+ * The customer's own copy of the printed receipt. Allowed for whoever sat in the room, ordered a line, or paid a share; 404 until the bill is settled.
+ */
+export const getTicketReceipt = <ThrowOnError extends boolean = false>(options: Options<GetTicketReceiptData, ThrowOnError>): RequestResult<GetTicketReceiptResponses, GetTicketReceiptErrors, ThrowOnError> => (options.client ?? client).get<GetTicketReceiptResponses, GetTicketReceiptErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/{id}/receipt',
+    ...options
 });
 
 /**

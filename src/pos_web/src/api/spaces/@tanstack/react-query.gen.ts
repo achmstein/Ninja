@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMemberToSession, assignCustomerToSession, cancelMyReservation, cancelSession, changePlayerMode, createRoom, createTable, deleteRoom, deleteTable, endSession, getActiveSessions, getAvailableRooms, getMySessions, getRoom, getRoomSessionHistory, getSession, getSessionHistory, getSessionStats, getTable, joinSessionByRoom, leaveSession, listRooms, listTables, type Options, removeMemberFromSession, reserveRoom, scanRoom, setTableActive, startSession, startWalkInSession, updateRoom, updateRoomStatus, updateTable } from '../sdk.gen';
-import type { AddMemberToSessionData, AddMemberToSessionError, AssignCustomerToSessionData, AssignCustomerToSessionError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, ChangePlayerModeData, ChangePlayerModeError, CreateRoomData, CreateRoomResponse, CreateTableData, CreateTableError, CreateTableResponse, DeleteRoomData, DeleteRoomError, DeleteTableData, EndSessionData, EndSessionError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, GetSessionStatsData, GetSessionStatsResponse, GetTableData, GetTableResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, LeaveSessionData, LeaveSessionError, ListRoomsData, ListRoomsResponse, ListTablesData, ListTablesResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanRoomData, ScanRoomResponse, SetTableActiveData, StartSessionData, StartSessionError, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdateRoomData, UpdateRoomStatusData, UpdateRoomStatusError, UpdateTableData, UpdateTableError } from '../types.gen';
+import { addMemberToSession, addStayMember, assignCustomerToSession, assignStayCustomer, cancelMyHold, cancelMyReservation, cancelSession, cancelStay, changePlayerMode, changeStayOption, confirmSession, confirmStay, createPlace, createRoom, createTable, deletePlace, deleteRoom, deleteTable, endSession, endStay, getActiveSessions, getAvailablePlaces, getAvailableRooms, getMySessions, getMyStays, getOpenStays, getPlace, getPlaceStayHistory, getRoom, getRoomSessionHistory, getSession, getSessionHistory, getSessionStats, getStay, getStayHistory, getStayStats, getTable, holdPlace, joinSessionByRoom, joinStay, leaveSession, leaveStay, listPlaces, listRooms, listTables, type Options, removeMemberFromSession, removeStayMember, reserveRoom, scanPlace, scanRoom, setPlaceActive, setPlaceStatus, setPlaceTariff, setTableActive, startSession, startStay, startWalkIn, startWalkInSession, updatePlace, updateRoom, updateRoomStatus, updateTable } from '../sdk.gen';
+import type { AddMemberToSessionData, AddMemberToSessionError, AddStayMemberData, AddStayMemberError, AssignCustomerToSessionData, AssignCustomerToSessionError, AssignStayCustomerData, AssignStayCustomerError, CancelMyHoldData, CancelMyHoldError, CancelMyReservationData, CancelMyReservationError, CancelSessionData, CancelSessionError, CancelStayData, CancelStayError, ChangePlayerModeData, ChangePlayerModeError, ChangeStayOptionData, ChangeStayOptionError, ConfirmSessionData, ConfirmSessionError, ConfirmStayData, ConfirmStayError, CreatePlaceData, CreatePlaceError, CreatePlaceResponse, CreateRoomData, CreateRoomError, CreateRoomResponse, CreateTableData, CreateTableError, CreateTableResponse, DeletePlaceData, DeletePlaceError, DeleteRoomData, DeleteRoomError, DeleteTableData, DeleteTableError, EndSessionData, EndSessionError, EndStayData, EndStayError, GetActiveSessionsData, GetActiveSessionsResponse, GetAvailablePlacesData, GetAvailablePlacesResponse, GetAvailableRoomsData, GetAvailableRoomsResponse, GetMySessionsData, GetMySessionsResponse, GetMyStaysData, GetMyStaysResponse, GetOpenStaysData, GetOpenStaysResponse, GetPlaceData, GetPlaceResponse, GetPlaceStayHistoryData, GetPlaceStayHistoryResponse, GetRoomData, GetRoomResponse, GetRoomSessionHistoryData, GetRoomSessionHistoryResponse, GetSessionData, GetSessionHistoryData, GetSessionHistoryResponse, GetSessionResponse, GetSessionStatsData, GetSessionStatsResponse, GetStayData, GetStayHistoryData, GetStayHistoryResponse, GetStayResponse, GetStayStatsData, GetStayStatsResponse, GetTableData, GetTableResponse, HoldPlaceData, HoldPlaceError, HoldPlaceResponse, JoinSessionByRoomData, JoinSessionByRoomError, JoinSessionByRoomResponse, JoinStayData, JoinStayError, JoinStayResponse, LeaveSessionData, LeaveSessionError, LeaveStayData, LeaveStayError, ListPlacesData, ListPlacesResponse, ListRoomsData, ListRoomsResponse, ListTablesData, ListTablesResponse, RemoveMemberFromSessionData, RemoveMemberFromSessionError, RemoveStayMemberData, RemoveStayMemberError, ReserveRoomData, ReserveRoomError, ReserveRoomResponse, ScanPlaceData, ScanPlaceResponse, ScanRoomData, ScanRoomResponse, SetPlaceActiveData, SetPlaceStatusData, SetPlaceStatusError, SetPlaceTariffData, SetPlaceTariffError, SetTableActiveData, StartSessionData, StartSessionError, StartStayData, StartStayError, StartWalkInData, StartWalkInError, StartWalkInResponse, StartWalkInSessionData, StartWalkInSessionError, StartWalkInSessionResponse, UpdatePlaceData, UpdatePlaceError, UpdateRoomData, UpdateRoomError, UpdateRoomStatusData, UpdateRoomStatusError, UpdateTableData, UpdateTableError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -40,12 +40,529 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
+export const listPlacesQueryKey = (options?: Options<ListPlacesData>) => createQueryKey('listPlaces', options);
+
+/**
+ * List places
+ *
+ * Every place of the branch with its status; narrow by kind or to timed places
+ */
+export const listPlacesOptions = (options?: Options<ListPlacesData>) => queryOptions<ListPlacesResponse, AxiosError<DefaultError>, ListPlacesResponse, ReturnType<typeof listPlacesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listPlaces({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listPlacesQueryKey(options)
+});
+
+/**
+ * Create a place (Admin)
+ */
+export const createPlaceMutation = (options?: Partial<Options<CreatePlaceData>>): UseMutationOptions<CreatePlaceResponse, AxiosError<CreatePlaceError>, Options<CreatePlaceData>> => {
+    const mutationOptions: UseMutationOptions<CreatePlaceResponse, AxiosError<CreatePlaceError>, Options<CreatePlaceData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createPlace({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAvailablePlacesQueryKey = (options?: Options<GetAvailablePlacesData>) => createQueryKey('getAvailablePlaces', options);
+
+/**
+ * Places a customer can book now
+ */
+export const getAvailablePlacesOptions = (options?: Options<GetAvailablePlacesData>) => queryOptions<GetAvailablePlacesResponse, AxiosError<DefaultError>, GetAvailablePlacesResponse, ReturnType<typeof getAvailablePlacesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAvailablePlaces({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAvailablePlacesQueryKey(options)
+});
+
+/**
+ * Delete a place (Admin)
+ *
+ * Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.
+ */
+export const deletePlaceMutation = (options?: Partial<Options<DeletePlaceData>>): UseMutationOptions<unknown, AxiosError<DeletePlaceError>, Options<DeletePlaceData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DeletePlaceError>, Options<DeletePlaceData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deletePlace({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPlaceQueryKey = (options: Options<GetPlaceData>) => createQueryKey('getPlace', options);
+
+/**
+ * Get a place
+ *
+ * What a scanned place QR resolves to
+ */
+export const getPlaceOptions = (options: Options<GetPlaceData>) => queryOptions<GetPlaceResponse, AxiosError<DefaultError>, GetPlaceResponse, ReturnType<typeof getPlaceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlace({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlaceQueryKey(options)
+});
+
+/**
+ * Rename a place or change its description (Admin)
+ */
+export const updatePlaceMutation = (options?: Partial<Options<UpdatePlaceData>>): UseMutationOptions<unknown, AxiosError<UpdatePlaceError>, Options<UpdatePlaceData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdatePlaceError>, Options<UpdatePlaceData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updatePlace({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give a place a tariff, change it, or take it away (Admin)
+ *
+ * A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.
+ */
+export const setPlaceTariffMutation = (options?: Partial<Options<SetPlaceTariffData>>): UseMutationOptions<unknown, AxiosError<SetPlaceTariffError>, Options<SetPlaceTariffData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<SetPlaceTariffError>, Options<SetPlaceTariffData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPlaceTariff({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Activate or deactivate a place (Admin)
+ *
+ * Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it
+ */
+export const setPlaceActiveMutation = (options?: Partial<Options<SetPlaceActiveData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetPlaceActiveData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetPlaceActiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPlaceActive({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Set a place's physical status (Admin)
+ */
+export const setPlaceStatusMutation = (options?: Partial<Options<SetPlaceStatusData>>): UseMutationOptions<unknown, AxiosError<SetPlaceStatusError>, Options<SetPlaceStatusData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<SetPlaceStatusError>, Options<SetPlaceStatusData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPlaceStatus({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const scanPlaceQueryKey = (options: Options<ScanPlaceData>) => createQueryKey('scanPlace', options);
+
+/**
+ * What this customer sees after scanning the place's QR
+ */
+export const scanPlaceOptions = (options: Options<ScanPlaceData>) => queryOptions<ScanPlaceResponse, AxiosError<DefaultError>, ScanPlaceResponse, ReturnType<typeof scanPlaceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await scanPlace({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: scanPlaceQueryKey(options)
+});
+
+/**
+ * Hold a timed place
+ *
+ * The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.
+ */
+export const holdPlaceMutation = (options?: Partial<Options<HoldPlaceData>>): UseMutationOptions<HoldPlaceResponse, AxiosError<HoldPlaceError>, Options<HoldPlaceData>> => {
+    const mutationOptions: UseMutationOptions<HoldPlaceResponse, AxiosError<HoldPlaceError>, Options<HoldPlaceData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await holdPlace({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Start the clock for a party that walked in (staff)
+ */
+export const startWalkInMutation = (options?: Partial<Options<StartWalkInData>>): UseMutationOptions<StartWalkInResponse, AxiosError<StartWalkInError>, Options<StartWalkInData>> => {
+    const mutationOptions: UseMutationOptions<StartWalkInResponse, AxiosError<StartWalkInError>, Options<StartWalkInData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startWalkIn({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Join the stay running at a place (QR scan)
+ */
+export const joinStayMutation = (options?: Partial<Options<JoinStayData>>): UseMutationOptions<JoinStayResponse, AxiosError<JoinStayError>, Options<JoinStayData>> => {
+    const mutationOptions: UseMutationOptions<JoinStayResponse, AxiosError<JoinStayError>, Options<JoinStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await joinStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPlaceStayHistoryQueryKey = (options: Options<GetPlaceStayHistoryData>) => createQueryKey('getPlaceStayHistory', options);
+
+/**
+ * Ended and cancelled stays at a place (Admin)
+ */
+export const getPlaceStayHistoryOptions = (options: Options<GetPlaceStayHistoryData>) => queryOptions<GetPlaceStayHistoryResponse, AxiosError<DefaultError>, GetPlaceStayHistoryResponse, ReturnType<typeof getPlaceStayHistoryQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlaceStayHistory({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlaceStayHistoryQueryKey(options)
+});
+
+export const getMyStaysQueryKey = (options?: Options<GetMyStaysData>) => createQueryKey('getMyStays', options);
+
+/**
+ * The signed-in customer's stays, newest first
+ */
+export const getMyStaysOptions = (options?: Options<GetMyStaysData>) => queryOptions<GetMyStaysResponse, AxiosError<DefaultError>, GetMyStaysResponse, ReturnType<typeof getMyStaysQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMyStays({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMyStaysQueryKey(options)
+});
+
+export const getOpenStaysQueryKey = (options?: Options<GetOpenStaysData>) => createQueryKey('getOpenStays', options);
+
+/**
+ * Held and running stays of the branch (staff)
+ */
+export const getOpenStaysOptions = (options?: Options<GetOpenStaysData>) => queryOptions<GetOpenStaysResponse, AxiosError<DefaultError>, GetOpenStaysResponse, ReturnType<typeof getOpenStaysQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOpenStays({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOpenStaysQueryKey(options)
+});
+
+export const getStayHistoryQueryKey = (options?: Options<GetStayHistoryData>) => createQueryKey('getStayHistory', options);
+
+/**
+ * Ended and cancelled stays across the branch, paged (Admin)
+ */
+export const getStayHistoryOptions = (options?: Options<GetStayHistoryData>) => queryOptions<GetStayHistoryResponse, AxiosError<DefaultError>, GetStayHistoryResponse, ReturnType<typeof getStayHistoryQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStayHistory({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStayHistoryQueryKey(options)
+});
+
+export const getStayStatsQueryKey = (options: Options<GetStayStatsData>) => createQueryKey('getStayStats', options);
+
+/**
+ * Per-day and per-place hours, stays and revenue (Admin)
+ */
+export const getStayStatsOptions = (options: Options<GetStayStatsData>) => queryOptions<GetStayStatsResponse, AxiosError<DefaultError>, GetStayStatsResponse, ReturnType<typeof getStayStatsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStayStats({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStayStatsQueryKey(options)
+});
+
+export const getStayQueryKey = (options: Options<GetStayData>) => createQueryKey('getStay', options);
+
+/**
+ * Get a stay
+ */
+export const getStayOptions = (options: Options<GetStayData>) => queryOptions<GetStayResponse, AxiosError<DefaultError>, GetStayResponse, ReturnType<typeof getStayQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getStay({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getStayQueryKey(options)
+});
+
+/**
+ * The customer arrived (staff)
+ *
+ * Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start
+ */
+export const confirmStayMutation = (options?: Partial<Options<ConfirmStayData>>): UseMutationOptions<unknown, AxiosError<ConfirmStayError>, Options<ConfirmStayData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ConfirmStayError>, Options<ConfirmStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await confirmStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Start the clock on a held stay (staff)
+ */
+export const startStayMutation = (options?: Partial<Options<StartStayData>>): UseMutationOptions<unknown, AxiosError<StartStayError>, Options<StartStayData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<StartStayError>, Options<StartStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Stop the clock and settle the cost (staff)
+ */
+export const endStayMutation = (options?: Partial<Options<EndStayData>>): UseMutationOptions<unknown, AxiosError<EndStayError>, Options<EndStayData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<EndStayError>, Options<EndStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await endStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give up a hold or cut a running stay short (staff)
+ */
+export const cancelStayMutation = (options?: Partial<Options<CancelStayData>>): UseMutationOptions<unknown, AxiosError<CancelStayError>, Options<CancelStayData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelStayError>, Options<CancelStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Switch a running stay to another rate option (staff)
+ */
+export const changeStayOptionMutation = (options?: Partial<Options<ChangeStayOptionData>>): UseMutationOptions<unknown, AxiosError<ChangeStayOptionError>, Options<ChangeStayOptionData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ChangeStayOptionError>, Options<ChangeStayOptionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await changeStayOption({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give an unclaimed walk-in its owner (staff)
+ */
+export const assignStayCustomerMutation = (options?: Partial<Options<AssignStayCustomerData>>): UseMutationOptions<unknown, AxiosError<AssignStayCustomerError>, Options<AssignStayCustomerData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<AssignStayCustomerError>, Options<AssignStayCustomerData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await assignStayCustomer({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Name someone in the party (staff)
+ *
+ * Allowed on a running or ended stay: after the clock stops this still names who was there, so their share can go on their tab at settle
+ */
+export const addStayMemberMutation = (options?: Partial<Options<AddStayMemberData>>): UseMutationOptions<unknown, AxiosError<AddStayMemberError>, Options<AddStayMemberData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<AddStayMemberError>, Options<AddStayMemberData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await addStayMember({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Remove a member (not the owner) from a running stay (staff)
+ */
+export const removeStayMemberMutation = (options?: Partial<Options<RemoveStayMemberData>>): UseMutationOptions<unknown, AxiosError<RemoveStayMemberError>, Options<RemoveStayMemberData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<RemoveStayMemberError>, Options<RemoveStayMemberData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await removeStayMember({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Leave a stay you joined (not as its owner)
+ */
+export const leaveStayMutation = (options?: Partial<Options<LeaveStayData>>): UseMutationOptions<unknown, AxiosError<LeaveStayError>, Options<LeaveStayData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<LeaveStayError>, Options<LeaveStayData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await leaveStay({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give up your own hold before it starts
+ */
+export const cancelMyHoldMutation = (options?: Partial<Options<CancelMyHoldData>>): UseMutationOptions<unknown, AxiosError<CancelMyHoldError>, Options<CancelMyHoldData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelMyHoldError>, Options<CancelMyHoldData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelMyHold({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const listRoomsQueryKey = (options?: Options<ListRoomsData>) => createQueryKey('listRooms', options);
 
 /**
  * List all rooms
- *
- * Get all PlayStation rooms with their current display status
  */
 export const listRoomsOptions = (options?: Options<ListRoomsData>) => queryOptions<ListRoomsResponse, AxiosError<DefaultError>, ListRoomsResponse, ReturnType<typeof listRoomsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -62,11 +579,9 @@ export const listRoomsOptions = (options?: Options<ListRoomsData>) => queryOptio
 
 /**
  * Create a new room
- *
- * Create a new PlayStation room (Admin only)
  */
-export const createRoomMutation = (options?: Partial<Options<CreateRoomData>>): UseMutationOptions<CreateRoomResponse, AxiosError<DefaultError>, Options<CreateRoomData>> => {
-    const mutationOptions: UseMutationOptions<CreateRoomResponse, AxiosError<DefaultError>, Options<CreateRoomData>> = {
+export const createRoomMutation = (options?: Partial<Options<CreateRoomData>>): UseMutationOptions<CreateRoomResponse, AxiosError<CreateRoomError>, Options<CreateRoomData>> => {
+    const mutationOptions: UseMutationOptions<CreateRoomResponse, AxiosError<CreateRoomError>, Options<CreateRoomData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createRoom({
                 ...options,
@@ -81,8 +596,6 @@ export const createRoomMutation = (options?: Partial<Options<CreateRoomData>>): 
 
 /**
  * Delete a room
- *
- * Delete a room (Admin only)
  */
 export const deleteRoomMutation = (options?: Partial<Options<DeleteRoomData>>): UseMutationOptions<unknown, AxiosError<DeleteRoomError>, Options<DeleteRoomData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<DeleteRoomError>, Options<DeleteRoomData>> = {
@@ -102,8 +615,6 @@ export const getRoomQueryKey = (options: Options<GetRoomData>) => createQueryKey
 
 /**
  * Get room by ID
- *
- * Get a specific room by its ID
  */
 export const getRoomOptions = (options: Options<GetRoomData>) => queryOptions<GetRoomResponse, AxiosError<DefaultError>, GetRoomResponse, ReturnType<typeof getRoomQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -120,11 +631,9 @@ export const getRoomOptions = (options: Options<GetRoomData>) => queryOptions<Ge
 
 /**
  * Update room details
- *
- * Update room name, description, and rates (Admin only)
  */
-export const updateRoomMutation = (options?: Partial<Options<UpdateRoomData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<UpdateRoomData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<UpdateRoomData>> = {
+export const updateRoomMutation = (options?: Partial<Options<UpdateRoomData>>): UseMutationOptions<unknown, AxiosError<UpdateRoomError>, Options<UpdateRoomData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdateRoomError>, Options<UpdateRoomData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateRoom({
                 ...options,
@@ -141,8 +650,6 @@ export const getAvailableRoomsQueryKey = (options?: Options<GetAvailableRoomsDat
 
 /**
  * Get available rooms
- *
- * Get only rooms that are currently available for reservation
  */
 export const getAvailableRoomsOptions = (options?: Options<GetAvailableRoomsData>) => queryOptions<GetAvailableRoomsResponse, AxiosError<DefaultError>, GetAvailableRoomsResponse, ReturnType<typeof getAvailableRoomsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -159,8 +666,6 @@ export const getAvailableRoomsOptions = (options?: Options<GetAvailableRoomsData
 
 /**
  * Update room physical status
- *
- * Update the physical status of a room (Admin only)
  */
 export const updateRoomStatusMutation = (options?: Partial<Options<UpdateRoomStatusData>>): UseMutationOptions<unknown, AxiosError<UpdateRoomStatusError>, Options<UpdateRoomStatusData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdateRoomStatusError>, Options<UpdateRoomStatusData>> = {
@@ -178,8 +683,6 @@ export const updateRoomStatusMutation = (options?: Partial<Options<UpdateRoomSta
 
 /**
  * Reserve a room
- *
- * Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.
  */
 export const reserveRoomMutation = (options?: Partial<Options<ReserveRoomData>>): UseMutationOptions<ReserveRoomResponse, AxiosError<ReserveRoomError>, Options<ReserveRoomData>> => {
     const mutationOptions: UseMutationOptions<ReserveRoomResponse, AxiosError<ReserveRoomError>, Options<ReserveRoomData>> = {
@@ -197,8 +700,6 @@ export const reserveRoomMutation = (options?: Partial<Options<ReserveRoomData>>)
 
 /**
  * Start a session
- *
- * Start the timer for a reserved session (staff)
  */
 export const startSessionMutation = (options?: Partial<Options<StartSessionData>>): UseMutationOptions<unknown, AxiosError<StartSessionError>, Options<StartSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<StartSessionError>, Options<StartSessionData>> = {
@@ -215,9 +716,24 @@ export const startSessionMutation = (options?: Partial<Options<StartSessionData>
 };
 
 /**
+ * Confirm the customer arrived
+ */
+export const confirmSessionMutation = (options?: Partial<Options<ConfirmSessionData>>): UseMutationOptions<unknown, AxiosError<ConfirmSessionError>, Options<ConfirmSessionData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ConfirmSessionError>, Options<ConfirmSessionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await confirmSession({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * End a session
- *
- * End the session and calculate cost (staff)
  */
 export const endSessionMutation = (options?: Partial<Options<EndSessionData>>): UseMutationOptions<unknown, AxiosError<EndSessionError>, Options<EndSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<EndSessionError>, Options<EndSessionData>> = {
@@ -235,8 +751,6 @@ export const endSessionMutation = (options?: Partial<Options<EndSessionData>>): 
 
 /**
  * Cancel a session
- *
- * Cancel a reservation or active session (staff)
  */
 export const cancelSessionMutation = (options?: Partial<Options<CancelSessionData>>): UseMutationOptions<unknown, AxiosError<CancelSessionError>, Options<CancelSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelSessionError>, Options<CancelSessionData>> = {
@@ -254,8 +768,6 @@ export const cancelSessionMutation = (options?: Partial<Options<CancelSessionDat
 
 /**
  * Start a walk-in session
- *
- * Start a walk-in session without an assigned customer (staff)
  */
 export const startWalkInSessionMutation = (options?: Partial<Options<StartWalkInSessionData>>): UseMutationOptions<StartWalkInSessionResponse, AxiosError<StartWalkInSessionError>, Options<StartWalkInSessionData>> => {
     const mutationOptions: UseMutationOptions<StartWalkInSessionResponse, AxiosError<StartWalkInSessionError>, Options<StartWalkInSessionData>> = {
@@ -273,8 +785,6 @@ export const startWalkInSessionMutation = (options?: Partial<Options<StartWalkIn
 
 /**
  * Change player mode
- *
- * Change the player mode (Single/Multi) for an active session (staff)
  */
 export const changePlayerModeMutation = (options?: Partial<Options<ChangePlayerModeData>>): UseMutationOptions<unknown, AxiosError<ChangePlayerModeError>, Options<ChangePlayerModeData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<ChangePlayerModeError>, Options<ChangePlayerModeData>> = {
@@ -292,8 +802,6 @@ export const changePlayerModeMutation = (options?: Partial<Options<ChangePlayerM
 
 /**
  * Leave a session
- *
- * Leave a session you've joined (cannot leave if you're the owner)
  */
 export const leaveSessionMutation = (options?: Partial<Options<LeaveSessionData>>): UseMutationOptions<unknown, AxiosError<LeaveSessionError>, Options<LeaveSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<LeaveSessionError>, Options<LeaveSessionData>> = {
@@ -311,8 +819,6 @@ export const leaveSessionMutation = (options?: Partial<Options<LeaveSessionData>
 
 /**
  * Cancel my reservation
- *
- * Cancel your own reservation (only if still in Reserved status)
  */
 export const cancelMyReservationMutation = (options?: Partial<Options<CancelMyReservationData>>): UseMutationOptions<unknown, AxiosError<CancelMyReservationError>, Options<CancelMyReservationData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<CancelMyReservationError>, Options<CancelMyReservationData>> = {
@@ -332,8 +838,6 @@ export const getMySessionsQueryKey = (options?: Options<GetMySessionsData>) => c
 
 /**
  * Get my sessions
- *
- * Get all sessions for the current authenticated user
  */
 export const getMySessionsOptions = (options?: Options<GetMySessionsData>) => queryOptions<GetMySessionsResponse, AxiosError<DefaultError>, GetMySessionsResponse, ReturnType<typeof getMySessionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -352,8 +856,6 @@ export const getActiveSessionsQueryKey = (options?: Options<GetActiveSessionsDat
 
 /**
  * Get active sessions
- *
- * Get all currently active sessions (staff)
  */
 export const getActiveSessionsOptions = (options?: Options<GetActiveSessionsData>) => queryOptions<GetActiveSessionsResponse, AxiosError<DefaultError>, GetActiveSessionsResponse, ReturnType<typeof getActiveSessionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -370,8 +872,6 @@ export const getActiveSessionsOptions = (options?: Options<GetActiveSessionsData
 
 /**
  * Assign a customer to a walk-in session
- *
- * Assign a customer to an active walk-in session that has no owner (staff)
  */
 export const assignCustomerToSessionMutation = (options?: Partial<Options<AssignCustomerToSessionData>>): UseMutationOptions<unknown, AxiosError<AssignCustomerToSessionError>, Options<AssignCustomerToSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AssignCustomerToSessionError>, Options<AssignCustomerToSessionData>> = {
@@ -389,8 +889,6 @@ export const assignCustomerToSessionMutation = (options?: Partial<Options<Assign
 
 /**
  * Add a member to a session
- *
- * Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.
  */
 export const addMemberToSessionMutation = (options?: Partial<Options<AddMemberToSessionData>>): UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<AddMemberToSessionError>, Options<AddMemberToSessionData>> = {
@@ -408,8 +906,6 @@ export const addMemberToSessionMutation = (options?: Partial<Options<AddMemberTo
 
 /**
  * Remove a member from a session
- *
- * Remove a non-owner member from an active session (staff)
  */
 export const removeMemberFromSessionMutation = (options?: Partial<Options<RemoveMemberFromSessionData>>): UseMutationOptions<unknown, AxiosError<RemoveMemberFromSessionError>, Options<RemoveMemberFromSessionData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<RemoveMemberFromSessionError>, Options<RemoveMemberFromSessionData>> = {
@@ -429,8 +925,6 @@ export const getSessionQueryKey = (options: Options<GetSessionData>) => createQu
 
 /**
  * Get session by ID
- *
- * Get a specific session by its ID
  */
 export const getSessionOptions = (options: Options<GetSessionData>) => queryOptions<GetSessionResponse, AxiosError<DefaultError>, GetSessionResponse, ReturnType<typeof getSessionQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -449,8 +943,6 @@ export const getRoomSessionHistoryQueryKey = (options: Options<GetRoomSessionHis
 
 /**
  * Get room session history
- *
- * Get completed sessions history for a specific room (Admin only)
  */
 export const getRoomSessionHistoryOptions = (options: Options<GetRoomSessionHistoryData>) => queryOptions<GetRoomSessionHistoryResponse, AxiosError<DefaultError>, GetRoomSessionHistoryResponse, ReturnType<typeof getRoomSessionHistoryQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -469,8 +961,6 @@ export const getSessionHistoryQueryKey = (options?: Options<GetSessionHistoryDat
 
 /**
  * Get session history
- *
- * Get completed/cancelled sessions across all rooms, paginated (Admin only)
  */
 export const getSessionHistoryOptions = (options?: Options<GetSessionHistoryData>) => queryOptions<GetSessionHistoryResponse, AxiosError<DefaultError>, GetSessionHistoryResponse, ReturnType<typeof getSessionHistoryQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -489,8 +979,6 @@ export const getSessionStatsQueryKey = (options: Options<GetSessionStatsData>) =
 
 /**
  * Get aggregated session statistics
- *
- * Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)
  */
 export const getSessionStatsOptions = (options: Options<GetSessionStatsData>) => queryOptions<GetSessionStatsResponse, AxiosError<DefaultError>, GetSessionStatsResponse, ReturnType<typeof getSessionStatsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -509,8 +997,6 @@ export const scanRoomQueryKey = (options: Options<ScanRoomData>) => createQueryK
 
 /**
  * Get room scan info
- *
- * Get room info and active session status for QR code scan-to-join
  */
 export const scanRoomOptions = (options: Options<ScanRoomData>) => queryOptions<ScanRoomResponse, AxiosError<DefaultError>, ScanRoomResponse, ReturnType<typeof scanRoomQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -527,8 +1013,6 @@ export const scanRoomOptions = (options: Options<ScanRoomData>) => queryOptions<
 
 /**
  * Join session by room
- *
- * Join the active session of a room (via QR scan)
  */
 export const joinSessionByRoomMutation = (options?: Partial<Options<JoinSessionByRoomData>>): UseMutationOptions<JoinSessionByRoomResponse, AxiosError<JoinSessionByRoomError>, Options<JoinSessionByRoomData>> => {
     const mutationOptions: UseMutationOptions<JoinSessionByRoomResponse, AxiosError<JoinSessionByRoomError>, Options<JoinSessionByRoomData>> = {
@@ -548,8 +1032,6 @@ export const listTablesQueryKey = (options?: Options<ListTablesData>) => createQ
 
 /**
  * List all tables
- *
- * Get all café tables for the branch, including inactive ones
  */
 export const listTablesOptions = (options?: Options<ListTablesData>) => queryOptions<ListTablesResponse, AxiosError<DefaultError>, ListTablesResponse, ReturnType<typeof listTablesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -566,8 +1048,6 @@ export const listTablesOptions = (options?: Options<ListTablesData>) => queryOpt
 
 /**
  * Create a new table
- *
- * Create a new café table (Admin only)
  */
 export const createTableMutation = (options?: Partial<Options<CreateTableData>>): UseMutationOptions<CreateTableResponse, AxiosError<CreateTableError>, Options<CreateTableData>> => {
     const mutationOptions: UseMutationOptions<CreateTableResponse, AxiosError<CreateTableError>, Options<CreateTableData>> = {
@@ -585,11 +1065,9 @@ export const createTableMutation = (options?: Partial<Options<CreateTableData>>)
 
 /**
  * Delete a table
- *
- * Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)
  */
-export const deleteTableMutation = (options?: Partial<Options<DeleteTableData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<DeleteTableData>> => {
-    const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<DeleteTableData>> = {
+export const deleteTableMutation = (options?: Partial<Options<DeleteTableData>>): UseMutationOptions<unknown, AxiosError<DeleteTableError>, Options<DeleteTableData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DeleteTableError>, Options<DeleteTableData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await deleteTable({
                 ...options,
@@ -606,8 +1084,6 @@ export const getTableQueryKey = (options: Options<GetTableData>) => createQueryK
 
 /**
  * Get table by ID
- *
- * Get a table by its ID. This is what a scanned table QR code resolves to.
  */
 export const getTableOptions = (options: Options<GetTableData>) => queryOptions<GetTableResponse, AxiosError<DefaultError>, GetTableResponse, ReturnType<typeof getTableQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -624,8 +1100,6 @@ export const getTableOptions = (options: Options<GetTableData>) => queryOptions<
 
 /**
  * Rename a table
- *
- * Update a table's name (Admin only)
  */
 export const updateTableMutation = (options?: Partial<Options<UpdateTableData>>): UseMutationOptions<unknown, AxiosError<UpdateTableError>, Options<UpdateTableData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdateTableError>, Options<UpdateTableData>> = {
@@ -643,8 +1117,6 @@ export const updateTableMutation = (options?: Partial<Options<UpdateTableData>>)
 
 /**
  * Activate or deactivate a table
- *
- * Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)
  */
 export const setTableActiveMutation = (options?: Partial<Options<SetTableActiveData>>): UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetTableActiveData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<DefaultError>, Options<SetTableActiveData>> = {

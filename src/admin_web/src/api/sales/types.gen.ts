@@ -76,7 +76,7 @@ export type CloseShiftRequest = {
 };
 
 export type DiscountRequest = {
-    reason: string;
+    reason?: null | string;
     rate?: null | number | string;
     amount?: null | number | string;
 };
@@ -217,6 +217,53 @@ export type RangeReport = {
     tabPayments?: number | string;
     tabPaymentCount?: number | string;
     tabPaymentTenderTotals?: Array<TenderTotal>;
+};
+
+export type ReceiptLineView = {
+    description: LocalizedText;
+    details: null | LocalizedText;
+    qty: number | string;
+    unitPrice: number | string;
+    discount: number | string;
+    total: number | string;
+    customerName: null | string;
+};
+
+export type ReceiptPaymentView = {
+    tender: string;
+    amount: number | string;
+    customerName: null | string;
+};
+
+export type ReceiptRefundView = {
+    number: number | string;
+    amount: number | string;
+    reason: string;
+    tender: string;
+    refundedAt: string;
+};
+
+export type ReceiptView = {
+    ticketId: number | string;
+    receiptNumber: number | string;
+    branchId: number | string;
+    type: string;
+    locationName: null | LocalizedText;
+    settledAt: string;
+    lines: Array<ReceiptLineView>;
+    subtotal: number | string;
+    discount: number | string;
+    discountRate: null | number | string;
+    serviceCharge: number | string;
+    serviceChargeRate: number | string;
+    vat: number | string;
+    vatRate: number | string;
+    vatIncluded: boolean;
+    total: number | string;
+    changeGiven: number | string;
+    payments: Array<ReceiptPaymentView>;
+    refunds: Array<ReceiptRefundView>;
+    refundedTotal: number | string;
 };
 
 export type RefundLineRequest = {
@@ -369,6 +416,8 @@ export type TicketDetail = {
     locationName?: null | LocalizedText;
     sessionId?: null | number | string;
     sessionEndedAt?: null | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
     label?: null | string;
@@ -438,6 +487,8 @@ export type TicketSummary = {
     status?: string;
     locationName?: null | LocalizedText;
     sessionId?: null | number | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
     label?: null | string;
@@ -1430,6 +1481,44 @@ export type SetBranchPricingResponses = {
      */
     200: unknown;
 };
+
+export type GetTicketReceiptData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/receipt';
+};
+
+export type GetTicketReceiptErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTicketReceiptResponses = {
+    /**
+     * OK
+     */
+    200: ReceiptView;
+};
+
+export type GetTicketReceiptResponse = GetTicketReceiptResponses[keyof GetTicketReceiptResponses];
 
 export type OpenShiftData = {
     body: OpenShiftRequest;

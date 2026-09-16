@@ -18,6 +18,21 @@ export type ChangePlayerModeRequest = {
     playerMode: string;
 };
 
+export type ChangeStayOptionRequest = {
+    optionCode: string;
+};
+
+export type ConfirmStayRequest = {
+    optionCode?: null | string;
+};
+
+export type CreatePlaceRequest = {
+    kind: PlaceKind;
+    name: LocalizedText;
+    description?: null | LocalizedText;
+    tariff?: null | TariffRequest;
+};
+
 export type CreateRoomRequest = {
     name: LocalizedText;
     description: null | LocalizedText;
@@ -29,10 +44,24 @@ export type CreateTableRequest = {
     name: LocalizedText;
 };
 
+export type HoldPlaceRequest = {
+    customerName?: null | string;
+    notes?: null | string;
+    startOnConfirm?: boolean;
+};
+
 export type JoinSessionResult = {
     reservationId: number | string;
     roomId: number | string;
     roomName: LocalizedText;
+    isOwner: boolean;
+    startTime: string;
+};
+
+export type JoinStayResult = {
+    stayId: number | string;
+    placeId: number | string;
+    placeName: LocalizedText;
     isOwner: boolean;
     startTime: string;
 };
@@ -52,12 +81,75 @@ export type PaginatedResultOfReservationViewModel = {
     hasPreviousPage?: boolean;
 };
 
+export type PaginatedResultOfStayViewModel = {
+    items?: Array<StayViewModel>;
+    pageIndex?: number | string;
+    pageSize?: number | string;
+    totalCount?: number | string;
+    totalPages?: number | string;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+};
+
+export type PlaceDisplayStatus = number;
+
+export type PlaceKind = number;
+
+export type PlaceScanViewModel = {
+    branchId?: number | string;
+    placeId?: number | string;
+    kind?: PlaceKind;
+    placeName?: LocalizedText;
+    status?: PlaceDisplayStatus;
+    isActive?: boolean;
+    tariff?: null | TariffViewModel;
+    isTimed?: boolean;
+    hasOptions?: boolean;
+    canReserve?: boolean;
+    takesControllerRequests?: boolean;
+    hasRunningStay?: boolean;
+    stay?: null | StayPreviewViewModel;
+    isAlreadyMember?: boolean;
+};
+
+export type PlaceStatus = number;
+
+export type PlaceViewModel = {
+    id?: number | string;
+    kind?: PlaceKind;
+    name?: LocalizedText;
+    description?: null | LocalizedText;
+    branchId?: number | string;
+    status?: PlaceDisplayStatus;
+    isActive?: boolean;
+    tariff?: null | TariffViewModel;
+    isTimed?: boolean;
+    hasOptions?: boolean;
+    canReserve?: boolean;
+    takesControllerRequests?: boolean;
+    legacyRoomId?: null | number | string;
+    legacyTableId?: null | number | string;
+    currentStay?: null | StayPreviewViewModel;
+};
+
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type RateOptionRequest = {
+    code: string;
+    name: LocalizedText;
+    hourlyRate: number | string;
+};
+
+export type RateOptionViewModel = {
+    code?: string;
+    name?: LocalizedText;
+    hourlyRate?: number | string;
 };
 
 export type ReservationStatus = number;
@@ -74,6 +166,10 @@ export type ReservationViewModel = {
     actualStartTime?: null | string;
     endTime?: null | string;
     totalCost?: null | number | string;
+    receiptNumber?: null | number | string;
+    paidAt?: null | string;
+    ticketId?: null | number | string;
+    paidWith?: null | string;
     currentPlayerMode?: null | string;
     singleRoundedHours?: number | string;
     multiRoundedHours?: number | string;
@@ -89,6 +185,7 @@ export type ReservationViewModel = {
 export type ReserveRoomRequest = {
     customerName?: null | string;
     notes?: null | string;
+    startOnConfirm?: boolean;
 };
 
 export type RoomDisplayStatus = number;
@@ -158,6 +255,14 @@ export type SessionStatsRoom = {
     revenue?: number | string;
 };
 
+export type SetPlaceActiveRequest = {
+    isActive: boolean;
+};
+
+export type SetPlaceTariffRequest = {
+    tariff: null | TariffRequest;
+};
+
 export type SetTableActiveRequest = {
     isActive: boolean;
 };
@@ -166,8 +271,99 @@ export type StartSessionRequest = {
     playerMode?: null | string;
 };
 
+export type StartStayRequest = {
+    optionCode?: null | string;
+};
+
 export type StartWalkInSessionResult = {
     reservationId: number | string;
+};
+
+export type StartWalkInStayResult = {
+    stayId: number | string;
+};
+
+export type StayCostViewModel = {
+    optionCode?: string;
+    optionName?: LocalizedText;
+    hourlyRate?: number | string;
+    hours?: number | string;
+    cost?: number | string;
+};
+
+export type StayMemberViewModel = {
+    customerId?: string;
+    customerName?: null | string;
+    joinedAt?: string;
+    role?: string;
+};
+
+export type StayPreviewViewModel = {
+    stayId?: number | string;
+    placeId?: number | string;
+    placeName?: LocalizedText;
+    status?: StayStatus;
+    startTime?: string;
+    expiresAt?: null | string;
+    memberCount?: number | string;
+};
+
+export type StaySegmentViewModel = {
+    optionCode?: string;
+    optionName?: LocalizedText;
+    hourlyRate?: number | string;
+    startTime?: string;
+    endTime?: null | string;
+};
+
+export type StayStats = {
+    days?: Array<StayStatsDay>;
+    places?: Array<StayStatsPlace>;
+};
+
+export type StayStatsDay = {
+    date?: string;
+    stays?: number | string;
+    hours?: number | string;
+    revenue?: number | string;
+};
+
+export type StayStatsPlace = {
+    placeId?: number | string;
+    placeKind?: PlaceKind;
+    placeName?: LocalizedText;
+    stays?: number | string;
+    hours?: number | string;
+    revenue?: number | string;
+};
+
+export type StayStatus = number;
+
+export type StayViewModel = {
+    id?: number | string;
+    placeId?: number | string;
+    placeKind?: PlaceKind;
+    placeName?: LocalizedText;
+    customerId?: null | string;
+    customerName?: null | string;
+    createdAt?: string;
+    expiresAt?: null | string;
+    startOnConfirm?: boolean;
+    startedAt?: null | string;
+    endedAt?: null | string;
+    tariff?: TariffViewModel;
+    currentOptionCode?: null | string;
+    currentOptionName?: null | LocalizedText;
+    costs?: Array<StayCostViewModel>;
+    totalCost?: null | number | string;
+    receiptNumber?: null | number | string;
+    paidAt?: null | string;
+    ticketId?: null | number | string;
+    paidWith?: null | string;
+    status?: StayStatus;
+    notes?: null | string;
+    members?: Array<StayMemberViewModel>;
+    segments?: Array<StaySegmentViewModel>;
 };
 
 export type TableViewModel = {
@@ -175,6 +371,21 @@ export type TableViewModel = {
     name?: LocalizedText;
     branchId?: number | string;
     isActive?: boolean;
+};
+
+export type TariffRequest = {
+    options: Array<RateOptionRequest>;
+    roundingMinutes?: number | string;
+};
+
+export type TariffViewModel = {
+    options?: Array<RateOptionViewModel>;
+    roundingMinutes?: number | string;
+};
+
+export type UpdatePlaceRequest = {
+    name: LocalizedText;
+    description?: null | LocalizedText;
 };
 
 export type UpdateRoomRequest = {
@@ -191,6 +402,1068 @@ export type UpdateTableRequest = {
 export type WalkInSessionRequest = {
     notes?: null | string;
     playerMode?: null | string;
+};
+
+export type WalkInStayRequest = {
+    notes?: null | string;
+    optionCode?: null | string;
+    customerId?: null | string;
+    customerName?: null | string;
+};
+
+export type ListPlacesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only places of this kind
+         */
+        kind?: PlaceKind;
+        /**
+         * Only timed (true) or order-only (false) places
+         */
+        timed?: boolean;
+    };
+    url: '/api/places';
+};
+
+export type ListPlacesResponses = {
+    /**
+     * OK
+     */
+    200: Array<PlaceViewModel>;
+};
+
+export type ListPlacesResponse = ListPlacesResponses[keyof ListPlacesResponses];
+
+export type CreatePlaceData = {
+    body: CreatePlaceRequest;
+    path?: never;
+    query?: never;
+    url: '/api/places';
+};
+
+export type CreatePlaceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreatePlaceError = CreatePlaceErrors[keyof CreatePlaceErrors];
+
+export type CreatePlaceResponses = {
+    /**
+     * Created
+     */
+    201: number | string;
+};
+
+export type CreatePlaceResponse = CreatePlaceResponses[keyof CreatePlaceResponses];
+
+export type GetAvailablePlacesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/places/available';
+};
+
+export type GetAvailablePlacesResponses = {
+    /**
+     * OK
+     */
+    200: Array<PlaceViewModel>;
+};
+
+export type GetAvailablePlacesResponse = GetAvailablePlacesResponses[keyof GetAvailablePlacesResponses];
+
+export type DeletePlaceData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}';
+};
+
+export type DeletePlaceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeletePlaceError = DeletePlaceErrors[keyof DeletePlaceErrors];
+
+export type DeletePlaceResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetPlaceData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}';
+};
+
+export type GetPlaceErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetPlaceResponses = {
+    /**
+     * OK
+     */
+    200: PlaceViewModel;
+};
+
+export type GetPlaceResponse = GetPlaceResponses[keyof GetPlaceResponses];
+
+export type UpdatePlaceData = {
+    body: UpdatePlaceRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}';
+};
+
+export type UpdatePlaceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdatePlaceError = UpdatePlaceErrors[keyof UpdatePlaceErrors];
+
+export type UpdatePlaceResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type SetPlaceTariffData = {
+    body: SetPlaceTariffRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/tariff';
+};
+
+export type SetPlaceTariffErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPlaceTariffError = SetPlaceTariffErrors[keyof SetPlaceTariffErrors];
+
+export type SetPlaceTariffResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type SetPlaceActiveData = {
+    body: SetPlaceActiveRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/active';
+};
+
+export type SetPlaceActiveErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPlaceActiveResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type SetPlaceStatusData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query: {
+        /**
+         * The new physical status
+         */
+        status: PlaceStatus;
+    };
+    url: '/api/places/{id}/status';
+};
+
+export type SetPlaceStatusErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPlaceStatusError = SetPlaceStatusErrors[keyof SetPlaceStatusErrors];
+
+export type SetPlaceStatusResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type ScanPlaceData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/scan';
+};
+
+export type ScanPlaceErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ScanPlaceResponses = {
+    /**
+     * OK
+     */
+    200: PlaceScanViewModel;
+};
+
+export type ScanPlaceResponse = ScanPlaceResponses[keyof ScanPlaceResponses];
+
+export type HoldPlaceData = {
+    body?: null | HoldPlaceRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/hold';
+};
+
+export type HoldPlaceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type HoldPlaceError = HoldPlaceErrors[keyof HoldPlaceErrors];
+
+export type HoldPlaceResponses = {
+    /**
+     * Created
+     */
+    201: number | string;
+};
+
+export type HoldPlaceResponse = HoldPlaceResponses[keyof HoldPlaceResponses];
+
+export type StartWalkInData = {
+    body?: null | WalkInStayRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/walk-in';
+};
+
+export type StartWalkInErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type StartWalkInError = StartWalkInErrors[keyof StartWalkInErrors];
+
+export type StartWalkInResponses = {
+    /**
+     * Created
+     */
+    201: StartWalkInStayResult;
+};
+
+export type StartWalkInResponse = StartWalkInResponses[keyof StartWalkInResponses];
+
+export type JoinStayData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/join';
+};
+
+export type JoinStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type JoinStayError = JoinStayErrors[keyof JoinStayErrors];
+
+export type JoinStayResponses = {
+    /**
+     * OK
+     */
+    200: JoinStayResult;
+};
+
+export type JoinStayResponse = JoinStayResponses[keyof JoinStayResponses];
+
+export type GetPlaceStayHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * Maximum number of stays to return
+         */
+        limit?: number | string;
+    };
+    url: '/api/places/{id}/stays';
+};
+
+export type GetPlaceStayHistoryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlaceStayHistoryResponses = {
+    /**
+     * OK
+     */
+    200: Array<StayViewModel>;
+};
+
+export type GetPlaceStayHistoryResponse = GetPlaceStayHistoryResponses[keyof GetPlaceStayHistoryResponses];
+
+export type GetMyStaysData = {
+    body?: never;
+    path?: never;
+    query?: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+    };
+    url: '/api/stays/my';
+};
+
+export type GetMyStaysErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyStaysResponses = {
+    /**
+     * OK
+     */
+    200: Array<StayViewModel>;
+};
+
+export type GetMyStaysResponse = GetMyStaysResponses[keyof GetMyStaysResponses];
+
+export type GetOpenStaysData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/stays/open';
+};
+
+export type GetOpenStaysErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOpenStaysResponses = {
+    /**
+     * OK
+     */
+    200: Array<StayViewModel>;
+};
+
+export type GetOpenStaysResponse = GetOpenStaysResponses[keyof GetOpenStaysResponses];
+
+export type GetStayHistoryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * Filter by place
+         */
+        placeId?: number | string;
+        fromDate?: string;
+        toDate?: string;
+    };
+    url: '/api/stays/history';
+};
+
+export type GetStayHistoryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetStayHistoryResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedResultOfStayViewModel;
+};
+
+export type GetStayHistoryResponse = GetStayHistoryResponses[keyof GetStayHistoryResponses];
+
+export type GetStayStatsData = {
+    body?: never;
+    path?: never;
+    query: {
+        fromDate: string;
+        toDate: string;
+        /**
+         * JS getTimezoneOffset() of the caller, for local-day bucketing
+         */
+        tzOffsetMinutes?: number | string;
+    };
+    url: '/api/stays/stats';
+};
+
+export type GetStayStatsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetStayStatsResponses = {
+    /**
+     * OK
+     */
+    200: StayStats;
+};
+
+export type GetStayStatsResponse = GetStayStatsResponses[keyof GetStayStatsResponses];
+
+export type GetStayData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}';
+};
+
+export type GetStayErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetStayResponses = {
+    /**
+     * OK
+     */
+    200: StayViewModel;
+};
+
+export type GetStayResponse = GetStayResponses[keyof GetStayResponses];
+
+export type ConfirmStayData = {
+    body?: null | ConfirmStayRequest;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/confirm';
+};
+
+export type ConfirmStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ConfirmStayError = ConfirmStayErrors[keyof ConfirmStayErrors];
+
+export type ConfirmStayResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type StartStayData = {
+    body?: null | StartStayRequest;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/start';
+};
+
+export type StartStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type StartStayError = StartStayErrors[keyof StartStayErrors];
+
+export type StartStayResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type EndStayData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/end';
+};
+
+export type EndStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type EndStayError = EndStayErrors[keyof EndStayErrors];
+
+export type EndStayResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelStayData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/cancel';
+};
+
+export type CancelStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelStayError = CancelStayErrors[keyof CancelStayErrors];
+
+export type CancelStayResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type ChangeStayOptionData = {
+    body: ChangeStayOptionRequest;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/option';
+};
+
+export type ChangeStayOptionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ChangeStayOptionError = ChangeStayOptionErrors[keyof ChangeStayOptionErrors];
+
+export type ChangeStayOptionResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type AssignStayCustomerData = {
+    body: AssignCustomerRequest;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/assign-customer';
+};
+
+export type AssignStayCustomerErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type AssignStayCustomerError = AssignStayCustomerErrors[keyof AssignStayCustomerErrors];
+
+export type AssignStayCustomerResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type AddStayMemberData = {
+    body: AddMemberRequest;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/members';
+};
+
+export type AddStayMemberErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type AddStayMemberError = AddStayMemberErrors[keyof AddStayMemberErrors];
+
+export type AddStayMemberResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type RemoveStayMemberData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+        /**
+         * The customer ID to remove
+         */
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/stays/{id}/members/{customerId}';
+};
+
+export type RemoveStayMemberErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type RemoveStayMemberError = RemoveStayMemberErrors[keyof RemoveStayMemberErrors];
+
+export type RemoveStayMemberResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type LeaveStayData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/{id}/leave';
+};
+
+export type LeaveStayErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type LeaveStayError = LeaveStayErrors[keyof LeaveStayErrors];
+
+export type LeaveStayResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelMyHoldData = {
+    body?: never;
+    path: {
+        /**
+         * The stay ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/stays/my/{id}/cancel';
+};
+
+export type CancelMyHoldErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelMyHoldError = CancelMyHoldErrors[keyof CancelMyHoldErrors];
+
+export type CancelMyHoldResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
 };
 
 export type ListRoomsData = {
@@ -218,6 +1491,10 @@ export type CreateRoomData = {
 
 export type CreateRoomErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -226,6 +1503,8 @@ export type CreateRoomErrors = {
      */
     403: unknown;
 };
+
+export type CreateRoomError = CreateRoomErrors[keyof CreateRoomErrors];
 
 export type CreateRoomResponses = {
     /**
@@ -240,7 +1519,7 @@ export type DeleteRoomData = {
     body?: never;
     path: {
         /**
-         * The room ID
+         * The place ID
          */
         id: number;
     };
@@ -318,6 +1597,10 @@ export type UpdateRoomData = {
 
 export type UpdateRoomErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -330,6 +1613,8 @@ export type UpdateRoomErrors = {
      */
     404: unknown;
 };
+
+export type UpdateRoomError = UpdateRoomErrors[keyof UpdateRoomErrors];
 
 export type UpdateRoomResponses = {
     /**
@@ -471,6 +1756,46 @@ export type StartSessionErrors = {
 export type StartSessionError = StartSessionErrors[keyof StartSessionErrors];
 
 export type StartSessionResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type ConfirmSessionData = {
+    body?: null | StartSessionRequest;
+    path: {
+        /**
+         * The session ID
+         */
+        sessionId: number;
+    };
+    query?: never;
+    url: '/api/rooms/sessions/{sessionId}/confirm';
+};
+
+export type ConfirmSessionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ConfirmSessionError = ConfirmSessionErrors[keyof ConfirmSessionErrors];
+
+export type ConfirmSessionResponses = {
     /**
      * OK
      */
@@ -1176,6 +2501,10 @@ export type DeleteTableData = {
 
 export type DeleteTableErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -1188,6 +2517,8 @@ export type DeleteTableErrors = {
      */
     404: unknown;
 };
+
+export type DeleteTableError = DeleteTableErrors[keyof DeleteTableErrors];
 
 export type DeleteTableResponses = {
     /**

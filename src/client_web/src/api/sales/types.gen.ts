@@ -416,6 +416,8 @@ export type TicketDetail = {
     locationName?: null | LocalizedText;
     sessionId?: null | number | string;
     sessionEndedAt?: null | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
     label?: null | string;
@@ -485,6 +487,8 @@ export type TicketSummary = {
     status?: string;
     locationName?: null | LocalizedText;
     sessionId?: null | number | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
     roomId?: null | number | string;
     tableId?: null | number | string;
     label?: null | string;

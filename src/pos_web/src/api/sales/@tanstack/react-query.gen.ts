@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, removeTicketDiscount, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, removeTicketDiscount, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -405,7 +405,7 @@ export const removeTicketDiscountMutation = (options?: Partial<Options<RemoveTic
 /**
  * Take a percent or an amount off the whole bill, with a reason
  *
- * Exactly one of rate (a fraction, 0.1 is 10%) or amount. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.
+ * Exactly one of rate (a fraction, 0.1 is 10%) or amount; the reason is optional. A cashier is capped by the branch's MaxCashierDiscountRate; an owner is not. Given again, it replaces the earlier discount.
  */
 export const applyTicketDiscountMutation = (options?: Partial<Options<ApplyTicketDiscountData>>): UseMutationOptions<unknown, AxiosError<ApplyTicketDiscountError>, Options<ApplyTicketDiscountData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<ApplyTicketDiscountError>, Options<ApplyTicketDiscountData>> = {
@@ -495,6 +495,26 @@ export const setBranchPricingMutation = (options?: Partial<Options<SetBranchPric
     };
     return mutationOptions;
 };
+
+export const getTicketReceiptQueryKey = (options: Options<GetTicketReceiptData>) => createQueryKey('getTicketReceipt', options);
+
+/**
+ * A settled bill's receipt, for a customer who was on it
+ *
+ * The customer's own copy of the printed receipt. Allowed for whoever sat in the room, ordered a line, or paid a share; 404 until the bill is settled.
+ */
+export const getTicketReceiptOptions = (options: Options<GetTicketReceiptData>) => queryOptions<GetTicketReceiptResponse, AxiosError<DefaultError>, GetTicketReceiptResponse, ReturnType<typeof getTicketReceiptQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTicketReceipt({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTicketReceiptQueryKey(options)
+});
 
 /**
  * Open the branch's drawer shift with a counted float

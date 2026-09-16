@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, CreateTableData, CreateTableErrors, CreateTableResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, DeleteTableData, DeleteTableErrors, DeleteTableResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, GetSessionStatsData, GetSessionStatsErrors, GetSessionStatsResponses, GetTableData, GetTableErrors, GetTableResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, ListRoomsData, ListRoomsResponses, ListTablesData, ListTablesResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, SetTableActiveData, SetTableActiveErrors, SetTableActiveResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses, UpdateTableData, UpdateTableErrors, UpdateTableResponses } from './types.gen';
+import type { AddMemberToSessionData, AddMemberToSessionErrors, AddMemberToSessionResponses, AddStayMemberData, AddStayMemberErrors, AddStayMemberResponses, AssignCustomerToSessionData, AssignCustomerToSessionErrors, AssignCustomerToSessionResponses, AssignStayCustomerData, AssignStayCustomerErrors, AssignStayCustomerResponses, CancelMyHoldData, CancelMyHoldErrors, CancelMyHoldResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelSessionData, CancelSessionErrors, CancelSessionResponses, CancelStayData, CancelStayErrors, CancelStayResponses, ChangePlayerModeData, ChangePlayerModeErrors, ChangePlayerModeResponses, ChangeStayOptionData, ChangeStayOptionErrors, ChangeStayOptionResponses, ConfirmSessionData, ConfirmSessionErrors, ConfirmSessionResponses, ConfirmStayData, ConfirmStayErrors, ConfirmStayResponses, CreatePlaceData, CreatePlaceErrors, CreatePlaceResponses, CreateRoomData, CreateRoomErrors, CreateRoomResponses, CreateTableData, CreateTableErrors, CreateTableResponses, DeletePlaceData, DeletePlaceErrors, DeletePlaceResponses, DeleteRoomData, DeleteRoomErrors, DeleteRoomResponses, DeleteTableData, DeleteTableErrors, DeleteTableResponses, EndSessionData, EndSessionErrors, EndSessionResponses, EndStayData, EndStayErrors, EndStayResponses, GetActiveSessionsData, GetActiveSessionsErrors, GetActiveSessionsResponses, GetAvailablePlacesData, GetAvailablePlacesResponses, GetAvailableRoomsData, GetAvailableRoomsResponses, GetMySessionsData, GetMySessionsErrors, GetMySessionsResponses, GetMyStaysData, GetMyStaysErrors, GetMyStaysResponses, GetOpenStaysData, GetOpenStaysErrors, GetOpenStaysResponses, GetPlaceData, GetPlaceErrors, GetPlaceResponses, GetPlaceStayHistoryData, GetPlaceStayHistoryErrors, GetPlaceStayHistoryResponses, GetRoomData, GetRoomErrors, GetRoomResponses, GetRoomSessionHistoryData, GetRoomSessionHistoryErrors, GetRoomSessionHistoryResponses, GetSessionData, GetSessionErrors, GetSessionHistoryData, GetSessionHistoryErrors, GetSessionHistoryResponses, GetSessionResponses, GetSessionStatsData, GetSessionStatsErrors, GetSessionStatsResponses, GetStayData, GetStayErrors, GetStayHistoryData, GetStayHistoryErrors, GetStayHistoryResponses, GetStayResponses, GetStayStatsData, GetStayStatsErrors, GetStayStatsResponses, GetTableData, GetTableErrors, GetTableResponses, HoldPlaceData, HoldPlaceErrors, HoldPlaceResponses, JoinSessionByRoomData, JoinSessionByRoomErrors, JoinSessionByRoomResponses, JoinStayData, JoinStayErrors, JoinStayResponses, LeaveSessionData, LeaveSessionErrors, LeaveSessionResponses, LeaveStayData, LeaveStayErrors, LeaveStayResponses, ListPlacesData, ListPlacesResponses, ListRoomsData, ListRoomsResponses, ListTablesData, ListTablesResponses, RemoveMemberFromSessionData, RemoveMemberFromSessionErrors, RemoveMemberFromSessionResponses, RemoveStayMemberData, RemoveStayMemberErrors, RemoveStayMemberResponses, ReserveRoomData, ReserveRoomErrors, ReserveRoomResponses, ScanPlaceData, ScanPlaceErrors, ScanPlaceResponses, ScanRoomData, ScanRoomErrors, ScanRoomResponses, SetPlaceActiveData, SetPlaceActiveErrors, SetPlaceActiveResponses, SetPlaceStatusData, SetPlaceStatusErrors, SetPlaceStatusResponses, SetPlaceTariffData, SetPlaceTariffErrors, SetPlaceTariffResponses, SetTableActiveData, SetTableActiveErrors, SetTableActiveResponses, StartSessionData, StartSessionErrors, StartSessionResponses, StartStayData, StartStayErrors, StartStayResponses, StartWalkInData, StartWalkInErrors, StartWalkInResponses, StartWalkInSessionData, StartWalkInSessionErrors, StartWalkInSessionResponses, UpdatePlaceData, UpdatePlaceErrors, UpdatePlaceResponses, UpdateRoomData, UpdateRoomErrors, UpdateRoomResponses, UpdateRoomStatusData, UpdateRoomStatusErrors, UpdateRoomStatusResponses, UpdateTableData, UpdateTableErrors, UpdateTableResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,9 +19,292 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * List all rooms
+ * List places
  *
- * Get all PlayStation rooms with their current display status
+ * Every place of the branch with its status; narrow by kind or to timed places
+ */
+export const listPlaces = <ThrowOnError extends boolean = false>(options?: Options<ListPlacesData, ThrowOnError>): RequestResult<ListPlacesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListPlacesResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places',
+    ...options
+});
+
+/**
+ * Create a place (Admin)
+ */
+export const createPlace = <ThrowOnError extends boolean = false>(options: Options<CreatePlaceData, ThrowOnError>): RequestResult<CreatePlaceResponses, CreatePlaceErrors, ThrowOnError> => (options.client ?? client).post<CreatePlaceResponses, CreatePlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Places a customer can book now
+ */
+export const getAvailablePlaces = <ThrowOnError extends boolean = false>(options?: Options<GetAvailablePlacesData, ThrowOnError>): RequestResult<GetAvailablePlacesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAvailablePlacesResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/available',
+    ...options
+});
+
+/**
+ * Delete a place (Admin)
+ *
+ * Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.
+ */
+export const deletePlace = <ThrowOnError extends boolean = false>(options: Options<DeletePlaceData, ThrowOnError>): RequestResult<DeletePlaceResponses, DeletePlaceErrors, ThrowOnError> => (options.client ?? client).delete<DeletePlaceResponses, DeletePlaceErrors, ThrowOnError>({ url: '/api/places/{id}', ...options });
+
+/**
+ * Get a place
+ *
+ * What a scanned place QR resolves to
+ */
+export const getPlace = <ThrowOnError extends boolean = false>(options: Options<GetPlaceData, ThrowOnError>): RequestResult<GetPlaceResponses, GetPlaceErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceResponses, GetPlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}',
+    ...options
+});
+
+/**
+ * Rename a place or change its description (Admin)
+ */
+export const updatePlace = <ThrowOnError extends boolean = false>(options: Options<UpdatePlaceData, ThrowOnError>): RequestResult<UpdatePlaceResponses, UpdatePlaceErrors, ThrowOnError> => (options.client ?? client).put<UpdatePlaceResponses, UpdatePlaceErrors, ThrowOnError>({
+    url: '/api/places/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Give a place a tariff, change it, or take it away (Admin)
+ *
+ * A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.
+ */
+export const setPlaceTariff = <ThrowOnError extends boolean = false>(options: Options<SetPlaceTariffData, ThrowOnError>): RequestResult<SetPlaceTariffResponses, SetPlaceTariffErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceTariffResponses, SetPlaceTariffErrors, ThrowOnError>({
+    url: '/api/places/{id}/tariff',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Activate or deactivate a place (Admin)
+ *
+ * Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it
+ */
+export const setPlaceActive = <ThrowOnError extends boolean = false>(options: Options<SetPlaceActiveData, ThrowOnError>): RequestResult<SetPlaceActiveResponses, SetPlaceActiveErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceActiveResponses, SetPlaceActiveErrors, ThrowOnError>({
+    url: '/api/places/{id}/active',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set a place's physical status (Admin)
+ */
+export const setPlaceStatus = <ThrowOnError extends boolean = false>(options: Options<SetPlaceStatusData, ThrowOnError>): RequestResult<SetPlaceStatusResponses, SetPlaceStatusErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceStatusResponses, SetPlaceStatusErrors, ThrowOnError>({ url: '/api/places/{id}/status', ...options });
+
+/**
+ * What this customer sees after scanning the place's QR
+ */
+export const scanPlace = <ThrowOnError extends boolean = false>(options: Options<ScanPlaceData, ThrowOnError>): RequestResult<ScanPlaceResponses, ScanPlaceErrors, ThrowOnError> => (options.client ?? client).get<ScanPlaceResponses, ScanPlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/scan',
+    ...options
+});
+
+/**
+ * Hold a timed place
+ *
+ * The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.
+ */
+export const holdPlace = <ThrowOnError extends boolean = false>(options: Options<HoldPlaceData, ThrowOnError>): RequestResult<HoldPlaceResponses, HoldPlaceErrors, ThrowOnError> => (options.client ?? client).post<HoldPlaceResponses, HoldPlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/hold',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Start the clock for a party that walked in (staff)
+ */
+export const startWalkIn = <ThrowOnError extends boolean = false>(options: Options<StartWalkInData, ThrowOnError>): RequestResult<StartWalkInResponses, StartWalkInErrors, ThrowOnError> => (options.client ?? client).post<StartWalkInResponses, StartWalkInErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/walk-in',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Join the stay running at a place (QR scan)
+ */
+export const joinStay = <ThrowOnError extends boolean = false>(options: Options<JoinStayData, ThrowOnError>): RequestResult<JoinStayResponses, JoinStayErrors, ThrowOnError> => (options.client ?? client).post<JoinStayResponses, JoinStayErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/join',
+    ...options
+});
+
+/**
+ * Ended and cancelled stays at a place (Admin)
+ */
+export const getPlaceStayHistory = <ThrowOnError extends boolean = false>(options: Options<GetPlaceStayHistoryData, ThrowOnError>): RequestResult<GetPlaceStayHistoryResponses, GetPlaceStayHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceStayHistoryResponses, GetPlaceStayHistoryErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/stays',
+    ...options
+});
+
+/**
+ * The signed-in customer's stays, newest first
+ */
+export const getMyStays = <ThrowOnError extends boolean = false>(options?: Options<GetMyStaysData, ThrowOnError>): RequestResult<GetMyStaysResponses, GetMyStaysErrors, ThrowOnError> => (options?.client ?? client).get<GetMyStaysResponses, GetMyStaysErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/stays/my',
+    ...options
+});
+
+/**
+ * Held and running stays of the branch (staff)
+ */
+export const getOpenStays = <ThrowOnError extends boolean = false>(options?: Options<GetOpenStaysData, ThrowOnError>): RequestResult<GetOpenStaysResponses, GetOpenStaysErrors, ThrowOnError> => (options?.client ?? client).get<GetOpenStaysResponses, GetOpenStaysErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/stays/open',
+    ...options
+});
+
+/**
+ * Ended and cancelled stays across the branch, paged (Admin)
+ */
+export const getStayHistory = <ThrowOnError extends boolean = false>(options?: Options<GetStayHistoryData, ThrowOnError>): RequestResult<GetStayHistoryResponses, GetStayHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetStayHistoryResponses, GetStayHistoryErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/stays/history',
+    ...options
+});
+
+/**
+ * Per-day and per-place hours, stays and revenue (Admin)
+ */
+export const getStayStats = <ThrowOnError extends boolean = false>(options: Options<GetStayStatsData, ThrowOnError>): RequestResult<GetStayStatsResponses, GetStayStatsErrors, ThrowOnError> => (options.client ?? client).get<GetStayStatsResponses, GetStayStatsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/stays/stats',
+    ...options
+});
+
+/**
+ * Get a stay
+ */
+export const getStay = <ThrowOnError extends boolean = false>(options: Options<GetStayData, ThrowOnError>): RequestResult<GetStayResponses, GetStayErrors, ThrowOnError> => (options.client ?? client).get<GetStayResponses, GetStayErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/stays/{id}',
+    ...options
+});
+
+/**
+ * The customer arrived (staff)
+ *
+ * Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start
+ */
+export const confirmStay = <ThrowOnError extends boolean = false>(options: Options<ConfirmStayData, ThrowOnError>): RequestResult<ConfirmStayResponses, ConfirmStayErrors, ThrowOnError> => (options.client ?? client).post<ConfirmStayResponses, ConfirmStayErrors, ThrowOnError>({
+    url: '/api/stays/{id}/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Start the clock on a held stay (staff)
+ */
+export const startStay = <ThrowOnError extends boolean = false>(options: Options<StartStayData, ThrowOnError>): RequestResult<StartStayResponses, StartStayErrors, ThrowOnError> => (options.client ?? client).post<StartStayResponses, StartStayErrors, ThrowOnError>({
+    url: '/api/stays/{id}/start',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Stop the clock and settle the cost (staff)
+ */
+export const endStay = <ThrowOnError extends boolean = false>(options: Options<EndStayData, ThrowOnError>): RequestResult<EndStayResponses, EndStayErrors, ThrowOnError> => (options.client ?? client).post<EndStayResponses, EndStayErrors, ThrowOnError>({ url: '/api/stays/{id}/end', ...options });
+
+/**
+ * Give up a hold or cut a running stay short (staff)
+ */
+export const cancelStay = <ThrowOnError extends boolean = false>(options: Options<CancelStayData, ThrowOnError>): RequestResult<CancelStayResponses, CancelStayErrors, ThrowOnError> => (options.client ?? client).post<CancelStayResponses, CancelStayErrors, ThrowOnError>({ url: '/api/stays/{id}/cancel', ...options });
+
+/**
+ * Switch a running stay to another rate option (staff)
+ */
+export const changeStayOption = <ThrowOnError extends boolean = false>(options: Options<ChangeStayOptionData, ThrowOnError>): RequestResult<ChangeStayOptionResponses, ChangeStayOptionErrors, ThrowOnError> => (options.client ?? client).put<ChangeStayOptionResponses, ChangeStayOptionErrors, ThrowOnError>({
+    url: '/api/stays/{id}/option',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Give an unclaimed walk-in its owner (staff)
+ */
+export const assignStayCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignStayCustomerData, ThrowOnError>): RequestResult<AssignStayCustomerResponses, AssignStayCustomerErrors, ThrowOnError> => (options.client ?? client).post<AssignStayCustomerResponses, AssignStayCustomerErrors, ThrowOnError>({
+    url: '/api/stays/{id}/assign-customer',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Name someone in the party (staff)
+ *
+ * Allowed on a running or ended stay: after the clock stops this still names who was there, so their share can go on their tab at settle
+ */
+export const addStayMember = <ThrowOnError extends boolean = false>(options: Options<AddStayMemberData, ThrowOnError>): RequestResult<AddStayMemberResponses, AddStayMemberErrors, ThrowOnError> => (options.client ?? client).post<AddStayMemberResponses, AddStayMemberErrors, ThrowOnError>({
+    url: '/api/stays/{id}/members',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove a member (not the owner) from a running stay (staff)
+ */
+export const removeStayMember = <ThrowOnError extends boolean = false>(options: Options<RemoveStayMemberData, ThrowOnError>): RequestResult<RemoveStayMemberResponses, RemoveStayMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveStayMemberResponses, RemoveStayMemberErrors, ThrowOnError>({ url: '/api/stays/{id}/members/{customerId}', ...options });
+
+/**
+ * Leave a stay you joined (not as its owner)
+ */
+export const leaveStay = <ThrowOnError extends boolean = false>(options: Options<LeaveStayData, ThrowOnError>): RequestResult<LeaveStayResponses, LeaveStayErrors, ThrowOnError> => (options.client ?? client).post<LeaveStayResponses, LeaveStayErrors, ThrowOnError>({ url: '/api/stays/{id}/leave', ...options });
+
+/**
+ * Give up your own hold before it starts
+ */
+export const cancelMyHold = <ThrowOnError extends boolean = false>(options: Options<CancelMyHoldData, ThrowOnError>): RequestResult<CancelMyHoldResponses, CancelMyHoldErrors, ThrowOnError> => (options.client ?? client).post<CancelMyHoldResponses, CancelMyHoldErrors, ThrowOnError>({ url: '/api/stays/my/{id}/cancel', ...options });
+
+/**
+ * List all rooms
  */
 export const listRooms = <ThrowOnError extends boolean = false>(options?: Options<ListRoomsData, ThrowOnError>): RequestResult<ListRoomsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListRoomsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -31,8 +314,6 @@ export const listRooms = <ThrowOnError extends boolean = false>(options?: Option
 
 /**
  * Create a new room
- *
- * Create a new PlayStation room (Admin only)
  */
 export const createRoom = <ThrowOnError extends boolean = false>(options: Options<CreateRoomData, ThrowOnError>): RequestResult<CreateRoomResponses, CreateRoomErrors, ThrowOnError> => (options.client ?? client).post<CreateRoomResponses, CreateRoomErrors, ThrowOnError>({
     responseType: 'json',
@@ -46,15 +327,11 @@ export const createRoom = <ThrowOnError extends boolean = false>(options: Option
 
 /**
  * Delete a room
- *
- * Delete a room (Admin only)
  */
 export const deleteRoom = <ThrowOnError extends boolean = false>(options: Options<DeleteRoomData, ThrowOnError>): RequestResult<DeleteRoomResponses, DeleteRoomErrors, ThrowOnError> => (options.client ?? client).delete<DeleteRoomResponses, DeleteRoomErrors, ThrowOnError>({ url: '/api/rooms/{id}', ...options });
 
 /**
  * Get room by ID
- *
- * Get a specific room by its ID
  */
 export const getRoom = <ThrowOnError extends boolean = false>(options: Options<GetRoomData, ThrowOnError>): RequestResult<GetRoomResponses, GetRoomErrors, ThrowOnError> => (options.client ?? client).get<GetRoomResponses, GetRoomErrors, ThrowOnError>({
     responseType: 'json',
@@ -64,8 +341,6 @@ export const getRoom = <ThrowOnError extends boolean = false>(options: Options<G
 
 /**
  * Update room details
- *
- * Update room name, description, and rates (Admin only)
  */
 export const updateRoom = <ThrowOnError extends boolean = false>(options: Options<UpdateRoomData, ThrowOnError>): RequestResult<UpdateRoomResponses, UpdateRoomErrors, ThrowOnError> => (options.client ?? client).put<UpdateRoomResponses, UpdateRoomErrors, ThrowOnError>({
     url: '/api/rooms/{id}',
@@ -78,8 +353,6 @@ export const updateRoom = <ThrowOnError extends boolean = false>(options: Option
 
 /**
  * Get available rooms
- *
- * Get only rooms that are currently available for reservation
  */
 export const getAvailableRooms = <ThrowOnError extends boolean = false>(options?: Options<GetAvailableRoomsData, ThrowOnError>): RequestResult<GetAvailableRoomsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAvailableRoomsResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -89,15 +362,11 @@ export const getAvailableRooms = <ThrowOnError extends boolean = false>(options?
 
 /**
  * Update room physical status
- *
- * Update the physical status of a room (Admin only)
  */
 export const updateRoomStatus = <ThrowOnError extends boolean = false>(options: Options<UpdateRoomStatusData, ThrowOnError>): RequestResult<UpdateRoomStatusResponses, UpdateRoomStatusErrors, ThrowOnError> => (options.client ?? client).put<UpdateRoomStatusResponses, UpdateRoomStatusErrors, ThrowOnError>({ url: '/api/rooms/{id}/status', ...options });
 
 /**
  * Reserve a room
- *
- * Create an immediate reservation for a room. Customer has 10 minutes to arrive before auto-cancellation.
  */
 export const reserveRoom = <ThrowOnError extends boolean = false>(options: Options<ReserveRoomData, ThrowOnError>): RequestResult<ReserveRoomResponses, ReserveRoomErrors, ThrowOnError> => (options.client ?? client).post<ReserveRoomResponses, ReserveRoomErrors, ThrowOnError>({
     responseType: 'json',
@@ -111,8 +380,6 @@ export const reserveRoom = <ThrowOnError extends boolean = false>(options: Optio
 
 /**
  * Start a session
- *
- * Start the timer for a reserved session (staff)
  */
 export const startSession = <ThrowOnError extends boolean = false>(options: Options<StartSessionData, ThrowOnError>): RequestResult<StartSessionResponses, StartSessionErrors, ThrowOnError> => (options.client ?? client).post<StartSessionResponses, StartSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/start',
@@ -124,23 +391,29 @@ export const startSession = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
+ * Confirm the customer arrived
+ */
+export const confirmSession = <ThrowOnError extends boolean = false>(options: Options<ConfirmSessionData, ThrowOnError>): RequestResult<ConfirmSessionResponses, ConfirmSessionErrors, ThrowOnError> => (options.client ?? client).post<ConfirmSessionResponses, ConfirmSessionErrors, ThrowOnError>({
+    url: '/api/rooms/sessions/{sessionId}/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * End a session
- *
- * End the session and calculate cost (staff)
  */
 export const endSession = <ThrowOnError extends boolean = false>(options: Options<EndSessionData, ThrowOnError>): RequestResult<EndSessionResponses, EndSessionErrors, ThrowOnError> => (options.client ?? client).post<EndSessionResponses, EndSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/end', ...options });
 
 /**
  * Cancel a session
- *
- * Cancel a reservation or active session (staff)
  */
 export const cancelSession = <ThrowOnError extends boolean = false>(options: Options<CancelSessionData, ThrowOnError>): RequestResult<CancelSessionResponses, CancelSessionErrors, ThrowOnError> => (options.client ?? client).post<CancelSessionResponses, CancelSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/cancel', ...options });
 
 /**
  * Start a walk-in session
- *
- * Start a walk-in session without an assigned customer (staff)
  */
 export const startWalkInSession = <ThrowOnError extends boolean = false>(options: Options<StartWalkInSessionData, ThrowOnError>): RequestResult<StartWalkInSessionResponses, StartWalkInSessionErrors, ThrowOnError> => (options.client ?? client).post<StartWalkInSessionResponses, StartWalkInSessionErrors, ThrowOnError>({
     responseType: 'json',
@@ -154,8 +427,6 @@ export const startWalkInSession = <ThrowOnError extends boolean = false>(options
 
 /**
  * Change player mode
- *
- * Change the player mode (Single/Multi) for an active session (staff)
  */
 export const changePlayerMode = <ThrowOnError extends boolean = false>(options: Options<ChangePlayerModeData, ThrowOnError>): RequestResult<ChangePlayerModeResponses, ChangePlayerModeErrors, ThrowOnError> => (options.client ?? client).put<ChangePlayerModeResponses, ChangePlayerModeErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/player-mode',
@@ -168,22 +439,16 @@ export const changePlayerMode = <ThrowOnError extends boolean = false>(options: 
 
 /**
  * Leave a session
- *
- * Leave a session you've joined (cannot leave if you're the owner)
  */
 export const leaveSession = <ThrowOnError extends boolean = false>(options: Options<LeaveSessionData, ThrowOnError>): RequestResult<LeaveSessionResponses, LeaveSessionErrors, ThrowOnError> => (options.client ?? client).post<LeaveSessionResponses, LeaveSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/leave', ...options });
 
 /**
  * Cancel my reservation
- *
- * Cancel your own reservation (only if still in Reserved status)
  */
 export const cancelMyReservation = <ThrowOnError extends boolean = false>(options: Options<CancelMyReservationData, ThrowOnError>): RequestResult<CancelMyReservationResponses, CancelMyReservationErrors, ThrowOnError> => (options.client ?? client).post<CancelMyReservationResponses, CancelMyReservationErrors, ThrowOnError>({ url: '/api/rooms/sessions/my/{sessionId}/cancel', ...options });
 
 /**
  * Get my sessions
- *
- * Get all sessions for the current authenticated user
  */
 export const getMySessions = <ThrowOnError extends boolean = false>(options?: Options<GetMySessionsData, ThrowOnError>): RequestResult<GetMySessionsResponses, GetMySessionsErrors, ThrowOnError> => (options?.client ?? client).get<GetMySessionsResponses, GetMySessionsErrors, ThrowOnError>({
     responseType: 'json',
@@ -193,8 +458,6 @@ export const getMySessions = <ThrowOnError extends boolean = false>(options?: Op
 
 /**
  * Get active sessions
- *
- * Get all currently active sessions (staff)
  */
 export const getActiveSessions = <ThrowOnError extends boolean = false>(options?: Options<GetActiveSessionsData, ThrowOnError>): RequestResult<GetActiveSessionsResponses, GetActiveSessionsErrors, ThrowOnError> => (options?.client ?? client).get<GetActiveSessionsResponses, GetActiveSessionsErrors, ThrowOnError>({
     responseType: 'json',
@@ -204,8 +467,6 @@ export const getActiveSessions = <ThrowOnError extends boolean = false>(options?
 
 /**
  * Assign a customer to a walk-in session
- *
- * Assign a customer to an active walk-in session that has no owner (staff)
  */
 export const assignCustomerToSession = <ThrowOnError extends boolean = false>(options: Options<AssignCustomerToSessionData, ThrowOnError>): RequestResult<AssignCustomerToSessionResponses, AssignCustomerToSessionErrors, ThrowOnError> => (options.client ?? client).post<AssignCustomerToSessionResponses, AssignCustomerToSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/assign-customer',
@@ -218,8 +479,6 @@ export const assignCustomerToSession = <ThrowOnError extends boolean = false>(op
 
 /**
  * Add a member to a session
- *
- * Add a customer as a member to an active or ended session (staff). After the session ends this names who was in the room, so their share can go on their tab at settle.
  */
 export const addMemberToSession = <ThrowOnError extends boolean = false>(options: Options<AddMemberToSessionData, ThrowOnError>): RequestResult<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError> => (options.client ?? client).post<AddMemberToSessionResponses, AddMemberToSessionErrors, ThrowOnError>({
     url: '/api/rooms/sessions/{sessionId}/members',
@@ -232,15 +491,11 @@ export const addMemberToSession = <ThrowOnError extends boolean = false>(options
 
 /**
  * Remove a member from a session
- *
- * Remove a non-owner member from an active session (staff)
  */
 export const removeMemberFromSession = <ThrowOnError extends boolean = false>(options: Options<RemoveMemberFromSessionData, ThrowOnError>): RequestResult<RemoveMemberFromSessionResponses, RemoveMemberFromSessionErrors, ThrowOnError> => (options.client ?? client).delete<RemoveMemberFromSessionResponses, RemoveMemberFromSessionErrors, ThrowOnError>({ url: '/api/rooms/sessions/{sessionId}/members/{customerId}', ...options });
 
 /**
  * Get session by ID
- *
- * Get a specific session by its ID
  */
 export const getSession = <ThrowOnError extends boolean = false>(options: Options<GetSessionData, ThrowOnError>): RequestResult<GetSessionResponses, GetSessionErrors, ThrowOnError> => (options.client ?? client).get<GetSessionResponses, GetSessionErrors, ThrowOnError>({
     responseType: 'json',
@@ -250,8 +505,6 @@ export const getSession = <ThrowOnError extends boolean = false>(options: Option
 
 /**
  * Get room session history
- *
- * Get completed sessions history for a specific room (Admin only)
  */
 export const getRoomSessionHistory = <ThrowOnError extends boolean = false>(options: Options<GetRoomSessionHistoryData, ThrowOnError>): RequestResult<GetRoomSessionHistoryResponses, GetRoomSessionHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetRoomSessionHistoryResponses, GetRoomSessionHistoryErrors, ThrowOnError>({
     responseType: 'json',
@@ -261,8 +514,6 @@ export const getRoomSessionHistory = <ThrowOnError extends boolean = false>(opti
 
 /**
  * Get session history
- *
- * Get completed/cancelled sessions across all rooms, paginated (Admin only)
  */
 export const getSessionHistory = <ThrowOnError extends boolean = false>(options?: Options<GetSessionHistoryData, ThrowOnError>): RequestResult<GetSessionHistoryResponses, GetSessionHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetSessionHistoryResponses, GetSessionHistoryErrors, ThrowOnError>({
     responseType: 'json',
@@ -272,8 +523,6 @@ export const getSessionHistory = <ThrowOnError extends boolean = false>(options?
 
 /**
  * Get aggregated session statistics
- *
- * Per-day and per-room hours/sessions/revenue over completed sessions (Admin only)
  */
 export const getSessionStats = <ThrowOnError extends boolean = false>(options: Options<GetSessionStatsData, ThrowOnError>): RequestResult<GetSessionStatsResponses, GetSessionStatsErrors, ThrowOnError> => (options.client ?? client).get<GetSessionStatsResponses, GetSessionStatsErrors, ThrowOnError>({
     responseType: 'json',
@@ -283,8 +532,6 @@ export const getSessionStats = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * Get room scan info
- *
- * Get room info and active session status for QR code scan-to-join
  */
 export const scanRoom = <ThrowOnError extends boolean = false>(options: Options<ScanRoomData, ThrowOnError>): RequestResult<ScanRoomResponses, ScanRoomErrors, ThrowOnError> => (options.client ?? client).get<ScanRoomResponses, ScanRoomErrors, ThrowOnError>({
     responseType: 'json',
@@ -294,8 +541,6 @@ export const scanRoom = <ThrowOnError extends boolean = false>(options: Options<
 
 /**
  * Join session by room
- *
- * Join the active session of a room (via QR scan)
  */
 export const joinSessionByRoom = <ThrowOnError extends boolean = false>(options: Options<JoinSessionByRoomData, ThrowOnError>): RequestResult<JoinSessionByRoomResponses, JoinSessionByRoomErrors, ThrowOnError> => (options.client ?? client).post<JoinSessionByRoomResponses, JoinSessionByRoomErrors, ThrowOnError>({
     responseType: 'json',
@@ -305,8 +550,6 @@ export const joinSessionByRoom = <ThrowOnError extends boolean = false>(options:
 
 /**
  * List all tables
- *
- * Get all café tables for the branch, including inactive ones
  */
 export const listTables = <ThrowOnError extends boolean = false>(options?: Options<ListTablesData, ThrowOnError>): RequestResult<ListTablesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListTablesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -316,8 +559,6 @@ export const listTables = <ThrowOnError extends boolean = false>(options?: Optio
 
 /**
  * Create a new table
- *
- * Create a new café table (Admin only)
  */
 export const createTable = <ThrowOnError extends boolean = false>(options: Options<CreateTableData, ThrowOnError>): RequestResult<CreateTableResponses, CreateTableErrors, ThrowOnError> => (options.client ?? client).post<CreateTableResponses, CreateTableErrors, ThrowOnError>({
     responseType: 'json',
@@ -331,15 +572,11 @@ export const createTable = <ThrowOnError extends boolean = false>(options: Optio
 
 /**
  * Delete a table
- *
- * Permanently delete a table. Its printed QR code stops working - prefer deactivating (Admin only)
  */
 export const deleteTable = <ThrowOnError extends boolean = false>(options: Options<DeleteTableData, ThrowOnError>): RequestResult<DeleteTableResponses, DeleteTableErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTableResponses, DeleteTableErrors, ThrowOnError>({ url: '/api/tables/{id}', ...options });
 
 /**
  * Get table by ID
- *
- * Get a table by its ID. This is what a scanned table QR code resolves to.
  */
 export const getTable = <ThrowOnError extends boolean = false>(options: Options<GetTableData, ThrowOnError>): RequestResult<GetTableResponses, GetTableErrors, ThrowOnError> => (options.client ?? client).get<GetTableResponses, GetTableErrors, ThrowOnError>({
     responseType: 'json',
@@ -349,8 +586,6 @@ export const getTable = <ThrowOnError extends boolean = false>(options: Options<
 
 /**
  * Rename a table
- *
- * Update a table's name (Admin only)
  */
 export const updateTable = <ThrowOnError extends boolean = false>(options: Options<UpdateTableData, ThrowOnError>): RequestResult<UpdateTableResponses, UpdateTableErrors, ThrowOnError> => (options.client ?? client).put<UpdateTableResponses, UpdateTableErrors, ThrowOnError>({
     url: '/api/tables/{id}',
@@ -363,8 +598,6 @@ export const updateTable = <ThrowOnError extends boolean = false>(options: Optio
 
 /**
  * Activate or deactivate a table
- *
- * Deactivating keeps the table and its printed QR code, but stops customers ordering to it (Admin only)
  */
 export const setTableActive = <ThrowOnError extends boolean = false>(options: Options<SetTableActiveData, ThrowOnError>): RequestResult<SetTableActiveResponses, SetTableActiveErrors, ThrowOnError> => (options.client ?? client).put<SetTableActiveResponses, SetTableActiveErrors, ThrowOnError>({
     url: '/api/tables/{id}/active',
