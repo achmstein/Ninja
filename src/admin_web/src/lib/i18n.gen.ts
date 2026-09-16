@@ -439,7 +439,7 @@ export const messages = {
   noBranchDescription: { en: "Your account is not assigned to any branch yet. Ask the owner to assign you one.", ar: "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع." },
   cashierRole: { en: "Cashier", ar: "كاشير" },
   retry: { en: "Retry", ar: "حاول تاني" },
-  placesNav: { en: "Rooms & Tables", ar: "الأوض والترابيزات" },
+  placesNav: { en: "Rooms & Tables", ar: "الأماكن" },
   tables: { en: "Tables", ar: "الترابيزات" },
   stations: { en: "Stations", ar: "الألعاب" },
   fillEveryRate: { en: "Every rate needs a code and a price per hour", ar: "كل سعر لازم له كود وسعر في الساعة" },

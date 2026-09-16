@@ -156,8 +156,14 @@ internal static class Extensions
             yarp.AddRoute("/api/orders/{*any}", orderingCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // Spaces routes (rooms, sessions and tables all live in Spaces.API)
+            // Spaces routes: places and stays, plus the rooms/sessions/tables aliases
             var spacesCluster = yarp.AddCluster(spacesApi);
+            yarp.AddRoute("/api/places/{*any}", spacesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+            yarp.AddRoute("/api/stays/{*any}", spacesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
+            // LEGACY(places): the /api/rooms, /api/sessions and /api/tables aliases — remove when every till and customer app is on /api/places and /api/stays.
             yarp.AddRoute("/api/rooms/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 

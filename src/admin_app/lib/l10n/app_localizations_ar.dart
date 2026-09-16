@@ -1376,7 +1376,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get retry => 'حاول تاني';
 
   @override
-  String get placesNav => 'الأوض والترابيزات';
+  String get placesNav => 'الأماكن';
 
   @override
   String get tables => 'الترابيزات';
