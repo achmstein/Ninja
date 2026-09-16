@@ -4,8 +4,8 @@ import '../../features/catalog/services/catalog_service.dart';
 import '../../features/customers/services/customer_search_service.dart';
 import '../../features/orders/models/order.dart';
 import '../../features/orders/services/order_service.dart';
-import '../../features/rooms/models/room.dart';
-import '../../features/rooms/services/room_service.dart';
+import '../../features/places/models/place.dart';
+import '../../features/places/services/place_service.dart';
 import '../../features/sale/models/pos_order_request.dart';
 import '../../features/service_requests/models/service_request.dart';
 import '../../features/service_requests/services/service_requests_service.dart';
@@ -61,7 +61,7 @@ final demoOverrides = [
   shiftsRepositoryProvider.overrideWithValue(_DemoShiftsRepository()),
   tillPicksRepositoryProvider.overrideWithValue(_DemoTillPicksRepository()),
   serviceRequestsRepositoryProvider.overrideWithValue(_DemoServiceRequestsRepository()),
-  roomRepositoryProvider.overrideWithValue(_DemoRoomRepository()),
+  placeRepositoryProvider.overrideWithValue(_DemoPlaceRepository()),
   customerSearchServiceProvider.overrideWithValue(_DemoCustomerSearchService()),
 ];
 
@@ -124,7 +124,7 @@ class _DemoTicketsRepository implements TicketsRepository {
               id: t.id,
               type: t.type,
               sessionId: t.sessionId,
-              roomId: t.roomId,
+              placeId: t.placeId,
               tableId: t.tableId,
               locationName: t.locationName,
               label: t.label,
@@ -409,7 +409,7 @@ class _DemoTicketsRepository implements TicketsRepository {
       type: t.type,
       status: t.status,
       sessionId: t.sessionId,
-      roomId: t.roomId,
+      placeId: t.placeId,
       tableId: t.tableId,
       locationName: t.locationName,
       label: t.label,
@@ -655,183 +655,206 @@ class _DemoShiftsRepository implements ShiftsRepository {
       );
 }
 
-class _DemoRoomRepository implements RoomRepository {
-  final List<Room> _rooms = [
-    Room(id: 1, name: _lt('Room 1', 'اوضة 1'), status: RoomStatus.available, singleRate: 60, multiRate: 90),
-    Room(id: 2, name: _lt('Room 2', 'اوضة 2'), status: RoomStatus.reserved, singleRate: 60, multiRate: 90),
-    Room(id: 3, name: _lt('Room 3', 'اوضة 3'), status: RoomStatus.occupied, singleRate: 80, multiRate: 120),
-    Room(id: 4, name: _lt('Room 4', 'اوضة 4'), status: RoomStatus.maintenance, singleRate: 60, multiRate: 90),
+class _DemoPlaceRepository implements PlaceRepository {
+  static final _roomTariff = [
+    RateOption(code: 'single', name: _lt('Single', 'سنجل'), hourlyRate: 60),
+    RateOption(code: 'multi', name: _lt('Multi', 'ملتي'), hourlyRate: 90),
   ];
-  final List<RoomSession> _sessions = [
-    RoomSession(
+  static final _vipTariff = [
+    RateOption(code: 'single', name: _lt('Single', 'سنجل'), hourlyRate: 80),
+    RateOption(code: 'multi', name: _lt('Multi', 'ملتي'), hourlyRate: 120),
+  ];
+  static final _tableTariff = [RateOption(code: 'standard', name: _lt('Standard', 'عادي'), hourlyRate: 40)];
+
+  final List<Place> _places = [
+    Place(id: 1, name: _lt('Room 1', 'اوضة 1'), status: PlaceStatus.available, options: _roomTariff),
+    Place(id: 2, name: _lt('Room 2', 'اوضة 2'), status: PlaceStatus.held, options: _roomTariff),
+    Place(id: 3, name: _lt('Room 3', 'اوضة 3'), status: PlaceStatus.occupied, options: _vipTariff),
+    Place(id: 4, name: _lt('Room 4', 'اوضة 4'), status: PlaceStatus.outOfService, options: _roomTariff),
+    for (var n = 1; n <= 3; n++)
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
+    // Table 4 runs a clock, at one rate
+    Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'ترابيزة 4'), status: PlaceStatus.available, options: _tableTariff, legacyTableId: 4),
+    for (var n = 5; n <= 8; n++)
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available, legacyTableId: n),
+    Place(id: 29, kind: PlaceKind.table, name: _lt('Garden 1', 'الجنينة 1'), status: PlaceStatus.available),
+    Place(id: 30, kind: PlaceKind.table, name: _lt('Garden 2', 'الجنينة 2'), status: PlaceStatus.available, isActive: false),
+  ];
+  final List<Stay> _sessions = [
+    Stay(
       id: 7,
-      roomId: 3,
-      roomName: _lt('Room 3', 'اوضة 3'),
+      placeId: 3,
+      placeName: _lt('Room 3', 'اوضة 3'),
       customerId: 'u1',
       userName: 'Ahmed',
-      reservationTime: _now.subtract(const Duration(minutes: 42)),
-      startTime: _now.subtract(const Duration(minutes: 42)),
-      status: SessionStatus.active,
-      singleRate: 80,
-      multiRate: 120,
-      currentPlayerMode: 'Single',
-      singleRoundedHours: 0.5,
-      members: [SessionMember(customerId: 'u1', customerName: 'Ahmed', joinedAt: _now.subtract(const Duration(minutes: 42)), role: 'Owner')],
-      segments: [SessionSegment(playerMode: 'Single', hourlyRate: 80, startTime: _now.subtract(const Duration(minutes: 42)))],
+      createdAt: _now.subtract(const Duration(minutes: 42)),
+      startedAt: _now.subtract(const Duration(minutes: 42)),
+      status: StayStatus.running,
+      options: _vipTariff,
+      currentOptionCode: 'single',
+      currentOptionName: _lt('Single', 'سنجل'),
+      members: [StayMember(customerId: 'u1', customerName: 'Ahmed', joinedAt: _now.subtract(const Duration(minutes: 42)), role: 'Owner')],
+      segments: [StaySegment(optionCode: 'single', optionName: _lt('Single', 'سنجل'), hourlyRate: 80, startTime: _now.subtract(const Duration(minutes: 42)))],
     ),
-    RoomSession(
+    Stay(
       id: 8,
-      roomId: 2,
-      roomName: _lt('Room 2', 'اوضة 2'),
+      placeId: 2,
+      placeName: _lt('Room 2', 'اوضة 2'),
       userName: 'Mona',
-      reservationTime: _now.subtract(const Duration(minutes: 3)),
-      status: SessionStatus.reserved,
-      singleRate: 60,
-      multiRate: 90,
+      createdAt: _now.subtract(const Duration(minutes: 3)),
+      status: StayStatus.held,
+      options: _roomTariff,
+      startOnConfirm: true,
       expiresAt: _now.add(const Duration(minutes: 12)),
     ),
   ];
   int _nextSession = 9;
 
-  Room _room(int id) => _rooms.firstWhere((r) => r.id == id);
-  RoomSession _session(int id) => _sessions.firstWhere((s) => s.id == id);
+  Place _place(int id) => _places.firstWhere((r) => r.id == id);
+  Stay _session(int id) => _sessions.firstWhere((s) => s.id == id);
 
-  void _setStatus(int roomId, RoomStatus status) {
-    final i = _rooms.indexWhere((r) => r.id == roomId);
-    _rooms[i] = _rooms[i].copyWith(status: status);
+  void _setStatus(int roomId, PlaceStatus status) {
+    final i = _places.indexWhere((r) => r.id == roomId);
+    final r = _places[i];
+    _places[i] = Place(
+      id: r.id, kind: r.kind, name: r.name, description: r.description, status: status, isActive: r.isActive,
+      options: r.options, roundingMinutes: r.roundingMinutes, canReserve: r.canReserve, legacyTableId: r.legacyTableId,
+    );
   }
 
-  void _replace(RoomSession next) => _sessions[_sessions.indexWhere((s) => s.id == next.id)] = next;
+  void _replace(Stay next) => _sessions[_sessions.indexWhere((s) => s.id == next.id)] = next;
 
-  RoomSession _copy(RoomSession s, {SessionStatus? status, DateTime? startTime, String? currentPlayerMode, String? userName, String? customerId, List<SessionMember>? members, List<SessionSegment>? segments}) =>
-      RoomSession(
+  Stay _copy(Stay s, {StayStatus? status, DateTime? startedAt, String? currentOptionCode, String? userName, String? customerId, List<StayMember>? members, List<StaySegment>? segments}) =>
+      Stay(
         id: s.id,
-        roomId: s.roomId,
-        roomName: s.roomName,
+        placeId: s.placeId,
+        placeKind: s.placeKind,
+        placeName: s.placeName,
         customerId: customerId ?? s.customerId,
         userName: userName ?? s.userName,
-        reservationTime: s.reservationTime,
-        startTime: startTime ?? s.startTime,
-        endTime: s.endTime,
+        createdAt: s.createdAt,
+        startedAt: startedAt ?? s.startedAt,
+        endedAt: s.endedAt,
         status: status ?? s.status,
-        singleRate: s.singleRate,
-        multiRate: s.multiRate,
-        currentPlayerMode: currentPlayerMode ?? s.currentPlayerMode,
-        singleRoundedHours: s.singleRoundedHours,
-        multiRoundedHours: s.multiRoundedHours,
+        options: s.options,
+        currentOptionCode: currentOptionCode ?? s.currentOptionCode,
+        currentOptionName: s.option(currentOptionCode ?? s.currentOptionCode)?.name,
+        startOnConfirm: s.startOnConfirm,
+        costs: s.costs,
         expiresAt: s.expiresAt,
         members: members ?? s.members,
         segments: segments ?? s.segments,
       );
 
-  @override
-  Future<({List<Room> rooms, List<RoomSession> activeSessions})> loadRooms() async => (rooms: List.of(_rooms), activeSessions: List.of(_sessions));
+  StaySegment _segment(Stay s, String code, DateTime start) {
+    final option = s.option(code) ?? s.options.first;
+    return StaySegment(optionCode: option.code, optionName: option.name, hourlyRate: option.hourlyRate, startTime: start);
+  }
 
   @override
-  Future<void> reserveRoom(int roomId) async {
-    final room = _room(roomId);
-    _sessions.add(RoomSession(
+  Future<({List<Place> places, List<Stay> openStays})> loadPlaces() async => (places: List.of(_places), openStays: List.of(_sessions));
+
+  @override
+  Future<void> holdPlace(int roomId) async {
+    final room = _place(roomId);
+    _sessions.add(Stay(
       id: _nextSession++,
-      roomId: roomId,
-      roomName: room.name,
-      reservationTime: DateTime.now(),
-      status: SessionStatus.reserved,
-      singleRate: room.singleRate,
-      multiRate: room.multiRate,
+      placeId: roomId,
+      placeKind: room.kind,
+      placeName: room.name,
+      createdAt: DateTime.now(),
+      status: StayStatus.held,
+      options: room.options,
       expiresAt: DateTime.now().add(const Duration(minutes: 15)),
     ));
-    _setStatus(roomId, RoomStatus.reserved);
+    _setStatus(roomId, PlaceStatus.held);
   }
 
   @override
-  Future<void> startSession(int sessionId, {String? playerMode}) async {
+  Future<void> startStay(int sessionId, {String? optionCode}) async {
     final s = _session(sessionId);
     final now = DateTime.now();
-    final mode = playerMode ?? 'Single';
-    _replace(_copy(s,
-        status: SessionStatus.active,
-        startTime: now,
-        currentPlayerMode: mode,
-        segments: [SessionSegment(playerMode: mode, hourlyRate: mode == 'Multi' ? s.multiRate : s.singleRate, startTime: now)]));
-    _setStatus(s.roomId, RoomStatus.occupied);
+    final code = optionCode ?? s.options.first.code;
+    _replace(_copy(s, status: StayStatus.running, startedAt: now, currentOptionCode: code, segments: [_segment(s, code, now)]));
+    _setStatus(s.placeId, PlaceStatus.occupied);
   }
 
   @override
-  Future<void> startWalkInSession(int roomId, {String? playerMode}) async {
-    final room = _room(roomId);
+  Future<void> confirmStay(int sessionId) async {
+    final s = _session(sessionId);
+    if (s.startOnConfirm) await startStay(sessionId);
+  }
+
+  @override
+  Future<void> startWalkIn(int roomId, {String? optionCode}) async {
+    final room = _place(roomId);
     final now = DateTime.now();
-    final mode = playerMode ?? 'Single';
-    _sessions.add(RoomSession(
+    final option = room.option(optionCode) ?? room.options.first;
+    _sessions.add(Stay(
       id: _nextSession++,
-      roomId: roomId,
-      roomName: room.name,
-      reservationTime: now,
-      startTime: now,
-      status: SessionStatus.active,
-      singleRate: room.singleRate,
-      multiRate: room.multiRate,
-      currentPlayerMode: mode,
-      segments: [SessionSegment(playerMode: mode, hourlyRate: mode == 'Multi' ? room.multiRate : room.singleRate, startTime: now)],
+      placeId: roomId,
+      placeKind: room.kind,
+      placeName: room.name,
+      createdAt: now,
+      startedAt: now,
+      status: StayStatus.running,
+      options: room.options,
+      currentOptionCode: option.code,
+      currentOptionName: option.name,
+      segments: [StaySegment(optionCode: option.code, optionName: option.name, hourlyRate: option.hourlyRate, startTime: now)],
     ));
-    _setStatus(roomId, RoomStatus.occupied);
+    _setStatus(roomId, PlaceStatus.occupied);
   }
 
   @override
-  Future<void> endSession(int sessionId) async {
+  Future<void> endStay(int sessionId) async {
     final s = _session(sessionId);
     _sessions.removeWhere((x) => x.id == sessionId);
-    _setStatus(s.roomId, RoomStatus.available);
+    _setStatus(s.placeId, PlaceStatus.available);
   }
 
   @override
-  Future<void> cancelSession(int sessionId) => endSession(sessionId);
+  Future<void> cancelStay(int sessionId) => endStay(sessionId);
 
   @override
-  Future<void> changePlayerMode(int sessionId, String playerMode) async {
+  Future<void> changeOption(int sessionId, String optionCode) async {
     final s = _session(sessionId);
     final now = DateTime.now();
-    _replace(_copy(s, currentPlayerMode: playerMode, segments: [
+    _replace(_copy(s, currentOptionCode: optionCode, segments: [
       for (final seg in s.segments)
-        seg.endTime == null ? SessionSegment(playerMode: seg.playerMode, hourlyRate: seg.hourlyRate, startTime: seg.startTime, endTime: now) : seg,
-      SessionSegment(playerMode: playerMode, hourlyRate: playerMode == 'Multi' ? s.multiRate : s.singleRate, startTime: now),
+        seg.endTime == null
+            ? StaySegment(optionCode: seg.optionCode, optionName: seg.optionName, hourlyRate: seg.hourlyRate, startTime: seg.startTime, endTime: now)
+            : seg,
+      _segment(s, optionCode, now),
     ]));
   }
 
   @override
-  Future<void> assignCustomerToSession(int sessionId, String customerId, String? customerName) async {
+  Future<void> assignStayCustomer(int sessionId, String customerId, String? customerName) async {
     final s = _session(sessionId);
     _replace(_copy(s, customerId: customerId, userName: customerName, members: [
-      SessionMember(customerId: customerId, customerName: customerName, joinedAt: DateTime.now(), role: 'Owner'),
+      StayMember(customerId: customerId, customerName: customerName, joinedAt: DateTime.now(), role: 'Owner'),
       ...s.members.where((m) => !m.isOwner),
     ]));
   }
 
   @override
-  Future<void> addMemberToSession(int sessionId, String customerId, String? customerName) async {
+  Future<void> addStayMember(int sessionId, String customerId, String? customerName) async {
     final s = _session(sessionId);
-    _replace(_copy(s, members: [...s.members, SessionMember(customerId: customerId, customerName: customerName, joinedAt: DateTime.now(), role: 'Member')]));
+    _replace(_copy(s, members: [...s.members, StayMember(customerId: customerId, customerName: customerName, joinedAt: DateTime.now(), role: 'Member')]));
   }
 
   @override
-  Future<void> removeMemberFromSession(int sessionId, String customerId) async {
+  Future<void> removeStayMember(int sessionId, String customerId) async {
     final s = _session(sessionId);
     _replace(_copy(s, members: s.members.where((m) => m.customerId != customerId).toList()));
   }
 
   @override
-  Future<void> createRoom(Room room) async {}
+  Future<Stay?> getStay(int sessionId) async => _sessions.where((s) => s.id == sessionId).firstOrNull;
 
   @override
-  Future<void> updateRoom(Room room) async {}
-
-  @override
-  Future<void> deleteRoom(int roomId) async {}
-
-  @override
-  Future<RoomSession?> getSession(int sessionId) async => _sessions.where((s) => s.id == sessionId).firstOrNull;
-
-  @override
-  Future<List<RoomSession>> getSessionHistory(int roomId, {int limit = 20}) async => const [];
+  Future<List<Stay>> getStayHistory(int roomId, {int limit = 20}) async => const [];
 }
 
 class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
@@ -839,7 +862,7 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
     ServiceRequest(
       id: 51,
       userName: 'Ahmed',
-      roomId: 3,
+      placeId: 3,
       roomName: _lt('Room 3', 'اوضة 3'),
       requestType: ServiceRequestType.controllerChange,
       status: ServiceRequestStatus.pending,
@@ -858,7 +881,7 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
     _requests[i] = ServiceRequest(
       id: r.id,
       userName: r.userName,
-      roomId: r.roomId,
+      placeId: r.placeId,
       roomName: r.roomName,
       requestType: r.requestType,
       status: ServiceRequestStatus.acknowledged,
@@ -873,9 +896,10 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
 class _DemoTablesRepository implements TablesRepository {
   @override
   Future<List<CafeTable>> getTables() async => [
-        for (var n = 1; n <= 8; n++) CafeTable(id: n, name: _lt('Table $n', 'ترابيزة $n')),
-        CafeTable(id: 9, name: _lt('Garden 1', 'الجنينة 1')),
-        CafeTable(id: 10, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
+        for (var n = 1; n <= 8; n++)
+          if (n != 4) CafeTable(id: 20 + n, legacyTableId: n, name: _lt('Table $n', 'ترابيزة $n')),
+        CafeTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
+        CafeTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
       ];
 }
 
@@ -1004,7 +1028,7 @@ final List<TicketDetail> _sampleTickets = [
     id: 101,
     type: TicketType.room,
     sessionId: 7,
-    roomId: 3,
+    placeId: 3,
     locationName: _lt('Room 3', 'اوضة 3'),
     label: 'Ahmed',
     openedAt: _now.subtract(const Duration(minutes: 42)),

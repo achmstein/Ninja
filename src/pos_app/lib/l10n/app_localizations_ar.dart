@@ -532,6 +532,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tables => 'الترابيزات';
 
   @override
+  String get stations => 'الألعاب';
+
+  @override
+  String get time => 'الوقت';
+
+  @override
+  String get billOnly => 'شيك بس';
+
+  @override
+  String get confirmArrival => 'وصل';
+
+  @override
+  String get arrivalConfirmed => 'اتأكد الوصول';
+
+  @override
+  String get startsOnConfirm => 'الوقت يبدأ لما تأكد';
+
+  @override
+  String requestChangeOption(String option) {
+    return 'عايز يحوّل $option';
+  }
+
+  @override
   String get freeTables => 'ترابيزات فاضية';
 
   @override

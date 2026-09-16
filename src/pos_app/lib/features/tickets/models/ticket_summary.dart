@@ -7,6 +7,9 @@ class TicketSummary {
   final int id;
   final TicketType? type;
   final int? sessionId;
+
+  /// The Spaces place the bill is for; null on a counter sale
+  final int? placeId;
   final int? roomId;
   final int? tableId;
   final LocalizedText? locationName;
@@ -24,6 +27,7 @@ class TicketSummary {
     required this.id,
     this.type,
     this.sessionId,
+    this.placeId,
     this.roomId,
     this.tableId,
     this.locationName,
@@ -40,6 +44,7 @@ class TicketSummary {
       id: toInt(json['id']),
       type: TicketType.fromName(json['type'] as String?),
       sessionId: json['sessionId'] == null ? null : toInt(json['sessionId']),
+      placeId: json['placeId'] == null ? null : toInt(json['placeId']),
       roomId: json['roomId'] == null ? null : toInt(json['roomId']),
       tableId: json['tableId'] == null ? null : toInt(json['tableId']),
       locationName: LocalizedText.parseNullable(json['locationName']),

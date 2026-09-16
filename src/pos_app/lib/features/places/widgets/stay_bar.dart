@@ -2,15 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/confirm_dialog.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/room.dart';
-import '../session_actions.dart';
+import '../models/place.dart';
+import '../stay_actions.dart';
 import '../status.dart';
-import 'player_mode_toggle.dart';
-import 'session_members.dart';
+import 'rate_option_toggle.dart';
+import 'stay_members.dart';
 
 /// The running clock on a room ticket. Its time is not on the bill yet —
 /// it lands as lines when the session ends — so the card answers the two
@@ -18,17 +19,17 @@ import 'session_members.dart';
 /// The mode switches right here (the customers' most common mid-session
 /// ask), the people in the room are listed and added right here, and the
 /// session ends from here. On the bill itself, customers go on lines with
-/// the ticket's own Assign customer. Mirrors pos_web's SessionBar.
-class SessionBar extends ConsumerStatefulWidget {
-  final RoomSession session;
+/// the ticket's own Assign customer. Mirrors pos_web's StayBar.
+class StayBar extends ConsumerStatefulWidget {
+  final Stay session;
 
-  const SessionBar({super.key, required this.session});
+  const StayBar({super.key, required this.session});
 
   @override
-  ConsumerState<SessionBar> createState() => _SessionBarState();
+  ConsumerState<StayBar> createState() => _StayBarState();
 }
 
-class _SessionBarState extends ConsumerState<SessionBar> {
+class _StayBarState extends ConsumerState<StayBar> {
   // Started eagerly: a lazy `late final` field is first touched in dispose,
   // so the clock would never tick while the card is on screen
   late final Timer _clock;
@@ -46,25 +47,25 @@ class _SessionBarState extends ConsumerState<SessionBar> {
     super.dispose();
   }
 
-  Future<void> _guarded(Future<bool> Function(SessionActions actions) call) async {
+  Future<void> _guarded(Future<bool> Function(StayActions actions) call) async {
     if (_busy) return;
     setState(() => _busy = true);
-    await call(SessionActions(ref, context));
+    await call(StayActions(ref, context));
     if (mounted) setState(() => _busy = false);
   }
 
-  Future<void> _confirmMode(String mode) async {
+  Future<void> _confirmOption(String code) async {
     final l10n = AppLocalizations.of(context)!;
     final session = widget.session;
-    final current = modeLabel(l10n, session.currentPlayerMode);
-    final next = modeLabel(l10n, mode);
+    final current = optionLabel(context, session.options, session.currentOptionCode);
+    final next = optionLabel(context, session.options, code);
     final ok = await showConfirmDialog(
       context,
       title: l10n.switchToModeQuestion(next),
       cancelLabel: l10n.keepCurrent(current),
       actionLabel: l10n.switchMode,
     );
-    if (ok && mounted) await _guarded((a) => a.changeMode(session.id, mode));
+    if (ok && mounted) await _guarded((a) => a.changeOption(session.id, code));
   }
 
   // Ending bills the time; the quiet third answer is the session that
@@ -81,7 +82,7 @@ class _SessionBarState extends ConsumerState<SessionBar> {
       secondaryLabel: l10n.cancelSessionButton,
       onSecondary: _confirmCancel,
     );
-    if (ok && mounted) await _guarded((a) => a.endSession(session.id));
+    if (ok && mounted) await _guarded((a) => a.endStay(session.id));
   }
 
   Future<void> _confirmCancel() async {
@@ -95,7 +96,7 @@ class _SessionBarState extends ConsumerState<SessionBar> {
       actionLabel: l10n.cancelSessionButton,
       destructive: true,
     );
-    if (ok && mounted) await _guarded((a) => a.cancelSession(session.id, wasActive: true));
+    if (ok && mounted) await _guarded((a) => a.cancelStay(session.id, wasActive: true));
   }
 
   @override
@@ -104,8 +105,7 @@ class _SessionBarState extends ConsumerState<SessionBar> {
     final l10n = AppLocalizations.of(context)!;
     final session = widget.session;
     final now = DateTime.now();
-    final single = session.modeSeconds('Single', now);
-    final multi = session.modeSeconds('Multi', now);
+    final used = session.usedOptions(now);
     final estimate = session.estimate(now);
     final hoursLabel = l10n.billedHoursFormat(hoursText(estimate.hours));
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
@@ -141,12 +141,12 @@ class _SessionBarState extends ConsumerState<SessionBar> {
                         ),
                       ],
                     ),
-                    // Per-mode split only once both modes have been used
-                    if (single > 0 && multi > 0)
+                    // Per-option split only once more than one has been used
+                    if (used.length > 1)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(start: 36),
                         child: Text(
-                          '${l10n.playerModeSingle} ${formatClock(single)} · ${l10n.playerModeMulti} ${formatClock(multi)}',
+                          used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, now))}').join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: muted.copyWith(fontFeatures: tabular),
@@ -169,22 +169,26 @@ class _SessionBarState extends ConsumerState<SessionBar> {
             ],
           ),
           const SizedBox(height: 12),
-          SessionMembers(session: session),
+          StayMembers(session: session),
           const SizedBox(height: 12),
-          // Switching mode is the common ask; ending is the last one
+          // Switching the rate is the common ask; ending is the last one
           Row(
             children: [
-              Expanded(
-                child: PlayerModeToggle(
-                  value: session.currentPlayerMode,
-                  disabled: _busy,
-                  onChange: (mode) {
-                    if (mode != null && mode != session.currentPlayerMode) _confirmMode(mode);
-                  },
-                  rates: {'Single': money(context, session.singleRate), 'Multi': money(context, session.multiRate)},
+              if (session.hasOptions) ...[
+                Expanded(
+                  child: RateOptionToggle(
+                    options: session.options,
+                    value: session.currentOptionCode,
+                    disabled: _busy,
+                    onChange: (code) {
+                      if (code != session.currentOptionCode) _confirmOption(code);
+                    },
+                    rates: {for (final o in session.options) o.code: money(context, o.hourlyRate)},
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ] else
+                const Spacer(),
               SizedBox(
                 height: 48,
                 child: FButton(

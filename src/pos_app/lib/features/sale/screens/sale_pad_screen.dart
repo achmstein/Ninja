@@ -22,10 +22,10 @@ import '../../catalog/services/catalog_service.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/providers/customer_providers.dart';
 import '../../orders/services/order_service.dart';
-import '../../rooms/models/room.dart';
-import '../../rooms/providers/rooms_provider.dart';
-import '../../rooms/session_actions.dart';
-import '../../rooms/status.dart';
+import '../../places/models/place.dart';
+import '../../places/providers/places_provider.dart';
+import '../../places/stay_actions.dart';
+import '../../places/status.dart';
 import '../../ticket/dialogs/settle_dialog.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/pricing.dart';
@@ -104,12 +104,12 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   /// The room's session behind the bill being added to, watched so the
   /// customer picker can offer the roster; null for a table or the counter
-  RoomSession? _watchRoomSession() {
+  Stay? _watchRoomSession() {
     final ticketId = widget.ticketId;
     if (ticketId == null) return null;
     final ticket = ref.watch(ticketProvider(ticketId)).value;
-    if (ticket == null || ticket.type != TicketType.room || ticket.sessionId == null) return null;
-    return ref.watch(sessionProvider(ticket.sessionId!)).value;
+    if (ticket == null || ticket.sessionId == null) return null;
+    return ref.watch(stayProvider(ticket.sessionId!)).value;
   }
 
   @override
@@ -372,7 +372,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   /// bill wins. Otherwise, on a room: the person the last round went to,
   /// then the session owner, then the only member. Null when the bill is
   /// already split across people — then the cashier says whose round it is.
-  SaleCustomer? _defaultTicketCustomer(TicketDetail ticket, RoomSession? session) {
+  SaleCustomer? _defaultTicketCustomer(TicketDetail ticket, Stay? session) {
     // A tab opened for an account (the new-tab dialog) pre-selects them so the
     // round lands on their tab. One-shot: read once, then cleared.
     final pending = pendingTicketCustomer.remove(ticket.id);
@@ -405,18 +405,18 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   // Attribute this round in a room: remember it for the next round, and put
   // a newly named person onto the roster so their share needs a tab at settle
-  void _pickInRoom(SaleCustomer picked, RoomSession? session) {
+  void _pickInRoom(SaleCustomer picked, Stay? session) {
     ref.read(saleProvider.notifier).setCustomer(picked);
     if (session != null && (picked.id ?? '').isNotEmpty) {
       _lastRoundBySession[session.id] = picked;
       if (!session.roster.any((m) => m.id == picked.id)) {
-        SessionActions(ref, context).addMember(session.id, picked.id!, picked.name);
+        StayActions(ref, context).addMember(session.id, picked.id!, picked.name);
       }
     }
   }
 
   // Someone not shown as a chip: the search, adding them to the room
-  Future<void> _chooseSomeoneElse(RoomSession? session) async {
+  Future<void> _chooseSomeoneElse(Stay? session) async {
     final roster = session?.roster ?? const <({String id, String name})>[];
     final picked = await showCustomerDialog(context, quickPicks: roster);
     if (picked == null || !mounted) return;
@@ -742,7 +742,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                                 ref.read(saleProvider.notifier).setCustomer(picked);
                                 final id = picked.id;
                                 if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
-                                  SessionActions(ref, context).addMember(roomSession.id, id, picked.name);
+                                  StayActions(ref, context).addMember(roomSession.id, id, picked.name);
                                 }
                               },
                               prefix: const Icon(FIcons.userPlus, size: 20),

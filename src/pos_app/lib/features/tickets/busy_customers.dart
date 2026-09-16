@@ -1,6 +1,6 @@
 import '../../core/models/localized_text.dart';
-import '../rooms/models/room.dart';
-import '../rooms/status.dart';
+import '../places/models/place.dart';
+import '../places/status.dart';
 import '../sale/models/sale_line.dart';
 import 'models/enums.dart';
 import 'models/ticket_summary.dart';
@@ -17,7 +17,7 @@ typedef BillPlace = ({LocalizedText? name, String? label, TicketType? type});
 /// `pendingTicketCustomer` in the sale feature).
 Map<String, BillPlace> customersOnOpenBills({
   required Iterable<TicketSummary> openTickets,
-  required Iterable<RoomSession> activeSessions,
+  required Iterable<Stay> openStays,
   Map<int, SaleCustomer> pending = const {},
 }) {
   final where = <String, BillPlace>{};
@@ -29,10 +29,10 @@ Map<String, BillPlace> customersOnOpenBills({
       where[id] = place;
     }
   }
-  for (final session in activeSessions) {
-    if (!session.isActive) continue;
+  for (final session in openStays) {
+    if (!session.isRunning) continue;
     for (final member in session.roster) {
-      where[member.id] = (name: session.roomName, label: null, type: TicketType.room);
+      where[member.id] = (name: session.placeName, label: null, type: TicketType.room);
     }
   }
   for (final entry in pending.entries) {

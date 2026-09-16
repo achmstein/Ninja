@@ -6,7 +6,10 @@ enum ServiceRequestType {
   controllerChange(2, 'Controller Change'),
   receiptToPay(3, 'Receipt to Pay'),
   switchToMulti(4, 'Switch to Multi'),
-  switchToSingle(5, 'Switch to Single');
+  switchToSingle(5, 'Switch to Single'),
+
+  /// Switch the stay to another rate option; the option's code travels in optionCode
+  changeOption(6, 'Change rate');
 
   final int value;
   final String label;
@@ -50,6 +53,13 @@ class ServiceRequest {
   final LocalizedText roomName;
   final int? tableId;
   final LocalizedText? tableName;
+
+  /// The Spaces place; 'Room', 'Table' or 'Station'
+  final int? placeId;
+  final String? placeKind;
+
+  /// The rate option a changeOption request asks for
+  final String? optionCode;
   final ServiceRequestType requestType;
   final ServiceRequestStatus status;
   final DateTime createdAt;
@@ -61,6 +71,9 @@ class ServiceRequest {
     required this.roomName,
     this.tableId,
     this.tableName,
+    this.placeId,
+    this.placeKind,
+    this.optionCode,
     required this.requestType,
     required this.status,
     required this.createdAt,
@@ -71,9 +84,12 @@ class ServiceRequest {
       id: json['id'] as int,
       userName: json['userName'] as String,
       roomId: json['roomId'] as int?,
-      roomName: LocalizedText.fromJson(json['roomName'] as Map<String, dynamic>),
+      roomName: LocalizedText.parse(json['roomName']),
       tableId: json['tableId'] as int?,
       tableName: json['tableName'] != null ? LocalizedText.fromJson(json['tableName'] as Map<String, dynamic>) : null,
+      placeId: json['placeId'] as int?,
+      placeKind: json['placeKind'] as String?,
+      optionCode: json['optionCode'] as String?,
       requestType: ServiceRequestType.fromValue(json['requestType'] as int),
       status: ServiceRequestStatus.fromValue(json['status'] as int),
       createdAt: DateTime.parse(json['createdAt'] as String),

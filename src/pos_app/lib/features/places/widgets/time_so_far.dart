@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/models/money.dart';
-import '../models/room.dart';
+import '../models/place.dart';
 import '../status.dart';
 
 /// The running session's cost so far, as money, ticking on its own clock
@@ -10,7 +10,7 @@ import '../status.dart';
 /// lines and the total), because the time is not on the bill until the
 /// session ends.
 class TimeSoFar extends StatefulWidget {
-  final RoomSession session;
+  final Stay session;
   final TextStyle? style;
 
   const TimeSoFar({super.key, required this.session, this.style});
@@ -49,17 +49,17 @@ class _TimeSoFarState extends State<TimeSoFar> {
 /// own so the ticket around it does not rebuild every second. The counting
 /// "timer" the cashier watches; the cost beside it (TimeSoFar) steps only
 /// as the billed quarter-hours tick over.
-class RoomClock extends StatefulWidget {
-  final RoomSession session;
+class StayClock extends StatefulWidget {
+  final Stay session;
   final TextStyle? style;
 
-  const RoomClock({super.key, required this.session, this.style});
+  const StayClock({super.key, required this.session, this.style});
 
   @override
-  State<RoomClock> createState() => _RoomClockState();
+  State<StayClock> createState() => _StayClockState();
 }
 
-class _RoomClockState extends State<RoomClock> {
+class _StayClockState extends State<StayClock> {
   Timer? _clock;
 
   @override

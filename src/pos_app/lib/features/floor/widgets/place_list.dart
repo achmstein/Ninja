@@ -5,9 +5,7 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../rooms/models/room.dart';
-import '../../tables/models/cafe_table.dart';
-import '../../tickets/models/enums.dart';
+import '../../places/models/place.dart';
 import '../../tickets/models/ticket_summary.dart';
 
 /// Every place that has no bill yet, as a narrow column beside the bills so
@@ -16,25 +14,21 @@ import '../../tickets/models/ticket_summary.dart';
 /// A room opens its controls (start a walk-in, start the reservation that
 /// just arrived); a table opens a bill.
 class PlaceList extends StatefulWidget {
-  final List<Room> rooms;
-  final List<RoomSession> sessions;
-  final List<CafeTable> tables;
+  final List<Place> places;
+  final List<Stay> sessions;
   final List<TicketSummary> tickets;
   final bool busy;
   final VoidCallback onNewTab;
-  final ValueChanged<Room> onPickRoom;
-  final ValueChanged<CafeTable> onPickTable;
+  final ValueChanged<Place> onPick;
 
   const PlaceList({
     super.key,
-    required this.rooms,
+    required this.places,
     required this.sessions,
-    required this.tables,
     required this.tickets,
     required this.busy,
     required this.onNewTab,
-    required this.onPickRoom,
-    required this.onPickTable,
+    required this.onPick,
   });
 
   @override
@@ -68,9 +62,9 @@ class _PlaceListState extends State<PlaceList> {
     }
   }
 
-  RoomSession? _sessionForRoom(int roomId) {
+  Stay? _stayForPlace(int roomId) {
     for (final session in widget.sessions) {
-      if (session.roomId == roomId) return session;
+      if (session.placeId == roomId) return session;
     }
     return null;
   }
@@ -93,21 +87,22 @@ class _PlaceListState extends State<PlaceList> {
         name.en.toLowerCase().contains(needle) ||
         (name.ar ?? '').toLowerCase().contains(needle);
 
-    // A room with a bill is among the bills already; one without is here,
-    // in whatever state it is in
-    final freeRooms = [
-      for (final room in widget.rooms)
-        if (matches(room.name) && !widget.tickets.any((t) => t.roomId == room.id)) room,
+    // A place with a bill is among the bills already; one without is here,
+    // in whatever state it is in. Bills opened before the remodel name a
+    // room by its id.
+    bool hasBill(Place place) => widget.tickets.any(
+        (t) => t.placeId == place.id || (place.kind == PlaceKind.room && t.placeId == place.id));
+    final free = [
+      for (final place in widget.places)
+        if (place.isActive && matches(place.name) && !hasBill(place)) place,
     ];
-    final freeTables = [
-      for (final table in widget.tables)
-        if (table.isActive &&
-            matches(table.name) &&
-            !widget.tickets.any((t) => t.type == TicketType.table && t.tableId == table.id))
-          table,
+    final groups = [
+      (PlaceKind.room, l10n.rooms),
+      (PlaceKind.table, l10n.tables),
+      (PlaceKind.station, l10n.stations),
     ];
     final now = DateTime.now();
-    _syncClock(freeRooms.any((room) => _sessionForRoom(room.id)?.status == SessionStatus.active));
+    _syncClock(free.any((place) => _stayForPlace(place.id)?.status == StayStatus.running));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -129,41 +124,33 @@ class _PlaceListState extends State<PlaceList> {
             icon: FIcons.shoppingBag,
             onTap: widget.onNewTab,
           ),
-        if (freeRooms.isNotEmpty) ...[
-          Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: Heading(l10n.rooms)),
-          for (final room in freeRooms)
-            Builder(builder: (context) {
-              final session = _sessionForRoom(room.id);
-              final maintenance = room.status == RoomStatus.maintenance;
-              // The dot already says free (tables show nothing either);
-              // text only when there is something to add
-              final detail = session?.status == SessionStatus.active && session?.startTime != null
-                  ? _formatClock(now.difference(session!.startTime!))
-                  : session?.status == SessionStatus.reserved
-                      ? (session!.userName ?? l10n.statusReserved)
-                      : maintenance
-                          ? l10n.underMaintenance
-                          : null;
-              return _PlaceRow(
-                leading: _StatusDot(color: _roomDot(room.status)),
-                name: room.name.localized(context),
-                detail: detail,
-                icon: FIcons.doorOpen,
-                onTap: maintenance || widget.busy ? null : () => widget.onPickRoom(room),
-              );
-            }),
-        ],
-        if (freeTables.isNotEmpty) ...[
-          Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: Heading(l10n.tables)),
-          for (final table in freeTables)
-            _PlaceRow(
-              leading: const _StatusDot(color: AppColors.successColor),
-              name: table.name.localized(context),
-              icon: FIcons.armchair,
-              onTap: widget.busy ? null : () => widget.onPickTable(table),
-            ),
-        ],
-        if (freeRooms.isEmpty && freeTables.isEmpty)
+        for (final (kind, label) in groups)
+          if (free.any((p) => p.kind == kind)) ...[
+            Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: Heading(label)),
+            for (final place in free.where((p) => p.kind == kind))
+              Builder(builder: (context) {
+                // A place with a clock has a state; one without is only ever free
+                final session = place.isTimed ? _stayForPlace(place.id) : null;
+                final maintenance = place.isTimed && place.status == PlaceStatus.outOfService;
+                // The dot already says free; text only when there is
+                // something to add
+                final detail = session?.status == StayStatus.running && session?.startedAt != null
+                    ? _formatClock(now.difference(session!.startedAt!))
+                    : session?.status == StayStatus.held
+                        ? (session!.userName ?? l10n.statusReserved)
+                        : maintenance
+                            ? l10n.underMaintenance
+                            : null;
+                return _PlaceRow(
+                  leading: _StatusDot(color: place.isTimed ? _placeDot(place.status) : AppColors.successColor),
+                  name: place.name.localized(context),
+                  detail: detail,
+                  icon: place.kind.icon,
+                  onTap: maintenance || widget.busy ? null : () => widget.onPick(place),
+                );
+              }),
+          ],
+        if (free.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
@@ -176,11 +163,11 @@ class _PlaceListState extends State<PlaceList> {
     );
   }
 
-  static Color _roomDot(RoomStatus status) => switch (status) {
-        RoomStatus.available => AppColors.successColor,
-        RoomStatus.occupied => AppColors.red500,
-        RoomStatus.reserved => AppColors.amber500,
-        RoomStatus.maintenance => AppColors.gray400,
+  static Color _placeDot(PlaceStatus status) => switch (status) {
+        PlaceStatus.available => AppColors.successColor,
+        PlaceStatus.occupied => AppColors.red500,
+        PlaceStatus.held => AppColors.amber500,
+        PlaceStatus.outOfService => AppColors.gray400,
       };
 }
 

@@ -526,6 +526,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tables => 'Tables';
 
   @override
+  String get stations => 'Stations';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get billOnly => 'Bill only';
+
+  @override
+  String get confirmArrival => 'Confirm arrival';
+
+  @override
+  String get arrivalConfirmed => 'Arrival confirmed';
+
+  @override
+  String get startsOnConfirm => 'Timer starts on confirm';
+
+  @override
+  String requestChangeOption(String option) {
+    return 'Switch to $option';
+  }
+
+  @override
   String get freeTables => 'Free tables';
 
   @override

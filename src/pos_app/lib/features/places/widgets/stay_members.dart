@@ -6,31 +6,31 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/widgets/customer_dialog.dart';
-import '../models/room.dart';
-import '../session_actions.dart';
+import '../models/place.dart';
+import '../stay_actions.dart';
 
 /// Who is in the room: the owner starred, members removable, and a dashed
 /// chip to add the next one. Members' phone orders land on the bill and
 /// earn their points, and at settle each member is a tab the bill can go
 /// on — which is why the till keeps naming people after the time has
 /// landed: someone who never scanned the QR still owes their share.
-/// Mirrors pos_web's SessionMembers.
-class SessionMembers extends ConsumerStatefulWidget {
-  final RoomSession session;
+/// Mirrors pos_web's StayMembers.
+class StayMembers extends ConsumerStatefulWidget {
+  final Stay session;
 
-  const SessionMembers({super.key, required this.session});
+  const StayMembers({super.key, required this.session});
 
   @override
-  ConsumerState<SessionMembers> createState() => _SessionMembersState();
+  ConsumerState<StayMembers> createState() => _StayMembersState();
 }
 
-class _SessionMembersState extends ConsumerState<SessionMembers> {
+class _StayMembersState extends ConsumerState<StayMembers> {
   bool _busy = false;
 
-  Future<void> _guarded(Future<bool> Function(SessionActions actions) call) async {
+  Future<void> _guarded(Future<bool> Function(StayActions actions) call) async {
     if (_busy) return;
     setState(() => _busy = true);
-    await call(SessionActions(ref, context));
+    await call(StayActions(ref, context));
     if (mounted) setState(() => _busy = false);
   }
 

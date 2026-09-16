@@ -1004,6 +1004,48 @@ abstract class AppLocalizations {
   /// **'Tables'**
   String get tables;
 
+  /// No description provided for @stations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get stations;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @billOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill only'**
+  String get billOnly;
+
+  /// No description provided for @confirmArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm arrival'**
+  String get confirmArrival;
+
+  /// No description provided for @arrivalConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival confirmed'**
+  String get arrivalConfirmed;
+
+  /// No description provided for @startsOnConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer starts on confirm'**
+  String get startsOnConfirm;
+
+  /// No description provided for @requestChangeOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {option}'**
+  String requestChangeOption(String option);
+
   /// No description provided for @freeTables.
   ///
   /// In en, this message translates to:

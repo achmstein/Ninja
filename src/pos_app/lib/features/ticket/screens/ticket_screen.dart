@@ -22,13 +22,13 @@ import '../../orders/models/order.dart';
 import '../../orders/providers/pending_orders_provider.dart';
 import '../../orders/services/order_service.dart';
 import '../../orders/widgets/pending_orders.dart';
-import '../../rooms/models/room.dart';
-import '../../rooms/providers/rooms_provider.dart';
-import '../../rooms/session_actions.dart';
-import '../../rooms/status.dart';
-import '../../rooms/widgets/session_bar.dart';
-import '../../rooms/widgets/session_members.dart';
-import '../../rooms/widgets/time_so_far.dart';
+import '../../places/models/place.dart';
+import '../../places/providers/places_provider.dart';
+import '../../places/stay_actions.dart';
+import '../../places/status.dart';
+import '../../places/widgets/stay_bar.dart';
+import '../../places/widgets/stay_members.dart';
+import '../../places/widgets/time_so_far.dart';
 import '../../sale/models/sale_line.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/models/enums.dart';
@@ -115,8 +115,8 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   Future<void> _settle(
     TicketDetail ticket, {
     List<Order> waiting = const [],
-    RoomSession? activeSession,
-    List<SessionMember> members = const [],
+    Stay? activeSession,
+    List<StayMember> members = const [],
   }) async {
     final l10n = AppLocalizations.of(context)!;
     // A running session cannot be settled past — its time is not on the
@@ -129,7 +129,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         actionLabel: l10n.endSessionButton,
         destructive: true,
       );
-      if (end && mounted) await SessionActions(ref, context).endSession(activeSession.id);
+      if (end && mounted) await StayActions(ref, context).endStay(activeSession.id);
       return;
     }
     // An order still waiting can be settled past (it may be stale) — but
@@ -151,7 +151,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
   // Same rule for Void, server-enforced too: time that has not landed yet
   // is money, and a void would write it off unseen
-  Future<void> _voidGuarded(RoomSession? activeSession) async {
+  Future<void> _voidGuarded(Stay? activeSession) async {
     if (activeSession == null) return _void();
     final l10n = AppLocalizations.of(context)!;
     final end = await showConfirmDialog(
@@ -161,7 +161,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       actionLabel: l10n.endSessionButton,
       destructive: true,
     );
-    if (end && mounted) await SessionActions(ref, context).endSession(activeSession.id);
+    if (end && mounted) await StayActions(ref, context).endStay(activeSession.id);
   }
 
   Future<void> _discard() async {
@@ -268,13 +268,13 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // The room's people first when this is a room's bill; and somebody with
     // an account named on its lines is in the room — onto the roster, so
     // their share of the time has a tab at settle
-    final session = ticket.sessionId == null ? null : ref.read(sessionProvider(ticket.sessionId!)).value;
+    final session = ticket.sessionId == null ? null : ref.read(stayProvider(ticket.sessionId!)).value;
     final roster = session?.roster ?? const <({String id, String name})>[];
     final SaleCustomer? customer = await showCustomerDialog(context, quickPicks: roster);
     if (customer == null || !mounted) return;
     final accountId = customer.id;
     if (session != null && accountId != null && accountId.isNotEmpty && !roster.any((m) => m.id == accountId)) {
-      SessionActions(ref, context).addMember(session.id, accountId, customer.name);
+      StayActions(ref, context).addMember(session.id, accountId, customer.name);
     }
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
@@ -342,15 +342,15 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // shows the running clock and guards the settle until then. The session
     // is read by id, not off the active list: once it has ended the bill is
     // still open, and the people in the room are still its account holders
-    final sessionAsync = ticket.isOpen && ticket.sessionId != null ? ref.watch(sessionProvider(ticket.sessionId!)) : null;
+    final sessionAsync = ticket.isOpen && ticket.sessionId != null ? ref.watch(stayProvider(ticket.sessionId!)) : null;
     final session = sessionAsync?.value;
     // A room ticket whose session hasn't arrived yet: shimmer the room card in
     // its place rather than showing nothing until it lands.
     final sessionLoading = sessionAsync != null && !sessionAsync.hasValue;
-    final activeSession = session != null && session.isActive ? session : null;
+    final activeSession = session != null && session.isRunning ? session : null;
     // Ended, bill still open: the time has landed and the roster stays
     // editable so every share can find its tab
-    final endedSession = session != null && !session.isActive && !session.isReserved ? session : null;
+    final endedSession = session != null && !session.isRunning && !session.isHeld ? session : null;
     final groups = groupLinesByCustomer(lines);
     final shared = !(groups.length == 1 && groups.single.unattributed);
     // Selecting moves individual lines to another ticket, so the rounds
@@ -372,7 +372,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // session has ended with nothing on it — while it runs, there is time
     // still to come. Once a line lands, only an owner's void (with its
     // reason) takes it off the floor.
-    final canDiscard = lines.isEmpty && (ticket.type != TicketType.room || ticket.sessionEndedAt != null);
+    final canDiscard = lines.isEmpty && (ticket.sessionId == null || ticket.sessionEndedAt != null);
     final canVoid = !canDiscard && isOwner;
 
     return Stack(
@@ -405,7 +405,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     const SizedBox(height: 16),
                   ],
                   if (activeSession != null) ...[
-                    SessionBar(session: activeSession),
+                    StayBar(session: activeSession),
                     const SizedBox(height: 16),
                   ],
                   if (endedSession != null) ...[
@@ -427,7 +427,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          SessionMembers(session: endedSession),
+                          StayMembers(session: endedSession),
                         ],
                       ),
                     ),
@@ -480,7 +480,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                           ),
-                          RoomClock(
+                          StayClock(
                             session: activeSession,
                             style: theme.typography.base.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -1028,7 +1028,7 @@ class _RefundCard extends StatelessWidget {
 class _ActionBar extends StatelessWidget {
   final TicketDetail ticket;
   // The running session whose time will join the total when it ends
-  final RoomSession? activeSession;
+  final Stay? activeSession;
   final bool selecting;
   final int selectedCount;
   final bool busy;

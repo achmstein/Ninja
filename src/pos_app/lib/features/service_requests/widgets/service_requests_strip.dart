@@ -119,20 +119,23 @@ class _RequestCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final amber = AppColors.amber(theme.colors.brightness);
     final acked = request.status == ServiceRequestStatus.acknowledged;
-    // A table asks for a waiter or the bill the same way a room does
-    final atTable = request.tableId != null;
+    // The place is what the request names; a table asks for a waiter or
+    // the bill the same way a room does
+    final atTable = request.placeKind != null ? request.placeKind != 'Room' : request.tableId != null;
     final placeName = (request.tableName ?? request.roomName).localized(context);
     final room = placeName.isNotEmpty
         ? placeName
         : atTable
-            ? '${l10n.table} ${request.tableId}'
-            : '${l10n.room} ${request.roomId}';
+            ? '${l10n.table} ${request.tableId ?? request.placeId ?? ''}'
+            : '${l10n.room} ${request.roomId ?? request.placeId ?? ''}';
+    // A rate change names the option wanted; the two old room types read as before
     final (icon, label) = switch (request.requestType) {
       ServiceRequestType.callWaiter => (FIcons.bell, l10n.requestCallWaiter),
       ServiceRequestType.controllerChange => (FIcons.gamepad2, l10n.requestControllerChange),
       ServiceRequestType.receiptToPay => (FIcons.receipt, l10n.requestReceiptToPay),
       ServiceRequestType.switchToMulti => (FIcons.users, l10n.requestSwitchToMulti),
       ServiceRequestType.switchToSingle => (FIcons.user, l10n.requestSwitchToSingle),
+      ServiceRequestType.changeOption => (FIcons.refreshCw, l10n.requestChangeOption(request.optionCode ?? '')),
     };
 
     return Container(

@@ -20,7 +20,7 @@ import 'core/auth/auth_service.dart';
 import 'core/demo/demo.dart';
 import 'features/catalog/providers/catalog_provider.dart';
 import 'features/orders/providers/pending_orders_provider.dart';
-import 'features/rooms/providers/rooms_provider.dart';
+import 'features/places/providers/places_provider.dart';
 import 'features/service_requests/providers/service_requests_provider.dart';
 import 'features/tickets/providers/tickets_provider.dart';
 
@@ -116,7 +116,7 @@ class _ChillaxPosAppState extends ConsumerState<ChillaxPosApp> with WidgetsBindi
 
     void refreshOrders() => ref.read(pendingOrdersProvider.notifier).refresh();
     void refreshRequests() => ref.read(serviceRequestsProvider.notifier).refresh();
-    void refreshRooms() => ref.read(roomsProvider.notifier).refresh();
+    void refreshRooms() => ref.read(placesProvider.notifier).refresh();
     // Events for another branch still refetch (the refetch carries
     // X-Branch-Id), but only this branch's ring the till
     bool forActiveBranch(Map<String, dynamic> event) {

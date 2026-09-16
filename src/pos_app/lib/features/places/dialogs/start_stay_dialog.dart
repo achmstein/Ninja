@@ -5,61 +5,75 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/room.dart';
-import '../session_actions.dart';
-import '../widgets/player_mode_toggle.dart';
+import '../models/place.dart';
+import '../stay_actions.dart';
+import '../widgets/rate_option_toggle.dart';
 
-/// Starts the clock: a walk-in from an available room, or the reserved
-/// session of a customer who just arrived. The player mode can wait — the
-/// server bills at the single rate until one is chosen. Resolves to true
-/// once the session runs.
-Future<bool> showStartSessionDialog(BuildContext context, Room room, {RoomSession? session}) async {
-  final started = await showFDialog<bool>(
+/// What the start dialog ended in
+enum StartOutcome {
+  /// The clock runs
+  started,
+
+  /// A timed table that only wants a bill, no clock
+  billOnly,
+
+  /// Nothing started
+  none,
+}
+
+/// Starts the clock: a walk-in on a free place, or the hold of a customer
+/// who just arrived. Where the tariff has options the cashier picks one;
+/// where it has one rate there is nothing to pick.
+Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Stay? session}) async {
+  final outcome = await showFDialog<StartOutcome>(
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _StartSessionDialog(room: room, session: session),
+      builder: (context, _) => _StartStayDialog(room: room, session: session),
     ),
   );
-  return started ?? false;
+  return outcome ?? StartOutcome.none;
 }
 
-class _StartSessionDialog extends ConsumerStatefulWidget {
-  final Room room;
-  final RoomSession? session;
-  const _StartSessionDialog({required this.room, this.session});
+class _StartStayDialog extends ConsumerStatefulWidget {
+  final Place room;
+  final Stay? session;
+  const _StartStayDialog({required this.room, this.session});
 
   @override
-  ConsumerState<_StartSessionDialog> createState() => _StartSessionDialogState();
+  ConsumerState<_StartStayDialog> createState() => _StartStayDialogState();
 }
 
-class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
-  String _playerMode = 'Single';
+class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
+  String? _optionCode;
   bool _busy = false;
+
+  RateOption? get _chosen => widget.room.option(_optionCode) ?? widget.room.options.firstOrNull;
 
   // Reserve instead: the room panel used to offer this beside Start, and a
   // free room now opens this dialog directly
   Future<void> _reserve() async {
     setState(() => _busy = true);
-    final ok = await SessionActions(ref, context).reserve(widget.room.id);
+    final ok = await StayActions(ref, context).reserve(widget.room.id);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (ok) Navigator.of(context, rootNavigator: true).pop(false);
+    if (ok) Navigator.of(context, rootNavigator: true).pop(StartOutcome.none);
   }
 
   Future<void> _start() async {
     setState(() => _busy = true);
-    final actions = SessionActions(ref, context);
+    final actions = StayActions(ref, context);
     final session = widget.session;
+    final code = _chosen?.code;
     final ok = session != null
-        ? await actions.startReserved(session.id, _playerMode)
-        : await actions.startWalkIn(widget.room.id, _playerMode);
+        ? await actions.startHeld(session.id, code)
+        : await actions.startWalkIn(widget.room.id, code);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (ok) Navigator.of(context, rootNavigator: true).pop(true);
+    if (ok) Navigator.of(context, rootNavigator: true).pop(StartOutcome.started);
   }
 
   @override
@@ -96,8 +110,8 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
             ),
           ],
           const SizedBox(height: 16),
-          // The card prices the mode picked below; the toggle carries both
-          // rates so the other one stays in view
+          // The card prices the option picked below; the toggle carries every
+          // rate so the others stay in view
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
@@ -106,7 +120,7 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
                 Text(name, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
                 Text.rich(
                   TextSpan(
-                    text: money(context, _playerMode == 'Multi' ? room.multiRate : room.singleRate),
+                    text: money(context, _chosen?.hourlyRate ?? 0),
                     style: theme.typography.xl2.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.colors.primary,
@@ -121,14 +135,17 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Text(l10n.playerMode, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          PlayerModeToggle(
-            value: _playerMode,
-            onChange: (mode) => setState(() => _playerMode = mode ?? _playerMode),
-            rates: {'Single': money(context, room.singleRate), 'Multi': money(context, room.multiRate)},
-          ),
+          if (room.hasOptions) ...[
+            const SizedBox(height: 16),
+            Text(l10n.playerMode, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 8),
+            RateOptionToggle(
+              options: room.options,
+              value: _chosen?.code,
+              onChange: (code) => setState(() => _optionCode = code),
+              rates: {for (final o in room.options) o.code: money(context, o.hourlyRate)},
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -144,6 +161,20 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
                     child: Text(l10n.reserve, style: theme.typography.base.forButton),
                   ),
                 ),
+                // A timed table still seats people who only order
+                if (room.kind != PlaceKind.room) ...[
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 48,
+                    child: FButton(
+                      variant: FButtonVariant.outline,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.billOnly),
+                      prefix: const Icon(FIcons.receiptText, size: 20),
+                      child: Text(l10n.billOnly, style: theme.typography.base.forButton),
+                    ),
+                  ),
+                ],
                 const Spacer(),
               ],
               SizedBox(
@@ -151,7 +182,7 @@ class _StartSessionDialogState extends ConsumerState<_StartSessionDialog> {
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
-                  onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
+                  onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.none),
                   child: Text(l10n.cancel, style: theme.typography.base.forButton),
                 ),
               ),

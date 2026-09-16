@@ -4,7 +4,7 @@ import '../../../core/providers/branch_provider.dart';
 import '../models/cafe_table.dart';
 
 abstract class TablesRepository {
-  /// Every table of the branch, inactive ones included
+  /// Every place of the branch with no clock, inactive ones included
   Future<List<CafeTable>> getTables();
 }
 
@@ -15,13 +15,13 @@ class ApiTablesRepository implements TablesRepository {
 
   @override
   Future<List<CafeTable>> getTables() async {
-    final response = await _apiClient.get<List<dynamic>>('');
+    final response = await _apiClient.get<List<dynamic>>('', queryParameters: {'timed': false});
     return (response.data ?? []).map((e) => CafeTable.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
 
 final tablesRepositoryProvider = Provider<TablesRepository>((ref) {
-  return ApiTablesRepository(ref.read(tablesApiProvider));
+  return ApiTablesRepository(ref.read(placesApiProvider));
 });
 
 /// The branch's tables. They change from the admin app, rarely; a branch

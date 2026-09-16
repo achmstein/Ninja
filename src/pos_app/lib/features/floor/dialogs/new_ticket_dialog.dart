@@ -12,7 +12,7 @@ import '../../../core/widgets/pos_dialog.dart';
 import '../widgets/bill_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/services/customer_search_service.dart';
-import '../../rooms/providers/rooms_provider.dart';
+import '../../places/providers/places_provider.dart';
 import '../../sale/models/sale_line.dart';
 import '../../sale/pending_ticket_customer.dart';
 import '../../tickets/busy_customers.dart';
@@ -95,7 +95,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
       if (!mounted || _search != search) return;
       final busy = customersOnOpenBills(
         openTickets: ref.read(openTicketsProvider).value ?? const [],
-        activeSessions: ref.read(roomsProvider).activeSessions,
+        openStays: ref.read(placesProvider).openStays,
         pending: pendingTicketCustomer,
       );
       setState(() {

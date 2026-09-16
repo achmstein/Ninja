@@ -23,9 +23,13 @@ class MoveToCounter extends MoveTarget {
 }
 
 class MoveToTable extends MoveTarget {
-  final int tableId;
+  /// The Spaces place
+  final int placeId;
+
+  /// The id the table's printed sticker carries, when it has one
+  final int? tableId;
   final LocalizedText? tableName;
-  const MoveToTable(this.tableId, this.tableName);
+  const MoveToTable(this.placeId, this.tableId, this.tableName);
 }
 
 /// `POST /api/tickets/{id}/move-lines`. Both destinations null is the
@@ -44,8 +48,9 @@ class MoveLinesRequest {
         },
         'newTicket': switch (target) {
           MoveToCounter(:final label) => {'type': TicketType.counter.value, 'label': label},
-          MoveToTable(:final tableId, :final tableName) => {
+          MoveToTable(:final placeId, :final tableId, :final tableName) => {
               'type': TicketType.table.value,
+              'placeId': placeId,
               'tableId': tableId,
               'tableName': tableName?.toJson(),
             },

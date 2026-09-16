@@ -12,12 +12,12 @@ import '../../../core/widgets/confirm_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/providers/tickets_provider.dart';
-import '../models/room.dart';
-import '../providers/rooms_provider.dart';
-import '../session_actions.dart';
+import '../models/place.dart';
+import '../providers/places_provider.dart';
+import '../stay_actions.dart';
 import '../status.dart';
-import '../widgets/player_mode_toggle.dart';
-import 'start_session_dialog.dart';
+import '../widgets/rate_option_toggle.dart';
+import 'start_stay_dialog.dart';
 
 /// One room's live state and every control the till has for it — the
 /// admin room panel's "now" section, sized for a thumb. Hours here; the
@@ -26,7 +26,7 @@ import 'start_session_dialog.dart';
 /// while it is open. Resolves to true when a session was started from it:
 /// the panel closes on that, and the floor takes the till to the bill,
 /// where the running session's card lives.
-Future<bool> showRoomPanel(BuildContext context, int roomId) async {
+Future<bool> showPlacePanel(BuildContext context, int roomId) async {
   final started = await showFDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -34,21 +34,21 @@ Future<bool> showRoomPanel(BuildContext context, int roomId) async {
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _RoomPanel(roomId: roomId),
+      builder: (context, _) => _PlacePanel(placeId: roomId),
     ),
   );
   return started ?? false;
 }
 
-class _RoomPanel extends ConsumerStatefulWidget {
-  final int roomId;
-  const _RoomPanel({required this.roomId});
+class _PlacePanel extends ConsumerStatefulWidget {
+  final int placeId;
+  const _PlacePanel({required this.placeId});
 
   @override
-  ConsumerState<_RoomPanel> createState() => _RoomPanelState();
+  ConsumerState<_PlacePanel> createState() => _PlacePanelState();
 }
 
-class _RoomPanelState extends ConsumerState<_RoomPanel> {
+class _PlacePanelState extends ConsumerState<_PlacePanel> {
   late final Timer _clock = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   bool _busy = false;
 
@@ -60,20 +60,27 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
 
   void _close() => Navigator.of(context, rootNavigator: true).pop();
 
-  Future<void> _start(Room room, {RoomSession? session}) async {
-    final started = await showStartSessionDialog(context, room, session: session);
-    if (started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+  Future<void> _start(Place room, {Stay? session}) async {
+    final outcome = await showStartStayDialog(context, room, session: session);
+    if (outcome == StartOutcome.started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
   }
 
-  Future<bool> _guarded(Future<bool> Function(SessionActions actions) call) async {
+  /// The customer asked for the clock to start the moment the counter
+  /// confirms they arrived: one tap does both
+  Future<void> _confirmArrival(Stay session) async {
+    final ok = await _guarded((a) => a.confirm(session.id, startsClock: session.startOnConfirm));
+    if (ok && session.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+  }
+
+  Future<bool> _guarded(Future<bool> Function(StayActions actions) call) async {
     if (_busy) return false;
     setState(() => _busy = true);
-    final ok = await call(SessionActions(ref, context));
+    final ok = await call(StayActions(ref, context));
     if (mounted) setState(() => _busy = false);
     return ok;
   }
 
-  Future<void> _confirmEnd(RoomSession session) async {
+  Future<void> _confirmEnd(Stay session) async {
     final l10n = AppLocalizations.of(context)!;
     final ok = await showConfirmDialog(
       context,
@@ -83,12 +90,12 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
       actionLabel: l10n.endSessionButton,
       destructive: true,
     );
-    if (ok && mounted) await _guarded((a) => a.endSession(session.id));
+    if (ok && mounted) await _guarded((a) => a.endStay(session.id));
   }
 
-  Future<void> _confirmCancel(RoomSession session) async {
+  Future<void> _confirmCancel(Stay session) async {
     final l10n = AppLocalizations.of(context)!;
-    final active = session.isActive;
+    final active = session.isRunning;
     final ok = await showConfirmDialog(
       context,
       title: active ? l10n.cancelThisSession : l10n.cancelThisReservation,
@@ -100,26 +107,26 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     if (ok && mounted) {
       // Close the panel once cancelled — otherwise it reverts to the
       // available state, re-showing Start/Reserve as if prompting to start.
-      final cancelled = await _guarded((a) => a.cancelSession(session.id, wasActive: active));
+      final cancelled = await _guarded((a) => a.cancelStay(session.id, wasActive: active));
       if (cancelled && mounted) _close();
     }
   }
 
-  Future<void> _confirmMode(RoomSession session, String mode) async {
+  Future<void> _confirmOption(Stay session, String code) async {
     final l10n = AppLocalizations.of(context)!;
-    final current = modeLabel(l10n, session.currentPlayerMode);
-    final next = modeLabel(l10n, mode);
+    final current = optionLabel(context, session.options, session.currentOptionCode);
+    final next = optionLabel(context, session.options, code);
     final ok = await showConfirmDialog(
       context,
       title: l10n.switchToModeQuestion(next),
       cancelLabel: l10n.keepCurrent(current),
       actionLabel: l10n.switchMode,
     );
-    if (ok && mounted) await _guarded((a) => a.changeMode(session.id, mode));
+    if (ok && mounted) await _guarded((a) => a.changeOption(session.id, code));
   }
 
   // Customer picker: adds a member (running) or assigns the owner (reserved)
-  Future<void> _pickCustomer(RoomSession session, {required bool assign}) async {
+  Future<void> _pickCustomer(Stay session, {required bool assign}) async {
     final picked = await showCustomerDialog(context, accountsOnly: true);
     final id = picked?.id;
     if (picked == null || id == null || id.isEmpty || !mounted) return;
@@ -131,24 +138,24 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final rooms = ref.watch(roomsProvider);
-    final room = rooms.rooms.where((r) => r.id == widget.roomId).firstOrNull;
-    final session = rooms.activeSessions.where((s) => s.roomId == widget.roomId && (s.isActive || s.isReserved)).firstOrNull;
+    final placesState = ref.watch(placesProvider);
+    final room = placesState.places.where((r) => r.id == widget.placeId).firstOrNull;
+    final session = placesState.openStays.where((s) => s.placeId == widget.placeId && (s.isRunning || s.isHeld)).firstOrNull;
     if (room == null) return const SizedBox(height: 120);
 
     final now = DateTime.now();
-    final active = session != null && session.isActive;
-    final reserved = session != null && session.isReserved;
-    final maintenance = room.status == RoomStatus.maintenance;
+    final active = session != null && session.isRunning;
+    final reserved = session != null && session.isHeld;
+    final maintenance = room.status == PlaceStatus.outOfService;
     final amber = AppColors.amber(theme.colors.brightness);
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
     final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: 20));
     final dot = switch (room.status) {
-      RoomStatus.available => AppColors.successColor,
-      RoomStatus.occupied => AppColors.red500,
-      RoomStatus.reserved => AppColors.amber500,
-      RoomStatus.maintenance => AppColors.gray400,
+      PlaceStatus.available => AppColors.successColor,
+      PlaceStatus.occupied => AppColors.red500,
+      PlaceStatus.held => AppColors.amber500,
+      PlaceStatus.outOfService => AppColors.gray400,
     };
 
     Widget circle(IconData icon, Color color, Color bg) => Container(
@@ -171,8 +178,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
     final Widget body;
     if (active) {
       final elapsed = session.elapsedSeconds(now);
-      final single = session.modeSeconds('Single', now);
-      final multi = session.modeSeconds('Multi', now);
+      final used = session.usedOptions(now);
       final billed = session.billedHours;
       // The running session's bill, for the jump to it
       final ticket = (ref.watch(openTicketsProvider).value ?? const []).where((t) => t.sessionId == session.id).firstOrNull;
@@ -182,25 +188,25 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
           Text(formatClock(elapsed),
               textAlign: TextAlign.center,
               style: theme.typography.xl4.copyWith(fontWeight: FontWeight.w300, letterSpacing: 4, fontFeatures: tabular)),
-          if (single > 0 || multi > 0) ...[
+          if (used.isNotEmpty && session.hasOptions) ...[
             const SizedBox(height: 4),
             Text(
-              [
-                if (single > 0) '${l10n.playerModeSingle} ${formatClock(single)}',
-                if (multi > 0) '${l10n.playerModeMulti} ${formatClock(multi)}',
-              ].join('    '),
+              used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, now))}').join('    '),
               textAlign: TextAlign.center,
               style: muted.copyWith(fontFeatures: tabular),
             ),
           ],
-          const SizedBox(height: 16),
-          PlayerModeToggle(
-            value: session.currentPlayerMode,
-            disabled: _busy,
-            onChange: (mode) {
-              if (mode != null && mode != session.currentPlayerMode) _confirmMode(session, mode);
-            },
-          ),
+          if (session.hasOptions) ...[
+            const SizedBox(height: 16),
+            RateOptionToggle(
+              options: session.options,
+              value: session.currentOptionCode,
+              disabled: _busy,
+              onChange: (code) {
+                if (code != session.currentOptionCode) _confirmOption(session, code);
+              },
+            ),
+          ],
           const SizedBox(height: 16),
           // Who is in the room: the owner starred, members removable, and
           // a dashed chip to add the next one
@@ -267,18 +273,13 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
               decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
               child: Column(
                 children: [
-                  if ((session.singleRoundedHours ?? 0) > 0)
-                    Row(children: [
-                      Text(l10n.playerModeSingle, style: muted),
-                      const Spacer(),
-                      Text(l10n.billedHoursFormat(hoursText(session.singleRoundedHours!)), style: theme.typography.sm.copyWith(fontFeatures: tabular)),
-                    ]),
-                  if ((session.multiRoundedHours ?? 0) > 0)
-                    Row(children: [
-                      Text(l10n.playerModeMulti, style: muted),
-                      const Spacer(),
-                      Text(l10n.billedHoursFormat(hoursText(session.multiRoundedHours!)), style: theme.typography.sm.copyWith(fontFeatures: tabular)),
-                    ]),
+                  for (final c in session.costs)
+                    if (c.hours > 0)
+                      Row(children: [
+                        Text(session.hasOptions ? c.optionName.localized(context) : l10n.time, style: muted),
+                        const Spacer(),
+                        Text(l10n.billedHoursFormat(hoursText(c.hours)), style: theme.typography.sm.copyWith(fontFeatures: tabular)),
+                      ]),
                   const FDivider(),
                   Row(children: [
                     Text(l10n.billedHours, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
@@ -352,6 +353,19 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
             Text(l10n.expiresIn(formatCountdown(expiresIn)),
                 textAlign: TextAlign.center, style: theme.typography.sm.copyWith(color: amber, fontFeatures: tabular)),
           ],
+          // The customer asked for the clock to start the moment the counter
+          // confirms they arrived: one tap does both
+          if (session.startOnConfirm) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(FIcons.timerReset, size: 16, color: theme.colors.mutedForeground),
+                const SizedBox(width: 6),
+                Text(l10n.startsOnConfirm, style: muted),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
@@ -361,7 +375,9 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room, session: session)),
+                child: session.startOnConfirm
+                    ? bigButton(l10n.confirmArrival, icon: playIcon, onPress: _busy ? null : () => _confirmArrival(session))
+                    : bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room, session: session)),
               ),
             ],
           ),
@@ -422,7 +438,7 @@ class _RoomPanelState extends ConsumerState<_RoomPanel> {
               ],
             ),
             const SizedBox(height: 4),
-            Text('${money(context, room.singleRate)} · ${money(context, room.multiRate)} ${l10n.perHour}',
+            Text('${tariffLine(context, room.options, (v) => money(context, v))} ${l10n.perHour}',
                 style: theme.typography.base.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
             const SizedBox(height: 16),
             body,

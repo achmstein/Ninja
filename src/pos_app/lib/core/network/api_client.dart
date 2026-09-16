@@ -117,14 +117,14 @@ final ordersApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.ordersApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
-final roomsApiProvider = Provider<ApiClient>((ref) {
+final placesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.roomsApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return ApiClient(authService, baseUrl: AppConfig.placesApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
-final tablesApiProvider = Provider<ApiClient>((ref) {
+final staysApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.tablesApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return ApiClient(authService, baseUrl: AppConfig.staysApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final notificationsApiProvider = Provider<ApiClient>((ref) {

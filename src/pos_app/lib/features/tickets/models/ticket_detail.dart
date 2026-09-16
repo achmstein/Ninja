@@ -147,6 +147,7 @@ class TicketDetail {
   final TicketStatus status;
   final int? sessionId;
   final DateTime? sessionEndedAt;
+  final int? placeId;
   final int? roomId;
   final int? tableId;
   final LocalizedText? locationName;
@@ -189,6 +190,7 @@ class TicketDetail {
     this.status = TicketStatus.open,
     this.sessionId,
     this.sessionEndedAt,
+    this.placeId,
     this.roomId,
     this.tableId,
     this.locationName,
@@ -236,6 +238,7 @@ class TicketDetail {
       status: TicketStatus.fromName(json['status'] as String?),
       sessionId: json['sessionId'] == null ? null : toInt(json['sessionId']),
       sessionEndedAt: date('sessionEndedAt'),
+      placeId: json['placeId'] == null ? null : toInt(json['placeId']),
       roomId: json['roomId'] == null ? null : toInt(json['roomId']),
       tableId: json['tableId'] == null ? null : toInt(json['tableId']),
       locationName: LocalizedText.parseNullable(json['locationName']),

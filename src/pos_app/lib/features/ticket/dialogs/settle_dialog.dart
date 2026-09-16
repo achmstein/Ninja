@@ -17,7 +17,7 @@ import '../../customers/providers/customer_providers.dart';
 import '../../receipt/receipt_sheet.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/settle.dart';
-import '../../rooms/models/room.dart';
+import '../../places/models/place.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
@@ -60,7 +60,7 @@ Future<SettleOutcome?> showSettleDialog(
   BuildContext context,
   TicketDetail ticket, {
   OfflineSaleDraft? offline,
-  List<SessionMember> members = const [],
+  List<StayMember> members = const [],
 }) {
   return showFDialog<SettleOutcome>(
     context: context,
@@ -77,7 +77,7 @@ Future<SettleOutcome?> showSettleDialog(
 class _SettleDialog extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final OfflineSaleDraft? offline;
-  final List<SessionMember> members;
+  final List<StayMember> members;
   const _SettleDialog({required this.ticket, this.offline, this.members = const []});
 
   @override

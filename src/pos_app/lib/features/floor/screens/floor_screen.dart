@@ -18,14 +18,12 @@ import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../orders/providers/pending_orders_provider.dart';
 import '../../orders/widgets/pending_orders.dart';
-import '../../rooms/dialogs/room_panel.dart';
-import '../../rooms/dialogs/start_session_dialog.dart';
-import '../../rooms/models/room.dart';
-import '../../rooms/providers/rooms_provider.dart';
-import '../../rooms/status.dart';
-import '../../tables/models/cafe_table.dart';
+import '../../places/dialogs/place_panel.dart';
+import '../../places/dialogs/start_stay_dialog.dart';
+import '../../places/models/place.dart';
+import '../../places/providers/places_provider.dart';
+import '../../places/status.dart';
 import '../../service_requests/widgets/service_requests_strip.dart';
-import '../../tables/services/tables_service.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/open_ticket.dart';
 import '../../tickets/models/ticket_summary.dart';
@@ -165,9 +163,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
 
   // A table with a bill is among the bills; the list only offers the free
   // ones, but the floor can be stale by a poll — go to the bill if one exists
-  Future<void> _pickTable(CafeTable table) async {
+  Future<void> _pickTable(Place table) async {
     final existing = (ref.read(openTicketsProvider).value ?? const [])
-        .where((t) => t.type == TicketType.table && t.tableId == table.id)
+        .where((t) => t.type == TicketType.table && t.sessionId == null && t.placeId == table.id)
         .firstOrNull;
     if (existing != null) {
       context.go('/ticket/${existing.id}');
@@ -176,7 +174,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     setState(() => _openingTable = true);
     try {
       final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
-            OpenTicketRequest(type: TicketType.table, tableId: table.id, tableName: table.name),
+            OpenTicketRequest(type: TicketType.table, placeId: table.id, tableId: table.legacyTableId, tableName: table.name),
             // A retry on café Wi-Fi must not become a second command
             requestId: const Uuid().v4(),
           );
@@ -191,31 +189,41 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     }
   }
 
-  // A free room has one thing to do: start the clock. Straight to the
-  // single/multi choice, no panel in between; the panel still opens for
-  // a room with a session or a reservation, where there is more to see.
-  Future<void> _pickRoom(int roomId) async {
-    final room = ref.read(roomsProvider).rooms.where((r) => r.id == roomId).firstOrNull;
-    final bool started;
-    if (room != null && room.status == RoomStatus.available) {
-      started = await showStartSessionDialog(context, room);
-    } else {
-      started = await showRoomPanel(context, roomId);
+  // A free timed place has one thing to do: start the clock. Straight to
+  // the rate choice, no panel in between; the panel still opens for a
+  // place with a running clock or a hold, where there is more to see. A
+  // place with no clock opens a bill.
+  Future<void> _pickPlace(int roomId) async {
+    final room = ref.read(placesProvider).places.where((r) => r.id == roomId).firstOrNull;
+    if (room != null && !room.isTimed) {
+      await _pickTable(room);
+      return;
     }
-    if (started && mounted) await _openStartedRoomTicket(roomId);
+    final bool started;
+    if (room != null && room.status == PlaceStatus.available) {
+      final outcome = await showStartStayDialog(context, room);
+      if (outcome == StartOutcome.billOnly) {
+        if (mounted) await _pickTable(room);
+        return;
+      }
+      started = outcome == StartOutcome.started;
+    } else {
+      started = await showPlacePanel(context, roomId);
+    }
+    if (started && mounted) await _openStartedPlaceTicket(roomId);
   }
 
   // A session just started in this room: Sales opens its bill on the event,
   // so it is not there the instant the start returns. Poll quickly until it
   // shows up and go there; give up after a while (Sales down, event lost)
   // and leave the cashier on the floor, where the room now shows occupied.
-  Future<void> _openStartedRoomTicket(int roomId) async {
+  Future<void> _openStartedPlaceTicket(int roomId) async {
     final deadline = DateTime.now().add(const Duration(seconds: 15));
     while (mounted && DateTime.now().isBefore(deadline)) {
       await ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
       final bill = (ref.read(openTicketsProvider).value ?? const [])
-          .where((t) => t.roomId == roomId && t.sessionId != null)
+          .where((t) => t.placeId == roomId && t.sessionId != null)
           .firstOrNull;
       if (bill != null) {
         context.go('/ticket/${bill.id}');
@@ -231,20 +239,19 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final l10n = AppLocalizations.of(context)!;
     final tickets = ref.watch(openTicketsProvider);
-    final rooms = ref.watch(roomsProvider);
-    final tablesAsync = ref.watch(tablesProvider);
-    // Places in the order people count them — Room 2 before Room 10 — and
-    // bills in the order of their places: rooms, then tables, then tabs
-    final sortedRooms = [...rooms.rooms]
-      ..sort((a, b) => naturalCompare(a.name.localized(context), b.name.localized(context)));
-    final sortedTables = [...tablesAsync.value ?? const <CafeTable>[]]
-      ..sort((a, b) => naturalCompare(a.name.localized(context), b.name.localized(context)));
-    final roomRank = {for (final (i, room) in sortedRooms.indexed) room.id: i};
-    final tableRank = {for (final (i, table) in sortedTables.indexed) table.id: i};
+    final placesState = ref.watch(placesProvider);
+    // Places in the order people count them — Room 2 before Room 10 —
+    // rooms first, then tables, then stations; and bills in the order of
+    // their places, counter tabs last
+    final sortedRooms = [...placesState.places]
+      ..sort((a, b) {
+        final byKind = a.kind.value.compareTo(b.kind.value);
+        return byKind != 0 ? byKind : naturalCompare(a.name.localized(context), b.name.localized(context));
+      });
+    final placeOrder = {for (final (i, place) in sortedRooms.indexed) place.id: i};
     int placeRank(TicketSummary b) => switch (b.type) {
-          TicketType.room => roomRank[b.roomId] ?? sortedRooms.length,
-          TicketType.table => tableRank[b.tableId] ?? sortedTables.length,
-          _ => 0,
+          TicketType.counter => 0,
+          _ => placeOrder[b.placeId ?? b.placeId] ?? sortedRooms.length,
         };
     int compareBills(TicketSummary a, TicketSummary b) {
       final byType = (a.type?.index ?? 99).compareTo(b.type?.index ?? 99);
@@ -254,17 +261,17 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       return (a.openedAt ?? DateTime(0)).compareTo(b.openedAt ?? DateTime(0));
     }
     // First load of the room/table list: shimmer the column, not blank
-    final placesLoading = (rooms.isLoading && rooms.rooms.isEmpty) || !tablesAsync.hasValue;
+    final placesLoading = placesState.isLoading && placesState.places.isEmpty;
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
-    final sessions = rooms.activeSessions;
+    final sessions = placesState.openStays;
     // Reservations are the one thing not yet a bill that the cashier must
     // not miss: somebody is on their way
-    final reserved = sessions.where((s) => s.isReserved).toList();
+    final reserved = sessions.where((s) => s.isHeld).toList();
     final now = DateTime.now();
-    RoomSession? sessionForTicket(TicketSummary t) =>
-        t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isActive).firstOrNull;
+    Stay? stayForTicket(TicketSummary t) =>
+        t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isRunning).firstOrNull;
     final bills = tickets.value ?? const <TicketSummary>[];
-    _syncClock(reserved.isNotEmpty || bills.any((b) => sessionForTicket(b) != null));
+    _syncClock(reserved.isNotEmpty || bills.any((b) => stayForTicket(b) != null));
     final above = <Widget>[
       // A customer in a room is waiting on each of these, so they lead the
       // floor; app orders waiting for a tap come next. Both strips are
@@ -272,11 +279,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       const ServiceRequestsStrip(),
       const PendingOrdersStrip(),
       if (reserved.isNotEmpty)
-        _ReservationsRow(
+        _HoldsRow(
           reserved: reserved,
-          rooms: rooms.rooms,
+          places: placesState.places,
           now: now,
-          onPick: (session) => _pickRoom(session.roomId),
+          onPick: (session) => _pickPlace(session.placeId),
         ),
     ];
 
@@ -300,14 +307,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       child: placesLoading
                           ? _placesSkeleton(context)
                           : PlaceList(
-                              rooms: sortedRooms,
-                              sessions: rooms.activeSessions,
-                              tables: sortedTables,
+                              places: sortedRooms,
+                              sessions: placesState.openStays,
                               tickets: tickets.value ?? const [],
                               busy: _openingTable,
                               onNewTab: _newTab,
-                              onPickRoom: (room) => _pickRoom(room.id),
-                              onPickTable: _pickTable,
+                              onPick: (place) => _pickPlace(place.id),
                             ),
                     ),
                   ),
@@ -421,7 +426,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       // A running room shows its clock on the bill
                       clocks: {
                         for (final b in list)
-                          if (sessionForTicket(b) case final s?) b.id: formatClock(s.elapsedSeconds(now)),
+                          if (stayForTicket(b) case final s?) b.id: formatClock(s.elapsedSeconds(now)),
                       },
                       filter: _filter,
                       onFilter: (filter) => setState(() => _filter = filter),
@@ -605,13 +610,13 @@ class _BillsState extends State<_Bills> {
 
 /// Reservations about to arrive: the room, who for, and the minutes left
 /// before the hold lapses. A tap opens the room to start or cancel it.
-class _ReservationsRow extends StatelessWidget {
-  final List<RoomSession> reserved;
-  final List<Room> rooms;
+class _HoldsRow extends StatelessWidget {
+  final List<Stay> reserved;
+  final List<Place> places;
   final DateTime now;
-  final ValueChanged<RoomSession> onPick;
+  final ValueChanged<Stay> onPick;
 
-  const _ReservationsRow({required this.reserved, required this.rooms, required this.now, required this.onPick});
+  const _HoldsRow({required this.reserved, required this.places, required this.now, required this.onPick});
 
   @override
   Widget build(BuildContext context) {
@@ -646,7 +651,7 @@ class _ReservationsRow extends StatelessWidget {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                          child: Icon(FIcons.clock, size: 20, color: amber),
+                          child: Icon(session.startOnConfirm ? FIcons.timerReset : FIcons.clock, size: 20, color: amber),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -654,7 +659,7 @@ class _ReservationsRow extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                (rooms.where((r) => r.id == session.roomId).firstOrNull?.name ?? session.roomName).localized(context),
+                                (places.where((r) => r.id == session.placeId).firstOrNull?.name ?? session.placeName).localized(context),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),

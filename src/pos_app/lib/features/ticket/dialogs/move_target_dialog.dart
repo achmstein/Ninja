@@ -175,9 +175,9 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
     final tables = ref.watch(tablesProvider).value ?? const <CafeTable>[];
     final freeTables = [
       for (final table in tables)
-        if (table.isActive && !tickets.any((t) => t.type == TicketType.table && t.tableId == table.id)) table,
+        if (table.isActive && !tickets.any((t) => t.type == TicketType.table && t.placeId == table.id)) table,
     ];
-    final canSplit = widget.ticket.type != TicketType.room && !widget.allSelected;
+    final canSplit = widget.ticket.sessionId == null && !widget.allSelected;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,7 +231,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
-                    onPress: () => _pick(MoveToTable(table.id, table.name)),
+                    onPress: () => _pick(MoveToTable(table.id, table.legacyTableId, table.name)),
                     prefix: Icon(FIcons.armchair, size: 16, color: theme.colors.mutedForeground),
                     child: Text(table.name.localized(context), style: theme.typography.base.forButton),
                   ),
