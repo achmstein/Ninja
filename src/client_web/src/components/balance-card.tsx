@@ -33,7 +33,7 @@ export function BalanceCard({
       <div className={`flex items-center gap-2 text-sm font-medium ${softText}`}>
         <Icon className={`h-5 w-5 ${settled ? '' : 'text-white'}`} />
         <span className='flex-1'>
-          {owes ? t('amountDue') : hasCredit ? t('creditBalance') : t('account')}
+          {owes ? t('amountDue') : hasCredit ? t('creditBalance') : t('yourBalance')}
         </span>
         {chevron && <ChevronRight className='h-5 w-5 rtl:rotate-180' />}
       </div>

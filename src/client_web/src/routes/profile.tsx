@@ -187,7 +187,7 @@ function ProfilePage() {
       {/* Activity */}
       {auth.isAuthenticated && (
         <Card className='gap-0 divide-y p-0'>
-          <TileLink to='/orders' icon={ReceiptText} label={t('orders')} />
+          <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
           <TileLink to='/stays' icon={Gamepad2} label={t('sessions')} />
           <TileLink to='/account' icon={Wallet} label={t('transactions')} />
         </Card>

@@ -3,7 +3,7 @@ import { useT } from '@/lib/i18n'
 import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from './branch-switcher'
 
-const tabPaths = ['/', '/places', '/orders', '/profile']
+const tabPaths = ['/', '/places', '/bills', '/profile']
 
 // Mobile parity with the app: no persistent app bar. Every tab gets the same
 // row — branding at the start, the place chip and branch chip at the end —

@@ -21,16 +21,16 @@ import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from './branch-switcher'
 import { SignInSheet } from './sign-in-options'
 
-// Mobile IA: primary nav is Menu / Places / Orders; everything else lives
+// Mobile IA: primary nav is Menu / Places / Bills; everything else lives
 // under Profile. The places link is named after the visit.
 const navLinks: ReadonlyArray<{
-  to: '/' | '/places' | '/orders'
+  to: '/' | '/places' | '/bills'
   key: TranslationKey
   exact?: boolean
 }> = [
   { to: '/', key: 'menu', exact: true },
   { to: '/places', key: 'rooms' },
-  { to: '/orders', key: 'orders' },
+  { to: '/bills', key: 'bills' },
 ]
 
 export function AppHeader() {

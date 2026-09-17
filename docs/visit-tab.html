@@ -167,12 +167,12 @@
 
 <section>
   <h2>The problem it solves</h2>
-  <p>The app has four tabs: Menu, Rooms, Orders, Profile. The Rooms tab is built for a cafe that rents rooms by the hour. A cafe that only has tables has nothing to put there, and hiding the tab leaves a three-tab app that looks like a cut-down product. At the same time a scanned table has no home of its own: the only place to call a waiter is a small chip in the top bar, hidden behind a popover, on four routes, on phones only.</p>
+  <p>The app had four tabs: Menu, Rooms, Orders, Profile. The Rooms tab is built for a cafe that rents rooms by the hour. A cafe that only has tables has nothing to put there, and hiding the tab leaves a three-tab app that looks like a cut-down product. At the same time a scanned table has no home of its own: the only place to call a waiter is a small chip in the top bar, hidden behind a popover, on four routes, on phones only.</p>
   <p>Both problems are one problem. The second tab is about the wrong noun.</p>
 </section>
 
 <section>
-  <p class="rule"><strong>The booking list always exists, and the table is behind its chip.</strong> People at a table book rooms, so the second tab is the places to book whenever there are any; only a running clock takes it over. A scanned table shows as a chip in the bar on every tab, and tapping the chip slides the table up as a sheet: the hero, the waiter and the bill, the tab, the way out. In a branch with nothing to book the table is the tab itself. Orders keep their own tab. Nothing is configured.</p>
+  <p class="rule"><strong>The booking list always exists, and the table is behind its chip.</strong> People at a table book rooms, so the second tab is the places to book whenever there are any; only a running clock takes it over. A scanned table shows as a chip in the bar on every tab, and tapping the chip slides the table up as a sheet: the hero, the waiter and the bill, the tab, the way out. In a branch with nothing to book the table is the tab itself. Bills keep their own tab. Nothing is configured.</p>
 </section>
 
 <section>
@@ -182,13 +182,13 @@
     <table>
       <thead><tr><th>Situation</th><th>What the tab shows</th><th>Label</th></tr></thead>
       <tbody>
-        <tr><td>Order placed for the counter, nobody seated</td><td>Nothing changes here: the tab is the places to book, so someone ordering from home can still hold a room for when they arrive. The order lives on the Orders tab, as every order does.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Order placed for the counter, nobody seated</td><td>Nothing changes here: the tab is the places to book, so someone ordering from home can still hold a room for when they arrive. The order lives on the Bills tab, as every order does.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Branch has timed places, nothing scanned</td><td>The bookable list as today, with a footer card: "At a table? Scan the code on it."</td><td><span class="lbl">Places</span></td></tr>
-        <tr><td>Branch has only tables</td><td>No second tab at all: with nothing to book there is nothing to show, and the chip is the table's door. Three tabs: Menu, Orders, Profile.</td><td>—</td></tr>
+        <tr><td>Branch has only tables</td><td>No second tab at all: with nothing to book there is nothing to show, and the chip is the table's door. Three tabs: Menu, Bills, Profile.</td><td>—</td></tr>
         <tr><td>Scanned a plain table, branch has rooms</td><td>The tab stays the bookable list. The table is a chip in the bar; tapping it opens the table sheet: call waiter and get bill as status pills, the way into the menu, leave the table.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Holding a timed place</td><td>The held banner with the countdown above the list, as today.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Clock running</td><td>The clock card: timer, the rate, who is in the room as chips; then the quick requests and leave.</td><td><span class="lbl seat">Room 2</span></td></tr>
-        <tr><td>Ticket paid at a table</td><td>The chip goes; on the Orders tab the bill's tile turns paid, with the receipt number and the stars for the rounds on it.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Ticket paid at a table</td><td>The chip goes; on the Bills tab the bill's tile turns paid, with the receipt number and the stars for the rounds on it.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Bookings paused by the branch</td><td>The "bookings paused" banner inside the tab. The tab stays; only the hold buttons go.</td><td><span class="lbl">Places</span></td></tr>
       </tbody>
     </table>
@@ -225,7 +225,7 @@
           <div class="sub">Scan the code on it to order and call a waiter.</div>
         </div>
         <div class="spacer"></div>
-        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Orders</span><span>Profile</span></div>
+        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Bills</span><span>Profile</span></div>
       </div>
       <figcaption><b>Cafe with rooms, nothing scanned</b>Today's list, plus one dashed footer card so tables are not a secret. New string: <code>atTableScanHint</code>.</figcaption>
     </figure>
@@ -250,7 +250,7 @@
         </div>
         <span class="btn ghost">Same again</span>
         <div class="spacer"></div>
-        <div class="nav"><span>Menu</span><span class="seat">Table 4</span><span>Orders</span><span>Profile</span></div>
+        <div class="nav"><span>Menu</span><span class="seat">Table 4</span><span>Bills</span><span>Profile</span></div>
       </div>
       <figcaption><b>Seated at a plain table</b>The waiter button is a status, not a button: sent, then seen, then "Sara is on the way", then it clears. It is also the cooldown, and it can be cancelled while sent. The feed is what a friend who scans the same code sees.</figcaption>
     </figure>
@@ -262,7 +262,7 @@
         <div class="card" style="padding:8px 12px"><div class="sub">Search the menu</div></div>
         <div class="tiles"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
         <div class="spacer"></div>
-        <div class="nav"><span class="on">Menu</span><span class="seat">Table 4</span><span>Orders</span><span>Profile</span></div>
+        <div class="nav"><span class="on">Menu</span><span class="seat">Table 4</span><span>Bills</span><span>Profile</span></div>
       </div>
       <figcaption><b>The menu while seated</b>Ordering never leaves the menu. The top-bar chip names the table and opens the two requests, so nobody has to switch tabs mid-order. A slim card under it was tried and dropped as a duplicate.</figcaption>
     </figure>
@@ -286,9 +286,9 @@
           <div class="sub">How was it? ★★★★★</div>
         </div>
         <div class="spacer"></div>
-        <div class="nav"><span>Menu</span><span>Rooms</span><span class="on">Orders</span><span>Profile</span></div>
+        <div class="nav"><span>Menu</span><span>Rooms</span><span class="on">Bills</span><span>Profile</span></div>
       </div>
-      <figcaption><b>The orders tab is the bills</b>One tile per Sales ticket the customer is on: their own rounds, and the place's time whole — the app never guesses a split the till decides at settle. A bill with nobody else on it ends on its total with the discount, service and VAT under the lines; a shared one ends on "your rounds" with the whole bill's total under it. Over the list, what the customer owes the cafe as the till decided it: their tab balance from Accounts, where a settled share lands when the cashier puts it on account — never a sum the app made up. A tap opens the bill on its own page — the printed receipt once paid, otherwise the slip the till would print, every line with the name the till put on it. A clock still running adds its time so far, marked as about, until the till stops it. The paid tile is the thanks: receipt number and stars in place. The stored table clears itself on the paid event, so nobody has to find "Leave table".</figcaption>
+      <figcaption><b>The orders tab became the bills tab</b>One tile per Sales ticket the customer is on: their own rounds, and the place's time whole — the app never guesses a split the till decides at settle. A bill with nobody else on it ends on its total with the discount, service and VAT under the lines; a shared one ends on "your rounds" with the whole bill's total under it. Over the list, what the customer owes the cafe as the till decided it: their tab balance from Accounts, where a settled share lands when the cashier puts it on account — never a sum the app made up. A tap opens the bill on its own page — the printed receipt once paid, otherwise the slip the till would print, every line with the name the till put on it. A clock still running adds its time so far, marked as about, until the till stops it. The paid tile is the thanks: receipt number and stars in place. The stored table clears itself on the paid event, so nobody has to find "Leave table".</figcaption>
     </figure>
 
     <figure>
@@ -308,7 +308,7 @@
           <div class="sub">Scan the code on it to order and call a waiter.</div>
         </div>
         <div class="spacer"></div>
-        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Orders</span><span>Profile</span></div>
+        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Bills</span><span>Profile</span></div>
       </div>
       <figcaption><b>Bookings paused</b>The branch switch keeps its meaning: a banner and no hold buttons. The tab never disappears because of it.</figcaption>
     </figure>
@@ -363,7 +363,7 @@
       <div>
         <h3>The table feed</h3>
         <p class="tag">Ordering.API + client_web · built, then dropped</p>
-        <p>A running tab of everyone's rounds under the table and the clock, gated on having ordered there. Removed from both: a long list of items next to the waiter button reads as a bill and can put people off ordering more. The orders stay on the Orders tab. The Ordering endpoint for the place's open orders is still there, unused.</p>
+        <p>A running tab of everyone's rounds under the table and the clock, gated on having ordered there. Removed from both: a long list of items next to the waiter button reads as a bill and can put people off ordering more. The orders stay on the Bills tab. The Ordering endpoint for the place's open orders is still there, unused.</p>
       </div>
     </div>
     <div class="phase">
@@ -371,15 +371,15 @@
       <div>
         <h3>Keeping the tabs apart</h3>
         <p class="tag">client_web only · built</p>
-        <p>Four tabs stay: Menu, the visit, Orders, Profile. Two other shapes were tried and dropped — three tabs with receipts under Account, and an order-on-its-way line on the menu — because a customer with many orders would bloat the menu, and orders should never sit beside the places to book. What stayed from the pass: the rating on the paid bill, the place's tab under a running clock, and the branch switch confirming that it leaves the table.</p>
+        <p>Four tabs stay: Menu, the visit, Bills, Profile. Two other shapes were tried and dropped — three tabs with receipts under Account, and an order-on-its-way line on the menu — because a customer with many orders would bloat the menu, and orders should never sit beside the places to book. What stayed from the pass: the rating on the paid bill, the place's tab under a running clock, and the branch switch confirming that it leaves the table.</p>
       </div>
     </div>
     <div class="phase">
       <div class="n">5b</div>
       <div>
-        <h3>The orders tab as bills</h3>
+        <h3>The orders tab as bills — renamed الحساب</h3>
         <p class="tag">Sales + Notification + client_web · built</p>
-        <p>The cafe sells time as well as drinks, and a customer can be on two unsettled tickets at once — the table they started at and the room they moved to. Orders alone could not say what was on them, so the tab reads bills instead: one Sales read returns every ticket the caller is on (sat in the room, ordered a line, paid a share), open ones whatever their age and closed ones for the last ninety days, with lines, the till's totals and the caller's own lines flagged. Guests are known by the same header Ordering uses. The tile keeps to the customer's own rounds and shows the place's time whole (an even split by the stay's roster was tried and dropped, with the field Sales grew for it: the till decides the split at settle, so any number the app shows can be wrong; the roster now comes from the customer's own stays, only to tell a shared bill from one that is all theirs), ending on "your rounds" when the bill is shared, and a tap opens the bill on the receipt page — the printed receipt once paid, the slip otherwise, guests included; a friend's rounds listed under yours would read as a table feed, which was cut from the clock card for putting people off ordering. Over the open ones, the tab balance from Accounts, since only the till knows the customer's part of a shared bill and it says so by putting it on account ("on you today" summed from the bills was tried and dropped for guessing); a clock still running adds its time so far from the stay's segments, rounded the way the tariff rounds, marked as about. Orders the till has not confirmed wait above, since they are on no bill yet. The separate thanks card and its stored state went; the paid tile carries the receipt number and the stars. Each member of a stay now also hears the clock stop on their own hub group, so the time line lands without waiting for the next read.</p>
+        <p>The cafe sells time as well as drinks, and a customer can be on two unsettled tickets at once — the table they started at and the room they moved to. Orders alone could not say what was on them, so the tab reads bills instead: one Sales read returns every ticket the caller is on (sat in the room, ordered a line, paid a share), open ones whatever their age and closed ones for the last ninety days, with lines, the till's totals and the caller's own lines flagged. Guests are known by the same header Ordering uses. The tab is now "Bills" — "الحساب", what a customer asks for at the table — on the route /bills, and the profile tab reads "بروفايلي" rather than "حسابي" so the two never sound alike; the house account's labels say "balance" and "on your tab" for the same reason. The tile keeps to the customer's own rounds and shows the place's time whole (an even split by the stay's roster was tried and dropped, with the field Sales grew for it: the till decides the split at settle, so any number the app shows can be wrong; the roster now comes from the customer's own stays, only to tell a shared bill from one that is all theirs), ending on "your rounds" when the bill is shared, and a tap opens the bill on the receipt page — the printed receipt once paid, the slip otherwise, guests included; a friend's rounds listed under yours would read as a table feed, which was cut from the clock card for putting people off ordering. Over the open ones, the tab balance from Accounts, since only the till knows the customer's part of a shared bill and it says so by putting it on account ("on you today" summed from the bills was tried and dropped for guessing); a clock still running adds its time so far from the stay's segments, rounded the way the tariff rounds, marked as about. Orders the till has not confirmed wait above, since they are on no bill yet. The separate thanks card and its stored state went; the paid tile carries the receipt number and the stars. Each member of a stay now also hears the clock stop on their own hub group, so the time line lands without waiting for the next read.</p>
       </div>
     </div>
     <div class="phase">

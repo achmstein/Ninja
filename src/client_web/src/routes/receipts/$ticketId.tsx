@@ -23,7 +23,7 @@ export const Route = createFileRoute('/receipts/$ticketId')({
   component: ReceiptRoute,
 })
 
-/** Open to a guest with a guest id, like the orders page: their bills are
+/** Open to a guest with a guest id, like the bills page: their bills are
  *  theirs to see. Anyone else is asked to sign in. */
 function ReceiptRoute() {
   const auth = useAuth()
@@ -40,7 +40,7 @@ const tenderKey: Record<string, TranslationKey> = {
   Cash: 'cash',
   Card: 'card',
   InstaPay: 'instapay',
-  Account: 'account',
+  Account: 'onYourTab',
 }
 
 const percent = (rate: number | string | null | undefined) =>
@@ -84,7 +84,7 @@ function ReceiptPage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <BackHeader to='/orders' title={title} />
+      <BackHeader to='/bills' title={title} />
       {loading ? (
         <Skeleton className='h-96 rounded-xl' />
       ) : printed.data ? (

@@ -181,7 +181,7 @@ function CartPage() {
       clear()
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
       toast.success(t('orderPlacedSuccessfully'))
-      navigate({ to: '/orders' })
+      navigate({ to: '/bills' })
     },
     onError: () => toast.error(t('failedToPlaceOrder')),
   })

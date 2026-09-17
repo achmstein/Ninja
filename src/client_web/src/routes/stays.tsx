@@ -163,7 +163,7 @@ function StayList({
   }
 
   // Overnight shifts: a stay before the start hour belongs to the
-  // previous day's shift (same rule as the orders page and the app)
+  // previous day's shift (same rule as the bills page and the app)
   const startHour = dayStartHour(branch)
   const overnight = isOvernightShift(branch)
   const shiftDay = (date: Date): Date => {

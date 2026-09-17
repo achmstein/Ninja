@@ -22,7 +22,7 @@ const tenderKey: Record<string, TranslationKey> = {
   Cash: 'cash',
   Card: 'card',
   InstaPay: 'instapay',
-  Account: 'account',
+  Account: 'onYourTab',
   Mixed: 'paidSeveralWays',
 }
 

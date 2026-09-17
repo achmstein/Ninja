@@ -47,8 +47,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/orders/')({
-  component: OrdersRoute,
+export const Route = createFileRoute('/bills')({
+  component: BillsRoute,
 })
 
 /**
@@ -56,7 +56,7 @@ export const Route = createFileRoute('/orders/')({
  * browser sends. Only a visitor who has neither an account nor a guest id
  * has nothing to show, and they get the sign-in prompt.
  */
-function OrdersRoute() {
+function BillsRoute() {
   const auth = useAuth()
   const guestId = useGuestStore((s) => s.guestId)
 
@@ -64,7 +64,7 @@ function OrdersRoute() {
     return <SignedOutPrompt />
   }
 
-  return <OrdersPage />
+  return <BillsPage />
 }
 
 function SignedOutPrompt() {
@@ -72,7 +72,7 @@ function SignedOutPrompt() {
   return (
     <div className='flex h-[60svh] flex-col items-center justify-center gap-4 px-6 text-center'>
       <ReceiptText className='text-muted-foreground/40 h-12 w-12' />
-      <p className='text-muted-foreground'>{t('noGuestOrdersYet')}</p>
+      <p className='text-muted-foreground'>{t('signInForBills')}</p>
       <SignInOptions />
     </div>
   )
@@ -88,14 +88,14 @@ function placeKindOf(kind: string | null | undefined): number {
 }
 
 /**
- * The page is the customer's bills, not their orders (docs/visit-tab.html):
+ * The bills tab (docs/visit-tab.html): the customer's bills, not their orders.
  * everything the cafe charges — the rounds, a room's time, a discount,
  * service and VAT — lands on a Sales ticket, and the till's own arithmetic
  * is what the customer sees. One tile per bill they are on today, open ones
  * first with what they add up to over them; an order the till has not
  * confirmed yet waits above, since it is on no bill until then.
  */
-function OrdersPage() {
+function BillsPage() {
   const t = useT()
 
   // One read covers both tabs: open bills whatever their age (last night's
@@ -144,15 +144,15 @@ function OrdersPage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('orders')}</h1>
+      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('bills')}</h1>
 
       <Tabs defaultValue='today'>
         <TabsList className='w-full'>
           <TabsTrigger value='today' className='flex-1'>
-            {t('todaysOrders')}
+            {t('today')}
           </TabsTrigger>
           <TabsTrigger value='history' className='flex-1'>
-            {t('previousOrders')}
+            {t('earlier')}
           </TabsTrigger>
         </TabsList>
 
@@ -189,7 +189,7 @@ function OrdersPage() {
           ) : billsQuery.isError ? (
             <ErrorState onRetry={retry} />
           ) : pastBills.length === 0 ? (
-            <EmptyState title={t('noOrdersYet')} />
+            <EmptyState title={t('noBillsYet')} />
           ) : (
             <HistoryList bills={pastBills} />
           )}
@@ -277,7 +277,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className='flex h-[40svh] flex-col items-center justify-center gap-3 text-center'>
       <CircleAlert className='text-muted-foreground h-12 w-12' />
-      <p>{t('failedToLoadOrders')}</p>
+      <p>{t('failedToLoadBills')}</p>
       <Button variant='outline' className='rounded-full' onClick={onRetry}>
         {t('retry')}
       </Button>

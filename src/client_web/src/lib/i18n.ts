@@ -32,9 +32,9 @@ const webExtras = {
     en: 'Scan the QR code on your table to order',
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
   },
-  noGuestOrdersYet: {
-    en: 'Sign in to see your orders, or place one as a guest',
-    ar: 'سجل دخول عشان تشوف طلباتك، أو اطلب كضيف',
+  signInForBills: {
+    en: 'Sign in to see your bills, or order as a guest',
+    ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كضيف',
   },
   continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
@@ -61,8 +61,16 @@ const webExtras = {
   },
   // The clock card's members, and a shared bill's lines
   you: { en: 'You', ar: 'انت' },
-  // The orders page is the customer's bills: what the open ones add up
-  // to, a clock still running, what is on no bill yet
+  // The bills tab — "الحساب", what a customer asks for at the table — is
+  // everything the cafe is charging them; the profile tab is "بروفايلي"
+  // so the two never read alike. The house account's own labels say
+  // "balance" and "on your tab" rather than "account" for the same reason.
+  bills: { en: 'Bills', ar: 'الحساب' },
+  profile: { en: 'Profile', ar: 'بروفايلي' },
+  earlier: { en: 'Earlier', ar: 'قبل كده' },
+  noBillsYet: { en: 'No bills yet', ar: 'مفيش حسابات لسه' },
+  failedToLoadBills: { en: "Couldn't load your bills", ar: 'الحساب مش بيحمل' },
+  yourBalance: { en: 'Your balance', ar: 'رصيدك' },
   nothingOnYouToday: {
     en: 'Nothing on you today',
     ar: 'مفيش حاجة عليك النهاردة',

@@ -4,14 +4,14 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useVisitTab } from '@/lib/visit'
 
-// Same four tabs as the mobile app: Menu / Places / Orders / Profile. The
+// Same four tabs as the mobile app: Menu / Places / Bills / Profile. The
 // places tab is where the customer is in the cafe, so its label and icon
-// follow the visit (docs/visit-tab.html); Orders is every order of theirs,
-// so the menu never carries them.
+// follow the visit (docs/visit-tab.html); Bills is everything the cafe is
+// charging them, so the menu never carries orders.
 const tabs = [
   { to: '/', key: 'menu', icon: Coffee, exact: true },
   { to: '/places', key: 'rooms', icon: Gamepad2 },
-  { to: '/orders', key: 'orders', icon: ReceiptText },
+  { to: '/bills', key: 'bills', icon: ReceiptText },
   { to: '/profile', key: 'profile', icon: User },
 ] as const
 
