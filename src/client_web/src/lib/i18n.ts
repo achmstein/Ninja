@@ -59,12 +59,22 @@ const webExtras = {
     en: 'Someone is already on the way',
     ar: 'في حد جايلك خلاص',
   },
-  // The clock card's members, and the thanks card
+  // The clock card's members, and a shared bill's lines
   you: { en: 'You', ar: 'انت' },
-  thanks: { en: 'Thanks!', ar: 'شكراً!' },
-  thanksName: { en: 'Thanks, {name}!', ar: 'شكراً يا {name}!' },
-  paid: { en: 'paid', ar: 'اتدفع' },
-  // Rating on the thanks card, the moment the bill is paid
+  // The orders page is the customer's bills: what the open ones add up
+  // to, a clock still running, what is on no bill yet
+  onYouToday: { en: 'On you today', ar: 'عليك النهاردة' },
+  nothingOnYouToday: {
+    en: 'Nothing on you today',
+    ar: 'مفيش حاجة عليك النهاردة',
+  },
+  waitingToBeConfirmed: {
+    en: 'Waiting to be confirmed',
+    ar: 'مستني التأكيد',
+  },
+  timeSoFar: { en: '{place} time so far', ar: 'وقت {place} لحد دلوقتي' },
+  atTheCounter: { en: 'At the counter', ar: 'من الكاشير' },
+  // Rating on the paid bill, the moment the customer is already looking
   howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
   ratedThanks: { en: 'Thanks for rating!', ar: 'شكراً على تقييمك!' },
   // A table carried over from an earlier session is asked about, not assumed

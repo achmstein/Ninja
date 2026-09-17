@@ -3,7 +3,6 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import { useSelectedBranch } from '@/lib/branch'
 import { businessDayStart } from '@/lib/business-day'
 import { getActiveBranchId, useBranchStore } from './branch-store'
-import { useThanksStore } from './thanks-store'
 
 /** The place the customer scanned to order at: a place, or a timed place
  *  they sat at without a clock running for them. */
@@ -63,9 +62,7 @@ export const usePlaceStore = create<PlaceState>()(
     (set) => ({
       place: null,
       setPlace: (place) => {
-        // A new sitting: last time's thanks card is done, and this session
-        // has seen the code with its own eyes
-        useThanksStore.getState().clear()
+        // A new sitting, and this session has seen the code with its own eyes
         useSessionPlaceStore.getState().confirm(place.id)
         set({ place: { ...place, scannedAt: Date.now() } })
       },

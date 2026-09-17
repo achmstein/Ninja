@@ -1,66 +1,38 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CircleAlert, Loader2, ReceiptText, Star } from 'lucide-react'
-import {
-  getOrdersByUser,
-  type Order,
-  type OrderSummary,
-} from '@/api/ordering'
+import { CircleAlert, Loader2, ReceiptText, Star, Timer } from 'lucide-react'
+import { rateOrder, type Order, type OrderSummary } from '@/api/ordering'
 import {
   getOrderOptions,
   getOrdersByUserOptions,
-  rateOrderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
+import { type BillLineView, type BillView } from '@/api/sales'
+import { getMyBillsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { type StayViewModel } from '@/api/spaces'
 import { API_VERSION } from '@/lib/api-client'
 import { statusDotClass } from '@/lib/order-status'
-import {
-  PLACE_ROOM,
-  PLACE_STATION,
-  PLACE_TABLE,
-  PlaceIcon,
-} from '@/lib/places'
+import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, PlaceIcon } from '@/lib/places'
+import { useActiveStay } from '@/lib/stays'
 import { businessDayStart } from '@/lib/business-day'
-import {
-  dayStartHour,
-  isOvernightShift,
-  useSelectedBranch,
-} from '@/lib/branch'
-import {
-  useLanguage,
-  useLocalized,
-  usePrice,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ThanksCard } from '@/components/places/thanks-card'
-import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/orders/')({
   component: OrdersRoute,
 })
 
 /**
- * Open to guests: the API returns the orders placed under the guest id this
- * browser sends. Only a visitor who has neither an account nor a guest order
+ * Open to guests: Sales and Ordering both know a guest by the id this
+ * browser sends. Only a visitor who has neither an account nor a guest id
  * has nothing to show, and they get the sign-in prompt.
  */
 function OrdersRoute() {
@@ -85,9 +57,12 @@ function SignedOutPrompt() {
   )
 }
 
-const HISTORY_PAGE_SIZE = 15
+/** How far back the history tab reaches. One read, no paging: a regular's
+ *  three months of bills is a short list. */
+const HISTORY_DAYS = 90
+const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Ordering spells the kind by name ("Table"); the icons go by number. */
+/** Ordering and Sales spell the kind by name ("Table"); the icons go by number. */
 function placeKindOf(kind: string | null | undefined): number {
   return kind === 'Table'
     ? PLACE_TABLE
@@ -96,52 +71,80 @@ function placeKindOf(kind: string | null | undefined): number {
       : PLACE_ROOM
 }
 
+const isOpen = (bill: BillView) => bill.status === 'Open'
+const isSettled = (bill: BillView) => bill.status === 'Settled'
+
+/** When the till closed the bill, paid or thrown out; null while open. */
+function closedAt(bill: BillView): Date | null {
+  const at = bill.settledAt ?? bill.voidedAt
+  return at ? new Date(at) : null
+}
+
+/**
+ * The page is the customer's bills, not their orders (docs/visit-tab.html):
+ * everything the cafe charges — the rounds, a room's time, a discount,
+ * service and VAT — lands on a Sales ticket, and the till's own arithmetic
+ * is what the customer sees. One tile per bill they are on today, open ones
+ * first with what they add up to over them; an order the till has not
+ * confirmed yet waits above, since it is on no bill until then.
+ */
 function OrdersPage() {
   const t = useT()
-  const price = usePrice()
   const branch = useSelectedBranch()
 
   // Today = the branch's current business day (overnight shifts included).
-  // Guests get the same live updates as anyone else: the hub puts them in a
-  // group keyed on their guest id, so no polling is needed here.
-  const todayQuery = useQuery(
+  // The bills read reaches back for the history tab in the same call; open
+  // bills come whatever their age, so last night's unpaid table is today's.
+  const dayStart = businessDayStart(branch)
+  const since = new Date(dayStart.getTime() - HISTORY_DAYS * DAY_MS)
+  const billsQuery = useQuery({
+    ...getMyBillsOptions({
+      query: { 'api-version': API_VERSION, since: since.toISOString() },
+    }),
+    // A friend's round landing on the same bill sends this browser no
+    // event, so an open bill is re-read now and then as well
+    refetchInterval: (query) =>
+      query.state.data?.some(isOpen) ? 30_000 : false,
+  })
+  const bills = billsQuery.data ?? []
+  const todayBills = bills.filter((bill) => {
+    const closed = closedAt(bill)
+    return closed == null || closed >= dayStart
+  })
+  const pastBills = bills.filter((bill) => {
+    const closed = closedAt(bill)
+    return closed != null && closed < dayStart
+  })
+
+  // The orders themselves are still read for what is not on a bill yet —
+  // sent and waiting, or turned down — and for the rating on each
+  const ordersQuery = useQuery(
     getOrdersByUserOptions({
       query: {
         'api-version': API_VERSION,
         pageIndex: 0,
         pageSize: 50,
-        fromDate: businessDayStart(branch).toISOString(),
+        fromDate: dayStart.toISOString(),
       },
     })
   )
-  const todayOrders = todayQuery.data?.items ?? []
-  const totalSpent = todayOrders
-    .filter((order) => order.status?.toLowerCase() === 'confirmed')
-    .reduce(
-      (sum, order) =>
-        sum + Number(order.total ?? 0) - Number(order.loyaltyDiscount ?? 0),
-      0
-    )
-
-  const historyQuery = useInfiniteQuery({
-    queryKey: [{ _id: 'getOrdersByUser', scope: 'history' }],
-    queryFn: async ({ pageParam }) => {
-      const { data } = await getOrdersByUser({
-        query: {
-          'api-version': API_VERSION,
-          pageIndex: pageParam,
-          pageSize: HISTORY_PAGE_SIZE,
-        },
-        throwOnError: true,
-      })
-      return data
-    },
-    initialPageParam: 0,
-    getNextPageParam: (last, pages) =>
-      last.hasNextPage ? pages.length : undefined,
+  const todayOrders = ordersQuery.data?.items ?? []
+  const waiting = todayOrders.filter((order) => {
+    const status = order.status?.toLowerCase()
+    return status !== 'confirmed' && status !== 'cancelled'
   })
-  const historyOrders =
-    historyQuery.data?.pages.flatMap((page) => page.items ?? []) ?? []
+  const cancelled = todayOrders.filter(
+    (order) => order.status?.toLowerCase() === 'cancelled'
+  )
+  const ordersById = new Map(
+    todayOrders.map((order) => [Number(order.orderNumber), order])
+  )
+
+  const loading = billsQuery.isLoading || ordersQuery.isLoading
+  const retry = () => {
+    void billsQuery.refetch()
+    void ordersQuery.refetch()
+  }
 
   return (
     <div className='flex flex-col gap-4 p-4'>
@@ -158,29 +161,26 @@ function OrdersPage() {
         </TabsList>
 
         <TabsContent value='today' className='mt-2'>
-          {/* The bill at the table just paid: thanks, the receipt, the
-              stars — above the orders it covered */}
-          <ThanksCard />
-          {todayQuery.isLoading ? (
-            <OrdersSkeleton />
-          ) : todayQuery.isError ? (
-            <ErrorState onRetry={() => todayQuery.refetch()} />
-          ) : todayOrders.length === 0 ? (
-            <EmptyState title={t('noOrdersToday')} />
+          {loading ? (
+            <BillsSkeleton />
+          ) : billsQuery.isError && ordersQuery.isError ? (
+            <ErrorState onRetry={retry} />
+          ) : todayBills.length === 0 &&
+            waiting.length === 0 &&
+            cancelled.length === 0 ? (
+            <EmptyState title={t('nothingOnYouToday')} />
           ) : (
             <div className='flex flex-col'>
-              {/* Count + total spent summary (mobile parity) */}
-              <div className='flex items-baseline justify-between py-2 text-[13px]'>
-                <span className='text-muted-foreground'>
-                  {t('todayOrdersCount', { count: todayOrders.length })}
-                </span>
-                <span className='font-semibold'>
-                  {t('totalSpent', { amount: price(totalSpent) })}
-                </span>
-              </div>
+              <OnYouToday bills={todayBills} />
+              <OrderGroup title={t('waitingToBeConfirmed')} orders={waiting} />
+              <OrderGroup title={t('statusCancelled')} orders={cancelled} />
               <div className='divide-y'>
-                {todayOrders.map((order) => (
-                  <OrderTile key={String(order.orderNumber)} order={order} />
+                {todayBills.map((bill) => (
+                  <BillTile
+                    key={String(bill.id)}
+                    bill={bill}
+                    ordersById={ordersById}
+                  />
                 ))}
               </div>
             </div>
@@ -188,19 +188,14 @@ function OrdersPage() {
         </TabsContent>
 
         <TabsContent value='history' className='mt-2'>
-          {historyQuery.isLoading ? (
-            <OrdersSkeleton />
-          ) : historyQuery.isError ? (
-            <ErrorState onRetry={() => historyQuery.refetch()} />
-          ) : historyOrders.length === 0 ? (
+          {billsQuery.isLoading ? (
+            <BillsSkeleton />
+          ) : billsQuery.isError ? (
+            <ErrorState onRetry={retry} />
+          ) : pastBills.length === 0 ? (
             <EmptyState title={t('noOrdersYet')} />
           ) : (
-            <HistoryList
-              orders={historyOrders}
-              hasMore={historyQuery.hasNextPage}
-              isFetchingMore={historyQuery.isFetchingNextPage}
-              onLoadMore={() => historyQuery.fetchNextPage()}
-            />
+            <HistoryList bills={pastBills} />
           )}
         </TabsContent>
       </Tabs>
@@ -208,21 +203,152 @@ function OrdersPage() {
   )
 }
 
-/** Mirrors OrderCard's layout: status dot and time on one line with the total
- *  pushed to the end, then the item lines beneath. */
-function OrdersSkeleton() {
+/**
+ * What the open bills add up to, over them. A running clock is not on its
+ * bill until it stops, so its time so far is added here the way the till
+ * will add it, and the sum is marked as about.
+ */
+function OnYouToday({ bills }: { bills: BillView[] }) {
+  const t = useT()
+  const price = usePrice()
+  const stay = useActiveStay()
+  const now = useNow()
+
+  const open = bills.filter(isOpen)
+  if (open.length === 0) return null
+
+  const running = open.map((bill) => runningTime(bill, stay, now))
+  const approx = running.some((time) => time != null)
+  const sum = open.reduce(
+    (total, bill, i) =>
+      total + Number(bill.total ?? 0) + (running[i]?.charged ?? 0),
+    0
+  )
+
+  return (
+    <div className='flex items-baseline justify-between py-2'>
+      <span className='text-muted-foreground text-[13px]'>
+        {t('onYouToday')}
+      </span>
+      <span className='text-lg font-bold tabular-nums'>
+        {approx && '≈ '}
+        {price(sum)}
+      </span>
+    </div>
+  )
+}
+
+/** A minute clock: the running time line only needs the minute. */
+function useNow(): number {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
+  return now
+}
+
+type RunningTime = {
+  /** Minutes on the clock so far */
+  minutes: number
+  /** One entry per rate the clock ran on, as the till will bill them */
+  parts: Array<{
+    optionName: StayViewModel['currentOptionName']
+    hours: number
+    rate: number
+    cost: number
+  }>
+  /** The cost with the bill's discount, service and VAT on top, since
+   *  that is what the total will grow by */
+  charged: number
+}
+
+/**
+ * The time a running clock has racked up on an open bill, before the till
+ * stops it and it lands as a line. Mirrors Stay.HoursFor: the minutes on
+ * each rate, rounded to the tariff's step, times that rate. Only for the
+ * stay this customer is in — anyone else's clock is not theirs to see.
+ */
+function runningTime(
+  bill: BillView,
+  stay: StayViewModel | undefined,
+  now: number
+): RunningTime | null {
+  if (
+    !isOpen(bill) ||
+    bill.sessionId == null ||
+    bill.sessionEndedAt != null ||
+    stay == null ||
+    Number(stay.id) !== Number(bill.sessionId) ||
+    !stay.startedAt
+  )
+    return null
+
+  const step = Number(stay.tariff?.roundingMinutes ?? 15) || 15
+  const byOption = new Map<
+    string,
+    {
+      optionName: StayViewModel['currentOptionName']
+      rate: number
+      minutes: number
+    }
+  >()
+  for (const segment of stay.segments ?? []) {
+    if (!segment.startTime) continue
+    const end = segment.endTime ? new Date(segment.endTime).getTime() : now
+    const minutes = Math.max(
+      0,
+      (end - new Date(segment.startTime).getTime()) / 60_000
+    )
+    const code = segment.optionCode ?? ''
+    const part = byOption.get(code) ?? {
+      optionName: segment.optionName,
+      rate: Number(segment.hourlyRate ?? 0),
+      minutes: 0,
+    }
+    part.minutes += minutes
+    byOption.set(code, part)
+  }
+
+  const parts = [...byOption.values()].map((part) => {
+    const hours = (Math.round(part.minutes / step) * step) / 60
+    return {
+      optionName: part.optionName,
+      hours,
+      rate: part.rate,
+      cost: hours * part.rate,
+    }
+  })
+  const minutes = Math.max(
+    0,
+    (now - new Date(stay.startedAt).getTime()) / 60_000
+  )
+  const cost = parts.reduce((sum, part) => sum + part.cost, 0)
+
+  // The same order the till applies them in: discount, then service, then
+  // VAT unless the prices already include it
+  let charged = cost * (1 - Number(bill.discountRate ?? 0))
+  charged += charged * Number(bill.serviceChargeRate ?? 0)
+  if (!bill.vatIncluded) charged += charged * Number(bill.vatRate ?? 0)
+
+  return { minutes, parts, charged }
+}
+
+/** Mirrors a bill tile: the header line, a few lines, the total. */
+function BillsSkeleton() {
   return (
     <div className='flex flex-col pt-2'>
-      {[...Array(4)].map((_, i) => (
+      {[...Array(3)].map((_, i) => (
         <div key={i} className='flex flex-col gap-2 py-3'>
           <div className='flex items-center gap-2'>
             <Skeleton className='size-2.5 shrink-0 rounded-full' />
             <Skeleton className='h-4 w-16' />
             <Skeleton className='h-3 w-20' />
-            <Skeleton className='ms-auto h-4 w-14 shrink-0' />
+            <Skeleton className='ms-auto h-5 w-14 shrink-0 rounded-full' />
           </div>
-          <Skeleton className='h-3 w-3/5' />
-          <Skeleton className='h-3 w-2/5' />
+          <Skeleton className='ms-[18px] h-3 w-3/5' />
+          <Skeleton className='ms-[18px] h-3 w-2/5' />
+          <Skeleton className='ms-[18px] h-4 w-full' />
         </div>
       ))}
     </div>
@@ -251,38 +377,15 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-// ── History: grouped by business day (shift-aware, mobile parity) ──
+// ── History: bills grouped by business day (shift-aware, mobile parity) ──
 
-function HistoryList({
-  orders,
-  hasMore,
-  isFetchingMore,
-  onLoadMore,
-}: {
-  orders: OrderSummary[]
-  hasMore: boolean | undefined
-  isFetchingMore: boolean
-  onLoadMore: () => void
-}) {
+function HistoryList({ bills }: { bills: BillView[] }) {
   const t = useT()
   const language = useLanguage((s) => s.language)
   const branch = useSelectedBranch()
-  const sentinelRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && hasMore && !isFetchingMore) {
-        onLoadMore()
-      }
-    })
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [hasMore, isFetchingMore, onLoadMore])
-
-  // For overnight shifts, orders before the start hour belong to the
-  // previous day's shift (same rule as the mobile app)
+  // For overnight shifts, a bill closed before the start hour belongs to
+  // the previous day's shift (same rule as the mobile app)
   const startHour = dayStartHour(branch)
   const overnight = isOvernightShift(branch)
   const shiftDay = (date: Date): Date => {
@@ -304,14 +407,15 @@ function HistoryList({
     })
   }
 
-  const groups: Array<{ label: string; orders: OrderSummary[] }> = []
-  for (const order of orders) {
-    const label = order.date ? labelFor(shiftDay(new Date(order.date))) : ''
+  const groups: Array<{ label: string; bills: BillView[] }> = []
+  for (const bill of bills) {
+    const closed = closedAt(bill)
+    const label = closed ? labelFor(shiftDay(closed)) : ''
     const group = groups.at(-1)
     if (group && group.label === label) {
-      group.orders.push(order)
+      group.bills.push(bill)
     } else {
-      groups.push({ label, orders: [order] })
+      groups.push({ label, bills: [bill] })
     }
   }
 
@@ -323,47 +427,463 @@ function HistoryList({
             {group.label}
           </h3>
           <div className='divide-y'>
-            {group.orders.map((order) => (
-              <OrderTile key={String(order.orderNumber)} order={order} />
+            {group.bills.map((bill) => (
+              <BillTile key={String(bill.id)} bill={bill} />
             ))}
           </div>
         </div>
       ))}
-      <div ref={sentinelRef} className='flex justify-center py-2'>
-        {isFetchingMore && (
-          <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
+    </div>
+  )
+}
+
+// ── Bill tile: the till's bill, laid out like a slip ──
+
+/** Open is money outstanding, paid is done, voided is thrown out. */
+function billDotClass(bill: BillView): string {
+  return isSettled(bill)
+    ? 'bg-green-600 dark:bg-green-500'
+    : bill.status === 'Voided'
+      ? 'bg-destructive'
+      : 'bg-orange-500'
+}
+
+function BillTile({
+  bill,
+  ordersById,
+}: {
+  bill: BillView
+  /** Today's orders by number, for the stars on a paid bill; the history
+   *  tab has none */
+  ordersById?: Map<number, OrderSummary>
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const language = useLanguage((s) => s.language)
+  const stay = useActiveStay()
+  const now = useNow()
+
+  const lines = bill.lines ?? []
+  // Names go on the lines only when the bill is shared: yours as "you",
+  // a friend's by the name they gave the till
+  const shared = lines.some((line) => !line.isMine)
+  const running = runningTime(bill, stay, now)
+
+  const subtotal = Number(bill.subtotal ?? 0)
+  const discount = Number(bill.discount ?? 0)
+  const service = Number(bill.serviceCharge ?? 0)
+  const vat = Number(bill.vat ?? 0)
+  const refunded = Number(bill.refundedTotal ?? 0)
+  const hasBreakdown =
+    discount > 0 || service > 0 || (vat > 0 && !bill.vatIncluded)
+  const total = Number(bill.total ?? 0) + (running?.charged ?? 0)
+
+  const placeName = localized(bill.locationName)
+  const opened = bill.openedAt
+    ? new Date(bill.openedAt).toLocaleTimeString(
+        language === 'ar' ? 'ar-EG' : 'en-US',
+        { hour: 'numeric', minute: '2-digit' }
+      )
+    : ''
+
+  const row = 'flex items-baseline justify-between gap-2 tabular-nums'
+
+  return (
+    <div className='flex flex-col gap-1 py-3'>
+      <div className='flex items-center gap-2'>
+        <span
+          className={`size-2.5 shrink-0 rounded-full ${billDotClass(bill)}`}
+        />
+        <span className='text-[15px] font-semibold'>{opened}</span>
+        <span className='text-muted-foreground flex min-w-0 items-center gap-1 text-[13px]'>
+          {bill.placeId != null && (
+            <PlaceIcon
+              kind={placeKindOf(bill.placeKind)}
+              className='h-3.5 w-3.5 shrink-0'
+            />
+          )}
+          <span className='truncate'>{placeName || t('atTheCounter')}</span>
+        </span>
+        <div className='ms-auto shrink-0'>
+          <BillPill bill={bill} />
+        </div>
+      </div>
+
+      <div className='flex flex-col gap-1 ps-[18px]'>
+        {lines.map((line) => (
+          <BillLine key={String(line.id)} line={line} shared={shared} />
+        ))}
+        {running && <RunningTimeLine bill={bill} running={running} />}
+
+        {hasBreakdown && (
+          <div className='text-muted-foreground flex flex-col gap-0.5 pt-1 text-[13px]'>
+            <div className={row}>
+              <span>{t('subtotal')}</span>
+              <span>{price(subtotal)}</span>
+            </div>
+            {discount > 0 && (
+              <div className={row}>
+                <span>
+                  {t('discount')}
+                  {bill.discountRate != null &&
+                    ` ${percent(bill.discountRate)}%`}
+                </span>
+                <span>−{price(discount)}</span>
+              </div>
+            )}
+            {service > 0 && (
+              <div className={row}>
+                <span>
+                  {t('serviceCharge', {
+                    rate: String(percent(bill.serviceChargeRate)),
+                  })}
+                </span>
+                <span>{price(service)}</span>
+              </div>
+            )}
+            {vat > 0 && !bill.vatIncluded && (
+              <div className={row}>
+                <span>{t('vat', { rate: String(percent(bill.vatRate)) })}</span>
+                <span>{price(vat)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className={`${row} pt-1 text-[15px] font-bold`}>
+          <span>{t('total')}</span>
+          <span>
+            {running && '≈ '}
+            {price(total)}
+          </span>
+        </div>
+        {vat > 0 && bill.vatIncluded && (
+          <div className={`${row} text-muted-foreground -mt-1 text-xs`}>
+            <span>
+              {t('vatIncluded', { rate: String(percent(bill.vatRate)) })}
+            </span>
+            <span>{price(vat)}</span>
+          </div>
+        )}
+        {refunded > 0 && (
+          <div className={`${row} text-destructive text-[13px]`}>
+            <span>{t('refunded')}</span>
+            <span>−{price(refunded)}</span>
+          </div>
+        )}
+
+        {/* A paid bill is the thanks: the stars for the rounds on it, at the
+            one moment the customer is already looking */}
+        {isSettled(bill) && ordersById && (
+          <BillStars bill={bill} ordersById={ordersById} />
         )}
       </div>
     </div>
   )
 }
 
-// ── Order tile: status dot + time + inline details (mobile parity) ──
+const percent = (rate: number | string | null | undefined) =>
+  Math.round(Number(rate ?? 0) * 100)
 
+function BillLine({ line, shared }: { line: BillLineView; shared: boolean }) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const isTime = line.source === 'SessionTime'
+  const qty = Number(line.qty ?? 0)
+  const discount = Number(line.discount ?? 0)
+
+  return (
+    <div>
+      <div className='flex items-baseline gap-1 text-sm'>
+        {isTime ? (
+          <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />
+        ) : (
+          <span className='text-muted-foreground'>{qty}x</span>
+        )}
+        <span className='min-w-0 flex-1'>
+          {localized(line.description)}
+          {shared && (line.isMine || line.customerName) && (
+            <span className='bg-muted text-muted-foreground ms-1.5 rounded-full px-1.5 py-px text-[10px] font-medium'>
+              {line.isMine ? t('you') : line.customerName}
+            </span>
+          )}
+        </span>
+        <span className='shrink-0 tabular-nums'>
+          {price(Number(line.total ?? 0))}
+        </span>
+      </div>
+      {isTime && (
+        <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
+          {t('hoursShort', { count: String(qty) })} ×{' '}
+          {price(Number(line.unitPrice ?? 0))}
+          {t('perHourShort')}
+        </p>
+      )}
+      {localized(line.details) && (
+        <p className='text-muted-foreground ms-6 text-xs'>
+          {localized(line.details)}
+        </p>
+      )}
+      {discount > 0 && (
+        <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
+          −{price(discount)} ({t('discount')})
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** The clock still running: its time so far, as the till will bill it. */
+function RunningTimeLine({
+  bill,
+  running,
+}: {
+  bill: BillView
+  running: RunningTime
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const place = localized(bill.locationName)
+  const hours = Math.floor(running.minutes / 60)
+  const minutes = Math.floor(running.minutes % 60)
+  const elapsed = `${hours}:${String(minutes).padStart(2, '0')}`
+  const perOption = running.parts.length > 1
+
+  return (
+    <div>
+      {running.parts.map((part, i) => (
+        <div key={i}>
+          <div className='flex items-baseline gap-1 text-sm'>
+            <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />
+            <span className='min-w-0 flex-1'>
+              {t('timeSoFar', { place })}
+              {perOption && ` — ${localized(part.optionName)}`}
+            </span>
+            <span className='shrink-0 tabular-nums'>≈ {price(part.cost)}</span>
+          </div>
+          <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
+            {i === 0 && `${elapsed} · `}
+            {t('hoursShort', { count: String(part.hours) })} ×{' '}
+            {price(part.rate)}
+            {t('perHourShort')}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * What the till did with the bill: paid (and on which receipt, a tap away
+ * for an account), on the customer's tab, voided — or still unpaid.
+ */
+function BillPill({ bill }: { bill: BillView }) {
+  const t = useT()
+  const auth = useAuth()
+
+  if (bill.status === 'Voided') {
+    return (
+      <Badge variant='outline' className='text-muted-foreground'>
+        {t('voided')}
+      </Badge>
+    )
+  }
+  if (!isSettled(bill)) {
+    return <Badge variant='outline'>{t('unpaid')}</Badge>
+  }
+  const badge = (
+    <Badge variant='secondary' className='tabular-nums'>
+      {bill.paidWith === 'Account' ? t('onYourTab') : t('paid')}
+      {bill.receiptNumber != null &&
+        ` ${t('receiptShort', { number: Number(bill.receiptNumber) })}`}
+    </Badge>
+  )
+  // The receipt page is for accounts; a guest keeps the number alone
+  return auth.isAuthenticated && bill.id != null ? (
+    <Link to='/receipts/$ticketId' params={{ ticketId: String(bill.id) }}>
+      {badge}
+    </Link>
+  ) : (
+    badge
+  )
+}
+
+/**
+ * The rating, on the paid bill: one row of stars for the customer's own
+ * rounds on it. Rating is account-only server-side, so a guest gets none.
+ * Rated already, it shows what they gave.
+ */
+function BillStars({
+  bill,
+  ordersById,
+}: {
+  bill: BillView
+  ordersById: Map<number, OrderSummary>
+}) {
+  const t = useT()
+  const auth = useAuth()
+  if (!auth.isAuthenticated) return null
+
+  const mine = [
+    ...new Set(
+      (bill.lines ?? [])
+        .filter((line) => line.isMine && line.orderId != null)
+        .map((line) => Number(line.orderId))
+    ),
+  ]
+    .map((id) => ordersById.get(id))
+    .filter((order): order is OrderSummary => order != null)
+  if (mine.length === 0) return null
+
+  const unrated = mine.filter((order) => order.ratingValue == null)
+  if (unrated.length === 0) {
+    const value = Number(mine[0].ratingValue ?? 0)
+    return (
+      <div className='flex items-center gap-1 pt-1'>
+        <span className='text-muted-foreground text-[13px]'>
+          {t('yourRating')}
+        </span>
+        <StarsDisplay value={value} />
+      </div>
+    )
+  }
+  return (
+    <StarRow orderIds={unrated.map((order) => Number(order.orderNumber))} />
+  )
+}
+
+function StarsDisplay({ value }: { value: number }) {
+  return (
+    <span className='text-muted-foreground flex gap-0.5'>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-3.5 w-3.5 ${star <= value ? 'fill-current' : 'opacity-40'}`}
+        />
+      ))}
+    </span>
+  )
+}
+
+/** Five stars, one tap, for every round of theirs the bill covered. */
+function StarRow({ orderIds }: { orderIds: number[] }) {
+  const t = useT()
+  const queryClient = useQueryClient()
+  const [hover, setHover] = useState(0)
+  const [given, setGiven] = useState(0)
+
+  const rate = useMutation({
+    mutationFn: async (value: number) => {
+      for (const orderId of orderIds) {
+        await rateOrder({
+          path: { orderId },
+          body: { ratingValue: value, comment: null },
+          headers: { 'x-requestid': crypto.randomUUID() },
+          query: { 'api-version': API_VERSION },
+          throwOnError: true,
+        })
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
+    },
+    onError: () => setGiven(0),
+  })
+
+  if (rate.isSuccess) {
+    return (
+      <span className='text-muted-foreground pt-1 text-[13px]'>
+        {t('ratedThanks')}
+      </span>
+    )
+  }
+
+  return (
+    <div className='flex flex-wrap items-center gap-2 pt-1'>
+      <span className='text-[13px] font-semibold'>{t('howWasIt')}</span>
+      <div
+        className='text-amber-400 flex items-center'
+        onMouseLeave={() => setHover(0)}
+      >
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type='button'
+            aria-label={String(value)}
+            disabled={rate.isPending}
+            className='p-0.5'
+            onMouseEnter={() => setHover(value)}
+            onClick={() => {
+              setGiven(value)
+              rate.mutate(value)
+            }}
+          >
+            <Star
+              className={cn(
+                'h-5 w-5 transition-colors',
+                value <= (hover || given)
+                  ? 'fill-current'
+                  : 'text-muted-foreground/40'
+              )}
+            />
+          </button>
+        ))}
+        {rate.isPending && (
+          <Loader2 className='text-muted-foreground ms-1 h-4 w-4 animate-spin' />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Orders not on a bill: sent and waiting, or turned down ──
+
+function OrderGroup({
+  title,
+  orders,
+}: {
+  title: string
+  orders: OrderSummary[]
+}) {
+  if (orders.length === 0) return null
+  return (
+    <div className='flex flex-col'>
+      <h3 className='text-muted-foreground pt-2 pb-1 text-[13px] font-semibold'>
+        {title}
+      </h3>
+      <div className='divide-y border-b'>
+        {orders.map((order) => (
+          <OrderTile key={String(order.orderNumber)} order={order} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** An order the till has not put on a bill: where it was sent, and what is
+ *  in it. The status dot says what the till did. */
 function OrderTile({ order }: { order: OrderSummary }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const language = useLanguage((s) => s.language)
 
-  // Items, note, and rating are auto-fetched like the mobile app; live
-  // status updates invalidate this via the app-wide hub
   const detailQuery = useQuery(
     getOrderOptions({
       path: { orderId: Number(order.orderNumber) },
       query: { 'api-version': API_VERSION },
     })
   )
-
   const discount = Number(order.loyaltyDiscount ?? 0)
   // LEGACY(places): roomName is the fallback for orders from before the
   // Places remodel — remove when Ordering stops filling the old room fields.
   const placeName = localized(order.placeName ?? order.roomName)
 
   return (
-    // Two columns: the time, the place and the lines run down the start
-    // side, the total with the paid pill under it stacks on the end side,
-    // so the lines follow the time however tall the money stack is
     <div className='flex items-start gap-2 py-3'>
       <span
         className={`mt-1.5 size-2.5 shrink-0 rounded-full ${statusDotClass(order.status)}`}
@@ -392,7 +912,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
             {t('failedToLoadDetails')}
           </p>
         ) : (
-          detailQuery.data && <OrderTileDetails order={detailQuery.data} />
+          detailQuery.data && <OrderItems order={detailQuery.data} />
         )}
       </div>
       <div className='shrink-0 text-end'>
@@ -405,79 +925,14 @@ function OrderTile({ order }: { order: OrderSummary }) {
             {t('discountFormat', { price: discount.toFixed(2) })}
           </div>
         )}
-        <PaidPill order={order} />
       </div>
     </div>
   )
 }
 
-/**
- * What the till did with the bill this order was on, projected by Ordering
- * from Sales' receipt: paid (and on which receipt), on the customer's tab,
- * refunded, voided (the bill was thrown out, so it will never be paid) —
- * or still unpaid once staff confirmed it. A submitted or cancelled order
- * carries no pill.
- */
-function PaidPill({ order }: { order: OrderSummary }) {
-  const t = useT()
-  const price = usePrice()
-  const refunded = Number(order.refundedAmount ?? 0)
-  if (order.paidAt == null) {
-    if (order.voidedAt != null) {
-      return (
-        <Badge variant='outline' className='text-muted-foreground mt-1'>
-          {t('voided')}
-        </Badge>
-      )
-    }
-    return order.status?.toLowerCase() === 'confirmed' ? (
-      <Badge variant='outline' className='mt-1'>
-        {t('unpaid')}
-      </Badge>
-    ) : null
-  }
-  const receipt =
-    order.receiptNumber != null
-      ? ` ${t('receiptShort', { number: Number(order.receiptNumber) })}`
-      : ''
-  return (
-    <div className='mt-1 flex flex-wrap items-center justify-end gap-1'>
-      {/* The receipt is a tap away once there is one */}
-      {order.ticketId != null ? (
-        <Link to='/receipts/$ticketId' params={{ ticketId: String(order.ticketId) }}>
-          <Badge variant='secondary' className='tabular-nums'>
-            {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
-            {receipt}
-          </Badge>
-        </Link>
-      ) : (
-        <Badge variant='secondary' className='tabular-nums'>
-          {order.paidWith === 'Account' ? t('onYourTab') : t('paid')}
-          {receipt}
-        </Badge>
-      )}
-      {refunded > 0 && (
-        <Badge variant='outline' className='text-destructive tabular-nums'>
-          {t('refunded')} −{price(refunded)}
-        </Badge>
-      )}
-    </div>
-  )
-}
-
-function OrderTileDetails({ order }: { order: Order }) {
+function OrderItems({ order }: { order: Order }) {
   const t = useT()
   const localized = useLocalized()
-  const auth = useAuth()
-  const [rateOpen, setRateOpen] = useState(false)
-
-  const rating = order.rating?.ratingValue
-  // Rating is still account-only server-side, so don't offer a guest a button
-  // that would come back 401
-  const canBeRated =
-    auth.isAuthenticated &&
-    order.status?.toLowerCase() === 'confirmed' &&
-    rating == null
 
   return (
     <div className='flex flex-col gap-1'>
@@ -503,166 +958,11 @@ function OrderTileDetails({ order }: { order: Order }) {
           )}
         </div>
       ))}
-
       {order.customerNote && (
         <p className='text-muted-foreground text-[13px]'>
           {t('noteWithText', { notes: order.customerNote })}
         </p>
       )}
-
-      {rating != null ? (
-        <div className='pt-1'>
-          <div className='flex items-center gap-1'>
-            <span className='text-muted-foreground text-[13px]'>
-              {t('yourRating')}
-            </span>
-            <StarsDisplay value={Number(rating)} />
-          </div>
-          {order.rating?.comment && (
-            <p className='text-muted-foreground text-[13px]'>
-              "{order.rating.comment}"
-            </p>
-          )}
-        </div>
-      ) : (
-        canBeRated && (
-          <>
-            <button
-              type='button'
-              className='text-muted-foreground flex items-center gap-1 pt-1 text-[13px]'
-              onClick={() => setRateOpen(true)}
-            >
-              <Star className='h-4 w-4' />
-              {t('rateThisOrder')}
-            </button>
-            <RatingSheet
-              orderId={Number(order.orderNumber)}
-              open={rateOpen}
-              onOpenChange={setRateOpen}
-            />
-          </>
-        )
-      )}
     </div>
-  )
-}
-
-function StarsDisplay({ value }: { value: number }) {
-  return (
-    <span className='text-muted-foreground flex gap-0.5'>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`h-3.5 w-3.5 ${star <= value ? 'fill-current' : 'opacity-40'}`}
-        />
-      ))}
-    </span>
-  )
-}
-
-// ── Rating bottom sheet (mobile parity) ──
-
-const RATING_LABELS: Record<number, TranslationKey> = {
-  1: 'ratingPoor',
-  2: 'ratingFair',
-  3: 'ratingGood',
-  4: 'ratingVeryGood',
-  5: 'ratingExcellent',
-}
-
-function RatingSheet({
-  orderId,
-  open,
-  onOpenChange,
-}: {
-  orderId: number
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  const t = useT()
-  const queryClient = useQueryClient()
-  const [rating, setRating] = useState(5)
-  const [comment, setComment] = useState('')
-
-  const rateOrder = useMutation({
-    ...rateOrderMutation(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
-      onOpenChange(false)
-    },
-  })
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side='bottom'
-        className='mx-auto max-w-lg gap-0 rounded-t-2xl border-t-0 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]'
-      >
-        <div className='bg-muted-foreground mx-auto mb-4 h-1 w-10 rounded-full' />
-
-        <SheetHeader className='p-0 text-start'>
-          <SheetTitle className='pe-8 text-xl font-bold'>
-            {t('rateYourOrder')}
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className='mt-6 flex justify-center gap-1'>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type='button'
-              disabled={rateOrder.isPending}
-              onClick={() => setRating(star)}
-              aria-label={`${star} stars`}
-            >
-              <Star
-                className={`h-10 w-10 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}`}
-              />
-            </button>
-          ))}
-        </div>
-        <p className='text-muted-foreground mt-2 text-center text-[15px]'>
-          {t(RATING_LABELS[rating])}
-        </p>
-
-        <p className='mt-6 text-sm font-semibold'>{t('yourReviewOptional')}</p>
-        <Textarea
-          rows={3}
-          maxLength={500}
-          className='mt-2'
-          placeholder={t('shareYourExperience')}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
-
-        {rateOrder.isError && (
-          <div className='bg-destructive/10 text-destructive mt-4 flex items-center gap-2 rounded-lg p-3 text-[13px]'>
-            <CircleAlert className='h-4 w-4 shrink-0' />
-            {t('failedToPlaceOrder')}
-          </div>
-        )}
-
-        <Button
-          size='lg'
-          className='mt-6 w-full rounded-full font-bold'
-          disabled={rateOrder.isPending}
-          onClick={() =>
-            rateOrder.mutate({
-              path: { orderId },
-              body: { ratingValue: rating, comment: comment.trim() || null },
-              headers: { 'x-requestid': crypto.randomUUID() },
-              query: { 'api-version': API_VERSION },
-            })
-          }
-        >
-          {rateOrder.isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            t('submitRating')
-          )}
-        </Button>
-      </SheetContent>
-    </Sheet>
   )
 }

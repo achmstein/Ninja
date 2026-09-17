@@ -188,7 +188,7 @@
         <tr><td>Scanned a plain table, branch has rooms</td><td>The tab stays the bookable list. The table is a chip in the bar; tapping it opens the table sheet: call waiter and get bill as status pills, the way into the menu, leave the table.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Holding a timed place</td><td>The held banner with the countdown above the list, as today.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Clock running</td><td>The clock card: timer, the rate, who is in the room as chips; then the quick requests and leave.</td><td><span class="lbl seat">Room 2</span></td></tr>
-        <tr><td>Ticket paid at a table</td><td>The chip goes; the Orders tab opens on a thanks card with the receipt number and the stars, above the orders the bill covered.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Ticket paid at a table</td><td>The chip goes; on the Orders tab the bill's tile turns paid, with the receipt number and the stars for the rounds on it.</td><td><span class="lbl">Places</span></td></tr>
         <tr><td>Bookings paused by the branch</td><td>The "bookings paused" banner inside the tab. The tab stays; only the hold buttons go.</td><td><span class="lbl">Places</span></td></tr>
       </tbody>
     </table>
@@ -270,19 +270,25 @@
     <figure>
       <div class="phone">
         <div class="topbar"><span>Chillax</span><span class="chip">Downtown</span></div>
-        <div class="card hero">
-          <div class="title">Thanks, Ahmed</div>
-          <div class="sub">Table 4 · paid 215 · 12 points earned</div>
-          <span class="btn">Receipt</span>
+        <div class="card">
+          <div class="sub">On you today <b style="float:right">≈ 265</b></div>
         </div>
-        <div class="card" style="border-style: dashed">
-          <div class="title">Next time</div>
-          <div class="sub">Scan the code on your table and it all comes back.</div>
+        <div class="card">
+          <div class="title">8:40 pm · Room 3 <span class="chip" style="float:right">Unpaid</span></div>
+          <div class="sub">⏱ Room 3 time so far · 1:05 · ≈ 50</div>
+          <div class="sub">2x Latte · Ahmed 80</div>
+          <div class="sub"><b>Total ≈ 130</b></div>
+        </div>
+        <div class="card">
+          <div class="title">6:10 pm · Table 4 <span class="chip" style="float:right">Paid #12</span></div>
+          <div class="sub">1x Mojito · you 60 · 1x Water · Sara 15</div>
+          <div class="sub">Service 12% · <b>Total 84</b></div>
+          <div class="sub">How was it? ★★★★★</div>
         </div>
         <div class="spacer"></div>
-        <div class="nav"><span>Menu</span><span class="on">Table</span><span>Orders</span><span>Profile</span></div>
+        <div class="nav"><span>Menu</span><span>Rooms</span><span class="on">Orders</span><span>Profile</span></div>
       </div>
-      <figcaption><b>After the bill is paid</b>The table card dissolves into thanks. The stored place clears itself on the paid event, so nobody has to find "Leave table". Requires the ticket-paid push to reach the customer.</figcaption>
+      <figcaption><b>The orders tab is the bills</b>One tile per Sales ticket the customer is on: the time line, the rounds with names when the bill is shared, discount, service and VAT as the till applies them, the total. A clock still running adds its time so far, marked as about, until the till stops it. The paid tile is the thanks: receipt number and stars in place. The stored table clears itself on the paid event, so nobody has to find "Leave table".</figcaption>
     </figure>
 
     <figure>
@@ -365,7 +371,15 @@
       <div>
         <h3>Keeping the tabs apart</h3>
         <p class="tag">client_web only · built</p>
-        <p>Four tabs stay: Menu, the visit, Orders, Profile. Two other shapes were tried and dropped — three tabs with receipts under Account, and an order-on-its-way line on the menu — because a customer with many orders would bloat the menu, and orders should never sit beside the places to book. What stayed from the pass: the rating on the thanks card, the place's tab under a running clock, and the branch switch confirming that it leaves the table.</p>
+        <p>Four tabs stay: Menu, the visit, Orders, Profile. Two other shapes were tried and dropped — three tabs with receipts under Account, and an order-on-its-way line on the menu — because a customer with many orders would bloat the menu, and orders should never sit beside the places to book. What stayed from the pass: the rating on the paid bill, the place's tab under a running clock, and the branch switch confirming that it leaves the table.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">5b</div>
+      <div>
+        <h3>The orders tab as bills</h3>
+        <p class="tag">Sales + Notification + client_web · built</p>
+        <p>The cafe sells time as well as drinks, and a customer can be on two unsettled tickets at once — the table they started at and the room they moved to. Orders alone could not say what was on them, so the tab reads bills instead: one Sales read returns every ticket the caller is on (sat in the room, ordered a line, paid a share), open ones whatever their age and closed ones for the last ninety days, with lines, the till's totals and the caller's own lines flagged. Guests are known by the same header Ordering uses. Over the open ones, "on you today"; a clock still running adds its time so far from the stay's segments, rounded the way the tariff rounds, marked as about. Orders the till has not confirmed wait above, since they are on no bill yet. The separate thanks card and its stored state went; the paid tile carries the receipt number and the stars. Each member of a stay now also hears the clock stop on their own hub group, so the time line lands without waiting for the next read.</p>
       </div>
     </div>
     <div class="phase">

@@ -18,8 +18,7 @@ public class SessionEndedIntegrationEventHandler(
         logger.LogInformation("Handling SessionEndedIntegrationEvent: ReservationId={ReservationId}, RoomId={RoomId}, Members={MemberCount}",
             @event.ReservationId, @event.RoomId, @event.MemberUserIds.Count);
 
-        // Broadcast via SignalR
-        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
+        var change = new
         {
             type = "session_ended",
             // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
@@ -27,7 +26,16 @@ public class SessionEndedIntegrationEventHandler(
             placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
             placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
-        });
+        };
+
+        // Broadcast via SignalR: the places list, and each member wherever
+        // they are in the app — their clock stopped and its time is about to
+        // land on their bill
+        await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", change);
+        foreach (var memberId in @event.MemberUserIds.Distinct())
+        {
+            await hubContext.Clients.Group($"user:{memberId}").SendAsync("RoomStatusChanged", change);
+        }
 
         // A clock stopping on a timed table ends the sitting for everyone who
         // scanned it, members or not (docs/visit-tab.html). Rooms are not

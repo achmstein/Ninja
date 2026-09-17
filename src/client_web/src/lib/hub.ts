@@ -8,9 +8,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
 import { getActivePlace, usePlaceStore } from '@/stores/place-store'
-import { useThanksStore } from '@/stores/thanks-store'
-import { getOrder } from '@/api/ordering'
-import { API_VERSION } from './api-client'
 import { getStoredUser } from './oidc'
 import { translate } from './i18n'
 import {
@@ -27,15 +24,11 @@ let connection: HubConnection | null = null
 type OrderStatusChangedEvent = {
   type?: string
   orderId?: number
-  /** On order_paid: the receipt the bill was settled on */
-  receiptNumber?: number | null
 }
 
-/** What PlaceCleared carries: the sitting at a place ended, and why */
+/** What PlaceCleared carries: the sitting at a place ended */
 type PlaceClearedEvent = {
   placeId?: number
-  receiptNumber?: number | null
-  reason?: 'paid' | 'voided' | 'ended'
 }
 
 /**
@@ -134,12 +127,20 @@ export function useHub() {
   useEffect(() => {
     const conn = getConnection()
 
+    // The customer's bills follow every step: confirmed puts the order on
+    // one, paid closes it. Read again rather than patched, so the page
+    // always shows the till's own arithmetic
+    const refreshBills = () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyBills' }] })
+    }
+
     // The mobile app hears about these as push notifications; on the web the
     // hub event was only refreshing lists, so a customer watching the screen
     // saw their order change state with nothing said about it.
     const onOrder = (event?: OrderStatusChangedEvent) => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
+      refreshBills()
 
       const orderId = event?.orderId ?? 0
       if (event?.type === 'order_confirmed') {
@@ -147,44 +148,15 @@ export function useHub() {
       } else if (event?.type === 'order_cancelled') {
         toast.error(translate('orderCancelledToast', { orderId }))
       } else if (event?.type === 'order_paid') {
-        void onOrderPaid(orderId, event.receiptNumber ?? null)
+        // The bill at a scanned table is paid: the table clears itself, so
+        // the next scan starts clean. The paid bill itself is on the
+        // orders page, with the receipt number and the stars
+        if (getActivePlace()) usePlaceStore.getState().clearPlace()
       }
     }
-
-    // The bill an order was on is paid: thanks at the top of the orders it
-    // covered, with the stars for this order. At a scanned table the table
-    // also clears itself, so the next scan starts clean. In a room there is
-    // no stored table, so the order itself says where it was — one read,
-    // and only for an order that was somewhere.
-    const onOrderPaid = async (
-      orderId: number,
-      receiptNumber: number | null,
-    ) => {
-      const thanks = useThanksStore.getState()
-      const place = getActivePlace()
-      if (place) {
-        thanks.setPaid({ placeName: place.name, receiptNumber, orderId })
-        usePlaceStore.getState().clearPlace()
-        return
-      }
-      if (thanks.paid && thanks.paid.orderId == null) {
-        // The table's own "cleared" beat this one to it: add the order so
-        // the card can ask how it was
-        thanks.setPaid({ ...thanks.paid, orderId })
-        return
-      }
-      try {
-        const { data } = await getOrder({
-          path: { orderId },
-          query: { 'api-version': API_VERSION },
-        })
-        const placeName = data?.placeName ?? data?.roomName
-        if (placeName) thanks.setPaid({ placeName, receiptNumber, orderId })
-      } catch {
-        // No card is better than a wrong one
-      }
-    }
+    // A clock started or stopped: its time lands on the bill when it stops
     const onRoom = () => {
+      refreshBills()
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getPlace' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'scanPlace' }] })
@@ -228,19 +200,11 @@ export function useHub() {
 
     // The sitting at a scanned table ended — its bill paid or voided, or the
     // clock on a timed table stopped — for everyone who scanned it, ordered
-    // or not. Paid gets the thanks card; the rest just let the table go.
+    // or not: the table lets go, and the bill reads again as closed.
     const onPlaceCleared = (event?: PlaceClearedEvent) => {
+      refreshBills()
       const place = getActivePlace()
       if (!place || event?.placeId !== place.id) return
-      if (event.reason === 'paid') {
-        // Their own order's paid event, if any, adds the order id for rating
-        const current = useThanksStore.getState().paid
-        useThanksStore.getState().setPaid({
-          placeName: place.name,
-          receiptNumber: event.receiptNumber ?? null,
-          orderId: current?.orderId ?? null,
-        })
-      }
       usePlaceStore.getState().clearPlace()
     }
 
