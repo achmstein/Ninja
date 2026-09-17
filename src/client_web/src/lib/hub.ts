@@ -360,3 +360,11 @@ export function useRoomsGroup() {
     }
   }, [])
 }
+
+// The connection is a module singleton whose handlers are bound once, in an
+// effect that never re-runs. A hot update of this file would leave the old
+// handlers on the old connection and the new code unreached, so in
+// development the page reloads instead.
+if (import.meta.hot) {
+  import.meta.hot.accept(() => window.location.reload())
+}
