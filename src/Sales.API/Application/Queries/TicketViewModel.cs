@@ -110,6 +110,64 @@ public record TicketDetail
 /// till printed, without the till's own fields (who rang it up, the shift,
 /// the audit trail).
 /// </summary>
+/// <summary>
+/// A bill as the customer sees it — the till's arithmetic, none of the
+/// till's names: who added a line, who settled, who discounted stay on the
+/// staff side. One per ticket the customer is on, open or settled.
+/// </summary>
+public record BillView
+{
+    public int Id { get; init; }
+    /// <summary>"Room" or "Cafe".</summary>
+    public string Type { get; init; } = string.Empty;
+    /// <summary>"Open", "Settled" or "Voided".</summary>
+    public string Status { get; init; } = string.Empty;
+    public int BranchId { get; init; }
+    public int? PlaceId { get; init; }
+    public string? PlaceKind { get; init; }
+    public LocalizedText? LocationName { get; init; }
+    /// <summary>The stay this bill charges the time of, when it is a room's.</summary>
+    public int? SessionId { get; init; }
+    /// <summary>Set once the clock stopped and its time landed as a line; null while it runs.</summary>
+    public DateTime? SessionEndedAt { get; init; }
+    public DateTime OpenedAt { get; init; }
+    public DateTime LastActivityAt { get; init; }
+    public DateTime? SettledAt { get; init; }
+    public DateTime? VoidedAt { get; init; }
+    public int? ReceiptNumber { get; init; }
+    /// <summary>"Cash", "Card", "InstaPay", "Account" or "Mixed" once settled.</summary>
+    public string? PaidWith { get; init; }
+    public List<BillLineView> Lines { get; init; } = [];
+    public decimal Subtotal { get; init; }
+    public decimal Discount { get; init; }
+    public decimal? DiscountRate { get; init; }
+    public decimal ServiceCharge { get; init; }
+    public decimal ServiceChargeRate { get; init; }
+    public decimal Vat { get; init; }
+    public decimal VatRate { get; init; }
+    public bool VatIncluded { get; init; }
+    public decimal Total { get; init; }
+    public decimal RefundedTotal { get; init; }
+}
+
+public record BillLineView
+{
+    public int Id { get; init; }
+    /// <summary>"Order", "SessionTime" or "Manual".</summary>
+    public string Source { get; init; } = string.Empty;
+    public int? OrderId { get; init; }
+    public LocalizedText Description { get; init; } = new();
+    public LocalizedText? Details { get; init; }
+    public decimal Qty { get; init; }
+    public decimal UnitPrice { get; init; }
+    public decimal Discount { get; init; }
+    public decimal Total { get; init; }
+    /// <summary>Who the line is for, by the name they gave; null for the place's own lines.</summary>
+    public string? CustomerName { get; init; }
+    /// <summary>The caller's own line: ordered by them, or their guest device.</summary>
+    public bool IsMine { get; init; }
+}
+
 public record ReceiptView(
     int TicketId,
     int ReceiptNumber,

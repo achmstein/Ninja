@@ -1,7 +1,9 @@
+using System.ComponentModel;
 using System.Security.Claims;
 #nullable enable
 using Chillax.Sales.API.Application.Commands;
 using Chillax.Sales.API.Application.Queries;
+using Chillax.Sales.API.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +25,15 @@ public static class TicketsApi
             .MapGroup("api/tickets")
             .HasApiVersion(1.0)
             .RequireAuthorization();
+
+        // The customer's bills: everything on them today, open or paid, as
+        // the till adds it up. A guest is known by the id their browser
+        // sends, the way Ordering knows their orders.
+        receipts.MapGet("/mine", GetMyBills)
+            .AllowAnonymous()
+            .WithName("GetMyBills")
+            .WithSummary("The caller's bills: open ones, and those settled since a given time")
+            .WithDescription("Every ticket the caller is on — sat in the room, ordered a line, or paid a share — with its lines and the till's totals. Open bills always; settled and voided ones since `since` (default: the last 24 hours). Signed in, or a guest by X-Guest-Id.");
 
         receipts.MapGet("/{id:int}/receipt", GetReceipt)
             .WithName("GetTicketReceipt")
@@ -280,6 +291,22 @@ public static class TicketsApi
         {
             return TypedResults.BadRequest(ex.Message);
         }
+    }
+
+    public static async Task<Results<Ok<IEnumerable<BillView>>, UnauthorizedHttpResult>> GetMyBills(
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        [Description("Only bills settled or voided after this moment (UTC); open bills come regardless")] DateTime? since = null)
+    {
+        var userId = user.GetUserId();
+        var guestId = userId is null ? httpContext.GetGuestId() : null;
+        if (userId is null && guestId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+        var bills = await queries.GetMyBillsAsync(userId, guestId, since ?? DateTime.UtcNow.AddHours(-24));
+        return TypedResults.Ok(bills);
     }
 
     public static async Task<Results<Ok<ReceiptView>, NotFound, ForbidHttpResult>> GetReceipt(

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, removeTicketDiscount, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, closeShift, discardTicket, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getMyBills, getOpenTickets, getPayments, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundTicket, removeTicketDiscount, setBranchPricing, settleTicket, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetMyBillsData, GetMyBillsResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetPaymentsData, GetPaymentsError, GetPaymentsResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -495,6 +495,26 @@ export const setBranchPricingMutation = (options?: Partial<Options<SetBranchPric
     };
     return mutationOptions;
 };
+
+export const getMyBillsQueryKey = (options: Options<GetMyBillsData>) => createQueryKey('getMyBills', options);
+
+/**
+ * The caller's bills: open ones, and those settled since a given time
+ *
+ * Every ticket the caller is on — sat in the room, ordered a line, or paid a share — with its lines and the till's totals. Open bills always; settled and voided ones since `since` (default: the last 24 hours). Signed in, or a guest by X-Guest-Id.
+ */
+export const getMyBillsOptions = (options: Options<GetMyBillsData>) => queryOptions<GetMyBillsResponse, AxiosError<DefaultError>, GetMyBillsResponse, ReturnType<typeof getMyBillsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMyBills({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMyBillsQueryKey(options)
+});
 
 export const getTicketReceiptQueryKey = (options: Options<GetTicketReceiptData>) => createQueryKey('getTicketReceipt', options);
 

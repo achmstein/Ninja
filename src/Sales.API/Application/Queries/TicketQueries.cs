@@ -59,6 +59,14 @@ public interface ITicketQueries
 
     /// <summary>One slip, to reprint it.</summary>
     Task<TabPaymentView?> GetTabPaymentAsync(int id);
+
+    /// <summary>
+    /// The bills the caller is on — sat in the room, ordered a line, or paid
+    /// a share — open ones first, then those settled or voided since
+    /// <paramref name="since"/>. Identified by account, or by the guest id
+    /// their browser holds. Sums come from the same rules the till bills by.
+    /// </summary>
+    Task<IEnumerable<BillView>> GetMyBillsAsync(string? userId, string? guestId, DateTime since);
 }
 
 public class TicketQueries(SalesContext context) : ITicketQueries
@@ -207,6 +215,98 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 .OrderBy(t => t.Type)
                 .ToList(),
         };
+    }
+
+    public async Task<IEnumerable<BillView>> GetMyBillsAsync(string? userId, string? guestId, DateTime since)
+    {
+        if (userId is null && guestId is null)
+            return [];
+
+        // Open bills whatever their age (an unpaid table from last night is
+        // still on the customer), and closed ones from the window asked for
+        var query = context.Tickets
+            .AsNoTracking()
+            .Where(t => t.SettledAt == null && t.VoidedAt == null
+                || t.SettledAt >= since
+                || t.VoidedAt >= since);
+
+        // The same test as Ticket.Involves, in SQL: a member of the room's
+        // party, a line of theirs, or a payment of theirs. MemberIds is a
+        // stored list, so it is checked in memory below.
+        query = userId is not null
+            ? query.Where(t => t.MemberIds.Contains(userId)
+                || t.Lines.Any(l => l.CustomerId == userId)
+                || t.Payments.Any(p => p.CustomerId == userId))
+            : query.Where(t => t.Lines.Any(l => l.GuestId == guestId));
+
+        var tickets = await query
+            .OrderBy(t => t.SettledAt != null || t.VoidedAt != null)
+            .ThenByDescending(t => t.LastActivityAt)
+            .ToListAsync();
+        if (tickets.Count == 0)
+            return [];
+
+        var ids = tickets.Select(t => t.Id).ToList();
+        var receipts = await context.Receipts
+            .AsNoTracking()
+            .Where(r => ids.Contains(r.TicketId))
+            .ToDictionaryAsync(r => r.TicketId, r => r.Number);
+        var refunded = await context.Refunds
+            .AsNoTracking()
+            .Where(r => ids.Contains(r.TicketId))
+            .GroupBy(r => r.TicketId)
+            .Select(g => new { TicketId = g.Key, Amount = g.Sum(r => r.Amount) })
+            .ToDictionaryAsync(x => x.TicketId, x => x.Amount);
+
+        var bills = new List<BillView>(tickets.Count);
+        foreach (var ticket in tickets)
+        {
+            var bill = ticket.GetBill(await RulesForAsync(ticket.BranchId));
+            bills.Add(new BillView
+            {
+                Id = ticket.Id,
+                Type = ticket.Type.ToString(),
+                Status = ticket.Status.ToString(),
+                BranchId = ticket.BranchId,
+                PlaceId = ticket.PlaceId,
+                PlaceKind = ticket.PlaceKind,
+                LocationName = ticket.LocationName,
+                SessionId = ticket.SessionId,
+                SessionEndedAt = ticket.SessionEndedAt,
+                OpenedAt = ticket.OpenedAt,
+                LastActivityAt = ticket.LastActivityAt,
+                SettledAt = ticket.SettledAt,
+                VoidedAt = ticket.VoidedAt,
+                ReceiptNumber = receipts.TryGetValue(ticket.Id, out var number) ? number : null,
+                PaidWith = ticket.SettledAt is null ? null : Payment.DescribeTenders(ticket.Payments),
+                Lines = ticket.Lines.Select(l => new BillLineView
+                {
+                    Id = l.Id,
+                    Source = l.Source.ToString(),
+                    OrderId = l.OrderId,
+                    Description = l.Description,
+                    Details = l.Details,
+                    Qty = l.Qty,
+                    UnitPrice = l.UnitPrice,
+                    Discount = l.Discount,
+                    Total = l.Total,
+                    CustomerName = l.CustomerName,
+                    IsMine = (userId is not null && l.CustomerId == userId)
+                        || (guestId is not null && l.GuestId == guestId),
+                }).ToList(),
+                Subtotal = bill.Subtotal,
+                Discount = bill.Discount,
+                DiscountRate = ticket.DiscountRate,
+                ServiceCharge = bill.ServiceCharge,
+                ServiceChargeRate = bill.ServiceChargeRate,
+                Vat = bill.Vat,
+                VatRate = bill.VatRate,
+                VatIncluded = bill.VatIncluded,
+                Total = bill.Total,
+                RefundedTotal = refunded.TryGetValue(ticket.Id, out var amount) ? amount : 0,
+            });
+        }
+        return bills;
     }
 
     public async Task<TicketDetail?> GetTicketAsync(int ticketId)
