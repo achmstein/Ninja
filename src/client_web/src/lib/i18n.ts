@@ -74,9 +74,10 @@ const webExtras = {
   },
   timeSoFar: { en: '{place} time so far', ar: 'وقت {place} لحد دلوقتي' },
   atTheCounter: { en: 'At the counter', ar: 'من الكاشير' },
-  // The tile shows the customer's own rounds; everyone else's, with the
-  // service and VAT, fold into one row so the total still adds up
-  restOfBill: { en: 'Rest of the bill', ar: 'باقي الحساب' },
+  // A shared bill ends on the customer's part of it — their rounds and an
+  // even share of the place's time — with the whole bill under it
+  yourShare: { en: 'Your share', ar: 'حصتك' },
+  billTotal: { en: 'Bill total', ar: 'إجمالي الحساب' },
   paidSeveralWays: { en: 'Paid several ways', ar: 'اتدفع بأكتر من طريقة' },
   // Rating on the paid bill, the moment the customer is already looking
   howWasIt: { en: 'How was it?', ar: 'عجبك؟' },

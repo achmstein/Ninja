@@ -48,6 +48,7 @@ export type BillView = {
     voidedAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
+    memberCount?: number | string;
     lines?: Array<BillLineView>;
     subtotal?: number | string;
     discount?: number | string;

@@ -279,6 +279,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 VoidedAt = ticket.VoidedAt,
                 ReceiptNumber = receipts.TryGetValue(ticket.Id, out var number) ? number : null,
                 PaidWith = ticket.SettledAt is null ? null : Payment.DescribeTenders(ticket.Payments),
+                MemberCount = ticket.MemberIds.Count,
                 Lines = ticket.Lines.Select(l => new BillLineView
                 {
                     Id = l.Id,

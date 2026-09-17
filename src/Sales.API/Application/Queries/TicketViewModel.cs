@@ -137,6 +137,8 @@ public record BillView
     public int? ReceiptNumber { get; init; }
     /// <summary>"Cash", "Card", "InstaPay", "Account" or "Mixed" once settled.</summary>
     public string? PaidWith { get; init; }
+    /// <summary>How many people the stay's roster puts on this bill — what the place's time is split by, until the group settles otherwise.</summary>
+    public int MemberCount { get; init; }
     public List<BillLineView> Lines { get; init; } = [];
     public decimal Subtotal { get; init; }
     public decimal Discount { get; init; }

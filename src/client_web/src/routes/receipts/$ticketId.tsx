@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
+import { useAuth } from 'react-oidc-context'
 import { getTicketReceiptOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { ReceiptView } from '@/api/sales'
 import { API_VERSION } from '@/lib/api-client'
+import { isSettled, useMyBills } from '@/lib/bills'
 import { useBranches } from '@/lib/branch'
 import {
   useLanguage,
@@ -12,16 +14,27 @@ import {
   type TranslationKey,
 } from '@/lib/i18n'
 import { BackHeader } from '@/components/back-header'
+import { BillSlip } from '@/components/bills/bill-slip'
 import { RequireAuth } from '@/components/require-auth'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useGuestStore } from '@/stores/guest-store'
 
 export const Route = createFileRoute('/receipts/$ticketId')({
-  component: () => (
+  component: ReceiptRoute,
+})
+
+/** Open to a guest with a guest id, like the orders page: their bills are
+ *  theirs to see. Anyone else is asked to sign in. */
+function ReceiptRoute() {
+  const auth = useAuth()
+  const guestId = useGuestStore((s) => s.guestId)
+  if (!auth.isAuthenticated && guestId) return <ReceiptPage />
+  return (
     <RequireAuth>
       <ReceiptPage />
     </RequireAuth>
-  ),
-})
+  )
+}
 
 const tenderKey: Record<string, TranslationKey> = {
   Cash: 'cash',
@@ -34,35 +47,50 @@ const percent = (rate: number | string | null | undefined) =>
   Math.round(Number(rate ?? 0) * 100)
 
 /**
- * The customer's own copy of the printed receipt: what the till printed,
- * laid out the same way, for a bill they were on. Sales says who was on it;
- * anyone else gets 403 and sees the not-found state.
+ * The bill, on its own page. Paid and for an account, it is the customer's
+ * copy of the printed receipt: what the till printed, laid out the same
+ * way, with the branch's header and footer. Otherwise — still open, or a
+ * guest's — it is the bill as the slip the till would print, from the
+ * customer's own bills. Sales says who was on it; anyone else sees the
+ * not-found state.
  */
 function ReceiptPage() {
   const { ticketId } = Route.useParams()
   const t = useT()
-  const query = useQuery({
+  const localized = useLocalized()
+  const auth = useAuth()
+
+  const bills = useMyBills()
+  const bill = bills.data?.find((b) => Number(b.id) === Number(ticketId))
+  // The printed receipt exists once the bill is settled; a bill known to
+  // be open is not asked for
+  const printed = useQuery({
     ...getTicketReceiptOptions({
       path: { id: Number(ticketId) },
       query: { 'api-version': API_VERSION },
     }),
     retry: false,
+    enabled: auth.isAuthenticated && (bill == null || isSettled(bill)),
   })
+
+  const loading =
+    (printed.isLoading && printed.fetchStatus !== 'idle') ||
+    (bill == null && bills.isLoading)
+  const title = printed.data
+    ? t('receiptNumber', { number: Number(printed.data.receiptNumber) })
+    : bill?.receiptNumber != null
+      ? t('receiptNumber', { number: Number(bill.receiptNumber) })
+      : localized(bill?.locationName) || t('receipt')
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <BackHeader
-        to='/orders'
-        title={
-          query.data
-            ? t('receiptNumber', { number: Number(query.data.receiptNumber) })
-            : t('receipt')
-        }
-      />
-      {query.isLoading ? (
+      <BackHeader to='/orders' title={title} />
+      {loading ? (
         <Skeleton className='h-96 rounded-xl' />
-      ) : query.data ? (
-        <Receipt receipt={query.data} />
+      ) : printed.data ? (
+        <Receipt receipt={printed.data} />
+      ) : bill ? (
+        <BillSlip bill={bill} />
       ) : (
         <p className='text-muted-foreground py-16 text-center'>
           {t('receiptUnavailable')}
