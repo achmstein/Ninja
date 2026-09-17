@@ -24,15 +24,28 @@ import { statusDotClass } from '@/lib/order-status'
 import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, PlaceIcon } from '@/lib/places'
 import { useActiveStay, useMyStays } from '@/lib/stays'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import {
+  useLanguage,
+  useLocalized,
+  usePrice,
+  useT,
+  type TranslationKey,
+} from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { RunningTimeLine } from '@/components/bills/bill-slip'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/orders/')({
   component: OrdersRoute,
@@ -619,33 +632,18 @@ function StarsDisplay({ value }: { value: number }) {
   )
 }
 
-/** Five stars, one tap, for every round of theirs the bill covered. */
+/**
+ * Five stars on the paid bill. A tap on one opens the rating sheet with
+ * that star chosen and room for a word, as the app does; the sheet rates
+ * every round of theirs the bill covered.
+ */
 function StarRow({ orderIds }: { orderIds: number[] }) {
   const t = useT()
-  const queryClient = useQueryClient()
   const [hover, setHover] = useState(0)
-  const [given, setGiven] = useState(0)
+  const [chosen, setChosen] = useState<number | null>(null)
+  const [done, setDone] = useState(false)
 
-  const rate = useMutation({
-    mutationFn: async (value: number) => {
-      for (const orderId of orderIds) {
-        await rateOrder({
-          path: { orderId },
-          body: { ratingValue: value, comment: null },
-          headers: { 'x-requestid': crypto.randomUUID() },
-          query: { 'api-version': API_VERSION },
-          throwOnError: true,
-        })
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
-    },
-    onError: () => setGiven(0),
-  })
-
-  if (rate.isSuccess) {
+  if (done) {
     return (
       <span className='text-muted-foreground pt-1 text-[13px]'>
         {t('ratedThanks')}
@@ -665,29 +663,155 @@ function StarRow({ orderIds }: { orderIds: number[] }) {
             key={value}
             type='button'
             aria-label={String(value)}
-            disabled={rate.isPending}
             className='p-0.5'
             onMouseEnter={() => setHover(value)}
-            onClick={() => {
-              setGiven(value)
-              rate.mutate(value)
-            }}
+            onClick={() => setChosen(value)}
           >
             <Star
               className={cn(
                 'h-5 w-5 transition-colors',
-                value <= (hover || given)
-                  ? 'fill-current'
-                  : 'text-muted-foreground/40'
+                value <= hover ? 'fill-current' : 'text-muted-foreground/40'
               )}
             />
           </button>
         ))}
-        {rate.isPending && (
-          <Loader2 className='text-muted-foreground ms-1 h-4 w-4 animate-spin' />
-        )}
       </div>
+      <RatingSheet
+        orderIds={orderIds}
+        initialRating={chosen ?? 5}
+        open={chosen != null}
+        onOpenChange={(open) => {
+          if (!open) setChosen(null)
+        }}
+        onRated={() => setDone(true)}
+      />
     </div>
+  )
+}
+
+// ── Rating bottom sheet (mobile parity) ──
+
+const RATING_LABELS: Record<number, TranslationKey> = {
+  1: 'ratingPoor',
+  2: 'ratingFair',
+  3: 'ratingGood',
+  4: 'ratingVeryGood',
+  5: 'ratingExcellent',
+}
+
+function RatingSheet({
+  orderIds,
+  initialRating,
+  open,
+  onOpenChange,
+  onRated,
+}: {
+  orderIds: number[]
+  initialRating: number
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onRated: () => void
+}) {
+  const t = useT()
+  const queryClient = useQueryClient()
+  const [rating, setRating] = useState(initialRating)
+  const [comment, setComment] = useState('')
+
+  // The star tapped on the tile is the sheet's starting point each time it
+  // opens, and the comment box starts empty
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setRating(initialRating)
+      setComment('')
+    }
+  }
+
+  const rateAll = useMutation({
+    mutationFn: async () => {
+      for (const orderId of orderIds) {
+        await rateOrder({
+          path: { orderId },
+          body: { ratingValue: rating, comment: comment.trim() || null },
+          headers: { 'x-requestid': crypto.randomUUID() },
+          query: { 'api-version': API_VERSION },
+          throwOnError: true,
+        })
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
+      onRated()
+      onOpenChange(false)
+    },
+  })
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side='bottom'
+        className='mx-auto max-w-lg gap-0 rounded-t-2xl border-t-0 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]'
+      >
+        <div className='bg-muted-foreground mx-auto mb-4 h-1 w-10 rounded-full' />
+
+        <SheetHeader className='p-0 text-start'>
+          <SheetTitle className='pe-8 text-xl font-bold'>
+            {t('rateYourOrder')}
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className='mt-6 flex justify-center gap-1'>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type='button'
+              disabled={rateAll.isPending}
+              onClick={() => setRating(star)}
+              aria-label={`${star} stars`}
+            >
+              <Star
+                className={`h-10 w-10 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}`}
+              />
+            </button>
+          ))}
+        </div>
+        <p className='text-muted-foreground mt-2 text-center text-[15px]'>
+          {t(RATING_LABELS[rating])}
+        </p>
+
+        <p className='mt-6 text-sm font-semibold'>{t('yourReviewOptional')}</p>
+        <Textarea
+          rows={3}
+          maxLength={500}
+          className='mt-2'
+          placeholder={t('shareYourExperience')}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+
+        {rateAll.isError && (
+          <div className='bg-destructive/10 text-destructive mt-4 flex items-center gap-2 rounded-lg p-3 text-[13px]'>
+            <CircleAlert className='h-4 w-4 shrink-0' />
+            {t('failedToPlaceOrder')}
+          </div>
+        )}
+
+        <Button
+          size='lg'
+          className='mt-6 w-full rounded-full font-bold'
+          disabled={rateAll.isPending}
+          onClick={() => rateAll.mutate()}
+        >
+          {rateAll.isPending ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            t('submitRating')
+          )}
+        </Button>
+      </SheetContent>
+    </Sheet>
   )
 }
 
