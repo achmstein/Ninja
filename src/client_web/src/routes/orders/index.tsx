@@ -8,12 +8,12 @@ import {
   getOrderOptions,
   getOrdersByUserOptions,
 } from '@/api/ordering/@tanstack/react-query.gen'
+import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { API_VERSION } from '@/lib/api-client'
 import {
   billParts,
   closedAt,
-  isOpen,
   isSettled,
   percent,
   runningTime,
@@ -154,7 +154,7 @@ function OrdersPage() {
             <EmptyState title={t('nothingOnYouToday')} />
           ) : (
             <div className='flex flex-col'>
-              <OnYouToday bills={todayBills} />
+              <OnYourTab />
               <OrderGroup title={t('waitingToBeConfirmed')} orders={waiting} />
               <OrderGroup title={t('statusCancelled')} orders={cancelled} />
               <div className='divide-y'>
@@ -187,52 +187,35 @@ function OrdersPage() {
 }
 
 /**
- * What is certainly on the customer across the open bills: a bill with
- * nobody else on it whole, and their own rounds of a shared one. The
- * group's time on a shared bill is settled at the till, so it is named
- * under the sum rather than guessed into it. A clock still running counts
- * its time so far the way the till will add it, and marks the sum as
- * about.
+ * What the customer owes the cafe, as the till decided it: the balance of
+ * their tab in Accounts, where a settled share lands when the cashier puts
+ * it on account. No sum of the open bills — the app cannot know their
+ * part of an unsettled room's time, so it does not guess one. Only for
+ * an account that owes; a tap opens the tab.
  */
-function OnYouToday({ bills }: { bills: BillView[] }) {
+function OnYourTab() {
   const t = useT()
   const price = usePrice()
-  const stay = useActiveStay()
-  const now = useNow()
-
-  const stayOf = useStayOf()
-
-  const open = bills.filter(isOpen)
-  if (open.length === 0) return null
-
-  const running = open.map((bill) => runningTime(bill, stay, now))
-  const parts = open.map((bill, i) => billParts(bill, running[i], stayOf(bill)))
-  const approx = running.some((time) => time != null)
-  const sharedTime = parts.some(
-    (part, i) => part.shared && (part.time > 0 || running[i] != null)
-  )
-  const sum = parts.reduce(
-    (total, part) => total + (part.shared ? part.ownLines : part.total),
-    0
-  )
+  const auth = useAuth()
+  const accountQuery = useQuery({
+    ...getMyAccountOptions(),
+    enabled: auth.isAuthenticated,
+    retry: false,
+  })
+  const balance = accountQuery.isError
+    ? 0
+    : Number(accountQuery.data?.balance ?? 0)
+  if (balance <= 0) return null
 
   return (
-    <div className='flex flex-col py-2'>
-      <div className='flex items-baseline justify-between'>
-        <span className='text-muted-foreground text-[13px]'>
-          {t('onYouToday')}
-        </span>
-        <span className='text-lg font-bold tabular-nums'>
-          {approx && '≈ '}
-          {price(sum)}
-        </span>
-      </div>
-      {sharedTime && (
-        <span className='text-muted-foreground text-end text-xs'>
-          {t('plusTimeSettledAtTill')}
-        </span>
-      )}
-    </div>
+    <Link to='/account' className='flex items-baseline justify-between py-2'>
+      <span className='text-muted-foreground text-[13px]'>
+        {t('onYourTab')}
+      </span>
+      <span className='text-destructive text-lg font-bold tabular-nums'>
+        {price(balance)}
+      </span>
+    </Link>
   )
 }
 

@@ -63,7 +63,6 @@ const webExtras = {
   you: { en: 'You', ar: 'انت' },
   // The orders page is the customer's bills: what the open ones add up
   // to, a clock still running, what is on no bill yet
-  onYouToday: { en: 'On you today', ar: 'عليك النهاردة' },
   nothingOnYouToday: {
     en: 'Nothing on you today',
     ar: 'مفيش حاجة عليك النهاردة',
@@ -79,10 +78,6 @@ const webExtras = {
   // the till splits it at settle however they agree
   yourRounds: { en: 'Your rounds', ar: 'طلباتك' },
   billTotal: { en: 'Bill total', ar: 'إجمالي الحساب' },
-  plusTimeSettledAtTill: {
-    en: 'plus your part of the time, settled at the till',
-    ar: 'غير نصيبك من الوقت، بيتحدد عند الكاشير',
-  },
   paidSeveralWays: { en: 'Paid several ways', ar: 'اتدفع بأكتر من طريقة' },
   // Rating on the paid bill, the moment the customer is already looking
   howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
