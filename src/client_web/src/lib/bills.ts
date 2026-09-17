@@ -143,32 +143,26 @@ export function runningTime(
 export const percent = (rate: number | string | null | undefined) =>
   Math.round(Number(rate ?? 0) * 100)
 
-export type Share = {
+export type Parts = {
   /** What the customer's own rounds come to, at menu prices */
   ownLines: number
-  /** How many the place's time is split by: the stay's roster */
-  members: number
-  /** The customer's part of the place's time, split evenly */
-  timeShare: number
-  /** Their part of the whole bill: rounds and time share, with the
-   *  discount, service and VAT in the same proportion */
-  share: number
+  /** The place's time on the bill, a running clock's time so far included */
+  time: number
+  /** Others are on this bill — a roster of more than one splitting the
+   *  time, or rounds that are not the customer's — so what of the total
+   *  is theirs is the till's to decide at settle, not the app's to guess */
+  shared: boolean
   /** The bill's total, a running clock's time so far included */
   total: number
-  /** What the share leaves: everyone else's rounds and time */
-  rest: number
-  /** A guess rather than the till's word: a clock still running, or a
-   *  split the group may settle otherwise */
-  approx: boolean
 }
 
 /**
- * What of a bill is the customer's. The till says whose each round is;
- * the place's time is nobody's until the group settles it, so it is
- * split evenly across the stay's roster here, marked as about. The bill-
- * level discount, service and VAT follow in proportion.
+ * The bill taken apart into what is certainly the customer's and what is
+ * the group's. The till says whose each round is; the place's time is
+ * nobody's until the group settles it, however they agree, so the app
+ * never splits it. A bill with nobody else on it is simply the total.
  */
-export function billShare(bill: BillView, running: RunningTime | null): Share {
+export function billParts(bill: BillView, running: RunningTime | null): Parts {
   const lines = bill.lines ?? []
   const ownLines = lines
     .filter((line) => line.isMine && line.source !== 'SessionTime')
@@ -179,23 +173,14 @@ export function billShare(bill: BillView, running: RunningTime | null): Share {
     lines
       .filter((line) => line.source === 'SessionTime')
       .reduce((sum, line) => sum + Number(line.total ?? 0), 0) + runningCost
-  const members = Math.max(1, Number(bill.memberCount ?? 0))
-  const timeShare = time / members
-
-  // Running time is not on the bill yet, so it goes on both sides of the
-  // proportion that carries the discount, service and VAT
-  const total = Number(bill.total ?? 0) + (running?.charged ?? 0)
-  const base = Number(bill.subtotal ?? 0) + runningCost
-  const factor = base > 0 ? total / base : 1
-  const share = (ownLines + timeShare) * factor
-
+  const others = lines.some(
+    (line) => !line.isMine && line.source !== 'SessionTime',
+  )
+  const members = Number(bill.memberCount ?? 0)
   return {
     ownLines,
-    members,
-    timeShare,
-    share,
-    total,
-    rest: Math.max(0, total - share),
-    approx: running != null || (members > 1 && time > 0),
+    time,
+    shared: others || (members > 1 && (time > 0 || running != null)),
+    total: Number(bill.total ?? 0) + (running?.charged ?? 0),
   }
 }

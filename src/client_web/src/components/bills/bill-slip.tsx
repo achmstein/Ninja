@@ -196,19 +196,19 @@ function SlipLine({ line }: { line: BillLineView }) {
   )
 }
 
-/** The clock still running: its time so far, as the till will bill it —
- *  split by the roster on the tile, whole on the slip. */
+/** The clock still running: its time so far, as the till will bill it. */
 export function RunningTimeLine({
   bill,
   running,
   slip = false,
-  members = 1,
+  shared = false,
 }: {
   bill: BillView
   running: RunningTime
   /** On the slip: no icon, the smaller type */
   slip?: boolean
-  members?: number
+  /** The group's time, split at the till: said so on the tile */
+  shared?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -218,7 +218,6 @@ export function RunningTimeLine({
   const minutes = Math.floor(running.minutes % 60)
   const elapsed = `${hours}:${String(minutes).padStart(2, '0')}`
   const perOption = running.parts.length > 1
-  const split = members > 1
 
   return (
     <div>
@@ -237,9 +236,7 @@ export function RunningTimeLine({
               {t('timeSoFar', { place })}
               {perOption && ` — ${localized(part.optionName)}`}
             </span>
-            <span className='shrink-0 tabular-nums'>
-              ≈ {price(part.cost / (split ? members : 1))}
-            </span>
+            <span className='shrink-0 tabular-nums'>≈ {price(part.cost)}</span>
           </div>
           <p
             className={cn(
@@ -251,7 +248,7 @@ export function RunningTimeLine({
             {t('hoursShort', { count: String(part.hours) })} ×{' '}
             {price(part.rate)}
             {t('perHourShort')}
-            {split && ` ÷ ${members}`}
+            {shared && !slip && ` · ${t('splitAtTill')}`}
           </p>
         </div>
       ))}

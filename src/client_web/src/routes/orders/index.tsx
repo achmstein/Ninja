@@ -11,7 +11,7 @@ import {
 import { type BillLineView, type BillView } from '@/api/sales'
 import { API_VERSION } from '@/lib/api-client'
 import {
-  billShare,
+  billParts,
   closedAt,
   isOpen,
   isSettled,
@@ -187,10 +187,12 @@ function OrdersPage() {
 }
 
 /**
- * What the customer's part of the open bills adds up to, over them: their
- * own rounds, and an even share of the place's time where a stay has a
- * roster. A clock still running counts its time so far the way the till
- * will add it. Marked as about whenever any of that is a guess.
+ * What is certainly on the customer across the open bills: a bill with
+ * nobody else on it whole, and their own rounds of a shared one. The
+ * group's time on a shared bill is settled at the till, so it is named
+ * under the sum rather than guessed into it. A clock still running counts
+ * its time so far the way the till will add it, and marks the sum as
+ * about.
  */
 function OnYouToday({ bills }: { bills: BillView[] }) {
   const t = useT()
@@ -201,21 +203,33 @@ function OnYouToday({ bills }: { bills: BillView[] }) {
   const open = bills.filter(isOpen)
   if (open.length === 0) return null
 
-  const shares = open.map((bill) =>
-    billShare(bill, runningTime(bill, stay, now))
+  const running = open.map((bill) => runningTime(bill, stay, now))
+  const parts = open.map((bill, i) => billParts(bill, running[i]))
+  const approx = running.some((time) => time != null)
+  const sharedTime = parts.some(
+    (part, i) => part.shared && (part.time > 0 || running[i] != null)
   )
-  const approx = shares.some((share) => share.approx)
-  const sum = shares.reduce((total, share) => total + share.share, 0)
+  const sum = parts.reduce(
+    (total, part) => total + (part.shared ? part.ownLines : part.total),
+    0
+  )
 
   return (
-    <div className='flex items-baseline justify-between py-2'>
-      <span className='text-muted-foreground text-[13px]'>
-        {t('onYouToday')}
-      </span>
-      <span className='text-lg font-bold tabular-nums'>
-        {approx && '≈ '}
-        {price(sum)}
-      </span>
+    <div className='flex flex-col py-2'>
+      <div className='flex items-baseline justify-between'>
+        <span className='text-muted-foreground text-[13px]'>
+          {t('onYouToday')}
+        </span>
+        <span className='text-lg font-bold tabular-nums'>
+          {approx && '≈ '}
+          {price(sum)}
+        </span>
+      </div>
+      {sharedTime && (
+        <span className='text-muted-foreground text-end text-xs'>
+          {t('plusTimeSettledAtTill')}
+        </span>
+      )}
     </div>
   )
 }
@@ -350,19 +364,20 @@ function BillTile({
   const stay = useActiveStay()
   const now = useNow()
 
-  // The tile is the customer's own view of the bill: their rounds and
-  // their part of the place's time. A bill that is all theirs adds up to
-  // its total with the till's discount, service and VAT under the lines;
-  // a shared one ends on their share, with the whole bill's total under
-  // it. The tap opens the slip, which itemises everything.
+  // The tile is the customer's own view of the bill: their rounds, and
+  // the place's time as the group's. A bill with nobody else on it adds
+  // up to its total, with the till's discount, service and VAT under the
+  // lines; a shared one ends on the customer's rounds, with the whole
+  // bill's total under it — whose the time is, the till decides at
+  // settle. The tap opens the bill, which itemises everything.
   const lines = bill.lines ?? []
   const mine = lines.filter(
     (line) => line.isMine && line.source !== 'SessionTime'
   )
   const time = lines.filter((line) => line.source === 'SessionTime')
   const running = runningTime(bill, stay, now)
-  const share = billShare(bill, running)
-  const shared = share.rest >= 0.005
+  const parts = billParts(bill, running)
+  const { shared } = parts
   const discount = Number(bill.discount ?? 0)
   const service = Number(bill.serviceCharge ?? 0)
   const vat = Number(bill.vat ?? 0)
@@ -410,31 +425,23 @@ function BillTile({
             <BillLine key={String(line.id)} line={line} />
           ))}
           {time.map((line) => (
-            <BillLine
-              key={String(line.id)}
-              line={line}
-              members={share.members}
-            />
+            <BillLine key={String(line.id)} line={line} shared={shared} />
           ))}
           {running && (
-            <RunningTimeLine
-              bill={bill}
-              running={running}
-              members={share.members}
-            />
+            <RunningTimeLine bill={bill} running={running} shared={shared} />
           )}
 
           {shared ? (
             <>
               <div className={`${row} pt-1 text-[15px] font-bold`}>
-                <span>{t('yourShare')}</span>
-                <span>≈ {price(share.share)}</span>
+                <span>{t('yourRounds')}</span>
+                <span>{price(parts.ownLines)}</span>
               </div>
               <div className={muted}>
                 <span>{t('billTotal')}</span>
                 <span>
                   {running && '≈ '}
-                  {price(share.total)}
+                  {price(parts.total)}
                 </span>
               </div>
             </>
@@ -472,7 +479,7 @@ function BillTile({
                 <span>{t('total')}</span>
                 <span>
                   {running && '≈ '}
-                  {price(share.total)}
+                  {price(parts.total)}
                 </span>
               </div>
             </>
@@ -497,21 +504,20 @@ function BillTile({
   )
 }
 
-/** One of the customer's own lines, or the place's time — split by the
- *  roster when there is one, since the time is the group's. */
+/** One of the customer's own lines, or the place's time — whole, and
+ *  said to be the group's when it is, since the till splits it. */
 function BillLine({
   line,
-  members = 1,
+  shared = false,
 }: {
   line: BillLineView
-  members?: number
+  shared?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const isTime = line.source === 'SessionTime'
   const qty = Number(line.qty ?? 0)
-  const split = isTime && members > 1
 
   return (
     <div>
@@ -523,8 +529,7 @@ function BillLine({
         )}
         <span className='min-w-0 flex-1'>{localized(line.description)}</span>
         <span className='shrink-0 tabular-nums'>
-          {split && '≈ '}
-          {price(Number(line.total ?? 0) / (split ? members : 1))}
+          {price(Number(line.total ?? 0))}
         </span>
       </div>
       {isTime ? (
@@ -532,7 +537,7 @@ function BillLine({
           {t('hoursShort', { count: String(qty) })} ×{' '}
           {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
-          {split && ` ÷ ${members}`}
+          {isTime && shared && ` · ${t('splitAtTill')}`}
         </p>
       ) : (
         localized(line.details) && (

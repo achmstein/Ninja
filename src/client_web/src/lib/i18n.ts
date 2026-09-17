@@ -74,10 +74,16 @@ const webExtras = {
   },
   timeSoFar: { en: '{place} time so far', ar: 'وقت {place} لحد دلوقتي' },
   atTheCounter: { en: 'At the counter', ar: 'من الكاشير' },
-  // A shared bill ends on the customer's part of it — their rounds and an
-  // even share of the place's time — with the whole bill under it
-  yourShare: { en: 'Your share', ar: 'حصتك' },
+  // A shared bill ends on what is certainly the customer's — their rounds
+  // — with the whole bill under it; the place's time is the group's, and
+  // the till splits it at settle however they agree
+  yourRounds: { en: 'Your rounds', ar: 'طلباتك' },
   billTotal: { en: 'Bill total', ar: 'إجمالي الحساب' },
+  splitAtTill: { en: 'split at the till', ar: 'بيتقسم عند الكاشير' },
+  plusTimeSettledAtTill: {
+    en: 'plus your part of the time, settled at the till',
+    ar: 'غير نصيبك من الوقت، بيتحدد عند الكاشير',
+  },
   paidSeveralWays: { en: 'Paid several ways', ar: 'اتدفع بأكتر من طريقة' },
   // Rating on the paid bill, the moment the customer is already looking
   howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
