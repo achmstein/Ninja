@@ -138,7 +138,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orders => 'Orders';
 
   @override
-  String get rooms => 'Rooms & Tables';
+  String get rooms => 'Book';
 
   @override
   String get yourRoom => 'Your room';

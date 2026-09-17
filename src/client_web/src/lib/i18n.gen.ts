@@ -49,7 +49,7 @@ export const messages = {
   close: { en: "Close", ar: "قفل" },
   menu: { en: "Menu", ar: "المنيو" },
   orders: { en: "Orders", ar: "الطلبات" },
-  rooms: { en: "Rooms & Tables", ar: "احجز" },
+  rooms: { en: "Book", ar: "احجز" },
   yourRoom: { en: "Your room", ar: "اوضتك" },
   yourTable: { en: "Your table", ar: "ترابيزتك" },
   yourStation: { en: "Your station", ar: "لعبتك" },

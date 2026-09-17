@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// No description provided for @rooms.
   ///
   /// In en, this message translates to:
-  /// **'Rooms & Tables'**
+  /// **'Book'**
   String get rooms;
 
   /// No description provided for @yourRoom.

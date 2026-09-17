@@ -180,11 +180,12 @@ function SettingsPage() {
         </Card>
       </section>
 
-      {/* Account */}
+      {/* The profile itself: edit it, its password, delete it. Named as the
+          tab is, never "account" — that word is the house tab's */}
       {auth.isAuthenticated && (
         <section className='flex flex-col gap-2'>
           <h2 className='text-muted-foreground px-1 text-sm font-semibold'>
-            {t('account')}
+            {t('profile')}
           </h2>
           <Card className='gap-0 divide-y p-0'>
             <TileButton

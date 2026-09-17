@@ -62,11 +62,11 @@ const webExtras = {
   // The clock card's members, and a shared bill's lines
   you: { en: 'You', ar: 'انت' },
   // The bills tab — "الحساب", what a customer asks for at the table — is
-  // everything the cafe is charging them; the profile tab is "بروفايلي"
+  // everything the cafe is charging them; the profile tab is "البروفايل"
   // so the two never read alike. The house account's own labels say
   // "balance" and "on your tab" rather than "account" for the same reason.
   bills: { en: 'Bills', ar: 'الحساب' },
-  profile: { en: 'Profile', ar: 'بروفايلي' },
+  profile: { en: 'Profile', ar: 'البروفايل' },
   earlier: { en: 'Earlier', ar: 'قبل كده' },
   noBillsYet: { en: 'No bills yet', ar: 'مفيش حسابات لسه' },
   failedToLoadBills: { en: "Couldn't load your bills", ar: 'الحساب مش بيحمل' },
