@@ -94,6 +94,9 @@ public record StayViewModel
     /// <summary>When the hold lapses; only while held.</summary>
     public DateTime? ExpiresAt { get; init; }
     public bool StartOnConfirm { get; init; }
+    /// <summary>The rate the customer asked to start at, while held; the till confirms at it.</summary>
+    public string? RequestedOptionCode { get; init; }
+    public LocalizedText? RequestedOptionName { get; init; }
     public DateTime? StartedAt { get; init; }
     public DateTime? EndedAt { get; init; }
     public TariffViewModel Tariff { get; init; } = new();
@@ -251,6 +254,8 @@ public static class ViewModelMapping
             CreatedAt = stay.CreatedAt,
             ExpiresAt = stay.GetExpirationTime(),
             StartOnConfirm = stay.StartOnConfirm,
+            RequestedOptionCode = stay.RequestedOptionCode,
+            RequestedOptionName = stay.Tariff.Find(stay.RequestedOptionCode)?.Name,
             StartedAt = stay.StartedAt,
             EndedAt = stay.EndedAt,
             Tariff = stay.Tariff.ToViewModel(),

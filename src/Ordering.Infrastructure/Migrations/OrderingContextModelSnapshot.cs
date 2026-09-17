@@ -27,6 +27,9 @@ namespace Ordering.Infrastructure.Migrations
             modelBuilder.HasSequence("buyerseq")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("guestblockseq")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("orderitemseq")
                 .IncrementsBy(10);
 
@@ -322,12 +325,51 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<bool>("IsReservationsEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("RequireSignInForTableOrders")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("BranchId");
 
                     b.ToTable("branchsettings", "ordering");
+                });
+
+            modelBuilder.Entity("Chillax.Ordering.Infrastructure.Projections.GuestBlock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "guestblockseq");
+
+                    b.Property<DateTime>("BlockedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BlockedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("BlockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GuestId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuestId", "BranchId", "BlockedUntil");
+
+                    b.ToTable("guestblocks", "ordering");
                 });
 
             modelBuilder.Entity("Chillax.Ordering.Infrastructure.Projections.Place", b =>

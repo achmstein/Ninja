@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -162,7 +161,11 @@ export function PlacesManagement() {
               </SelectContent>
             </Select>
 
-            <ScrollArea className='-mx-3 h-full p-3'>
+            {/* Native scrolling, like the sidebar, so both show the app's
+                thin scrollbar rather than Radix's own bar. flex-1 + min-h-0,
+                not h-full: the list takes what is left under the title and
+                filter, so the last place is reachable */}
+            <div className='-mx-3 min-h-0 flex-1 overflow-y-auto p-3'>
               {isLoading ? (
                 [...Array(6)].map((_, i) => (
                   <Skeleton key={i} className='mb-2 h-14 rounded-md' />
@@ -300,7 +303,7 @@ export function PlacesManagement() {
                   )
                 })
               )}
-            </ScrollArea>
+            </div>
           </div>
 
           {/* Detail */}

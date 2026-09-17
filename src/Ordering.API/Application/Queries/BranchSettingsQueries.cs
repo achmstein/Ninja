@@ -11,4 +11,12 @@ public class BranchSettingsQueries(OrderingContext context) : IBranchSettingsQue
 
         return row?.IsOrderingEnabled ?? true;
     }
+
+    public async Task<bool> RequiresSignInForTableOrdersAsync(int branchId)
+    {
+        var row = await context.BranchSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.BranchId == branchId);
+        return row?.RequireSignInForTableOrders ?? false;
+    }
 }

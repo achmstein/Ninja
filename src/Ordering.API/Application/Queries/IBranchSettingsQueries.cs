@@ -12,4 +12,10 @@ public interface IBranchSettingsQueries
     /// a branch with no projection row is taking orders.
     /// </summary>
     Task<bool> IsOrderingEnabledAsync(int branchId);
+
+    /// <summary>
+    /// Whether an order to a table at this branch needs an account. Fail-open:
+    /// a branch with no projection row takes guest table orders.
+    /// </summary>
+    Task<bool> RequiresSignInForTableOrdersAsync(int branchId);
 }

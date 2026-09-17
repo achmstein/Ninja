@@ -29,6 +29,20 @@ public class SessionEndedIntegrationEventHandler(
             reservationId = @event.ReservationId
         });
 
+        // A clock stopping on a timed table ends the sitting for everyone who
+        // scanned it, members or not (docs/visit-tab.html). Rooms are not
+        // scanned-and-sat-at the same way; their members hear it above.
+        if (@event.PlaceId > 0 && @event.PlaceKind == "Table")
+        {
+            await hubContext.Clients.Group(NotificationHub.PlaceGroup(@event.PlaceId)).SendAsync("PlaceCleared", new
+            {
+                placeId = @event.PlaceId,
+                ticketId = (int?)null,
+                receiptNumber = (int?)null,
+                reason = "ended"
+            });
+        }
+
         if (@event.MemberUserIds.Count == 0)
             return;
 

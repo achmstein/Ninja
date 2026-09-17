@@ -51,5 +51,7 @@ public enum ServiceRequestStatus
 {
     Pending = 1,
     Acknowledged = 2,
-    Completed = 3
+    Completed = 3,
+    /// <summary>Taken back by the customer before anyone picked it up.</summary>
+    Cancelled = 4
 }

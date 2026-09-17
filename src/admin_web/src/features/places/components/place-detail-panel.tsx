@@ -116,6 +116,7 @@ export function PlaceDetailPanel({
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [pendingOption, setPendingOption] = useState<string | null>(null)
   const [cancelOrder, setCancelOrder] = useState<number | null>(null)
+  const [rejectOrder, setRejectOrder] = useState<number | null>(null)
   // Customer picker: names the owner (assign) or adds a member
   const [pickerFor, setPickerFor] = useState<'member' | 'assign' | null>(null)
 
@@ -138,11 +139,16 @@ export function PlaceDetailPanel({
     toast.success(t('placeLinkCopied'))
   }
 
-  const confirmArrival = () => {
+  const confirmHold = () => {
     if (!stay) return
     // The customer asked for the clock to start the moment the counter
-    // confirms they arrived: with a rate to pick, ask first
-    if (stay.startOnConfirm && hasOptions(stay.tariff)) {
+    // confirms the hold. With a rate to pick that they did not pick, ask
+    // first; otherwise the server starts at the rate they asked for
+    if (
+      stay.startOnConfirm &&
+      hasOptions(stay.tariff) &&
+      !stay.requestedOptionCode
+    ) {
       onStartHeld(stay, 'confirm')
     } else {
       actions.confirm(stayId, null, Boolean(stay.startOnConfirm))
@@ -365,6 +371,12 @@ export function PlaceDetailPanel({
                   <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
                     <TimerReset className='size-4' />
                     {t('startsOnConfirm')}
+                    {/* The rate the customer asked to start at */}
+                    {stay.requestedOptionName && (
+                      <Badge variant='secondary'>
+                        {localized(stay.requestedOptionName)}
+                      </Badge>
+                    )}
                   </p>
                 )}
                 <div className='mt-2 flex flex-wrap justify-center gap-2'>
@@ -379,7 +391,7 @@ export function PlaceDetailPanel({
                   <Button
                     variant={stay.startOnConfirm ? 'default' : 'outline'}
                     disabled={actions.isBusy}
-                    onClick={confirmArrival}
+                    onClick={confirmHold}
                   >
                     <CheckCircle2 className='me-1 h-4 w-4' />
                     {t('confirm')}
@@ -443,21 +455,30 @@ export function PlaceDetailPanel({
                 {t('noOrdersForTable')}
               </p>
             ) : (
-              orders.map((order) => (
-                <PendingOrderCard
-                  key={String(order.orderNumber)}
-                  summary={order}
-                  nowMs={now}
-                  onConfirm={() =>
-                    orderActions.confirm(Number(order.orderNumber))
-                  }
-                  onCancel={() => setCancelOrder(Number(order.orderNumber))}
-                  isActing={
-                    Number(orderActions.actingOrderNumber) ===
-                    Number(order.orderNumber)
-                  }
-                />
-              ))
+              // The board's tickets, as many across as fit at a comfortable
+              // width rather than one stretched across the panel; the place
+              // is the panel's heading, so the card does not repeat it
+              <div className='grid [grid-template-columns:repeat(auto-fill,minmax(22rem,1fr))] items-start gap-4'>
+                {orders.map((order) => (
+                  <PendingOrderCard
+                    key={String(order.orderNumber)}
+                    summary={order}
+                    nowMs={now}
+                    hidePlace
+                    onConfirm={() =>
+                      orderActions.confirm(Number(order.orderNumber))
+                    }
+                    onCancel={() => setCancelOrder(Number(order.orderNumber))}
+                    onRejectGuest={() =>
+                      setRejectOrder(Number(order.orderNumber))
+                    }
+                    isActing={
+                      Number(orderActions.actingOrderNumber) ===
+                      Number(order.orderNumber)
+                    }
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -631,6 +652,22 @@ export function PlaceDetailPanel({
         handleConfirm={() => {
           if (cancelOrder != null) orderActions.cancel(cancelOrder)
           setCancelOrder(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={rejectOrder != null}
+        onOpenChange={(open) => {
+          if (!open) setRejectOrder(null)
+        }}
+        title={t('nobodyAtTheTableQuestion')}
+        desc={t('nobodyAtTheTableDesc')}
+        cancelBtnText={t('keepOrder')}
+        confirmText={t('nobodyAtTheTable')}
+        destructive
+        handleConfirm={() => {
+          if (rejectOrder != null) orderActions.rejectGuest(rejectOrder)
+          setRejectOrder(null)
         }}
       />
     </div>

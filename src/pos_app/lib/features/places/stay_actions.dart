@@ -50,7 +50,7 @@ class StayActions {
   /// this; one that did not stays held until Start.
   Future<bool> confirm(int sessionId, {required bool startsClock}) => _run(
         () => _places.confirmStay(sessionId),
-        success: startsClock ? _l10n.sessionStarted : _l10n.arrivalConfirmed,
+        success: startsClock ? _l10n.sessionStarted : _l10n.holdConfirmed,
         failure: _l10n.failedToStartSession,
       );
 

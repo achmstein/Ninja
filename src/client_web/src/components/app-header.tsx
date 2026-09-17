@@ -5,8 +5,8 @@ import { LogIn, LogOut, ShoppingBag, User } from 'lucide-react'
 import { cartCount, useCart } from '@/lib/cart'
 import { unregisterPush } from '@/lib/use-push'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import { usePlacesTabLabel } from '@/lib/stays'
 import { cn } from '@/lib/utils'
+import { useVisitTab } from '@/lib/visit'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,11 +17,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from './branch-switcher'
 import { SignInSheet } from './sign-in-options'
 
-// Mobile IA: primary nav is Menu / Rooms / Orders; everything else lives
-// under Profile.
+// Mobile IA: primary nav is Menu / Places / Orders; everything else lives
+// under Profile. The places link is named after the visit.
 const navLinks: ReadonlyArray<{
   to: '/' | '/places' | '/orders'
   key: TranslationKey
@@ -34,7 +35,7 @@ const navLinks: ReadonlyArray<{
 
 export function AppHeader() {
   const t = useT()
-  const placesLabel = usePlacesTabLabel()
+  const visitTab = useVisitTab()
   const auth = useAuth()
   const count = useCart((s) => cartCount(s.lines))
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -68,6 +69,8 @@ export function AppHeader() {
         {/* Desktop navigation */}
         <nav className='ms-6 hidden items-center gap-1 md:flex'>
           {navLinks.map(({ to, key, exact }) => {
+            // No places to book, no link: the chip is the table's door
+            if (key === 'rooms' && !visitTab.visible) return null
             const active = exact ? pathname === to : pathname.startsWith(to)
             return (
               <Link
@@ -80,13 +83,15 @@ export function AppHeader() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                {key === 'rooms' ? placesLabel : t(key)}
+                {key === 'rooms' ? visitTab.label : t(key)}
               </Link>
             )
           })}
         </nav>
 
         <div className='ms-auto flex items-center gap-1'>
+          {/* The table is one tap away on a tablet at the table too */}
+          <DestinationChip />
           <BranchSwitcher />
 
           {/* Cart lives in the bottom tabs on mobile */}

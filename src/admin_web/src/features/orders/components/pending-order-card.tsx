@@ -3,11 +3,14 @@ import {
   MessageSquare,
   MoreHorizontal,
   Phone,
+  ShieldQuestion,
   User,
+  UserX,
   X,
 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,7 +38,11 @@ type PendingOrderCardProps = {
   /** Opens the confirm dialog; cancelling is never one click */
   onCancel: () => void
   onViewCustomer?: () => void
+  /** "Nobody at the table": offered for a guest's order at a place */
+  onRejectGuest?: () => void
   isActing: boolean
+  /** Inside the place's own panel the place is the heading, not a line */
+  hidePlace?: boolean
   className?: string
 }
 
@@ -51,7 +58,9 @@ export function PendingOrderCard({
   onConfirm,
   onCancel,
   onViewCustomer,
+  onRejectGuest,
   isActing,
+  hidePlace = false,
   className,
 }: PendingOrderCardProps) {
   const t = useT()
@@ -61,6 +70,11 @@ export function PendingOrderCard({
   const items = summary.items ?? []
   const loyaltyDiscount = Number(summary.loyaltyDiscount ?? 0)
   const sourceKey = summary.source ? orderSourceKeys[summary.source] : undefined
+  // A guest at a table: how many orders this device has had confirmed here
+  // before. A first-timer is worth a look before the kitchen starts.
+  const ordersBefore =
+    summary.guestOrdersBefore == null ? null : Number(summary.guestOrdersBefore)
+  const isGuestAtPlace = ordersBefore != null && summary.placeId != null
 
   return (
     <QueueCard urgency={urgency} className={className}>
@@ -107,10 +121,23 @@ export function PendingOrderCard({
             {summary.guestPhone}
           </a>
         )}
-        {localized(summary.placeName) && (
+        {!hidePlace && localized(summary.placeName) && (
           <span className='flex items-center gap-1'>
             <PlaceKindIcon kind={summary.placeKind} className='h-3 w-3' />
             {localized(summary.placeName)}
+          </span>
+        )}
+        {ordersBefore != null && (
+          <span
+            className={cn(
+              'flex items-center gap-1',
+              ordersBefore === 0 && 'text-amber-600 dark:text-amber-500'
+            )}
+          >
+            <ShieldQuestion className='h-3 w-3' />
+            {ordersBefore === 0
+              ? t('guestFirstOrderHere')
+              : t('guestOrdersBefore', { count: ordersBefore })}
           </span>
         )}
       </div>
@@ -200,6 +227,12 @@ export function PendingOrderCard({
               <X />
               {t('cancelOrderButton')}
             </DropdownMenuItem>
+            {isGuestAtPlace && onRejectGuest && (
+              <DropdownMenuItem variant='destructive' onClick={onRejectGuest}>
+                <UserX />
+                {t('nobodyAtTheTable')}
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

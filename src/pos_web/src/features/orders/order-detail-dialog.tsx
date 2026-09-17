@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, MessageSquare, X } from 'lucide-react'
+import type { OrderSummary } from '@/api/ordering/types.gen'
+import { Check, MessageSquare, ShieldQuestion, UserX, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,14 +16,19 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { useMoney, toNumber } from '@/lib/money'
 
 type OrderDetailDialogProps = {
   /** The order to show; null keeps the dialog closed. */
   orderNumber: number | null
+  /** The queue's row for it: the identity facts the order itself lacks */
+  summary?: OrderSummary
   onOpenChange: (open: boolean) => void
   onConfirm: (orderNumber: number) => void
   onCancel: (orderNumber: number) => void
+  /** "Nobody at the table": cancel, and turn the guest's device away for the day */
+  onRejectGuest?: (orderNumber: number) => void
 }
 
 /**
@@ -34,8 +40,10 @@ type OrderDetailDialogProps = {
 export function OrderDetailDialog({
   orderNumber,
   onOpenChange,
+  summary,
   onConfirm,
   onCancel,
+  onRejectGuest,
 }: OrderDetailDialogProps) {
   const t = useT()
   const localized = useLocalized()
@@ -58,6 +66,25 @@ export function OrderDetailDialog({
   const loyaltyDiscount = toNumber(order?.loyaltyDiscount)
   const place = localized(order?.placeName)
   const who = order?.guestName || null
+  // A guest's order to a place: the one the "nobody there" answer fits
+  const guestAtPlace = !!order?.guestName && order?.placeId != null
+  // Who this is: account or guest, the phone, and how many orders the
+  // device has had confirmed here before
+  const ordersBefore =
+    summary?.guestOrdersBefore == null
+      ? null
+      : toNumber(summary.guestOrdersBefore)
+  const identity = [
+    ordersBefore == null ? t('accountHolder') : t('guest'),
+    summary?.guestPhone,
+    ordersBefore == null
+      ? null
+      : ordersBefore === 0
+        ? t('guestFirstOrderHere')
+        : t('guestOrdersBefore', { count: ordersBefore }),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,6 +97,19 @@ export function OrderDetailDialog({
             <DialogDescription className='text-base'>
               {[place, who].filter(Boolean).join(' · ')}
             </DialogDescription>
+          )}
+          {summary && (
+            <p
+              className={cn(
+                'flex items-center gap-1.5 text-sm',
+                ordersBefore === 0
+                  ? 'text-amber-600 dark:text-amber-500'
+                  : 'text-muted-foreground',
+              )}
+            >
+              <ShieldQuestion className='size-4 shrink-0' />
+              {identity}
+            </p>
           )}
         </DialogHeader>
 
@@ -137,24 +177,42 @@ export function OrderDetailDialog({
             <p className='text-destructive text-base'>
               {t('cancelOrderConfirm')}
             </p>
-            <DialogFooter className='gap-2'>
-              <Button
-                variant='outline'
-                size='lg'
-                className='h-12'
-                onClick={() => setCancelling(false)}
-              >
-                {t('keepOrder')}
-              </Button>
-              <Button
-                variant='destructive'
-                size='lg'
-                className='h-12'
-                onClick={() => orderNumber != null && onCancel(orderNumber)}
-              >
-                <X className='size-5' />
-                {t('cancelOrder')}
-              </Button>
+            {/* The two answers side by side, and the stronger one — the
+                guest turned away for the day — on its own row, so three
+                wide buttons never overflow the dialog */}
+            <DialogFooter className='flex-col gap-2 sm:flex-col'>
+              <div className='flex justify-end gap-2'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-12'
+                  onClick={() => setCancelling(false)}
+                >
+                  {t('keepOrder')}
+                </Button>
+                <Button
+                  variant='destructive'
+                  size='lg'
+                  className='h-12'
+                  onClick={() => orderNumber != null && onCancel(orderNumber)}
+                >
+                  <X className='size-5' />
+                  {t('cancelOrder')}
+                </Button>
+              </div>
+              {guestAtPlace && onRejectGuest && (
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='text-destructive hover:text-destructive h-12 w-full'
+                  onClick={() =>
+                    orderNumber != null && onRejectGuest(orderNumber)
+                  }
+                >
+                  <UserX className='size-5' />
+                  {t('nobodyAtTheTable')}
+                </Button>
+              )}
             </DialogFooter>
           </>
         ) : (

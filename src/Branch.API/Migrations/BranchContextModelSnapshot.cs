@@ -52,6 +52,9 @@ namespace Chillax.Branch.API.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<bool>("RequireSignInForTableOrders")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("TaxNumber")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");

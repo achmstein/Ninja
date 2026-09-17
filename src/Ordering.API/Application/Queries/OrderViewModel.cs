@@ -172,6 +172,12 @@ public record OrderSummary
     public string? UserId { get; init; }
     /// <summary>Phone a guest left at checkout, so staff can reach an order with no account behind it.</summary>
     public string? GuestPhone { get; init; }
+    /// <summary>
+    /// On the pending queue, for a guest order: how many of this device's
+    /// orders the till has confirmed at this branch before. Zero is a
+    /// first-timer; null is an account holder.
+    /// </summary>
+    public int? GuestOrdersBefore { get; init; }
     public int? RatingValue { get; init; }
     /// <summary>The customer's note, on the pending queue only (null on paginated lists).</summary>
     public string? CustomerNote { get; init; }
@@ -180,4 +186,6 @@ public record OrderSummary
     /// ticket from one request; null on paginated lists.
     /// </summary>
     public IReadOnlyList<Orderitem>? Items { get; init; }
+    /// <summary>On the table's tab: whether the caller placed this order.</summary>
+    public bool IsMine { get; init; }
 }

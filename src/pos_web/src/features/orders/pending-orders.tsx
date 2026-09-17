@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { Armchair, Check, Clock, DoorOpen, User } from 'lucide-react'
+import {
+  Armchair,
+  Check,
+  Clock,
+  DoorOpen,
+  ShieldQuestion,
+  User,
+} from 'lucide-react'
 import type { OrderSummary } from '@/api/ordering/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,6 +44,16 @@ function PendingOrderCard({
   const place = localized(order.placeName)
   const who = order.userName || t('guest')
   const title = place || who
+  // A guest: how many orders this device has had confirmed here before —
+  // a first-timer at a table is worth a look before the kitchen starts
+  const ordersBefore =
+    order.guestOrdersBefore == null ? null : toNumber(order.guestOrdersBefore)
+  const history =
+    ordersBefore == null
+      ? null
+      : ordersBefore === 0
+        ? t('guestFirstOrderHere')
+        : t('guestOrdersBefore', { count: ordersBefore })
   const subtitle = place ? who : order.guestPhone
   const PlaceIcon = !place
     ? User
@@ -71,6 +88,21 @@ function PendingOrderCard({
           #{toNumber(order.orderNumber)}
           {subtitle && ` · ${subtitle}`}
         </div>
+        {/* Its own line, so it never truncates away: a first-timer at a
+            table is the thing to notice */}
+        {history && (
+          <div
+            className={cn(
+              'mt-0.5 flex items-center gap-1 text-sm',
+              ordersBefore === 0
+                ? 'text-amber-600 dark:text-amber-500'
+                : 'text-muted-foreground',
+            )}
+          >
+            <ShieldQuestion className='size-3.5 shrink-0' />
+            {history}
+          </div>
+        )}
         <div
           className={cn(
             'mt-0.5 text-sm tabular-nums',
@@ -106,7 +138,7 @@ export function PendingOrders({
   horizontal?: boolean
 }) {
   const nowMs = useNowMs()
-  const { confirm, cancel, actingOrderNumber } = useOrderActions()
+  const { confirm, cancel, rejectGuest, actingOrderNumber } = useOrderActions()
   const [openOrder, setOpenOrder] = useState<number | null>(null)
 
   if (orders.length === 0) return null
@@ -137,6 +169,7 @@ export function PendingOrders({
       </div>
       <OrderDetailDialog
         orderNumber={openOrder}
+        summary={orders.find((o) => toNumber(o.orderNumber) === openOrder)}
         onOpenChange={(open) => {
           if (!open) setOpenOrder(null)
         }}
@@ -147,6 +180,10 @@ export function PendingOrders({
         onCancel={(id) => {
           setOpenOrder(null)
           cancel(id)
+        }}
+        onRejectGuest={(id) => {
+          setOpenOrder(null)
+          rejectGuest(id)
         }}
       />
     </>

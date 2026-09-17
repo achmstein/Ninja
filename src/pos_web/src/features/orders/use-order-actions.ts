@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   cancelOrderMutation,
   confirmOrderMutation,
+  rejectGuestOrderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
@@ -44,6 +45,24 @@ export function useOrderActions() {
     onError: () => toast.error(t('failedToCancelOrder')),
   })
 
+  // "Nobody at the table": the order goes and the device that placed it is
+  // turned away for the day
+  const rejectGuestOrder = useMutation({
+    ...rejectGuestOrderMutation(),
+    onSuccess: () => {
+      invalidateOrders()
+      toast.success(t('guestTurnedAway'))
+    },
+    onError: () => toast.error(t('failedToCancelOrder')),
+  })
+
+  const rejectGuest = (orderNumber: number) =>
+    rejectGuestOrder.mutate({
+      path: { orderId: orderNumber },
+      headers: { 'x-requestid': crypto.randomUUID() },
+      query: { 'api-version': API_VERSION },
+    })
+
   const confirm = (orderNumber: number) =>
     confirmOrder.mutate({
       body: { orderNumber },
@@ -63,7 +82,9 @@ export function useOrderActions() {
     ? toNumber(confirmOrder.variables?.body?.orderNumber)
     : cancelOrder.isPending
       ? toNumber(cancelOrder.variables?.body?.orderNumber)
-      : null
+      : rejectGuestOrder.isPending
+        ? toNumber(rejectGuestOrder.variables?.path?.orderId)
+        : null
 
-  return { confirm, cancel, actingOrderNumber }
+  return { confirm, cancel, rejectGuest, actingOrderNumber }
 }

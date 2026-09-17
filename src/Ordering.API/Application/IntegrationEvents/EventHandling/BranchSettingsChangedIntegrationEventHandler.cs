@@ -25,6 +25,7 @@ public class BranchSettingsChangedIntegrationEventHandler(
                 BranchId = @event.BranchId,
                 IsOrderingEnabled = @event.IsOrderingEnabled,
                 IsReservationsEnabled = @event.IsReservationsEnabled,
+                RequireSignInForTableOrders = @event.RequireSignInForTableOrders,
                 UpdatedAt = @event.CreationDate,
             });
         }
@@ -40,6 +41,7 @@ public class BranchSettingsChangedIntegrationEventHandler(
 
             row.IsOrderingEnabled = @event.IsOrderingEnabled;
             row.IsReservationsEnabled = @event.IsReservationsEnabled;
+            row.RequireSignInForTableOrders = @event.RequireSignInForTableOrders;
             row.UpdatedAt = @event.CreationDate;
         }
 

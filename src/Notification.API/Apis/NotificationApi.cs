@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Security.Claims;
+using Chillax.Notification.API.Hubs;
 using Chillax.Notification.API.IntegrationEvents.Events;
 using Chillax.Notification.API.Model;
 using Chillax.Notification.API.Services;
 using Chillax.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using static Chillax.ServiceDefaults.BranchHeaderExtensions;
 
 using Chillax.Notification.API.Extensions;
@@ -112,9 +114,26 @@ public static class NotificationApi
         // id header instead, the way Ordering does for guest orders
         api.MapPost("/service-requests", CreateServiceRequest)
             .AllowAnonymous()
+            .RequireRateLimiting(ServiceRequestRateLimiting.GuestCreatePolicy)
             .WithName("CreateServiceRequest")
             .WithSummary("Create a service request")
             .WithDescription("Request waiter, controller change, or receipt")
+            .WithTags("Service Requests");
+
+        // The customer's side of the loop: what they asked for that is still
+        // open, and taking a request back before anyone has moved on it
+        api.MapGet("/service-requests/mine", GetMyServiceRequests)
+            .AllowAnonymous()
+            .WithName("GetMyServiceRequests")
+            .WithSummary("Get my open service requests")
+            .WithDescription("The caller's pending and acknowledged requests: open until the till finishes them or the caller cancels")
+            .WithTags("Service Requests");
+
+        api.MapDelete("/service-requests/{id}", CancelServiceRequest)
+            .AllowAnonymous()
+            .WithName("CancelServiceRequest")
+            .WithSummary("Cancel my service request")
+            .WithDescription("Withdraw a request of mine that nobody has acknowledged yet")
             .WithTags("Service Requests");
 
         // Service request management (for staff/admin)
@@ -679,16 +698,27 @@ public static class NotificationApi
         {
             return TypedResults.BadRequest("A request names the place it comes from.");
         }
-        var allowed = place is null
-            ? atTable
-                ? request.RequestType is ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay
-                : request.SessionId is not null
-            : request.RequestType switch
+        // A place the projection has never heard of (created before the
+        // projection existed, or its PlaceUpdated never arrived) still names
+        // its kind in the request: a table takes a waiter or the bill, a room
+        // anything, a rate change needs a running clock either way
+        var allowed = place is not null
+            ? request.RequestType switch
             {
                 ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
                 ServiceRequestType.ControllerChange => place.TakesControllerRequests,
                 _ => place.HasOptions && request.SessionId is not null,
-            };
+            }
+            : request.PlaceKind is not null
+                ? request.RequestType switch
+                {
+                    ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
+                    ServiceRequestType.ControllerChange => request.PlaceKind == "Room",
+                    _ => request.SessionId is not null,
+                }
+                : atTable
+                    ? request.RequestType is ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay
+                    : request.SessionId is not null;
         if (!allowed)
         {
             return TypedResults.BadRequest("This place cannot take that kind of request.");
@@ -716,19 +746,19 @@ public static class NotificationApi
         // LEGACY(places): fills the old RoomId from the place so older tills still see it — remove when every till and customer app is on /api/places and /api/stays.
         var roomId = request.RoomId ?? (placeKind == "Room" ? placeId : null);
 
-        // Check for recent duplicate request (within 30 seconds)
-        var recentRequest = await context.ServiceRequests
-            .Where(r => r.UserId == userId
-                && r.SessionId == request.SessionId
-                && r.TableId == request.TableId
+        // One open request of a kind per person per place: the earlier one
+        // is still on the till's screen, so a second changes nothing there,
+        // and a stranger with a table's link can leave one, not a pile. The
+        // customer can take theirs back and ask again.
+        var alreadyOpen = await context.ServiceRequests
+            .AnyAsync(r => r.UserId == userId
+                && r.PlaceId == placeId
                 && r.RequestType == requestType
-                && r.Status == ServiceRequestStatus.Pending
-                && r.CreatedAt > DateTime.UtcNow.AddSeconds(-30))
-            .FirstOrDefaultAsync();
+                && r.Status == ServiceRequestStatus.Pending);
 
-        if (recentRequest != null)
+        if (alreadyOpen)
         {
-            return TypedResults.BadRequest("A similar request was made recently. Please wait before making another request.");
+            return TypedResults.BadRequest("You already have this request waiting. The counter will see it shortly.");
         }
 
         var serviceRequest = new ServiceRequest
@@ -837,8 +867,111 @@ public static class NotificationApi
         return TypedResults.Ok(requests);
     }
 
+    /// <summary>The caller as a request names its owner: the account's id, or the guest id its browser holds.</summary>
+    private static string? RequestOwner(ClaimsPrincipal user, HttpContext httpContext)
+    {
+        var guestId = httpContext.GetGuestId();
+        return user.GetUserId() ?? (guestId is not null ? $"guest:{guestId}" : null);
+    }
+
+    /// <summary>The hub group the owner listens on: the account's, or the guest's (the id already carries its prefix).</summary>
+    private static string CustomerGroup(string ownerId) =>
+        ownerId.StartsWith("guest:", StringComparison.Ordinal) ? ownerId : $"user:{ownerId}";
+
+    private static ServiceRequestResponse ToResponse(ServiceRequest r) => new(
+        r.Id,
+        r.UserName,
+        r.RoomId,
+        r.RoomName,
+        r.RequestType,
+        r.Status,
+        r.CreatedAt,
+        r.TableId,
+        r.TableName,
+        r.PlaceId,
+        r.PlaceKind,
+        r.OptionCode,
+        r.TableName ?? r.RoomName,
+        r.AcknowledgedBy,
+        r.AcknowledgedAt);
+
+    /// <summary>
+    /// Tells the customer (and every till) that a request of theirs moved:
+    /// the pill on their screen goes from sent to on-the-way to done.
+    /// </summary>
+    private static async Task PushChangedAsync(IHubContext<NotificationHub> hub, ServiceRequest request)
+    {
+        var payload = new
+        {
+            id = request.Id,
+            status = request.Status,
+            requestType = request.RequestType,
+            placeId = request.PlaceId,
+            acknowledgedBy = request.AcknowledgedBy,
+            branchId = request.BranchId
+        };
+        await hub.Clients.Group(CustomerGroup(request.UserId)).SendAsync("ServiceRequestChanged", payload);
+        await hub.Clients.Group("admin").SendAsync("ServiceRequestChanged", payload);
+    }
+
+    public static async Task<Results<Ok<List<ServiceRequestResponse>>, UnauthorizedHttpResult>> GetMyServiceRequests(
+        NotificationContext context,
+        ClaimsPrincipal user,
+        HttpContext httpContext)
+    {
+        var owner = RequestOwner(user, httpContext);
+        if (owner is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+        // Open until the till finishes it or the customer takes it back;
+        // no clock decides a request was forgotten
+        var requests = await context.ServiceRequests
+            .AsNoTracking()
+            .Where(r => r.UserId == owner)
+            .Where(r => r.Status == ServiceRequestStatus.Pending || r.Status == ServiceRequestStatus.Acknowledged)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        return TypedResults.Ok(requests.Select(ToResponse).ToList());
+    }
+
+    public static async Task<Results<Ok<ServiceRequestResponse>, NotFound, Conflict<string>, UnauthorizedHttpResult>> CancelServiceRequest(
+        NotificationContext context,
+        IHubContext<NotificationHub> hub,
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        [Description("The service request ID")] int id)
+    {
+        var owner = RequestOwner(user, httpContext);
+        if (owner is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        // Someone else's request is not found rather than forbidden: the id
+        // alone should not tell a caller whether it exists
+        var request = await context.ServiceRequests.FindAsync(id);
+        if (request == null || request.UserId != owner)
+        {
+            return TypedResults.NotFound();
+        }
+        // Once a waiter is on the way the request is theirs to finish
+        if (request.Status != ServiceRequestStatus.Pending)
+        {
+            return TypedResults.Conflict("This request has already been picked up.");
+        }
+
+        request.Status = ServiceRequestStatus.Cancelled;
+        await context.SaveChangesAsync();
+        await PushChangedAsync(hub, request);
+
+        return TypedResults.Ok(ToResponse(request));
+    }
+
     public static async Task<Results<Ok<ServiceRequestResponse>, NotFound>> AcknowledgeServiceRequest(
         NotificationContext context,
+        IHubContext<NotificationHub> hub,
         ClaimsPrincipal user,
         [Description("The service request ID")] int id)
     {
@@ -854,25 +987,14 @@ public static class NotificationApi
         request.AcknowledgedBy = user.GetUserName() ?? user.GetUserId();
 
         await context.SaveChangesAsync();
+        await PushChangedAsync(hub, request);
 
-        return TypedResults.Ok(new ServiceRequestResponse(
-            request.Id,
-            request.UserName,
-            request.RoomId,
-            request.RoomName,
-            request.RequestType,
-            request.Status,
-            request.CreatedAt,
-            request.TableId,
-            request.TableName,
-            request.PlaceId,
-            request.PlaceKind,
-            request.OptionCode,
-            request.TableName ?? request.RoomName));
+        return TypedResults.Ok(ToResponse(request));
     }
 
     public static async Task<Results<Ok<ServiceRequestResponse>, NotFound>> CompleteServiceRequest(
         NotificationContext context,
+        IHubContext<NotificationHub> hub,
         [Description("The service request ID")] int id)
     {
         var request = await context.ServiceRequests.FindAsync(id);
@@ -884,6 +1006,7 @@ public static class NotificationApi
 
         request.Status = ServiceRequestStatus.Completed;
         await context.SaveChangesAsync();
+        await PushChangedAsync(hub, request);
 
         return TypedResults.Ok(new ServiceRequestResponse(
             request.Id,
@@ -1001,7 +1124,9 @@ public record ServiceRequestResponse(
     int? PlaceId = null,
     string? PlaceKind = null,
     string? OptionCode = null,
-    LocalizedText? PlaceName = null
+    LocalizedText? PlaceName = null,
+    [property: Description("Who picked the request up, for the customer's 'on the way'")] string? AcknowledgedBy = null,
+    DateTime? AcknowledgedAt = null
 );
 
 public record NotificationPreferencesResponse(

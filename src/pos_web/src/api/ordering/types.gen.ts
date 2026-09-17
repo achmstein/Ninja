@@ -193,9 +193,11 @@ export type OrderSummary = {
     userName?: null | string;
     userId?: null | string;
     guestPhone?: null | string;
+    guestOrdersBefore?: null | number | string;
     ratingValue?: null | number | string;
     customerNote?: null | string;
     items?: null | Array<Orderitem>;
+    isMine?: boolean;
 };
 
 export type PaginatedResultOfOrderSummary = {
@@ -433,6 +435,53 @@ export type CancelOrderResponses = {
     200: unknown;
 };
 
+export type RejectGuestOrderData = {
+    body?: never;
+    headers: {
+        'x-requestid': string;
+    };
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/reject-guest';
+};
+
+export type RejectGuestOrderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type RejectGuestOrderError = RejectGuestOrderErrors[keyof RejectGuestOrderErrors];
+
+export type RejectGuestOrderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RejectGuestOrderResponse = RejectGuestOrderResponses[keyof RejectGuestOrderResponses];
+
 export type AssignOrderCustomerData = {
     body: AssignOrderCustomerRequest;
     headers: {
@@ -592,6 +641,40 @@ export type RateOrderResponses = {
      */
     200: unknown;
 };
+
+export type GetOpenOrdersAtPlaceData = {
+    body?: never;
+    path: {
+        placeId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/place/{placeId}/open';
+};
+
+export type GetOpenOrdersAtPlaceErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOpenOrdersAtPlaceResponses = {
+    /**
+     * OK
+     */
+    200: Array<OrderSummary>;
+};
+
+export type GetOpenOrdersAtPlaceResponse = GetOpenOrdersAtPlaceResponses[keyof GetOpenOrdersAtPlaceResponses];
 
 export type GetPendingOrdersData = {
     body?: never;

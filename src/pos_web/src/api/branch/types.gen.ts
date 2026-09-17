@@ -17,6 +17,7 @@ export type BranchResponse = {
     dayEndTime: string;
     isOrderingEnabled: boolean;
     isReservationsEnabled: boolean;
+    requireSignInForTableOrders?: boolean;
 };
 
 export type CreateBranchRequest = {
@@ -49,11 +50,13 @@ export type UpdateBranchRequest = {
     dayEndTime?: null | string;
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
+    requireSignInForTableOrders?: null | boolean;
 };
 
 export type UpdateBranchSettingsRequest = {
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
+    requireSignInForTableOrders?: null | boolean;
 };
 
 export type GetBranchesData = {

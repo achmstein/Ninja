@@ -37,6 +37,13 @@ public class Stay : Entity, IAggregateRoot
     /// <summary>The customer asked that the till's Confirm also start the clock.</summary>
     public bool StartOnConfirm { get; private set; }
 
+    /// <summary>
+    /// The rate option the customer asked for when holding, so Confirm can
+    /// start the clock at it without the cashier choosing. Null: the tariff's
+    /// default, or the cashier picks.
+    /// </summary>
+    public string? RequestedOptionCode { get; private set; }
+
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 
@@ -72,7 +79,8 @@ public class Stay : Entity, IAggregateRoot
         string? customerName,
         string? notes = null,
         bool startOnConfirm = false,
-        bool isStaffCreated = false) : this()
+        bool isStaffCreated = false,
+        string? requestedOptionCode = null) : this()
     {
         if (!isStaffCreated && string.IsNullOrWhiteSpace(customerId))
             throw new SpacesDomainException("Customer ID is required");
@@ -84,6 +92,11 @@ public class Stay : Entity, IAggregateRoot
         CustomerName = customerName;
         Notes = notes;
         StartOnConfirm = startOnConfirm;
+        // Only a rate the tariff has, and only when the clock will start on
+        // Confirm — otherwise there is nothing for it to decide
+        RequestedOptionCode = startOnConfirm && requestedOptionCode is not null
+            ? Tariff.Require(requestedOptionCode).Code
+            : null;
         CreatedAt = DateTime.UtcNow;
         ExpiresAt = isStaffCreated ? null : CreatedAt.AddMinutes(HoldMinutes);
         Status = StayStatus.Held;
@@ -148,9 +161,10 @@ public class Stay : Entity, IAggregateRoot
     }
 
     /// <summary>
-    /// The till confirms the customer arrived. Starts the clock when the
-    /// customer asked for that; otherwise the hold simply stays until Start.
-    /// Returns whether the clock started.
+    /// The till confirms the hold. Starts the clock when the customer asked
+    /// for that — at the rate they asked for, unless the cashier names one —
+    /// otherwise the hold simply stays until Start. Returns whether the clock
+    /// started.
     /// </summary>
     public bool Confirm(string? optionCode = null)
     {
@@ -160,7 +174,7 @@ public class Stay : Entity, IAggregateRoot
         if (!StartOnConfirm)
             return false;
 
-        Start(optionCode);
+        Start(optionCode ?? RequestedOptionCode);
         return true;
     }
 

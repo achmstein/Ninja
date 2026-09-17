@@ -67,7 +67,13 @@ export function HeldBanner({ stay }: { stay: StayViewModel }) {
       {stay.startOnConfirm && (
         <span className='flex items-center gap-1.5 text-[13px] text-white/90'>
           <TimerReset className='h-3.5 w-3.5' />
-          {t('timerStartsOnArrival')}
+          {t('timeStartsOnConfirm')}
+          {/* The rate they asked to start at, where the tariff has a choice */}
+          {stay.requestedOptionName && (
+            <span className='rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium'>
+              {localized(stay.requestedOptionName)}
+            </span>
+          )}
         </span>
       )}
       <AlertDialog>

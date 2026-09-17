@@ -163,6 +163,10 @@ namespace Spaces.Infrastructure.Migrations
                     b.Property<int?>("ReceiptNumber")
                         .HasColumnType("integer");
 
+                    b.Property<string>("RequestedOptionCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<bool>("StartOnConfirm")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")

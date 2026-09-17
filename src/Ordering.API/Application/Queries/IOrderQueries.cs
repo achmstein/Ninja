@@ -24,6 +24,27 @@ public interface IOrderQueries
     Task<IEnumerable<OrderSummary>> GetPendingOrdersAsync(int branchId);
 
     /// <summary>
+    /// A guest with an order still waiting on the till at this place: the
+    /// next one waits until that one is answered.
+    /// </summary>
+    Task<bool> HasUnconfirmedGuestOrderAtPlaceAsync(string guestId, int placeId);
+
+    /// <summary>The till turned this guest away at this branch, and the block has not lapsed.</summary>
+    Task<bool> IsGuestBlockedAsync(string guestId, int branchId);
+
+    /// <summary>
+    /// The table's tab as everyone sitting at it sees it: every unpaid,
+    /// unvoided, uncancelled order at the place, whoever placed it, with
+    /// lines. The bill being paid is what ends a sitting, not a clock.
+    /// Only for a caller who is on the tab themselves — an unpaid order of
+    /// theirs at the place, by account or by the guest id their browser
+    /// holds; anyone else gets an empty list, since having the table's link
+    /// is not being at the table. <see cref="OrderSummary.IsMine"/> marks the
+    /// caller's own. Contact details are left out: a table-mate is not staff.
+    /// </summary>
+    Task<IEnumerable<OrderSummary>> GetOpenOrdersAtPlaceAsync(int placeId, string? userId, string? guestId);
+
+    /// <summary>
     /// The kitchen's queue for a branch: confirmed orders not yet ready, plus
     /// those marked ready in the last half hour so a card can be recalled.
     /// Orders confirmed before the kitchen display existed are left out.

@@ -17,6 +17,13 @@ public class BranchSettings
     public bool IsReservationsEnabled { get; set; }
 
     /// <summary>
+    /// Ordering to a table needs an account at this branch: a guest may still
+    /// browse, but only a signed-in customer can put an order on a table.
+    /// Branch.API's flag, projected here where CreateOrder can read it.
+    /// </summary>
+    public bool RequireSignInForTableOrders { get; set; }
+
+    /// <summary>
     /// CreationDate of the last event applied — the out-of-order guard: an
     /// older event arriving late must not undo a newer one.
     /// </summary>

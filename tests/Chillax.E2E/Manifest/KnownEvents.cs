@@ -53,9 +53,9 @@ public static class KnownEvents
         new("StockLow", "Inventory", ["Notification"]),
         new("TabPaymentRecorded", "Sales", ["Accounts"]),
         new("TicketRefunded", "Sales", ["Finance", "Loyalty", "Accounts"]),
-        new("TicketSettled", "Sales", ["Finance", "Accounts"]),
+        new("TicketSettled", "Sales", ["Finance", "Accounts", "Notification"]),
         new("TicketUpdated", "Sales", ["Notification"]),
-        new("TicketVoided", "Sales", ["Loyalty"]),
+        new("TicketVoided", "Sales", ["Loyalty", "Notification"]),
         new("UserProfileUpdated", "Identity", ["Loyalty", "Accounts"]),
     ];
 

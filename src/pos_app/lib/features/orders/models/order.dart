@@ -117,6 +117,11 @@ class Order {
   final String? guestPhone;
   final String? source;
 
+  /// On the pending queue, for a guest order: how many of this device's
+  /// orders the till has confirmed at this branch before. Zero is a
+  /// first-timer; null is an account holder.
+  final int? guestOrdersBefore;
+
   Order({
     required this.id,
     this.userId,
@@ -138,6 +143,7 @@ class Order {
     this.guestName,
     this.guestPhone,
     this.source,
+    this.guestOrdersBefore,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -176,6 +182,7 @@ class Order {
       guestName: (json['guestName'] ?? json['GuestName']) as String?,
       guestPhone: (json['guestPhone'] ?? json['GuestPhone']) as String?,
       source: (json['source'] ?? json['Source']) as String?,
+      guestOrdersBefore: (json['guestOrdersBefore'] ?? json['GuestOrdersBefore']) as int?,
     );
   }
 }

@@ -24,6 +24,10 @@ const webExtras = {
   signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
   // Shown when a guest has no table: ordering without one means ordering
   // ahead, which needs an account
+  tableOrdersNeedAccount: {
+    en: 'Ordering to a table here needs an account. Sign in to order.',
+    ar: 'الطلب على الترابيزة هنا محتاج حساب. سجل دخول عشان تطلب.',
+  },
   scanTableToOrder: {
     en: 'Scan the QR code on your table to order',
     ar: 'امسح الكود اللي على الترابيزة عشان تطلب',
@@ -36,6 +40,48 @@ const webExtras = {
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },
   continueWithEmail: { en: 'Continue with email', ar: 'الإيميل' },
   leaveTable: { en: 'Leave table', ar: 'سيب الترابيزة' },
+  // The table behind its chip (docs/visit-tab.html). Web first; these move
+  // into the ARB files when the mobile app gets the same sheet.
+  atTableQuestion: { en: 'At a table?', ar: 'قاعد على ترابيزة؟' },
+  atTableScanHint: {
+    en: 'Scan the code on it to order and call a waiter',
+    ar: 'امسح الكود اللي عليها عشان تطلب وتنادي الويتر',
+  },
+  orderFromMenu: { en: 'Order from the menu', ar: 'اطلب من المنيو' },
+  sinceTime: { en: 'since {time}', ar: 'من {time}' },
+  sent: { en: 'Sent', ar: 'اتبعت' },
+  // The request answering back (phase 3): sent → on the way → done
+  onTheWay: { en: 'On the way', ar: 'جايلك' },
+  onTheWayBy: { en: '{name} is on the way', ar: '{name} جايلك' },
+  tapToCancel: { en: 'Tap to cancel', ar: 'دوس للإلغاء' },
+  requestCancelled: { en: 'Request cancelled', ar: 'الطلب اتلغى' },
+  requestAlreadyPickedUp: {
+    en: 'Someone is already on the way',
+    ar: 'في حد جايلك خلاص',
+  },
+  // The clock card's members, and the thanks card
+  you: { en: 'You', ar: 'انت' },
+  thanks: { en: 'Thanks!', ar: 'شكراً!' },
+  thanksName: { en: 'Thanks, {name}!', ar: 'شكراً يا {name}!' },
+  paid: { en: 'paid', ar: 'اتدفع' },
+  // Rating on the thanks card, the moment the bill is paid
+  howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
+  ratedThanks: { en: 'Thanks for rating!', ar: 'شكراً على تقييمك!' },
+  // A table carried over from an earlier session is asked about, not assumed
+  stillAtTable: { en: 'Still at {name}?', ar: 'لسه على {name}؟' },
+  yesStillHere: { en: "Yes, I'm here", ar: 'أيوه، أنا هنا' },
+  noLeftTable: { en: 'No, I left', ar: 'لأ، مشيت' },
+  // Switching branch while seated is leaving the table, and says so
+  switchBranchLeavesTable: {
+    en: "You're at {name}. Switching branch leaves it.",
+    ar: 'انت على {name}. لو غيرت الفرع هتسيبها.',
+  },
+  stayAtTable: { en: 'Stay', ar: 'خليك' },
+  leaveAndSwitch: { en: 'Leave and switch', ar: 'سيبها وغيّر' },
+  confirmTableFirst: {
+    en: 'Tell us if you are still at the table first',
+    ar: 'قولنا الأول إنت لسه على الترابيزة ولا لأ',
+  },
   // Order status arriving over SignalR. Wording matches the push notifications
   // the mobile app receives for the same events (NotificationMessages.cs), so
   // a customer with both does not read two different sentences.
@@ -54,7 +100,10 @@ const webExtras = {
   toastWarning: { en: 'Warning', ar: 'تنبيه' },
   // Installing the PWA — web only by definition
   installApp: { en: 'Install app', ar: 'نزّل الابلكيشن' },
-  installAppTitle: { en: 'Get the Chillax app now', ar: 'نزل الابلكيشن عندك دلوقتي' },
+  installAppTitle: {
+    en: 'Get the Chillax app now',
+    ar: 'نزل الابلكيشن عندك دلوقتي',
+  },
   install: { en: 'Install', ar: 'تنزيل' },
   howTo: { en: 'How?', ar: 'إزاي؟' },
   notNow: { en: 'Not now', ar: 'مش دلوقتي' },

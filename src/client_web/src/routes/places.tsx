@@ -1,39 +1,93 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Ban } from 'lucide-react'
 import { type PlaceViewModel } from '@/api/spaces'
-import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
-import { useActiveStay, useMyHold } from '@/lib/stays'
+import { useMyHold } from '@/lib/stays'
 import { useT } from '@/lib/i18n'
+import { useTimedPlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { HoldSheet } from '@/components/places/hold-sheet'
 import { HeldBanner } from '@/components/places/held-banner'
 import { PlaceRow, PlaceRowSkeleton } from '@/components/places/place-row'
+import { ScanFooter } from '@/components/places/scan-footer'
+import { ScanSheet } from '@/components/places/scan-sheet'
 import { SignInSheet } from '@/components/sign-in-options'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/places')({
   component: PlacesPage,
+  // ?scan={placeId}: a timed place's code just opened; the tab answers it
+  // with a sheet from the bottom instead of a page of its own
+  validateSearch: (search: Record<string, unknown>): { scan?: number } =>
+    Number(search.scan) > 0 ? { scan: Number(search.scan) } : {},
 })
 
 /**
- * The timed places of the branch — the PlayStation rooms and any table or
- * station with a clock — and the customer's own place in them: the list to
- * pick from, the hold while they walk over, the running clock once the
- * counter starts it. The whole tab changes with that state, so its name
- * never promises something already done.
+ * The second tab (docs/visit-tab.html): the places to book. A running
+ * clock takes it over, since that is where the customer is. A scanned
+ * table does not — people at a table book rooms — and lives behind its
+ * chip in the bar instead. Where there is nothing to book the tab does not
+ * exist, and an old link to it goes home. Orders keep their own tab.
  */
 function PlacesPage() {
+  const { seat, settling } = useVisit()
+  const { visible } = useVisitTab()
+  const navigate = useNavigate()
+  const { scan } = Route.useSearch()
+
+  useEffect(() => {
+    if (!visible) navigate({ to: '/', replace: true })
+  }, [visible, navigate])
+
+  // The scan's sheet sits over whatever the tab shows, and the address
+  // forgets the scan once it has been answered
+  const scanSheet = scan ? (
+    <ScanSheet
+      placeId={scan}
+      onDone={() => navigate({ to: '/places', search: {}, replace: true })}
+    />
+  ) : null
+
+  if (!visible) return null
+  // Until the stays answer, a skeleton: the list flashing up and then
+  // giving way to the clock is worse than a moment of nothing
+  if (settling) {
+    return (
+      <div className='flex flex-col gap-4 p-4'>
+        <Skeleton className='mt-2 h-8 w-40' />
+        <Skeleton className='h-44 w-full rounded-2xl' />
+        <div className='grid grid-cols-2 gap-3'>
+          <Skeleton className='h-16 rounded-2xl' />
+          <Skeleton className='h-16 rounded-2xl' />
+        </div>
+      </div>
+    )
+  }
+  return (
+    <>
+      {seat.kind === 'stay' ? (
+        <ActiveStayView stay={seat.stay} />
+      ) : (
+        <PlacesList atTable={seat.kind === 'table'} />
+      )}
+      {scanSheet}
+    </>
+  )
+}
+
+/** The timed places of the branch — the PlayStation rooms and any table or
+ *  station with a clock — and the customer's hold on one while they walk
+ *  over. */
+function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const auth = useAuth()
   const branch = useSelectedBranch()
-  const activeStay = useActiveStay()
   const hold = useMyHold()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
@@ -42,17 +96,7 @@ function PlacesPage() {
 
   // Live RoomStatusChanged updates + 30s fallback poll (app parity)
   useRoomsGroup()
-  const { data: places = [], isLoading } = useQuery({
-    ...listPlacesOptions({ query: { timed: true } }),
-    refetchInterval: 30_000,
-    // A place taken out of service is not on the customer's list
-    select: (list) => list.filter((p) => p.isActive !== false),
-  })
-
-  // While the clock runs, the whole tab is the stay view (app parity)
-  if (activeStay) {
-    return <ActiveStayView stay={activeStay} />
-  }
+  const { data: places = [], isLoading } = useTimedPlaces()
 
   const reservationsEnabled = branch?.isReservationsEnabled ?? true
   const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
@@ -66,7 +110,7 @@ function PlacesPage() {
       return
     }
     // One hold at a time (app parity; the backend enforces it too)
-    if (hold || activeStay) return
+    if (hold) return
     if (!(await ensureProfileComplete())) return
     setReservePlace(place)
   }
@@ -103,6 +147,9 @@ function PlacesPage() {
           ))}
         </div>
       )}
+
+      {/* Telling someone already at a table to scan a table is noise */}
+      {!atTable && <ScanFooter />}
 
       <HoldSheet
         place={reservePlace}

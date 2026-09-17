@@ -12,6 +12,30 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // The till's confirm as an identity check
+  guestFirstOrderHere: { en: 'First order here', ar: 'أول طلب هنا' },
+  guestOrdersBefore: {
+    en: '{count} orders here before',
+    ar: '{count} طلبات هنا قبل كده',
+  },
+  nobodyAtTheTable: { en: 'Nobody at the table', ar: 'مفيش حد على الترابيزة' },
+  nobodyAtTheTableQuestion: {
+    en: 'Nobody at the table?',
+    ar: 'مفيش حد على الترابيزة؟',
+  },
+  nobodyAtTheTableDesc: {
+    en: "The order is cancelled and this phone can't order here until tomorrow.",
+    ar: 'الطلب هيتلغى والموبايل ده مش هيقدر يطلب هنا لحد بكرة.',
+  },
+  guestTurnedAway: { en: 'Turned away for today', ar: 'اترفض لحد بكرة' },
+  requireSignInForTableOrders: {
+    en: 'Table orders need an account',
+    ar: 'طلبات الترابيزة محتاجة حساب',
+  },
+  // The place form
+  chargedByTheHour: { en: 'Charged by the hour', ar: 'بيتحاسب بالساعة' },
+  roundTimeTo: { en: 'Round time to', ar: 'تقريب الوقت' },
+  minutesShort: { en: '{count} min', ar: '{count} د' },
   // Stock workbench (inventory master-detail)
   selectStockItem: { en: 'Pick an item', ar: 'اختار صنف' },
   backToStock: { en: 'Back to stock', ar: 'رجوع للمخزون' },

@@ -139,6 +139,11 @@ export function usePosNotifications() {
       playAlertSound()
       toast.info(translate('newServiceRequestToast'))
     })
+    // Picked up, finished, or taken back by the customer — on another till
+    // or from their phone. Quiet: only the strip changes.
+    connection.on('ServiceRequestChanged', () => {
+      refresh('serviceRequestsPending')
+    })
 
     const invalidateBranches = () => refresh('getBranches')
 

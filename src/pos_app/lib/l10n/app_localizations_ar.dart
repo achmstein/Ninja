@@ -144,6 +144,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmOrder => 'أكّد';
 
   @override
+  String get guestFirstOrderHere => 'أول طلب هنا';
+
+  @override
+  String guestOrdersBefore(int count) {
+    return '$count طلبات هنا قبل كده';
+  }
+
+  @override
+  String get nobodyAtTheTable => 'مفيش حد على الترابيزة';
+
+  @override
+  String get guestTurnedAway => 'اترفض لحد بكرة';
+
+  @override
+  String get accountHolder => 'حساب';
+
+  @override
   String get cancelOrder => 'ألغي الطلب';
 
   @override
@@ -529,10 +546,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billOnly => 'شيك بس';
 
   @override
-  String get confirmArrival => 'وصل';
+  String get confirmHold => 'تأكيد';
 
   @override
-  String get arrivalConfirmed => 'اتأكد الوصول';
+  String get holdConfirmed => 'الحجز اتأكد';
 
   @override
   String get startsOnConfirm => 'الوقت يبدأ لما تأكد';

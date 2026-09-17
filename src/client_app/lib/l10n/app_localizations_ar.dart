@@ -155,10 +155,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get perHourShort => '/ساعة';
 
   @override
-  String get startTimerOnArrival => 'ابدأ الوقت أول ما أوصل';
+  String get startTimeNow => 'ابدأ الوقت دلوقتي';
 
   @override
-  String get timerStartsOnArrival => 'الوقت يبدأ لما توصل';
+  String get timeStartsOnConfirm => 'الوقت هيبدأ أول ما الحجز يتأكد';
 
   @override
   String switchToOption(String option) {

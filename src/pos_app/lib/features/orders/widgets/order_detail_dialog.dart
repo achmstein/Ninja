@@ -4,18 +4,23 @@ import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
+import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 
-enum OrderDetailAction { confirm, cancel }
+enum OrderDetailAction { confirm, cancel, rejectGuest }
 
 /// What the customer actually ordered, for the cashier who wants to look
 /// before accepting: every item with its options and instructions, the
 /// note, the total. Confirm is the primary action; cancelling takes a
 /// second tap, because the customer is told and there is no way back from
 /// it. Resolves to the pick; the caller carries it out.
-Future<OrderDetailAction?> showOrderDetailDialog(BuildContext context, int orderId) {
+/// [summary] is the queue's row for the order: the identity facts (account or
+/// guest, the phone, how many orders the device has had here) the order
+/// itself does not carry.
+Future<OrderDetailAction?> showOrderDetailDialog(BuildContext context, int orderId, {Order? summary}) {
   return showFDialog<OrderDetailAction>(
     context: context,
     useRootNavigator: true,
@@ -23,14 +28,15 @@ Future<OrderDetailAction?> showOrderDetailDialog(BuildContext context, int order
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _OrderDetailDialog(orderId: orderId),
+      builder: (context, _) => _OrderDetailDialog(orderId: orderId, summary: summary),
     ),
   );
 }
 
 class _OrderDetailDialog extends ConsumerStatefulWidget {
   final int orderId;
-  const _OrderDetailDialog({required this.orderId});
+  final Order? summary;
+  const _OrderDetailDialog({required this.orderId, this.summary});
 
   @override
   ConsumerState<_OrderDetailDialog> createState() => _OrderDetailDialogState();
@@ -49,6 +55,20 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
     final place = order?.placeName?.localized(context) ?? '';
     final who = order?.guestName ?? '';
     final subtitle = [if (place.isNotEmpty) place, if (who.isNotEmpty) who].join(' · ');
+    // Who this is: account or guest, the phone, and how many orders the
+    // device has had confirmed here before
+    final summary = widget.summary;
+    final ordersBefore = summary?.guestOrdersBefore;
+    final identity = summary == null
+        ? null
+        : [
+            ordersBefore == null ? l10n.accountHolder : l10n.guest,
+            if ((summary.guestPhone ?? '').isNotEmpty) summary.guestPhone!,
+            if (ordersBefore != null) ordersBefore == 0 ? l10n.guestFirstOrderHere : l10n.guestOrdersBefore(ordersBefore),
+          ].join(' · ');
+    final identityColor = ordersBefore == 0 ? AppColors.amber(theme.colors.brightness) : theme.colors.mutedForeground;
+    // A guest's order to a place: the one the "nobody there" answer fits
+    final guestAtPlace = (order?.guestName ?? '').isNotEmpty && order?.placeId != null;
 
     void pick(OrderDetailAction action) => Navigator.of(context, rootNavigator: true).pop(action);
 
@@ -64,6 +84,16 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
             if (subtitle.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(subtitle, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+            ],
+            if (identity != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(FIcons.idCard, size: 16, color: identityColor),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(identity, style: theme.typography.sm.copyWith(color: identityColor))),
+                ],
+              ),
             ],
             const SizedBox(height: 16),
             if (order == null)
@@ -165,6 +195,21 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   ),
                 ],
               ),
+              // The stronger answer on its own row: the guest's device is
+              // turned away at this branch for the day
+              if (guestAtPlace) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 48,
+                  child: FButton(
+                    variant: FButtonVariant.outline,
+                    onPress: () => pick(OrderDetailAction.rejectGuest),
+                    prefix: Icon(FIcons.userX, size: 20, color: theme.colors.destructive),
+                    child: Text(l10n.nobodyAtTheTable,
+                        style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                  ),
+                ),
+              ],
             ] else
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,

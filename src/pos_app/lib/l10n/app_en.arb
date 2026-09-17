@@ -55,6 +55,18 @@
   },
   "guest": "Guest",
   "confirmOrder": "Confirm",
+  "guestFirstOrderHere": "First order here",
+  "guestOrdersBefore": "{count} orders here before",
+  "nobodyAtTheTable": "Nobody at the table",
+  "guestTurnedAway": "Turned away for today",
+  "accountHolder": "Account",
+  "@guestOrdersBefore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cancelOrder": "Cancel order",
   "cancelOrderConfirm": "Cancel order?",
   "keepOrder": "Keep it",
@@ -320,8 +332,8 @@
   "stations": "Stations",
   "time": "Time",
   "billOnly": "Bill only",
-  "confirmArrival": "Confirm arrival",
-  "arrivalConfirmed": "Arrival confirmed",
+  "confirmHold": "Confirm",
+  "holdConfirmed": "Hold confirmed",
   "startsOnConfirm": "Timer starts on confirm",
   "requestChangeOption": "Switch to {option}",
   "@requestChangeOption": { "placeholders": { "option": { "type": "String" } } },

@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visit Tab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Lalezar&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f6f7fa;
+    --paper: #ffffff;
+    --ink: #1b2233;
+    --muted: #5b6478;
+    --line: #dde1e9;
+    --navy: #23304f;
+    --navy-ink: #ffffff;
+    --seat: #b9691a;
+    --seat-soft: #fbf1e3;
+    --ok: #2f7a4d;
+    --ok-soft: #e6f3ea;
+    --phone-bg: #f1f3f7;
+    --code-bg: #eef0f5;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #11151d;
+      --paper: #181d28;
+      --ink: #e7eaf1;
+      --muted: #98a2b6;
+      --line: #2a3141;
+      --navy: #c9d3ec;
+      --navy-ink: #131a2b;
+      --seat: #e0a35a;
+      --seat-soft: #2c2415;
+      --ok: #7fcf9b;
+      --ok-soft: #16291d;
+      --phone-bg: #1f2533;
+      --code-bg: #1f2533;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #11151d;
+    --paper: #181d28;
+    --ink: #e7eaf1;
+    --muted: #98a2b6;
+    --line: #2a3141;
+    --navy: #c9d3ec;
+    --navy-ink: #131a2b;
+    --seat: #e0a35a;
+    --seat-soft: #2c2415;
+    --ok: #7fcf9b;
+    --ok-soft: #16291d;
+    --phone-bg: #1f2533;
+    --code-bg: #1f2533;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'Cairo', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    padding-block: 48px 96px;
+    padding-inline: 20px;
+  }
+  main { max-width: 760px; margin-inline: auto; display: flex; flex-direction: column; gap: 56px; }
+
+  h1, h2, h3 { font-family: 'Lalezar', 'Cairo', system-ui, sans-serif; font-weight: 400; line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+  h1 { font-size: 2.6rem; }
+  h2 { font-size: 1.7rem; }
+  h3 { font-size: 1.15rem; font-family: 'Cairo', system-ui, sans-serif; font-weight: 700; }
+  p { margin: 0; max-width: 62ch; }
+  section { display: flex; flex-direction: column; gap: 20px; }
+  .eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
+  .lede { font-size: 1.15rem; color: var(--muted); max-width: 58ch; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.85rem; color: var(--muted); }
+  code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.85em; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  ul { margin: 0; padding-inline-start: 1.2em; display: flex; flex-direction: column; gap: 8px; max-width: 62ch; }
+  ol { margin: 0; padding-inline-start: 1.2em; display: flex; flex-direction: column; gap: 10px; max-width: 62ch; }
+  li strong { font-weight: 700; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+
+  /* The one rule, set apart */
+  .rule { background: var(--navy); color: var(--navy-ink); padding: 24px 28px; border-radius: 6px; font-size: 1.2rem; line-height: 1.5; max-width: none; }
+  .rule strong { font-family: 'Lalezar', 'Cairo', sans-serif; font-weight: 400; font-size: 1.5rem; display: block; margin-bottom: 4px; }
+
+  /* State matrix */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 0.92rem; }
+  th, td { text-align: start; padding: 12px 14px; vertical-align: top; border-top: 1px solid var(--line); }
+  thead th { border-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  td:last-child { white-space: nowrap; }
+  .lbl { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--code-bg); font-weight: 600; font-size: 0.85rem; }
+  .lbl.seat { background: var(--seat-soft); color: var(--seat); }
+
+  /* Phone sketches */
+  .phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 24px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figcaption { font-size: 0.85rem; color: var(--muted); line-height: 1.4; }
+  figcaption b { color: var(--ink); display: block; font-weight: 700; }
+  .phone { background: var(--phone-bg); border: 1px solid var(--line); border-radius: 22px; padding: 14px 12px 0; display: flex; flex-direction: column; gap: 10px; min-height: 420px; font-size: 0.8rem; max-width: 100%; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .topbar .chip { font-weight: 600; font-size: 0.7rem; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--muted); }
+  .topbar .chip.seat { color: var(--seat); border-color: var(--seat); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .card.hero { background: var(--navy); color: var(--navy-ink); border: 0; align-items: center; text-align: center; padding: 18px 12px; }
+  .card .title { font-weight: 700; font-size: 0.95rem; }
+  .card .sub { color: var(--muted); font-size: 0.75rem; }
+  .hero .sub { color: inherit; opacity: 0.75; }
+  .btn { display: block; text-align: center; padding: 8px; border-radius: 999px; font-weight: 700; background: var(--navy); color: var(--navy-ink); }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  .hero .btn { background: var(--paper); color: var(--navy); width: 100%; }
+  .btn.pill-sent { background: var(--seat-soft); color: var(--seat); }
+  .btn.pill-ok { background: var(--ok-soft); color: var(--ok); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .list { display: flex; flex-direction: column; }
+  .list div { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--line); }
+  .list div:first-child { border-top: 0; }
+  .list span:last-child { color: var(--muted); }
+  .feed div { display: flex; justify-content: space-between; font-size: 0.75rem; }
+  .feed .who { color: var(--muted); }
+  .spacer { flex: 1; }
+  .nav { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); background: var(--paper); margin-inline: -12px; padding: 8px 0 10px; font-size: 0.65rem; text-align: center; color: var(--muted); border-radius: 0 0 22px 22px; }
+  .nav .on { color: var(--navy); font-weight: 700; }
+  .nav .seat { color: var(--seat); font-weight: 700; }
+  .banner { background: var(--seat-soft); color: var(--seat); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.75rem; }
+  .menu-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .menu-card .t { font-weight: 700; flex: 1; }
+  .menu-card .mini { font-size: 0.65rem; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { aspect-ratio: 1.15; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+
+  /* Phases */
+  .phase { display: grid; grid-template-columns: 64px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .phase:last-child { border-bottom: 1px solid var(--line); }
+  .phase .n { font-family: 'Lalezar', sans-serif; font-size: 1.6rem; color: var(--muted); line-height: 1; }
+  .phase h3 { margin-bottom: 6px; }
+  .phase .tag { font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 2.1rem; }
+    .phase { grid-template-columns: 1fr; gap: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="eyebrow">Chillax · customer app · design note</span>
+  <h1>The visit tab</h1>
+  <p class="lede">One second tab for every cafe: the customer's place in the cafe right now, whether that is a PlayStation room with a clock, a table with a sticker, or nothing yet.</p>
+  <div class="meta">
+    <span>Branch: feature/places</span>
+    <span>Written 17 Sep 2026</span>
+    <span>Scope: client_web first, client_app to follow</span>
+  </div>
+</header>
+
+<section>
+  <h2>The problem it solves</h2>
+  <p>The app has four tabs: Menu, Rooms, Orders, Profile. The Rooms tab is built for a cafe that rents rooms by the hour. A cafe that only has tables has nothing to put there, and hiding the tab leaves a three-tab app that looks like a cut-down product. At the same time a scanned table has no home of its own: the only place to call a waiter is a small chip in the top bar, hidden behind a popover, on four routes, on phones only.</p>
+  <p>Both problems are one problem. The second tab is about the wrong noun.</p>
+</section>
+
+<section>
+  <p class="rule"><strong>The booking list always exists, and the table is behind its chip.</strong> People at a table book rooms, so the second tab is the places to book whenever there are any; only a running clock takes it over. A scanned table shows as a chip in the bar on every tab, and tapping the chip slides the table up as a sheet: the hero, the waiter and the bill, the tab, the way out. In a branch with nothing to book the table is the tab itself. Orders keep their own tab. Nothing is configured.</p>
+</section>
+
+<section>
+  <h2>The states</h2>
+  <p>The tab reads two inputs. <em>Has timed places</em> is the branch's list of active timed places being non-empty, which the tab already fetches. <em>Where the customer is</em> comes from the stored scan, the pending hold, or the running stay, in that order of precedence reversed: a running stay always wins, then a hold, then a scanned table.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Situation</th><th>What the tab shows</th><th>Label</th></tr></thead>
+      <tbody>
+        <tr><td>Order placed for the counter, nobody seated</td><td>Nothing changes here: the tab is the places to book, so someone ordering from home can still hold a room for when they arrive. The order lives on the Orders tab, as every order does.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Branch has timed places, nothing scanned</td><td>The bookable list as today, with a footer card: "At a table? Scan the code on it."</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Branch has only tables</td><td>No second tab at all: with nothing to book there is nothing to show, and the chip is the table's door. Three tabs: Menu, Orders, Profile.</td><td>—</td></tr>
+        <tr><td>Scanned a plain table, branch has rooms</td><td>The tab stays the bookable list. The table is a chip in the bar; tapping it opens the table sheet: call waiter and get bill as status pills, the way into the menu, leave the table.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Holding a timed place</td><td>The held banner with the countdown above the list, as today.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Clock running</td><td>The clock card: timer, the rate, who is in the room as chips; then the quick requests and leave.</td><td><span class="lbl seat">Room 2</span></td></tr>
+        <tr><td>Ticket paid at a table</td><td>The chip goes; the Orders tab opens on a thanks card with the receipt number and the stars, above the orders the bill covered.</td><td><span class="lbl">Places</span></td></tr>
+        <tr><td>Bookings paused by the branch</td><td>The "bookings paused" banner inside the tab. The tab stays; only the hold buttons go.</td><td><span class="lbl">Places</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The label change is the feedback. Scanning a code and watching the tab turn into "Table 4" tells the customer it worked. No toast needed.</p>
+</section>
+
+<section>
+  <h2>The screens</h2>
+  <p>Sketches, not pixels. Arabic copy is listed under each one; the app renders right-to-left and every label already exists in the i18n table except the new ones marked.</p>
+
+  <div class="phones">
+
+
+    <figure>
+      <div class="phone">
+        <div class="topbar"><span>Chillax</span><span class="chip">Downtown</span></div>
+        <div class="card">
+          <div class="title">Room 1 · PS5</div>
+          <div class="sub">Single 60 · Multi 80 per hour</div>
+          <span class="btn">Hold</span>
+        </div>
+        <div class="card">
+          <div class="title">Room 2 · PS5</div>
+          <div class="sub">Busy · 2 people</div>
+        </div>
+        <div class="card">
+          <div class="title">Billiards</div>
+          <div class="sub">40 per hour</div>
+          <span class="btn">Hold</span>
+        </div>
+        <div class="card" style="border-style: dashed">
+          <div class="title">At a table?</div>
+          <div class="sub">Scan the code on it to order and call a waiter.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Orders</span><span>Profile</span></div>
+      </div>
+      <figcaption><b>Cafe with rooms, nothing scanned</b>Today's list, plus one dashed footer card so tables are not a secret. New string: <code>atTableScanHint</code>.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="topbar"><span>Chillax</span><span class="chip seat">Table 4</span></div>
+        <div class="card hero">
+          <div class="title">Table 4</div>
+          <div class="sub">Downtown · since 8:40 pm</div>
+        </div>
+        <div class="row2">
+          <span class="btn pill-sent">Waiter · sent</span>
+          <span class="btn ghost">Get bill</span>
+        </div>
+        <div class="card feed">
+          <div class="title">This table so far</div>
+          <div><span>Latte</span><span class="who">Ahmed · 2 min</span></div>
+          <div><span>Mint tea ×2</span><span class="who">Sara · 9 min</span></div>
+          <div><span>Cheesecake</span><span class="who">Ahmed · 9 min</span></div>
+          <div style="font-weight:700"><span>Running total</span><span>215</span></div>
+        </div>
+        <span class="btn ghost">Same again</span>
+        <div class="spacer"></div>
+        <div class="nav"><span>Menu</span><span class="seat">Table 4</span><span>Orders</span><span>Profile</span></div>
+      </div>
+      <figcaption><b>Seated at a plain table</b>The waiter button is a status, not a button: sent, then seen, then "Sara is on the way", then it clears. It is also the cooldown, and it can be cancelled while sent. The feed is what a friend who scans the same code sees.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="topbar"><span>Chillax</span><span class="chip seat">Table 4</span></div>
+        <div class="menu-card"><span class="t">Table 4</span><span class="mini">Waiter</span><span class="mini">Bill</span></div>
+        <div class="card" style="padding:8px 12px"><div class="sub">Search the menu</div></div>
+        <div class="tiles"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+        <div class="spacer"></div>
+        <div class="nav"><span class="on">Menu</span><span class="seat">Table 4</span><span>Orders</span><span>Profile</span></div>
+      </div>
+      <figcaption><b>The menu while seated</b>Ordering never leaves the menu. The top-bar chip names the table and opens the two requests, so nobody has to switch tabs mid-order. A slim card under it was tried and dropped as a duplicate.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="topbar"><span>Chillax</span><span class="chip">Downtown</span></div>
+        <div class="card hero">
+          <div class="title">Thanks, Ahmed</div>
+          <div class="sub">Table 4 · paid 215 · 12 points earned</div>
+          <span class="btn">Receipt</span>
+        </div>
+        <div class="card" style="border-style: dashed">
+          <div class="title">Next time</div>
+          <div class="sub">Scan the code on your table and it all comes back.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav"><span>Menu</span><span class="on">Table</span><span>Orders</span><span>Profile</span></div>
+      </div>
+      <figcaption><b>After the bill is paid</b>The table card dissolves into thanks. The stored place clears itself on the paid event, so nobody has to find "Leave table". Requires the ticket-paid push to reach the customer.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="topbar"><span>Chillax</span><span class="chip">Downtown</span></div>
+        <div class="banner">Bookings are paused today</div>
+        <div class="card">
+          <div class="title">Room 1 · PS5</div>
+          <div class="sub">Single 60 · Multi 80 per hour</div>
+        </div>
+        <div class="card">
+          <div class="title">Room 2 · PS5</div>
+          <div class="sub">Busy · 2 people</div>
+        </div>
+        <div class="card" style="border-style: dashed">
+          <div class="title">At a table?</div>
+          <div class="sub">Scan the code on it to order and call a waiter.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav"><span>Menu</span><span class="on">Places</span><span>Orders</span><span>Profile</span></div>
+      </div>
+      <figcaption><b>Bookings paused</b>The branch switch keeps its meaning: a banner and no hold buttons. The tab never disappears because of it.</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<section>
+  <h2>Rules that keep it honest</h2>
+  <ul>
+    <li><strong>Derived, never configured.</strong> "Has timed places" is the list being non-empty. No branch flag, no admin screen, no way for the two to disagree.</li>
+    <li><strong>A running stay always wins.</strong> A table scanned earlier never covers a clock that started for the customer. Same precedence checkout already uses.</li>
+    <li><strong>No manual table number.</strong> The scan is the only way in on purpose. Typing a number is a second way to fake presence and adds nothing for an honest customer.</li>
+    <li><strong>The web explains the scan, the app performs it.</strong> A browser customer already scanned with the phone camera to get here; the card says so and offers install underneath, since a customer at a table is the best moment to install.</li>
+    <li><strong>Every width.</strong> The table view and the menu card render on tablet and desktop too. The side rail on wide screens follows the same label rule as the bottom bar.</li>
+    <li><strong>No timers.</strong> A sitting ends when something real ends it: the bill is paid or voided (every phone that scanned the table hears it over the hub, ordered or not), the clock on a timed table stops, the customer leaves the table, scans another, or the cafe's business day rolls over. A table carried into a new browser session is asked about ("Still at Table 4?") before anything is sent to it. No clock guesses when someone left.</li>
+    <li><strong>The tab is for the people on it.</strong> Having the table's link is not being at the table, so the table's orders are only returned to a caller who has an unpaid order there themselves. A friend joins the view by ordering a drink; a stranger with the link sees an invitation to order and nothing else. Names on the tab are the names people gave at checkout; phones never leave the till.</li>
+    <li><strong>Guests included.</strong> A guest at a table can call a waiter and see the feed. Only ordering keeps the existing guest gate.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Build order, web first</h2>
+  <p>Each phase ships on its own. The first two need no server change.</p>
+  <div>
+    <div class="phase">
+      <div class="n">1</div>
+      <div>
+        <h3>The adaptive tab</h3>
+        <p class="tag">client_web only · built</p>
+        <p>One hook returns the tab's state and label. The bottom bar and side rail use it. The places route renders today's list, and exists only where there is something to book. The list gets the dashed scan footer, hidden while a table is scanned. The table view starts with the waiter and bill actions moved out of the chip, as pills with the existing local cooldown.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">2</div>
+      <div>
+        <h3>The menu card</h3>
+        <p class="tag">client_web only · dropped</p>
+        <p>Built, then removed: on the phone it sat directly under the top-bar chip that already names the table and holds the same two actions. The chip is the menu's table presence; the places tab is the table's home.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">3</div>
+      <div>
+        <h3>The request that answers back</h3>
+        <p class="tag">Notification.API + client_web · built (the stay view's quick actions still use their own cooldown)</p>
+        <p>A read of the customer's open requests, a hub push on acknowledge and complete, and a cancel while pending. The pill moves through sent, seen, on the way, done, and replaces the timers. Staff side: "I'm going" is one tap with a sound.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">4</div>
+      <div>
+        <h3>The table feed</h3>
+        <p class="tag">Ordering.API + client_web · built, then dropped</p>
+        <p>A running tab of everyone's rounds under the table and the clock, gated on having ordered there. Removed from both: a long list of items next to the waiter button reads as a bill and can put people off ordering more. The orders stay on the Orders tab. The Ordering endpoint for the place's open orders is still there, unused.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">5</div>
+      <div>
+        <h3>Keeping the tabs apart</h3>
+        <p class="tag">client_web only · built</p>
+        <p>Four tabs stay: Menu, the visit, Orders, Profile. Two other shapes were tried and dropped — three tabs with receipts under Account, and an order-on-its-way line on the menu — because a customer with many orders would bloat the menu, and orders should never sit beside the places to book. What stayed from the pass: the rating on the thanks card, the place's tab under a running clock, and the branch switch confirming that it leaves the table.</p>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="n">6</div>
+      <div>
+        <h3>The app</h3>
+        <p class="tag">client_app</p>
+        <p>Same states, same labels, with the chip's sheet and the scan opening the camera.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Not in this note</h2>
+  <p>Presence proof for a leaked link, and any per-sitting object for tables. Both were discussed and parked. What was built against the leaked link instead: the till's confirm is an identity check (account or guest, the phone, and how many orders the device has had confirmed here before, with "nobody at the table" cancelling the order and turning the device away for the day); the server allows one unconfirmed guest order per device per place and one open request of a kind per person per place, with rate limits per device and per address on both endpoints; and a branch can require an account for table orders.</p>
+</section>
+
+</main>
+</body>
+</html>

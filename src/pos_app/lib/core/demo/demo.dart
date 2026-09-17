@@ -518,6 +518,12 @@ class _DemoOrderRepository implements OrderRepository {
   }
 
   @override
+  Future<bool> rejectGuestOrder(int orderId, {String? requestId}) async {
+    _pending.removeWhere((o) => o.id == orderId);
+    return true;
+  }
+
+  @override
   Future<Order> getOrderDetails(int orderId) async => _pending.firstWhere((o) => o.id == orderId);
 
   @override

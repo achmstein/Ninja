@@ -32,7 +32,7 @@ export function OrdersBoard() {
   const t = useT()
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { confirm, cancel, actingOrderNumber } = useOrderActions()
+  const { confirm, cancel, rejectGuest, actingOrderNumber } = useOrderActions()
 
   // Tapping a card's customer name opens their hub on the Customers page
   const globalNavigate = useNavigate()
@@ -41,6 +41,7 @@ export function OrdersBoard() {
 
   // Cancelling is irreversible for the customer: always a confirm step
   const [cancelTarget, setCancelTarget] = useState<number | null>(null)
+  const [rejectTarget, setRejectTarget] = useState<number | null>(null)
 
   // Tick every 30s so ages and urgency tiers advance without a refetch
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -157,6 +158,7 @@ export function OrdersBoard() {
                 nowMs={nowMs}
                 onConfirm={() => confirm(Number(order.orderNumber))}
                 onCancel={() => setCancelTarget(Number(order.orderNumber))}
+                onRejectGuest={() => setRejectTarget(Number(order.orderNumber))}
                 onViewCustomer={
                   order.userId ? () => openCustomer(order.userId!) : undefined
                 }
@@ -182,6 +184,22 @@ export function OrdersBoard() {
         handleConfirm={() => {
           if (cancelTarget != null) cancel(cancelTarget)
           setCancelTarget(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={rejectTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setRejectTarget(null)
+        }}
+        title={t('nobodyAtTheTableQuestion')}
+        desc={t('nobodyAtTheTableDesc')}
+        cancelBtnText={t('keepOrder')}
+        confirmText={t('nobodyAtTheTable')}
+        destructive
+        handleConfirm={() => {
+          if (rejectTarget != null) rejectGuest(rejectTarget)
+          setRejectTarget(null)
         }}
       />
     </>

@@ -19,13 +19,13 @@ public class BranchSettingsService(
     /// Load, set, save, publish. A null flag leaves that setting as it was.
     /// Returns null when there is no such branch.
     /// </summary>
-    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled)
+    public async Task<Model.Branch?> ApplyAsync(int branchId, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null)
     {
         var branch = await context.Branches.FindAsync(branchId);
         if (branch == null)
             return null;
 
-        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled);
+        await ApplyAsync(branch, isOrderingEnabled, isReservationsEnabled, requireSignInForTableOrders);
 
         return branch;
     }
@@ -34,10 +34,11 @@ public class BranchSettingsService(
     /// Same on a branch the caller already loaded; whatever else is pending
     /// on the context is saved in the same call.
     /// </summary>
-    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled)
+    public async Task ApplyAsync(Model.Branch branch, bool? isOrderingEnabled, bool? isReservationsEnabled, bool? requireSignInForTableOrders = null)
     {
         if (isOrderingEnabled != null) branch.IsOrderingEnabled = isOrderingEnabled.Value;
         if (isReservationsEnabled != null) branch.IsReservationsEnabled = isReservationsEnabled.Value;
+        if (requireSignInForTableOrders != null) branch.RequireSignInForTableOrders = requireSignInForTableOrders.Value;
 
         await context.SaveChangesAsync();
 
@@ -46,6 +47,6 @@ public class BranchSettingsService(
             branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled);
 
         await eventBus.PublishAsync(new BranchSettingsChangedIntegrationEvent(
-            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled));
+            branch.Id, branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders));
     }
 }

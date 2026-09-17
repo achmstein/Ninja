@@ -110,6 +110,8 @@ export type NewTicketRequest = {
     tableId?: null | number | string;
     tableName?: null | LocalizedText;
     label?: null | string;
+    placeId?: null | number | string;
+    placeName?: null | LocalizedText;
 };
 
 export type OpenShiftRequest = {
@@ -125,6 +127,8 @@ export type OpenTicketRequest = {
     tableId?: null | number | string;
     tableName?: null | LocalizedText;
     label?: null | string;
+    placeId?: null | number | string;
+    placeName?: null | LocalizedText;
 };
 
 export type OpenTicketResponse = {

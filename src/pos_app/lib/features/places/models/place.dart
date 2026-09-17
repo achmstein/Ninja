@@ -241,6 +241,10 @@ class Stay {
 
   /// The customer asked that the till's Confirm also start the clock
   final bool startOnConfirm;
+
+  /// The rate the customer asked to start at, while held; Confirm starts at it
+  final String? requestedOptionCode;
+  final LocalizedText? requestedOptionName;
   final List<StayCost> costs;
   final DateTime? expiresAt;
   final List<StayMember> members;
@@ -263,6 +267,8 @@ class Stay {
     this.currentOptionCode,
     this.currentOptionName,
     this.startOnConfirm = false,
+    this.requestedOptionCode,
+    this.requestedOptionName,
     this.costs = const [],
     this.expiresAt,
     this.members = const [],
@@ -361,6 +367,9 @@ class Stay {
       currentOptionName:
           json['currentOptionName'] != null ? LocalizedText.parse(json['currentOptionName']) : null,
       startOnConfirm: json['startOnConfirm'] as bool? ?? false,
+      requestedOptionCode: json['requestedOptionCode'] as String?,
+      requestedOptionName:
+          json['requestedOptionName'] != null ? LocalizedText.parse(json['requestedOptionName']) : null,
       costs: costs,
       expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt'] as String) : null,
       members: members,

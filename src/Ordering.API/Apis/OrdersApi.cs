@@ -51,6 +51,14 @@ public static partial class OrdersApi
             .WithSummary("Cancel a submitted order (staff)")
             .RequireAuthorization("Pos");
 
+        // "Nobody at the table": the order goes, and so does the device that
+        // placed it — for the rest of the day, at this branch
+        api.MapPost("/{orderId:int}/reject-guest", RejectGuestOrderAsync)
+            .WithName("RejectGuestOrder")
+            .WithSummary("Cancel a guest's order and block their device for the day (staff)")
+            .WithDescription("For an order placed as a guest: cancels it and refuses further orders from the same X-Guest-Id at this branch for 24 hours. Nothing happens to an account holder's order.")
+            .RequireAuthorization("Pos");
+
         // The cashier rang the sale up and only then remembered whose it was:
         // the customer goes on after the fact, and Sales and Loyalty follow.
         api.MapPut("/{orderId:int}/customer", AssignOrderCustomerAsync)
@@ -79,6 +87,15 @@ public static partial class OrdersApi
             .WithName("GetOrdersByUser")
             .WithSummary("Get current user's orders")
             .WithDescription("Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.")
+            .AllowAnonymous();
+
+        // The table's tab, for everyone sitting at it (docs/visit-tab.html,
+        // phase 4). A caller with neither an account nor a guest id gets
+        // nothing: the feed is for people at the table, not for a crawler.
+        api.MapGet("/place/{placeId:int}/open", GetOpenOrdersAtPlaceAsync)
+            .WithName("GetOpenOrdersAtPlace")
+            .WithSummary("Open orders at a place, for the people sitting there")
+            .WithDescription("Every order at the place still waiting for its bill, with lines and a flag on the caller's own — but only for a caller who has an unpaid order there themselves; anyone else gets an empty list. No contact details. The bill being paid is what ends a sitting; no clock does.")
             .AllowAnonymous();
 
         api.MapGet("/pending", GetPendingOrdersAsync)
@@ -179,6 +196,28 @@ public static partial class OrdersApi
             if (request.PlaceId is null && request.TableId is null && request.RoomName is null)
             {
                 return TypedResults.BadRequest("A table or room is required to order as a guest.");
+            }
+
+            // Turned away by the till today: the answer does not change
+            if (await services.Queries.IsGuestBlockedAsync(guestId, httpContext.GetRequiredBranchId()))
+            {
+                services.Logger.LogWarning("Guest order rejected - guest {GuestId} is blocked at this branch", guestId);
+                return TypedResults.BadRequest("Orders from this device are not being taken here today. Please ask at the counter.");
+            }
+
+            // The branch wants a name it can hold to on a table order
+            if (await services.BranchSettings.RequiresSignInForTableOrdersAsync(httpContext.GetRequiredBranchId()))
+            {
+                return TypedResults.BadRequest("Ordering to a table here needs an account. Please sign in.");
+            }
+
+            // One order at a time per device per table, until the till has
+            // answered it: a stranger with the link can leave one order on the
+            // queue, not a pile
+            if (request.PlaceId is int guestPlaceId
+                && await services.Queries.HasUnconfirmedGuestOrderAtPlaceAsync(guestId, guestPlaceId))
+            {
+                return TypedResults.BadRequest("Your last order is still waiting for the counter. It will be confirmed shortly.");
             }
         }
 
@@ -426,6 +465,58 @@ public static partial class OrdersApi
         return TypedResults.Ok();
     }
 
+    /// <summary>How long a turned-away device stays turned away.</summary>
+    private static readonly TimeSpan GuestBlockDuration = TimeSpan.FromHours(24);
+
+    public static async Task<Results<NoContent, BadRequest<string>, NotFound, ProblemHttpResult>> RejectGuestOrderAsync(
+        int orderId,
+        [FromHeader(Name = "x-requestid")] Guid requestId,
+        HttpContext httpContext,
+        OrderingContext context,
+        [AsParameters] OrderServices services)
+    {
+        if (requestId == Guid.Empty)
+        {
+            return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+        }
+
+        var ownership = await services.Queries.GetOrderOwnershipAsync(orderId);
+        if (ownership is null)
+        {
+            return TypedResults.NotFound();
+        }
+        if (string.IsNullOrEmpty(ownership.GuestId))
+        {
+            return TypedResults.BadRequest("Only a guest's order can be rejected this way; an account holder's order is cancelled as usual.");
+        }
+
+        // The order first, through the same command the cancel button uses
+        var cancelled = await services.Mediator.Send(
+            new IdentifiedCommand<CancelOrderCommand, bool>(new CancelOrderCommand(orderId), requestId));
+        if (!cancelled)
+        {
+            return TypedResults.Problem(detail: "Cancel order failed to process.", statusCode: 500);
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+        var now = DateTime.UtcNow;
+        context.GuestBlocks.Add(new GuestBlock
+        {
+            GuestId = ownership.GuestId,
+            BranchId = branchId,
+            BlockedAt = now,
+            BlockedUntil = now + GuestBlockDuration,
+            OrderId = orderId,
+            BlockedBy = services.IdentityService.GetUserName() ?? services.IdentityService.GetUserIdentity(),
+        });
+        await context.SaveChangesAsync();
+
+        services.Logger.LogWarning(
+            "Guest {GuestId} turned away at branch {BranchId} until {Until} over order {OrderId}",
+            ownership.GuestId, branchId, now + GuestBlockDuration, orderId);
+        return TypedResults.NoContent();
+    }
+
     public static async Task<Results<NoContent, BadRequest<string>, NotFound>> AssignOrderCustomerAsync(
         int orderId,
         [FromHeader(Name = "x-requestid")] Guid requestId,
@@ -583,6 +674,25 @@ public static partial class OrdersApi
         }
 
         var orders = await services.Queries.GetOrdersFromUserAsync(userId, pageIndex, pageSize, fromDate, toDate);
+        return TypedResults.Ok(orders);
+    }
+
+    public static async Task<Results<Ok<IEnumerable<OrderSummary>>, UnauthorizedHttpResult>> GetOpenOrdersAtPlaceAsync(
+        int placeId,
+        HttpContext httpContext,
+        [AsParameters] OrderServices services)
+    {
+        var userId = services.IdentityService.GetUserIdentity();
+        var guestId = string.IsNullOrEmpty(userId) ? httpContext.GetGuestId() : null;
+        if (string.IsNullOrEmpty(userId) && string.IsNullOrEmpty(guestId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var orders = await services.Queries.GetOpenOrdersAtPlaceAsync(
+            placeId,
+            string.IsNullOrEmpty(userId) ? null : userId,
+            guestId);
         return TypedResults.Ok(orders);
     }
 

@@ -145,6 +145,15 @@ export function useAdminNotifications() {
       toast.info(translate('newServiceRequest'))
     })
 
+    // Picked up, finished, or taken back by the customer — from another
+    // screen. Quiet: only the list changes.
+    connection.on('ServiceRequestChanged', () => {
+      queryClient.invalidateQueries({
+        queryKey: ['service-requests'],
+        refetchType: 'all',
+      })
+    })
+
     // Joins are independent so one failing (e.g. a policy rejection) can't
     // silently kill the other, and every failure is named in the console —
     // a dead connection here is otherwise invisible.

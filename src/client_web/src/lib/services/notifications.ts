@@ -110,6 +110,54 @@ export async function createServiceRequest(request: {
   sessionId?: number | null
   /** The rate option wanted, for a changeOption request */
   optionCode?: string
-}): Promise<void> {
-  await apiClient.post(`${BASE}/service-requests`, request)
+}): Promise<ServiceRequestView> {
+  const response = await apiClient.post<ServiceRequestView>(
+    `${BASE}/service-requests`,
+    request,
+  )
+  return response.data
+}
+
+/** ServiceRequestStatus as Notification.API serialises it */
+export const REQUEST_STATUS = {
+  pending: 1,
+  acknowledged: 2,
+  completed: 3,
+  cancelled: 4,
+} as const
+
+/** One request of the customer's, as the API returns it (the fields the
+ *  customer's side reads; the response carries more for the tills). */
+export type ServiceRequestView = {
+  id: number
+  requestType: ServiceRequestType
+  status: number
+  placeId?: number | null
+  createdAt: string
+  /** Who picked it up: the customer's "on the way" names them */
+  acknowledgedBy?: string | null
+  acknowledgedAt?: string | null
+}
+
+/** The customer's open requests: pending and acknowledged, by account or by
+ *  the guest id header. Open until the till finishes them or they cancel. */
+export async function getMyServiceRequests(): Promise<ServiceRequestView[]> {
+  const response = await apiClient.get<ServiceRequestView[]>(
+    `${BASE}/service-requests/mine`,
+  )
+  return response.data
+}
+
+/** Takes a pending request back. 409 means a waiter already picked it up. */
+export async function cancelServiceRequest(id: number): Promise<void> {
+  await apiClient.delete(`${BASE}/service-requests/${id}`)
+}
+
+/** What ServiceRequestChanged carries over the hub */
+export type ServiceRequestChangedEvent = {
+  id?: number
+  status?: number
+  requestType?: number
+  placeId?: number | null
+  acknowledgedBy?: string | null
 }

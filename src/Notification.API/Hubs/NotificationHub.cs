@@ -55,6 +55,25 @@ public class NotificationHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, $"guest:{guestId}");
     }
 
+    /// <summary>The group every phone at a place listens on for the sitting ending.</summary>
+    public static string PlaceGroup(int placeId) => $"place:{placeId}";
+
+    /// <summary>
+    /// A customer who scanned a table's code calls this to hear when the
+    /// sitting there ends — the bill paid or voided — whether or not they
+    /// ordered anything themselves (docs/visit-tab.html). Open to anyone,
+    /// guests included: the group only ever carries "this table is done",
+    /// which is nothing a place id alone did not already let them ask.
+    /// </summary>
+    public async Task JoinPlaceGroup(int placeId)
+    {
+        if (placeId <= 0) return;
+        await Groups.AddToGroupAsync(Context.ConnectionId, PlaceGroup(placeId));
+    }
+
+    public async Task LeavePlaceGroup(int placeId) =>
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, PlaceGroup(placeId));
+
     /// <summary>
     /// Client calls this to receive room/session status updates
     /// </summary>

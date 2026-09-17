@@ -18,4 +18,12 @@ public class Branch
     public TimeOnly DayEndTime { get; set; } = new(5, 0);
     public bool IsOrderingEnabled { get; set; } = true;
     public bool IsReservationsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Ordering to a table needs an account here: a guest may still browse,
+    /// but only a signed-in customer can put an order on a table. Off by
+    /// default; a branch turns it on when strangers with a table's link
+    /// become a problem. Ordering enforces it from its projection.
+    /// </summary>
+    public bool RequireSignInForTableOrders { get; set; }
 }

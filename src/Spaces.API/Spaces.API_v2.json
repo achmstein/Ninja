@@ -3490,6 +3490,13 @@
           "startOnConfirm": {
             "type": "boolean",
             "default": false
+          },
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The rate to start at when the clock starts on Confirm; one of the place's tariff options"
           }
         }
       },
@@ -4791,6 +4798,22 @@
           },
           "startOnConfirm": {
             "type": "boolean"
+          },
+          "requestedOptionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedOptionName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
           },
           "startedAt": {
             "type": [

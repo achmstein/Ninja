@@ -311,7 +311,8 @@ public static class PlacesApi
                 isStaff ? request?.CustomerName : httpContext.User.GetUserName() ?? request?.CustomerName,
                 request?.Notes,
                 request?.StartOnConfirm ?? false,
-                isStaff));
+                isStaff,
+                request?.OptionCode));
             return TypedResults.Created($"/api/stays/{stayId}", stayId);
         }
         catch (SpacesDomainException ex)
@@ -573,7 +574,11 @@ public record SetPlaceTariffRequest(TariffRequest? Tariff);
 
 public record SetPlaceActiveRequest(bool IsActive);
 
-public record HoldPlaceRequest(string? CustomerName = null, string? Notes = null, bool StartOnConfirm = false);
+public record HoldPlaceRequest(
+    string? CustomerName = null,
+    string? Notes = null,
+    bool StartOnConfirm = false,
+    [property: Description("The rate to start at when the clock starts on Confirm; one of the place's tariff options")] string? OptionCode = null);
 
 public record WalkInStayRequest(string? Notes = null, string? OptionCode = null, string? CustomerId = null, string? CustomerName = null);
 

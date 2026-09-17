@@ -207,6 +207,10 @@ class Stay {
 
   /// The customer asked that the till's Confirm also start the clock
   final bool startOnConfirm;
+
+  /// The rate they asked to start at, while held; the till confirms at it
+  final String? requestedOptionCode;
+  final LocalizedText? requestedOptionName;
   final String? customerId;
   final List<StayMember> members;
   final List<StaySegment> segments;
@@ -236,6 +240,8 @@ class Stay {
     this.currentOptionCode,
     this.currentOptionName,
     this.startOnConfirm = false,
+    this.requestedOptionCode,
+    this.requestedOptionName,
     this.customerId,
     this.members = const [],
     this.segments = const [],
@@ -299,6 +305,9 @@ class Stay {
       currentOptionName:
           json['currentOptionName'] != null ? LocalizedText.parse(json['currentOptionName']) : null,
       startOnConfirm: json['startOnConfirm'] as bool? ?? false,
+      requestedOptionCode: json['requestedOptionCode'] as String?,
+      requestedOptionName:
+          json['requestedOptionName'] != null ? LocalizedText.parse(json['requestedOptionName']) : null,
       customerId: json['customerId'] as String?,
       members: (json['members'] as List<dynamic>?)
               ?.map((e) => StayMember.fromJson(e as Map<String, dynamic>))

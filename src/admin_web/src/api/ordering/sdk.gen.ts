@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -83,6 +83,13 @@ export const cancelOrder = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
+ * Cancel a guest's order and block their device for the day (staff)
+ *
+ * For an order placed as a guest: cancels it and refuses further orders from the same X-Guest-Id at this branch for 24 hours. Nothing happens to an account holder's order.
+ */
+export const rejectGuestOrder = <ThrowOnError extends boolean = false>(options: Options<RejectGuestOrderData, ThrowOnError>): RequestResult<RejectGuestOrderResponses, RejectGuestOrderErrors, ThrowOnError> => (options.client ?? client).post<RejectGuestOrderResponses, RejectGuestOrderErrors, ThrowOnError>({ url: '/api/orders/{orderId}/reject-guest', ...options });
+
+/**
  * Assign a customer to an order after the fact (staff)
  *
  * Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.
@@ -124,6 +131,17 @@ export const rateOrder = <ThrowOnError extends boolean = false>(options: Options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Open orders at a place, for the people sitting there
+ *
+ * Every order at the place still waiting for its bill, with lines and a flag on the caller's own — but only for a caller who has an unpaid order there themselves; anyone else gets an empty list. No contact details. The bill being paid is what ends a sitting; no clock does.
+ */
+export const getOpenOrdersAtPlace = <ThrowOnError extends boolean = false>(options: Options<GetOpenOrdersAtPlaceData, ThrowOnError>): RequestResult<GetOpenOrdersAtPlaceResponses, GetOpenOrdersAtPlaceErrors, ThrowOnError> => (options.client ?? client).get<GetOpenOrdersAtPlaceResponses, GetOpenOrdersAtPlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/place/{placeId}/open',
+    ...options
 });
 
 /**

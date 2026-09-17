@@ -24,6 +24,7 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
 /// </param>
 /// <param name="SessionId">The room session (Spaces reservation) the bill was for, if any.</param>
 /// <param name="Tender">"Cash", "Card", "InstaPay", "Account", or "Mixed" — one word for the customer's screens.</param>
+/// <param name="PlaceId">The Spaces place the bill was for, if any: paying it is what ends a sitting at a table, for everyone at it.</param>
 public record TicketSettledIntegrationEvent(
     int TicketId,
     int BranchId,
@@ -38,7 +39,8 @@ public record TicketSettledIntegrationEvent(
     IReadOnlyCollection<int>? OrderIds = null,
     int? SessionId = null,
     string? Tender = null,
-    DateTime SettledAt = default) : IntegrationEvent;
+    DateTime SettledAt = default,
+    int? PlaceId = null) : IntegrationEvent;
 
 /// <summary>What one account holder's share of a settled ticket came to.</summary>
 public record TicketAccountCharge(string CustomerId, string? CustomerName, decimal Amount);

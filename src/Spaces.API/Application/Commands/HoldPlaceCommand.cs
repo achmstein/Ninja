@@ -22,7 +22,8 @@ public record HoldPlaceCommand(
     string? CustomerName,
     string? Notes = null,
     bool StartOnConfirm = false,
-    bool IsStaff = false) : IRequest<int>;
+    bool IsStaff = false,
+    string? RequestedOptionCode = null) : IRequest<int>;
 
 public class HoldPlaceCommandHandler(
     IPlaceRepository places,
@@ -72,7 +73,8 @@ public class HoldPlaceCommandHandler(
             request.CustomerName,
             request.Notes,
             request.StartOnConfirm,
-            isStaffCreated: request.IsStaff);
+            isStaffCreated: request.IsStaff,
+            requestedOptionCode: request.RequestedOptionCode);
 
         stays.Add(stay);
         logger.LogInformation("Holding place {PlaceId} for customer {CustomerId} (startOnConfirm={StartOnConfirm})",

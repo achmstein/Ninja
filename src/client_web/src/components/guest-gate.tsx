@@ -49,7 +49,10 @@ export function useGuestGate() {
 
   const dialog = (
     <GuestGateDialog
-      key={`${open}`}
+      // A fresh dialog each time it opens, so the fields start from the
+      // stored values; prefixed, since two gates can sit side by side in one
+      // page and their closed keys would otherwise collide
+      key={`guest-gate-${open}`}
       open={open}
       initialName={contact?.name ?? ''}
       initialPhone={contact?.phone ?? ''}

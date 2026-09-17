@@ -42,10 +42,12 @@ import { useProfileGate } from '@/components/profile-gate'
 import { useGuestGate } from '@/components/guest-gate'
 import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
+import { useSelectedBranch } from '@/lib/branch'
 import { useOrderDestination } from '@/lib/order-destination'
 import { PLACE_ROOM, PLACE_TABLE, PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
-import { usePlaceStore } from '@/stores/place-store'
+import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
+import { StillHereCard } from '@/components/places/still-here'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -73,10 +75,17 @@ function CartPage() {
   const auth = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const stampOrdered = usePlaceStore((s) => s.stampOrdered)
   // Room-beats-table lives in useOrderDestination so the header chip and this
   // payload can never disagree about where the order is going
   const destination = useOrderDestination()
+  const branch = useSelectedBranch()
+  // A table carried over from an earlier session is asked about before an
+  // order goes to it (docs/visit-tab.html): a stale table is the one way an
+  // order-ahead could land on yesterday's seat
+  const activePlace = useActivePlace()
+  const placeConfirmed = useActivePlaceConfirmed()
+  const tableUnconfirmed =
+    destination?.kind === 'place' && activePlace != null && !placeConfirmed
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
   // Checking out without an account: the same name and phone, kept on the
   // order instead of on a profile
@@ -148,8 +157,6 @@ function CartPage() {
     onSuccess: () => {
       // The order landed — the next checkout is a new logical request
       requestIdRef.current = null
-      // Keep the table alive through a long sitting with several rounds
-      stampOrdered()
       // Remember the chosen customizations for next time (mobile parity).
       // Preferences hang off an account, so there is nothing to save for a guest.
       const customized = auth.isAuthenticated
@@ -180,6 +187,10 @@ function CartPage() {
   })
 
   const handleCheckout = async () => {
+    if (tableUnconfirmed) {
+      toast.info(t('confirmTableFirst'))
+      return
+    }
     // Both paths ask for a name and a reachable phone; only where they are
     // stored differs. A guest that dismisses the dialog has not ordered.
     const guestContact = isGuest ? await ensureGuestDetails() : null
@@ -293,50 +304,66 @@ function CartPage() {
   // forward are to scan the table or to sign in — the server refuses it either
   // way, and finding that out after tapping Order would be the wrong lesson.
   const guestNeedsTable = isGuest && !destination
+  // The branch wants a name it can hold to on a table order: a guest at a
+  // table signs in first. Ordering refuses it too; this just says so
+  // before the tap rather than after.
+  const guestNeedsAccount =
+    isGuest &&
+    destination?.kind === 'place' &&
+    (branch?.requireSignInForTableOrders ?? false)
 
   // Ordering never needs an account. Signing in is offered underneath rather
   // than in the way, since it is what earns points and keeps the order history.
-  const checkoutButton = guestNeedsTable ? (
-    <div className='flex flex-col gap-3 border-t pt-4'>
-      <div className='flex items-start gap-2 text-sm'>
-        <QrCode className='text-primary mt-0.5 h-4 w-4 shrink-0' />
-        <span>{t('scanTableToOrder')}</span>
-      </div>
-      <Button
-        size='lg'
-        className='w-full rounded-full'
-        onClick={() => setSignInOpen(true)}
-      >
-        <LogIn className='h-4 w-4' />
-        {t('signIn')}
-      </Button>
-    </div>
-  ) : (
-    <div className='flex flex-col gap-2'>
-      <Button
-        size='lg'
-        className='w-full rounded-full'
-        disabled={placeOrder.isPending}
-        onClick={handleCheckout}
-      >
-        {placeOrder.isPending && (
-          <Loader2 className='me-2 h-4 w-4 animate-spin' />
-        )}
-        {isGuest ? t('orderAsGuest') : t('placeOrder')}
-      </Button>
-      {isGuest && (
+  const checkoutButton =
+    guestNeedsTable || guestNeedsAccount ? (
+      <div className='flex flex-col gap-3 border-t pt-4'>
+        <div className='flex items-start gap-2 text-sm'>
+          {guestNeedsAccount ? (
+            <LogIn className='text-primary mt-0.5 h-4 w-4 shrink-0' />
+          ) : (
+            <QrCode className='text-primary mt-0.5 h-4 w-4 shrink-0' />
+          )}
+          <span>
+            {guestNeedsAccount
+              ? t('tableOrdersNeedAccount')
+              : t('scanTableToOrder')}
+          </span>
+        </div>
         <Button
-          variant='ghost'
-          size='sm'
+          size='lg'
           className='w-full rounded-full'
           onClick={() => setSignInOpen(true)}
         >
           <LogIn className='h-4 w-4' />
-          {t('signInInstead')}
+          {t('signIn')}
         </Button>
-      )}
-    </div>
-  )
+      </div>
+    ) : (
+      <div className='flex flex-col gap-2'>
+        <Button
+          size='lg'
+          className='w-full rounded-full'
+          disabled={placeOrder.isPending || tableUnconfirmed}
+          onClick={handleCheckout}
+        >
+          {placeOrder.isPending && (
+            <Loader2 className='me-2 h-4 w-4 animate-spin' />
+          )}
+          {isGuest ? t('orderAsGuest') : t('placeOrder')}
+        </Button>
+        {isGuest && (
+          <Button
+            variant='ghost'
+            size='sm'
+            className='w-full rounded-full'
+            onClick={() => setSignInOpen(true)}
+          >
+            <LogIn className='h-4 w-4' />
+            {t('signInInstead')}
+          </Button>
+        )}
+      </div>
+    )
 
   return (
     // Mobile app parity: one scrolling column, checkout group (note → points
@@ -460,11 +487,15 @@ function CartPage() {
       {/* One flat summary section (bordered card only on desktop); mt-auto
           sinks it to the bottom on mobile, mirroring the app's spaceBetween */}
       <div className='mt-auto flex flex-col gap-4 md:mt-0 md:rounded-xl md:border md:p-4 md:pt-4'>
-        {destination && (
-          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-            <PlaceIcon kind={destination.placeKind} className='h-4 w-4' />
-            {localized(destination.name)}
-          </div>
+        {tableUnconfirmed && activePlace ? (
+          <StillHereCard place={activePlace} />
+        ) : (
+          destination && (
+            <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+              <PlaceIcon kind={destination.placeKind} className='h-4 w-4' />
+              {localized(destination.name)}
+            </div>
+          )
         )}
 
         <Textarea

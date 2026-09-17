@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignOrderCustomer, cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, setOrderReady } from '../sdk.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse } from '../types.gen';
+import { assignOrderCustomer, cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, rejectGuestOrder, setOrderReady } from '../sdk.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -133,6 +133,25 @@ export const cancelOrderMutation = (options?: Partial<Options<CancelOrderData>>)
 };
 
 /**
+ * Cancel a guest's order and block their device for the day (staff)
+ *
+ * For an order placed as a guest: cancels it and refuses further orders from the same X-Guest-Id at this branch for 24 hours. Nothing happens to an account holder's order.
+ */
+export const rejectGuestOrderMutation = (options?: Partial<Options<RejectGuestOrderData>>): UseMutationOptions<RejectGuestOrderResponse, AxiosError<RejectGuestOrderError>, Options<RejectGuestOrderData>> => {
+    const mutationOptions: UseMutationOptions<RejectGuestOrderResponse, AxiosError<RejectGuestOrderError>, Options<RejectGuestOrderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rejectGuestOrder({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Assign a customer to an order after the fact (staff)
  *
  * Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.
@@ -206,6 +225,26 @@ export const rateOrderMutation = (options?: Partial<Options<RateOrderData>>): Us
     };
     return mutationOptions;
 };
+
+export const getOpenOrdersAtPlaceQueryKey = (options: Options<GetOpenOrdersAtPlaceData>) => createQueryKey('getOpenOrdersAtPlace', options);
+
+/**
+ * Open orders at a place, for the people sitting there
+ *
+ * Every order at the place still waiting for its bill, with lines and a flag on the caller's own — but only for a caller who has an unpaid order there themselves; anyone else gets an empty list. No contact details. The bill being paid is what ends a sitting; no clock does.
+ */
+export const getOpenOrdersAtPlaceOptions = (options: Options<GetOpenOrdersAtPlaceData>) => queryOptions<GetOpenOrdersAtPlaceResponse, AxiosError<DefaultError>, GetOpenOrdersAtPlaceResponse, ReturnType<typeof getOpenOrdersAtPlaceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOpenOrdersAtPlace({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOpenOrdersAtPlaceQueryKey(options)
+});
 
 export const getPendingOrdersQueryKey = (options: Options<GetPendingOrdersData>) => createQueryKey('getPendingOrders', options);
 

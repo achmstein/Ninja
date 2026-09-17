@@ -851,9 +851,23 @@ class _HeldStayBanner extends ConsumerWidget {
                 Icon(FIcons.timerReset, color: Colors.white.withValues(alpha: 0.9), size: 14),
                 const SizedBox(width: 6),
                 AppText(
-                  AppLocalizations.of(context)!.timerStartsOnArrival,
+                  AppLocalizations.of(context)!.timeStartsOnConfirm,
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
                 ),
+                if (session.requestedOptionName != null) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: AppText(
+                      session.requestedOptionName!.localized(context),
+                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
@@ -1196,6 +1210,14 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
   bool _isLoading = false;
   bool _startOnConfirm = false;
 
+  /// The rate the clock starts at when it starts on Confirm: the tariff's
+  /// first option until the customer picks another
+  String? _optionCode;
+
+  bool get _pickRate => _startOnConfirm && widget.room.hasOptions;
+  String? get _chosenCode =>
+      _optionCode ?? (widget.room.options.isNotEmpty ? widget.room.options.first.code : null);
+
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
@@ -1298,21 +1320,16 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
               ),
               const SizedBox(height: 12),
 
-              // The clock starts the moment the counter confirms they arrived,
-              // instead of waiting for the cashier to start it
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: colors.border),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              // The clock starts the moment the counter confirms the hold,
+              // instead of waiting for the cashier to start it. A plain row,
+              // not a card: it is one setting of the hold, not a thing of its own
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                 child: Row(
                   children: [
-                    Icon(FIcons.timerReset, size: 24, color: colors.mutedForeground),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: AppText(
-                        l10n.startTimerOnArrival,
+                        l10n.startTimeNow,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 15,
@@ -1327,6 +1344,27 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
                   ],
                 ),
               ),
+
+              // Which rate the clock starts at, where the tariff has a choice:
+              // the customer picks here, so the till confirms without asking
+              if (_pickRate) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    for (final (index, option) in widget.room.options.indexed) ...[
+                      if (index > 0) const SizedBox(width: 8),
+                      Expanded(
+                        child: _RateChoice(
+                          option: option,
+                          selected: option.code == _chosenCode,
+                          upgrade: index > 0,
+                          onTap: () => setState(() => _optionCode = option.code),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
               const SizedBox(height: 24),
 
               // Reserve button
@@ -1373,9 +1411,11 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
 
-    final success = await ref
-        .read(holdProvider.notifier)
-        .holdPlace(widget.room.id, startOnConfirm: _startOnConfirm);
+    final success = await ref.read(holdProvider.notifier).holdPlace(
+          widget.room.id,
+          startOnConfirm: _startOnConfirm,
+          optionCode: _pickRate ? _chosenCode : null,
+        );
 
     setState(() => _isLoading = false);
 
@@ -1410,4 +1450,66 @@ String tariffLine(BuildContext context, List<RateOption> options) {
       .map((o) => l10n.optionRateFormat(o.name.localized(context), o.hourlyRate.toStringAsFixed(0)))
       .join(' · ');
   return '$parts ${l10n.perHourShort}';
+}
+
+/// One rate to start at, as a tile: the option's dot in its colour, its
+/// name, its price. The first option reads as the base rate, the second as
+/// the upgrade, the way Single and Multi always did.
+class _RateChoice extends StatelessWidget {
+  final RateOption option;
+  final bool selected;
+  final bool upgrade;
+  final VoidCallback onTap;
+
+  const _RateChoice({
+    required this.option,
+    required this.selected,
+    required this.upgrade,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final dot = upgrade ? Colors.orange : colors.primary;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary.withValues(alpha: 0.05) : null,
+          border: Border.all(color: selected ? colors.primary : colors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: AppText(
+                    option.name.localized(context),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.foreground),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            AppText(
+              l10n.hourlyRateFormat(option.hourlyRate.toStringAsFixed(0)),
+              style: TextStyle(fontSize: 12, color: colors.mutedForeground),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

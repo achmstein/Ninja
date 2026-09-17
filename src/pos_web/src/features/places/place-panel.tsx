@@ -16,6 +16,7 @@ import {
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -270,11 +271,17 @@ export function PlacePanel({
                 </p>
               )}
               {/* The customer asked for the clock to start the moment the
-                  counter confirms they arrived: one tap does both */}
+                  counter confirms the hold, at the rate they picked: one
+                  tap does both */}
               {stay.startOnConfirm && (
                 <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
                   <TimerReset className='size-4' />
                   {t('startsOnConfirm')}
+                  {stay.requestedOptionName && (
+                    <Badge variant='secondary'>
+                      {localized(stay.requestedOptionName)}
+                    </Badge>
+                  )}
                 </p>
               )}
               <div className='mt-2 grid w-full grid-cols-2 gap-2'>
@@ -304,7 +311,7 @@ export function PlacePanel({
                     }
                   >
                     <Play className='size-5 rtl:rotate-180' />
-                    {t('confirmArrival')}
+                    {t('confirmHold')}
                   </Button>
                 ) : (
                   <Button

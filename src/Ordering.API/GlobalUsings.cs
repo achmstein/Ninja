@@ -25,6 +25,7 @@ global using Chillax.Ordering.Domain.Events;
 global using Chillax.Ordering.Domain.Exceptions;
 global using Chillax.Ordering.Domain.SeedWork;
 global using Chillax.Ordering.Infrastructure;
+global using Chillax.Ordering.Infrastructure.Projections;
 global using Chillax.Ordering.Infrastructure.Idempotency;
 global using Chillax.Ordering.Infrastructure.Repositories;
 global using Chillax.ServiceDefaults;

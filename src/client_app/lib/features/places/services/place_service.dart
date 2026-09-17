@@ -13,7 +13,7 @@ abstract class PlaceRepository {
   Future<Place> getPlace(int id);
 
   /// Hold a place; the customer has 10 minutes to arrive
-  Future<int> holdPlace(int roomId, {bool startOnConfirm = false});
+  Future<int> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode});
   Future<List<Stay>> getMyStays();
   Future<void> cancelHold(int sessionId);
   Future<void> leaveStay(int sessionId);
@@ -44,10 +44,11 @@ class ApiPlaceRepository implements PlaceRepository {
   }
 
   @override
-  Future<int> holdPlace(int roomId, {bool startOnConfirm = false}) async {
+  Future<int> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode}) async {
     final response = await _places.post<int>(
       '$roomId/hold',
-      data: {'startOnConfirm': startOnConfirm},
+      // The rate to start at, when the clock starts on Confirm
+      data: {'startOnConfirm': startOnConfirm, 'optionCode': optionCode},
     );
     return response.data!;
   }
@@ -171,11 +172,12 @@ class HoldNotifier extends Notifier<HoldState> {
   }
 
   /// Hold a place (the customer has 10 minutes to arrive)
-  Future<bool> holdPlace(int roomId, {bool startOnConfirm = false}) async {
+  Future<bool> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final reservationId = await _roomService.holdPlace(roomId, startOnConfirm: startOnConfirm);
+      final reservationId =
+          await _roomService.holdPlace(roomId, startOnConfirm: startOnConfirm, optionCode: optionCode);
       state = state.copyWith(isLoading: false, reservationId: reservationId);
       return true;
     } catch (e) {

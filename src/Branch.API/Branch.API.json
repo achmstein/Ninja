@@ -297,6 +297,10 @@
           },
           "isReservationsEnabled": {
             "type": "boolean"
+          },
+          "requireSignInForTableOrders": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -467,6 +471,12 @@
               "null",
               "boolean"
             ]
+          },
+          "requireSignInForTableOrders": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -480,6 +490,12 @@
             ]
           },
           "isReservationsEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "requireSignInForTableOrders": {
             "type": [
               "null",
               "boolean"

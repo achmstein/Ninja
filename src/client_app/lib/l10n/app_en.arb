@@ -60,8 +60,8 @@
     }
   },
   "perHourShort": "/hr",
-  "startTimerOnArrival": "Start the timer as soon as I arrive",
-  "timerStartsOnArrival": "The timer starts when you arrive",
+  "startTimeNow": "Start the time now, don't wait for me",
+  "timeStartsOnConfirm": "The time starts as soon as it's confirmed",
   "switchToOption": "Switch to {option}",
   "@switchToOption": {
     "placeholders": {

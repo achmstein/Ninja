@@ -87,7 +87,8 @@ public class SettleTicketCommandHandler(
                     ticket.Lines.Where(l => l.OrderId is not null).Select(l => l.OrderId!.Value).Distinct().ToList(),
                     ticket.SessionId,
                     Payment.DescribeTenders(payments),
-                    ticket.SettledAt ?? DateTime.UtcNow));
+                    ticket.SettledAt ?? DateTime.UtcNow,
+                    ticket.PlaceId));
 
                 return new SettleResult(number, change);
             }

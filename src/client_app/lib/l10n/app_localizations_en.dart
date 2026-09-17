@@ -158,10 +158,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get perHourShort => '/hr';
 
   @override
-  String get startTimerOnArrival => 'Start the timer as soon as I arrive';
+  String get startTimeNow => 'Start the time now, don\'t wait for me';
 
   @override
-  String get timerStartsOnArrival => 'The timer starts when you arrive';
+  String get timeStartsOnConfirm => 'The time starts as soon as it\'s confirmed';
 
   @override
   String switchToOption(String option) {

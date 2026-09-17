@@ -79,6 +79,7 @@ function BranchForm({
     dayStartTime: branch?.dayStartTime?.slice(0, 5) ?? '10:00',
     dayEndTime: branch?.dayEndTime?.slice(0, 5) ?? '02:00',
     isActive: branch?.isActive ?? true,
+    requireSignInForTableOrders: branch?.requireSignInForTableOrders ?? false,
   })
   const [error, setError] = useState('')
 
@@ -145,6 +146,7 @@ function BranchForm({
           dayEndTime,
           isOrderingEnabled: branch.isOrderingEnabled,
           isReservationsEnabled: branch.isReservationsEnabled,
+          requireSignInForTableOrders: form.requireSignInForTableOrders,
         },
       })
     } else {
@@ -247,6 +249,21 @@ function BranchForm({
             checked={form.isActive}
             onCheckedChange={(checked) =>
               setForm({ ...form, isActive: checked })
+            }
+          />
+        </div>
+      )}
+
+      {/* Off by default; on when strangers with a table's link become a
+          problem — a guest may still browse, but a table order needs an
+          account the branch can hold to */}
+      {isEditing && (
+        <div className='flex items-center justify-between rounded-lg border p-3'>
+          <Label className='text-sm'>{t('requireSignInForTableOrders')}</Label>
+          <Switch
+            checked={form.requireSignInForTableOrders}
+            onCheckedChange={(checked) =>
+              setForm({ ...form, requireSignInForTableOrders: checked })
             }
           />
         </div>

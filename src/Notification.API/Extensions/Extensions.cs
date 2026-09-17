@@ -9,6 +9,8 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        builder.Services.AddServiceRequestRateLimiting();
+
         // Add database context
         builder.AddNpgsqlDbContext<NotificationContext>("notificationdb", configureDbContextOptions: options =>
         {
@@ -48,7 +50,10 @@ public static class Extensions
             .AddSubscription<SessionPaidIntegrationEvent, SessionPaidIntegrationEventHandler>()
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
             .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
-            .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>();
+            .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>()
+            // A bill paid or voided ends the sitting at its place, for every phone that scanned it
+            .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
+            .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
     }
 }
 

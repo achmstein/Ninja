@@ -33,6 +33,7 @@ public class TicketVoidedDomainEventHandler(
             ticket.BranchId,
             ticket.VoidReason ?? string.Empty,
             ticket.VoidedBy ?? string.Empty,
-            reversals));
+            reversals,
+            ticket.PlaceId));
     }
 }

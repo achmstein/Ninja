@@ -344,6 +344,36 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get confirmOrder;
 
+  /// No description provided for @guestFirstOrderHere.
+  ///
+  /// In en, this message translates to:
+  /// **'First order here'**
+  String get guestFirstOrderHere;
+
+  /// No description provided for @nobodyAtTheTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody at the table'**
+  String get nobodyAtTheTable;
+
+  /// No description provided for @guestTurnedAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned away for today'**
+  String get guestTurnedAway;
+
+  /// No description provided for @accountHolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountHolder;
+
+  /// No description provided for @guestOrdersBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} orders here before'**
+  String guestOrdersBefore(int count);
+
   /// No description provided for @cancelOrder.
   ///
   /// In en, this message translates to:
@@ -998,17 +1028,17 @@ abstract class AppLocalizations {
   /// **'Bill only'**
   String get billOnly;
 
-  /// No description provided for @confirmArrival.
+  /// No description provided for @confirmHold.
   ///
   /// In en, this message translates to:
-  /// **'Confirm arrival'**
-  String get confirmArrival;
+  /// **'Confirm'**
+  String get confirmHold;
 
-  /// No description provided for @arrivalConfirmed.
+  /// No description provided for @holdConfirmed.
   ///
   /// In en, this message translates to:
-  /// **'Arrival confirmed'**
-  String get arrivalConfirmed;
+  /// **'Hold confirmed'**
+  String get holdConfirmed;
 
   /// No description provided for @startsOnConfirm.
   ///

@@ -48,6 +48,10 @@ export type HoldPlaceRequest = {
     customerName?: null | string;
     notes?: null | string;
     startOnConfirm?: boolean;
+    /**
+     * The rate to start at when the clock starts on Confirm; one of the place's tariff options
+     */
+    optionCode?: null | string;
 };
 
 export type JoinSessionResult = {
@@ -349,6 +353,8 @@ export type StayViewModel = {
     createdAt?: string;
     expiresAt?: null | string;
     startOnConfirm?: boolean;
+    requestedOptionCode?: null | string;
+    requestedOptionName?: null | LocalizedText;
     startedAt?: null | string;
     endedAt?: null | string;
     tariff?: TariffViewModel;
@@ -368,6 +374,7 @@ export type StayViewModel = {
 
 export type TableViewModel = {
     id?: number | string;
+    placeId?: number | string;
     name?: LocalizedText;
     branchId?: number | string;
     isActive?: boolean;

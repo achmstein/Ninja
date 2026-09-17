@@ -380,17 +380,17 @@ abstract class AppLocalizations {
   /// **'/hr'**
   String get perHourShort;
 
-  /// No description provided for @startTimerOnArrival.
+  /// No description provided for @startTimeNow.
   ///
   /// In en, this message translates to:
-  /// **'Start the timer as soon as I arrive'**
-  String get startTimerOnArrival;
+  /// **'Start the time now, don't wait for me'**
+  String get startTimeNow;
 
-  /// No description provided for @timerStartsOnArrival.
+  /// No description provided for @timeStartsOnConfirm.
   ///
   /// In en, this message translates to:
-  /// **'The timer starts when you arrive'**
-  String get timerStartsOnArrival;
+  /// **'The time starts as soon as it's confirmed'**
+  String get timeStartsOnConfirm;
 
   /// No description provided for @switchToOption.
   ///

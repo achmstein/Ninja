@@ -19,6 +19,13 @@ import {
   rateOrderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { statusDotClass } from '@/lib/order-status'
+import {
+  PLACE_ROOM,
+  PLACE_STATION,
+  PLACE_TABLE,
+  PlaceIcon,
+} from '@/lib/places'
 import { businessDayStart } from '@/lib/business-day'
 import {
   dayStartHour,
@@ -44,6 +51,7 @@ import {
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ThanksCard } from '@/components/places/thanks-card'
 import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/orders/')({
@@ -77,19 +85,16 @@ function SignedOutPrompt() {
   )
 }
 
-/** Status dot colors mirroring the mobile app's _StatusDot. */
-function statusDotClass(status: string | undefined | null): string {
-  switch (status?.toLowerCase()) {
-    case 'confirmed':
-      return 'bg-green-600 dark:bg-green-500'
-    case 'cancelled':
-      return 'bg-destructive'
-    default:
-      return 'bg-orange-500'
-  }
-}
-
 const HISTORY_PAGE_SIZE = 15
+
+/** Ordering spells the kind by name ("Table"); the icons go by number. */
+function placeKindOf(kind: string | null | undefined): number {
+  return kind === 'Table'
+    ? PLACE_TABLE
+    : kind === 'Station'
+      ? PLACE_STATION
+      : PLACE_ROOM
+}
 
 function OrdersPage() {
   const t = useT()
@@ -153,6 +158,9 @@ function OrdersPage() {
         </TabsList>
 
         <TabsContent value='today' className='mt-2'>
+          {/* The bill at the table just paid: thanks, the receipt, the
+              stars — above the orders it covered */}
+          <ThanksCard />
           {todayQuery.isLoading ? (
             <OrdersSkeleton />
           ) : todayQuery.isError ? (
@@ -348,51 +356,57 @@ function OrderTile({ order }: { order: OrderSummary }) {
   )
 
   const discount = Number(order.loyaltyDiscount ?? 0)
+  // LEGACY(places): roomName is the fallback for orders from before the
+  // Places remodel — remove when Ordering stops filling the old room fields.
+  const placeName = localized(order.placeName ?? order.roomName)
 
   return (
-    <div className='flex flex-col gap-2 py-3'>
-      <div className='flex items-center gap-2'>
-        <span
-          className={`size-2.5 shrink-0 rounded-full ${statusDotClass(order.status)}`}
-        />
-        <span className='text-[15px] font-semibold'>
+    // Two columns: the time, the place and the lines run down the start
+    // side, the total with the paid pill under it stacks on the end side,
+    // so the lines follow the time however tall the money stack is
+    <div className='flex items-start gap-2 py-3'>
+      <span
+        className={`mt-1.5 size-2.5 shrink-0 rounded-full ${statusDotClass(order.status)}`}
+      />
+      <div className='flex min-w-0 flex-1 flex-col gap-1'>
+        <div className='text-[15px] font-semibold'>
           {order.date &&
             new Date(order.date).toLocaleTimeString(
               language === 'ar' ? 'ar-EG' : 'en-US',
               { hour: 'numeric', minute: '2-digit' }
             )}
-        </span>
-        {/* LEGACY(places): reads the older roomName field instead of placeName —
-            remove when Ordering and Notification stop reading the old
-            room/table fields. */}
-        {order.roomName && (
-          <span className='text-muted-foreground truncate text-[13px]'>
-            • {localized(order.roomName)}
-          </span>
-        )}
-        <div className='ms-auto shrink-0 text-end'>
-          <div className='text-[15px] font-bold tabular-nums'>
-            {price(Number(order.total ?? 0) - discount)}
-          </div>
-          {discount > 0 && (
-            <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
-              <Star className='h-3 w-3 fill-current' />
-              {t('discountFormat', { price: discount.toFixed(2) })}
-            </div>
-          )}
-          <PaidPill order={order} />
         </div>
+        {placeName && (
+          <div className='text-muted-foreground flex items-center gap-1 text-[13px]'>
+            <PlaceIcon
+              kind={placeKindOf(order.placeKind)}
+              className='h-3.5 w-3.5 shrink-0'
+            />
+            <span className='truncate'>{placeName}</span>
+          </div>
+        )}
+        {detailQuery.isLoading ? (
+          <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
+        ) : detailQuery.isError ? (
+          <p className='text-destructive text-[13px]'>
+            {t('failedToLoadDetails')}
+          </p>
+        ) : (
+          detailQuery.data && <OrderTileDetails order={detailQuery.data} />
+        )}
       </div>
-
-      {detailQuery.isLoading ? (
-        <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
-      ) : detailQuery.isError ? (
-        <p className='text-destructive text-[13px]'>
-          {t('failedToLoadDetails')}
-        </p>
-      ) : (
-        detailQuery.data && <OrderTileDetails order={detailQuery.data} />
-      )}
+      <div className='shrink-0 text-end'>
+        <div className='text-[15px] font-bold tabular-nums'>
+          {price(Number(order.total ?? 0) - discount)}
+        </div>
+        {discount > 0 && (
+          <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
+            <Star className='h-3 w-3 fill-current' />
+            {t('discountFormat', { price: discount.toFixed(2) })}
+          </div>
+        )}
+        <PaidPill order={order} />
+      </div>
     </div>
   )
 }

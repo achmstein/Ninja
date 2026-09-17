@@ -35,20 +35,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { StayClock } from './stay-clock'
 
 const COOLDOWN_SECONDS = 30
-
-function formatElapsed(start: string | null | undefined, now: number): string {
-  if (!start) return '00:00:00'
-  const seconds = Math.max(
-    0,
-    Math.floor((now - new Date(start).getTime()) / 1000),
-  )
-  const h = String(Math.floor(seconds / 3600)).padStart(2, '0')
-  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')
-  const s = String(seconds % 60).padStart(2, '0')
-  return `${h}:${m}:${s}`
-}
 
 type QuickAction = {
   /** One key per action for the cooldown map */
@@ -60,8 +49,10 @@ type QuickAction = {
   optionCode?: string
 }
 
-/** Full-tab view while the customer's clock runs: live timer, quick
- *  service requests with cooldowns, member list, and leave (app parity).
+/** Full-tab view while the customer's clock runs: the clock card (timer,
+ *  who is in the room), quick service requests with cooldowns, and leave
+ *  (app parity). No tab here: a room's orders stay on the Orders tab, so a
+ *  long list never sits next to the clock.
  *  The requests follow what the place can do: a waiter and the bill
  *  anywhere, a controller in a console room, a rate switch where the
  *  tariff has options. */
@@ -167,29 +158,9 @@ export function ActiveStayView({ stay }: { stay: StayViewModel }) {
       : []),
   ]
 
-  const members = stay.members ?? []
-
   return (
     <div className='flex flex-col gap-4 p-4'>
-      {/* The clock card */}
-      <div className='from-primary to-primary/85 text-primary-foreground flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br p-6 shadow-lg'>
-        <div className='flex w-full items-center justify-between'>
-          <span className='text-xl font-bold'>{localized(stay.placeName)}</span>
-          {hasOptions(stay.tariff) && stay.currentOptionName && (
-            <span className='rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold'>
-              {localized(stay.currentOptionName)}
-            </span>
-          )}
-        </div>
-        <div className='text-4xl font-bold tracking-widest tabular-nums'>
-          {formatElapsed(stay.startedAt, now)}
-        </div>
-        {members.length > 1 && (
-          <div className='text-sm opacity-80'>
-            {t('memberCountFormat', { count: members.length })}
-          </div>
-        )}
-      </div>
+      <StayClock stay={stay} now={now} selfId={auth.user?.profile?.sub} />
 
       {/* Quick service requests */}
       <div className='grid grid-cols-2 gap-3'>

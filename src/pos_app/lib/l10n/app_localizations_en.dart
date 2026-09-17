@@ -142,6 +142,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmOrder => 'Confirm';
 
   @override
+  String get guestFirstOrderHere => 'First order here';
+
+  @override
+  String guestOrdersBefore(int count) {
+    return '$count orders here before';
+  }
+
+  @override
+  String get nobodyAtTheTable => 'Nobody at the table';
+
+  @override
+  String get guestTurnedAway => 'Turned away for today';
+
+  @override
+  String get accountHolder => 'Account';
+
+  @override
   String get cancelOrder => 'Cancel order';
 
   @override
@@ -523,10 +540,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get billOnly => 'Bill only';
 
   @override
-  String get confirmArrival => 'Confirm arrival';
+  String get confirmHold => 'Confirm';
 
   @override
-  String get arrivalConfirmed => 'Arrival confirmed';
+  String get holdConfirmed => 'Hold confirmed';
 
   @override
   String get startsOnConfirm => 'Timer starts on confirm';

@@ -123,6 +123,13 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 RefundedAmount = o.RefundedAmount,
                 VoidedAt = o.VoidedAt,
                 TicketId = o.TicketId,
+                // Where it was ordered to: the place, which is what the
+                // customer's list names
+                PlaceId = o.PlaceId,
+                PlaceKind = o.PlaceKind,
+                PlaceName = o.PlaceName,
+                SessionId = o.SessionId,
+                // LEGACY(places): the old room and table names beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
                 RoomName = o.RoomName,
                 TableId = o.TableId,
                 TableName = o.TableName,
@@ -215,8 +222,84 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 UserId = o.Buyer != null ? o.Buyer.IdentityGuid : null,
                 GuestPhone = o.GuestPhone,
+                // How many orders this device has had confirmed here before:
+                // a first-timer at a table is worth a second look
+                GuestOrdersBefore = o.GuestId == null
+                    ? null
+                    : context.Orders.Count(x => x.GuestId == o.GuestId
+                        && x.BranchId == o.BranchId
+                        && x.Id != o.Id
+                        && x.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed),
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null,
                 CustomerNote = o.CustomerNote,
+                Items = o.OrderItems.Select(oi => new Orderitem
+                {
+                    ProductName = oi.ProductName,
+                    Units = oi.Units,
+                    UnitPrice = (double)oi.UnitPrice,
+                    PictureUrl = oi.PictureUrl,
+                    CustomizationsDescription = oi.CustomizationsDescription,
+                    SpecialInstructions = oi.SpecialInstructions
+                }).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public Task<bool> HasUnconfirmedGuestOrderAtPlaceAsync(string guestId, int placeId)
+        => context.Orders
+            .AsNoTracking()
+            .AnyAsync(o => o.GuestId == guestId
+                && o.PlaceId == placeId
+                && (o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.AwaitingValidation
+                    || o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Submitted));
+
+    public Task<bool> IsGuestBlockedAsync(string guestId, int branchId)
+    {
+        var now = DateTime.UtcNow;
+        return context.GuestBlocks
+            .AsNoTracking()
+            .AnyAsync(b => b.GuestId == guestId && b.BranchId == branchId && b.BlockedUntil > now);
+    }
+
+    public async Task<IEnumerable<OrderSummary>> GetOpenOrdersAtPlaceAsync(int placeId, string? userId, string? guestId)
+    {
+        var open = context.Orders
+            .AsNoTracking()
+            .Where(o => o.PlaceId == placeId)
+            .Where(o => o.PaidAt == null && o.VoidedAt == null)
+            .Where(o => o.OrderStatus != Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Cancelled);
+
+        // The tab is for the people on it: having the table's link is not
+        // being at the table, but having an unpaid order there is. A caller
+        // with nothing on the bill sees nothing — not even that there is one.
+        var onTheTab = await open.AnyAsync(o =>
+            (userId != null && o.Buyer != null && o.Buyer.IdentityGuid == userId)
+            || (guestId != null && o.GuestId == guestId));
+        if (!onTheTab)
+        {
+            return [];
+        }
+
+        return await open
+            .Include(o => o.Buyer)
+            .OrderBy(o => o.OrderDate)
+            .Select(o => new OrderSummary
+            {
+                OrderNumber = o.Id,
+                Date = o.OrderDate,
+                Status = o.OrderStatus.ToString(),
+                Total = Math.Max(0, (double)o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.LoyaltyDiscount),
+                PointsToRedeem = o.PointsToRedeem,
+                LoyaltyDiscount = o.LoyaltyDiscount,
+                TicketId = o.TicketId,
+                PlaceId = o.PlaceId,
+                PlaceKind = o.PlaceKind,
+                PlaceName = o.PlaceName,
+                SessionId = o.SessionId,
+                Source = o.Source.ToString(),
+                UserName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
+                IsMine = (userId != null && o.Buyer != null && o.Buyer.IdentityGuid == userId)
+                    || (guestId != null && o.GuestId == guestId),
                 Items = o.OrderItems.Select(oi => new Orderitem
                 {
                     ProductName = oi.ProductName,

@@ -9,6 +9,10 @@ abstract class OrderRepository {
   Future<List<Order>> getPendingOrders();
   Future<bool> confirmOrder(int orderId, {String? requestId});
   Future<bool> cancelOrder(int orderId, {String? requestId});
+
+  /// "Nobody at the table": cancels a guest's order and turns their device
+  /// away at this branch for the day
+  Future<bool> rejectGuestOrder(int orderId, {String? requestId});
   Future<Order> getOrderDetails(int orderId);
 
   /// Rings a counter sale up as a real order (the kitchen sees it like any
@@ -40,6 +44,12 @@ class ApiOrderRepository implements OrderRepository {
   @override
   Future<bool> confirmOrder(int orderId, {String? requestId}) async {
     await _api.put('confirm', data: {'orderNumber': orderId}, requestId: requestId);
+    return true;
+  }
+
+  @override
+  Future<bool> rejectGuestOrder(int orderId, {String? requestId}) async {
+    await _api.post('$orderId/reject-guest', requestId: requestId);
     return true;
   }
 

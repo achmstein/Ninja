@@ -28,6 +28,8 @@ class StayEntityTypeConfiguration : IEntityTypeConfiguration<Stay>
         builder.Property(s => s.StartOnConfirm)
             .IsRequired()
             .HasDefaultValue(false);
+        builder.Property(s => s.RequestedOptionCode)
+            .HasMaxLength(50);
         builder.Property(s => s.StartedAt);
         builder.Property(s => s.EndedAt);
 

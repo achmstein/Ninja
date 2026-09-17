@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
-import { Clock, Loader2, TimerReset } from 'lucide-react'
+import { Clock, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { holdPlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
+import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -26,13 +28,17 @@ interface HoldSheetProps {
 }
 
 /** The hold sheet, mirroring the app: the rates, the description, the
- *  arrival window, the start-on-arrival switch, one full-width button. */
+ *  ten-minute window, the start-now switch with the rate to start at, one
+ *  full-width button. */
 export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const auth = useAuth()
   const queryClient = useQueryClient()
   const [startOnConfirm, setStartOnConfirm] = useState(false)
+  // The rate the clock starts at when it starts on Confirm: the tariff's
+  // first option until the customer picks another
+  const [optionCode, setOptionCode] = useState<string | null>(null)
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
@@ -62,6 +68,10 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
 
   if (!place) return null
 
+  const options = tariffOptions(place.tariff)
+  const pickRate = startOnConfirm && hasOptions(place.tariff)
+  const chosenCode = optionCode ?? options[0]?.code ?? null
+
   return (
     <Sheet open={!!place} onOpenChange={onOpenChange}>
       <SheetContent
@@ -90,18 +100,53 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
           </div>
         </div>
 
-        {/* The clock starts the moment the counter confirms they arrived,
-            instead of waiting for the cashier to start it */}
-        <label className='mt-3 flex items-center gap-3 rounded-xl border p-4'>
-          <TimerReset className='text-muted-foreground h-6 w-6 shrink-0' />
+        {/* The clock starts the moment the counter confirms the hold,
+            instead of waiting for the cashier to start it. A plain row, not
+            a card: it is one setting of the hold, not a thing of its own */}
+        <label className='mt-3 flex items-center gap-3 px-1 py-2'>
           <span className='flex-1 text-[15px] font-medium'>
-            {t('startTimerOnArrival')}
+            {t('startTimeNow')}
           </span>
           <Switch
             checked={startOnConfirm}
             onCheckedChange={setStartOnConfirm}
           />
         </label>
+
+        {/* Which rate the clock starts at, where the tariff has a choice:
+            the customer picks here, so the till confirms without asking */}
+        {pickRate && (
+          <div className='mt-1 grid grid-cols-2 gap-2 px-1'>
+            {options.map((option) => {
+              const selected = option.code === chosenCode
+              const color = optionColor(place.tariff, option.code)
+              return (
+                <button
+                  key={option.code}
+                  type='button'
+                  aria-pressed={selected}
+                  onClick={() => setOptionCode(option.code ?? null)}
+                  className={cn(
+                    'flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-start transition-colors',
+                    selected
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:bg-accent',
+                  )}
+                >
+                  <span className='flex items-center gap-1.5 text-sm font-semibold'>
+                    <span className={cn('size-2 rounded-full', color.dot)} />
+                    {localized(option.name)}
+                  </span>
+                  <span className='text-muted-foreground text-xs'>
+                    {t('hourlyRateFormat', {
+                      rate: String(Number(option.hourlyRate ?? 0)),
+                    })}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         <Button
           size='lg'
@@ -117,6 +162,7 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
                   null,
                 notes: null,
                 startOnConfirm,
+                optionCode: pickRate ? chosenCode : null,
               },
             })
           }

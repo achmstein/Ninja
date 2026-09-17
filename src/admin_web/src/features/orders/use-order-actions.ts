@@ -4,6 +4,7 @@ import {
   cancelOrderMutation,
   confirmOrderMutation,
   deleteOrderMutation,
+  rejectGuestOrderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
@@ -39,6 +40,17 @@ export function useOrderActions() {
     onError: () => toast.error(t('failedToCancelOrder')),
   })
 
+  // "Nobody at the table": the order goes and the device that placed it is
+  // turned away for the day
+  const rejectGuestOrder = useMutation({
+    ...rejectGuestOrderMutation(),
+    onSuccess: () => {
+      invalidateOrders()
+      toast.success(t('guestTurnedAway'))
+    },
+    onError: () => toast.error(t('failedToCancelOrder')),
+  })
+
   // No onSuccess/onError here: single and bulk delete toast differently
   const deleteOrder = useMutation({ ...deleteOrderMutation() })
 
@@ -52,6 +64,13 @@ export function useOrderActions() {
   const cancel = (orderNumber: number) =>
     cancelOrder.mutate({
       body: { orderNumber },
+      headers: { 'x-requestid': uuidv4() },
+      query: { 'api-version': API_VERSION },
+    })
+
+  const rejectGuest = (orderNumber: number) =>
+    rejectGuestOrder.mutate({
+      path: { orderId: orderNumber },
       headers: { 'x-requestid': uuidv4() },
       query: { 'api-version': API_VERSION },
     })
@@ -97,10 +116,14 @@ export function useOrderActions() {
   return {
     confirm,
     cancel,
+    rejectGuest,
     remove,
     removeMany,
     actingOrderNumber,
     isActing:
-      confirmOrder.isPending || cancelOrder.isPending || deleteOrder.isPending,
+      confirmOrder.isPending ||
+      cancelOrder.isPending ||
+      rejectGuestOrder.isPending ||
+      deleteOrder.isPending,
   }
 }

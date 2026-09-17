@@ -57,14 +57,25 @@ class _PendingOrdersState extends ConsumerState<PendingOrders> {
     showPosToast(context, ok ? PosToastType.success : PosToastType.error, ok ? l10n.orderCancelled : l10n.failedToCancelOrder);
   }
 
-  Future<void> _open(int orderId) async {
-    final action = await showOrderDetailDialog(context, orderId);
+  Future<void> _rejectGuest(int orderId) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _acting = orderId);
+    final ok = await ref.read(pendingOrdersProvider.notifier).rejectGuest(orderId);
+    if (!mounted) return;
+    setState(() => _acting = null);
+    showPosToast(context, ok ? PosToastType.success : PosToastType.error, ok ? l10n.guestTurnedAway : l10n.failedToCancelOrder);
+  }
+
+  Future<void> _open(Order order) async {
+    final action = await showOrderDetailDialog(context, order.id, summary: order);
     if (!mounted || action == null) return;
     switch (action) {
       case OrderDetailAction.confirm:
-        await _confirm(orderId);
+        await _confirm(order.id);
       case OrderDetailAction.cancel:
-        await _cancel(orderId);
+        await _cancel(order.id);
+      case OrderDetailAction.rejectGuest:
+        await _rejectGuest(order.id);
     }
   }
 
@@ -79,7 +90,7 @@ class _PendingOrdersState extends ConsumerState<PendingOrders> {
           now: now,
           horizontal: widget.horizontal,
           acting: _acting == order.id,
-          onOpen: () => _open(order.id),
+          onOpen: () => _open(order),
           onConfirm: () => _confirm(order.id),
         ),
     ];
@@ -133,6 +144,14 @@ class _PendingOrderCard extends StatelessWidget {
     final who = (order.userName ?? '').isNotEmpty ? order.userName! : l10n.guest;
     final title = place.isNotEmpty ? place : who;
     final subtitle = place.isNotEmpty ? who : order.guestPhone;
+    // A guest: how many orders this device has had confirmed here before —
+    // a first-timer at a table is worth a look before the kitchen starts
+    final ordersBefore = order.guestOrdersBefore;
+    final history = ordersBefore == null
+        ? null
+        : ordersBefore == 0
+            ? l10n.guestFirstOrderHere
+            : l10n.guestOrdersBefore(ordersBefore);
     final placeIcon = place.isEmpty
         ? FIcons.user
         : order.placeKind == 'Room'
@@ -186,6 +205,21 @@ class _PendingOrderCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
                   ),
+                  if (history != null)
+                    Row(
+                      children: [
+                        Icon(FIcons.idCard, size: 14, color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            history,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.typography.sm.copyWith(color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
+                          ),
+                        ),
+                      ],
+                    ),
                   Text(
                     '${relativeTime(context, l10n, order.date, now)} · ${money(context, order.total)}',
                     style: theme.typography.sm.copyWith(

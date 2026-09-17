@@ -37,6 +37,11 @@ class PendingOrdersNotifier extends AsyncNotifier<List<Order>> {
 
   Future<bool> cancel(int orderId) => _act(() => ref.read(orderRepositoryProvider).cancelOrder(orderId, requestId: const Uuid().v4()));
 
+  /// "Nobody at the table": the order goes and the device that placed it is
+  /// turned away for the day
+  Future<bool> rejectGuest(int orderId) =>
+      _act(() => ref.read(orderRepositoryProvider).rejectGuestOrder(orderId, requestId: const Uuid().v4()));
+
   Future<bool> _act(Future<bool> Function() call) async {
     try {
       final ok = await call();

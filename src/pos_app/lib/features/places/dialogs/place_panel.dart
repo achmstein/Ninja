@@ -67,7 +67,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
 
   /// The customer asked for the clock to start the moment the counter
   /// confirms they arrived: one tap does both
-  Future<void> _confirmArrival(Stay session) async {
+  Future<void> _confirmHold(Stay session) async {
     final ok = await _guarded((a) => a.confirm(session.id, startsClock: session.startOnConfirm));
     if (ok && session.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(true);
   }
@@ -354,7 +354,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 textAlign: TextAlign.center, style: theme.typography.sm.copyWith(color: amber, fontFeatures: tabular)),
           ],
           // The customer asked for the clock to start the moment the counter
-          // confirms they arrived: one tap does both
+          // confirms the hold, at the rate they picked: one tap does both
           if (session.startOnConfirm) ...[
             const SizedBox(height: 8),
             Row(
@@ -363,6 +363,13 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 Icon(FIcons.timerReset, size: 16, color: theme.colors.mutedForeground),
                 const SizedBox(width: 6),
                 Text(l10n.startsOnConfirm, style: muted),
+                if (session.requestedOptionName != null) ...[
+                  const SizedBox(width: 6),
+                  FBadge(
+                    variant: FBadgeVariant.secondary,
+                    child: Text(session.requestedOptionName!.localized(context)),
+                  ),
+                ],
               ],
             ),
           ],
@@ -376,7 +383,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               const SizedBox(width: 8),
               Expanded(
                 child: session.startOnConfirm
-                    ? bigButton(l10n.confirmArrival, icon: playIcon, onPress: _busy ? null : () => _confirmArrival(session))
+                    ? bigButton(l10n.confirmHold, icon: playIcon, onPress: _busy ? null : () => _confirmHold(session))
                     : bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room, session: session)),
               ),
             ],

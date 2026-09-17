@@ -218,7 +218,7 @@ export function useStayActions() {
         {
           onSuccess: () => {
             toast.success(
-              t(startsClock ? 'sessionStarted' : 'arrivalConfirmed'),
+              t(startsClock ? 'sessionStarted' : 'holdConfirmed'),
             )
             done?.onSuccess?.()
           },
