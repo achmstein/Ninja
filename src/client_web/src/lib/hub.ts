@@ -9,6 +9,8 @@ import { useAuth } from 'react-oidc-context'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
 import { getActivePlace, usePlaceStore } from '@/stores/place-store'
 import { useThanksStore } from '@/stores/thanks-store'
+import { getOrder } from '@/api/ordering'
+import { API_VERSION } from './api-client'
 import { getStoredUser } from './oidc'
 import { translate } from './i18n'
 import {
@@ -145,22 +147,41 @@ export function useHub() {
       } else if (event?.type === 'order_cancelled') {
         toast.error(translate('orderCancelledToast', { orderId }))
       } else if (event?.type === 'order_paid') {
-        // The bill is paid: the table card dissolves into thanks, and the
-        // scanned table clears itself so the next scan starts clean
-        const place = getActivePlace()
-        const thanks = useThanksStore.getState()
-        if (place) {
-          thanks.setPaid({
-            placeName: place.name,
-            receiptNumber: event.receiptNumber ?? null,
-            orderId: event.orderId ?? null,
-          })
-          usePlaceStore.getState().clearPlace()
-        } else if (thanks.paid && thanks.paid.orderId == null) {
-          // The table's own "cleared" beat this one to it: add the order
-          // so the thanks card can ask how it was
-          thanks.setPaid({ ...thanks.paid, orderId: event.orderId ?? null })
-        }
+        void onOrderPaid(orderId, event.receiptNumber ?? null)
+      }
+    }
+
+    // The bill an order was on is paid: thanks at the top of the orders it
+    // covered, with the stars for this order. At a scanned table the table
+    // also clears itself, so the next scan starts clean. In a room there is
+    // no stored table, so the order itself says where it was — one read,
+    // and only for an order that was somewhere.
+    const onOrderPaid = async (
+      orderId: number,
+      receiptNumber: number | null,
+    ) => {
+      const thanks = useThanksStore.getState()
+      const place = getActivePlace()
+      if (place) {
+        thanks.setPaid({ placeName: place.name, receiptNumber, orderId })
+        usePlaceStore.getState().clearPlace()
+        return
+      }
+      if (thanks.paid && thanks.paid.orderId == null) {
+        // The table's own "cleared" beat this one to it: add the order so
+        // the card can ask how it was
+        thanks.setPaid({ ...thanks.paid, orderId })
+        return
+      }
+      try {
+        const { data } = await getOrder({
+          path: { orderId },
+          query: { 'api-version': API_VERSION },
+        })
+        const placeName = data?.placeName ?? data?.roomName
+        if (placeName) thanks.setPaid({ placeName, receiptNumber, orderId })
+      } catch {
+        // No card is better than a wrong one
       }
     }
     const onRoom = () => {
