@@ -79,7 +79,6 @@ const webExtras = {
   // the till splits it at settle however they agree
   yourRounds: { en: 'Your rounds', ar: 'طلباتك' },
   billTotal: { en: 'Bill total', ar: 'إجمالي الحساب' },
-  splitAtTill: { en: 'split at the till', ar: 'بيتقسم عند الكاشير' },
   plusTimeSettledAtTill: {
     en: 'plus your part of the time, settled at the till',
     ar: 'غير نصيبك من الوقت، بيتحدد عند الكاشير',

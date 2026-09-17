@@ -201,14 +201,11 @@ export function RunningTimeLine({
   bill,
   running,
   slip = false,
-  shared = false,
 }: {
   bill: BillView
   running: RunningTime
   /** On the slip: no icon, the smaller type */
   slip?: boolean
-  /** The group's time, split at the till: said so on the tile */
-  shared?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -248,7 +245,6 @@ export function RunningTimeLine({
             {t('hoursShort', { count: String(part.hours) })} ×{' '}
             {price(part.rate)}
             {t('perHourShort')}
-            {shared && !slip && ` · ${t('splitAtTill')}`}
           </p>
         </div>
       ))}

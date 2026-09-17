@@ -161,8 +161,13 @@ export type Parts = {
  * the group's. The till says whose each round is; the place's time is
  * nobody's until the group settles it, however they agree, so the app
  * never splits it. A bill with nobody else on it is simply the total.
+ * The roster is the stay's, as Spaces reports it to its members.
  */
-export function billParts(bill: BillView, running: RunningTime | null): Parts {
+export function billParts(
+  bill: BillView,
+  running: RunningTime | null,
+  stay: StayViewModel | undefined,
+): Parts {
   const lines = bill.lines ?? []
   const ownLines = lines
     .filter((line) => line.isMine && line.source !== 'SessionTime')
@@ -176,7 +181,7 @@ export function billParts(bill: BillView, running: RunningTime | null): Parts {
   const others = lines.some(
     (line) => !line.isMine && line.source !== 'SessionTime',
   )
-  const members = Number(bill.memberCount ?? 0)
+  const members = stay?.members?.length ?? 0
   return {
     ownLines,
     time,

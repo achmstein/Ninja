@@ -22,7 +22,7 @@ import {
 } from '@/lib/bills'
 import { statusDotClass } from '@/lib/order-status'
 import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, PlaceIcon } from '@/lib/places'
-import { useActiveStay } from '@/lib/stays'
+import { useActiveStay, useMyStays } from '@/lib/stays'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -200,11 +200,13 @@ function OnYouToday({ bills }: { bills: BillView[] }) {
   const stay = useActiveStay()
   const now = useNow()
 
+  const stayOf = useStayOf()
+
   const open = bills.filter(isOpen)
   if (open.length === 0) return null
 
   const running = open.map((bill) => runningTime(bill, stay, now))
-  const parts = open.map((bill, i) => billParts(bill, running[i]))
+  const parts = open.map((bill, i) => billParts(bill, running[i], stayOf(bill)))
   const approx = running.some((time) => time != null)
   const sharedTime = parts.some(
     (part, i) => part.shared && (part.time > 0 || running[i] != null)
@@ -232,6 +234,16 @@ function OnYouToday({ bills }: { bills: BillView[] }) {
       )}
     </div>
   )
+}
+
+/** The stay a bill charges the time of, from the customer's own stays —
+ *  running or ended — for its roster. A guest has none. */
+function useStayOf() {
+  const { data: stays = [] } = useMyStays()
+  return (bill: BillView) =>
+    bill.sessionId == null
+      ? undefined
+      : stays.find((s) => Number(s.id) === Number(bill.sessionId))
 }
 
 /** Mirrors a bill tile: the header line, a few lines, the total. */
@@ -375,8 +387,9 @@ function BillTile({
     (line) => line.isMine && line.source !== 'SessionTime'
   )
   const time = lines.filter((line) => line.source === 'SessionTime')
+  const stayOf = useStayOf()
   const running = runningTime(bill, stay, now)
-  const parts = billParts(bill, running)
+  const parts = billParts(bill, running, stayOf(bill))
   const { shared } = parts
   const discount = Number(bill.discount ?? 0)
   const service = Number(bill.serviceCharge ?? 0)
@@ -425,11 +438,9 @@ function BillTile({
             <BillLine key={String(line.id)} line={line} />
           ))}
           {time.map((line) => (
-            <BillLine key={String(line.id)} line={line} shared={shared} />
+            <BillLine key={String(line.id)} line={line} />
           ))}
-          {running && (
-            <RunningTimeLine bill={bill} running={running} shared={shared} />
-          )}
+          {running && <RunningTimeLine bill={bill} running={running} />}
 
           {shared ? (
             <>
@@ -504,15 +515,8 @@ function BillTile({
   )
 }
 
-/** One of the customer's own lines, or the place's time — whole, and
- *  said to be the group's when it is, since the till splits it. */
-function BillLine({
-  line,
-  shared = false,
-}: {
-  line: BillLineView
-  shared?: boolean
-}) {
+/** One of the customer's own lines, or the place's time, whole. */
+function BillLine({ line }: { line: BillLineView }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
@@ -537,7 +541,6 @@ function BillLine({
           {t('hoursShort', { count: String(qty) })} ×{' '}
           {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
-          {isTime && shared && ` · ${t('splitAtTill')}`}
         </p>
       ) : (
         localized(line.details) && (
