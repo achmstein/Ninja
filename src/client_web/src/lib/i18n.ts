@@ -74,6 +74,10 @@ const webExtras = {
   },
   timeSoFar: { en: '{place} time so far', ar: 'وقت {place} لحد دلوقتي' },
   atTheCounter: { en: 'At the counter', ar: 'من الكاشير' },
+  // The tile shows the customer's own rounds; everyone else's, with the
+  // service and VAT, fold into one row so the total still adds up
+  restOfBill: { en: 'Rest of the bill', ar: 'باقي الحساب' },
+  paidSeveralWays: { en: 'Paid several ways', ar: 'اتدفع بأكتر من طريقة' },
   // Rating on the paid bill, the moment the customer is already looking
   howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
   ratedThanks: { en: 'Thanks for rating!', ar: 'شكراً على تقييمك!' },

@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CircleAlert, Loader2, ReceiptText, Star, Timer } from 'lucide-react'
+import {
+  ChevronRight,
+  CircleAlert,
+  Loader2,
+  ReceiptText,
+  Star,
+  Timer,
+} from 'lucide-react'
 import { rateOrder, type Order, type OrderSummary } from '@/api/ordering'
 import {
   getOrderOptions,
@@ -17,12 +24,19 @@ import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, PlaceIcon } from '@/lib/places'
 import { useActiveStay } from '@/lib/stays'
 import { businessDayStart } from '@/lib/business-day'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import {
+  useLanguage,
+  useLocalized,
+  usePrice,
+  useT,
+  type TranslationKey,
+} from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { SignInOptions } from '@/components/sign-in-options'
 import { useGuestStore } from '@/stores/guest-store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -463,21 +477,26 @@ function BillTile({
   const language = useLanguage((s) => s.language)
   const stay = useActiveStay()
   const now = useNow()
+  const [open, setOpen] = useState(false)
 
+  // The tile is the customer's own view of the bill: their rounds, the
+  // room's time (the bill's, not anyone's), and the total. Everyone
+  // else's rounds, the discount, service and VAT fold into one "rest of
+  // the bill" row so the numbers still add up; the slip behind the tap
+  // itemises all of it.
   const lines = bill.lines ?? []
-  // Names go on the lines only when the bill is shared: yours as "you",
-  // a friend's by the name they gave the till
-  const shared = lines.some((line) => !line.isMine)
+  const mine = lines.filter(
+    (line) => line.isMine && line.source !== 'SessionTime'
+  )
+  const time = lines.filter((line) => line.source === 'SessionTime')
+  const shown = [...mine, ...time].reduce(
+    (sum, line) => sum + Number(line.total ?? 0),
+    0
+  )
   const running = runningTime(bill, stay, now)
-
-  const subtotal = Number(bill.subtotal ?? 0)
-  const discount = Number(bill.discount ?? 0)
-  const service = Number(bill.serviceCharge ?? 0)
-  const vat = Number(bill.vat ?? 0)
-  const refunded = Number(bill.refundedTotal ?? 0)
-  const hasBreakdown =
-    discount > 0 || service > 0 || (vat > 0 && !bill.vatIncluded)
+  const rest = Number(bill.total ?? 0) - shown
   const total = Number(bill.total ?? 0) + (running?.charged ?? 0)
+  const refunded = Number(bill.refundedTotal ?? 0)
 
   const placeName = localized(bill.locationName)
   const opened = bill.openedAt
@@ -491,94 +510,73 @@ function BillTile({
 
   return (
     <div className='flex flex-col gap-1 py-3'>
-      <div className='flex items-center gap-2'>
-        <span
-          className={`size-2.5 shrink-0 rounded-full ${billDotClass(bill)}`}
-        />
-        <span className='text-[15px] font-semibold'>{opened}</span>
-        <span className='text-muted-foreground flex min-w-0 items-center gap-1 text-[13px]'>
-          {bill.placeId != null && (
-            <PlaceIcon
-              kind={placeKindOf(bill.placeKind)}
-              className='h-3.5 w-3.5 shrink-0'
-            />
-          )}
-          <span className='truncate'>{placeName || t('atTheCounter')}</span>
-        </span>
-        <div className='ms-auto shrink-0'>
-          <BillPill bill={bill} />
-        </div>
-      </div>
-
-      <div className='flex flex-col gap-1 ps-[18px]'>
-        {lines.map((line) => (
-          <BillLine key={String(line.id)} line={line} shared={shared} />
-        ))}
-        {running && <RunningTimeLine bill={bill} running={running} />}
-
-        {hasBreakdown && (
-          <div className='text-muted-foreground flex flex-col gap-0.5 pt-1 text-[13px]'>
-            <div className={row}>
-              <span>{t('subtotal')}</span>
-              <span>{price(subtotal)}</span>
-            </div>
-            {discount > 0 && (
-              <div className={row}>
-                <span>
-                  {t('discount')}
-                  {bill.discountRate != null &&
-                    ` ${percent(bill.discountRate)}%`}
-                </span>
-                <span>−{price(discount)}</span>
-              </div>
+      <button
+        type='button'
+        className='flex w-full flex-col gap-1 text-start'
+        onClick={() => setOpen(true)}
+      >
+        <div className='flex w-full items-center gap-2'>
+          <span
+            className={`size-2.5 shrink-0 rounded-full ${billDotClass(bill)}`}
+          />
+          <span className='text-[15px] font-semibold'>{opened}</span>
+          <span className='text-muted-foreground flex min-w-0 items-center gap-1 text-[13px]'>
+            {bill.placeId != null && (
+              <PlaceIcon
+                kind={placeKindOf(bill.placeKind)}
+                className='h-3.5 w-3.5 shrink-0'
+              />
             )}
-            {service > 0 && (
-              <div className={row}>
-                <span>
-                  {t('serviceCharge', {
-                    rate: String(percent(bill.serviceChargeRate)),
-                  })}
-                </span>
-                <span>{price(service)}</span>
-              </div>
-            )}
-            {vat > 0 && !bill.vatIncluded && (
-              <div className={row}>
-                <span>{t('vat', { rate: String(percent(bill.vatRate)) })}</span>
-                <span>{price(vat)}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className={`${row} pt-1 text-[15px] font-bold`}>
-          <span>{t('total')}</span>
-          <span>
-            {running && '≈ '}
-            {price(total)}
+            <span className='truncate'>{placeName || t('atTheCounter')}</span>
           </span>
+          <div className='ms-auto flex shrink-0 items-center gap-1'>
+            <BillPill bill={bill} />
+            <ChevronRight className='text-muted-foreground/60 h-4 w-4 rtl:rotate-180' />
+          </div>
         </div>
-        {vat > 0 && bill.vatIncluded && (
-          <div className={`${row} text-muted-foreground -mt-1 text-xs`}>
-            <span>
-              {t('vatIncluded', { rate: String(percent(bill.vatRate)) })}
-            </span>
-            <span>{price(vat)}</span>
-          </div>
-        )}
-        {refunded > 0 && (
-          <div className={`${row} text-destructive text-[13px]`}>
-            <span>{t('refunded')}</span>
-            <span>−{price(refunded)}</span>
-          </div>
-        )}
 
-        {/* A paid bill is the thanks: the stars for the rounds on it, at the
-            one moment the customer is already looking */}
-        {isSettled(bill) && ordersById && (
+        <div className='flex w-full flex-col gap-1 ps-[18px]'>
+          {mine.map((line) => (
+            <BillLine key={String(line.id)} line={line} />
+          ))}
+          {time.map((line) => (
+            <BillLine key={String(line.id)} line={line} />
+          ))}
+          {running && <RunningTimeLine bill={bill} running={running} />}
+          {Math.abs(rest) >= 0.005 && (
+            <div className={`${row} text-muted-foreground text-[13px]`}>
+              <span>{t('restOfBill')}</span>
+              <span>
+                {rest < 0 && '−'}
+                {price(Math.abs(rest))}
+              </span>
+            </div>
+          )}
+          <div className={`${row} pt-1 text-[15px] font-bold`}>
+            <span>{t('total')}</span>
+            <span>
+              {running && '≈ '}
+              {price(total)}
+            </span>
+          </div>
+          {refunded > 0 && (
+            <div className={`${row} text-destructive text-[13px]`}>
+              <span>{t('refunded')}</span>
+              <span>−{price(refunded)}</span>
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* A paid bill is the thanks: the stars for the rounds on it, at the
+          one moment the customer is already looking */}
+      {isSettled(bill) && ordersById && (
+        <div className='ps-[18px]'>
           <BillStars bill={bill} ordersById={ordersById} />
-        )}
-      </div>
+        </div>
+      )}
+
+      <BillSheet bill={bill} open={open} onOpenChange={setOpen} />
     </div>
   )
 }
@@ -586,13 +584,13 @@ function BillTile({
 const percent = (rate: number | string | null | undefined) =>
   Math.round(Number(rate ?? 0) * 100)
 
-function BillLine({ line, shared }: { line: BillLineView; shared: boolean }) {
+/** One of the customer's own lines, or the room's time, on the tile. */
+function BillLine({ line }: { line: BillLineView }) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const isTime = line.source === 'SessionTime'
   const qty = Number(line.qty ?? 0)
-  const discount = Number(line.discount ?? 0)
 
   return (
     <div>
@@ -602,34 +600,23 @@ function BillLine({ line, shared }: { line: BillLineView; shared: boolean }) {
         ) : (
           <span className='text-muted-foreground'>{qty}x</span>
         )}
-        <span className='min-w-0 flex-1'>
-          {localized(line.description)}
-          {shared && (line.isMine || line.customerName) && (
-            <span className='bg-muted text-muted-foreground ms-1.5 rounded-full px-1.5 py-px text-[10px] font-medium'>
-              {line.isMine ? t('you') : line.customerName}
-            </span>
-          )}
-        </span>
+        <span className='min-w-0 flex-1'>{localized(line.description)}</span>
         <span className='shrink-0 tabular-nums'>
           {price(Number(line.total ?? 0))}
         </span>
       </div>
-      {isTime && (
+      {isTime ? (
         <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
           {t('hoursShort', { count: String(qty) })} ×{' '}
           {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
         </p>
-      )}
-      {localized(line.details) && (
-        <p className='text-muted-foreground ms-6 text-xs'>
-          {localized(line.details)}
-        </p>
-      )}
-      {discount > 0 && (
-        <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
-          −{price(discount)} ({t('discount')})
-        </p>
+      ) : (
+        localized(line.details) && (
+          <p className='text-muted-foreground ms-6 text-xs'>
+            {localized(line.details)}
+          </p>
+        )
       )}
     </div>
   )
@@ -639,9 +626,12 @@ function BillLine({ line, shared }: { line: BillLineView; shared: boolean }) {
 function RunningTimeLine({
   bill,
   running,
+  slip = false,
 }: {
   bill: BillView
   running: RunningTime
+  /** On the slip: no icon, the smaller type */
+  slip?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -656,15 +646,27 @@ function RunningTimeLine({
     <div>
       {running.parts.map((part, i) => (
         <div key={i}>
-          <div className='flex items-baseline gap-1 text-sm'>
-            <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />
+          <div
+            className={cn(
+              'flex items-baseline gap-1',
+              slip ? 'justify-between gap-2' : 'text-sm'
+            )}
+          >
+            {!slip && (
+              <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />
+            )}
             <span className='min-w-0 flex-1'>
               {t('timeSoFar', { place })}
               {perOption && ` — ${localized(part.optionName)}`}
             </span>
             <span className='shrink-0 tabular-nums'>≈ {price(part.cost)}</span>
           </div>
-          <p className='text-muted-foreground ms-6 text-xs tabular-nums'>
+          <p
+            className={cn(
+              'tabular-nums',
+              slip ? 'text-[10px]' : 'text-muted-foreground ms-6 text-xs'
+            )}
+          >
             {i === 0 && `${elapsed} · `}
             {t('hoursShort', { count: String(part.hours) })} ×{' '}
             {price(part.rate)}
@@ -677,12 +679,11 @@ function RunningTimeLine({
 }
 
 /**
- * What the till did with the bill: paid (and on which receipt, a tap away
- * for an account), on the customer's tab, voided — or still unpaid.
+ * What the till did with the bill: paid (and on which receipt), on the
+ * customer's tab, voided — or still unpaid.
  */
 function BillPill({ bill }: { bill: BillView }) {
   const t = useT()
-  const auth = useAuth()
 
   if (bill.status === 'Voided') {
     return (
@@ -694,20 +695,238 @@ function BillPill({ bill }: { bill: BillView }) {
   if (!isSettled(bill)) {
     return <Badge variant='outline'>{t('unpaid')}</Badge>
   }
-  const badge = (
+  return (
     <Badge variant='secondary' className='tabular-nums'>
       {bill.paidWith === 'Account' ? t('onYourTab') : t('paid')}
       {bill.receiptNumber != null &&
         ` ${t('receiptShort', { number: Number(bill.receiptNumber) })}`}
     </Badge>
   )
-  // The receipt page is for accounts; a guest keeps the number alone
-  return auth.isAuthenticated && bill.id != null ? (
-    <Link to='/receipts/$ticketId' params={{ ticketId: String(bill.id) }}>
-      {badge}
-    </Link>
-  ) : (
-    badge
+}
+
+const tenderKey: Record<string, TranslationKey> = {
+  Cash: 'cash',
+  Card: 'card',
+  InstaPay: 'instapay',
+  Account: 'account',
+  Mixed: 'paidSeveralWays',
+}
+
+/**
+ * The bill itself, behind a tap on the tile: the slip the till would
+ * print, with every line on the ticket and who ordered it, the room's
+ * time, the discount, service and VAT, the total, and how it was paid.
+ * The customer is on this bill, so nobody on it is hidden from them.
+ */
+function BillSheet({
+  bill,
+  open,
+  onOpenChange,
+}: {
+  bill: BillView
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const language = useLanguage((s) => s.language)
+  const auth = useAuth()
+  const stay = useActiveStay()
+  const now = useNow()
+
+  const lines = bill.lines ?? []
+  const running = runningTime(bill, stay, now)
+  const subtotal = Number(bill.subtotal ?? 0)
+  const discount = Number(bill.discount ?? 0)
+  const service = Number(bill.serviceCharge ?? 0)
+  const vat = Number(bill.vat ?? 0)
+  const total = Number(bill.total ?? 0) + (running?.charged ?? 0)
+  const refunded = Number(bill.refundedTotal ?? 0)
+  const hasBreakdown = discount > 0 || service > 0 || vat > 0
+  const locale = language === 'ar' ? 'ar-EG' : 'en-US'
+  const closed = closedAt(bill)
+
+  const row = 'flex items-baseline justify-between gap-2 tabular-nums'
+  // The dashed rule a thermal printer draws between the slip's parts
+  const rule = <div className='border-t border-dashed border-black' />
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side='bottom'
+        className='bg-muted mx-auto max-w-lg gap-0 rounded-t-2xl border-t-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]'
+      >
+        <SheetTitle className='sr-only'>{t('receipt')}</SheetTitle>
+        <div className='bg-muted-foreground/40 mx-auto mb-3 h-1 w-10 rounded-full' />
+
+        <div className='max-h-[75svh] overflow-y-auto'>
+          {/* The paper the till prints, on screen: black on white whatever
+              the theme, 72mm wide */}
+          <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
+            <div className='flex flex-col items-center text-center'>
+              <div className='text-[13px] font-semibold'>
+                {bill.receiptNumber != null
+                  ? t('receiptNumber', { number: Number(bill.receiptNumber) })
+                  : localized(bill.locationName) || t('atTheCounter')}
+              </div>
+              {bill.receiptNumber != null && localized(bill.locationName) && (
+                <div className='text-[11px]'>
+                  {localized(bill.locationName)}
+                </div>
+              )}
+              {bill.openedAt && (
+                <div className='text-[11px] tabular-nums'>
+                  {new Date(bill.openedAt).toLocaleString(locale, {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}
+                  {closed &&
+                    ` – ${closed.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}`}
+                </div>
+              )}
+              {bill.status === 'Voided' && (
+                <div className='text-[11px] font-semibold'>{t('voided')}</div>
+              )}
+            </div>
+
+            {rule}
+
+            <div className='flex flex-col gap-1.5'>
+              {lines.map((line) => (
+                <SlipLine key={String(line.id)} line={line} />
+              ))}
+              {running && (
+                <RunningTimeLine bill={bill} running={running} slip />
+              )}
+            </div>
+
+            {rule}
+
+            {hasBreakdown && (
+              <div className='flex flex-col gap-0.5 text-[11px]'>
+                <div className={row}>
+                  <span>{t('subtotal')}</span>
+                  <span>{price(subtotal)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className={row}>
+                    <span>
+                      {t('discount')}
+                      {bill.discountRate != null &&
+                        ` ${percent(bill.discountRate)}%`}
+                    </span>
+                    <span>−{price(discount)}</span>
+                  </div>
+                )}
+                {service > 0 && (
+                  <div className={row}>
+                    <span>
+                      {t('serviceCharge', {
+                        rate: String(percent(bill.serviceChargeRate)),
+                      })}
+                    </span>
+                    <span>{price(service)}</span>
+                  </div>
+                )}
+                {vat > 0 && !bill.vatIncluded && (
+                  <div className={row}>
+                    <span>
+                      {t('vat', { rate: String(percent(bill.vatRate)) })}
+                    </span>
+                    <span>{price(vat)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className={`${row} text-[15px] font-bold`}>
+              <span>{t('total')}</span>
+              <span>
+                {running && '≈ '}
+                {price(total)}
+              </span>
+            </div>
+            {vat > 0 && bill.vatIncluded && (
+              <div className={`${row} -mt-1 text-[10px]`}>
+                <span>
+                  {t('vatIncluded', { rate: String(percent(bill.vatRate)) })}
+                </span>
+                <span>{price(vat)}</span>
+              </div>
+            )}
+
+            {isSettled(bill) && bill.paidWith && (
+              <div className={row}>
+                <span>
+                  {tenderKey[bill.paidWith]
+                    ? t(tenderKey[bill.paidWith])
+                    : bill.paidWith}
+                </span>
+                <span>{price(Number(bill.total ?? 0))}</span>
+              </div>
+            )}
+            {refunded > 0 && (
+              <div className={`${row} font-medium`}>
+                <span>{t('refunded')}</span>
+                <span>−{price(refunded)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* The printed receipt, with the branch's own header and footer,
+              once there is one — for an account, as the page is */}
+          {isSettled(bill) && auth.isAuthenticated && bill.id != null && (
+            <Button
+              asChild
+              variant='outline'
+              className='mt-4 w-full rounded-full'
+            >
+              <Link
+                to='/receipts/$ticketId'
+                params={{ ticketId: String(bill.id) }}
+              >
+                <ReceiptText className='h-4 w-4' />
+                {t('receipt')}
+              </Link>
+            </Button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+/** A line as the till prints it: the description and its total, then
+ *  quantity × price, any discount, and the name the till put on it. */
+function SlipLine({ line }: { line: BillLineView }) {
+  const t = useT()
+  const localized = useLocalized()
+  const price = usePrice()
+  const isTime = line.source === 'SessionTime'
+  const qty = Number(line.qty ?? 0)
+  const discount = Number(line.discount ?? 0)
+  const who = line.customerName
+
+  return (
+    <div>
+      <div className='flex items-baseline justify-between gap-2'>
+        <span>{localized(line.description)}</span>
+        <span className='shrink-0 tabular-nums'>
+          {price(Number(line.total ?? 0))}
+        </span>
+      </div>
+      <div className='text-[10px] tabular-nums'>
+        {isTime ? t('hoursShort', { count: String(qty) }) : qty} ×{' '}
+        {price(Number(line.unitPrice ?? 0))}
+        {isTime && t('perHourShort')}
+        {discount > 0 && ` − ${price(discount)} (${t('discount')})`}
+        {who && ` · ${who}`}
+      </div>
+      {localized(line.details) && (
+        <div className='text-[10px]'>{localized(line.details)}</div>
+      )}
+    </div>
   )
 }
 
