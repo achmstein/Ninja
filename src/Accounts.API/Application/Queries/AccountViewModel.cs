@@ -21,6 +21,8 @@ public class TransactionViewModel
     public string Source { get; set; } = "manual";
     /// <summary>The till's receipt, credit note or tab payment number when the source is the till.</summary>
     public int? SourceNumber { get; set; }
+    /// <summary>The Sales ticket a receipt charge settled — what the customer's receipt page is keyed by. Null for every other source.</summary>
+    public int? TicketId { get; set; }
     public string RecordedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }

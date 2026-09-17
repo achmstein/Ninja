@@ -134,6 +134,23 @@ export function useHub() {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyBills' }] })
     }
 
+    // A settled bill can land on the customer's tab. Accounts posts that
+    // charge off the same event this push came from, so the balance is
+    // read again now and once more a moment later, in case the push won
+    // the race
+    let accountTimer: ReturnType<typeof setTimeout> | null = null
+    const refreshAccount = () => {
+      const invalidate = () => {
+        queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyAccount' }] })
+        queryClient.invalidateQueries({
+          queryKey: [{ _id: 'getMyTransactions' }],
+        })
+      }
+      invalidate()
+      if (accountTimer) clearTimeout(accountTimer)
+      accountTimer = setTimeout(invalidate, 3000)
+    }
+
     // The mobile app hears about these as push notifications; on the web the
     // hub event was only refreshing lists, so a customer watching the screen
     // saw their order change state with nothing said about it.
@@ -152,6 +169,7 @@ export function useHub() {
         // the next scan starts clean. The paid bill itself is on the
         // orders page, with the receipt number and the stars
         if (getActivePlace()) usePlaceStore.getState().clearPlace()
+        refreshAccount()
       }
     }
     // A clock started or stopped: its time lands on the bill when it stops
@@ -203,6 +221,7 @@ export function useHub() {
     // or not: the table lets go, and the bill reads again as closed.
     const onPlaceCleared = (event?: PlaceClearedEvent) => {
       refreshBills()
+      refreshAccount()
       const place = getActivePlace()
       if (!place || event?.placeId !== place.id) return
       usePlaceStore.getState().clearPlace()
@@ -214,6 +233,8 @@ export function useHub() {
     conn.on('CatalogChanged', onCatalog)
     conn.on('ServiceRequestChanged', onServiceRequest)
     conn.on('PlaceCleared', onPlaceCleared)
+    // A settle put a share on this customer's tab — ordered or not
+    conn.on('AccountChanged', refreshAccount)
     ensureStarted(conn)
 
     // Every phone at a scanned table listens on that place's group, so the
@@ -277,6 +298,7 @@ export function useHub() {
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
+      if (accountTimer) clearTimeout(accountTimer)
       clearInterval(guestGroupTimer)
       unsubscribeGuest()
       clearInterval(placeGroupTimer)
@@ -288,6 +310,7 @@ export function useHub() {
       conn.off('CatalogChanged', onCatalog)
       conn.off('ServiceRequestChanged', onServiceRequest)
       conn.off('PlaceCleared', onPlaceCleared)
+      conn.off('AccountChanged', refreshAccount)
     }
   }, [queryClient])
 }

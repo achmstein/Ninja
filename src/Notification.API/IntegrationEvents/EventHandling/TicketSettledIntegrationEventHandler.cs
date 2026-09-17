@@ -9,8 +9,9 @@ namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
 /// The bill for a place was paid: the sitting there is over for everyone
 /// who scanned its code, not only for whoever ordered (they hear about their
 /// own orders separately). Every phone in the place's group drops the table
-/// and shows its thanks (docs/visit-tab.html). No push — the customer is
-/// at the table, phone in hand.
+/// (docs/visit-tab.html), and anyone whose tab the settle charged hears
+/// that their balance moved. No push — the customer is at the table, phone
+/// in hand.
 /// </summary>
 public class TicketSettledIntegrationEventHandler(
     IHubContext<NotificationHub> hubContext,
@@ -18,6 +19,21 @@ public class TicketSettledIntegrationEventHandler(
 {
     public async Task Handle(TicketSettledIntegrationEvent @event)
     {
+        // A share on someone's tab: that account holder reads their balance
+        // again, whether or not they ordered or scanned anything
+        foreach (var customerId in (@event.AccountCharges ?? []).Select(c => c.CustomerId).Distinct())
+        {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                continue;
+            }
+            await hubContext.Clients.Group($"user:{customerId}").SendAsync("AccountChanged", new
+            {
+                ticketId = @event.TicketId,
+                receiptNumber = @event.ReceiptNumber
+            });
+        }
+
         if (@event.PlaceId is not int placeId)
         {
             return;

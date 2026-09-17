@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   getMyAccountOptions,
   getMyTransactionsOptions,
@@ -72,8 +72,8 @@ function AccountPage() {
           <div className='divide-y'>
             {transactions.map((tx) => {
               const isCharge = (tx.type ?? '').toLowerCase() === 'charge'
-              return (
-                <div key={String(tx.id)} className='flex items-start gap-3 py-3'>
+              const row = (
+                <>
                   <span
                     className={`w-24 shrink-0 rounded-md px-2 py-1 text-center text-sm font-semibold tabular-nums ${
                       isCharge
@@ -104,12 +104,31 @@ function AccountPage() {
                           : tx.source === 'posTabPayment' &&
                               tx.sourceNumber != null
                             ? t('posTabPayment', { number: tx.sourceNumber })
-                          : tx.description ||
-                            (tx.recordedBy
-                              ? t('byPerson', { name: tx.recordedBy })
-                              : '')}
+                            : tx.description ||
+                              (tx.recordedBy
+                                ? t('byPerson', { name: tx.recordedBy })
+                                : '')}
                     </div>
                   </div>
+                </>
+              )
+              // A charge the till posted from a receipt opens that receipt;
+              // the rest of the ledger has nothing behind it to open
+              return tx.ticketId != null ? (
+                <Link
+                  key={String(tx.id)}
+                  to='/receipts/$ticketId'
+                  params={{ ticketId: String(tx.ticketId) }}
+                  className='flex items-start gap-3 py-3'
+                >
+                  {row}
+                </Link>
+              ) : (
+                <div
+                  key={String(tx.id)}
+                  className='flex items-start gap-3 py-3'
+                >
+                  {row}
                 </div>
               )
             })}

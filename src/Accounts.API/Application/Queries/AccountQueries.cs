@@ -130,8 +130,26 @@ public class AccountQueries : IAccountQueries
                 _ => "manual"
             },
             SourceNumber = transaction.SourceNumber,
+            TicketId = TicketIdOf(transaction),
             RecordedBy = transaction.RecordedBy,
             CreatedAt = transaction.CreatedAt
         };
+    }
+
+    /// <summary>
+    /// A receipt charge is posted under "sales-ticket:{ticketId}:{customerId}"
+    /// (see TicketSettledIntegrationEventHandler); the ticket id is read back
+    /// out of it, so the customer can open the receipt from the ledger.
+    /// </summary>
+    private static int? TicketIdOf(AccountTransaction transaction)
+    {
+        const string prefix = "sales-ticket:";
+        if (transaction.Source != TransactionSource.PosReceipt
+            || transaction.Reference is null
+            || !transaction.Reference.StartsWith(prefix, StringComparison.Ordinal))
+            return null;
+        var rest = transaction.Reference.AsSpan(prefix.Length);
+        var end = rest.IndexOf(':');
+        return int.TryParse(end < 0 ? rest : rest[..end], out var id) ? id : null;
     }
 }
