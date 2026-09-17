@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
-import { Check, Moon, Sun } from 'lucide-react'
+import { Check, SunMoon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
-import { useT } from '@/lib/i18n'
-import { Button } from '@/components/ui/button'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { TileButton } from '@/components/tile-row'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+const themeLabel: Record<string, TranslationKey> = {
+  light: 'light',
+  dark: 'dark',
+  system: 'systemDefault',
+}
+
+/** The theme row on the settings page: a tile like its neighbours, the
+ *  current choice before the chevron, the choices in a menu. */
 export function ThemeSwitch() {
   const { theme, setTheme } = useTheme()
   const t = useT()
@@ -25,11 +33,11 @@ export function ThemeSwitch() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' className='scale-95 rounded-full'>
-          <Sun className='size-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' />
-          <Moon className='absolute size-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0' />
-          <span className='sr-only'>{t('theme')}</span>
-        </Button>
+        <TileButton
+          icon={SunMoon}
+          label={t('theme')}
+          value={t(themeLabel[theme] ?? 'systemDefault')}
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={() => setTheme('light')}>

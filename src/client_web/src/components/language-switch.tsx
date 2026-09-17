@@ -1,7 +1,7 @@
 import { Check, Languages } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage, useT } from '@/lib/i18n'
-import { Button } from '@/components/ui/button'
+import { TileButton } from '@/components/tile-row'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+/** The language row on the settings page: a tile like its neighbours, the
+ *  current language before the chevron, both languages in a menu. */
 export function LanguageSwitch() {
   const { language, setLanguage } = useLanguage()
   const t = useT()
@@ -16,10 +18,11 @@ export function LanguageSwitch() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant='ghost' size='icon' className='scale-95 rounded-full'>
-          <Languages className='size-[1.2rem]' />
-          <span className='sr-only'>{t('language')}</span>
-        </Button>
+        <TileButton
+          icon={Languages}
+          label={t('language')}
+          value={language === 'ar' ? 'العربية' : 'English'}
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={() => setLanguage('ar')}>

@@ -12,6 +12,8 @@ type TileContentProps = {
   icon: React.ComponentType<{ className?: string }>
   label: string
   sublabel?: React.ReactNode
+  /** The row's current setting, before the chevron */
+  value?: React.ReactNode
   destructive?: boolean
 }
 
@@ -19,6 +21,7 @@ function TileContent({
   icon: Icon,
   label,
   sublabel,
+  value,
   destructive,
 }: TileContentProps) {
   return (
@@ -38,6 +41,11 @@ function TileContent({
           </span>
         )}
       </span>
+      {value && (
+        <span className='text-muted-foreground shrink-0 text-[13px] font-normal'>
+          {value}
+        </span>
+      )}
       <ChevronRight
         className={cn(
           'h-4 w-4 shrink-0 rtl:rotate-180',
@@ -76,6 +84,7 @@ export function TileButton({
   icon,
   label,
   sublabel,
+  value,
   destructive,
   className,
   ...props
@@ -95,6 +104,7 @@ export function TileButton({
         icon={icon}
         label={label}
         sublabel={sublabel}
+        value={value}
         destructive={destructive}
       />
     </button>

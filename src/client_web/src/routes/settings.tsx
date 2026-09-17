@@ -157,14 +157,9 @@ function SettingsPage() {
           {t('appearance')}
         </h2>
         <Card className='gap-0 divide-y p-0'>
-          <div className='flex items-center justify-between p-4'>
-            <span className='text-[15px] font-medium'>{t('theme')}</span>
-            <ThemeSwitch />
-          </div>
-          <div className='flex items-center justify-between p-4'>
-            <span className='text-[15px] font-medium'>{t('language')}</span>
-            <LanguageSwitch />
-          </div>
+          {/* Tiles like every other row here, the choice in a menu */}
+          <ThemeSwitch />
+          <LanguageSwitch />
           {/* Android: the native prompt. iOS: the share-sheet walkthrough.
               Nothing once installed, or where neither route exists */}
           {(canInstall || (isIos && !isStandalone)) && (
