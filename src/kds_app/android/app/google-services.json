@@ -1,0 +1,86 @@
+{
+  "project_info": {
+    "project_number": "1077963122629",
+    "project_id": "chillax-b6289",
+    "storage_bucket": "chillax-b6289.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077963122629:android:d7136b55599e2e87924dac",
+        "android_client_info": {
+          "package_name": "com.chillax.admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCdPVGQ8Xa8bk93sEjCNBIv5dnjNIATdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077963122629:android:1ac87c93529a3b67924dac",
+        "android_client_info": {
+          "package_name": "com.chillax.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCdPVGQ8Xa8bk93sEjCNBIv5dnjNIATdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077963122629:android:ca278ad5424fe035924dac",
+        "android_client_info": {
+          "package_name": "com.chillax.kds"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCdPVGQ8Xa8bk93sEjCNBIv5dnjNIATdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077963122629:android:5d8c806714cd224a924dac",
+        "android_client_info": {
+          "package_name": "com.chillax.pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCdPVGQ8Xa8bk93sEjCNBIv5dnjNIATdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
