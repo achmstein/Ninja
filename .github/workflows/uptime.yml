@@ -1,0 +1,48 @@
+name: Uptime
+
+# Is the site up, every 15 minutes, from outside the server. One probe per
+# service through the public edge (Caddy -> BFF -> the API's /health, which
+# covers its database and the event bus), plus the web apps and Keycloak.
+# A failed run is the alert: GitHub mails the repository owner. There is no
+# state and no dashboard on purpose; the Actions history is the log.
+#
+# GitHub pauses scheduled workflows after 60 days without a commit; a push
+# resumes them.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe
+        run: |
+          set -e
+          failed=0
+          probe() {
+            local url="$1"
+            # Two tries a few seconds apart, so a single dropped packet is not an alarm
+            for i in 1 2; do
+              code=$(curl -sS -o /dev/null --max-time 15 -w '%{http_code}' "$url" 2>/dev/null || echo none)
+              [ "$code" = "200" ] && { echo "ok   $url"; return 0; }
+              sleep 5
+            done
+            echo "::error::DOWN $url -> HTTP $code"
+            failed=1
+          }
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
+            probe "https://api.chillax.site/health/$svc"
+          done
+          for host in app admin pos kds; do
+            probe "https://$host.chillax.site/"
+          done
+          probe "https://auth.chillax.site/realms/chillax"
+          [ "$failed" = 0 ] || exit 1

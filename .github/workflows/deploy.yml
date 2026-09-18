@@ -86,6 +86,10 @@ jobs:
             sed -i "/^  ${svc}:$/a\    restart: \"unless-stopped\"" deploy-artifacts/docker-compose.yaml
           done
 
+          # The nightly backup script and its restore runbook live beside the compose file
+          cp deploy/backup.sh deploy-artifacts/backup.sh
+          cp deploy/restore.md deploy-artifacts/restore.md
+
           # Copy Caddy files for TLS termination
           cp deploy/docker-compose.caddy.yml deploy-artifacts/docker-compose.caddy.yml
           cp deploy/Caddyfile deploy-artifacts/Caddyfile
@@ -183,17 +187,67 @@ jobs:
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml pull --ignore-buildable
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml up -d --build --remove-orphans
 
+            # Dead-lettering for the queues that predate it: a queue's
+            # arguments are fixed at its first declaration, so the broker
+            # policy is what covers the old ones (new queues declare it
+            # themselves - RabbitMQEventBus.DeclareQueueAsync). Idempotent;
+            # the node may still be booting right after a recreate.
+            for i in $(seq 1 12); do
+              docker compose -f docker-compose.yaml -f docker-compose.caddy.yml exec -T eventbus \
+                rabbitmqctl set_policy dead-letter ".*" '{"dead-letter-exchange":"chillax_dead_letters"}' --apply-to queues \
+                && break
+              [ "$i" -eq 12 ] && { echo "ERROR: could not set the dead-letter policy"; exit 1; }
+              sleep 5
+            done
+
             # The Caddyfile is a single-file bind mount: scp replaces it with a
             # new inode, so the running container keeps seeing the OLD file and
             # a `caddy reload` inside it reloads stale config. Recreating the
             # container re-resolves the mount to the new file (~2s blip).
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml up -d --force-recreate caddy
 
+            # The nightly backup (deploy/backup.sh): 05:15 UTC is 08:15 in
+            # Cairo, after the overnight shift has closed. Installed on every
+            # deploy so the crontab line always matches the shipped script;
+            # backup.yml checks the result each morning.
+            chmod +x backup.sh
+            mkdir -p backups
+            ( crontab -l 2>/dev/null | grep -v 'chillax-backup' ;               echo "15 5 * * * cd $(pwd) && ./backup.sh >> $(pwd)/backups/backup.log 2>&1 # chillax-backup" ) | crontab -
+
             # Cleanup old images
             docker image prune -f
 
             # Show running containers
             docker compose -f docker-compose.yaml -f docker-compose.caddy.yml ps
+
+      # The deploy is not done until the site answers. Each API's /health
+      # (database + event bus + self, through Caddy and the BFF), the three
+      # web apps and Keycloak; the services migrate on start, so give them
+      # a few minutes. A failure here fails the run - the alert that was
+      # missing on 2026-09-09.
+      - name: Smoke-test the deployment
+        run: |
+          set -e
+          check() {
+            local url="$1" tries="${2:-36}"
+            for i in $(seq 1 "$tries"); do
+              body=$(curl -sS --max-time 10 -w '\n%{http_code}' "$url" 2>/dev/null || true)
+              code=$(echo "$body" | tail -1)
+              if [ "$code" = "200" ]; then echo "ok   $url"; return 0; fi
+              sleep 5
+            done
+            echo "::error::FAIL $url -> HTTP ${code:-none} ($(echo "$body" | head -1 | cut -c1-120))"
+            return 1
+          }
+          failed=0
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
+            check "https://api.chillax.site/health/$svc" || failed=1
+          done
+          for host in app admin pos kds; do
+            check "https://$host.chillax.site/" 6 || failed=1
+          done
+          check "https://auth.chillax.site/realms/chillax" 6 || failed=1
+          [ "$failed" = 0 ] || { echo "::error::smoke test failed - see above"; exit 1; }
 
       - name: Setup Keycloak token exchange
         uses: appleboy/ssh-action@v1

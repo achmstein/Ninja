@@ -1,0 +1,112 @@
+name: Backup
+
+# The nightly backup runs on the server (deploy/backup.sh, cron at 05:15
+# UTC). This workflow is the part that cannot live on the server: it checks
+# the newest archive is fresh every morning and keeps an encrypted copy off
+# the machine as a workflow artifact, so a lost disk is not a lost cafe.
+# A failed run is the alert: GitHub mails the repository owner.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      run_backup_now:
+        description: 'Run backup.sh on the server first'
+        type: boolean
+        default: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare SSH
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SERVER_SSH_KEY" > ~/.ssh/server.key
+          chmod 600 ~/.ssh/server.key
+          echo "StrictHostKeyChecking accept-new" > ~/.ssh/config
+
+      - name: Run backup on the server
+        if: ${{ inputs.run_backup_now }}
+        run: |
+          ssh -i ~/.ssh/server.key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            'bash ${{ secrets.DEPLOY_PATH }}/backup.sh'
+
+      - name: Check the newest archive
+        id: check
+        run: |
+          set -e
+          latest=$(ssh -i ~/.ssh/server.key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            'readlink -f ${{ secrets.DEPLOY_PATH }}/backups/latest.tar.gz 2>/dev/null || true')
+          if [ -z "$latest" ]; then
+            echo "::error::no backup archive on the server - has deploy.yml installed the cron job?"
+            exit 1
+          fi
+          read -r age_seconds size_bytes <<< "$(ssh -i ~/.ssh/server.key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "echo \$(( \$(date +%s) - \$(stat -c %Y '$latest') )) \$(stat -c %s '$latest')")"
+          echo "newest: $latest, $((age_seconds / 3600)) h old, $((size_bytes / 1024)) KB"
+          # A day plus slack; older means the cron did not run or failed
+          if [ "$age_seconds" -gt $((26 * 3600)) ]; then
+            echo "::error::newest backup is $((age_seconds / 3600)) hours old - check backups/backup.log on the server"
+            exit 1
+          fi
+          # An empty cluster dumps to a few KB; a real one is far more
+          if [ "$size_bytes" -lt 51200 ]; then
+            echo "::error::newest backup is only $size_bytes bytes - the dump is probably empty"
+            exit 1
+          fi
+          echo "path=$latest" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$latest")" >> "$GITHUB_OUTPUT"
+
+      - name: Copy it off the server
+        run: |
+          scp -i ~/.ssh/server.key \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ steps.check.outputs.path }}" \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ steps.check.outputs.path }}.sha256" .
+          sha256sum -c "${{ steps.check.outputs.name }}.sha256"
+
+      # The archive holds customer names, phones and Keycloak credential
+      # hashes: it leaves the server only encrypted. Without the passphrase
+      # the copy is skipped, and the warning below is the reminder to add
+      # the BACKUP_PASSPHRASE repository secret.
+      - name: Encrypt
+        id: encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::warning::BACKUP_PASSPHRASE secret is not set - the archive was checked but not copied off the server"
+            echo "encrypted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$BACKUP_PASSPHRASE" \
+            -o "${{ steps.check.outputs.name }}.gpg" "${{ steps.check.outputs.name }}"
+          rm "${{ steps.check.outputs.name }}"
+          echo "encrypted=true" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the encrypted copy
+        if: ${{ steps.encrypt.outputs.encrypted == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.check.outputs.name }}
+          path: ${{ steps.check.outputs.name }}.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      # A message a service could not handle is parked on the dead-letters
+      # queue rather than dropped (RabbitMQEventBus). One there is a bug or
+      # an outage to look at, so the day's check goes red until it is dealt
+      # with; the archive above was copied first. See deploy/monitoring.md.
+      - name: Dead letters
+        if: ${{ always() && steps.check.outcome == 'success' }}
+        run: |
+          depth=$(ssh -i ~/.ssh/server.key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "cd ${{ secrets.DEPLOY_PATH }} && docker compose -f docker-compose.yaml -f docker-compose.caddy.yml exec -T eventbus rabbitmqctl list_queues name messages --quiet 2>/dev/null | awk '\$1==\"dead-letters\"{print \$2}'")
+          echo "dead-letters queue depth: ${depth:-0}"
+          if [ "${depth:-0}" -gt 0 ]; then
+            echo "::error::${depth} dead-lettered message(s) on the event bus - see deploy/monitoring.md"
+            exit 1
+          fi

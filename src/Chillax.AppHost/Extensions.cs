@@ -224,6 +224,21 @@ internal static class Extensions
             var branchCluster = yarp.AddCluster(branchApi);
             yarp.AddRoute("/api/branches/{*any}", branchCluster);
 
+            // Health, one path per service, so the edge can ask each API
+            // whether it is up and can reach its database and the bus:
+            // api.chillax.site/health/sales -> sales-api/health. Read by the
+            // post-deploy smoke in deploy.yml and the uptime workflow.
+            foreach (var (name, cluster) in new (string, YarpCluster)[]
+            {
+                ("catalog", catalogCluster), ("ordering", orderingCluster), ("spaces", spacesCluster),
+                ("sales", salesCluster), ("inventory", inventoryCluster), ("payroll", payrollCluster),
+                ("finance", financeCluster), ("identity", identityCluster), ("loyalty", loyaltyCluster),
+                ("notification", notificationCluster), ("accounts", accountsCluster), ("branch", branchCluster),
+            })
+            {
+                yarp.AddRoute($"/health/{name}", cluster).WithTransformPathSet("/health");
+            }
+
             // Keycloak routes (for mobile app authentication)
             // YARP's default X-Forwarded transforms describe its own hop
             // (plain http, prefix stripped), which makes Keycloak generate
