@@ -68,6 +68,7 @@ export type CreateOrderRequest = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
+    promoCode?: null | string;
 };
 
 export type KitchenOrder = {
@@ -119,6 +120,8 @@ export type Order = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    promoCode?: null | string;
+    promoDiscount?: number | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -184,6 +187,8 @@ export type OrderSummary = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    promoCode?: null | string;
+    promoDiscount?: number | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;

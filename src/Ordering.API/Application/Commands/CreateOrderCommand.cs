@@ -137,6 +137,9 @@ public class CreateOrderCommand : IRequest<int>
     /// </summary>
     [DataMember]
     public OrderSource Source { get; private set; }
+    /// <summary>A promo code typed at checkout in the customer app; the till never sends one.</summary>
+    [DataMember]
+    public string? PromoCode { get; private set; }
 
     /// <summary>
     /// True when nobody signed in to place this order and it isn't a counter
@@ -177,9 +180,11 @@ public class CreateOrderCommand : IRequest<int>
         bool replay = false,
         int? placeId = null,
         string? placeKind = null,
-        LocalizedText? placeName = null)
+        LocalizedText? placeName = null,
+        string? promoCode = null)
     {
         _orderItems = basketItems.ToOrderItemsDTO().ToList();
+        PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim();
         PlaceId = placeId;
         PlaceKind = placeKind;
         PlaceName = placeName;

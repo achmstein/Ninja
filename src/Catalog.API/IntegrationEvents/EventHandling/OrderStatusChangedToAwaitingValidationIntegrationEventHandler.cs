@@ -36,9 +36,55 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
 
         var confirmedIntegrationEvent = confirmedOrderStockItems.Any(c => !c.HasStock)
             ? (IntegrationEvent)new OrderStockRejectedIntegrationEvent(@event.OrderId, confirmedOrderStockItems)
-            : new OrderStockConfirmedIntegrationEvent(@event.OrderId);
+            : await ConfirmWithPromoAsync(@event);
 
         await catalogIntegrationEventService.SaveEventAndCatalogContextChangesAsync(confirmedIntegrationEvent);
         await catalogIntegrationEventService.PublishThroughEventBusAsync(confirmedIntegrationEvent);
+    }
+
+    /// <summary>
+    /// The items are in: redeem the promo code the order carried, if any.
+    /// Redeemed once per order (a redelivered event finds its redemption and
+    /// repeats the same answer), and a code that does not apply confirms the
+    /// order at full price with the reason — the cart quoted it, so the
+    /// customer only loses the discount if the code ran out in between.
+    /// </summary>
+    private async Task<OrderStockConfirmedIntegrationEvent> ConfirmWithPromoAsync(OrderStatusChangedToAwaitingValidationIntegrationEvent @event)
+    {
+        if (string.IsNullOrWhiteSpace(@event.PromoCode))
+            return new OrderStockConfirmedIntegrationEvent(@event.OrderId);
+
+        var code = PromoCode.Normalize(@event.PromoCode);
+
+        var already = await catalogContext.PromoRedemptions.FirstOrDefaultAsync(r => r.OrderId == @event.OrderId);
+        if (already is not null)
+            return new OrderStockConfirmedIntegrationEvent(@event.OrderId, already.Code, already.Discount);
+
+        var promo = await catalogContext.PromoCodes.FirstOrDefaultAsync(p => p.Code == code);
+        if (promo is null)
+            return new OrderStockConfirmedIntegrationEvent(@event.OrderId, code, 0, PromoRefusal.NotFound);
+
+        var customerKey = @event.CustomerKey ?? string.Empty;
+        var used = customerKey.Length > 0
+            && await catalogContext.PromoRedemptions.AnyAsync(r => r.Code == code && r.CustomerKey == customerKey);
+
+        var quote = promo.Evaluate(@event.ItemsTotal, used, DateTime.UtcNow);
+        if (!quote.Valid)
+        {
+            logger.LogInformation("Promo {Code} not applied to order {OrderId}: {Reason}", code, @event.OrderId, quote.Reason);
+            return new OrderStockConfirmedIntegrationEvent(@event.OrderId, code, 0, quote.Reason);
+        }
+
+        promo.Uses++;
+        catalogContext.PromoRedemptions.Add(new PromoRedemption
+        {
+            Code = code,
+            OrderId = @event.OrderId,
+            CustomerKey = customerKey,
+            Discount = quote.Discount,
+            RedeemedAt = DateTime.UtcNow,
+        });
+
+        return new OrderStockConfirmedIntegrationEvent(@event.OrderId, code, quote.Discount);
     }
 }

@@ -131,6 +131,16 @@ public class Order
     public double LoyaltyDiscount { get; private set; }
 
     /// <summary>
+    /// The promo code typed at checkout: as requested while the items are
+    /// being checked, then as Catalog redeemed it — or null once Catalog said
+    /// it does not apply.
+    /// </summary>
+    public string? PromoCode { get; private set; }
+
+    /// <summary>What the promo code took off, in currency; set when the items check out.</summary>
+    public decimal PromoDiscount { get; private set; }
+
+    /// <summary>
     /// The branch this order was placed at
     /// </summary>
     public int BranchId { get; private set; }
@@ -220,9 +230,10 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null) : this()
+    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null) : this()
     {
         BuyerId = buyerId;
+        PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
         OrderStatus = OrderStatus.AwaitingValidation;
         // A replayed offline sale is dated when it was rung up, not when it reached us
         OrderDate = placedAt ?? DateTime.UtcNow;
@@ -406,9 +417,11 @@ public class Order
     }
 
     /// <summary>
-    /// Set order to submitted after stock validation passes
+    /// Set order to submitted after stock validation passes. Catalog answers
+    /// the promo code in the same breath: the code as redeemed and its worth,
+    /// or nothing when it did not apply.
     /// </summary>
-    public void SetStockConfirmedStatus()
+    public void SetStockConfirmedStatus(string? promoCode = null, decimal promoDiscount = 0)
     {
         if (OrderStatus != OrderStatus.AwaitingValidation)
         {
@@ -417,6 +430,8 @@ public class Order
 
         OrderStatus = OrderStatus.Submitted;
         Description = "Items validated. Order ready for confirmation.";
+        PromoCode = promoDiscount > 0 ? promoCode : null;
+        PromoDiscount = Math.Clamp(promoDiscount, 0, Math.Max(0, GetItemsTotal()));
         AddDomainEvent(new OrderStatusChangedToSubmittedDomainEvent(Id));
     }
 
@@ -558,9 +573,9 @@ public class Order
 
     /// <summary>
     /// What the customer actually pays: items net of line discounts, minus the
-    /// loyalty discount. Never negative.
+    /// promo and loyalty discounts. Never negative.
     /// </summary>
-    public decimal GetTotal() => Math.Max(0, GetItemsTotal() - (decimal)LoyaltyDiscount);
+    public decimal GetTotal() => Math.Max(0, GetItemsTotal() - PromoDiscount - (decimal)LoyaltyDiscount);
 
     /// <summary>
     /// Check if the order can be rated (must be confirmed)

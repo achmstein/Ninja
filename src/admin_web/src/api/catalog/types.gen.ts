@@ -178,6 +178,41 @@ export type ProblemDetails = {
     instance?: null | string;
 };
 
+export type PromoCodeDto = {
+    id: number | string;
+    code: string;
+    kind: PromoKind;
+    value: number | string;
+    minSubtotal: null | number | string;
+    startsAt: null | string;
+    endsAt: null | string;
+    maxUses: null | number | string;
+    oncePerCustomer: boolean;
+    isActive: boolean;
+    uses: number | string;
+};
+
+export type PromoCodeRequest = {
+    code: string;
+    kind: PromoKind;
+    value: number | string;
+    minSubtotal?: null | number | string;
+    startsAt?: null | string;
+    endsAt?: null | string;
+    maxUses?: null | number | string;
+    oncePerCustomer?: boolean;
+    isActive?: boolean;
+};
+
+export type PromoKind = number;
+
+export type PromoQuote = {
+    code: string;
+    discount: number | string;
+    reason: null | string;
+    valid?: boolean;
+};
+
 export type ProposedCategory = {
     name: LocalizedText;
     catalogTypeId: null | number | string;
@@ -233,6 +268,10 @@ export type SetItemOfferRequest = {
     offerWeekdays?: null | number | string;
     offerFrom?: null | string;
     offerTo?: null | string;
+};
+
+export type SetPromoActiveRequest = {
+    isActive: boolean;
 };
 
 export type SuggestCustomizationsRequest = {
@@ -389,6 +428,243 @@ export type ScanMenuResponses = {
 };
 
 export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
+
+export type QuotePromoData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The code as typed
+         */
+        code: string;
+        /**
+         * The cart's items subtotal
+         */
+        subtotal: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos/quote';
+};
+
+export type QuotePromoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type QuotePromoError = QuotePromoErrors[keyof QuotePromoErrors];
+
+export type QuotePromoResponses = {
+    /**
+     * OK
+     */
+    200: PromoQuote;
+};
+
+export type QuotePromoResponse = QuotePromoResponses[keyof QuotePromoResponses];
+
+export type ListPromosData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos';
+};
+
+export type ListPromosErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListPromosResponses = {
+    /**
+     * OK
+     */
+    200: Array<PromoCodeDto>;
+};
+
+export type ListPromosResponse = ListPromosResponses[keyof ListPromosResponses];
+
+export type CreatePromoData = {
+    body: PromoCodeRequest;
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos';
+};
+
+export type CreatePromoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreatePromoError = CreatePromoErrors[keyof CreatePromoErrors];
+
+export type CreatePromoResponses = {
+    /**
+     * Created
+     */
+    201: PromoCodeDto;
+};
+
+export type CreatePromoResponse = CreatePromoResponses[keyof CreatePromoResponses];
+
+export type DeletePromoData = {
+    body?: never;
+    path: {
+        /**
+         * The promo code id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos/{id}';
+};
+
+export type DeletePromoErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeletePromoResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeletePromoResponse = DeletePromoResponses[keyof DeletePromoResponses];
+
+export type UpdatePromoData = {
+    body: PromoCodeRequest;
+    path: {
+        /**
+         * The promo code id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos/{id}';
+};
+
+export type UpdatePromoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdatePromoError = UpdatePromoErrors[keyof UpdatePromoErrors];
+
+export type UpdatePromoResponses = {
+    /**
+     * OK
+     */
+    200: PromoCodeDto;
+};
+
+export type UpdatePromoResponse = UpdatePromoResponses[keyof UpdatePromoResponses];
+
+export type SetPromoActiveData = {
+    body: SetPromoActiveRequest;
+    path: {
+        /**
+         * The promo code id
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/promos/{id}/active';
+};
+
+export type SetPromoActiveErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPromoActiveResponses = {
+    /**
+     * OK
+     */
+    200: PromoCodeDto;
+};
+
+export type SetPromoActiveResponse = SetPromoActiveResponses[keyof SetPromoActiveResponses];
 
 export type ListItemsData = {
     body?: never;

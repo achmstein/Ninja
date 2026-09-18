@@ -220,6 +220,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pointsDiscount => 'Points discount';
 
   @override
+  String get promoCode => 'Promo code';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get removePromo => 'Remove code';
+
+  @override
+  String get promoDiscount => 'Promo discount';
+
+  @override
+  String get promoNotFound => 'Code not found';
+
+  @override
+  String get promoNotValidNow => 'Code not valid right now';
+
+  @override
+  String get promoUsedUp => 'Code has been used up';
+
+  @override
+  String get promoAlreadyUsed => 'You already used this code';
+
+  @override
+  String get promoBelowMinimum => 'Order too small for this code';
+
+  @override
   String get total => 'Total';
 
   @override

@@ -23,6 +23,7 @@ import { Route as AuthenticatedTillIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedRequestsIndexRouteImport } from './routes/_authenticated/requests/index'
+import { Route as AuthenticatedPromosIndexRouteImport } from './routes/_authenticated/promos/index'
 import { Route as AuthenticatedPlacesIndexRouteImport } from './routes/_authenticated/places/index'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications/index'
@@ -124,6 +125,12 @@ const AuthenticatedRequestsIndexRoute =
   AuthenticatedRequestsIndexRouteImport.update({
     id: '/requests/',
     path: '/requests/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPromosIndexRoute =
+  AuthenticatedPromosIndexRouteImport.update({
+    id: '/promos/',
+    path: '/promos/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPlacesIndexRoute =
@@ -348,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
+  '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
@@ -394,6 +402,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/places': typeof AuthenticatedPlacesIndexRoute
+  '/promos': typeof AuthenticatedPromosIndexRoute
   '/requests': typeof AuthenticatedRequestsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
@@ -442,6 +451,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/places/': typeof AuthenticatedPlacesIndexRoute
+  '/_authenticated/promos/': typeof AuthenticatedPromosIndexRoute
   '/_authenticated/requests/': typeof AuthenticatedRequestsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/places'
+    | '/promos'
     | '/requests'
     | '/settings'
     | '/staff'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/places'
+    | '/promos'
     | '/requests'
     | '/settings'
     | '/staff'
@@ -583,6 +595,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications/'
     | '/_authenticated/orders/'
     | '/_authenticated/places/'
+    | '/_authenticated/promos/'
     | '/_authenticated/requests/'
     | '/_authenticated/settings/'
     | '/_authenticated/staff/'
@@ -703,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/requests'
       preLoaderRoute: typeof AuthenticatedRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/promos/': {
+      id: '/_authenticated/promos/'
+      path: '/promos'
+      fullPath: '/promos'
+      preLoaderRoute: typeof AuthenticatedPromosIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/places/': {
@@ -954,6 +974,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
   AuthenticatedPlacesIndexRoute: typeof AuthenticatedPlacesIndexRoute
+  AuthenticatedPromosIndexRoute: typeof AuthenticatedPromosIndexRoute
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
@@ -993,6 +1014,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
   AuthenticatedPlacesIndexRoute: AuthenticatedPlacesIndexRoute,
+  AuthenticatedPromosIndexRoute: AuthenticatedPromosIndexRoute,
   AuthenticatedRequestsIndexRoute: AuthenticatedRequestsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,

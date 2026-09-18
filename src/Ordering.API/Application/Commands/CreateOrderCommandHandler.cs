@@ -55,7 +55,8 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             placedAt: message.PlacedAt,
             placeId: message.PlaceId,
             placeKind: message.PlaceKind,
-            placeName: message.PlaceName);
+            placeName: message.PlaceName,
+            promoCode: message.PromoCode);
 
         foreach (var item in message.OrderItems)
         {
@@ -82,8 +83,15 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             var orderStockItems = message.OrderItems
                 .Select(i => new OrderStockItem(i.ProductId, i.Units));
 
+            // The promo code travels with the stock check so Catalog can redeem
+            // it against who is ordering: the account, or the guest device
             var awaitingValidationEvent = new OrderStatusChangedToAwaitingValidationIntegrationEvent(
-                order.Id, orderStockItems, message.BranchId);
+                order.Id,
+                orderStockItems,
+                message.BranchId,
+                order.PromoCode,
+                string.IsNullOrEmpty(message.UserId) ? order.GuestId : message.UserId,
+                itemsTotal);
 
             await _orderingIntegrationEventService.AddAndSaveEventAsync(awaitingValidationEvent);
         }

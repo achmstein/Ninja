@@ -12,7 +12,9 @@ import {
   Plus,
   QrCode,
   ShoppingBag,
+  Tag,
   Trash2,
+  X,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
@@ -20,7 +22,10 @@ import {
   getAccountOptions,
   getPointsValueOptions,
 } from '@/api/loyalty/@tanstack/react-query.gen'
-import { saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import {
+  quotePromoOptions,
+  saveUserPreferencesMutation,
+} from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import {
   AlertDialog,
@@ -32,6 +37,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
@@ -97,6 +103,10 @@ function CartPage() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [redeemEnabled, setRedeemEnabled] = useState(false)
   const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [promoInput, setPromoInput] = useState('')
+  // The code as applied; Catalog quotes it against the live subtotal and
+  // redeems it when the order's items check out
+  const [promoCode, setPromoCode] = useState<string | null>(null)
 
   const userId = auth.user?.profile?.sub ?? ''
 
@@ -128,6 +138,36 @@ function CartPage() {
     enabled: debouncedPoints > 0,
   })
 
+  const promoQuery = useQuery({
+    ...quotePromoOptions({
+      query: { 'api-version': API_VERSION, code: promoCode ?? '', subtotal },
+    }),
+    enabled: !!promoCode && subtotal > 0,
+    retry: false,
+  })
+  const promoQuote = promoCode ? promoQuery.data : undefined
+  const promoDiscount =
+    promoQuote && !promoQuote.reason
+      ? Math.min(Number(promoQuote.discount ?? 0), subtotal)
+      : 0
+  const promoReason = promoQuery.isError
+    ? 'error'
+    : (promoQuote?.reason ?? null)
+  const promoReasonKey = (reason: string) =>
+    reason === 'NotFound'
+      ? 'promoNotFound'
+      : reason === 'UsedUp'
+        ? 'promoUsedUp'
+        : reason === 'AlreadyUsed'
+          ? 'promoAlreadyUsed'
+          : reason === 'BelowMinimum'
+            ? 'promoBelowMinimum'
+            : 'promoNotValidNow'
+  const clearPromo = () => {
+    setPromoCode(null)
+    setPromoInput('')
+  }
+
   // The server owns the discount math; on failure redemption is inert until
   // the customer toggles it again (derived, no state sync needed)
   useEffect(() => {
@@ -140,7 +180,7 @@ function CartPage() {
     redeemActive && debouncedPoints > 0 && debouncedPoints === effectivePoints
       ? Math.min(Number(pointsValueQuery.data?.discountValue ?? 0), subtotal)
       : 0
-  const total = subtotal - discount
+  const total = Math.max(0, subtotal - promoDiscount - discount)
 
   const savePreferences = useMutation(saveUserPreferencesMutation())
 
@@ -209,6 +249,7 @@ function CartPage() {
       ]),
       note: note.trim(),
       points: discount > 0 ? debouncedPoints : 0,
+      promo: promoDiscount > 0 ? promoCode : null,
       // Signing in mid-cart makes it a different order, not a retry
       guest: guestId,
       // Moving between a table and a room makes it a different order, not a
@@ -254,6 +295,9 @@ function CartPage() {
             ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
             : null,
         customerNote: note.trim() || null,
+        // Only a code the quote accepted; the server drops one that no
+        // longer applies rather than failing the order
+        promoCode: promoDiscount > 0 ? promoCode : null,
         // Loyalty needs an account to redeem against; the server rejects a
         // guest order that claims either
         pointsToRedeem: !isGuest && discount > 0 ? debouncedPoints : 0,
@@ -487,6 +531,56 @@ function CartPage() {
           onChange={(e) => setNote(e.target.value)}
         />
 
+        {promoCode ? (
+          <div className='flex items-center gap-2 text-sm'>
+            <Tag
+              className={`h-4 w-4 shrink-0 ${promoReason ? 'text-destructive' : 'text-primary'}`}
+            />
+            <div className='flex min-w-0 flex-1 flex-col'>
+              <span className='font-semibold'>{promoCode}</span>
+              {promoReason && (
+                <span className='text-destructive text-xs'>
+                  {t(promoReasonKey(promoReason))}
+                </span>
+              )}
+            </div>
+            {promoQuery.isFetching ? (
+              <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
+            ) : (
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-7'
+                aria-label={t('removePromo')}
+                onClick={clearPromo}
+              >
+                <X className='h-4 w-4' />
+              </Button>
+            )}
+          </div>
+        ) : (
+          <form
+            className='flex gap-2'
+            onSubmit={(e) => {
+              e.preventDefault()
+              const code = promoInput.trim().toUpperCase()
+              if (code) setPromoCode(code)
+            }}
+          >
+            <Input
+              placeholder={t('promoCode')}
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value)}
+              className='uppercase'
+              autoCapitalize='characters'
+              autoComplete='off'
+            />
+            <Button type='submit' variant='outline' disabled={!promoInput.trim()}>
+              {t('apply')}
+            </Button>
+          </form>
+        )}
+
         {auth.isAuthenticated && maxRedeemable > 0 && (
           <div className='flex flex-col gap-3 border-t pt-4'>
             <div className='flex items-center justify-between'>
@@ -527,17 +621,23 @@ function CartPage() {
         )}
 
         <div className='space-y-1 border-t pt-4'>
+          {(discount > 0 || promoDiscount > 0) && (
+            <div className='text-muted-foreground flex items-center justify-between text-sm'>
+              <span>{t('subtotal')}</span>
+              <span className='tabular-nums'>{price(subtotal)}</span>
+            </div>
+          )}
+          {promoDiscount > 0 && (
+            <div className='flex items-center justify-between text-sm text-green-600 dark:text-green-500'>
+              <span>{t('promoDiscount')}</span>
+              <span className='tabular-nums'>−{price(promoDiscount)}</span>
+            </div>
+          )}
           {discount > 0 && (
-            <>
-              <div className='text-muted-foreground flex items-center justify-between text-sm'>
-                <span>{t('subtotal')}</span>
-                <span className='tabular-nums'>{price(subtotal)}</span>
-              </div>
-              <div className='flex items-center justify-between text-sm text-green-600 dark:text-green-500'>
-                <span>{t('pointsDiscount')}</span>
-                <span className='tabular-nums'>−{price(discount)}</span>
-              </div>
-            </>
+            <div className='flex items-center justify-between text-sm text-green-600 dark:text-green-500'>
+              <span>{t('pointsDiscount')}</span>
+              <span className='tabular-nums'>−{price(discount)}</span>
+            </div>
           )}
           <div className='flex items-center justify-between text-lg font-bold'>
             <span>{t('total')}</span>

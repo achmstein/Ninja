@@ -216,6 +216,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pointsDiscount => 'خصم النقط';
 
   @override
+  String get promoCode => 'كود خصم';
+
+  @override
+  String get apply => 'تطبيق';
+
+  @override
+  String get removePromo => 'شيل الكود';
+
+  @override
+  String get promoDiscount => 'خصم الكود';
+
+  @override
+  String get promoNotFound => 'الكود مش موجود';
+
+  @override
+  String get promoNotValidNow => 'الكود مش شغال دلوقتي';
+
+  @override
+  String get promoUsedUp => 'الكود خلص';
+
+  @override
+  String get promoAlreadyUsed => 'استخدمت الكود ده قبل كده';
+
+  @override
+  String get promoBelowMinimum => 'الطلب أقل من الحد الأدنى للكود';
+
+  @override
   String get total => 'الإجمالي';
 
   @override

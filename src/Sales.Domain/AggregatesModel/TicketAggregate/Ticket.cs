@@ -301,7 +301,9 @@ public class Ticket : Entity, IAggregateRoot
         IEnumerable<TicketLine> lines,
         double loyaltyDiscount,
         LocalizedText? loyaltyDiscountLabel = null,
-        string? guestPhone = null)
+        string? guestPhone = null,
+        string? promoCode = null,
+        decimal promoDiscount = 0)
     {
         EnsureOpen();
 
@@ -323,6 +325,19 @@ public class Ticket : Entity, IAggregateRoot
                 loyaltyDiscountLabel ?? new LocalizedText("Loyalty discount", "خصم نقاط الولاء"),
                 qty: 1,
                 unitPrice: -(decimal)loyaltyDiscount,
+                orderId: orderId));
+        }
+
+        // A promo code redeemed in the app: its own negative line under the
+        // code's name, so the receipt says where the money went
+        if (promoDiscount > 0)
+        {
+            var label = string.IsNullOrWhiteSpace(promoCode) ? "Promo" : $"Promo {promoCode}";
+            _lines.Add(new TicketLine(
+                TicketLineSource.Order,
+                new LocalizedText(label, string.IsNullOrWhiteSpace(promoCode) ? "كود خصم" : $"كود خصم {promoCode}"),
+                qty: 1,
+                unitPrice: -promoDiscount,
                 orderId: orderId));
         }
 

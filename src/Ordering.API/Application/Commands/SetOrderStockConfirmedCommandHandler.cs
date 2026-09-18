@@ -20,7 +20,7 @@ public class SetOrderStockConfirmedCommandHandler(
             return false;
         }
 
-        order.SetStockConfirmedStatus();
+        order.SetStockConfirmedStatus(command.PromoCode, command.PromoDiscount);
 
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }

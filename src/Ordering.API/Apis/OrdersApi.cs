@@ -290,7 +290,8 @@ public static partial class OrdersApi
                 roomId: request.RoomId,
                 placeId: request.PlaceId ?? place?.PlaceId,
                 placeKind: request.PlaceKind ?? place?.Kind,
-                placeName: request.PlaceName ?? place?.Name);
+                placeName: request.PlaceName ?? place?.Name,
+                promoCode: request.PromoCode);
 
             var requestCreateOrder = new IdentifiedCommand<CreateOrderCommand, int>(createOrderCommand, requestId);
 
@@ -882,7 +883,9 @@ public record CreateOrderRequest(
     int? RoomId = null,
     int? PlaceId = null,
     string? PlaceKind = null,
-    LocalizedText? PlaceName = null);
+    LocalizedText? PlaceName = null,
+    /// <summary>A promo code typed at checkout; quoted by Catalog beforehand, redeemed when the items check out.</summary>
+    string? PromoCode = null);
 
 /// <summary>
 /// Request model for a counter sale keyed in at the POS. The cashier is the

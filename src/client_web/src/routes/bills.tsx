@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { CircleAlert, Loader2, ReceiptText, Star, Timer } from 'lucide-react'
+import {
+  CircleAlert,
+  Loader2,
+  ReceiptText,
+  Star,
+  Tag,
+  Timer,
+} from 'lucide-react'
 import { rateOrder, type Order, type OrderSummary } from '@/api/ordering'
 import {
   getOrderOptions,
@@ -860,6 +867,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
     })
   )
   const discount = Number(order.loyaltyDiscount ?? 0)
+  const promoDiscount = Number(order.promoDiscount ?? 0)
   // LEGACY(places): roomName is the fallback for orders from before the
   // Places remodel — remove when Ordering stops filling the old room fields.
   const placeName = localized(order.placeName ?? order.roomName)
@@ -900,6 +908,12 @@ function OrderTile({ order }: { order: OrderSummary }) {
         <div className='text-[15px] font-bold tabular-nums'>
           {price(Number(order.total ?? 0) - discount)}
         </div>
+        {promoDiscount > 0 && (
+          <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
+            <Tag className='h-3 w-3' />
+            {t('discountFormat', { price: promoDiscount.toFixed(2) })}
+          </div>
+        )}
         {discount > 0 && (
           <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
             <Star className='h-3 w-3 fill-current' />

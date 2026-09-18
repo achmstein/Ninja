@@ -1625,6 +1625,12 @@
                 "$ref": "#/components/schemas/LocalizedText"
               }
             ]
+          },
+          "promoCode": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1912,6 +1918,20 @@
           },
           "loyaltyDiscount": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "promoCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "promoDiscount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"
@@ -2242,6 +2262,20 @@
           },
           "loyaltyDiscount": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "promoCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "promoDiscount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
               "string"

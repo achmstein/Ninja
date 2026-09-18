@@ -16,6 +16,7 @@ public static class CatalogApi
         var api = vApi.MapGroup("api/catalog").HasApiVersion(1, 0);
 
         api.MapCatalogAssistApi();
+        api.MapPromoApi();
 
         // Menu Items endpoints
         api.MapGet("/items", GetAllItems)

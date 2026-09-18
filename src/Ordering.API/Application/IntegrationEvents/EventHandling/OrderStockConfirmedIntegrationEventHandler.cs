@@ -17,7 +17,15 @@ public class OrderStockConfirmedIntegrationEventHandler(
         // has none. Calling the aggregate here threw ArgumentNullException
         // inside SaveEntitiesAsync, the bus swallowed it, and the whole status
         // change rolled back.
-        var submitted = await mediator.Send(new SetOrderStockConfirmedCommand(@event.OrderId));
+        if (@event.PromoReason is not null)
+        {
+            logger.LogInformation("Order {OrderId}: promo {Code} not applied ({Reason})", @event.OrderId, @event.PromoCode, @event.PromoReason);
+        }
+
+        // A code that gave nothing is dropped from the order rather than kept
+        // as a promise the bill will not honour
+        var promoCode = @event.PromoDiscount > 0 ? @event.PromoCode : null;
+        var submitted = await mediator.Send(new SetOrderStockConfirmedCommand(@event.OrderId, promoCode, @event.PromoDiscount));
 
         if (!submitted)
         {

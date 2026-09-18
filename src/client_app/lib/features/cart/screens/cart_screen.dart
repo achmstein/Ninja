@@ -13,6 +13,7 @@ import '../../../core/widgets/profile_gate.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
+import '../services/promo_service.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/loyalty_provider.dart';
 import '../../../core/models/localized_text.dart';
@@ -29,6 +30,7 @@ class CartScreen extends ConsumerStatefulWidget {
 
 class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _promoController = TextEditingController();
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   @override
   void dispose() {
     _noteController.dispose();
+    _promoController.dispose();
     super.dispose();
   }
 
@@ -138,6 +141,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<double>(cartTotalProvider, (_, total) => ref.read(promoProvider.notifier).requote(total));
     final cart = ref.watch(cartProvider);
     final checkoutState = ref.watch(checkoutProvider);
     final colors = context.theme.colors;
@@ -252,6 +256,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     ),
                                     const SizedBox(height: 16),
 
+                                    // Promo code
+                                    _buildPromoSection(cart.totalPrice, colors),
+                                    const SizedBox(height: 16),
+
                                     // Points redemption
                                     _buildPointsRedemption(cart.totalPrice, colors),
                                     const SizedBox(height: 16),
@@ -324,6 +332,76 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _applyPromo(double subtotal) {
+    FocusScope.of(context).unfocus();
+    ref.read(promoProvider.notifier).apply(_promoController.text, subtotal);
+  }
+
+  String _promoReason(AppLocalizations l10n, String reason) => switch (reason) {
+        'NotFound' => l10n.promoNotFound,
+        'UsedUp' => l10n.promoUsedUp,
+        'AlreadyUsed' => l10n.promoAlreadyUsed,
+        'BelowMinimum' => l10n.promoBelowMinimum,
+        _ => l10n.promoNotValidNow,
+      };
+
+  /// One row: the code field with Apply, or the applied code with its
+  /// verdict and a way to drop it. The discount itself shows in the totals.
+  Widget _buildPromoSection(double orderTotal, dynamic colors) {
+    final l10n = AppLocalizations.of(context)!;
+    final promo = ref.watch(promoProvider);
+    final code = promo.code;
+
+    if (code != null) {
+      final reason = promo.reason;
+      return Row(
+        children: [
+          Icon(FIcons.tag, size: 18, color: reason == null ? colors.primary : colors.destructive),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText(code, style: TextStyle(fontWeight: FontWeight.w600, color: colors.foreground)),
+                if (reason != null)
+                  AppText(_promoReason(l10n, reason), style: TextStyle(fontSize: 12, color: colors.destructive)),
+              ],
+            ),
+          ),
+          if (promo.checking)
+            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary))
+          else
+            IconButton(
+              icon: Icon(FIcons.x, size: 18, color: colors.mutedForeground),
+              tooltip: l10n.removePromo,
+              onPressed: () {
+                ref.read(promoProvider.notifier).clear();
+                _promoController.clear();
+              },
+            ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: FTextField(
+            control: FTextFieldControl.managed(controller: _promoController),
+            hint: l10n.promoCode,
+            textCapitalization: TextCapitalization.characters,
+          ),
+        ),
+        const SizedBox(width: 8),
+        FButton(
+          variant: FButtonVariant.outline,
+          onPress: () => _applyPromo(orderTotal),
+          child: Text(l10n.apply),
+        ),
+      ],
     );
   }
 
@@ -473,13 +551,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   Widget _buildTotalSection(double orderTotal, dynamic colors) {
     final l10n = AppLocalizations.of(context)!;
     final redemption = ref.watch(loyaltyRedemptionProvider);
+    final promo = ref.watch(promoProvider);
     final discount = redemption.serverDiscount ?? 0.0;
-    final finalTotal = orderTotal - discount;
+    final promoDiscount = promo.applied ? promo.discount : 0.0;
+    final afterDiscounts = orderTotal - promoDiscount - discount;
+    final finalTotal = afterDiscounts < 0 ? 0.0 : afterDiscounts;
 
     return Column(
       children: [
-        // Subtotal if discount applied
-        if (redemption.pointsToRedeem > 0) ...[
+        // Subtotal if a discount applies
+        if (redemption.pointsToRedeem > 0 || promoDiscount > 0) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -499,6 +580,23 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
             ],
           ),
+          if (promoDiscount > 0) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AppText(
+                  l10n.promoDiscount,
+                  style: TextStyle(fontSize: 14, color: AppTheme.successColor),
+                ),
+                AppText(
+                  l10n.discountFormat(promoDiscount.toStringAsFixed(2)),
+                  style: TextStyle(fontSize: 14, color: AppTheme.successColor),
+                ),
+              ],
+            ),
+          ],
+          if (discount > 0) ...[
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -519,6 +617,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
             ],
           ),
+          ],
           const SizedBox(height: 8),
         ],
         // Total
@@ -606,6 +705,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final l10n = AppLocalizations.of(context)!;
     final note = _noteController.text.isNotEmpty ? _noteController.text : null;
     final redemption = ref.read(loyaltyRedemptionProvider);
+    final promo = ref.read(promoProvider);
 
     // Make sure the destination reflects a session that may have started while
     // the cart was open; room-beats-table lives in orderDestinationProvider.
@@ -631,11 +731,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           customerNote: note,
           pointsToRedeem: redemption.pointsToRedeem,
           loyaltyDiscount: redemption.serverDiscount ?? 0,
+          promoCode: promo.applied ? promo.code : null,
         );
 
     if (success && mounted) {
       _noteController.clear();
       ref.read(loyaltyRedemptionProvider.notifier).reset();
+      ref.read(promoProvider.notifier).clear();
+      _promoController.clear();
       // Keep the table alive through a long sitting with several rounds
       ref.read(currentPlaceProvider.notifier).stampOrdered();
 

@@ -76,7 +76,9 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             @event.OrderId,
             lines,
             @event.LoyaltyDiscount,
-            guestPhone: @event.GuestPhone);
+            guestPhone: @event.GuestPhone,
+            promoCode: @event.PromoCode,
+            promoDiscount: @event.PromoDiscount);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync();
 

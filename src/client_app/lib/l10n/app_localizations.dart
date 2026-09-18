@@ -494,6 +494,60 @@ abstract class AppLocalizations {
   /// **'Points discount'**
   String get pointsDiscount;
 
+  /// No description provided for @promoCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo code'**
+  String get promoCode;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @removePromo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove code'**
+  String get removePromo;
+
+  /// No description provided for @promoDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Promo discount'**
+  String get promoDiscount;
+
+  /// No description provided for @promoNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Code not found'**
+  String get promoNotFound;
+
+  /// No description provided for @promoNotValidNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Code not valid right now'**
+  String get promoNotValidNow;
+
+  /// No description provided for @promoUsedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Code has been used up'**
+  String get promoUsedUp;
+
+  /// No description provided for @promoAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'You already used this code'**
+  String get promoAlreadyUsed;
+
+  /// No description provided for @promoBelowMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Order too small for this code'**
+  String get promoBelowMinimum;
+
   /// No description provided for @total.
   ///
   /// In en, this message translates to:

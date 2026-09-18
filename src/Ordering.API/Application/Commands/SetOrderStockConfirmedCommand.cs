@@ -1,3 +1,4 @@
+#nullable enable
 namespace Chillax.Ordering.API.Application.Commands;
 
 /// <summary>
@@ -5,4 +6,7 @@ namespace Chillax.Ordering.API.Application.Commands;
 /// to Submitted, where it waits in the pending queue for staff.
 /// </summary>
 [DataContract]
-public record SetOrderStockConfirmedCommand([property: DataMember] int OrderNumber) : IRequest<bool>;
+public record SetOrderStockConfirmedCommand(
+    [property: DataMember] int OrderNumber,
+    [property: DataMember] string? PromoCode = null,
+    [property: DataMember] decimal PromoDiscount = 0) : IRequest<bool>;

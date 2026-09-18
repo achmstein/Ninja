@@ -36,6 +36,7 @@ abstract class OrderRepository {
     String? customerNote,
     int pointsToRedeem,
     double loyaltyDiscount,
+    String? promoCode,
   });
   Future<void> submitFastOrder({
     required MenuItem item,
@@ -118,6 +119,7 @@ class ApiOrderRepository implements OrderRepository {
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
+    String? promoCode,
   }) async {
     await _apiClient.post<void>(
       '',
@@ -138,6 +140,7 @@ class ApiOrderRepository implements OrderRepository {
         'customerNote': customerNote,
         'pointsToRedeem': pointsToRedeem,
         'loyaltyDiscount': loyaltyDiscount,
+        'promoCode': promoCode,
         'items': items.map((item) => item.toJson()).toList(),
       },
       headers: {'x-requestid': requestId},
@@ -402,6 +405,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
+    String? promoCode,
   }) async {
     if (state.isLoading) return false; // Prevent duplicate submissions
     state = state.copyWith(isLoading: true, error: null);
@@ -415,6 +419,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       'customerNote': customerNote,
       'pointsToRedeem': pointsToRedeem,
       'loyaltyDiscount': loyaltyDiscount,
+      'promoCode': promoCode,
     });
     if (_requestSignature != signature || _requestId == null) {
       _requestSignature = signature;
@@ -439,6 +444,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         customerNote: customerNote,
         pointsToRedeem: pointsToRedeem,
         loyaltyDiscount: loyaltyDiscount,
+        promoCode: promoCode,
       );
 
       // The order went through — the next submission is a new order

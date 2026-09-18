@@ -32,6 +32,20 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
+    public void A_promo_code_lands_as_its_own_negative_line_named_after_the_code()
+    {
+        var ticket = Ticket.OpenForCounter(branchId: 1);
+
+        ticket.AppendOrder(41, [Line("Latte", 2, 50)], loyaltyDiscount: 0, promoCode: "SUMMER-10", promoDiscount: 10);
+
+        Assert.AreEqual(2, ticket.Lines.Count);
+        Assert.AreEqual(90m, ticket.GetSubtotal());
+        var promoLine = ticket.Lines.Last();
+        Assert.AreEqual("Promo SUMMER-10", promoLine.Description.En);
+        Assert.AreEqual(41, promoLine.OrderId);
+    }
+
+    [TestMethod]
     public void Session_time_lands_exactly_once_and_skips_empty_modes()
     {
         var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP"), branchId: 1);

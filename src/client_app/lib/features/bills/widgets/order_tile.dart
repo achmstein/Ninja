@@ -78,6 +78,18 @@ class OrderTile extends ConsumerWidget {
                 l10n.priceFormat((order.total - discount).toStringAsFixed(2)),
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: colors.foreground),
               ),
+              if (order.promoDiscount > 0)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.local_offer, size: 12, color: Colors.green.shade600),
+                    const SizedBox(width: 2),
+                    AppText(
+                      l10n.discountFormat(order.promoDiscount.toStringAsFixed(2)),
+                      style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+                    ),
+                  ],
+                ),
               if (discount > 0)
                 Row(
                   mainAxisSize: MainAxisSize.min,

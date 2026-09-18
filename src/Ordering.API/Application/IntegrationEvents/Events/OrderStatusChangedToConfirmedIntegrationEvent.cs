@@ -74,6 +74,12 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     /// <summary>Currency value of the redeemed points, already reflected in <see cref="OrderTotal"/>.</summary>
     public double LoyaltyDiscount { get; }
 
+    /// <summary>The promo code redeemed on the order, null when none applied.</summary>
+    public string? PromoCode { get; }
+
+    /// <summary>What the promo code took off, already reflected in <see cref="OrderTotal"/>; Sales prints it as its own line.</summary>
+    public decimal PromoDiscount { get; }
+
     public IReadOnlyList<OrderConfirmedItem> Items { get; }
 
     /// <summary>
@@ -105,7 +111,9 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         IReadOnlyList<OrderConfirmedItem>? items = null,
         int? placeId = null,
         string? placeKind = null,
-        LocalizedText? placeName = null)
+        LocalizedText? placeName = null,
+        string? promoCode = null,
+        decimal promoDiscount = 0)
     {
         OrderId = orderId;
         OrderStatus = orderStatus;
@@ -129,6 +137,8 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         PlaceId = placeId;
         PlaceKind = placeKind;
         PlaceName = placeName;
+        PromoCode = promoCode;
+        PromoDiscount = promoDiscount;
     }
 }
 

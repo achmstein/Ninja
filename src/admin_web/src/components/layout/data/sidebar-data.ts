@@ -16,6 +16,7 @@ import {
   Receipt,
   ReceiptText,
   ShieldCheck,
+  Ticket,
   TrendingUp,
   Truck,
   Users,
@@ -123,6 +124,7 @@ export const sidebarData: SidebarData = {
       title: 'navCustomers',
       items: [
         { title: 'customers', url: '/customers', icon: Users },
+        { title: 'promoCodes', url: '/promos', icon: Ticket },
         { title: 'announcements', url: '/notifications', icon: Megaphone },
       ],
     },

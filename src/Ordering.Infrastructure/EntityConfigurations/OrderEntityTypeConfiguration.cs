@@ -31,6 +31,14 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .HasMaxLength(500);
 
         orderConfiguration
+            .Property(o => o.PromoCode)
+            .HasMaxLength(20);
+
+        orderConfiguration
+            .Property(o => o.PromoDiscount)
+            .HasPrecision(18, 2);
+
+        orderConfiguration
             .Property(o => o.GuestId)
             .HasMaxLength(64);
 

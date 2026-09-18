@@ -100,6 +100,11 @@ class Order {
   final double total;
   final int pointsToRedeem;
   final double loyaltyDiscount;
+
+  /// The promo code redeemed on this order, and what it took off (already
+  /// inside [total]); null and zero when none applied.
+  final String? promoCode;
+  final double promoDiscount;
   final List<OrderItem> items;
   final OrderRating? rating;
 
@@ -138,6 +143,8 @@ class Order {
     required this.total,
     this.pointsToRedeem = 0,
     this.loyaltyDiscount = 0,
+    this.promoCode,
+    this.promoDiscount = 0,
     this.items = const [],
     this.rating,
     this.paidAt,
@@ -177,6 +184,8 @@ class Order {
       total: (json['total'] as num).toDouble(),
       pointsToRedeem: (json['pointsToRedeem'] ?? 0) as int,
       loyaltyDiscount: ((json['loyaltyDiscount'] ?? 0) as num).toDouble(),
+      promoCode: json['promoCode'] as String?,
+      promoDiscount: ((json['promoDiscount'] ?? 0) as num).toDouble(),
       items: (json['orderItems'] as List<dynamic>?)
               ?.map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
               .toList() ??

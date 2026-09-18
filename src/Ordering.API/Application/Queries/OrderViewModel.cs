@@ -56,6 +56,10 @@ public record Order
     public decimal Total { get; set; }
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
+    /// <summary>The promo code redeemed on this order; null when none applied.</summary>
+    public string? PromoCode { get; init; }
+    /// <summary>What the promo code took off, already reflected in Total.</summary>
+    public decimal PromoDiscount { get; init; }
     /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
     public DateTime? PaidAt { get; init; }
     /// <summary>The receipt that covered it — the number the tab and the till show.</summary>
@@ -138,6 +142,10 @@ public record OrderSummary
     public double Total { get; init; }
     public int PointsToRedeem { get; init; }
     public double LoyaltyDiscount { get; init; }
+    /// <summary>The promo code redeemed on this order; null when none applied.</summary>
+    public string? PromoCode { get; init; }
+    /// <summary>What the promo code took off, already reflected in Total.</summary>
+    public decimal PromoDiscount { get; init; }
     /// <summary>When the till settled the bill this order was on; null while unpaid.</summary>
     public DateTime? PaidAt { get; init; }
     /// <summary>The receipt that covered it — the number the tab and the till show.</summary>
