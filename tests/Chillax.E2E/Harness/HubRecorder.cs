@@ -36,7 +36,8 @@ public sealed class HubRecorder : IAsyncDisposable
     public static readonly string[] KnownMethods =
     [
         "TicketUpdated", "OrderStatusChanged", "RoomStatusChanged", "CatalogChanged",
-        "StockLow", "ServiceRequestCreated", "BranchSettingsChanged",
+        "StockLow", "ServiceRequestCreated", "ServiceRequestChanged", "BranchSettingsChanged",
+        "AccountChanged", "PlaceCleared",
     ];
 
     private readonly HubConnection _connection;

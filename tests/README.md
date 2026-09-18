@@ -4,7 +4,7 @@
 |---|---|---|
 | `*.UnitTests` | One service's domain and application logic, mocked. | nothing |
 | `Chillax.Contracts.Tests` | The integration-event contracts as written in `src/`: every subscribed event has a publisher, every published event a consumer (known dead ends listed in `Allowlist.cs`), no service declares an event twice, and each consumer's copy of an event reads only properties the publisher's copy sends. Roslyn over the source, no host. | nothing |
-| `Chillax.E2E` | Whole workflows across every service — a cashier's day replayed through the BFF with the calls the React apps make — with each downstream effect asserted five ways: the consuming service's projection, the event on RabbitMQ, the outbox row, the SignalR push, and the service logs (a handler that throws is ACKed and lost by `RabbitMQEventBus`; only the log shows it). | Docker Desktop |
+| `Chillax.E2E` | Whole workflows across every service — a cashier's day replayed through the BFF with the calls the React apps make — with each downstream effect asserted five ways: the consuming service's projection, the event on RabbitMQ, the outbox row, the SignalR push, and the service logs (a handler that throws has its message dead-lettered by `RabbitMQEventBus`; the log shows it). | Docker Desktop |
 | `*.FunctionalTests` | eShop-era in-process harnesses; stale. | Docker |
 
 ## Running

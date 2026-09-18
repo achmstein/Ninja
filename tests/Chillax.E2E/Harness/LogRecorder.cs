@@ -13,10 +13,10 @@ public sealed record LogFailure(LogRecord Line, IReadOnlyList<LogRecord> Context
 }
 
 /// <summary>
-/// Tails every resource's log through Aspire's ResourceLoggerService. The
-/// bus ACKs a message even when the handler throws, so the warning
-/// RabbitMQEventBus writes at that moment is the only trace of a lost event;
-/// this is where the suite looks for it.
+/// Tails every resource's log through Aspire's ResourceLoggerService. A
+/// handler that throws has its message dead-lettered by RabbitMQEventBus,
+/// which logs an error at that moment; a scenario that caused one has a bug,
+/// and this is where the suite looks for it.
 /// </summary>
 public sealed partial class LogRecorder(DistributedApplication app)
 {
@@ -24,7 +24,7 @@ public sealed partial class LogRecorder(DistributedApplication app)
     public static readonly Regex[] FailurePatterns =
     [
         LevelMarker(),                                             // fail: / crit: from the console formatter
-        new(@"Error Processing message", RegexOptions.Compiled),   // RabbitMQEventBus: handler threw, message ACKed and lost
+        new(@"Dead-lettering ", RegexOptions.Compiled),            // RabbitMQEventBus: handler threw, message parked on dead-letters
         new(@"Unable to resolve event type for event name", RegexOptions.Compiled),
         new(@"Error with RabbitMQ consumer channel", RegexOptions.Compiled),
         new(@"Error starting RabbitMQ connection", RegexOptions.Compiled),
@@ -34,9 +34,12 @@ public sealed partial class LogRecorder(DistributedApplication app)
 
     /// <summary>
     /// Blocks that are "fail:" by level but expected: EF probes __EFMigrationsHistory
-    /// before the first migration creates it and logs the miss as a failure.
+    /// before the first migration creates it and logs the miss as a failure, and a
+    /// readiness probe that times out while the database or the bus is still
+    /// coming up is logged the same way - /health answering Unhealthy at boot is
+    /// what it is for, not a scenario failing.
     /// </summary>
-    public static readonly string[] DefaultIgnore = [@"__EFMigrationsHistory"];
+    public static readonly string[] DefaultIgnore = [@"__EFMigrationsHistory", @"DefaultHealthCheckService"];
 
     private readonly List<LogRecord> _records = [];
     private readonly Lock _lock = new();
