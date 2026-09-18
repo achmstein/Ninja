@@ -20,11 +20,12 @@ import '../models/customer_card.dart';
 import '../providers/customer_providers.dart';
 
 /// Take money against a customer's tab: cash into the drawer, card or
-/// InstaPay to the terminal. The whole balance is prefilled — the common
-/// case is "I'll pay it all" — and the amount cannot exceed it: a tab is
-/// paid down, never overpaid into credit from the till. Sales numbers the
-/// slip and stamps it with the open shift; Accounts lowers the balance off
-/// the event. Returns the slip once recorded, null if the cashier backed out.
+/// InstaPay to the terminal. What is owed is prefilled — the common case is
+/// "I'll pay it all" — and anything beyond it becomes credit the customer
+/// spends on account later: the same slip tops a tab up ahead of time.
+/// Sales numbers the slip and stamps it with the open shift; Accounts moves
+/// the balance off the event. Returns the slip once recorded, null if the
+/// cashier backed out.
 Future<TabPaymentSlip?> showPayTabDialog(BuildContext context, {required CardCustomer customer, required double balance}) {
   return showFDialog<TabPaymentSlip>(
     context: context,
@@ -56,8 +57,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
   final String _requestId = const Uuid().v4();
 
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
-  double get _amount => _entered < widget.balance ? _entered : widget.balance;
-  bool get _overBalance => _entered > widget.balance;
+  double get _amount => _entered;
 
   @override
   void initState() {
@@ -153,7 +153,10 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
               child: Column(
                 children: [
                   Text(l10n.newBalance, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                  Text(money(context, slip.balanceAfter < 0 ? 0 : slip.balanceAfter),
+                  Text(
+                      slip.balanceAfter < 0
+                          ? l10n.creditAmount(money(context, -slip.balanceAfter))
+                          : money(context, slip.balanceAfter),
                       style: theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
                 ],
               ),
@@ -204,10 +207,16 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Expanded(child: Text(l10n.payTab, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600))),
+                  Expanded(
+                      child: Text(widget.balance > 0 ? l10n.payTab : l10n.topUp,
+                          style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600))),
                   const SizedBox(width: 12),
                   Text(
-                    l10n.owesAmount(money(context, widget.balance)),
+                    widget.balance > 0
+                        ? l10n.owesAmount(money(context, widget.balance))
+                        : widget.balance < 0
+                            ? l10n.creditAmount(money(context, -widget.balance))
+                            : l10n.settledUp,
                     style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
                   ),
                 ],
@@ -245,11 +254,6 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                   ),
                 ),
               ),
-              if (_overBalance) ...[
-                const SizedBox(height: 6),
-                Text(l10n.cappedAtBalance(money(context, widget.balance)),
-                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-              ],
               const SizedBox(height: 12),
               NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
               const SizedBox(height: 12),

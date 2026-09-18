@@ -27,11 +27,12 @@ type PayTabDialogProps = {
 
 /**
  * Take money against a customer's tab: cash into the drawer, card or
- * InstaPay to the terminal. The whole balance is prefilled — the common
- * case is "I'll pay it all" — and the amount cannot exceed it: a tab is
- * paid down, never overpaid into credit from the till. Sales numbers the
- * slip and stamps it with the open shift; Accounts lowers the balance off
- * the event, so the "new balance" shown here is what it will read next.
+ * InstaPay to the terminal. What is owed is prefilled — the common case is
+ * "I'll pay it all" — and anything beyond it becomes credit the customer
+ * spends on account later: the same slip tops a tab up ahead of time.
+ * Sales numbers the slip and stamps it with the open shift; Accounts moves
+ * the balance off the event, so the "new balance" shown here is what it
+ * will read next.
  */
 export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDialogProps) {
   const t = useT()
@@ -54,8 +55,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
   }, [open])
 
   const entered = Number(amountStr || '0')
-  const amount = Number.isFinite(entered) ? Math.min(entered, balance) : 0
-  const overBalance = Number.isFinite(entered) && entered > balance
+  const amount = Number.isFinite(entered) ? entered : 0
 
   const pay = usePayTab(customer.id)
 
@@ -110,7 +110,9 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             <div className='bg-accent w-full rounded-xl p-4'>
               <div className='text-muted-foreground text-sm'>{t('newBalance')}</div>
               <div className='text-4xl font-bold tabular-nums'>
-                {money(Math.max(0, slip.balanceAfter))}
+                {slip.balanceAfter < 0
+                  ? t('creditAmount', { amount: money(-slip.balanceAfter) })
+                  : money(slip.balanceAfter)}
               </div>
             </div>
           </div>
@@ -141,9 +143,13 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
         {/* The name on its own line: a long one must not squeeze the amount */}
         <DialogHeader className='border-b px-5 py-3 pe-14'>
           <DialogTitle className='flex items-baseline justify-between gap-4 text-lg'>
-            <span>{t('payTab')}</span>
+            <span>{balance > 0 ? t('payTab') : t('topUp')}</span>
             <span className='shrink-0 text-xl font-bold tabular-nums'>
-              {t('owesAmount', { amount: money(balance) })}
+              {balance > 0
+                ? t('owesAmount', { amount: money(balance) })
+                : balance < 0
+                  ? t('creditAmount', { amount: money(-balance) })
+                  : t('settledUp')}
             </span>
           </DialogTitle>
           <p className='text-muted-foreground truncate text-sm'>
@@ -171,12 +177,6 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
           >
             {amountStr || '0'}
           </div>
-          {overBalance && (
-            <p className='text-muted-foreground text-sm'>
-              {t('cappedAtBalance', { amount: money(balance) })}
-            </p>
-          )}
-
           <NumericKeypad value={amountStr} onChange={setAmountStr} />
 
           <Button

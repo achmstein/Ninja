@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/network_status.dart';
@@ -109,6 +110,12 @@ class _CustomerCard extends ConsumerWidget {
               Icon(FIcons.phone, size: 14, color: theme.colors.mutedForeground),
               const SizedBox(width: 6),
               Directionality(textDirection: TextDirection.ltr, child: Text(phone, style: muted)),
+              const SizedBox(width: 6),
+              // The customer on WhatsApp, from the till's own account
+              GestureDetector(
+                onTap: () => openWhatsApp(phone),
+                child: Icon(FIcons.messageCircle, size: 16, color: AppColors.emerald(brightness)),
+              ),
             ]),
           ],
           const SizedBox(height: 16),
@@ -152,39 +159,38 @@ class _CustomerCard extends ConsumerWidget {
                     loading: () => loading,
                     error: (_, _) => failed(() => ref.invalidate(tabAccountProvider(customer.id))),
                     data: (account) {
-                      if (account == null) {
-                        return Text(l10n.noTab, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500));
-                      }
-                      final owed = account.balance;
+                      final owed = account?.balance ?? 0;
                       return Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              owed > 0
-                                  ? l10n.owesAmount(money(context, owed))
-                                  : owed < 0
-                                      ? l10n.creditAmount(money(context, -owed))
-                                      : l10n.settledUp,
-                              style: theme.typography.xl2.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontFeatures: tabular,
-                                color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
-                              ),
-                            ),
+                            child: account == null
+                                ? Text(l10n.noTab, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500))
+                                : Text(
+                                    owed > 0
+                                        ? l10n.owesAmount(money(context, owed))
+                                        : owed < 0
+                                            ? l10n.creditAmount(money(context, -owed))
+                                            : l10n.settledUp,
+                                    style: theme.typography.xl2.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      fontFeatures: tabular,
+                                      color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
+                                    ),
+                                  ),
                           ),
-                          // Taking money needs something owed; a credit is
-                          // paid back from the back office, never the drawer
+                          // Money owed is paid down; anything beyond it, or
+                          // anything at all on an empty tab, is credit the
+                          // customer spends on account later - prepaid, money
+                          // in the drawer before the sale. Same slip either way.
                           SizedBox(
                             height: 44,
                             child: FButton(
                               mainAxisSize: MainAxisSize.min,
-                              onPress: owed > 0
-                                  ? () async {
-                                      await showPayTabDialog(context, customer: customer, balance: owed);
-                                      ref.invalidate(tabAccountProvider(customer.id));
-                                    }
-                                  : null,
-                              child: Text(l10n.payTab, style: theme.typography.base.forButton),
+                              onPress: () async {
+                                await showPayTabDialog(context, customer: customer, balance: owed);
+                                ref.invalidate(tabAccountProvider(customer.id));
+                              },
+                              child: Text(owed > 0 ? l10n.payTab : l10n.topUp, style: theme.typography.base.forButton),
                             ),
                           ),
                         ],

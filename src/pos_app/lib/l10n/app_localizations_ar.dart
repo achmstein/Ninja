@@ -866,12 +866,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payTab => 'سداد الحساب';
 
   @override
-  String get confirmTabPayment => 'استلم';
+  String get topUp => 'شحن رصيد';
 
   @override
-  String cappedAtBalance(String amount) {
-    return 'أقصى مبلغ هو المستحق: $amount';
-  }
+  String get confirmTabPayment => 'استلم';
 
   @override
   String get tabPaymentRecorded => 'اتسجل سداد الحساب';

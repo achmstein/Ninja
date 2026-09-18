@@ -1598,17 +1598,17 @@ abstract class AppLocalizations {
   /// **'Pay tab'**
   String get payTab;
 
+  /// No description provided for @topUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up'**
+  String get topUp;
+
   /// No description provided for @confirmTabPayment.
   ///
   /// In en, this message translates to:
   /// **'Take payment'**
   String get confirmTabPayment;
-
-  /// No description provided for @cappedAtBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'Capped at what is owed: {amount}'**
-  String cappedAtBalance(String amount);
 
   /// No description provided for @tabPaymentRecorded.
   ///

@@ -6,6 +6,7 @@ import {
   Award,
   Ban,
   CircleCheck,
+  MessageCircle,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -17,6 +18,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { whatsAppLink } from '@/lib/phone'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -149,12 +151,24 @@ function CustomerHub({
                 <Badge variant='destructive'>{t('disabled')}</Badge>
               )}
             </div>
-            <p className='text-muted-foreground truncate text-xs'>
+            <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
               {[customer.phoneNumber, customer.email]
                 .filter(Boolean)
                 .join(' · ') ||
                 customer.username ||
                 '—'}
+              {/* The customer on WhatsApp, from the owner's own account */}
+              {customer.phoneNumber && (
+                <a
+                  href={whatsAppLink(customer.phoneNumber)}
+                  target='_blank'
+                  rel='noreferrer'
+                  aria-label='WhatsApp'
+                  className='text-emerald-600'
+                >
+                  <MessageCircle className='size-3.5' />
+                </a>
+              )}
               {customer.createdTimestamp && (
                 <>
                   {' · '}

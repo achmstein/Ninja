@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Award, Phone, User, Wallet } from 'lucide-react'
+import { Award, MessageCircle, Phone, User, Wallet } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { whatsAppLink } from '@/lib/phone'
 import { PayTabDialog } from './pay-tab-dialog'
 import { useLoyalty, useTab } from './use-customer-card'
 
@@ -89,6 +90,16 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               <p className='text-muted-foreground flex items-center gap-1.5 text-sm' dir='ltr'>
                 <Phone className='size-3.5' />
                 {customer.phone}
+                {/* The customer on WhatsApp, from the cashier's own phone or this browser */}
+                <a
+                  href={whatsAppLink(customer.phone)}
+                  target='_blank'
+                  rel='noreferrer'
+                  aria-label='WhatsApp'
+                  className='ms-1 text-emerald-600'
+                >
+                  <MessageCircle className='size-4' />
+                </a>
               </p>
             )}
           </DialogHeader>
@@ -131,30 +142,28 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               <Skeleton className='h-8 w-40' />
             ) : tab.isError ? (
               failed(() => tab.refetch())
-            ) : tab.noTab ? (
-              <div className='font-medium'>{t('noTab')}</div>
             ) : (
               <div className='flex items-center justify-between gap-3'>
                 <span
                   className={cn(
                     'text-2xl font-bold tabular-nums',
-                    owed > 0 ? 'text-destructive' : 'text-emerald-600'
+                    tab.noTab ? 'font-medium' : owed > 0 ? 'text-destructive' : 'text-emerald-600'
                   )}
                 >
-                  {owed > 0
-                    ? t('owesAmount', { amount: money(owed) })
-                    : owed < 0
-                      ? t('creditAmount', { amount: money(-owed) })
-                      : t('settledUp')}
+                  {tab.noTab
+                    ? t('noTab')
+                    : owed > 0
+                      ? t('owesAmount', { amount: money(owed) })
+                      : owed < 0
+                        ? t('creditAmount', { amount: money(-owed) })
+                        : t('settledUp')}
                 </span>
-                {/* Taking money needs something owed; a credit is paid back
-                    from the back office, never the drawer */}
-                <Button
-                  className='h-11'
-                  disabled={owed <= 0}
-                  onClick={() => setPayOpen(true)}
-                >
-                  {t('payTab')}
+                {/* Money owed is paid down; anything beyond it, or anything
+                    at all on an empty tab, is credit the customer spends on
+                    account later - prepaid, money in the drawer before the
+                    sale. Same slip either way. */}
+                <Button className='h-11' onClick={() => setPayOpen(true)}>
+                  {owed > 0 ? t('payTab') : t('topUp')}
                 </Button>
               </div>
             )

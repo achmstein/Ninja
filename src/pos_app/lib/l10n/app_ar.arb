@@ -504,15 +504,8 @@
     }
   },
   "payTab": "سداد الحساب",
+  "topUp": "شحن رصيد",
   "confirmTabPayment": "استلم",
-  "cappedAtBalance": "أقصى مبلغ هو المستحق: {amount}",
-  "@cappedAtBalance": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
   "tabPaymentRecorded": "اتسجل سداد الحساب",
   "tabPaymentSlip": "سداد حساب آجل",
   "tabPaymentNumber": "سداد #{number}",

@@ -471,11 +471,8 @@ const dictionary = {
   noTab: { en: 'No tab', ar: 'مفيش حساب آجل' },
   thisBill: { en: 'this bill {amount}', ar: 'الحساب ده {amount}' },
   payTab: { en: 'Pay tab', ar: 'سداد الحساب' },
+  topUp: { en: 'Top up', ar: 'شحن رصيد' },
   confirmTabPayment: { en: 'Take payment', ar: 'استلم' },
-  cappedAtBalance: {
-    en: 'Capped at what is owed: {amount}',
-    ar: 'أقصى مبلغ هو المستحق: {amount}',
-  },
   tabPaymentRecorded: { en: 'Tab payment recorded', ar: 'اتسجل سداد الحساب' },
   tabPaymentSlip: { en: 'Tab payment', ar: 'سداد حساب آجل' },
   tabPaymentNumber: { en: 'Tab payment #{number}', ar: 'سداد #{number}' },

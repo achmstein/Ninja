@@ -859,12 +859,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payTab => 'Pay tab';
 
   @override
-  String get confirmTabPayment => 'Take payment';
+  String get topUp => 'Top up';
 
   @override
-  String cappedAtBalance(String amount) {
-    return 'Capped at what is owed: $amount';
-  }
+  String get confirmTabPayment => 'Take payment';
 
   @override
   String get tabPaymentRecorded => 'Tab payment recorded';

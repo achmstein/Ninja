@@ -518,15 +518,8 @@
     }
   },
   "payTab": "Pay tab",
+  "topUp": "Top up",
   "confirmTabPayment": "Take payment",
-  "cappedAtBalance": "Capped at what is owed: {amount}",
-  "@cappedAtBalance": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
   "tabPaymentRecorded": "Tab payment recorded",
   "tabPaymentSlip": "Tab payment",
   "tabPaymentNumber": "Tab payment #{number}",
