@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/providers/branch_provider.dart';
+import '../../../core/utils/business_day.dart';
 import '../../cart/models/cart_item.dart';
 import '../../cart/services/cart_service.dart';
 import '../../menu/models/menu_item.dart';
@@ -273,79 +274,34 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return ApiOrderRepository(ref.watch(ordersApiProvider));
 });
 
-/// Orders list state
+/// The business day's orders. The bills tab shows what the till has not
+/// put on a bill yet above the bills, and reads the rating on each for
+/// the stars on a paid bill.
 class OrdersState {
   final List<Order> orders;
   final bool isLoading;
-  final bool isLoadingMore;
-  final bool hasMore;
-  final int currentPage;
   final String? error;
-  final bool showingToday;
 
-  const OrdersState({
-    this.orders = const [],
-    this.isLoading = false,
-    this.isLoadingMore = false,
-    this.hasMore = true,
-    this.currentPage = 0,
-    this.error,
-    this.showingToday = true,
-  });
+  const OrdersState({this.orders = const [], this.isLoading = false, this.error});
 
-  OrdersState copyWith({
-    List<Order>? orders,
-    bool? isLoading,
-    bool? isLoadingMore,
-    bool? hasMore,
-    int? currentPage,
-    String? error,
-    bool? showingToday,
-  }) {
-    return OrdersState(
-      orders: orders ?? this.orders,
-      isLoading: isLoading ?? this.isLoading,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      hasMore: hasMore ?? this.hasMore,
-      currentPage: currentPage ?? this.currentPage,
-      error: error,
-      showingToday: showingToday ?? this.showingToday,
-    );
-  }
+  OrdersState copyWith({List<Order>? orders, bool? isLoading, String? error}) => OrdersState(
+        orders: orders ?? this.orders,
+        isLoading: isLoading ?? this.isLoading,
+        error: error,
+      );
 }
 
-/// Orders notifier with pagination support
 class OrdersNotifier extends Notifier<OrdersState> {
-  static const _pageSize = 10;
-
-  /// Get the current business session start time based on the branch's configured hours.
-  /// Overnight shift (e.g. 17:00→05:00): if now >= 17 → today at 17; if now < 17 → yesterday at 17.
-  /// Same-day shift (e.g. 08:00→16:00): always today at 08.
-  DateTime getSessionStart() {
-    final branch = ref.read(branchProvider).selectedBranch;
-    final startHour = branch?.dayStartHour ?? 17;
-    final isOvernight = branch?.isOvernightShift ?? true;
-    final now = DateTime.now();
-    if (isOvernight) {
-      if (now.hour >= startHour) {
-        return DateTime(now.year, now.month, now.day, startHour);
-      } else {
-        final yesterday = now.subtract(const Duration(days: 1));
-        return DateTime(yesterday.year, yesterday.month, yesterday.day, startHour);
-      }
-    } else {
-      return DateTime(now.year, now.month, now.day, startHour);
-    }
-  }
+  /// A day's orders for one customer: one page covers it
+  static const _pageSize = 50;
 
   @override
   OrdersState build() {
-    // Load initial data
     Future.microtask(() => loadOrders());
     return const OrdersState(isLoading: true);
   }
 
-  /// Load orders (initial load or refresh)
+  /// Load the business day's orders (initial load or refresh)
   Future<void> loadOrders() async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -356,64 +312,15 @@ class OrdersNotifier extends Notifier<OrdersState> {
 
     try {
       final service = ref.read(orderRepositoryProvider);
-      final fromDate = state.showingToday ? getSessionStart() : null;
       final result = await service.getOrders(
         pageIndex: 0,
         pageSize: _pageSize,
-        fromDate: fromDate,
+        fromDate: businessDayStart(ref.read(branchProvider).selectedBranch),
       );
-
-      state = state.copyWith(
-        orders: result.items,
-        isLoading: false,
-        hasMore: result.hasNextPage,
-        currentPage: 0,
-      );
+      state = state.copyWith(orders: result.items, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
-  }
-
-  /// Load more orders (pagination)
-  Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
-
-    state = state.copyWith(isLoadingMore: true);
-
-    try {
-      final service = ref.read(orderRepositoryProvider);
-      final nextPage = state.currentPage + 1;
-      final result = await service.getOrders(
-        pageIndex: nextPage,
-        pageSize: _pageSize,
-        fromDate: state.showingToday ? getSessionStart() : null,
-      );
-
-      state = state.copyWith(
-        orders: [...state.orders, ...result.items],
-        isLoadingMore: false,
-        hasMore: result.hasNextPage,
-        currentPage: nextPage,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoadingMore: false,
-        error: e.toString(),
-      );
-    }
-  }
-
-  /// Toggle between today's orders and full history
-  void toggleView() {
-    state = state.copyWith(
-      showingToday: !state.showingToday,
-      orders: [],
-      isLoading: true,
-    );
-    loadOrders();
   }
 
   /// Refresh orders

@@ -6,7 +6,7 @@ import '../auth/auth_service.dart';
 import '../../features/receipts/screens/receipt_screen.dart';
 import '../../features/menu/screens/menu_screen.dart';
 import '../../features/cart/screens/cart_screen.dart';
-import '../../features/orders/screens/orders_screen.dart';
+import '../../features/bills/screens/bills_screen.dart';
 import '../../features/places/screens/places_screen.dart';
 import '../../features/places/screens/stays_screen.dart';
 import '../../features/places/screens/place_link_screen.dart';
@@ -319,9 +319,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/orders',
+            path: '/bills',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: OrdersScreen(),
+              child: BillsScreen(),
             ),
           ),
           GoRoute(

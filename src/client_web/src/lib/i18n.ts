@@ -61,35 +61,9 @@ const webExtras = {
   },
   // The clock card's members, and a shared bill's lines
   you: { en: 'You', ar: 'انت' },
-  // The bills tab — "الحساب", what a customer asks for at the table — is
-  // everything the cafe is charging them; the profile tab is "البروفايل"
-  // so the two never read alike. The house account's own labels say
-  // "balance" and "on your tab" rather than "account" for the same reason.
-  bills: { en: 'Bills', ar: 'الحساب' },
-  profile: { en: 'Profile', ar: 'البروفايل' },
-  earlier: { en: 'Earlier', ar: 'قبل كده' },
-  noBillsYet: { en: 'No bills yet', ar: 'مفيش حسابات لسه' },
-  failedToLoadBills: { en: "Couldn't load your bills", ar: 'الحساب مش بيحمل' },
+  // The house account says "balance" and "on your tab", never "account",
+  // so it never reads like the bills tab (الحساب)
   yourBalance: { en: 'Your balance', ar: 'رصيدك' },
-  nothingOnYouToday: {
-    en: 'Nothing on you today',
-    ar: 'مفيش حاجة عليك النهاردة',
-  },
-  waitingToBeConfirmed: {
-    en: 'Waiting to be confirmed',
-    ar: 'مستني التأكيد',
-  },
-  timeSoFar: { en: '{place} time so far', ar: 'وقت {place} لحد دلوقتي' },
-  atTheCounter: { en: 'At the counter', ar: 'من الكاشير' },
-  // A shared bill ends on what is certainly the customer's — their rounds
-  // — with the whole bill under it; the place's time is the group's, and
-  // the till splits it at settle however they agree
-  yourRounds: { en: 'Your rounds', ar: 'طلباتك' },
-  billTotal: { en: 'Bill total', ar: 'إجمالي الحساب' },
-  paidSeveralWays: { en: 'Paid several ways', ar: 'اتدفع بأكتر من طريقة' },
-  // Rating on the paid bill, the moment the customer is already looking
-  howWasIt: { en: 'How was it?', ar: 'عجبك؟' },
-  ratedThanks: { en: 'Thanks for rating!', ar: 'شكراً على تقييمك!' },
   // A table carried over from an earlier session is asked about, not assumed
   stillAtTable: { en: 'Still at {name}?', ar: 'لسه على {name}؟' },
   yesStillHere: { en: "Yes, I'm here", ar: 'أيوه، أنا هنا' },

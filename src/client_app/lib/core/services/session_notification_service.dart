@@ -317,7 +317,7 @@ class SessionNotificationService {
       );
 
       _ref.read(ordersProvider.notifier).refresh();
-      _ref.read(routerProvider).go('/orders');
+      _ref.read(routerProvider).go('/bills');
     } catch (e) {
       debugPrint('Failed to submit drink order from notification: $e');
     }

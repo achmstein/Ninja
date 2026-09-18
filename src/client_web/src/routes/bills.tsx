@@ -15,6 +15,8 @@ import {
   billParts,
   closedAt,
   isSettled,
+  isTimeLine,
+  isUnassigned,
   percent,
   runningTime,
   useMyBills,
@@ -372,17 +374,17 @@ function BillTile({
   const stay = useActiveStay()
   const now = useNow()
 
-  // The tile is the customer's own view of the bill: their rounds, and
-  // the place's time as the group's. A bill with nobody else on it adds
-  // up to its total, with the till's discount, service and VAT under the
-  // lines; a shared one ends on the customer's rounds, with the whole
-  // bill's total under it — whose the time is, the till decides at
-  // settle. The tap opens the bill, which itemises everything.
+  // The tile is the customer's own view of the bill: their rounds, the
+  // rounds the till named nobody for, and the place's time as the
+  // group's. A bill with nobody else on it adds up to its total, with the
+  // till's discount, service and VAT under the lines; one with somebody
+  // else's rounds ends on the customer's own, with the whole bill's total
+  // under it — whose the time is, the till decides at settle. The tap
+  // opens the bill, which itemises everything with the names on it.
   const lines = bill.lines ?? []
-  const mine = lines.filter(
-    (line) => line.isMine && line.source !== 'SessionTime'
-  )
-  const time = lines.filter((line) => line.source === 'SessionTime')
+  const mine = lines.filter((line) => line.isMine && !isTimeLine(line))
+  const unassigned = lines.filter(isUnassigned)
+  const time = lines.filter(isTimeLine)
   const stayOf = useStayOf()
   const running = runningTime(bill, stay, now)
   const parts = billParts(bill, running, stayOf(bill))
@@ -431,6 +433,9 @@ function BillTile({
 
         <div className='flex w-full flex-col gap-1 ps-[18px]'>
           {mine.map((line) => (
+            <BillLine key={String(line.id)} line={line} />
+          ))}
+          {unassigned.map((line) => (
             <BillLine key={String(line.id)} line={line} />
           ))}
           {time.map((line) => (
@@ -511,7 +516,8 @@ function BillTile({
   )
 }
 
-/** One of the customer's own lines, or the place's time, whole. */
+/** One of the customer's own lines, or the place's time, whole. A round the
+ *  till named nobody for is muted: on the bill, but not read as theirs. */
 function BillLine({ line }: { line: BillLineView }) {
   const t = useT()
   const localized = useLocalized()
@@ -520,7 +526,7 @@ function BillLine({ line }: { line: BillLineView }) {
   const qty = Number(line.qty ?? 0)
 
   return (
-    <div>
+    <div className={cn(isUnassigned(line) && 'text-muted-foreground')}>
       <div className='flex items-baseline gap-1 text-sm'>
         {isTime ? (
           <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />

@@ -107,7 +107,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           FBottomNavigationBarItem(
             icon: const Icon(FIcons.receipt),
             label: AppText(
-              l10n.orders,
+              l10n.bills,
               style: TextStyle(
                 fontWeight: currentIndex == 2 ? FontWeight.bold : FontWeight.normal,
               ),
@@ -149,7 +149,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/menu')) return 0;
     if (location.startsWith('/places')) return 1;
-    if (location.startsWith('/orders')) return 2;
+    if (location.startsWith('/bills')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
   }
@@ -163,7 +163,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         context.go('/places');
         break;
       case 2:
-        context.go('/orders');
+        context.go('/bills');
         break;
       case 3:
         context.go('/profile');

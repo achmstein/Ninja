@@ -186,7 +186,7 @@ class FirebaseService {
 
     final type = message.data['type'];
     final route = switch (type) {
-      'order_confirmed' || 'order_cancelled' => '/orders',
+      'order_confirmed' || 'order_cancelled' => '/bills',
       'session_started' || 'session_ended' || 'reservation_cancelled' || 'room_available' => '/places',
       _ => null,
     };

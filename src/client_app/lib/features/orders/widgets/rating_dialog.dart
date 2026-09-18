@@ -6,32 +6,39 @@ import '../../../l10n/app_localizations.dart';
 import '../services/order_service.dart';
 import 'rating_widget.dart';
 
-/// Show rating dialog for an order
-Future<void> showRatingDialog({
+/// The rating sheet: every order in [orderIds] gets the same stars and
+/// word, starting from [initialRating] — the star tapped on the bill.
+/// Resolves to true once submitted.
+Future<bool> showRatingDialog({
   required BuildContext context,
   required WidgetRef ref,
-  required int orderId,
+  required List<int> orderIds,
+  int initialRating = 5,
 }) async {
-  return showModalBottomSheet(
+  final rated = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (context) => RatingDialog(
-      orderId: orderId,
+      orderIds: orderIds,
+      initialRating: initialRating,
       ref: ref,
     ),
   );
+  return rated ?? false;
 }
 
 /// Rating dialog widget
 class RatingDialog extends StatefulWidget {
-  final int orderId;
+  final List<int> orderIds;
+  final int initialRating;
   final WidgetRef ref;
 
   const RatingDialog({
     super.key,
-    required this.orderId,
+    required this.orderIds,
+    this.initialRating = 5,
     required this.ref,
   });
 
@@ -40,7 +47,7 @@ class RatingDialog extends StatefulWidget {
 }
 
 class _RatingDialogState extends State<RatingDialog> {
-  int _rating = 5;
+  late int _rating = widget.initialRating;
   final _commentController = TextEditingController();
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -61,20 +68,16 @@ class _RatingDialogState extends State<RatingDialog> {
 
     try {
       final orderService = widget.ref.read(orderRepositoryProvider);
-      await orderService.rateOrder(
-        orderId: widget.orderId,
-        ratingValue: _rating,
-        comment: _commentController.text.trim().isEmpty
-            ? null
-            : _commentController.text.trim(),
-      );
+      final comment = _commentController.text.trim().isEmpty ? null : _commentController.text.trim();
+      for (final orderId in widget.orderIds) {
+        await orderService.rateOrder(orderId: orderId, ratingValue: _rating, comment: comment);
+        widget.ref.invalidate(orderProvider(orderId));
+      }
+      // The summaries carry the rating the bill's stars read
+      await widget.ref.read(ordersProvider.notifier).refresh();
 
-      // Invalidate the cached order details so it refetches with the new rating
-      widget.ref.invalidate(orderProvider(widget.orderId));
-
-      // Close dialog
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       setState(() {

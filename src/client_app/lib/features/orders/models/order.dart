@@ -1,5 +1,6 @@
 import '../../../core/models/localized_text.dart';
 import 'rating.dart';
+import '../../places/models/place.dart';
 
 /// Order status - values must match backend OrderStatus enum
 /// Note: Backend returns status as string, not int
@@ -88,6 +89,13 @@ class Order {
   /// room/table fields.
   final LocalizedText? roomName;
   final LocalizedText? tableName;
+
+  /// Where the order went, as Ordering names the place
+  final LocalizedText? placeName;
+  final PlaceKind placeKind;
+
+  /// The rating given, when the summary carries one
+  final int? ratingValue;
   final String? customerNote;
   final double total;
   final int pointsToRedeem;
@@ -111,6 +119,11 @@ class Order {
 
   bool get isPaid => paidAt != null;
 
+  /// LEGACY(places): roomName/tableName are the fallback for orders from
+  /// before the Places remodel — remove when Ordering stops filling the old
+  /// room fields.
+  LocalizedText? get place => placeName ?? roomName ?? tableName;
+
   Order({
     required this.id,
     required this.date,
@@ -118,6 +131,9 @@ class Order {
     this.description,
     this.roomName,
     this.tableName,
+    this.placeName,
+    this.placeKind = PlaceKind.room,
+    this.ratingValue,
     this.customerNote,
     required this.total,
     this.pointsToRedeem = 0,
@@ -154,6 +170,9 @@ class Order {
       // LEGACY(places): parses the older roomName/tableName fields — remove when Ordering and Notification stop reading the old room/table fields.
       roomName: json['roomName'] != null ? OrderItem._parseLocalizedText(json['roomName']) : null,
       tableName: json['tableName'] != null ? OrderItem._parseLocalizedText(json['tableName']) : null,
+      placeName: json['placeName'] != null ? OrderItem._parseLocalizedText(json['placeName']) : null,
+      placeKind: PlaceKind.fromWireName(json['placeKind'] as String?) ?? PlaceKind.room,
+      ratingValue: (json['ratingValue'] as num?)?.toInt(),
       customerNote: json['customerNote'] as String?,
       total: (json['total'] as num).toDouble(),
       pointsToRedeem: (json['pointsToRedeem'] ?? 0) as int,

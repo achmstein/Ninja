@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { type BillView } from '@/api/sales'
+import { type BillLineView, type BillView } from '@/api/sales'
 import { getMyBillsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { type StayViewModel } from '@/api/spaces'
 import { API_VERSION } from './api-client'
@@ -143,14 +143,28 @@ export function runningTime(
 export const percent = (rate: number | string | null | undefined) =>
   Math.round(Number(rate ?? 0) * 100)
 
+export const isTimeLine = (line: BillLineView) => line.source === 'SessionTime'
+
+/** A round the till put no name on: a walk-in keyed at the counter, or a
+ *  line it has not named yet. Not the customer's, but not anyone else's
+ *  either, so it is on the tile with theirs rather than hidden behind the
+ *  total. */
+export const isUnassigned = (line: BillLineView) =>
+  !line.isMine && !line.customerName && !isTimeLine(line)
+
+/** A round the till named for somebody else on the bill. */
+export const isOthers = (line: BillLineView) =>
+  !line.isMine && !!line.customerName && !isTimeLine(line)
+
 export type Parts = {
   /** What the customer's own rounds come to, at menu prices */
   ownLines: number
   /** The place's time on the bill, a running clock's time so far included */
   time: number
   /** Others are on this bill — a roster of more than one splitting the
-   *  time, or rounds that are not the customer's — so what of the total
-   *  is theirs is the till's to decide at settle, not the app's to guess */
+   *  time, or rounds the till named for somebody else — so what of the
+   *  total is theirs is the till's to decide at settle, not the app's to
+   *  guess. Unnamed rounds do not make a bill shared. */
   shared: boolean
   /** The bill's total, a running clock's time so far included */
   total: number
@@ -170,17 +184,14 @@ export function billParts(
 ): Parts {
   const lines = bill.lines ?? []
   const ownLines = lines
-    .filter((line) => line.isMine && line.source !== 'SessionTime')
+    .filter((line) => line.isMine && !isTimeLine(line))
     .reduce((sum, line) => sum + Number(line.total ?? 0), 0)
   const runningCost =
     running?.parts.reduce((sum, part) => sum + part.cost, 0) ?? 0
   const time =
-    lines
-      .filter((line) => line.source === 'SessionTime')
-      .reduce((sum, line) => sum + Number(line.total ?? 0), 0) + runningCost
-  const others = lines.some(
-    (line) => !line.isMine && line.source !== 'SessionTime',
-  )
+    lines.filter(isTimeLine).reduce((sum, line) => sum + Number(line.total ?? 0), 0) +
+    runningCost
+  const others = lines.some(isOthers)
   const members = stay?.members?.length ?? 0
   return {
     ownLines,

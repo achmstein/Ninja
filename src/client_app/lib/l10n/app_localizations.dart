@@ -338,12 +338,6 @@ abstract class AppLocalizations {
   /// **'Menu'**
   String get menu;
 
-  /// No description provided for @orders.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders'**
-  String get orders;
-
   /// No description provided for @rooms.
   ///
   /// In en, this message translates to:
@@ -383,13 +377,13 @@ abstract class AppLocalizations {
   /// No description provided for @startTimeNow.
   ///
   /// In en, this message translates to:
-  /// **'Start the time now, don't wait for me'**
+  /// **'Start the time now, don\'t wait for me'**
   String get startTimeNow;
 
   /// No description provided for @timeStartsOnConfirm.
   ///
   /// In en, this message translates to:
-  /// **'The time starts as soon as it's confirmed'**
+  /// **'The time starts as soon as it\'s confirmed'**
   String get timeStartsOnConfirm;
 
   /// No description provided for @switchToOption.
@@ -535,42 +529,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{notes}'**
   String noteWithText(String notes);
-
-  /// No description provided for @todaysOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s Orders'**
-  String get todaysOrders;
-
-  /// No description provided for @noOrdersToday.
-  ///
-  /// In en, this message translates to:
-  /// **'No orders today'**
-  String get noOrdersToday;
-
-  /// No description provided for @todayOrdersCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 order} other{{count} orders}}'**
-  String todayOrdersCount(int count);
-
-  /// No description provided for @totalSpent.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount}'**
-  String totalSpent(String amount);
-
-  /// No description provided for @failedToLoadOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load orders'**
-  String get failedToLoadOrders;
-
-  /// No description provided for @noOrdersYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No orders yet'**
-  String get noOrdersYet;
 
   /// No description provided for @yourRating.
   ///
@@ -793,12 +751,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Multi: £{rate}/hr'**
   String multiPlayerRate(String rate);
-
-  /// No description provided for @previousOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous Orders'**
-  String get previousOrders;
 
   /// No description provided for @sessions.
   ///
@@ -1608,7 +1560,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{count}h'**
-  String hoursShort(int count);
+  String hoursShort(num count);
 
   /// No description provided for @minutesShort.
   ///
@@ -1783,6 +1735,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Date'**
   String get receiptDate;
+
+  /// No description provided for @bills.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills'**
+  String get bills;
+
+  /// No description provided for @earlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get earlier;
+
+  /// No description provided for @noBillsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills yet'**
+  String get noBillsYet;
+
+  /// No description provided for @failedToLoadBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your bills'**
+  String get failedToLoadBills;
+
+  /// No description provided for @nothingOnYouToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on you today'**
+  String get nothingOnYouToday;
+
+  /// No description provided for @waitingToBeConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be confirmed'**
+  String get waitingToBeConfirmed;
+
+  /// No description provided for @timeSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'{place} time so far'**
+  String timeSoFar(String place);
+
+  /// No description provided for @atTheCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'At the counter'**
+  String get atTheCounter;
+
+  /// No description provided for @yourRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rounds'**
+  String get yourRounds;
+
+  /// No description provided for @billTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill total'**
+  String get billTotal;
+
+  /// No description provided for @paidSeveralWays.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid several ways'**
+  String get paidSeveralWays;
+
+  /// No description provided for @howWasIt.
+  ///
+  /// In en, this message translates to:
+  /// **'How was it?'**
+  String get howWasIt;
+
+  /// No description provided for @ratedThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for rating!'**
+  String get ratedThanks;
 }
 
 class _AppLocalizationsDelegate

@@ -139,9 +139,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     FTile(
                       prefix: const Icon(FIcons.receipt),
-                      title: AppText(l10n.orders),
+                      title: AppText(l10n.bills),
                       suffix: const Icon(FIcons.chevronRight),
-                      onPress: () => context.go('/orders'),
+                      onPress: () => context.go('/bills'),
                     ),
                     FTile(
                       prefix: const Icon(FIcons.gamepad2),

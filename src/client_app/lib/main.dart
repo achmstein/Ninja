@@ -22,6 +22,7 @@ import 'core/theme/app_theme.dart';
 import 'features/menu/providers/favorites_provider.dart';
 import 'features/menu/services/menu_service.dart';
 import 'features/notifications/services/notification_service.dart';
+import 'features/bills/services/bills_service.dart';
 import 'features/orders/services/order_service.dart';
 import 'features/places/services/place_service.dart';
 import 'features/settings/providers/settings_provider.dart';
@@ -185,6 +186,7 @@ class _ChillaxAppState extends ConsumerState<ChillaxApp>
         final branchId = ref.read(selectedBranchIdProvider);
         if (branchId != null) ref.invalidate(placesProvider(branchId));
         ref.read(myStaysProvider.notifier).refresh();
+        ref.read(myBillsProvider.notifier).refresh();
         ref.invalidate(roomAvailabilitySubscriptionProvider);
         WidgetsBinding.instance.ensureVisualUpdate();
       }),
@@ -192,6 +194,7 @@ class _ChillaxAppState extends ConsumerState<ChillaxApp>
     _signalRSubscriptions.add(
       signalR.onOrderStatusChanged.listen((_) {
         ref.read(ordersProvider.notifier).refresh();
+        ref.read(myBillsProvider.notifier).refresh();
         WidgetsBinding.instance.ensureVisualUpdate();
       }),
     );

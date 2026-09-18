@@ -47,7 +47,6 @@
   "join": "Join",
   "close": "Close",
   "menu": "Menu",
-  "orders": "Orders",
   "rooms": "Book",
   "yourRoom": "Your room",
   "yourTable": "Your table",
@@ -55,8 +54,12 @@
   "optionRateFormat": "{option} £{rate}",
   "@optionRateFormat": {
     "placeholders": {
-      "option": { "type": "String" },
-      "rate": { "type": "String" }
+      "option": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "perHourShort": "/hr",
@@ -65,7 +68,9 @@
   "switchToOption": "Switch to {option}",
   "@switchToOption": {
     "placeholders": {
-      "option": { "type": "String" }
+      "option": {
+        "type": "String"
+      }
     }
   },
   "switchRequestSent": "Switch request sent",
@@ -105,26 +110,6 @@
       }
     }
   },
-  "todaysOrders": "Today's Orders",
-  "noOrdersToday": "No orders today",
-  "todayOrdersCount": "{count, plural, =1{1 order} other{{count} orders}}",
-  "@todayOrdersCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "totalSpent": "{amount}",
-  "@totalSpent": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "failedToLoadOrders": "Failed to load orders",
-  "noOrdersYet": "No orders yet",
   "yourRating": "Your rating: ",
   "rateThisOrder": "Rate This Order",
   "failedToLoadDetails": "Failed to load details",
@@ -200,7 +185,6 @@
       }
     }
   },
-  "previousOrders": "Previous Orders",
   "sessions": "Sessions",
   "previousSessions": "Previous Sessions",
   "favorites": "Favorites",
@@ -485,7 +469,7 @@
   "@hoursShort": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "num"
       }
     }
   },
@@ -580,5 +564,25 @@
     }
   },
   "receiptThanks": "Thank you!",
-  "receiptDate": "Date"
+  "receiptDate": "Date",
+  "bills": "Bills",
+  "earlier": "Earlier",
+  "noBillsYet": "No bills yet",
+  "failedToLoadBills": "Couldn't load your bills",
+  "nothingOnYouToday": "Nothing on you today",
+  "waitingToBeConfirmed": "Waiting to be confirmed",
+  "timeSoFar": "{place} time so far",
+  "@timeSoFar": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "atTheCounter": "At the counter",
+  "yourRounds": "Your rounds",
+  "billTotal": "Bill total",
+  "paidSeveralWays": "Paid several ways",
+  "howWasIt": "How was it?",
+  "ratedThanks": "Thanks for rating!"
 }

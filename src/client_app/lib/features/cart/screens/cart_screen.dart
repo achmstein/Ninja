@@ -644,7 +644,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
       // Navigate to orders page and show success toast
       SoundService.instance.playSuccess();
-      context.go('/orders');
+      context.go('/bills');
       showFToast(
         context: context,
         title: Text(l10n.orderPlacedSuccessfully),

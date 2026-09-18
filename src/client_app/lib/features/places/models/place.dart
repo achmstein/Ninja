@@ -25,6 +25,10 @@ enum PlaceKind {
       orElse: () => PlaceKind.room,
     );
   }
+
+  /// From the name the services spell it by ("Table"); null for none
+  static PlaceKind? fromWireName(String? name) =>
+      name == null ? null : PlaceKind.values.where((e) => e.wireName == name).firstOrNull;
 }
 
 /// Place display status (computed at query time)
@@ -196,6 +200,9 @@ class Stay {
   final PlaceKind placeKind;
   final LocalizedText placeName;
   final List<RateOption> options;
+
+  /// The tariff's step: the clock is billed in these minutes (15 = quarter hours)
+  final int roundingMinutes;
   final DateTime createdAt;
   final DateTime? startedAt;
   final DateTime? endTime;
@@ -231,6 +238,7 @@ class Stay {
     this.placeKind = PlaceKind.room,
     required this.placeName,
     this.options = const [],
+    this.roundingMinutes = 15,
     required this.createdAt,
     this.startedAt,
     this.endTime,
@@ -291,6 +299,8 @@ class Stay {
       placeKind: PlaceKind.fromValue(json['placeKind'] as int?),
       placeName: LocalizedText.parse(json['placeName'] ?? 'Place ${json['placeId']}'),
       options: _parseOptions(json['tariff']),
+      roundingMinutes:
+          (json['tariff'] is Map ? ((json['tariff'] as Map)['roundingMinutes'] as num?)?.toInt() : null) ?? 15,
       receiptNumber: (json['receiptNumber'] as num?)?.toInt(),
       paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt'] as String) : null,
       paidWith: json['paidWith'] as String?,

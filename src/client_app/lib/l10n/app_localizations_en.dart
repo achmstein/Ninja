@@ -135,9 +135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menu => 'Menu';
 
   @override
-  String get orders => 'Orders';
-
-  @override
   String get rooms => 'Book';
 
   @override
@@ -161,7 +158,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startTimeNow => 'Start the time now, don\'t wait for me';
 
   @override
-  String get timeStartsOnConfirm => 'The time starts as soon as it\'s confirmed';
+  String get timeStartsOnConfirm =>
+      'The time starts as soon as it\'s confirmed';
 
   @override
   String switchToOption(String option) {
@@ -240,34 +238,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String noteWithText(String notes) {
     return '$notes';
   }
-
-  @override
-  String get todaysOrders => 'Today\'s Orders';
-
-  @override
-  String get noOrdersToday => 'No orders today';
-
-  @override
-  String todayOrdersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count orders',
-      one: '1 order',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String totalSpent(String amount) {
-    return '$amount';
-  }
-
-  @override
-  String get failedToLoadOrders => 'Failed to load orders';
-
-  @override
-  String get noOrdersYet => 'No orders yet';
 
   @override
   String get yourRating => 'Your rating: ';
@@ -390,9 +360,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String multiPlayerRate(String rate) {
     return 'Multi: £$rate/hr';
   }
-
-  @override
-  String get previousOrders => 'Previous Orders';
 
   @override
   String get sessions => 'Sessions';
@@ -843,7 +810,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noSessionsToday => 'No sessions today';
 
   @override
-  String hoursShort(int count) {
+  String hoursShort(num count) {
     return '${count}h';
   }
 
@@ -951,4 +918,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receiptDate => 'Date';
+
+  @override
+  String get bills => 'Bills';
+
+  @override
+  String get earlier => 'Earlier';
+
+  @override
+  String get noBillsYet => 'No bills yet';
+
+  @override
+  String get failedToLoadBills => 'Couldn\'t load your bills';
+
+  @override
+  String get nothingOnYouToday => 'Nothing on you today';
+
+  @override
+  String get waitingToBeConfirmed => 'Waiting to be confirmed';
+
+  @override
+  String timeSoFar(String place) {
+    return '$place time so far';
+  }
+
+  @override
+  String get atTheCounter => 'At the counter';
+
+  @override
+  String get yourRounds => 'Your rounds';
+
+  @override
+  String get billTotal => 'Bill total';
+
+  @override
+  String get paidSeveralWays => 'Paid several ways';
+
+  @override
+  String get howWasIt => 'How was it?';
+
+  @override
+  String get ratedThanks => 'Thanks for rating!';
 }

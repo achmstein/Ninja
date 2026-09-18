@@ -132,9 +132,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menu => 'المنيو';
 
   @override
-  String get orders => 'الطلبات';
-
-  @override
   String get rooms => 'احجز';
 
   @override
@@ -172,7 +169,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orderHere => 'اطلب هنا';
 
   @override
-  String get profile => 'حسابي';
+  String get profile => 'البروفايل';
 
   @override
   String get cart => 'السلة';
@@ -237,34 +234,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String noteWithText(String notes) {
     return '$notes';
   }
-
-  @override
-  String get todaysOrders => 'طلبات النهاردة';
-
-  @override
-  String get noOrdersToday => 'مفيش طلبات النهاردة';
-
-  @override
-  String todayOrdersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count طلبات',
-      one: 'طلب واحد',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String totalSpent(String amount) {
-    return '$amount';
-  }
-
-  @override
-  String get failedToLoadOrders => 'الطلبات مش بتحمل';
-
-  @override
-  String get noOrdersYet => 'مفيش طلبات لسه';
 
   @override
   String get yourRating => 'تقييمك: ';
@@ -386,9 +355,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String multiPlayerRate(String rate) {
     return 'مالتي: $rate ج.م./ساعة';
   }
-
-  @override
-  String get previousOrders => 'طلباتي السابقة';
 
   @override
   String get sessions => 'الحجوزات';
@@ -835,7 +801,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noSessionsToday => 'مفيش حجوزات النهارده';
 
   @override
-  String hoursShort(int count) {
+  String hoursShort(num count) {
     return '$countس';
   }
 
@@ -943,4 +909,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get receiptDate => 'التاريخ';
+
+  @override
+  String get bills => 'الحساب';
+
+  @override
+  String get earlier => 'قبل كده';
+
+  @override
+  String get noBillsYet => 'مفيش حسابات لسه';
+
+  @override
+  String get failedToLoadBills => 'الحساب مش بيحمل';
+
+  @override
+  String get nothingOnYouToday => 'مفيش حاجة عليك النهاردة';
+
+  @override
+  String get waitingToBeConfirmed => 'مستني التأكيد';
+
+  @override
+  String timeSoFar(String place) {
+    return 'وقت $place لحد دلوقتي';
+  }
+
+  @override
+  String get atTheCounter => 'من الكاشير';
+
+  @override
+  String get yourRounds => 'طلباتك';
+
+  @override
+  String get billTotal => 'إجمالي الحساب';
+
+  @override
+  String get paidSeveralWays => 'اتدفع بأكتر من طريقة';
+
+  @override
+  String get howWasIt => 'عجبك؟';
+
+  @override
+  String get ratedThanks => 'شكراً على تقييمك!';
 }
