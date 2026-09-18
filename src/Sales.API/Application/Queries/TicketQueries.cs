@@ -453,18 +453,21 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .OrderByDescending(c => c.Net)
             .ToList();
 
-        // What sold, by the line's name: the loyalty line is money off, not
-        // a thing sold, so negative lines stay out
+        // What sold, by the catalog item where the line names one and by the
+        // line's name otherwise (the room's time, older lines): the loyalty
+        // line is money off, not a thing sold, so negative lines stay out.
+        // Every item, not a top 50: the back office folds them into
+        // categories, and a menu is a short list
         var items = tickets
             .SelectMany(t => t.Lines.Where(l => l.Total > 0).Select(l => (Ticket: t.Id, Line: l)))
-            .GroupBy(x => x.Line.Description.En)
+            .GroupBy(x => x.Line.CatalogItemId is { } id ? $"#{id}" : x.Line.Description.En)
             .Select(g => new ItemTotal(
                 g.First().Line.Description,
                 g.Sum(x => x.Line.Qty),
                 g.Sum(x => x.Line.Total),
-                g.Select(x => x.Ticket).Distinct().Count()))
+                g.Select(x => x.Ticket).Distinct().Count(),
+                g.First().Line.CatalogItemId))
             .OrderByDescending(i => i.Amount)
-            .Take(50)
             .ToList();
 
         return new BreakdownReport

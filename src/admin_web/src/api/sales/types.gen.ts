@@ -18,6 +18,49 @@ export type AssignLinesCustomerRequest = {
     customerName: string;
 };
 
+export type BillLineView = {
+    id?: number | string;
+    source?: string;
+    orderId?: null | number | string;
+    description?: LocalizedText;
+    details?: null | LocalizedText;
+    qty?: number | string;
+    unitPrice?: number | string;
+    discount?: number | string;
+    total?: number | string;
+    customerName?: null | string;
+    isMine?: boolean;
+};
+
+export type BillView = {
+    id?: number | string;
+    type?: string;
+    status?: string;
+    branchId?: number | string;
+    placeId?: null | number | string;
+    placeKind?: null | string;
+    locationName?: null | LocalizedText;
+    sessionId?: null | number | string;
+    sessionEndedAt?: null | string;
+    openedAt?: string;
+    lastActivityAt?: string;
+    settledAt?: null | string;
+    voidedAt?: null | string;
+    receiptNumber?: null | number | string;
+    paidWith?: null | string;
+    lines?: Array<BillLineView>;
+    subtotal?: number | string;
+    discount?: number | string;
+    discountRate?: null | number | string;
+    serviceCharge?: number | string;
+    serviceChargeRate?: number | string;
+    vat?: number | string;
+    vatRate?: number | string;
+    vatIncluded?: boolean;
+    total?: number | string;
+    refundedTotal?: number | string;
+};
+
 export type BreakdownReport = {
     from?: string;
     to?: string;
@@ -92,6 +135,7 @@ export type ItemTotal = {
     qty: number | string;
     amount: number | string;
     tickets: number | string;
+    catalogItemId?: null | number | string;
 };
 
 export type LocalizedText = {
@@ -1485,6 +1529,42 @@ export type SetBranchPricingResponses = {
      */
     200: unknown;
 };
+
+export type GetMyBillsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Only bills settled or voided after this moment (UTC); open bills come regardless
+         */
+        since?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/mine';
+};
+
+export type GetMyBillsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyBillsResponses = {
+    /**
+     * OK
+     */
+    200: Array<BillView>;
+};
+
+export type GetMyBillsResponse = GetMyBillsResponses[keyof GetMyBillsResponses];
 
 export type GetTicketReceiptData = {
     body?: never;

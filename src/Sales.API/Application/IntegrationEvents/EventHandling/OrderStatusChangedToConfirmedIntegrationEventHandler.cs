@@ -69,7 +69,8 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             details: i.CustomizationsDescription,
             customerName: lineCustomer,
             customerId: lineCustomerId,
-            guestId: @event.GuestId)).ToList();
+            guestId: @event.GuestId,
+            catalogItemId: i.ProductId)).ToList();
 
         ticket.AppendOrder(
             @event.OrderId,

@@ -697,6 +697,8 @@ const webExtras = {
   byWeekday: { en: 'By weekday', ar: 'بيوم الأسبوع' },
   byCashier: { en: 'By cashier', ar: 'بالكاشير' },
   byItem: { en: 'By item', ar: 'بالصنف' },
+  byCategory: { en: 'By category', ar: 'بالفئة' },
+  uncategorised: { en: 'Uncategorised', ar: 'بدون فئة' },
   cashier: { en: 'Cashier', ar: 'الكاشير' },
   net: { en: 'Net', ar: 'الصافي' },
   voids: { en: 'Voids', ar: 'إلغاءات' },

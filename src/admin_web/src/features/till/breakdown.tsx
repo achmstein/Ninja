@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
+import type { LocalizedText } from '@/api/catalog'
+import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -47,6 +50,27 @@ export function TillBreakdown() {
     }),
     enabled: dayWindow !== null,
   })
+
+  // The category is Catalog's, joined here: Sales names the item on each
+  // line, the menu says which category it is in. A line from before the
+  // stamp, or an item no longer on the menu, counts as uncategorised.
+  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const byCategory = useMemo(() => {
+    const category = new Map<number, LocalizedText | undefined>()
+    for (const item of items.data ?? []) {
+      category.set(toNumber(item.id), item.catalogTypeName ?? undefined)
+    }
+    const groups = new Map<string, { name: LocalizedText | undefined; qty: number; amount: number }>()
+    for (const row of report.data?.byItem ?? []) {
+      const name = row.catalogItemId != null ? category.get(toNumber(row.catalogItemId)) : undefined
+      const key = name ? localized(name) : ''
+      const group = groups.get(key) ?? { name, qty: 0, amount: 0 }
+      group.qty += toNumber(row.qty)
+      group.amount += toNumber(row.amount)
+      groups.set(key, group)
+    }
+    return [...groups.values()].sort((a, b) => b.amount - a.amount)
+  }, [items.data, report.data, localized])
 
   const data = report.data
   const loading = !dayWindow || report.isPending
@@ -117,6 +141,29 @@ export function TillBreakdown() {
                     <Num muted={toNumber(c.refunds) === 0}>
                       {formatEgp(c.refunds)}
                     </Num>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </section>
+          <section className='grid gap-2'>
+            <h2 className='text-sm font-semibold'>{t('byCategory')}</h2>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('category')}</TableHead>
+                  <TableHead className='text-end'>{t('qty')}</TableHead>
+                  <TableHead className='text-end'>{t('net')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {byCategory.map((c, index) => (
+                  <TableRow key={index}>
+                    <TableCell className={cn(!c.name && 'text-muted-foreground')}>
+                      {c.name ? localized(c.name) : t('uncategorised')}
+                    </TableCell>
+                    <Num>{c.qty}</Num>
+                    <Num>{formatEgp(c.amount)}</Num>
                   </TableRow>
                 ))}
               </TableBody>

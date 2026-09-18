@@ -112,7 +112,10 @@ public record BreakdownReport
     public List<HourTotal> ByHour { get; init; } = [];
     public List<WeekdayTotal> ByWeekday { get; init; } = [];
     public List<CashierTotal> ByCashier { get; init; } = [];
-    /// <summary>What sold, by the line's name, biggest first (top 50).</summary>
+    /// <summary>
+    /// What sold, by the line's name, biggest first - every item, so the back
+    /// office can fold the list into categories through CatalogItemId.
+    /// </summary>
     public List<ItemTotal> ByItem { get; init; } = [];
 }
 
@@ -123,4 +126,5 @@ public record WeekdayTotal(int Weekday, int Count, decimal Net);
 
 public record CashierTotal(string Name, int Count, decimal Net, decimal Discounts, int Voids, decimal Refunds);
 
-public record ItemTotal(LocalizedText Description, decimal Qty, decimal Amount, int Tickets);
+/// <param name="CatalogItemId">The catalog item, when the lines carried one; null groups as uncategorised.</param>
+public record ItemTotal(LocalizedText Description, decimal Qty, decimal Amount, int Tickets, int? CatalogItemId = null);

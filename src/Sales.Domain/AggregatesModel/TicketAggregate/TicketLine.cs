@@ -16,6 +16,14 @@ public class TicketLine : Entity
     /// </summary>
     public int? OrderId { get; private set; }
 
+    /// <summary>
+    /// The catalog item behind an order line, as the confirmation named it;
+    /// null on the room's time and on lines from before it was stamped. The
+    /// back office groups sales by category through it - the category
+    /// itself stays Catalog's, joined on the screen, never copied here.
+    /// </summary>
+    public int? CatalogItemId { get; private set; }
+
     public LocalizedText Description { get; private set; } = new();
 
     /// <summary>Localized customization summary, when the item had any.</summary>
@@ -68,7 +76,8 @@ public class TicketLine : Entity
         string? addedBy = null,
         string? customerName = null,
         string? customerId = null,
-        string? guestId = null)
+        string? guestId = null,
+        int? catalogItemId = null)
     {
         if (string.IsNullOrWhiteSpace(description.En))
             throw new SalesDomainException("A ticket line needs a description");
@@ -90,6 +99,7 @@ public class TicketLine : Entity
         Discount = discount;
         OrderId = orderId;
         AddedBy = addedBy;
+        CatalogItemId = catalogItemId;
     }
 
     /// <summary>

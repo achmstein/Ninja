@@ -48,6 +48,7 @@ export type TransactionViewModel = {
     description?: null | string;
     source?: string;
     sourceNumber?: null | number | string;
+    ticketId?: null | number | string;
     recordedBy?: string;
     createdAt?: string;
 };
