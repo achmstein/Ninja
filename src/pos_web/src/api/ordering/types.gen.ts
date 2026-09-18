@@ -34,6 +34,14 @@ export type CancelOrderCommand = {
     orderNumber: number | string;
 };
 
+export type ClaimGuestOrdersRequest = {
+    guestId: string;
+};
+
+export type ClaimGuestOrdersResponse = {
+    claimed: number | string;
+};
+
 export type ConfirmOrderCommand = {
     orderNumber: number | string;
 };
@@ -528,6 +536,44 @@ export type AssignOrderCustomerResponses = {
 };
 
 export type AssignOrderCustomerResponse = AssignOrderCustomerResponses[keyof AssignOrderCustomerResponses];
+
+export type ClaimGuestOrdersData = {
+    body: ClaimGuestOrdersRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/claim-guest';
+};
+
+export type ClaimGuestOrdersErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ClaimGuestOrdersError = ClaimGuestOrdersErrors[keyof ClaimGuestOrdersErrors];
+
+export type ClaimGuestOrdersResponses = {
+    /**
+     * OK
+     */
+    200: ClaimGuestOrdersResponse;
+};
+
+export type ClaimGuestOrdersResponse2 = ClaimGuestOrdersResponses[keyof ClaimGuestOrdersResponses];
 
 export type DeleteOrderData = {
     body?: never;

@@ -9,7 +9,6 @@ import {
   Loader2,
   LogIn,
   Minus,
-  Package,
   Plus,
   QrCode,
   ShoppingBag,
@@ -32,7 +31,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -160,9 +158,7 @@ function CartPage() {
       // Remember the chosen customizations for next time (mobile parity).
       // Preferences hang off an account, so there is nothing to save for a guest.
       const customized = auth.isAuthenticated
-        ? lines.filter(
-            (line) => !line.bundleId && line.customizations.length > 0,
-          )
+        ? lines.filter((line) => line.customizations.length > 0)
         : []
       if (customized.length > 0) {
         savePreferences.mutate({
@@ -413,11 +409,7 @@ function CartPage() {
                 src={line.pictureUrl}
                 className='h-14 w-14 shrink-0 rounded-lg'
                 fallbackIcon={
-                  line.bundleId ? (
-                    <Package className='text-muted-foreground/40 h-5 w-5' />
-                  ) : (
-                    <Coffee className='text-muted-foreground/40 h-5 w-5' />
-                  )
+                  <Coffee className='text-muted-foreground/40 h-5 w-5' />
                 }
               />
               <div className='min-w-0 flex-1'>
@@ -427,11 +419,6 @@ function CartPage() {
                       ? line.nameAr
                       : line.nameEn}
                   </span>
-                  {line.bundleId && (
-                    <Badge variant='secondary' className='text-[10px]'>
-                      {t('deals')}
-                    </Badge>
-                  )}
                 </div>
                 {customizationsLabel && (
                   <div className='text-muted-foreground truncate text-xs'>
@@ -445,11 +432,6 @@ function CartPage() {
                 )}
                 <div className='text-sm font-bold'>
                   {price(line.price * line.quantity)}
-                  {line.originalPrice && (
-                    <span className='text-muted-foreground ms-1 text-xs font-normal line-through'>
-                      {price(line.originalPrice * line.quantity)}
-                    </span>
-                  )}
                 </div>
               </div>
               <div className='flex items-center gap-2'>

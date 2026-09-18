@@ -401,20 +401,6 @@ const webExtras = {
     en: 'Failed to delete item',
     ar: 'معرفناش نحذف الصنف',
   },
-  failedToUpdateBundle: {
-    en: 'Failed to update bundle',
-    ar: 'معرفناش نحدث العرض',
-  },
-  bundleDeleted: { en: 'Bundle deleted', ar: 'العرض اتحذف' },
-  failedToDeleteBundle: {
-    en: 'Failed to delete bundle',
-    ar: 'معرفناش نحذف العرض',
-  },
-  filterBundlesPlaceholder: {
-    en: 'Filter bundles...',
-    ar: 'بحث في العروض...',
-  },
-  savePercent: { en: 'Save {percent}%', ar: 'وفر {percent}%' },
 
   // Menu component dialogs/sheets
   englishNameRequired: {
@@ -456,34 +442,7 @@ const webExtras = {
   prepTimeShort: { en: 'Prep (min)', ar: 'التحضير (دقايق)' },
   offerFrom: { en: 'From', ar: 'من' },
   offerTo: { en: 'To', ar: 'إلى' },
-  pickAtLeastOneItem: {
-    en: 'Pick at least one menu item.',
-    ar: 'اختار صنف واحد على الأقل.',
-  },
-  bundlePriceGreaterThanZero: {
-    en: 'Bundle price must be greater than zero.',
-    ar: 'سعر العرض لازم يكون أكبر من صفر.',
-  },
-  bundlePriceMustBeLess: {
-    en: 'Bundle price must be less than the items bought separately.',
-    ar: 'سعر العرض لازم يكون أقل من سعر الأصناف لو اتشترت لوحدها.',
-  },
-  failedToSaveBundle: {
-    en: 'Failed to save bundle',
-    ar: 'معرفناش نحفظ العرض',
-  },
-  bundleSavedPhotoRejected: {
-    en: 'Bundle saved, but the photo was rejected: {detail}',
-    ar: 'العرض اتحفظ، بس الصورة اترفضت: {detail}',
-  },
-  bundleSavedPhotoUploadFailed: {
-    en: 'Bundle saved, but the photo upload failed',
-    ar: 'العرض اتحفظ، بس معرفناش نرفع الصورة',
-  },
-  bundleSaved: { en: 'Bundle saved', ar: 'العرض اتحفظ' },
-  pickAnItem: { en: 'Pick an item', ar: 'اختار صنف' },
   quantity: { en: 'Quantity', ar: 'الكمية' },
-  removeItem: { en: 'Remove item', ar: 'شيل الصنف' },
   savesPercent: { en: 'saves {percent}%', ar: 'وفّر {percent}%' },
   customizationSaved: {
     en: 'Customization saved',

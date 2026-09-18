@@ -19,8 +19,6 @@ public class CatalogContext : DbContext
     public required DbSet<UserPreferenceOption> UserPreferenceOptions { get; set; }
     public required DbSet<UserItemFavorite> UserItemFavorites { get; set; }
     public required DbSet<CustomerItemPurchase> CustomerItemPurchases { get; set; }
-    public required DbSet<BundleDeal> BundleDeals { get; set; }
-    public required DbSet<BundleDealItem> BundleDealItems { get; set; }
     public required DbSet<BranchItemOverride> BranchItemOverrides { get; set; }
     public required DbSet<BranchOptionStockOut> BranchOptionStockOuts { get; set; }
 
@@ -34,8 +32,6 @@ public class CatalogContext : DbContext
         builder.ApplyConfiguration(new UserPreferenceOptionEntityTypeConfiguration());
         builder.ApplyConfiguration(new UserItemFavoriteEntityTypeConfiguration());
         builder.ApplyConfiguration(new CustomerItemPurchaseEntityTypeConfiguration());
-        builder.ApplyConfiguration(new BundleDealEntityTypeConfiguration());
-        builder.ApplyConfiguration(new BundleDealItemEntityTypeConfiguration());
         builder.ApplyConfiguration(new BranchItemOverrideEntityTypeConfiguration());
         builder.ApplyConfiguration(new BranchOptionStockOutEntityTypeConfiguration());
 

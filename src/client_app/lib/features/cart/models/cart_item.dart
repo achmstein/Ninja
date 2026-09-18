@@ -1,5 +1,4 @@
 import '../../../core/models/localized_text.dart';
-import '../../menu/models/bundle_deal.dart';
 import '../../menu/models/menu_item.dart';
 
 /// Selected customization in cart
@@ -39,7 +38,6 @@ class CartItem {
   final int quantity;
   final String? specialInstructions;
   final List<SelectedCustomization> selectedCustomizations;
-  final int? bundleId;
 
   const CartItem({
     required this.productId,
@@ -50,10 +48,7 @@ class CartItem {
     this.quantity = 1,
     this.specialInstructions,
     this.selectedCustomizations = const [],
-    this.bundleId,
   });
-
-  bool get isBundle => bundleId != null;
 
   bool get isOnOffer => originalUnitPrice != null && originalUnitPrice! > unitPrice;
 
@@ -71,7 +66,6 @@ class CartItem {
       quantity: quantity ?? this.quantity,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       selectedCustomizations: selectedCustomizations ?? this.selectedCustomizations,
-      bundleId: bundleId,
     );
   }
 
@@ -103,18 +97,6 @@ class CartItem {
       pictureUri: item.pictureUri,
       selectedCustomizations: customizations ?? [],
       specialInstructions: instructions,
-    );
-  }
-
-  /// Create cart item from a bundle deal
-  factory CartItem.fromBundle(BundleDeal bundle) {
-    return CartItem(
-      productId: 0,
-      productName: bundle.name,
-      unitPrice: bundle.bundlePrice,
-      originalUnitPrice: bundle.originalPrice > bundle.bundlePrice ? bundle.originalPrice : null,
-      pictureUri: bundle.pictureUri,
-      bundleId: bundle.id,
     );
   }
 
@@ -152,7 +134,6 @@ class Cart {
   Cart addItem(CartItem newItem) {
     final existingIndex = items.indexWhere((i) =>
         i.productId == newItem.productId &&
-        i.bundleId == newItem.bundleId &&
         _customizationsMatch(i.selectedCustomizations, newItem.selectedCustomizations));
 
     if (existingIndex >= 0) {

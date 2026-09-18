@@ -742,13 +742,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offer => 'Offer';
 
   @override
-  String get deals => 'Deals';
-
-  @override
   String get specialOffers => 'Special Offers';
-
-  @override
-  String get bundleIncludes => 'Includes';
 
   @override
   String get playerModeSingle => 'Single';

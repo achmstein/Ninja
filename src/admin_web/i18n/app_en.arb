@@ -1,8 +1,6 @@
 {
   "@@locale": "en",
-
   "appTitle": "Chillax Admin",
-
   "dashboard": "Dashboard",
   "pending": "Pending",
   "active": "Active",
@@ -10,7 +8,6 @@
   "pendingOrders": "Pending Orders",
   "viewAll": "View all",
   "noPendingOrders": "No pending orders",
-
   "signIn": "Sign In",
   "signOut": "Sign Out",
   "adminDashboard": "Admin Dashboard",
@@ -22,7 +19,6 @@
   "adminRoleRequired": "You must have Admin role to access this application.",
   "enterBothFields": "Please enter both username and password.",
   "invalidCredentials": "Invalid username or password. Please try again.",
-
   "orders": "Orders",
   "cancelOrder": "Cancel Order",
   "cancelOrderQuestion": "Cancel Order?",
@@ -69,7 +65,6 @@
   "cancelOrderButton": "Cancel Order",
   "noKeep": "No, Keep",
   "yesCancel": "Yes, Cancel",
-
   "rooms": "Rooms",
   "endSession": "End Session?",
   "statusAvailable": "Available",
@@ -79,7 +74,6 @@
   "nameRequired": "Name *",
   "description": "Description",
   "optionalDescription": "Optional description",
-
   "menu": "Menu",
   "categories": "Categories",
   "addItem": "Add item",
@@ -125,7 +119,6 @@
     }
   },
   "backToMenu": "Back to menu",
-
   "settings": "Settings",
   "profile": "Profile",
   "adminUser": "Admin User",
@@ -139,7 +132,6 @@
   "language": "Language",
   "arabic": "Arabic",
   "english": "English",
-
   "accounts": "Accounts",
   "addCharge": "Add Charge",
   "totalOutstanding": "Total Outstanding",
@@ -166,7 +158,6 @@
   "pleaseEnterValidAmount": "Please enter a valid amount",
   "chargeAddedSuccess": "Charge added successfully",
   "failedToAddCharge": "Failed to add charge",
-
   "loyalty": "Loyalty",
   "overview": "Overview",
   "accountsLabel": "Accounts",
@@ -177,7 +168,6 @@
   "noLoyaltyAccounts": "No loyalty accounts yet",
   "points": "pts",
   "lifetime": "lifetime",
-
   "requests": "Requests",
   "allClear": "All clear",
   "noPendingRequests": "No pending requests",
@@ -190,8 +180,12 @@
   "dateAtTime": "{date} at {time}",
   "@dateAtTime": {
     "placeholders": {
-      "date": { "type": "String" },
-      "time": { "type": "String" }
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "time": "Time",
@@ -219,12 +213,9 @@
   "receiptToPay": "Receipt to Pay",
   "switchToMulti": "Switch to Multi",
   "switchToSingle": "Switch to Single",
-
   "customers": "Customers",
   "more": "More",
-
   "now": "now",
-
   "end": "End",
   "no": "No",
   "deleteRoom": "Delete Room?",
@@ -238,23 +229,28 @@
   "posReceipt": "POS receipt #{number}",
   "@posReceipt": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "posCreditNote": "POS credit note #{number}",
   "@posCreditNote": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "posTabPayment": "Tab payment #{number}",
   "@posTabPayment": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "payment": "Payment",
-
   "adjust": "Adjust",
   "addPoints": "Add Points",
   "pleaseEnterValidPoints": "Please enter a valid points amount",
@@ -262,14 +258,11 @@
   "pointsAdded": "Points added",
   "failedToAdjustPoints": "Failed to adjust points",
   "failedToAddPoints": "Failed to add points",
-
   "pleaseSelectCategory": "Please select a category",
   "accountTab": "Account",
   "loyaltyTab": "Loyalty",
-
   "logout": "Logout",
   "logoutConfirmation": "Are you sure you want to logout?",
-
   "viewAllOrdersCount": "View all {count} orders",
   "@viewAllOrdersCount": {
     "placeholders": {
@@ -278,9 +271,7 @@
       }
     }
   },
-
   "amountEgpLabel": "Amount (EGP)",
-
   "balance": "Balance",
   "memberSince": "Member since",
   "status": "Status",
@@ -314,44 +305,49 @@
   "prepTimeHint": "e.g. 10",
   "searchByNameOrEmail": "Search by name or email...",
   "noCustomersFound": "No customers found",
-
   "tierBronze": "BRONZE",
   "tierSilver": "SILVER",
   "tierGold": "GOLD",
   "tierPlatinum": "PLATINUM",
-
   "loadMore": "Load more",
   "sessions": "Sessions",
-
   "expiredAutoCancelling": "Expired - Auto-cancelling...",
   "autoCancelIn": "Auto-cancel in {countdown}",
   "@autoCancelIn": {
     "placeholders": {
-      "countdown": {"type": "String"}
+      "countdown": {
+        "type": "String"
+      }
     }
   },
   "expiresIn": "Expires in {countdown}",
   "@expiresIn": {
     "placeholders": {
-      "countdown": {"type": "String"}
+      "countdown": {
+        "type": "String"
+      }
     }
   },
-
   "currency": "EGP",
   "priceFormat": "£{price}",
   "@priceFormat": {
     "placeholders": {
-      "price": {"type": "String"}
+      "price": {
+        "type": "String"
+      }
     }
   },
   "balanceFormat": "{amount} {currency}",
   "@balanceFormat": {
     "placeholders": {
-      "amount": {"type": "String"},
-      "currency": {"type": "String"}
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
     }
   },
-
   "changePassword": "Change Password",
   "adminsManagement": "Admins",
   "helpAndSupport": "Help & Support",
@@ -374,7 +370,9 @@
   "version": "Version {version}",
   "@version": {
     "placeholders": {
-      "version": {"type": "String"}
+      "version": {
+        "type": "String"
+      }
     }
   },
   "needHelpContactUs": "Need help? Contact us:",
@@ -383,7 +381,6 @@
   "supportHours": "Available 24/7",
   "cafeAndGaming": "CAFE & GAMING",
   "aboutDescription": "Your destination for relaxation, gaming, and great food.",
-
   "appearance": "Appearance",
   "theme": "Theme",
   "light": "Light",
@@ -394,7 +391,6 @@
   "darkThemeDescription": "Always use dark theme",
   "systemDefaultDescription": "Follow your device settings",
   "selectLanguage": "Select Language",
-
   "transactionTypePurchase": "Purchase",
   "transactionTypeBonus": "Bonus",
   "transactionTypeReferral": "Referral",
@@ -404,16 +400,19 @@
   "pointsEarnedFromOrder": "Points earned from Order #{orderId}",
   "@pointsEarnedFromOrder": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "pointsRedeemedForOrder": "Points redeemed for Order #{orderId}",
   "@pointsRedeemedForOrder": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
-
   "addMenuItemPage": "Add Menu Item",
   "editMenuItemPage": "Edit Menu Item",
   "customizations": "Customizations",
@@ -447,15 +446,15 @@
   "optionsCount": "{count} {count, plural, =1{option} other{options}}",
   "@optionsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "reorder": "Reorder",
   "saveOrder": "Save Order",
   "orderSavedSuccess": "Order saved successfully",
   "failedToSaveOrder": "Failed to save order",
-
   "allOrders": "All Orders",
   "loyaltyDiscount": "Loyalty Discount",
   "subtotal": "Subtotal",
@@ -478,13 +477,11 @@
   "assignCustomer": "Assign Customer",
   "customerAssigned": "Customer assigned",
   "failedToAssignCustomer": "Failed to assign customer",
-
   "addCustomer": "Add Customer",
   "removeCustomer": "Remove Customer",
   "memberRemoved": "Member removed",
   "failedToRemoveMember": "Failed to remove member",
   "members": "Members",
-
   "updateProfile": "Update Profile",
   "profileUpdatedSuccessfully": "Profile updated successfully",
   "failedToUpdateProfile": "Failed to update profile",
@@ -494,24 +491,13 @@
   "resetPassword": "Reset Password",
   "passwordResetSuccess": "Password reset successfully",
   "failedToResetPassword": "Failed to reset password",
-
   "itemOnOffer": "Item on Offer",
   "offerPrice": "Offer Price",
   "offerPriceMustBeLess": "Offer price must be less than regular price",
-  "bundleDeals": "Bundle Deals",
-  "noBundleDeals": "No bundle deals",
-  "createBundle": "Create Bundle",
-  "editBundle": "Edit Bundle",
-  "bundlePrice": "Bundle Price",
-  "selectItems": "Select Items",
-  "bundleActive": "Active",
-  "deleteBundleConfirm": "Delete this bundle?",
   "originalPrice": "Original Price",
-
   "hoursShort": "hour",
   "totalDuration": "Total Duration",
   "changePlayerMode": "Change Player Mode?",
-
   "blockCustomer": "Block Customer",
   "unblockCustomer": "Unblock Customer",
   "blockCustomerConfirmation": "Are you sure you want to block this customer? They will not be able to use the app.",
@@ -519,7 +505,6 @@
   "customerBlocked": "Customer blocked",
   "customerUnblocked": "Customer unblocked",
   "failedToToggleCustomer": "Failed to update customer status",
-
   "selectBranch": "Select Branch",
   "switchBranch": "Switch Branch",
   "manageBranches": "Manage Branches",
@@ -548,13 +533,11 @@
   "branchDeletedSuccess": "Branch deleted successfully",
   "inactive": "Inactive",
   "displayOrder": "Display Order",
-  "save": "Save",
   "saving": "Saving...",
   "selectAdmin": "Select Admin",
   "makeOwner": "Make Owner",
   "ownerDescription": "Owners can manage branches and create admins",
   "owner": "Owner",
-
   "role": "Role",
   "adminDetails": "Admin Details",
   "adminNotFound": "Admin not found",
@@ -569,7 +552,6 @@
   "noBranchesAssigned": "No branches assigned",
   "assignBranch": "Assign Branch",
   "copiedToClipboard": "Copied to clipboard",
-
   "businessHours": "Business Hours",
   "dayStartTime": "Start",
   "dayEndTime": "End",
@@ -577,35 +559,40 @@
   "orderingDisabled": "Ordering Disabled",
   "reservationsEnabled": "Reservations Enabled",
   "reservationsDisabled": "Reservations Disabled",
-
   "batteryOptimizationTitle": "Keep Notifications Reliable",
   "batteryOptimizationBody": "Battery optimization can block order notifications when the app is in the background.\n\nTo make sure you never miss an order, please disable battery optimization for this app.",
   "disableNow": "Disable Now",
   "later": "Later",
   "dontShowAgain": "Don't show again",
-
   "orderWaiting": "Order #{orderId} Waiting",
   "@orderWaiting": {
     "placeholders": {
-      "orderId": { "type": "String" }
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "orderNotConfirmed": "Order #{orderId} Not Confirmed!",
   "@orderNotConfirmed": {
     "placeholders": {
-      "orderId": { "type": "String" }
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "orderWaitingBody": "Order from {buyerName} has been waiting {minutes} minutes.",
   "@orderWaitingBody": {
     "placeholders": {
-      "buyerName": { "type": "String" },
-      "minutes": { "type": "String" }
+      "buyerName": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "String"
+      }
     }
   },
   "viewOrders": "View Orders",
   "dismiss": "Dismiss",
-
   "fullScreenIntentTitle": "Allow Urgent Order Alerts",
   "fullScreenIntentBody": "To show urgent order reminders over the lock screen (like a phone call), please allow full-screen notifications for this app.",
   "allowNow": "Allow Now",
@@ -613,7 +600,6 @@
   "noBranchDescription": "Your account is not assigned to any branch yet. Ask the owner to assign you one.",
   "cashierRole": "Cashier",
   "retry": "Retry",
-
   "placesNav": "Rooms & Tables",
   "tables": "Tables",
   "stations": "Stations",
@@ -647,20 +633,26 @@
   "heldFor": "Held for {name}",
   "@heldFor": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "hold": "Hold",
   "holdPlaceTitle": "Hold {name}",
   "@holdPlaceTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "placeHeld": "{name} held",
   "@placeHeld": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "failedToHold": "Couldn't hold it",
@@ -674,7 +666,9 @@
   "startClockAt": "Start the clock at {name}",
   "@startClockAt": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "clockStarted": "Clock started",
@@ -685,13 +679,17 @@
   "switchToRateQuestion": "Switch to {option}?",
   "@switchToRateQuestion": {
     "placeholders": {
-      "option": {"type": "String"}
+      "option": {
+        "type": "String"
+      }
     }
   },
   "keepRate": "Keep {option}",
   "@keepRate": {
     "placeholders": {
-      "option": {"type": "String"}
+      "option": {
+        "type": "String"
+      }
     }
   },
   "switchRate": "Switch",
@@ -699,7 +697,9 @@
   "endTimeEstimate": "About {amount} on the bill.",
   "@endTimeEstimate": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "keepGoing": "Keep going",

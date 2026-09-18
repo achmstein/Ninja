@@ -1430,23 +1430,11 @@ abstract class AppLocalizations {
   /// **'Offer'**
   String get offer;
 
-  /// No description provided for @deals.
-  ///
-  /// In en, this message translates to:
-  /// **'Deals'**
-  String get deals;
-
   /// No description provided for @specialOffers.
   ///
   /// In en, this message translates to:
   /// **'Special Offers'**
   String get specialOffers;
-
-  /// No description provided for @bundleIncludes.
-  ///
-  /// In en, this message translates to:
-  /// **'Includes'**
-  String get bundleIncludes;
 
   /// No description provided for @playerModeSingle.
   ///

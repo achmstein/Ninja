@@ -200,64 +200,6 @@ public record SetItemOfferRequest
 }
 
 /// <summary>
-/// DTO for bundle deal
-/// </summary>
-public record BundleDealDto
-{
-    public int Id { get; init; }
-    public LocalizedText Name { get; init; } = new();
-    public LocalizedText Description { get; init; } = new();
-    public decimal BundlePrice { get; init; }
-    public decimal OriginalPrice { get; init; }
-    public string? PictureUri { get; init; }
-    public bool IsActive { get; init; }
-    public int DisplayOrder { get; init; }
-    public List<BundleDealItemDto> Items { get; init; } = new();
-}
-
-/// <summary>
-/// DTO for an item within a bundle deal
-/// </summary>
-public record BundleDealItemDto
-{
-    public int Id { get; init; }
-    public int CatalogItemId { get; init; }
-    public LocalizedText ItemName { get; init; } = new();
-    public decimal ItemPrice { get; init; }
-    public int Quantity { get; init; }
-}
-
-/// <summary>
-/// Request to create or update a bundle deal
-/// </summary>
-public record CreateOrUpdateBundleDealRequest
-{
-    public LocalizedText Name { get; init; } = new();
-    public LocalizedText Description { get; init; } = new();
-    public decimal BundlePrice { get; init; }
-    public bool IsActive { get; init; }
-    public int DisplayOrder { get; init; }
-    public List<BundleDealItemRequest> Items { get; init; } = new();
-}
-
-/// <summary>
-/// Item within a bundle deal request
-/// </summary>
-public record BundleDealItemRequest
-{
-    public int CatalogItemId { get; init; }
-    public int Quantity { get; init; } = 1;
-}
-
-/// <summary>
-/// Request to toggle bundle active status
-/// </summary>
-public record SetBundleActiveRequest
-{
-    public bool IsActive { get; init; }
-}
-
-/// <summary>
 /// DTO for branch item override
 /// </summary>
 public record BranchItemOverrideDto(

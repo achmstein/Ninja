@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -96,6 +96,21 @@ export const rejectGuestOrder = <ThrowOnError extends boolean = false>(options: 
  */
 export const assignOrderCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignOrderCustomerData, ThrowOnError>): RequestResult<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError> => (options.client ?? client).put<AssignOrderCustomerResponses, AssignOrderCustomerErrors, ThrowOnError>({
     url: '/api/orders/{orderId}/customer',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Claim the orders a guest device placed for the signed-in account
+ *
+ * For a guest who just signed in: every order placed under the given X-Guest-Id that no account holds yet is assigned to the caller, as the till's assign-customer does. Cancelled orders stay behind. Returns how many were claimed; safe to repeat.
+ */
+export const claimGuestOrders = <ThrowOnError extends boolean = false>(options: Options<ClaimGuestOrdersData, ThrowOnError>): RequestResult<ClaimGuestOrdersResponses, ClaimGuestOrdersErrors, ThrowOnError> => (options.client ?? client).post<ClaimGuestOrdersResponses, ClaimGuestOrdersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/claim-guest',
     ...options,
     headers: {
         'Content-Type': 'application/json',

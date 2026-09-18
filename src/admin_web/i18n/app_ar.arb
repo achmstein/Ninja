@@ -1,8 +1,6 @@
 {
   "@@locale": "ar",
-
   "appTitle": "تشيلاكس ادمن",
-
   "dashboard": "لوحة التحكم",
   "pending": "معلّق",
   "active": "نشط",
@@ -10,7 +8,6 @@
   "pendingOrders": "الطلبات المعلقة",
   "viewAll": "عرض الكل",
   "noPendingOrders": "مفيش طلبات معلقة",
-
   "signIn": "تسجيل الدخول",
   "signOut": "تسجيل الخروج",
   "adminDashboard": "لوحة تحكم المدير",
@@ -22,7 +19,6 @@
   "adminRoleRequired": "لازم يكون عندك صلاحية مدير عشان تدخل التطبيق ده.",
   "enterBothFields": "من فضلك اكتب اليوزر والباسورد.",
   "invalidCredentials": "اليوزر أو الباسورد غلط. حاول تاني.",
-
   "orders": "الطلبات",
   "cancelOrder": "إلغاء الطلب",
   "cancelOrderQuestion": "إلغاء الطلب؟",
@@ -55,7 +51,6 @@
   "cancelOrderButton": "إلغاء الطلب",
   "noKeep": "لا، خليه",
   "yesCancel": "أيوه، الغيه",
-
   "rooms": "الاوض",
   "endSession": "إنهاء الوقت؟",
   "statusAvailable": "متاحة",
@@ -65,7 +60,6 @@
   "nameRequired": "الاسم *",
   "description": "الوصف",
   "optionalDescription": "وصف اختياري",
-
   "menu": "المنيو",
   "categories": "الأقسام",
   "addItem": "إضافة صنف",
@@ -90,7 +84,6 @@
   "deleteCategory": "حذف القسم؟",
   "deleteCategoryConfirmation": "متأكد إنك عايز تحذف \"{name}\"؟",
   "backToMenu": "رجوع للمنيو",
-
   "settings": "الإعدادات",
   "profile": "الملف الشخصي",
   "adminUser": "مستخدم مدير",
@@ -104,7 +97,6 @@
   "language": "اللغة",
   "arabic": "العربية",
   "english": "English",
-
   "accounts": "الحسابات",
   "addCharge": "إضافة رصيد",
   "totalOutstanding": "إجمالي المستحق",
@@ -124,7 +116,6 @@
   "pleaseEnterValidAmount": "من فضلك اكتب مبلغ صحيح",
   "chargeAddedSuccess": "تم إضافة الرصيد بنجاح",
   "failedToAddCharge": "فشل إضافة الرصيد",
-
   "loyalty": "الولاء",
   "overview": "نظرة عامة",
   "accountsLabel": "حسابات",
@@ -135,7 +126,6 @@
   "noLoyaltyAccounts": "مفيش حسابات ولاء لسه",
   "points": "نقطة",
   "lifetime": "إجمالي",
-
   "requests": "الخدمات",
   "allClear": "تمام",
   "noPendingRequests": "مفيش خدمات معلقة",
@@ -157,12 +147,9 @@
   "receiptToPay": "الشيك للدفع",
   "switchToMulti": "تحويل مالتي",
   "switchToSingle": "تحويل سنجل",
-
   "customers": "العملاء",
   "more": "المزيد",
-
   "now": "دلوقتي",
-
   "end": "إنهاء",
   "no": "لا",
   "deleteRoom": "حذف الغرفة؟",
@@ -177,7 +164,6 @@
   "posCreditNote": "مرتجع كاشير #{number}",
   "posTabPayment": "سداد حساب #{number}",
   "payment": "دفع",
-
   "adjust": "تعديل",
   "addPoints": "إضافة نقاط",
   "pleaseEnterValidPoints": "من فضلك اكتب عدد نقاط صحيح",
@@ -185,18 +171,13 @@
   "pointsAdded": "تم إضافة النقاط",
   "failedToAdjustPoints": "فشل تعديل النقاط",
   "failedToAddPoints": "فشل إضافة النقاط",
-
   "pleaseSelectCategory": "من فضلك اختار قسم",
   "accountTab": "الحساب",
   "loyaltyTab": "الولاء",
-
   "logout": "تسجيل الخروج",
   "logoutConfirmation": "متأكد إنك عايز تسجل خروج؟",
-
   "viewAllOrdersCount": "عرض كل الـ {count} طلب",
-
   "amountEgpLabel": "المبلغ (جنيه)",
-
   "balance": "الرصيد",
   "memberSince": "عضو من",
   "status": "الحالة",
@@ -230,23 +211,18 @@
   "prepTimeHint": "مثلاً 10",
   "searchByNameOrEmail": "ابحث بالاسم أو الإيميل...",
   "noCustomersFound": "مفيش عملاء",
-
   "tierBronze": "برونزي",
   "tierSilver": "فضي",
   "tierGold": "ذهبي",
   "tierPlatinum": "بلاتيني",
-
   "loadMore": "تحميل المزيد",
   "sessions": "الجلسات",
-
   "expiredAutoCancelling": "انتهى - بيتلغي...",
   "autoCancelIn": "هيتلغي في {countdown}",
   "expiresIn": "بينتهي في {countdown}",
-
   "currency": "ج.م",
   "priceFormat": "{price} ج.م",
   "balanceFormat": "{amount} {currency}",
-
   "changePassword": "تغيير الباسورد",
   "adminsManagement": "المديرين",
   "helpAndSupport": "المساعدة والدعم",
@@ -273,7 +249,6 @@
   "supportHours": "متاحين 24/7",
   "cafeAndGaming": "كافيه وجيمنج",
   "aboutDescription": "وجهتك للاسترخاء والجيمنج والأكل الحلو.",
-
   "appearance": "المظهر",
   "theme": "الثيم",
   "light": "فاتح",
@@ -284,7 +259,6 @@
   "darkThemeDescription": "الثيم الغامق دايماً",
   "systemDefaultDescription": "زي إعدادات الجهاز",
   "selectLanguage": "اختار اللغة",
-
   "transactionTypePurchase": "شراء",
   "transactionTypeBonus": "مكافأة",
   "transactionTypeReferral": "إحالة",
@@ -293,7 +267,6 @@
   "transactionTypeAdjustment": "تعديل",
   "pointsEarnedFromOrder": "نقط مكتسبة من طلب #{orderId}",
   "pointsRedeemedForOrder": "نقط مستخدمة في طلب #{orderId}",
-
   "addMenuItemPage": "إضافة صنف",
   "editMenuItemPage": "تعديل صنف",
   "customizations": "التخصيصات",
@@ -325,12 +298,10 @@
   "deleteCustomizationConfirm": "مسح التخصيص ده؟",
   "deleteOptionConfirm": "مسح الخيار ده؟",
   "optionsCount": "{count} {count, plural, =1{خيار} other{خيارات}}",
-
   "reorder": "ترتيب",
   "saveOrder": "حفظ الترتيب",
   "orderSavedSuccess": "تم حفظ الترتيب بنجاح",
   "failedToSaveOrder": "فشل حفظ الترتيب",
-
   "allOrders": "كل الطلبات",
   "loyaltyDiscount": "خصم النقاط",
   "subtotal": "المجموع الفرعي",
@@ -353,13 +324,11 @@
   "assignCustomer": "تعيين عميل",
   "customerAssigned": "تم تعيين العميل",
   "failedToAssignCustomer": "فشل تعيين العميل",
-
   "addCustomer": "إضافة عميل",
   "removeCustomer": "إزالة عميل",
   "memberRemoved": "تم إزالة العضو",
   "failedToRemoveMember": "فشل إزالة العضو",
   "members": "الأعضاء",
-
   "updateProfile": "تعديل البيانات",
   "profileUpdatedSuccessfully": "تم تعديل البيانات بنجاح",
   "failedToUpdateProfile": "فشل تعديل البيانات",
@@ -369,24 +338,13 @@
   "resetPassword": "إعادة تعيين الباسورد",
   "passwordResetSuccess": "تم إعادة تعيين الباسورد بنجاح",
   "failedToResetPassword": "فشل إعادة تعيين الباسورد",
-
   "itemOnOffer": "عرض على الصنف",
   "offerPrice": "سعر العرض",
   "offerPriceMustBeLess": "سعر العرض لازم يكون أقل من السعر العادي",
-  "bundleDeals": "عروض مجمعة",
-  "noBundleDeals": "مفيش عروض",
-  "createBundle": "إنشاء عرض",
-  "editBundle": "تعديل عرض",
-  "bundlePrice": "سعر العرض",
-  "selectItems": "اختار الأصناف",
-  "bundleActive": "مفعّل",
-  "deleteBundleConfirm": "مسح العرض ده؟",
   "originalPrice": "السعر الأصلي",
-
   "hoursShort": "ساعة",
-    "totalDuration": "المدة الكلية",
+  "totalDuration": "المدة الكلية",
   "changePlayerMode": "تغيير الوضع؟",
-
   "blockCustomer": "حظر العميل",
   "unblockCustomer": "إلغاء حظر العميل",
   "blockCustomerConfirmation": "متأكد إنك عايز تحظر العميل ده؟ مش هيقدر يستخدم التطبيق.",
@@ -394,7 +352,6 @@
   "customerBlocked": "تم حظر العميل",
   "customerUnblocked": "تم إلغاء حظر العميل",
   "failedToToggleCustomer": "فشل تحديث حالة العميل",
-
   "selectBranch": "اختار الفرع",
   "switchBranch": "غيّر الفرع",
   "manageBranches": "إدارة الفروع",
@@ -423,13 +380,11 @@
   "branchDeletedSuccess": "تم حذف الفرع بنجاح",
   "inactive": "متوقف",
   "displayOrder": "ترتيب العرض",
-  "save": "حفظ",
   "saving": "جاري الحفظ...",
   "selectAdmin": "اختار مدير",
   "makeOwner": "تعيين كمالك",
   "ownerDescription": "المالك يقدر يدير الفروع وينشئ مديرين جداد",
   "owner": "مالك",
-
   "role": "الدور",
   "adminDetails": "تفاصيل المدير",
   "adminNotFound": "المدير مش موجود",
@@ -444,7 +399,6 @@
   "noBranchesAssigned": "مفيش فروع معينة",
   "assignBranch": "تعيين فرع",
   "copiedToClipboard": "تم النسخ",
-
   "businessHours": "ساعات العمل",
   "dayStartTime": "البداية",
   "dayEndTime": "النهاية",
@@ -452,19 +406,16 @@
   "orderingDisabled": "الطلبات متوقفة",
   "reservationsEnabled": "الحجوزات مفعّلة",
   "reservationsDisabled": "الحجوزات متوقفة",
-
   "batteryOptimizationTitle": "خلي الإشعارات توصلك",
   "batteryOptimizationBody": "توفير البطارية ممكن يمنع إشعارات الأوردرات لما التطبيق في الخلفية.\n\nعشان ماتفوتكش أي أوردر، الغي توفير البطارية للتطبيق ده.",
   "disableNow": "الغي دلوقتي",
   "later": "بعدين",
   "dontShowAgain": "ماتظهرش تاني",
-
   "orderWaiting": "أوردر #{orderId} مستني",
   "orderNotConfirmed": "أوردر #{orderId} ماتأكدش!",
   "orderWaitingBody": "أوردر من {buyerName} مستني من {minutes} دقيقة.",
   "viewOrders": "شوف الطلبات",
   "dismiss": "تمام",
-
   "fullScreenIntentTitle": "اسمح بتنبيهات الطلبات المستعجلة",
   "fullScreenIntentBody": "عشان تنبيهات الطلبات المستعجلة تظهر على شاشة القفل (زي المكالمة)، اسمح بالإشعارات على الشاشة الكاملة للتطبيق ده.",
   "allowNow": "اسمح دلوقتي",
@@ -472,7 +423,6 @@
   "noBranchDescription": "حسابك لسه مش متعين على أي فرع. اطلب من المالك يعينك على فرع.",
   "cashierRole": "كاشير",
   "retry": "حاول تاني",
-
   "placesNav": "الأماكن",
   "tables": "الترابيزات",
   "stations": "الألعاب",
@@ -506,20 +456,26 @@
   "heldFor": "محجوز لـ {name}",
   "@heldFor": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "hold": "حجز",
   "holdPlaceTitle": "حجز {name}",
   "@holdPlaceTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "placeHeld": "اتحجز {name}",
   "@placeHeld": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "failedToHold": "مقدرناش نحجز",
@@ -533,7 +489,9 @@
   "startClockAt": "ابدأ الوقت في {name}",
   "@startClockAt": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "clockStarted": "الوقت بدأ",
@@ -544,13 +502,17 @@
   "switchToRateQuestion": "نحوّل لـ {option}؟",
   "@switchToRateQuestion": {
     "placeholders": {
-      "option": {"type": "String"}
+      "option": {
+        "type": "String"
+      }
     }
   },
   "keepRate": "خلي {option}",
   "@keepRate": {
     "placeholders": {
-      "option": {"type": "String"}
+      "option": {
+        "type": "String"
+      }
     }
   },
   "switchRate": "حوّل",
@@ -558,7 +520,9 @@
   "endTimeEstimate": "حوالي {amount} على الفاتورة.",
   "@endTimeEstimate": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "keepGoing": "كمّلوا",

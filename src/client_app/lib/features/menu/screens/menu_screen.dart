@@ -14,7 +14,6 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
-import '../models/bundle_deal.dart';
 import '../models/menu_item.dart';
 import '../models/user_preference.dart';
 import '../../../core/utils/search_normalize.dart';
@@ -47,7 +46,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   String _searchQuery = '';
   List<String> _categoryNames = [];
   bool _isProgrammaticScroll = false;
-  bool _hasDealsSection = false;
 
   @override
   void initState() {
@@ -99,9 +97,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     }
     if (topIndex < 0) return;
 
-    // Offset for deals section (offers is part of _categoryNames now)
-    final dealsOffset = _hasDealsSection ? 1 : 0;
-    final adjustedIndex = topIndex - dealsOffset;
+    final adjustedIndex = topIndex;
 
     final extent = topTrailing - topLeading;
     final fraction = extent > 0 ? (-topLeading).clamp(0.0, extent) / extent : 0.0;
@@ -122,12 +118,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
 
     _selectedCategoryNotifier.value = category;
 
-    // Only deals section is outside _categoryNames; offers is included
-    final dealsOffset = _hasDealsSection ? 1 : 0;
-
     _isProgrammaticScroll = true;
     _itemScrollController.scrollTo(
-      index: index + dealsOffset,
+      index: index,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     ).then((_) {
@@ -146,8 +139,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
       return Center(child: CircularProgressIndicator(color: context.theme.colors.primary));
     }
     final groupedItemsAsync = ref.watch(groupedMenuItemsProvider((locale, branchId)));
-    final bundlesAsync = ref.watch(activeBundlesProvider(branchId));
-    final bundles = bundlesAsync.value ?? [];
     final topItems = ref.watch(topMenuItemsProvider).value ?? const <MenuItem>[];
     final cart = ref.watch(cartProvider);
     final colors = context.theme.colors;
@@ -233,7 +224,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   .toList();
 
               // Compute layout state from data
-              final hasDeals = bundles.isNotEmpty && _searchQuery.isEmpty;
               // The signed-in customer's usuals — a chip like offers, shown
               // first, and only when not searching.
               final usualItems = _searchQuery.isEmpty ? topItems.take(8).toList() : const <MenuItem>[];
@@ -244,11 +234,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                 if (hasOffers) '${l10n.specialOffers} 🔥',
                 ...filteredItems.keys.map((c) => c.name.getText(locale)),
               ];
-              final topSectionsOffset =
-                  (hasDeals ? 1 : 0) + (hasUsuals ? 1 : 0) + (hasOffers ? 1 : 0);
+              final topSectionsOffset = (hasUsuals ? 1 : 0) + (hasOffers ? 1 : 0);
 
               // Sync to fields used by scroll callbacks
-              _hasDealsSection = hasDeals;
               _categoryNames = categoryNames;
 
               // Set initial selected category (post-frame to avoid notifier
@@ -288,7 +276,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                       color: colors.primary,
                       backgroundColor: colors.background,
                       onRefresh: () async {
-                        ref.invalidate(activeBundlesProvider(branchId));
                         ref.invalidate(groupedMenuItemsProvider((locale, branchId)));
                         // Wait for the new data to load
                         await ref.read(groupedMenuItemsProvider((locale, branchId)).future);
@@ -299,25 +286,17 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                         padding: const EdgeInsets.only(bottom: 16),
                         itemCount: filteredItems.length + topSectionsOffset,
                         itemBuilder: (context, index) {
-                          // Deals section at index 0
-                          if (hasDeals && index == 0) {
-                            return _DealsSection(
-                              bundles: bundles,
-                              locale: locale,
-                            );
-                          }
-                          // "Your usuals" right after deals — a normal titled
-                          // section of the customer's most-ordered items.
-                          if (hasUsuals && index == (hasDeals ? 1 : 0)) {
+                          // "Your usuals" first — a normal titled section of
+                          // the customer's most-ordered items.
+                          if (hasUsuals && index == 0) {
                             return _CategorySection(
                               categoryName: l10n.yourUsuals,
                               items: usualItems,
                               locale: locale,
                             );
                           }
-                          // Offers section after deals and usuals
-                          if (hasOffers &&
-                              index == (hasDeals ? 1 : 0) + (hasUsuals ? 1 : 0)) {
+                          // Offers section after usuals
+                          if (hasOffers && index == (hasUsuals ? 1 : 0)) {
                             return _OffersSection(
                               items: offerItems,
                               locale: locale,
@@ -1129,78 +1108,6 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
   }
 }
 
-/// Deals section showing active bundle deals as full-width pages with dots
-class _DealsSection extends ConsumerStatefulWidget {
-  final List<BundleDeal> bundles;
-  final Locale locale;
-
-  const _DealsSection({required this.bundles, required this.locale});
-
-  @override
-  ConsumerState<_DealsSection> createState() => _DealsSectionState();
-}
-
-class _DealsSectionState extends ConsumerState<_DealsSection> {
-  int _currentPage = 0;
-  late final PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 300,
-          child: PageView.builder(
-            clipBehavior: Clip.antiAlias,
-            controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentPage = index),
-            itemCount: widget.bundles.length,
-            itemBuilder: (context, index) => _BundleDealCard(
-              bundle: widget.bundles[index],
-              locale: widget.locale,
-            ),
-          ),
-        ),
-        if (widget.bundles.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.bundles.length, (index) {
-                final isActive = index == _currentPage;
-                return Container(
-                  width: isActive ? 8 : 6,
-                  height: isActive ? 8 : 6,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isActive ? colors.primary : colors.mutedForeground.withValues(alpha: 0.3),
-                  ),
-                );
-              }),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 /// Offers section showing items on offer in a horizontal list
 class _OffersSection extends ConsumerWidget {
   final List<MenuItem> items;
@@ -1362,7 +1269,7 @@ class _OfferItemCard extends ConsumerWidget {
                         ),
                         Builder(builder: (context) {
                           final cartQty = ref.watch(cartProvider).items
-                              .where((c) => c.productId == item.id && c.bundleId == null)
+                              .where((c) => c.productId == item.id)
                               .fold(0, (sum, c) => sum + c.quantity);
                           if (cartQty > 0) {
                             return Container(
@@ -1394,184 +1301,6 @@ class _OfferItemCard extends ConsumerWidget {
                               item.customizations.isNotEmpty ? FIcons.chevronRight : FIcons.plus,
                               color: colors.primaryForeground,
                               size: 16,
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Card for a single bundle deal
-class _BundleDealCard extends ConsumerWidget {
-  final BundleDeal bundle;
-  final Locale locale;
-
-  const _BundleDealCard({required this.bundle, required this.locale});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final itemsList = bundle.items
-        .map((i) => '${i.quantity > 1 ? '${i.quantity}x ' : ''}${i.itemName.getText(locale)}')
-        .join(', ');
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.background,
-          border: Border.all(color: colors.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image on top
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: SizedBox(
-                width: double.infinity,
-                height: 160,
-                child: bundle.pictureUri != null
-                    ? CachedNetworkImage(
-                        imageUrl: bundle.pictureUri!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: colors.muted,
-                          child: Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: colors.muted,
-                          child: Icon(FIcons.package, size: 32, color: colors.mutedForeground),
-                        ),
-                      )
-                    : Container(
-                        color: colors.muted,
-                        child: Icon(FIcons.package, size: 32, color: colors.mutedForeground),
-                      ),
-              ),
-            ),
-            // Info
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(
-                      bundle.name.getText(locale),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: colors.foreground,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (bundle.description.getText(locale).isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      AppText(
-                        bundle.description.getText(locale),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colors.mutedForeground,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    if (itemsList.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      AppText(
-                        '${l10n.bundleIncludes}: $itemsList',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.mutedForeground,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const Spacer(),
-                    // Price row + add button
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              AppText(
-                                l10n.priceFormat(bundle.bundlePrice.toStringAsFixed(2)),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              if (bundle.originalPrice > bundle.bundlePrice) ...[
-                                const SizedBox(width: 6),
-                                AppText(
-                                  l10n.priceFormat(bundle.originalPrice.toStringAsFixed(2)),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colors.mutedForeground,
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Builder(builder: (context) {
-                          final cartQty = ref.watch(cartProvider).items
-                              .where((c) => c.bundleId == bundle.id)
-                              .fold(0, (sum, c) => sum + c.quantity);
-                          return GestureDetector(
-                            onTap: () {
-                              final cartItem = CartItem.fromBundle(bundle);
-                              ref.read(cartProvider.notifier).addItem(cartItem);
-                            },
-                            child: Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: colors.primary,
-                                borderRadius: BorderRadius.circular(17),
-                              ),
-                              alignment: Alignment.center,
-                              child: cartQty > 0
-                                  ? Text(
-                                      '$cartQty',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: colors.primaryForeground,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : Icon(
-                                      FIcons.plus,
-                                      color: colors.primaryForeground,
-                                      size: 18,
-                                    ),
                             ),
                           );
                         }),

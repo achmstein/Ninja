@@ -304,9 +304,7 @@ export function MenuManagement() {
 
   return (
     <>
-      <MenuPage
-        tab='menu'
-        actions={
+      <MenuPage actions={
           <>
             {scan.available && (
               <>

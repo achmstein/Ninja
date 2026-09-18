@@ -31,7 +31,7 @@ The painful part of the current setup is **double entry**. Staff already run the
 | Cashier session control | `Rooms.API/Apis/RoomsApi.cs` | Done. start/end/cancel/change-mode/members, all Admin-gated, live floor view + SignalR. |
 | Live order queue | `admin_web/src/features/orders/board.tsx` | Done. Confirm/cancel with idempotency keys. |
 | Customer tab ledger | `Accounts.API` (+ `admin_web/src/features/accounts/`) | Done. Charge/Payment/Balance, `RecordedBy` audit. Staff-operated, nothing posts to it automatically. |
-| Catalog with modifiers | `Catalog.API` | Done. Customization groups, options with price adjustments, bundles, per-branch price overrides. |
+| Catalog with modifiers | `Catalog.API` | Done. Customization groups, options with price adjustments, per-branch price overrides. (Bundle deals were removed 2026-09-18: nothing could order or bill one, and an item with a recipe covers a combo.) |
 | Cart implementation | `client_web/src/lib/cart.ts` + `routes/cart.tsx` | Done — reusable as the POS cart (same stack, same generated SDK, idempotent submit). |
 | Realtime plumbing | `Notification.API` hub + `admin_web/src/hooks/use-admin-notifications.ts` | Done. Admin group, reconnect/backoff, poll fallback. Hub now also serves anonymous guests via `JoinGuestGroup` (2026-09-01). |
 | **Café tables + QR flow** | `Spaces.API` `/api/tables`, `admin_web/src/features/tables/`, `client_web/src/routes/table/$tableId.tsx` | Done (2026-09-01). Table aggregate (label-only, no time billing), admin CRUD + printable QR cards (rooms too), scan → order to table in web and app (App Links). |

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateBundleData, CreateBundleErrors, CreateBundleResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, DeleteBundleData, DeleteBundleErrors, DeleteBundlePictureData, DeleteBundlePictureErrors, DeleteBundlePictureResponses, DeleteBundleResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetBundleData, GetBundleErrors, GetBundlePictureData, GetBundlePictureErrors, GetBundleResponses, GetBundlesData, GetBundlesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleBundleActiveData, ToggleBundleActiveErrors, ToggleBundleActiveResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateBundleData, UpdateBundleErrors, UpdateBundleResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UploadBundlePictureData, UploadBundlePictureErrors, UploadBundlePictureResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
+import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -437,110 +437,6 @@ export const saveUserPreferencesForCustomer = <ThrowOnError extends boolean = fa
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * List bundle deals
- *
- * Get active bundle deals (or all with ?includeInactive=true)
- */
-export const getBundles = <ThrowOnError extends boolean = false>(options?: Options<GetBundlesData, ThrowOnError>): RequestResult<GetBundlesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetBundlesResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/catalog/bundles',
-    ...options
-});
-
-/**
- * Create a bundle deal
- *
- * Create a new bundle deal (Admin only)
- */
-export const createBundle = <ThrowOnError extends boolean = false>(options: Options<CreateBundleData, ThrowOnError>): RequestResult<CreateBundleResponses, CreateBundleErrors, ThrowOnError> => (options.client ?? client).post<CreateBundleResponses, CreateBundleErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/catalog/bundles',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Delete bundle deal
- *
- * Delete the specified bundle deal (Admin only)
- */
-export const deleteBundle = <ThrowOnError extends boolean = false>(options: Options<DeleteBundleData, ThrowOnError>): RequestResult<DeleteBundleResponses, DeleteBundleErrors, ThrowOnError> => (options.client ?? client).delete<DeleteBundleResponses, DeleteBundleErrors, ThrowOnError>({ url: '/api/catalog/bundles/{id}', ...options });
-
-/**
- * Get bundle deal
- *
- * Get a bundle deal by ID
- */
-export const getBundle = <ThrowOnError extends boolean = false>(options: Options<GetBundleData, ThrowOnError>): RequestResult<GetBundleResponses, GetBundleErrors, ThrowOnError> => (options.client ?? client).get<GetBundleResponses, GetBundleErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/catalog/bundles/{id}',
-    ...options
-});
-
-/**
- * Update a bundle deal
- *
- * Update an existing bundle deal (Admin only)
- */
-export const updateBundle = <ThrowOnError extends boolean = false>(options: Options<UpdateBundleData, ThrowOnError>): RequestResult<UpdateBundleResponses, UpdateBundleErrors, ThrowOnError> => (options.client ?? client).put<UpdateBundleResponses, UpdateBundleErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/catalog/bundles/{id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Toggle bundle active status
- *
- * Toggle the active status of a bundle deal (Admin only)
- */
-export const toggleBundleActive = <ThrowOnError extends boolean = false>(options: Options<ToggleBundleActiveData, ThrowOnError>): RequestResult<ToggleBundleActiveResponses, ToggleBundleActiveErrors, ThrowOnError> => (options.client ?? client).patch<ToggleBundleActiveResponses, ToggleBundleActiveErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/catalog/bundles/{id}/active',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Delete bundle picture
- *
- * Delete the picture for a bundle deal (Admin only)
- */
-export const deleteBundlePicture = <ThrowOnError extends boolean = false>(options: Options<DeleteBundlePictureData, ThrowOnError>): RequestResult<DeleteBundlePictureResponses, DeleteBundlePictureErrors, ThrowOnError> => (options.client ?? client).delete<DeleteBundlePictureResponses, DeleteBundlePictureErrors, ThrowOnError>({ url: '/api/catalog/bundles/{id}/pic', ...options });
-
-/**
- * Get bundle picture
- *
- * Get the picture for a bundle deal
- */
-export const getBundlePicture = <ThrowOnError extends boolean = false>(options: Options<GetBundlePictureData, ThrowOnError>): RequestResult<unknown, GetBundlePictureErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetBundlePictureErrors, ThrowOnError>({ url: '/api/catalog/bundles/{id}/pic', ...options });
-
-/**
- * Upload bundle picture
- *
- * Upload a picture for a bundle deal (Admin only)
- */
-export const uploadBundlePicture = <ThrowOnError extends boolean = false>(options: Options<UploadBundlePictureData, ThrowOnError>): RequestResult<UploadBundlePictureResponses, UploadBundlePictureErrors, ThrowOnError> => (options.client ?? client).post<UploadBundlePictureResponses, UploadBundlePictureErrors, ThrowOnError>({
-    ...formDataBodySerializer,
-    responseType: 'json',
-    url: '/api/catalog/bundles/{id}/pic',
-    ...options,
-    headers: {
-        'Content-Type': null,
         ...options.headers
     }
 });

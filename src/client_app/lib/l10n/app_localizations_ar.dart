@@ -734,13 +734,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offer => 'عرض';
 
   @override
-  String get deals => 'الديلز';
-
-  @override
   String get specialOffers => 'عروض مميزة';
-
-  @override
-  String get bundleIncludes => 'يشمل';
 
   @override
   String get playerModeSingle => 'سنجل';

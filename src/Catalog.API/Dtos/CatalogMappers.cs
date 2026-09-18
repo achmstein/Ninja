@@ -190,39 +190,4 @@ public static class CatalogMappers
     {
         return preferences.Select(p => p.ToDto()).ToList();
     }
-
-    public static BundleDealDto ToDto(this BundleDeal bundle, string? baseUrl = null)
-    {
-        return new BundleDealDto
-        {
-            Id = bundle.Id,
-            Name = bundle.Name,
-            Description = bundle.Description,
-            BundlePrice = bundle.BundlePrice,
-            OriginalPrice = bundle.Items.Sum(i => (i.CatalogItem?.Price ?? 0) * i.Quantity),
-            PictureUri = string.IsNullOrEmpty(bundle.PictureFileName)
-                ? null
-                : $"{baseUrl}/api/catalog/bundles/{bundle.Id}/pic?v={Uri.EscapeDataString(bundle.PictureFileName)}",
-            IsActive = bundle.IsActive,
-            DisplayOrder = bundle.DisplayOrder,
-            Items = bundle.Items.Select(i => i.ToDto()).ToList()
-        };
-    }
-
-    public static List<BundleDealDto> ToDtoList(this IEnumerable<BundleDeal> bundles, string? baseUrl = null)
-    {
-        return bundles.Select(b => b.ToDto(baseUrl)).ToList();
-    }
-
-    public static BundleDealItemDto ToDto(this BundleDealItem item)
-    {
-        return new BundleDealItemDto
-        {
-            Id = item.Id,
-            CatalogItemId = item.CatalogItemId,
-            ItemName = item.CatalogItem?.Name ?? new LocalizedText(),
-            ItemPrice = item.CatalogItem?.Price ?? 0,
-            Quantity = item.Quantity
-        };
-    }
 }

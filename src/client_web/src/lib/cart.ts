@@ -24,50 +24,19 @@ export type CartLine = {
   quantity: number
   specialInstructions?: string
   customizations: CartCustomization[]
-  /** Whole-bundle lines only; never sent to the API (mobile parity) */
-  bundleId?: number
-  /** Pre-discount price for bundle lines, shown struck through */
-  originalPrice?: number
 }
 
 function lineKey(
   line: Pick<
     CartLine,
-    'productId' | 'customizations' | 'specialInstructions' | 'bundleId'
+    'productId' | 'customizations' | 'specialInstructions'
   >
 ): string {
   const options = line.customizations
     .map((c) => c.optionId)
     .sort((a, b) => a - b)
     .join(',')
-  const id = line.bundleId ? `b${line.bundleId}` : line.productId
-  return `${id}:${options}:${line.specialInstructions ?? ''}`
-}
-
-// Mirrors the mobile app's CartItem.fromBundle: the whole bundle becomes one
-// line with productId 0 at the bundle price.
-export function lineFromBundle(bundle: {
-  id?: number | string
-  name?: { en?: string; ar?: string | null }
-  bundlePrice?: number | string
-  originalPrice?: number | string
-  pictureUri?: string | null
-}): CartLine {
-  const price = Number(bundle.bundlePrice ?? 0)
-  const original = Number(bundle.originalPrice ?? 0)
-  return {
-    productId: 0,
-    bundleId: Number(bundle.id),
-    nameEn: bundle.name?.en ?? '',
-    nameAr: bundle.name?.ar ?? '',
-    price,
-    originalPrice: original > price ? original : undefined,
-    pictureUrl: bundle.pictureUri
-      ? `/api/catalog/bundles/${bundle.id}/pic`
-      : undefined,
-    quantity: 1,
-    customizations: [],
-  }
+  return `${line.productId}:${options}:${line.specialInstructions ?? ''}`
 }
 
 type CartState = {

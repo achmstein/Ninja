@@ -13,7 +13,6 @@ import {
   History,
   LayoutDashboard,
   Megaphone,
-  Package,
   Receipt,
   ReceiptText,
   ShieldCheck,
@@ -44,7 +43,6 @@ export const sidebarData: SidebarData = {
       title: 'navCatalog',
       items: [
         { title: 'menuItems', url: '/menu', icon: Coffee },
-        { title: 'bundleDeals', url: '/menu/bundles', icon: Package },
       ],
     },
     {

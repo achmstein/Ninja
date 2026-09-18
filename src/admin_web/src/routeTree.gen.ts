@@ -43,7 +43,6 @@ import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_auth
 import { Route as AuthenticatedPayrollEmployeesRouteImport } from './routes/_authenticated/payroll/employees'
 import { Route as AuthenticatedPayrollAttendanceRouteImport } from './routes/_authenticated/payroll/attendance'
 import { Route as AuthenticatedOrdersHistoryRouteImport } from './routes/_authenticated/orders/history'
-import { Route as AuthenticatedMenuBundlesRouteImport } from './routes/_authenticated/menu/bundles'
 import { Route as AuthenticatedInventoryReportsRouteImport } from './routes/_authenticated/inventory/reports'
 import { Route as AuthenticatedInventoryMenuCostRouteImport } from './routes/_authenticated/inventory/menu-cost'
 import { Route as AuthenticatedFinanceSuppliersRouteImport } from './routes/_authenticated/finance/suppliers'
@@ -245,12 +244,6 @@ const AuthenticatedOrdersHistoryRoute =
     path: '/orders/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMenuBundlesRoute =
-  AuthenticatedMenuBundlesRouteImport.update({
-    id: '/menu/bundles',
-    path: '/menu/bundles',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedInventoryReportsRoute =
   AuthenticatedInventoryReportsRouteImport.update({
     id: '/inventory/reports',
@@ -335,7 +328,6 @@ export interface FileRoutesByFullPath {
   '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
-  '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
@@ -382,7 +374,6 @@ export interface FileRoutesByTo {
   '/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/inventory/reports': typeof AuthenticatedInventoryReportsRoute
-  '/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
@@ -431,7 +422,6 @@ export interface FileRoutesById {
   '/_authenticated/finance/suppliers': typeof AuthenticatedFinanceSuppliersRoute
   '/_authenticated/inventory/menu-cost': typeof AuthenticatedInventoryMenuCostRoute
   '/_authenticated/inventory/reports': typeof AuthenticatedInventoryReportsRoute
-  '/_authenticated/menu/bundles': typeof AuthenticatedMenuBundlesRoute
   '/_authenticated/orders/history': typeof AuthenticatedOrdersHistoryRoute
   '/_authenticated/payroll/attendance': typeof AuthenticatedPayrollAttendanceRoute
   '/_authenticated/payroll/employees': typeof AuthenticatedPayrollEmployeesRoute
@@ -480,7 +470,6 @@ export interface FileRouteTypes {
     | '/finance/suppliers'
     | '/inventory/menu-cost'
     | '/inventory/reports'
-    | '/menu/bundles'
     | '/orders/history'
     | '/payroll/attendance'
     | '/payroll/employees'
@@ -527,7 +516,6 @@ export interface FileRouteTypes {
     | '/finance/suppliers'
     | '/inventory/menu-cost'
     | '/inventory/reports'
-    | '/menu/bundles'
     | '/orders/history'
     | '/payroll/attendance'
     | '/payroll/employees'
@@ -575,7 +563,6 @@ export interface FileRouteTypes {
     | '/_authenticated/finance/suppliers'
     | '/_authenticated/inventory/menu-cost'
     | '/_authenticated/inventory/reports'
-    | '/_authenticated/menu/bundles'
     | '/_authenticated/orders/history'
     | '/_authenticated/payroll/attendance'
     | '/_authenticated/payroll/employees'
@@ -858,13 +845,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/menu/bundles': {
-      id: '/_authenticated/menu/bundles'
-      path: '/menu/bundles'
-      fullPath: '/menu/bundles'
-      preLoaderRoute: typeof AuthenticatedMenuBundlesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/inventory/reports': {
       id: '/_authenticated/inventory/reports'
       path: '/inventory/reports'
@@ -954,7 +934,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceSuppliersRoute: typeof AuthenticatedFinanceSuppliersRoute
   AuthenticatedInventoryMenuCostRoute: typeof AuthenticatedInventoryMenuCostRoute
   AuthenticatedInventoryReportsRoute: typeof AuthenticatedInventoryReportsRoute
-  AuthenticatedMenuBundlesRoute: typeof AuthenticatedMenuBundlesRoute
   AuthenticatedOrdersHistoryRoute: typeof AuthenticatedOrdersHistoryRoute
   AuthenticatedPayrollAttendanceRoute: typeof AuthenticatedPayrollAttendanceRoute
   AuthenticatedPayrollEmployeesRoute: typeof AuthenticatedPayrollEmployeesRoute
@@ -994,7 +973,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinanceSuppliersRoute: AuthenticatedFinanceSuppliersRoute,
   AuthenticatedInventoryMenuCostRoute: AuthenticatedInventoryMenuCostRoute,
   AuthenticatedInventoryReportsRoute: AuthenticatedInventoryReportsRoute,
-  AuthenticatedMenuBundlesRoute: AuthenticatedMenuBundlesRoute,
   AuthenticatedOrdersHistoryRoute: AuthenticatedOrdersHistoryRoute,
   AuthenticatedPayrollAttendanceRoute: AuthenticatedPayrollAttendanceRoute,
   AuthenticatedPayrollEmployeesRoute: AuthenticatedPayrollEmployeesRoute,

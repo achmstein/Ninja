@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/network/api_client.dart';
-import '../models/bundle_deal.dart';
 import '../models/menu_item.dart';
 import '../models/user_preference.dart';
 
@@ -12,7 +11,6 @@ abstract class MenuRepository {
   Future<List<MenuItem>> getMenuItems({int? categoryId});
   Future<MenuItem> getMenuItem(int id);
   Future<List<MenuCategory>> getCategories();
-  Future<List<BundleDeal>> getActiveBundles();
   Future<UserItemPreference?> getUserPreference(int catalogItemId);
   Future<List<UserItemPreference>> getUserPreferences(List<int> catalogItemIds);
   Future<void> saveUserPreferences(SaveUserPreferencesRequest request);
@@ -55,19 +53,6 @@ class ApiMenuRepository implements MenuRepository {
     );
 
     return MenuItem.fromJson(response.data!);
-  }
-
-  /// Get active bundle deals
-  @override
-  Future<List<BundleDeal>> getActiveBundles() async {
-    try {
-      final response = await _apiClient.get<List<dynamic>>('bundles');
-      return (response.data ?? [])
-          .map((e) => BundleDeal.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
-    }
   }
 
   /// Get all categories
@@ -201,12 +186,6 @@ final userPreferenceProvider = FutureProvider.family<UserItemPreference?, int>(
     return service.getUserPreference(catalogItemId);
   },
 );
-
-/// Provider for active bundle deals — keyed by branch ID for clean state per branch
-final activeBundlesProvider = FutureProvider.family<List<BundleDeal>, int>((ref, branchId) async {
-  final service = ref.watch(menuRepositoryProvider);
-  return service.getActiveBundles();
-});
 
 /// The signed-in user's most-ordered items ("your usuals"), ranked. Empty for
 /// a guest or a user without enough history, so the menu section hides.

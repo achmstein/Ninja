@@ -11,10 +11,3 @@ export function itemPictureUrl(
 ): string {
   return `/api/catalog/items/${id}/pic${pictureVersion(pictureUri)}`
 }
-
-export function bundlePictureUrl(
-  id: number | string | undefined,
-  pictureUri?: string | null
-): string {
-  return `/api/catalog/bundles/${id}/pic${pictureVersion(pictureUri)}`
-}

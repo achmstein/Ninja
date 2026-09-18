@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignOrderCustomer, cancelOrder, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, rejectGuestOrder, setOrderReady } from '../sdk.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse } from '../types.gen';
+import { assignOrderCustomer, cancelOrder, claimGuestOrders, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, rejectGuestOrder, setOrderReady } from '../sdk.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -160,6 +160,25 @@ export const assignOrderCustomerMutation = (options?: Partial<Options<AssignOrde
     const mutationOptions: UseMutationOptions<AssignOrderCustomerResponse, AxiosError<AssignOrderCustomerError>, Options<AssignOrderCustomerData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await assignOrderCustomer({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Claim the orders a guest device placed for the signed-in account
+ *
+ * For a guest who just signed in: every order placed under the given X-Guest-Id that no account holds yet is assigned to the caller, as the till's assign-customer does. Cancelled orders stay behind. Returns how many were claimed; safe to repeat.
+ */
+export const claimGuestOrdersMutation = (options?: Partial<Options<ClaimGuestOrdersData>>): UseMutationOptions<ClaimGuestOrdersResponse2, AxiosError<ClaimGuestOrdersError>, Options<ClaimGuestOrdersData>> => {
+    const mutationOptions: UseMutationOptions<ClaimGuestOrdersResponse2, AxiosError<ClaimGuestOrdersError>, Options<ClaimGuestOrdersData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await claimGuestOrders({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

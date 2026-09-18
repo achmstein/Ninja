@@ -43,7 +43,6 @@ export function ItemRow({
   const simpleLine = lines.find(
     (line) =>
       line.productId === Number(item.id) &&
-      !line.bundleId &&
       line.customizations.length === 0 &&
       !line.specialInstructions
   )

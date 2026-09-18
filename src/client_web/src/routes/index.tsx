@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input'
 import { InstallBanner } from '@/components/install-banner'
 import { CategoryRail, type MenuSection } from '@/components/menu/category-rail'
 import { CustomizeDialog } from '@/components/menu/customize-dialog'
-import { DealsSection } from '@/components/menu/deals-section'
 import { ItemRow, ItemRowSkeleton } from '@/components/menu/item-card'
 import { OffersCarousel } from '@/components/menu/offers-carousel'
 import { useFavorites } from '@/components/menu/use-favorites'
@@ -234,8 +233,6 @@ function MenuPage() {
             onCustomize={setCustomizeItem}
             orderingEnabled={orderingEnabled}
           />
-
-          <DealsSection orderingEnabled={orderingEnabled} />
 
           <CategoryRail
             sections={sections}

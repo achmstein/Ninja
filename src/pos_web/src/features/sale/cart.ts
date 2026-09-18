@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// The counter-sale cart, ported from client_web/src/lib/cart.ts (minus
-// bundles — deals are a customer-app feature; the pad sells catalog items).
+// The counter-sale cart, ported from client_web/src/lib/cart.ts.
 
 // A snapshot of a chosen customization option at add-to-cart time
 export type SaleCustomization = {
