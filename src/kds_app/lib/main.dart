@@ -1,3 +1,7 @@
+import 'dart:ui' show PlatformDispatcher;
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -25,6 +29,21 @@ void main() async {
   // Initialize locale and branch before app starts
   await initializeLocale(override: kDemoMode ? kDemoLocale : null);
   await initializeBranch();
+
+  // A kitchen display that crashes costs money: every Flutter and async error goes to
+  // Crashlytics. Without google-services.json (the app not yet registered
+  // in the Firebase console) initializeApp throws and the app runs
+  // without crash reporting, as it always did.
+  try {
+    await Firebase.initializeApp();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (_) {
+    // Not configured yet
+  }
 
   runApp(
     ProviderScope(

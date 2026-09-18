@@ -8,6 +8,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Crash reporting rides on the Firebase project. Both plugins refuse to
+// configure without google-services.json, so they apply only once this
+// app is registered in the Firebase console and the file is dropped in
+// beside this script; until then the build is the one it always was.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {

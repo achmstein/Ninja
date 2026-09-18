@@ -1,3 +1,7 @@
+plugins {
+    id("com.google.firebase.crashlytics") version "3.0.3" apply false
+}
+
 allprojects {
     repositories {
         google()
