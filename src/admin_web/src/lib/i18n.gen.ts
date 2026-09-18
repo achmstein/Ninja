@@ -1,4 +1,4 @@
-// Auto-generated from admin_app/lib/l10n/app_{en,ar}.arb by
+// Auto-generated from admin_web/i18n/app_{en,ar}.arb by
 // scripts/generate-i18n.mjs — do not edit by hand; run `npm run generate:i18n`.
 
 export type PluralForms = Record<string, string>

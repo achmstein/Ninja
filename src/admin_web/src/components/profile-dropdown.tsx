@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
+import { usePush } from '@/features/push/use-push'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -19,6 +21,7 @@ export function ProfileDropdown() {
   const t = useT()
   const [open, setOpen] = useDialogState()
   const auth = useAuth()
+  const push = usePush()
 
   // Extract user info from OIDC
   const user = auth.user?.profile
@@ -57,6 +60,19 @@ export function ProfileDropdown() {
             <DropdownMenuItem asChild>
               <Link to='/settings'>{t('settings')}</Link>
             </DropdownMenuItem>
+            {/* This browser as an admin device: new orders, requests, the
+                day's digest. Only offered when the Firebase web config is
+                built in; greyed when the browser has blocked notifications. */}
+            {push.available && (
+              <DropdownMenuCheckboxItem
+                checked={push.enabled}
+                disabled={push.blocked}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={() => void push.toggle()}
+              >
+                {push.blocked ? t('pushBlocked') : t('pushNotifications')}
+              </DropdownMenuCheckboxItem>
+            )}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>

@@ -12,6 +12,9 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // This browser as an admin device (the profile menu)
+  pushNotifications: { en: 'Push notifications', ar: 'الإشعارات' },
+  pushBlocked: { en: 'Notifications blocked by the browser', ar: 'المتصفح مانع الإشعارات' },
   // The till's confirm as an identity check
   guestFirstOrderHere: { en: 'First order here', ar: 'أول طلب هنا' },
   guestOrdersBefore: {

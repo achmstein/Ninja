@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const arbDir = join(here, '..', '..', 'admin_app', 'lib', 'l10n')
+const arbDir = join(here, '..', 'i18n')
 const outFile = join(here, '..', 'src', 'lib', 'i18n.gen.ts')
 
 const en = JSON.parse(readFileSync(join(arbDir, 'app_en.arb'), 'utf8'))
@@ -82,7 +82,7 @@ if (missingAr.length > 0) {
   )
 }
 
-const output = `// Auto-generated from admin_app/lib/l10n/app_{en,ar}.arb by
+const output = `// Auto-generated from admin_web/i18n/app_{en,ar}.arb by
 // scripts/generate-i18n.mjs — do not edit by hand; run \`npm run generate:i18n\`.
 
 export type PluralForms = Record<string, string>

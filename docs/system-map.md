@@ -34,7 +34,7 @@ No service calls another over HTTP; where a screen needs two services' data, the
 | `kds_web`, `kds_app` | The kitchen screen | Orders to make | Done. Keep. |
 | `client_web`, `mobile_app` | Customers | Menu, ordering, rooms, loyalty, tabs | Keep. |
 | **Manager phone** — a new Flutter app scaffolded from `pos_app` (same forui / riverpod / go_router / dio stack) | Owner / manager on the move | The owner's glance (today's till, month money, low stock), stock on the go (count by area, receive with the camera and the receipt scan, waste), a bill scanned onto an expense, push (`new_order`, `stock_low`), approvals later | **To build.** Replaces `admin_app`. |
-| `admin_app` | — | Orders, rooms, requests, customers, tabs (all now POS), menu, branches, staff, loyalty (all better on a desk) | **Stale**: 5 commits since mid-August against 35 on `pos_app`. Retire once the manager phone reaches the scope above. Its `lib/l10n/*.arb` is `admin_web`'s string source (`scripts/generate-i18n.mjs`) and moves to a shared `src/l10n/` first. It also carries the only FCM plumbing and the Play Store listing; both carry over. |
+| `admin_app` | — | — | **Retired 2026-09-18.** `admin_web` installs as a PWA (manifest, icons) and subscribes this browser as the admin push device from the profile menu, so the day's digest, new orders and requests reach the owner's phone without a store app. Its ARB strings moved to `src/admin_web/i18n/`. |
 
 Rules that follow:
 
@@ -48,6 +48,6 @@ One shared library (`src/Chillax.AI`), one chat model, one agent per feature, ow
 
 ## 4. What is not clean yet, in order
 
-1. `admin_app` (above).
+1. ~~`admin_app`~~ retired 2026-09-18 (above).
 2. `*.FunctionalTests` — eShop-era in-process harnesses, stale; the E2E suite covers what they did.
 3. `README.md` still opens as eShop's; the Chillax sections start at "AI assistant".

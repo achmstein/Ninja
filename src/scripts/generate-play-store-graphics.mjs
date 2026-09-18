@@ -11,7 +11,8 @@ if (!fs.existsSync(outputDir)) {
 
 const cupPath = path.join(clientAssets, 'cup.png');
 const logoPath = path.join(clientAssets, 'logo.png');
-const logoWhitePath = path.resolve('admin_app/assets/images/logo_white.png');
+// The white wordmark, kept beside this script since the Flutter admin app (its old home) retired
+const logoWhitePath = path.resolve('scripts/logo_white.png');
 
 async function generateAppIcon() {
   // 512x512 white background with cup centered

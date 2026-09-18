@@ -3,6 +3,7 @@ import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
+import { useRefreshPush } from '@/features/push/use-push'
 import { useAdminNotifications } from '@/hooks/use-admin-notifications'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -18,6 +19,9 @@ type AuthenticatedLayoutProps = {
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   // Live order/room updates over SignalR for every admin page
   useAdminNotifications()
+
+  // A device that opted into push keeps its subscription fresh
+  useRefreshPush()
 
   // "Orders · Chillax"-style browser-tab titles
   usePageTitle()
