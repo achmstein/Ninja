@@ -1,5 +1,10 @@
 name: Chillax Pull Request Validation
 
+# Every client and every service that has tests, on every pull request. The
+# .NET job builds the solution filter and runs its unit and functional tests
+# (the E2E suite boots Docker and stays out on purpose); the web job type-checks,
+# lints and builds each SPA; the Flutter job analyzes and tests each app.
+
 on:
   pull_request:
     paths-ignore:
@@ -21,3 +26,64 @@ jobs:
         run: dotnet build Chillax.Web.slnf
       - name: Test
         run: dotnet test --solution Chillax.Web.slnf --no-build --no-progress --output detailed
+
+  web:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [admin_web, pos_web, kds_web, client_web]
+    defaults:
+      run:
+        working-directory: src/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/${{ matrix.app }}/package-lock.json
+      - run: npm ci
+      # tsc -b then vite build: a type error fails the PR
+      - run: npm run build
+      - name: Lint
+        run: |
+          if npm run | grep -q '^  lint$'; then npm run lint; else echo "no lint script"; fi
+      - name: Unit tests
+        run: |
+          if npm run | grep -q '^  test$'; then npm test; else echo "no test script"; fi
+
+  flutter:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: client_app
+            codegen: true
+          - app: pos_app
+            codegen: false
+          - app: kds_app
+            codegen: false
+    defaults:
+      run:
+        working-directory: src/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.2'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - if: ${{ matrix.codegen }}
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+      # Warnings fail, infos do not (flutter analyze's defaults)
+      - run: flutter analyze
+      - name: Tests
+        run: |
+          if [ -d test ] && ls test/*_test.dart test/**/*_test.dart >/dev/null 2>&1 && [ "${{ matrix.app }}" != "client_app" ]; then
+            flutter test
+          else
+            echo "no test suite for ${{ matrix.app }}"
+          fi

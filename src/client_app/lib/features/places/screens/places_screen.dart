@@ -99,7 +99,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     if (state == AppLifecycleState.resumed) {
       ref.read(myStaysProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
-      if (branchId != null) ref.refresh(placesProvider(branchId));
+      if (branchId != null) ref.invalidate(placesProvider(branchId));
     }
   }
 
@@ -991,7 +991,7 @@ class NotifyMeBanner extends ConsumerWidget {
                 final repo = ref.read(notificationRepositoryProvider);
                 if (value) {
                   final success = await repo.subscribeToRoomAvailability(
-                    preferredLanguage: locale?.languageCode ?? 'en',
+                    preferredLanguage: locale.languageCode,
                   );
                   ref.invalidate(roomAvailabilitySubscriptionProvider);
                   if (context.mounted) {
@@ -1150,25 +1150,6 @@ class PlaceListItem extends ConsumerWidget {
       case PlaceStatus.maintenance:
         return colors.mutedForeground;
     }
-  }
-
-  Widget _ratePill(BuildContext context, String label, double rate, dynamic colors) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: AppText(
-        '$label ${l10n.priceFormat(rate.toStringAsFixed(0))}',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: colors.primary,
-        ),
-      ),
-    );
   }
 
   String _getLocalizedStatus(BuildContext context, PlaceStatus status) {

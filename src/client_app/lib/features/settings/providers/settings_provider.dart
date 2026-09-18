@@ -83,7 +83,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
 
       // Register/unregister FCM token based on order notification toggle
       if (orderStatusUpdates == true) {
-        final lang = ref.read(localeProvider)?.languageCode ?? 'en';
+        final lang = ref.read(localeProvider).languageCode;
         ref.read(notificationRepositoryProvider).registerForOrderNotifications(
           preferredLanguage: lang,
         );
