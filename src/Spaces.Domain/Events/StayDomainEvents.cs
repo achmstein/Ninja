@@ -22,3 +22,9 @@ public record class StayCustomerAssignedDomainEvent(Stay Stay, string CustomerId
 
 /// <summary>A place was created or its details, tariff or active flag changed: what other services project.</summary>
 public record class PlaceChangedDomainEvent(Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate.Place Place) : INotification;
+
+/// <summary>The till paid the bill this stay's time was on; the party gets told.</summary>
+public record class StayPaidDomainEvent(Stay Stay, int ReceiptNumber, int BranchId) : INotification;
+
+/// <summary>A place was deleted: what other services drop from their projections.</summary>
+public record class PlaceDeletedDomainEvent(Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate.Place Place) : INotification;

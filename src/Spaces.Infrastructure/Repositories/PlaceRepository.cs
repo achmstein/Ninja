@@ -4,11 +4,12 @@ public class PlaceRepository : IPlaceRepository
 {
     private readonly SpacesContext _context;
 
-    public IUnitOfWork UnitOfWork => _context;
+    public IUnitOfWork UnitOfWork { get; }
 
-    public PlaceRepository(SpacesContext context)
+    public PlaceRepository(SpacesContext context, IUnitOfWork unitOfWork)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public Place Add(Place place) => _context.Places.Add(place).Entity;

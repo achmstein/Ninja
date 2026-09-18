@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using Chillax.EventBus.Abstractions;
 using Chillax.Spaces.API.Application.Queries;
 using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
 using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
@@ -100,12 +99,12 @@ public static class TablesApi
     }
 
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> DeleteTable(
-        [FromServices] IPlaceRepository places, [FromServices] IStayRepository stays, [FromServices] IEventBus eventBus,
+        [FromServices] IPlaceRepository places, [FromServices] IStayRepository stays,
         [Description("The table ID")] int id)
     {
         var place = await Resolve(places, id);
         if (place is null) return TypedResults.NotFound();
-        return await PlacesApi.DeletePlace(places, stays, eventBus, place.Id);
+        return await PlacesApi.DeletePlace(places, stays, place.Id);
     }
 }
 

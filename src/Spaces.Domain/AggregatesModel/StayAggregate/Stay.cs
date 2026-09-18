@@ -241,7 +241,7 @@ public class Stay : Entity, IAggregateRoot
     /// The receipt that covered this stay. Idempotent on the receipt number
     /// (the bus redelivers); returns whether anything changed.
     /// </summary>
-    public bool MarkPaid(int receiptNumber, string tender, DateTime at, int? ticketId = null)
+    public bool MarkPaid(int receiptNumber, string tender, DateTime at, int? ticketId = null, int? branchId = null)
     {
         if (ReceiptNumber == receiptNumber)
             return false;
@@ -249,6 +249,7 @@ public class Stay : Entity, IAggregateRoot
         PaidWith = tender;
         PaidAt = at;
         TicketId = ticketId ?? TicketId;
+        AddDomainEvent(new StayPaidDomainEvent(this, receiptNumber, branchId ?? Place?.BranchId ?? 1));
         return true;
     }
 

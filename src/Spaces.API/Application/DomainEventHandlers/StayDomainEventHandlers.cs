@@ -1,4 +1,4 @@
-using Chillax.EventBus.Abstractions;
+using Chillax.Spaces.API.Application.IntegrationEvents;
 using Chillax.Spaces.API.Application.IntegrationEvents.Events;
 using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
 using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
@@ -9,9 +9,10 @@ using MediatR;
 namespace Chillax.Spaces.API.Application.DomainEventHandlers;
 
 // Every handler here turns a domain event into the integration event the
-// other services and the screens listen for. They run after the commit
-// (see SpacesContext.SaveEntitiesAsync), so a screen that refetches on
-// hearing one reads the new state.
+// other services and the screens listen for. They run inside the unit of
+// work (SpacesUnitOfWork) and queue the event on its outbox; it goes out
+// after the commit, so a screen that refetches on hearing it reads the
+// new state, and a failed commit sends nothing.
 
 /// <summary>The place fields every Spaces event carries, from a stay whose Place may or may not be loaded.</summary>
 internal static class StayEventFields
@@ -33,7 +34,7 @@ internal static class StayEventFields
     }
 }
 
-public class StayHeldDomainEventHandler(IEventBus eventBus, ILogger<StayHeldDomainEventHandler> logger)
+public class StayHeldDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayHeldDomainEventHandler> logger)
     : INotificationHandler<StayHeldDomainEvent>
 {
     public async Task Handle(StayHeldDomainEvent notification, CancellationToken cancellationToken)
@@ -41,7 +42,7 @@ public class StayHeldDomainEventHandler(IEventBus eventBus, ILogger<StayHeldDoma
         var stay = notification.Stay;
         logger.LogInformation("Stay held: {StayId} at place {PlaceId} for {Customer}", stay.Id, stay.PlaceId, stay.CustomerName ?? "Unknown");
 
-        await eventBus.PublishAsync(new RoomReservedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new RoomReservedIntegrationEvent(
             stay.Id,
             // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
@@ -57,7 +58,7 @@ public class StayHeldDomainEventHandler(IEventBus eventBus, ILogger<StayHeldDoma
     }
 }
 
-public class StayStartedDomainEventHandler(IEventBus eventBus, ILogger<StayStartedDomainEventHandler> logger)
+public class StayStartedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayStartedDomainEventHandler> logger)
     : INotificationHandler<StayStartedDomainEvent>
 {
     public async Task Handle(StayStartedDomainEvent notification, CancellationToken cancellationToken)
@@ -65,7 +66,7 @@ public class StayStartedDomainEventHandler(IEventBus eventBus, ILogger<StayStart
         var stay = notification.Stay;
         logger.LogInformation("Stay started: {StayId} at place {PlaceId} on {Option}", stay.Id, stay.PlaceId, stay.CurrentOptionCode);
 
-        await eventBus.PublishAsync(new SessionStartedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new SessionStartedIntegrationEvent(
             stay.Id,
             // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
@@ -82,7 +83,7 @@ public class StayStartedDomainEventHandler(IEventBus eventBus, ILogger<StayStart
     }
 }
 
-public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDomainEventHandler> logger)
+public class StayEndedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayEndedDomainEventHandler> logger)
     : INotificationHandler<StayEndedDomainEvent>
 {
     public async Task Handle(StayEndedDomainEvent notification, CancellationToken cancellationToken)
@@ -92,13 +93,13 @@ public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDo
 
         // The party's devices drop their stay notification
         // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-        await eventBus.PublishAsync(new SessionEndedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new SessionEndedIntegrationEvent(
             stay.Id, stay.PlaceId, stay.PlaceName(), stay.PartyIds(),
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
 
         // Whoever asked to be told the place is free
         // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-        await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
             stay.PlaceId, stay.PlaceName(), stay.BranchId(),
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
 
@@ -110,7 +111,7 @@ public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDo
                 .Select(c => new SessionCostLine(c.OptionCode, c.OptionName, c.HourlyRate, c.Hours, c.Cost))
                 .ToList();
 
-            await eventBus.PublishAsync(new SessionCompletedIntegrationEvent(
+            await outbox.AddAndSaveEventAsync(new SessionCompletedIntegrationEvent(
                 stay.Id,
                 stay.CustomerId,
                 // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
@@ -135,7 +136,7 @@ public class StayEndedDomainEventHandler(IEventBus eventBus, ILogger<StayEndedDo
     }
 }
 
-public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCancelledDomainEventHandler> logger)
+public class StayCancelledDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayCancelledDomainEventHandler> logger)
     : INotificationHandler<StayCancelledDomainEvent>
 {
     public async Task Handle(StayCancelledDomainEvent notification, CancellationToken cancellationToken)
@@ -143,7 +144,7 @@ public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCan
         var stay = notification.Stay;
         logger.LogInformation("Stay cancelled: {StayId}, was {PreviousStatus}", stay.Id, notification.PreviousStatus);
 
-        await eventBus.PublishAsync(new ReservationCancelledIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new ReservationCancelledIntegrationEvent(
             stay.Id,
             // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
@@ -160,14 +161,14 @@ public class StayCancelledDomainEventHandler(IEventBus eventBus, ILogger<StayCan
         if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
         {
             // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-            await eventBus.PublishAsync(new RoomBecameAvailableIntegrationEvent(
+            await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
                 stay.PlaceId, stay.PlaceName(), stay.BranchId(),
                 stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
         }
     }
 }
 
-public class StayMemberJoinedDomainEventHandler(IEventBus eventBus, ILogger<StayMemberJoinedDomainEventHandler> logger)
+public class StayMemberJoinedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayMemberJoinedDomainEventHandler> logger)
     : INotificationHandler<StayMemberJoinedDomainEvent>
 {
     public async Task Handle(StayMemberJoinedDomainEvent notification, CancellationToken cancellationToken)
@@ -175,7 +176,7 @@ public class StayMemberJoinedDomainEventHandler(IEventBus eventBus, ILogger<Stay
         var stay = notification.Stay;
         logger.LogInformation("Stay member joined: {StayId} at place {PlaceId}, member {MemberId}", stay.Id, stay.PlaceId, notification.MemberUserId);
 
-        await eventBus.PublishAsync(new SessionMemberJoinedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new SessionMemberJoinedIntegrationEvent(
             stay.Id,
             // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
@@ -191,7 +192,7 @@ public class StayMemberJoinedDomainEventHandler(IEventBus eventBus, ILogger<Stay
     }
 }
 
-public class StayCustomerAssignedDomainEventHandler(IEventBus eventBus, ILogger<StayCustomerAssignedDomainEventHandler> logger)
+public class StayCustomerAssignedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayCustomerAssignedDomainEventHandler> logger)
     : INotificationHandler<StayCustomerAssignedDomainEvent>
 {
     public async Task Handle(StayCustomerAssignedDomainEvent notification, CancellationToken cancellationToken)
@@ -199,7 +200,7 @@ public class StayCustomerAssignedDomainEventHandler(IEventBus eventBus, ILogger<
         var stay = notification.Stay;
         logger.LogInformation("Stay customer assigned: {StayId} at place {PlaceId}, customer {CustomerId}", stay.Id, stay.PlaceId, notification.CustomerId);
 
-        await eventBus.PublishAsync(new SessionCustomerAssignedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new SessionCustomerAssignedIntegrationEvent(
             stay.Id,
             // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
@@ -213,14 +214,14 @@ public class StayCustomerAssignedDomainEventHandler(IEventBus eventBus, ILogger<
 }
 
 /// <summary>What Ordering and Notification project: a place's identity and capabilities.</summary>
-public class PlaceChangedDomainEventHandler(IEventBus eventBus, ILogger<PlaceChangedDomainEventHandler> logger)
+public class PlaceChangedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<PlaceChangedDomainEventHandler> logger)
     : INotificationHandler<PlaceChangedDomainEvent>
 {
     public async Task Handle(PlaceChangedDomainEvent notification, CancellationToken cancellationToken)
     {
         var place = notification.Place;
         logger.LogInformation("Place changed: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.En);
-        await eventBus.PublishAsync(place.ToUpdatedEvent());
+        await outbox.AddAndSaveEventAsync(place.ToUpdatedEvent());
     }
 }
 
@@ -238,4 +239,38 @@ public static class PlaceEventMapping
         place.LegacyRoomId,
         place.LegacyTableId,
         deleted);
+}
+
+/// <summary>The bill with this stay's time on it was paid: everyone in the party gets their list refreshed.</summary>
+public class StayPaidDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayPaidDomainEventHandler> logger)
+    : INotificationHandler<StayPaidDomainEvent>
+{
+    public async Task Handle(StayPaidDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var stay = notification.Stay;
+        logger.LogInformation("Stay {StayId} paid on receipt #{Receipt} ({Tender})", stay.Id, notification.ReceiptNumber, stay.PaidWith);
+
+        await outbox.AddAndSaveEventAsync(new SessionPaidIntegrationEvent(
+            stay.Id,
+            // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
+            stay.PlaceId,
+            stay.PartyIds(),
+            notification.ReceiptNumber,
+            notification.BranchId,
+            stay.PlaceId,
+            stay.PlaceKind(),
+            stay.PlaceName()));
+    }
+}
+
+/// <summary>What Ordering and Notification drop: a deleted place.</summary>
+public class PlaceDeletedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<PlaceDeletedDomainEventHandler> logger)
+    : INotificationHandler<PlaceDeletedDomainEvent>
+{
+    public async Task Handle(PlaceDeletedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var place = notification.Place;
+        logger.LogInformation("Place deleted: {PlaceId} {Kind} {Name}", place.Id, place.Kind, place.Name.En);
+        await outbox.AddAndSaveEventAsync(place.ToUpdatedEvent(deleted: true));
+    }
 }

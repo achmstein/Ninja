@@ -9,7 +9,7 @@ namespace Chillax.Spaces.Infrastructure;
 ///
 /// dotnet ef migrations add --startup-project ../Spaces.API --context SpacesContext [migration-name]
 /// </remarks>
-public class SpacesContext : DbContext, IUnitOfWork
+public class SpacesContext : DbContext
 {
     public DbSet<Place> Places { get; set; }
     public DbSet<Stay> Stays { get; set; }
@@ -17,13 +17,10 @@ public class SpacesContext : DbContext, IUnitOfWork
     public DbSet<StaySegment> StaySegments { get; set; }
     public DbSet<BranchSettings> BranchSettings { get; set; }
 
-    private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
 
-    public SpacesContext(DbContextOptions<SpacesContext> options, IMediator? mediator = null) : base(options)
+    public SpacesContext(DbContextOptions<SpacesContext> options) : base(options)
     {
-        _mediator = mediator;
-        System.Diagnostics.Debug.WriteLine("SpacesContext::ctor ->" + this.GetHashCode());
     }
 
     public IDbContextTransaction? GetCurrentTransaction() => _currentTransaction;
@@ -42,23 +39,8 @@ public class SpacesContext : DbContext, IUnitOfWork
         modelBuilder.UseIntegrationEventLogs();
     }
 
-    public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
-    {
-        _ = await base.SaveChangesAsync(cancellationToken);
-
-        // Domain events go out after the commit, not before it. Every handler
-        // here publishes an integration event straight to the bus, and a
-        // screen that hears it refetches at once — dispatched before the
-        // commit, that refetch could read the old state and sit on it until
-        // its next poll (the "room started but shows no clock" bug). None of
-        // the handlers changes entities, so nothing is lost by saving first.
-        if (_mediator != null)
-        {
-            await _mediator.DispatchDomainEventsAsync(this);
-        }
-
-        return true;
-    }
+    // Saving, dispatching the domain events and publishing the outbox is
+    // SpacesUnitOfWork's; the context only holds the transaction.
 
     public async Task<IDbContextTransaction?> BeginTransactionAsync()
     {

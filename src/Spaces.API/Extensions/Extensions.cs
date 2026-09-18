@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
 using Chillax.Spaces.API.Application.BackgroundServices;
 using Chillax.Spaces.API.Application.IntegrationEvents.Events;
+using Chillax.Spaces.API.Application.IntegrationEvents;
 using Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
+using Chillax.IntegrationEventLogEF.Services;
 using Chillax.Spaces.API.Application.Queries;
 using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
 using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
@@ -40,6 +42,14 @@ public static class Extensions
 
         builder.Services.AddScoped<IPlaceRepository, PlaceRepository>();
         builder.Services.AddScoped<IStayRepository, StayRepository>();
+
+        // The outbox: events are written with the rows that produced them and
+        // published after the commit (SpacesUnitOfWork). The repositories hand
+        // the unit of work out, so every endpoint and bus handler is in it.
+        builder.Services.AddScoped<IUnitOfWork, SpacesUnitOfWork>();
+        builder.Services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<SpacesContext>>();
+        builder.Services.AddScoped<ISpacesIntegrationEventService, SpacesIntegrationEventService>();
+        builder.Services.AddScoped<IOutboxPublisher>(sp => sp.GetRequiredService<ISpacesIntegrationEventService>());
         builder.Services.AddScoped<IRequestManager, RequestManager>();
 
         builder.Services.AddScoped<IPlaceQueries, PlaceQueries>();

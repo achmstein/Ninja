@@ -34,3 +34,16 @@ public class RecordOrderRefundsCommandHandler(
         return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }
 }
+
+/// <summary>
+/// The bus redelivers and RecordRefund adds, so the credit note's event id
+/// is the request id: a second delivery finds it and does nothing.
+/// </summary>
+public class RecordOrderRefundsIdentifiedCommandHandler(
+    IMediator mediator,
+    IRequestManager requestManager,
+    ILogger<IdentifiedCommandHandler<RecordOrderRefundsCommand, bool>> logger)
+    : IdentifiedCommandHandler<RecordOrderRefundsCommand, bool>(mediator, requestManager, logger)
+{
+    protected override bool CreateResultForDuplicateRequest() => true;
+}

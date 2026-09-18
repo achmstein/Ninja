@@ -4,11 +4,12 @@ public class StayRepository : IStayRepository
 {
     private readonly SpacesContext _context;
 
-    public IUnitOfWork UnitOfWork => _context;
+    public IUnitOfWork UnitOfWork { get; }
 
-    public StayRepository(SpacesContext context)
+    public StayRepository(SpacesContext context, IUnitOfWork unitOfWork)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public Stay Add(Stay stay) => _context.Stays.Add(stay).Entity;

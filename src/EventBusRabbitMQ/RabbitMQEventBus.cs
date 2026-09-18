@@ -19,6 +19,14 @@ public sealed class RabbitMQEventBus(
 {
     private const string ExchangeName = "eshop_event_bus";
 
+    // Where a message goes when its handler throws: one fanout exchange and
+    // one queue for every service's rejects, so whatever the routing key a
+    // dead message lands on dead-letters with an x-death header naming the
+    // queue it came from and why. Nothing consumes it; backup.yml counts it
+    // every morning and deploy/monitoring.md says what to do with one.
+    private const string DeadLetterExchange = "chillax_dead_letters";
+    private const string DeadLetterQueue = "dead-letters";
+
     private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(options.Value.RetryCount);
     private readonly TextMapPropagator _propagator = rabbitMQTelemetry.Propagator;
     private readonly ActivitySource _activitySource = rabbitMQTelemetry.ActivitySource;
@@ -169,14 +177,19 @@ public sealed class RabbitMQEventBus(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Error Processing message \"{Message}\"", message);
+            // A handler that threw does not get to lose the message: it is
+            // rejected without requeue, and the queue's dead-letter exchange
+            // (declared in DeclareQueueAsync, or the broker policy deploy.yml
+            // sets for queues that predate it) parks it on dead-letters. An
+            // error, not a warning: money events pass this way.
+            logger.LogError(ex, "Dead-lettering {EventName} from queue {Queue}: {Message}", eventName, _queueName, message);
 
             activity.SetExceptionTags(ex);
+
+            await _consumerChannel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false);
+            return;
         }
 
-        // Even on exception we take the message off the queue.
-        // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
-        // For more information see: https://www.rabbitmq.com/dlx.html
         await _consumerChannel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
     }
 
@@ -243,24 +256,14 @@ public sealed class RabbitMQEventBus(
                     logger.LogTrace("Creating RabbitMQ consumer channel");
                 }
 
-                _consumerChannel = await _rabbitMQConnection.CreateChannelAsync();
-
-                _consumerChannel.CallbackExceptionAsync += (sender, ea) =>
-                {
-                    logger.LogWarning(ea.Exception, "Error with RabbitMQ consumer channel");
-                    return Task.CompletedTask;
-                };
+                _consumerChannel = await CreateConsumerChannelAsync();
 
                 await _consumerChannel.ExchangeDeclareAsync(
                     exchange: ExchangeName,
                     type: "direct");
 
-                await _consumerChannel.QueueDeclareAsync(
-                    queue: _queueName,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
+                await DeclareDeadLetteringAsync();
+                await DeclareQueueAsync();
 
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
@@ -292,6 +295,57 @@ public sealed class RabbitMQEventBus(
         TaskCreationOptions.LongRunning);
 
         return Task.CompletedTask;
+    }
+
+    private async Task<IChannel> CreateConsumerChannelAsync()
+    {
+        var channel = await _rabbitMQConnection.CreateChannelAsync();
+
+        channel.CallbackExceptionAsync += (sender, ea) =>
+        {
+            logger.LogWarning(ea.Exception, "Error with RabbitMQ consumer channel");
+            return Task.CompletedTask;
+        };
+
+        return channel;
+    }
+
+    private async Task DeclareDeadLetteringAsync()
+    {
+        await _consumerChannel.ExchangeDeclareAsync(exchange: DeadLetterExchange, type: "fanout", durable: true);
+        await _consumerChannel.QueueDeclareAsync(queue: DeadLetterQueue, durable: true, exclusive: false, autoDelete: false);
+        await _consumerChannel.QueueBindAsync(queue: DeadLetterQueue, exchange: DeadLetterExchange, routingKey: string.Empty);
+    }
+
+    // A queue's arguments are fixed at its first declaration. One from before
+    // dead-lettering refuses the argument (PRECONDITION_FAILED, and the broker
+    // closes the channel); it is declared as it is, and the broker policy
+    // deploy.yml sets covers it instead.
+    private async Task DeclareQueueAsync()
+    {
+        try
+        {
+            await _consumerChannel.QueueDeclareAsync(
+                queue: _queueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: new Dictionary<string, object> { ["x-dead-letter-exchange"] = DeadLetterExchange });
+        }
+        catch (OperationInterruptedException ex) when (ex.ShutdownReason?.ReplyCode == 406)
+        {
+            logger.LogWarning("Queue {Queue} predates dead-lettering and keeps its arguments; the broker policy covers it", _queueName);
+
+            _consumerChannel.Dispose();
+            _consumerChannel = await CreateConsumerChannelAsync();
+
+            await _consumerChannel.QueueDeclareAsync(
+                queue: _queueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

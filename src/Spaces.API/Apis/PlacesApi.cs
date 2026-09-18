@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Chillax.EventBus.Abstractions;
+using Chillax.Spaces.Domain.Events;
 using Chillax.Spaces.API.Application.Commands;
 using Chillax.Spaces.API.Application.DomainEventHandlers;
 using Chillax.Spaces.API.Application.Queries;
@@ -259,7 +259,6 @@ public static class PlacesApi
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> DeletePlace(
         [FromServices] IPlaceRepository places,
         [FromServices] IStayRepository stays,
-        [FromServices] IEventBus eventBus,
         [Description("The place ID")] int id)
     {
         var place = await places.GetAsync(id);
@@ -268,10 +267,11 @@ public static class PlacesApi
         if (await stays.HasOpenStayAsync(id))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Cannot delete a place with a held or running stay" });
 
-        var gone = place.ToUpdatedEvent(deleted: true);
+        // The event rides the same unit of work as the delete (the outbox),
+        // so a failed delete announces nothing and a crash after it loses nothing
+        place.AddDomainEvent(new PlaceDeletedDomainEvent(place));
         places.Delete(place);
         await places.UnitOfWork.SaveEntitiesAsync();
-        await eventBus.PublishAsync(gone);
         return TypedResults.Ok();
     }
 
