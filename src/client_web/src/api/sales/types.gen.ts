@@ -135,6 +135,7 @@ export type ItemTotal = {
     qty: number | string;
     amount: number | string;
     tickets: number | string;
+    catalogItemId?: null | number | string;
 };
 
 export type LocalizedText = {

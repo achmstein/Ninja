@@ -35,6 +35,13 @@ public class OrderRepository
         return order;
     }
 
+    public Task<List<int>> GetUnclaimedGuestOrderIdsAsync(string guestId)
+        => _context.Orders
+            .Where(o => o.GuestId == guestId && o.BuyerId == null && o.OrderStatus != OrderStatus.Cancelled)
+            .OrderBy(o => o.Id)
+            .Select(o => o.Id)
+            .ToListAsync();
+
     public void Update(Order order)
     {
         _context.Entry(order).State = EntityState.Modified;

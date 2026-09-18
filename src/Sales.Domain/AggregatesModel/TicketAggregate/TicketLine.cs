@@ -121,4 +121,16 @@ public class TicketLine : Entity
         CustomerName = string.IsNullOrWhiteSpace(customerName) ? null : customerName.Trim();
         CustomerId = string.IsNullOrWhiteSpace(customerId) ? null : customerId;
     }
+
+    /// <summary>
+    /// The account behind a line that had none - a guest who signed in. The
+    /// printed name is left as it was; only who may read the bill changes.
+    /// </summary>
+    internal bool AttachCustomer(string customerId)
+    {
+        if (CustomerId is not null || string.IsNullOrWhiteSpace(customerId))
+            return false;
+        CustomerId = customerId;
+        return true;
+    }
 }

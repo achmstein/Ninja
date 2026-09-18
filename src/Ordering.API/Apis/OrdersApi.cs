@@ -67,6 +67,15 @@ public static partial class OrdersApi
             .WithDescription("Puts an account holder or a bare name on an order placed without one, or moves an order from one account to another — Loyalty moves the points with it. Refused once the order is cancelled, when it already belongs to that account, or when it would drop an account for a bare name.")
             .RequireAuthorization("Pos");
 
+        // A guest who signs in takes their orders with them: every order the
+        // device placed becomes the account's, and Sales and Loyalty follow
+        // (the bill lines get the account, the points get awarded).
+        api.MapPost("/claim-guest", ClaimGuestOrdersAsync)
+            .WithName("ClaimGuestOrders")
+            .WithSummary("Claim the orders a guest device placed for the signed-in account")
+            .WithDescription("For a guest who just signed in: every order placed under the given X-Guest-Id that no account holds yet is assigned to the caller, as the till's assign-customer does. Cancelled orders stay behind. Returns how many were claimed; safe to repeat.")
+            .RequireAuthorization();
+
         api.MapDelete("/{orderId:int}", DeleteOrderAsync)
             .WithName("DeleteOrder")
             .WithSummary("Delete a cancelled order (admin)")
@@ -517,6 +526,36 @@ public static partial class OrdersApi
         return TypedResults.NoContent();
     }
 
+    public static async Task<Results<Ok<ClaimGuestOrdersResponse>, BadRequest<string>>> ClaimGuestOrdersAsync(
+        ClaimGuestOrdersRequest request,
+        [FromServices] IOrderRepository orders,
+        [AsParameters] OrderServices services)
+    {
+        var userId = services.IdentityService.GetUserIdentity();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return TypedResults.BadRequest("Sign in first.");
+        }
+        if (string.IsNullOrWhiteSpace(request.GuestId) || request.GuestId.Length > 64)
+        {
+            return TypedResults.BadRequest("A guest id is needed.");
+        }
+
+        var name = services.IdentityService.GetUserName() ?? "Customer";
+        var claimed = 0;
+        foreach (var orderId in await orders.GetUnclaimedGuestOrderIdsAsync(request.GuestId.Trim()))
+        {
+            // The same command the till uses to name a customer after the fact
+            if (await services.Mediator.Send(new AssignOrderCustomerCommand(orderId, userId, name)))
+            {
+                claimed++;
+            }
+        }
+
+        services.Logger.LogInformation("Guest {GuestId} signed in as {UserId}: {Count} order(s) claimed", request.GuestId, userId, claimed);
+        return TypedResults.Ok(new ClaimGuestOrdersResponse(claimed));
+    }
+
     public static async Task<Results<NoContent, BadRequest<string>, NotFound>> AssignOrderCustomerAsync(
         int orderId,
         [FromHeader(Name = "x-requestid")] Guid requestId,
@@ -896,6 +935,12 @@ public record PosOrderResponse(int OrderId);
 public record AssignOrderCustomerRequest(
     string? CustomerUserId,
     string CustomerName);
+
+/// <param name="GuestId">The X-Guest-Id the device ordered under before signing in.</param>
+public record ClaimGuestOrdersRequest(string GuestId);
+
+/// <param name="Claimed">How many orders became the account's on this call.</param>
+public record ClaimGuestOrdersResponse(int Claimed);
 
 /// <summary>
 /// Request model for rating an order

@@ -7,9 +7,10 @@ namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
 /// <summary>
 /// The till forgot the customer and Ordering was told afterwards: the order's
 /// lines, wherever they landed, take the new snapshot so the bill groups and
-/// settles under the right person. A settled or voided ticket is left alone —
-/// its receipt is frozen. Idempotent by nature: the same snapshot applied
-/// twice changes nothing.
+/// settles under the right person. A settled or voided ticket keeps its
+/// receipt as printed; its lines only learn the account behind an order that
+/// had none (a guest who signed in), so the bill shows in their history.
+/// Idempotent by nature: the same snapshot applied twice changes nothing.
 /// </summary>
 public class OrderCustomerAssignedIntegrationEventHandler(
     ITicketRepository ticketRepository,
@@ -45,9 +46,12 @@ public class OrderCustomerAssignedIntegrationEventHandler(
         {
             if (ticket.Status != TicketStatus.Open)
             {
-                logger.LogInformation(
-                    "Ticket {TicketId} is {Status} - order {OrderId}'s lines keep the snapshot they were settled under",
-                    ticket.Id, ticket.Status, @event.OrderId);
+                if (customerId is not null && ticket.AttachOrderCustomer(@event.OrderId, customerId))
+                {
+                    logger.LogInformation(
+                        "Ticket {TicketId} is {Status} - order {OrderId}'s lines now belong to {Customer}'s account, names as printed",
+                        ticket.Id, ticket.Status, @event.OrderId, @event.CustomerName);
+                }
                 continue;
             }
 

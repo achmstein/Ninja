@@ -3,6 +3,7 @@ import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { ThemeProvider, useTheme } from '@/context/theme-provider'
+import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
 import { usePushRegistration } from '@/lib/use-push'
@@ -19,6 +20,8 @@ function RootLayout() {
   useHub()
   // Web push (no-op until the Firebase web config is provided)
   usePushRegistration()
+  // A guest who signed in takes their orders and bills with them
+  useClaimGuestOrders()
 
   // Radix components don't read the document's dir attribute — without this
   // provider they render dir="ltr" and force their subtree LTR in Arabic

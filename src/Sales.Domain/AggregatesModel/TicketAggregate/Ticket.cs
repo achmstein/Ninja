@@ -404,6 +404,21 @@ public class Ticket : Entity, IAggregateRoot
     /// open: a settled ticket is a printed receipt and a voided one a record,
     /// and neither is rewritten.
     /// </summary>
+    /// <summary>
+    /// A closed bill's lines learn the account behind an order that had none
+    /// (a guest who signed in), so the customer finds the bill in their
+    /// history. The receipt is frozen: names and money do not move, and a
+    /// line that already belongs to an account is left alone.
+    /// </summary>
+    /// <returns>Whether any line changed.</returns>
+    public bool AttachOrderCustomer(int orderId, string customerId)
+    {
+        var changed = false;
+        foreach (var line in _lines.Where(l => l.OrderId == orderId))
+            changed |= line.AttachCustomer(customerId);
+        return changed;
+    }
+
     public void AssignOrderCustomer(int orderId, string? customerId, string? customerName)
     {
         EnsureOpen();

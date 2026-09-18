@@ -13,5 +13,11 @@ public interface IOrderRepository : IRepository<Order>
 
     Task<Order> GetAsync(int orderId);
 
+    /// <summary>
+    /// The orders a guest device placed that no account has claimed yet -
+    /// what a guest who signs in takes with them. Cancelled ones stay behind.
+    /// </summary>
+    Task<List<int>> GetUnclaimedGuestOrderIdsAsync(string guestId);
+
     void AddRating(OrderRating rating);
 }
