@@ -764,6 +764,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get whoseAccount => 'حساب مين؟';
 
   @override
+  String get whoseRounds => 'دول بتوع مين؟';
+
+  @override
   String get onCustomerTab => 'اتحط على حساب العميل';
 
   @override

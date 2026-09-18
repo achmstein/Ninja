@@ -350,6 +350,12 @@ abstract class AppLocalizations {
   /// **'First order here'**
   String get guestFirstOrderHere;
 
+  /// No description provided for @guestOrdersBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} orders here before'**
+  String guestOrdersBefore(int count);
+
   /// No description provided for @nobodyAtTheTable.
   ///
   /// In en, this message translates to:
@@ -367,12 +373,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get accountHolder;
-
-  /// No description provided for @guestOrdersBefore.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} orders here before'**
-  String guestOrdersBefore(int count);
 
   /// No description provided for @cancelOrder.
   ///
@@ -1417,6 +1417,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Whose account?'**
   String get whoseAccount;
+
+  /// No description provided for @whoseRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Whose are these?'**
+  String get whoseRounds;
 
   /// No description provided for @onCustomerTab.
   ///

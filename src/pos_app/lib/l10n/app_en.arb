@@ -336,7 +336,13 @@
   "holdConfirmed": "Hold confirmed",
   "startsOnConfirm": "Timer starts on confirm",
   "requestChangeOption": "Switch to {option}",
-  "@requestChangeOption": { "placeholders": { "option": { "type": "String" } } },
+  "@requestChangeOption": {
+    "placeholders": {
+      "option": {
+        "type": "String"
+      }
+    }
+  },
   "freeTables": "Free tables",
   "openBills": "Open bills",
   "allBills": "All",
@@ -440,6 +446,7 @@
   "instapay": "InstaPay",
   "account": "On account",
   "whoseAccount": "Whose account?",
+  "whoseRounds": "Whose are these?",
   "onCustomerTab": "On the customer's tab",
   "amount": "Amount",
   "addPayment": "Add payment",

@@ -756,6 +756,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whoseAccount => 'Whose account?';
 
   @override
+  String get whoseRounds => 'Whose are these?';
+
+  @override
   String get onCustomerTab => 'On the customer\'s tab';
 
   @override

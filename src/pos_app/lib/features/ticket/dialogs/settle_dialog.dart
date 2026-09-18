@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
@@ -86,8 +87,12 @@ class _SettleDialog extends ConsumerStatefulWidget {
 
 class _SettleDialogState extends ConsumerState<_SettleDialog> {
   final List<SettlePayment> _payments = [];
-  late final List<_AccountHolder> _holders;
   _AccountHolder? _accountHolder;
+
+  // Lines this dialog named, by line id: the ticket it was given is a
+  // snapshot, so the holders' shares and the unnamed list follow from here
+  final Map<int, _AccountHolder> _named = {};
+  bool _naming = false;
   PaymentTender _tender = PaymentTender.cash;
   String _amountStr = '';
   bool _settling = false;
@@ -109,33 +114,72 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   @override
   void initState() {
     super.initState();
-    // Everyone this bill can go on, with their share. The people in the
-    // room come first: a group splits the time between them however they
-    // agree, and someone who ordered nothing still owes their part. Then
-    // whoever has lines, with what those come to. A shared table can put
-    // Ahmed's items on his tab and Sara's on hers, so the tab is chosen per
-    // payment rather than fixed to the ticket.
+    // Prefill the exact remainder — the one-cash-payment happy path is:
+    // open, add payment, settle
+    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+  }
+
+  // Everyone this bill can go on, with their share. The people in the
+  // room come first: a group splits the time between them however they
+  // agree, and someone who ordered nothing still owes their part. Then
+  // whoever has lines, with what those come to. A shared table can put
+  // Ahmed's items on his tab and Sara's on hers, so the tab is chosen per
+  // payment rather than fixed to the ticket.
+  List<_AccountHolder> get _holders {
     final holders = <String, _AccountHolder>{};
     for (final member in widget.members) {
       if (member.customerId.isEmpty) continue;
       holders[member.customerId] = _AccountHolder(id: member.customerId, name: member.customerName ?? '', subtotal: 0);
     }
     for (final line in widget.ticket.lines) {
-      final id = line.customerId;
+      final named = _named[line.id];
+      final id = named?.id ?? line.customerId;
+      final name = named?.name ?? line.customerName;
       // The room's time is nobody's share: the group splits it as they say
       if (id == null || id.isEmpty || line.source == 'SessionTime') continue;
       final holder = holders[id];
       if (holder != null) {
         holder.subtotal += line.total;
-        if (holder.name.isEmpty && (line.customerName ?? '').isNotEmpty) holder.name = line.customerName!;
+        if (holder.name.isEmpty && (name ?? '').isNotEmpty) holder.name = name!;
       } else {
-        holders[id] = _AccountHolder(id: id, name: line.customerName ?? '', subtotal: line.total);
+        holders[id] = _AccountHolder(id: id, name: name ?? '', subtotal: line.total);
       }
     }
-    _holders = holders.values.toList();
-    // Prefill the exact remainder — the one-cash-payment happy path is:
-    // open, add payment, settle
-    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+    return holders.values.toList();
+  }
+
+  // A round the till named nobody for. The room's time is nobody's and
+  // never asked about; a loyalty line is money off, not a round.
+  List<TicketLineView> get _unnamed => [
+        for (final line in widget.ticket.lines)
+          if ((line.customerId ?? '').isEmpty &&
+              (line.customerName ?? '').isEmpty &&
+              line.source != 'SessionTime' &&
+              line.total > 0 &&
+              !_named.containsKey(line.id))
+            line,
+      ];
+
+  // The same call as naming lines on the ticket screen; the screen behind
+  // refetches, this dialog remembers
+  Future<void> _nameLine(TicketLineView line, _AccountHolder holder) async {
+    if (_naming) return;
+    setState(() => _naming = true);
+    try {
+      await ref.read(ticketsRepositoryProvider).assignLinesCustomer(
+            widget.ticket.id,
+            lineIds: [line.id],
+            customerId: holder.id,
+            customerName: holder.name,
+            requestId: const Uuid().v4(),
+          );
+      ref.invalidate(ticketProvider(widget.ticket.id));
+      if (mounted) setState(() => _named[line.id] = holder);
+    } catch (e) {
+      if (mounted) showPosToast(context, PosToastType.error, e.toString());
+    } finally {
+      if (mounted) setState(() => _naming = false);
+    }
   }
 
   // Cash opens the drawer even though the receipt no longer prints by
@@ -382,6 +426,47 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // A round the till named nobody for, on a bill with
+                        // more than one tab: whose is it? A tap names it;
+                        // ignoring it is fine, the bill settles either way.
+                        if (widget.offline == null && _holders.length > 1 && _unnamed.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: theme.colors.border),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(l10n.whoseRounds, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                                for (final line in _unnamed) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${line.description?.localized(context) ?? ''} · ${money(context, line.total)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.typography.sm,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      for (final holder in _holders)
+                                        FButton(
+                                          variant: FButtonVariant.outline,
+                                          onPress: _naming ? null : () => _nameLine(line, holder),
+                                          child: Text(holder.name.isEmpty ? l10n.guest : holder.name),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         if (_payments.isEmpty)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),

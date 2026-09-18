@@ -420,6 +420,7 @@ const dictionary = {
   instapay: { en: 'InstaPay', ar: 'إنستاباي' },
   account: { en: 'On account', ar: 'على الحساب' },
   whoseAccount: { en: 'Whose account?', ar: 'حساب مين؟' },
+  whoseRounds: { en: 'Whose are these?', ar: 'دول بتوع مين؟' },
   inTheRoom: { en: 'In the room', ar: 'اللي في الأوضة' },
   whoseRound: { en: 'Whose round?', ar: 'الطلب ده لمين؟' },
   usuals: { en: 'Usuals', ar: 'على مزاجه' },

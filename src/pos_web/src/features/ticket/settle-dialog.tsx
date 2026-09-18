@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Printer, X } from 'lucide-react'
-import { settleTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  assignTicketLinesCustomerMutation,
+  settleTicketMutation,
+} from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +18,7 @@ import { NumericKeypad } from '@/components/numeric-keypad'
 import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import {
@@ -126,6 +129,7 @@ export function SettleDialog({
   onSettled,
 }: SettleDialogProps) {
   const t = useT()
+  const localized = useLocalized()
   const money = useMoney()
   const queryClient = useQueryClient()
 
@@ -161,6 +165,31 @@ export function SettleDialog({
     }
   }
   const accountHolders = [...holders.values()]
+
+  // A round the till named nobody for, on a bill with more than one tab:
+  // whose is it? Listed once, a tap names it (the same call as naming lines
+  // on the ticket screen), and ignoring it is fine - the bill settles either
+  // way. The room's time is nobody's and never asked about.
+  const unnamed = (ticket.lines ?? []).filter(
+    (line) =>
+      !line.customerId &&
+      !line.customerName &&
+      line.source !== 'SessionTime' &&
+      toNumber(line.total) > 0
+  )
+  const nudge = accountHolders.length > 1 && unnamed.length > 0
+  const nameLine = useMutation({
+    ...assignTicketLinesCustomerMutation(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] }),
+  })
+  const nameLineFor = (lineId: number, holder: AccountHolder) =>
+    nameLine.mutate({
+      headers: { 'x-requestid': crypto.randomUUID() },
+      path: { id: toNumber(ticket.id) },
+      query: { 'api-version': API_VERSION },
+      body: { lineIds: [lineId], customerId: holder.id, customerName: holder.name },
+    })
 
   // Settling on account needs a tab to charge (the server enforces it too)
   const tenders =
@@ -443,6 +472,32 @@ export function SettleDialog({
           </div>
 
           <div className='flex flex-col gap-3'>
+            {nudge && (
+              <div className='grid gap-2 rounded-lg border p-3'>
+                <p className='text-muted-foreground text-sm'>{t('whoseRounds')}</p>
+                {unnamed.map((line) => (
+                  <div
+                    key={String(line.id)}
+                    className='flex flex-wrap items-center gap-2'
+                  >
+                    <span className='min-w-0 flex-1 truncate text-sm'>
+                      {localized(line.description)} · {money(toNumber(line.total))}
+                    </span>
+                    {accountHolders.map((holder) => (
+                      <Button
+                        key={holder.id}
+                        size='sm'
+                        variant='outline'
+                        disabled={nameLine.isPending}
+                        onClick={() => nameLineFor(toNumber(line.id), holder)}
+                      >
+                        {holder.name || t('guest')}
+                      </Button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
             {payments.length > 0 ? (
               <div className='grid gap-2'>
                 {payments.map((payment, index) => (
