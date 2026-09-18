@@ -1,4 +1,6 @@
-﻿using Chillax.Notification.API.Model;
+﻿using System.Globalization;
+using Chillax.Notification.API.IntegrationEvents.Events;
+using Chillax.Notification.API.Model;
 
 namespace Chillax.Notification.API.Localization;
 
@@ -98,4 +100,61 @@ public static class NotificationMessages
     public static LocalizedText OrderReminderBody(int orderId, string buyerName, int minutesPending) =>
         new($"Order #{orderId} from {buyerName} has been waiting {minutesPending} min",
             $"أوردر #{orderId} من {buyerName} مستني من {minutesPending} دقيقة");
+
+    // The day's digest, pushed when the till closes its shift
+    public static readonly LocalizedText ShiftClosedTitle = new("Shift closed", "الوردية قفلت");
+
+    /// <summary>
+    /// Four short lines: sales and bills, the tender split, the drawer, and
+    /// what left as discounts, refunds and tab payments (only the parts that
+    /// are not zero). Numbers in Western digits on both sides, as every
+    /// screen prints them.
+    /// </summary>
+    public static LocalizedText ShiftClosedBody(ShiftClosedIntegrationEvent shift) =>
+        new(Digest(shift, "en"), Digest(shift, "ar"));
+
+    private static string Digest(ShiftClosedIntegrationEvent shift, string lang)
+    {
+        var ar = lang == "ar";
+        var lines = new List<string>
+        {
+            ar ? $"المبيعات {Money(shift.SalesTotal)} · {shift.TicketsSettled} حساب"
+               : $"Sales {Money(shift.SalesTotal)} · {shift.TicketsSettled} bills",
+        };
+
+        var tenders = (shift.TenderTotals ?? [])
+            .Where(t => t.Amount != 0)
+            .Select(t => $"{Tender(t.Tender, ar)} {Money(t.Amount)}")
+            .ToList();
+        if (tenders.Count > 0)
+            lines.Add(string.Join(" · ", tenders));
+
+        lines.Add(shift.OverShort switch
+        {
+            > 0 => ar ? $"الدرج زيادة {Money(shift.OverShort)}" : $"Drawer over {Money(shift.OverShort)}",
+            < 0 => ar ? $"الدرج ناقص {Money(-shift.OverShort)}" : $"Drawer short {Money(-shift.OverShort)}",
+            _ => ar ? "الدرج مظبوط" : "Drawer exact",
+        });
+
+        var left = new List<string>();
+        if (shift.Discounts != 0) left.Add(ar ? $"خصومات {Money(shift.Discounts)}" : $"Discounts {Money(shift.Discounts)}");
+        if (shift.RefundsTotal != 0) left.Add(ar ? $"مرتجعات {Money(shift.RefundsTotal)}" : $"Refunds {Money(shift.RefundsTotal)}");
+        if (shift.TabPaymentsTotal != 0) left.Add(ar ? $"مدفوعات الحساب {Money(shift.TabPaymentsTotal)}" : $"Tab payments {Money(shift.TabPaymentsTotal)}");
+        if (shift.PayOutsTotal != 0) left.Add(ar ? $"مصاريف {Money(shift.PayOutsTotal)}" : $"Pay-outs {Money(shift.PayOutsTotal)}");
+        if (left.Count > 0)
+            lines.Add(string.Join(" · ", left));
+
+        return string.Join("\n", lines);
+    }
+
+    private static string Money(decimal amount) => amount.ToString("#,##0.##", CultureInfo.InvariantCulture);
+
+    private static string Tender(string tender, bool ar) => tender switch
+    {
+        "Cash" => ar ? "كاش" : "Cash",
+        "Card" => ar ? "فيزا" : "Card",
+        "InstaPay" => ar ? "انستاباي" : "InstaPay",
+        "Account" => ar ? "على الحساب" : "On account",
+        _ => tender,
+    };
 }

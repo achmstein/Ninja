@@ -53,7 +53,9 @@ public static class Extensions
             .AddSubscription<StockLowIntegrationEvent, StockLowIntegrationEventHandler>()
             // A bill paid or voided ends the sitting at its place, for every phone that scanned it
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
-            .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
+            .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>()
+            // The day's digest: the Z figures to the admin devices when the till closes
+            .AddSubscription<ShiftClosedIntegrationEvent, ShiftClosedIntegrationEventHandler>();
     }
 }
 
@@ -75,6 +77,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderPaymentChangedIntegrationEvent))]
 [JsonSerializable(typeof(SessionPaidIntegrationEvent))]
+[JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemAvailabilityChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]
 public partial class NotificationIntegrationEventContext : JsonSerializerContext

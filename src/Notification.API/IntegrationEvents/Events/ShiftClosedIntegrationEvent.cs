@@ -1,14 +1,11 @@
 using Chillax.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Chillax.Notification.API.IntegrationEvents.Events;
 
 /// <summary>
-/// The drawer shift was closed. Branch.API switches the branch's ordering and
-/// reservation flags off — the counterpart of <see cref="ShiftOpenedIntegrationEvent"/>
-/// — and Notification pushes the figures to the owner's devices as the day's
-/// digest. They are the Z report's: sales and bills, the tender split, the
-/// drawer's float, expected, counted and over/short, and what left as
-/// discounts, refunds, tab payments and cash movements.
+/// Consumer copy of the event Sales publishes when a drawer shift closes,
+/// carrying the Z report's figures: what the day's digest to the owner is
+/// made of. Amounts are the branch's currency; rates never travel here.
 /// </summary>
 public record ShiftClosedIntegrationEvent(
     int ShiftId,
@@ -28,5 +25,5 @@ public record ShiftClosedIntegrationEvent(
     decimal OverShort = 0,
     IReadOnlyCollection<ShiftTenderTotal>? TenderTotals = null) : IntegrationEvent;
 
-/// <summary>One tender's share of the shift's sales.</summary>
+/// <summary>One tender's share of the shift's sales: "Cash", "Card", "InstaPay" or "Account".</summary>
 public record ShiftTenderTotal(string Tender, decimal Amount, int Count);
