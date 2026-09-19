@@ -23,6 +23,7 @@ public sealed class TemplatesTests
         NameEn = "Blue \"Bottle\"",
         NameAr = "بلو",
         PrimaryColor = "#0055ff",
+        Seed = TenantSeed.Sample,
         OwnerEmail = "owner@blue.test",
         IdentitySecret = "identity-secret-1234567890123456",
         ControlSecret = "control-secret-12345678901234567",
@@ -98,6 +99,9 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Tenant__AuthUrl: \"https://auth.ninja.app/realms/blue\"");
         StringAssert.Contains(yaml, "blue-branch-uploads:/app/uploads");
         StringAssert.Contains(yaml, "CatalogOptions__PicBaseUrl: \"https://api.blue.ninja.app\"");
+        // Every service plants its own tables from the same profile; a stamp is never tenant one
+        Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Seed__Profile: \"sample\"").Count);
+        Assert.IsFalse(yaml.Contains("chillax", StringComparison.OrdinalIgnoreCase));
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__branch__DESTINATIONS__d1__ADDRESS: \"http://blue-branch-api:8080\"");

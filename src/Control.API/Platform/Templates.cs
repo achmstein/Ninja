@@ -89,6 +89,7 @@ public static partial class Templates
             sb.AppendLine($"      Identity__Url: \"{platform.KeycloakInternalUrl}/realms/{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      Keycloak__Realm: \"{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      OTEL_SERVICE_NAME: \"{name}\"");
+            sb.AppendLine($"      Seed__Profile: \"{tenant.Seed.ToString().ToLowerInvariant()}\"");
 
             var db = service switch
             {

@@ -5,9 +5,49 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ninja.Spaces.API.Infrastructure;
 
-public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<SpacesContext>
+/// <summary>
+/// Plants the floor once, on an empty database, according to the stack's
+/// <see cref="SeedProfile"/>: nothing for a customer (the owner draws the
+/// floor), a few tables and one room for a demo, tenant one's own rooms
+/// and tables for dev and tests.
+/// </summary>
+public class SpacesContextSeed(ILogger<SpacesContextSeed> logger, IConfiguration configuration) : IDbSeeder<SpacesContext>
 {
     public async Task SeedAsync(SpacesContext context)
+    {
+        var profile = SeedProfile.Of(configuration);
+        switch (profile)
+        {
+            case SeedProfile.Chillax:
+                await SeedChillaxAsync(context);
+                break;
+            case SeedProfile.Sample:
+                await SeedSampleAsync(context);
+                break;
+            default:
+                logger.LogInformation("Seed profile {Profile}: the floor starts empty", profile);
+                break;
+        }
+    }
+
+    private async Task SeedSampleAsync(SpacesContext context)
+    {
+        if (await context.Places.AnyAsync())
+        {
+            return;
+        }
+
+        var places = new List<Place>();
+        for (var i = 1; i <= 4; i++)
+            places.Add(Place.Table(new LocalizedText($"Table {i}", $"ترابيزة {ArabicDigits(i)}"), 1));
+        places.Add(Room("Room 1", "غرفة ١", 50.00m, 80.00m, 1, "A private room for groups", "غرفة خاصة للمجموعات"));
+
+        context.Places.AddRange(places);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Seeded the sample floor: {NumPlaces} places", places.Count);
+    }
+
+    private async Task SeedChillaxAsync(SpacesContext context)
     {
         // Rooms and tables are guarded separately: a database that already
         // has rooms may still be missing tables.

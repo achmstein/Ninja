@@ -194,6 +194,16 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
     .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site");
 
+// What an empty database is planted with. This stack is tenant one, so its
+// own menu, branches and floor (the E2E suite rings up Turkish Coffee at
+// Table 1); a stamped stack gets "sample" or "none" from the control plane.
+var seedProfile = builder.Configuration["Seed:Profile"] ?? "chillax";
+foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
+                            financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+{
+    api.WithEnvironment("Seed__Profile", seedProfile);
+}
+
 // The control plane: tenants and demos. In dev it dry-runs (records every
 // step, stamps nothing) against the platform realm imported above.
 var controlApi = builder.AddProject<Projects.Control_API>("control-api")

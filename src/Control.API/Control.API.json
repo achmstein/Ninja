@@ -592,6 +592,16 @@
           "kind": {
             "$ref": "#/components/schemas/TenantKind"
           },
+          "seed": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantSeed"
+              }
+            ]
+          },
           "slug": {
             "type": [
               "null",
@@ -783,6 +793,7 @@
           "nameAr",
           "kind",
           "status",
+          "seed",
           "primaryColor",
           "hosts",
           "ownerEmail",
@@ -813,6 +824,9 @@
           },
           "status": {
             "$ref": "#/components/schemas/TenantStatus"
+          },
+          "seed": {
+            "$ref": "#/components/schemas/TenantSeed"
           },
           "primaryColor": {
             "type": [
@@ -900,6 +914,12 @@
           "Customer"
         ]
       },
+      "TenantSeed": {
+        "enum": [
+          "None",
+          "Sample"
+        ]
+      },
       "TenantStatus": {
         "enum": [
           "Requested",
@@ -918,6 +938,7 @@
           "nameAr",
           "kind",
           "status",
+          "seed",
           "customerUrl",
           "createdAt",
           "expiresAt",
@@ -943,6 +964,9 @@
           },
           "status": {
             "$ref": "#/components/schemas/TenantStatus"
+          },
+          "seed": {
+            "$ref": "#/components/schemas/TenantSeed"
           },
           "customerUrl": {
             "type": "string"

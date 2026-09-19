@@ -20,6 +20,17 @@ public enum TenantStatus
 }
 
 /// <summary>
+/// What the stack's empty databases are planted with (the services read it
+/// as <c>Seed__Profile</c>). A demo gets the sample café so it looks alive;
+/// a customer starts empty and fills the menu from the admin app.
+/// </summary>
+public enum TenantSeed
+{
+    None = 0,
+    Sample = 1,
+}
+
+/// <summary>
 /// One café on the platform: a full stack of its own under one compose
 /// project, its own databases on the shared Postgres, its own realm, its own
 /// RabbitMQ vhost. The slug names all of them and every host the café gets.
@@ -38,6 +49,9 @@ public class Tenant
     public TenantKind Kind { get; set; }
 
     public TenantStatus Status { get; set; } = TenantStatus.Requested;
+
+    /// <summary>Chosen at creation (demos default to the sample café); the stack reads it once, on its first boot.</summary>
+    public TenantSeed Seed { get; set; }
 
     /// <summary>The brand color seeded into the stack; the owner can change it there.</summary>
     public string? PrimaryColor { get; set; }

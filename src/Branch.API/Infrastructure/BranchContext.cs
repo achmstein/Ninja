@@ -60,24 +60,41 @@ public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration
             logger.LogInformation("Seeded the tenant");
         }
 
+        // Every stack starts with one branch, so the till, the kitchen and
+        // the customer app have somewhere to point; the owner renames it or
+        // adds the rest. Tenant one (the dev AppHost, the E2E suite) plants
+        // its own two with their late business day.
         if (!await context.Branches.AnyAsync())
         {
-            context.Branches.AddRange(
-                new Model.Branch
+            if (SeedProfile.Of(configuration) == SeedProfile.Chillax)
+            {
+                context.Branches.AddRange(
+                    new Model.Branch
+                    {
+                        Name = new LocalizedText("El-Manshia", "المنشية"),
+                        DisplayOrder = 1,
+                        DayStartTime = new TimeOnly(17, 0),
+                        DayEndTime = new TimeOnly(5, 0),
+                    },
+                    new Model.Branch
+                    {
+                        Name = new LocalizedText("El-Benzina", "البنزينة"),
+                        DisplayOrder = 2,
+                        DayStartTime = new TimeOnly(17, 0),
+                        DayEndTime = new TimeOnly(5, 0),
+                    });
+            }
+            else
+            {
+                context.Branches.Add(new Model.Branch
                 {
-                    Name = new LocalizedText("El-Manshia", "المنشية"),
-                    IsActive = true,
-                    DisplayOrder = 1
-                },
-                new Model.Branch
-                {
-                    Name = new LocalizedText("El-Benzina", "البنزينة"),
-                    IsActive = true,
-                    DisplayOrder = 2
-                }
-            );
+                    Name = new LocalizedText("Main", "الرئيسي"),
+                    DisplayOrder = 1,
+                });
+            }
+
             await context.SaveChangesAsync();
-            logger.LogInformation("Seeded default branches");
+            logger.LogInformation("Seeded {Count} branch(es)", context.Branches.Local.Count);
         }
     }
 }

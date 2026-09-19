@@ -79,6 +79,7 @@ public static partial class ControlApi
             NameEn = request.NameEn.Trim(),
             NameAr = string.IsNullOrWhiteSpace(request.NameAr) ? null : request.NameAr.Trim(),
             Kind = request.Kind,
+            Seed = request.Seed ?? (request.Kind == TenantKind.Demo ? TenantSeed.Sample : TenantSeed.None),
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
             CustomerDomain = string.IsNullOrWhiteSpace(request.CustomerDomain) ? null : request.CustomerDomain.Trim().ToLowerInvariant(),
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
@@ -187,6 +188,7 @@ public record CreateTenantRequest(
     string? NameAr,
     string OwnerEmail,
     TenantKind Kind = TenantKind.Demo,
+    TenantSeed? Seed = null,
     string? Slug = null,
     string? PrimaryColor = null,
     string? CustomerDomain = null,
@@ -202,10 +204,10 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
     public static TenantHostsDto From(TenantHosts h) => new(h.CustomerUrl, h.AdminUrl, h.PosUrl, h.KdsUrl, h.ApiUrl);
 }
 
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
 }
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);
@@ -216,6 +218,7 @@ public record TenantDetail(
     string? NameAr,
     TenantKind Kind,
     TenantStatus Status,
+    TenantSeed Seed,
     string? PrimaryColor,
     TenantHostsDto Hosts,
     string OwnerEmail,
@@ -228,7 +231,7 @@ public record TenantDetail(
     IReadOnlyList<StepDto> Steps)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList());
 }

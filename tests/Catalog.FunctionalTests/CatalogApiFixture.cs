@@ -31,6 +31,8 @@ public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLi
             config.AddInMemoryCollection(new Dictionary<string, string>
             {
                 { $"ConnectionStrings:{Postgres.Resource.Name}", _postgresConnectionString },
+                // The tests count tenant one's menu
+                { "Seed:Profile", "chillax" },
                 });
         });
         return base.CreateHost(builder);
