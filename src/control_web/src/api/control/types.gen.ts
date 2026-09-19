@@ -4,6 +4,17 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AuditEntry = {
+    id: number | string;
+    at: string;
+    actor: string;
+    actorEmail: null | string;
+    source: string;
+    action: string;
+    slug: null | string;
+    details: null | string;
+};
+
 export type BrandDto = {
     name: BrandText;
     primaryColor: null | string;
@@ -69,6 +80,10 @@ export type BrandWordmarks = {
     arDark: null | BrandWordmark;
 };
 
+export type ConvertRequest = {
+    plan: null | TenantPlan;
+};
+
 export type CreateTenantRequest = {
     nameEn: string;
     nameAr: null | string;
@@ -83,6 +98,11 @@ export type CreateTenantRequest = {
     primaryColor?: null | string;
     customerDomain?: null | string;
     demoDays?: null | number | string;
+    contactName?: null | string;
+    phone?: null | string;
+    address?: null | string;
+    plan?: TenantPlan;
+    notes?: null | string;
     provision?: null | boolean;
 };
 
@@ -128,9 +148,11 @@ export type TenantDetail = {
     seed: TenantSeed;
     locale: TenantLocaleDto;
     primaryColor: null | string;
+    customerDomain: null | string;
     hosts: TenantHostsDto;
     ownerEmail: string;
     ownerInitialPassword: null | string;
+    record: TenantRecordDto;
     imageTag: string;
     createdAt: string;
     expiresAt: null | string;
@@ -157,6 +179,16 @@ export type TenantLocaleDto = {
     language: string;
 };
 
+export type TenantPlan = 'Free' | 'Starter' | 'Pro';
+
+export type TenantRecordDto = {
+    contactName: null | string;
+    phone: null | string;
+    address: null | string;
+    plan: TenantPlan;
+    notes: null | string;
+};
+
 export type TenantSeed = 'None' | 'Sample';
 
 export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed';
@@ -168,6 +200,7 @@ export type TenantSummary = {
     kind: TenantKind;
     status: TenantStatus;
     seed: TenantSeed;
+    plan: TenantPlan;
     country: string;
     currency: string;
     customerUrl: string;
@@ -184,6 +217,22 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
+};
+
+export type UpdateTenantRequest = {
+    nameEn: string;
+    nameAr: null | string;
+    primaryColor: null | string;
+    customerDomain: null | string;
+    contactName: null | string;
+    phone: null | string;
+    address: null | string;
+    plan: TenantPlan;
+    notes: null | string;
+    country: null | string;
+    currency: null | string;
+    timeZone: null | string;
+    defaultLanguage: null | string;
 };
 
 export type UpgradeRequest = {
@@ -350,6 +399,45 @@ export type GetTenantResponses = {
 };
 
 export type GetTenantResponse = GetTenantResponses[keyof GetTenantResponses];
+
+export type UpdateTenantData = {
+    body: UpdateTenantRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}';
+};
+
+export type UpdateTenantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateTenantError = UpdateTenantErrors[keyof UpdateTenantErrors];
+
+export type UpdateTenantResponses = {
+    /**
+     * OK
+     */
+    200: TenantDetail;
+};
+
+export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
 
 export type ProvisionTenantData = {
     body?: never;
@@ -847,6 +935,81 @@ export type UploadTenantSeedImageResponses = {
 };
 
 export type UploadTenantSeedImageResponse = UploadTenantSeedImageResponses[keyof UploadTenantSeedImageResponses];
+
+export type ConvertTenantData = {
+    body?: null | ConvertRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/convert';
+};
+
+export type ConvertTenantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ConvertTenantError = ConvertTenantErrors[keyof ConvertTenantErrors];
+
+export type ConvertTenantResponses = {
+    /**
+     * OK
+     */
+    200: TenantDetail;
+};
+
+export type ConvertTenantResponse = ConvertTenantResponses[keyof ConvertTenantResponses];
+
+export type ListAuditData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only this tenant's entries
+         */
+        slug?: string;
+        /**
+         * How many, newest first; 500 at most
+         */
+        take?: number | string;
+    };
+    url: '/api/control/audit';
+};
+
+export type ListAuditErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListAuditResponses = {
+    /**
+     * OK
+     */
+    200: Array<AuditEntry>;
+};
+
+export type ListAuditResponse = ListAuditResponses[keyof ListAuditResponses];
 
 export type TlsAskData = {
     body?: never;

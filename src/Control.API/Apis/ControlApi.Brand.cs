@@ -45,7 +45,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Ok<BrandDto>, NotFound, Conflict<ProblemDetails>, BadRequest<ProblemDetails>, ProblemHttpResult>> UpdateBrand(
-        ControlContext context, IStackProxy stack, IOptions<PlatformOptions> options, string slug, UpdateBrandRequest request, CancellationToken ct)
+        ControlContext context, IStackProxy stack, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, UpdateBrandRequest request, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
@@ -62,12 +62,13 @@ public static partial class ControlApi
             tenant.NameAr = brand.Name.Ar;
             tenant.PrimaryColor = brand.PrimaryColor;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("brand.updated", slug, request, ct);
         }
         return result;
     }
 
     public static async Task<Results<Ok<BrandDto>, NotFound, Conflict<ProblemDetails>, BadRequest<ProblemDetails>, ProblemHttpResult>> UploadBrandImage(
-        ControlContext context, IStackProxy stack, IOptions<PlatformOptions> options, string slug, string slot, IFormFile file, CancellationToken ct)
+        ControlContext context, IStackProxy stack, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, string slot, IFormFile file, CancellationToken ct)
     {
         if (!BrandImageSlots.IsKnown(slot)) return TypedResults.NotFound();
         if (file.Length == 0 || file.Length > MaxImageBytes)
@@ -82,11 +83,13 @@ public static partial class ControlApi
         content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType is { Length: > 0 } type ? type : "application/octet-stream");
         form.Add(content, "file", file.FileName is { Length: > 0 } name ? name : $"{slot}.png");
         using var response = await stack.SendAsync(tenant, HttpMethod.Put, $"/api/tenant/images/{slot}", form, StackAuth.Control, ct);
+        if (response.IsSuccessStatusCode)
+            await audit.WriteAsync("brand.image.uploaded", slug, new { slot, file.Length }, ct);
         return await BrandResult(response, tenant, options.Value, ct);
     }
 
     public static async Task<Results<Ok<BrandDto>, NotFound, Conflict<ProblemDetails>, BadRequest<ProblemDetails>, ProblemHttpResult>> DeleteBrandImage(
-        ControlContext context, IStackProxy stack, IOptions<PlatformOptions> options, string slug, string slot, CancellationToken ct)
+        ControlContext context, IStackProxy stack, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, string slot, CancellationToken ct)
     {
         if (!BrandImageSlots.IsKnown(slot)) return TypedResults.NotFound();
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
@@ -95,6 +98,8 @@ public static partial class ControlApi
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"The brand lives on the stack, and {slug} is {tenant.Status}." });
 
         using var response = await stack.SendAsync(tenant, HttpMethod.Delete, $"/api/tenant/images/{slot}", null, StackAuth.Control, ct);
+        if (response.IsSuccessStatusCode)
+            await audit.WriteAsync("brand.image.deleted", slug, new { slot }, ct);
         return await BrandResult(response, tenant, options.Value, ct);
     }
 
@@ -128,7 +133,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> UploadSeedImage(
-        ControlContext context, Provisioner provisioner, string slug, string slot, IFormFile file, CancellationToken ct)
+        ControlContext context, Provisioner provisioner, IAuditWriter audit, string slug, string slot, IFormFile file, CancellationToken ct)
     {
         if (!BrandImageSlots.IsKnown(slot)) return TypedResults.NotFound();
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
@@ -138,18 +143,22 @@ public static partial class ControlApi
 
         var path = provisioner.SeedImagePath(tenant, slot);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var target = File.Create(path);
-        await file.CopyToAsync(target, ct);
+        await using (var target = File.Create(path))
+        {
+            await file.CopyToAsync(target, ct);
+        }
+        await audit.WriteAsync("seed-image.uploaded", slug, new { slot, file.Length }, ct);
         return TypedResults.NoContent();
     }
 
-    public static async Task<Results<NoContent, NotFound>> DeleteSeedImage(ControlContext context, Provisioner provisioner, string slug, string slot, CancellationToken ct)
+    public static async Task<Results<NoContent, NotFound>> DeleteSeedImage(ControlContext context, Provisioner provisioner, IAuditWriter audit, string slug, string slot, CancellationToken ct)
     {
         if (!BrandImageSlots.IsKnown(slot)) return TypedResults.NotFound();
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
         var path = provisioner.SeedImagePath(tenant, slot);
         if (File.Exists(path)) File.Delete(path);
+        await audit.WriteAsync("seed-image.deleted", slug, new { slot }, ct);
         return TypedResults.NoContent();
     }
 }

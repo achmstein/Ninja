@@ -19,8 +19,11 @@ public sealed class Provisioner(
     IBrokerAdmin broker,
     IKeycloakAdmin keycloak,
     ITenantStack stack,
+    IAuditWriter audit,
     ILogger<Provisioner> logger)
 {
+    private const string Source = "provisioner";
+
     private PlatformOptions Platform => options.Value;
 
     private string Dir(Tenant tenant) => Path.Combine(Platform.TenantsRoot, tenant.Slug);
@@ -112,6 +115,7 @@ public sealed class Provisioner(
             tenant.Status = TenantStatus.Running;
             tenant.ProvisionedAt ??= DateTimeOffset.UtcNow;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag }, ct, Source);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -119,6 +123,7 @@ public sealed class Provisioner(
             tenant.Status = TenantStatus.Failed;
             tenant.LastError = ex.Message;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.provision.failed", tenant.Slug, new { runId, error = ex.Message }, ct, Source);
         }
     }
 
@@ -170,6 +175,7 @@ public sealed class Provisioner(
             tenant.Status = TenantStatus.Destroyed;
             tenant.OwnerInitialPassword = null;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.destroy.done", tenant.Slug, new { runId }, ct, Source);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -177,6 +183,7 @@ public sealed class Provisioner(
             tenant.Status = TenantStatus.Failed;
             tenant.LastError = ex.Message;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.destroy.failed", tenant.Slug, new { runId, error = ex.Message }, ct, Source);
         }
     }
 
@@ -211,12 +218,33 @@ public sealed class Provisioner(
             tenant.Status = action == "stop" ? TenantStatus.Stopped : TenantStatus.Running;
             tenant.LastError = null;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync($"tenant.{action}.done", tenant.Slug, null, ct, Source);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "{Action} on {Slug} failed", action, tenant.Slug);
+            tenant.Status = TenantStatus.Failed;
             tenant.LastError = ex.Message;
             await context.SaveChangesAsync(ct);
+            await audit.WriteAsync($"tenant.{action}.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
+        }
+    }
+
+    /// <summary>Rewrite the edge's custom-domain sites after a domain changed on the record.</summary>
+    public async Task EdgeAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        try
+        {
+            await Step(tenant, Guid.NewGuid(), "edge", () => WriteEdgeAsync(ct), ct);
+            await audit.WriteAsync("tenant.edge.done", tenant.Slug, null, ct, Source);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Edge rewrite for {Slug} failed", tenant.Slug);
+            tenant.LastError = ex.Message;
+            await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.edge.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
         }
     }
 
@@ -293,6 +321,7 @@ public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFac
             {
                 case "provision": await provisioner.ProvisionAsync(job.TenantId, stoppingToken); break;
                 case "destroy": await provisioner.DestroyAsync(job.TenantId, stoppingToken); break;
+                case "edge": await provisioner.EdgeAsync(job.TenantId, stoppingToken); break;
                 default: await provisioner.ComposeAsync(job.TenantId, job.Action, stoppingToken); break;
             }
         }
@@ -330,16 +359,19 @@ public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQ
             .Where(t => t.Status == TenantStatus.Running || t.Status == TenantStatus.Stopped)
             .ToListAsync(ct);
 
+        var audit = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
         foreach (var tenant in due)
         {
             if (tenant.Status == TenantStatus.Running)
             {
                 logger.LogInformation("Demo {Slug} expired; stopping", tenant.Slug);
+                await audit.WriteAsync("demo.expired", tenant.Slug, new { expiresAt = tenant.ExpiresAt }, ct, "expiry");
                 await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "stop"), ct);
             }
             else if (tenant.ExpiresAt + grace <= now)
             {
                 logger.LogInformation("Demo {Slug} past its grace; destroying", tenant.Slug);
+                await audit.WriteAsync("demo.grace-over", tenant.Slug, new { expiresAt = tenant.ExpiresAt, graceDays = options.Value.DemoGraceDays }, ct, "expiry");
                 await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "destroy"), ct);
             }
         }

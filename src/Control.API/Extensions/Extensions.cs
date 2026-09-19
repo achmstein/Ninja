@@ -21,6 +21,8 @@ public static class Extensions
         builder.Services.AddHttpClient("keycloak");
         builder.Services.AddHttpClient("stack", client => client.Timeout = TimeSpan.FromSeconds(30));
 
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<IAuditWriter, AuditWriter>();
         builder.Services.AddSingleton<ProvisioningQueue>();
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddHostedService<ProvisioningWorker>();

@@ -29,6 +29,7 @@ public static partial class ControlApi
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
 
         MapBrandApi(api);
+        MapRecordApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();
@@ -57,6 +58,7 @@ public static partial class ControlApi
     public static async Task<Results<Created<TenantDetail>, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> CreateTenant(
         ControlContext context,
         ProvisioningQueue queue,
+        IAuditWriter audit,
         IOptions<PlatformOptions> options,
         CreateTenantRequest request,
         CancellationToken ct)
@@ -91,6 +93,11 @@ public static partial class ControlApi
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
             CustomerDomain = string.IsNullOrWhiteSpace(request.CustomerDomain) ? null : request.CustomerDomain.Trim().ToLowerInvariant(),
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
+            ContactName = Clean(request.ContactName),
+            Phone = Clean(request.Phone),
+            Address = Clean(request.Address),
+            Plan = request.Plan,
+            Notes = Clean(request.Notes),
             IdentitySecret = TenantNaming.NewSecret(),
             ControlSecret = TenantNaming.NewSecret(),
             ImageTag = options.Value.DefaultImageTag,
@@ -98,6 +105,7 @@ public static partial class ControlApi
         };
         context.Tenants.Add(tenant);
         await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.created", slug, new { request.NameEn, request.Kind, tenant.Seed, tenant.Country, tenant.Currency, request.OwnerEmail, provision = request.Provision ?? true }, ct);
 
         if (request.Provision ?? true)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "provision"), ct);
@@ -114,17 +122,17 @@ public static partial class ControlApi
         return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
     }
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
+    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
         // A destroyed tenant can be brought back under the same slug: the steps recreate everything
-        => Enqueue(context, queue, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct);
+        => Enqueue(context, queue, audit, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct);
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
-        => Enqueue(context, queue, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);
+    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+        => Enqueue(context, queue, audit, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Start(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
-        => Enqueue(context, queue, slug, "start", [TenantStatus.Stopped, TenantStatus.Failed], ct);
+    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Start(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+        => Enqueue(context, queue, audit, slug, "start", [TenantStatus.Stopped, TenantStatus.Failed], ct);
 
-    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Upgrade(ControlContext context, ProvisioningQueue queue, string slug, UpgradeRequest? request, CancellationToken ct)
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Upgrade(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, UpgradeRequest? request, CancellationToken ct)
     {
         if (!string.IsNullOrWhiteSpace(request?.ImageTag))
         {
@@ -133,10 +141,10 @@ public static partial class ControlApi
             tenant.ImageTag = request.ImageTag.Trim();
             await context.SaveChangesAsync(ct);
         }
-        return await Enqueue(context, queue, slug, "upgrade", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed], ct);
+        return await Enqueue(context, queue, audit, slug, "upgrade", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed], ct, new { imageTag = request?.ImageTag });
     }
 
-    public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> Extend(ControlContext context, IOptions<PlatformOptions> options, string slug, ExtendRequest request, CancellationToken ct)
+    public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> Extend(ControlContext context, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, ExtendRequest request, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
@@ -145,18 +153,21 @@ public static partial class ControlApi
         var from = tenant.ExpiresAt is { } e && e > DateTimeOffset.UtcNow ? e : DateTimeOffset.UtcNow;
         tenant.ExpiresAt = from.AddDays(Math.Clamp(request.Days, 1, 365));
         await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("demo.extended", slug, new { request.Days, tenant.ExpiresAt }, ct);
         return TypedResults.Ok(TenantDetail.From(tenant, [], [], options.Value));
     }
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Destroy(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
-        => Enqueue(context, queue, slug, "destroy", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed, TenantStatus.Requested], ct);
+    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Destroy(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+        => Enqueue(context, queue, audit, slug, "destroy", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed, TenantStatus.Requested], ct);
 
-    private static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Enqueue(ControlContext context, ProvisioningQueue queue, string slug, string action, TenantStatus[] allowedFrom, CancellationToken ct)
+    private static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Enqueue(
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, string action, TenantStatus[] allowedFrom, CancellationToken ct, object? details = null)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
         if (!allowedFrom.Contains(tenant.Status))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Cannot {action} a tenant that is {tenant.Status}." });
+        await audit.WriteAsync($"tenant.{action}", slug, details, ct);
         await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, action), ct);
         return TypedResults.Accepted($"/api/control/tenants/{slug}");
     }
@@ -192,6 +203,11 @@ public record CreateTenantRequest(
     string? PrimaryColor = null,
     string? CustomerDomain = null,
     int? DemoDays = null,
+    string? ContactName = null,
+    string? Phone = null,
+    string? Address = null,
+    TenantPlan Plan = TenantPlan.Free,
+    string? Notes = null,
     bool? Provision = true);
 
 public record UpgradeRequest(string? ImageTag);
@@ -203,10 +219,10 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
     public static TenantHostsDto From(TenantHosts h) => new(h.CustomerUrl, h.AdminUrl, h.PosUrl, h.KdsUrl, h.ApiUrl);
 }
 
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, string Country, string Currency, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Country, t.Currency, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
@@ -217,6 +233,9 @@ public record TenantLocaleDto(string Country, string Currency, string TimeZone, 
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);
 
+/// <summary>The café's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
+public record TenantRecordDto(string? ContactName, string? Phone, string? Address, TenantPlan Plan, string? Notes);
+
 public record TenantDetail(
     string Slug,
     string NameEn,
@@ -226,9 +245,11 @@ public record TenantDetail(
     TenantSeed Seed,
     TenantLocaleDto Locale,
     string? PrimaryColor,
+    string? CustomerDomain,
     TenantHostsDto Hosts,
     string OwnerEmail,
     string? OwnerInitialPassword,
+    TenantRecordDto Record,
     string ImageTag,
     DateTimeOffset CreatedAt,
     DateTimeOffset? ExpiresAt,
@@ -238,7 +259,8 @@ public record TenantDetail(
     IReadOnlyList<string> SeedImages)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+            new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),
             seedImages);

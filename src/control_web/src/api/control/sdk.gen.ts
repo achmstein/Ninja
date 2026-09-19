@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -61,6 +61,19 @@ export const getTenant = <ThrowOnError extends boolean = false>(options: Options
     responseType: 'json',
     url: '/api/control/tenants/{slug}',
     ...options
+});
+
+/**
+ * The record: contact, plan, notes, own domain, and what the next stamp uses
+ */
+export const updateTenant = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantData, ThrowOnError>): RequestResult<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -169,6 +182,28 @@ export const uploadTenantSeedImage = <ThrowOnError extends boolean = false>(opti
         'Content-Type': null,
         ...options.headers
     }
+});
+
+/**
+ * A demo becomes a customer: no expiry, on a plan
+ */
+export const convertTenant = <ThrowOnError extends boolean = false>(options: Options<ConvertTenantData, ThrowOnError>): RequestResult<ConvertTenantResponses, ConvertTenantErrors, ThrowOnError> => (options.client ?? client).post<ConvertTenantResponses, ConvertTenantErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/convert',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Every platform action, newest first, for one tenant or all
+ */
+export const listAudit = <ThrowOnError extends boolean = false>(options?: Options<ListAuditData, ThrowOnError>): RequestResult<ListAuditResponses, ListAuditErrors, ThrowOnError> => (options?.client ?? client).get<ListAuditResponses, ListAuditErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/audit',
+    ...options
 });
 
 /**

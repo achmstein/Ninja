@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getTenant, getTenantBrand, getTenantSeedImage, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getTenant, getTenantBrand, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -127,6 +127,23 @@ export const getTenantOptions = (options: Options<GetTenantData>) => queryOption
     },
     queryKey: getTenantQueryKey(options)
 });
+
+/**
+ * The record: contact, plan, notes, own domain, and what the next stamp uses
+ */
+export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>>): UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> => {
+    const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 /**
  * Run (or retry) provisioning
@@ -342,6 +359,41 @@ export const uploadTenantSeedImageMutation = (options?: Partial<Options<UploadTe
     };
     return mutationOptions;
 };
+
+/**
+ * A demo becomes a customer: no expiry, on a plan
+ */
+export const convertTenantMutation = (options?: Partial<Options<ConvertTenantData>>): UseMutationOptions<ConvertTenantResponse, AxiosError<ConvertTenantError>, Options<ConvertTenantData>> => {
+    const mutationOptions: UseMutationOptions<ConvertTenantResponse, AxiosError<ConvertTenantError>, Options<ConvertTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await convertTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listAuditQueryKey = (options?: Options<ListAuditData>) => createQueryKey('listAudit', options);
+
+/**
+ * Every platform action, newest first, for one tenant or all
+ */
+export const listAuditOptions = (options?: Options<ListAuditData>) => queryOptions<ListAuditResponse, AxiosError<DefaultError>, ListAuditResponse, ReturnType<typeof listAuditQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAudit({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAuditQueryKey(options)
+});
 
 export const tlsAskQueryKey = (options: Options<TlsAskData>) => createQueryKey('tlsAsk', options);
 

@@ -30,6 +30,14 @@ public enum TenantSeed
     Sample = 1,
 }
 
+/// <summary>What the café pays for; the names are the platform's, the prices are not in the code.</summary>
+public enum TenantPlan
+{
+    Free = 0,
+    Starter = 1,
+    Pro = 2,
+}
+
 /// <summary>The locale defaults a tenant starts with: tenant one's, so Chillax is unchanged.</summary>
 public static class TenantLocale
 {
@@ -83,6 +91,17 @@ public class Tenant
     public string? CustomerDomain { get; set; }
 
     public string OwnerEmail { get; set; } = "";
+
+    /// <summary>The café's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
+    public string? ContactName { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Address { get; set; }
+
+    public TenantPlan Plan { get; set; }
+
+    public string? Notes { get; set; }
 
     /// <summary>The first owner's temporary password; cleared once the owner has signed in and changed it (not tracked yet).</summary>
     public string? OwnerInitialPassword { get; set; }

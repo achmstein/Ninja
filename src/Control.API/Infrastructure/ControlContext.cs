@@ -8,6 +8,8 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<ProvisioningStep> Steps => Set<ProvisioningStep>();
 
+    public DbSet<PlatformAudit> Audits => Set<PlatformAudit>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Tenant>(entity =>
@@ -31,7 +33,24 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
             entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
             entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.ContactName).HasMaxLength(80);
+            entity.Property(e => e.Phone).HasMaxLength(30);
+            entity.Property(e => e.Address).HasMaxLength(200);
+            entity.Property(e => e.Plan).HasConversion<string>().HasMaxLength(16);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
             entity.HasMany(e => e.Steps).WithOne().HasForeignKey(s => s.TenantId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PlatformAudit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Actor).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.ActorEmail).HasMaxLength(254);
+            entity.Property(e => e.Source).HasMaxLength(16).IsRequired();
+            entity.Property(e => e.Action).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Slug).HasMaxLength(24);
+            entity.Property(e => e.Details).HasColumnType("jsonb");
+            entity.HasIndex(e => new { e.Slug, e.Id });
         });
 
         modelBuilder.Entity<ProvisioningStep>(entity =>
