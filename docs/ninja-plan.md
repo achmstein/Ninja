@@ -2,7 +2,7 @@
 
 **Goal:** sell what Chillax runs on. A café or restaurant subscribes, gets a branded self-ordering menu (web, and native apps on the higher plan) and runs the rest — till, kitchen, stock, money, staff — under the Ninja name. Setting a new client up for a demo is one command plus a photo of their menu.
 
-**Status:** decided 2026-09-19 (four decisions below, all agreed). Phase 1 `09949837`, Phase 2 `2fc5ae38`, Phase 2.5 `abc9119c`; the control plane (Phases 3 + 6 together) built 2026-09-19, awaiting its first run on the box.
+**Status:** decided 2026-09-19 (four decisions below, all agreed). The next batches of work are in `docs/control-plane-plan.md`. Phase 1 `09949837`, Phase 2 `2fc5ae38`, Phase 2.5 `abc9119c`; the control plane (Phases 3 + 6 together) built 2026-09-19, awaiting its first run on the box.
 
 **Repo:** this repository (`NinjaPlatform`) is a copy of `achmstein/Chillax` at `c43fee71`, detached from that remote. It is *not* the older `achmstein/Ninja` repository (a food-delivery experiment); the two share nothing and must not be merged. Chillax keeps running from its own repo until Phase 3 moves it onto a Ninja stamp; after that the Chillax repo is history.
 
