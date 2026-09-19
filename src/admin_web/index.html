@@ -2,39 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/images/favicon.svg"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/images/favicon_light.svg"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      href="/images/favicon.png"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      href="/images/favicon_light.png"
-      media="(prefers-color-scheme: dark)"
-    />
+    <!-- A staff surface: the platform's icon and manifest, served by /api/tenant; brand.ts keeps them current -->
+    <link rel="icon" type="image/png" href="/api/tenant/icons/favicon.png?platform=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary Meta Tags -->
-    <title>Chillax</title>
-    <meta name="title" content="Chillax" />
-    <meta
-      name="description"
-      content="Chillax admin dashboard."
-    />
+    <title>Ninja Admin</title>
+    <meta name="description" content="The back office." />
 
     <!-- font family -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -46,8 +19,8 @@
 
     <meta name="theme-color" content="#fff" />
     <!-- Installable on a phone: the owner's back office in the pocket, and the device the day's digest is pushed to -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/api/tenant/manifest?app=admin" />
+    <link rel="apple-touch-icon" href="/api/tenant/icons/apple-touch-icon.png?platform=1" />
   </head>
 
   <body>

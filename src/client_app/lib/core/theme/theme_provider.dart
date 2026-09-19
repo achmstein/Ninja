@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../brand/brand_theme.dart';
 
 enum AppThemeMode { light, dark, system }
 
@@ -38,7 +39,8 @@ class ThemeState {
     );
   }
 
-  FThemeData getForuiTheme(BuildContext context, {Locale? locale}) {
+  /// [brandColor] is the tenant's primary; the rest of the palette stays zinc
+  FThemeData getForuiTheme(BuildContext context, {Locale? locale, Color? brandColor}) {
     final Brightness brightness;
     switch (themeMode) {
       case AppThemeMode.light:
@@ -52,10 +54,11 @@ class ThemeState {
         break;
     }
 
-    // Get base colors from zinc theme
-    final colors = brightness == Brightness.dark
-        ? FThemes.zinc.dark.colors
-        : FThemes.zinc.light.colors;
+    // Base colors from the zinc theme, the brand's primary on top
+    final colors = brandedColors(
+      brightness == Brightness.dark ? FThemes.zinc.dark.colors : FThemes.zinc.light.colors,
+      brandColor,
+    );
 
     // Get font family based on locale
     final fontFamily = locale != null ? getFontFamily(locale) : 'Inter';

@@ -19,7 +19,6 @@ type Message =
 // voice as the other apps: ترابيزة = table, اوضة = room.
 const dictionary = {
   // Brand / chrome
-  brandName: { en: 'Chillax', ar: 'تشيلاكس' },
   appName: { en: 'Kitchen', ar: 'المطبخ' },
   branches: { en: 'Branches', ar: 'الفروع' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },

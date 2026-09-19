@@ -1,3 +1,4 @@
+import '../brand/brand_provider.dart';
 import '../providers/branch_provider.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
@@ -58,6 +59,7 @@ class PrintService {
       ticket: ticket,
       l10n: l10n,
       locale: locale,
+      brandName: _brandName(locale),
       logo: await _logo(),
       branch: _ref.read(branchProvider).selectedBranch,
       paymentsOverride: paymentsOverride,
@@ -69,30 +71,32 @@ class PrintService {
 
   Future<void> printTabPayment(TabPaymentSlip slip, {required AppLocalizations l10n, required Locale locale, bool kickDrawer = false}) async {
     final printer = _printer();
-    await printer.send(await _job(TabPaymentSheet(slip: slip, l10n: l10n, locale: locale, logo: await _logo()), kickDrawer: kickDrawer));
+    await printer.send(await _job(
+      TabPaymentSheet(slip: slip, l10n: l10n, locale: locale, brandName: _brandName(locale), logo: await _logo()),
+      kickDrawer: kickDrawer,
+    ));
   }
 
   Future<void> printShiftReport(ShiftView shift, {required AppLocalizations l10n, required Locale locale}) async {
     final printer = _printer();
-    await printer.send(await _job(ShiftReportSheet(shift: shift, l10n: l10n, locale: locale)));
+    await printer.send(await _job(ShiftReportSheet(shift: shift, l10n: l10n, locale: locale, brandName: _brandName(locale))));
   }
 
   Future<void> testPrint({required AppLocalizations l10n, required Locale locale}) async {
     final printer = _printer();
-    await printer.send(await _job(TestSheet(l10n: l10n, locale: locale, logo: await _logo())));
+    await printer.send(await _job(TestSheet(l10n: l10n, locale: locale, brandName: _brandName(locale), logo: await _logo())));
   }
 
   Future<void> kickDrawer() => _printer().send(EscPosBuilder().init().kickDrawer().toBytes());
 
-  /// The wordmark, or nothing if the asset cannot be decoded: the sheet
-  /// falls back to the name in text rather than the receipt not printing
-  Future<ui.Image?> _logo() async {
-    try {
-      return await brandLogo();
-    } catch (_) {
-      return null;
-    }
-  }
+  /// The tenant's name in the sheet's language: what prints when there is
+  /// no logo, and the top line of the shift report either way
+  String _brandName(Locale locale) => _ref.read(brandProvider).displayName(locale);
+
+  /// The tenant's logo, or nothing when there is none or it cannot be
+  /// fetched: the sheet falls back to the name in text rather than the
+  /// receipt not printing
+  Future<ui.Image?> _logo() => brandLogo(_ref.read(brandProvider).logoUrl);
 
   Future<List<int>> _job(Widget sheet, {bool kickDrawer = false}) async {
     final image = await rasterizeWidget(sheet, width: receiptWidth);

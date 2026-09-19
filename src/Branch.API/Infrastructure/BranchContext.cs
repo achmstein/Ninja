@@ -6,6 +6,8 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
 {
     public DbSet<Model.Branch> Branches => Set<Model.Branch>();
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Model.Branch>(entity =>
@@ -22,13 +24,40 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.DisplayOrder);
         });
+
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.OwnsOne(e => e.Name, b => b.ToJson());
+            entity.Property(e => e.PrimaryColor).HasMaxLength(7);
+            entity.Property(e => e.CustomerUrl).HasMaxLength(200);
+            entity.Ignore(e => e.HasLogo);
+            entity.Ignore(e => e.Version);
+        });
     }
 }
 
-public class BranchContextSeed(ILogger<BranchContextSeed> logger) : IDbSeeder<BranchContext>
+public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration configuration) : IDbSeeder<BranchContext>
 {
     public async Task SeedAsync(BranchContext context)
     {
+        // The stack's tenant, from the environment the stack was provisioned
+        // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor);
+        // Tenant__CustomerUrl); "Ninja" until someone names it.
+        if (!await context.Tenants.AnyAsync())
+        {
+            var section = configuration.GetSection("Tenant");
+            context.Tenants.Add(new Tenant
+            {
+                Name = new LocalizedText(section["Name:En"] is { Length: > 0 } en ? en : "Ninja", section["Name:Ar"]),
+                PrimaryColor = section["PrimaryColor"] is { Length: > 0 } color ? color.ToLowerInvariant() : null,
+                CustomerUrl = section["CustomerUrl"] is { Length: > 0 } url ? url.TrimEnd('/') : null,
+            });
+            await context.SaveChangesAsync();
+            logger.LogInformation("Seeded the tenant");
+        }
+
         if (!await context.Branches.AnyAsync())
         {
             context.Branches.AddRange(

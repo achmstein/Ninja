@@ -1,4 +1,4 @@
-/// Application configuration for the Chillax POS tablet app
+/// Application configuration for the POS tablet app
 class AppConfig {
   // Everything goes through the mobile BFF (YARP).
   // Debug: the Aspire AppHost on the dev machine, reached from the emulator
@@ -22,6 +22,8 @@ class AppConfig {
   static String get identityApiUrl => '$bffBaseUrl/api/identity/';
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
+  /// The tenant's brand: one anonymous resource, no sub-paths
+  static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
   // Sales.API serves both /api/tickets/* and /api/shifts/*
   static String get salesApiUrl => '$bffBaseUrl/api/';
   // Read-only on the till: a customer's points and tab balance on their card
@@ -59,8 +61,7 @@ class AppConfig {
   // Who may run the till — mirrors the backend "Pos" policy
   static const List<String> posRoles = ['Admin', 'Owner', 'Cashier'];
 
-  // App info
-  static const String appName = 'Chillax POS';
+  // App info (the name comes from the tenant brand)
   static const String appVersion = '1.0.0';
 
   // Poll fallbacks, mirroring pos_web (SignalR is the primary update path)

@@ -8,7 +8,6 @@ export type Message =
   | { plural: string; en: PluralForms; ar: PluralForms }
 
 export const messages = {
-  appTitle: { en: "Chillax Admin", ar: "تشيلاكس ادمن" },
   dashboard: { en: "Dashboard", ar: "لوحة التحكم" },
   pending: { en: "Pending", ar: "معلّق" },
   active: { en: "Active", ar: "نشط" },
@@ -252,7 +251,6 @@ export const messages = {
   enterName: { en: "Enter name", ar: "اكتب الاسم" },
   version: { en: "Version {version}", ar: "الإصدار {version}" },
   needHelpContactUs: { en: "Need help? Contact us:", ar: "محتاج مساعدة؟ تواصل معانا:" },
-  supportEmail: { en: "support@chillax.com", ar: "support@chillax.com" },
   supportPhone: { en: "+20 123 456 7890", ar: "+20 123 456 7890" },
   supportHours: { en: "Available 24/7", ar: "متاحين 24/7" },
   cafeAndGaming: { en: "CAFE & GAMING", ar: "كافيه وجيمنج" },

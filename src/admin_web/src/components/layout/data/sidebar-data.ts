@@ -13,6 +13,7 @@ import {
   History,
   LayoutDashboard,
   Megaphone,
+  Palette,
   Receipt,
   ReceiptText,
   ShieldCheck,
@@ -35,8 +36,8 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        { title: 'placesNav', url: '/places', icon: Gamepad2 },
-        { title: 'requests', url: '/requests', icon: ConciergeBell },
+        { title: 'placesNav', url: '/places', icon: Gamepad2, feature: 'rooms' },
+        { title: 'requests', url: '/requests', icon: ConciergeBell, feature: 'rooms' },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },
@@ -50,6 +51,7 @@ export const sidebarData: SidebarData = {
       // Stock: what the branch has, what the menu takes out of it, and the
       // ledger behind it. Every posting is made from Stock.
       title: 'navInventory',
+      feature: 'inventory',
       items: [
         { title: 'inventoryStock', url: '/inventory', icon: Warehouse },
         {
@@ -72,6 +74,7 @@ export const sidebarData: SidebarData = {
     {
       // People: the register, the month's attendance, the month's payslips
       title: 'navPayroll',
+      feature: 'payroll',
       items: [
         {
           title: 'navPayrollEmployees',
@@ -93,6 +96,7 @@ export const sidebarData: SidebarData = {
     {
       // Money beyond stock and staff: bills, supplier tabs, the owners' own
       title: 'navFinance',
+      feature: 'finance',
       items: [
         {
           title: 'navFinanceExpenses',
@@ -134,6 +138,7 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
+        { title: 'brandNav', url: '/brand', icon: Palette },
       ],
     },
   ],

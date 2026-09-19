@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { AuthLayout } from '../auth-layout'
+import { PLATFORM_NAME } from '@/lib/brand'
+import { PlatformMark } from '@/components/platform-mark'
 
 /**
  * Keycloak is the only identity provider, so there is nothing to choose on a
@@ -95,12 +97,10 @@ export function SignIn() {
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
-        <img
-          src='/images/cup.png'
-          alt=''
-          className='size-14 object-contain dark:invert'
-        />
-        <span className='text-2xl font-semibold tracking-tight'>Chillax</span>
+        <PlatformMark className='size-14 text-2xl' />
+        <span className='text-2xl font-semibold tracking-tight'>
+          {PLATFORM_NAME}
+        </span>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Spinner />

@@ -1,8 +1,7 @@
-/** Public origin the printed QR codes point at. Every place — room, table
- *  or station — gets the same /p/{id} path; the customer apps parse it
- *  host-strictly. */
-const PUBLIC_ORIGIN = 'https://chillax.site'
-
-export function placeQrUrl(placeId: number): string {
-  return `${PUBLIC_ORIGIN}/p/${placeId}`
+/** The URL a printed QR code carries. Every place — room, table or station —
+ *  gets the same /p/{id} path on the tenant's customer origin (the brand's
+ *  customerUrl, this origin until provisioning sets one); the customer apps
+ *  parse it host-strictly. */
+export function placeQrUrl(origin: string, placeId: number): string {
+  return `${origin}/p/${placeId}`
 }

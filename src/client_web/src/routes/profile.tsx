@@ -43,6 +43,8 @@ import { Card } from '@/components/ui/card'
 import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
 import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
+import { useBrandName, useFeatures } from '@/lib/brand'
+import { BrandMark } from '@/components/brand-mark'
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -60,6 +62,7 @@ const tierKeys: Record<string, TranslationKey> = {
 function ProfilePage() {
   const t = useT()
   const auth = useAuth()
+  const features = useFeatures()
   const branch = useSelectedBranch()
   const [aboutOpen, setAboutOpen] = useState(false)
 
@@ -130,7 +133,7 @@ function ProfilePage() {
 
       {/* Balance card, like the app's — only with an outstanding balance;
           tap opens the account history */}
-      {auth.isAuthenticated && houseBalance !== 0 && (
+      {auth.isAuthenticated && features.tabs && houseBalance !== 0 && (
         <Link to='/account'>
           <BalanceCard balance={houseBalance} chevron />
         </Link>
@@ -138,7 +141,7 @@ function ProfilePage() {
 
       {/* Loyalty card, like the app's — only once the member has joined, so a
           non-member never sees a zeroed-out card; tap for details */}
-      {auth.isAuthenticated && loyalty && (
+      {auth.isAuthenticated && features.loyalty && loyalty && (
         <Link to='/loyalty'>
           <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
             <div className='flex items-center gap-2 border-b px-4 py-3'>
@@ -168,7 +171,7 @@ function ProfilePage() {
       )}
 
       {/* Not a member yet — a join prompt instead of an empty card */}
-      {auth.isAuthenticated && loyaltyQuery.isError && (
+      {auth.isAuthenticated && features.loyalty && loyaltyQuery.isError && (
         <Link to='/loyalty'>
           <Card className='hover:bg-accent gap-0 p-0 transition-colors'>
             <div className='flex items-center gap-3 px-4 py-3'>
@@ -188,8 +191,12 @@ function ProfilePage() {
       {auth.isAuthenticated && (
         <Card className='gap-0 divide-y p-0'>
           <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
-          <TileLink to='/stays' icon={Gamepad2} label={t('sessions')} />
-          <TileLink to='/account' icon={Wallet} label={t('transactions')} />
+          {features.rooms && (
+            <TileLink to='/stays' icon={Gamepad2} label={t('sessions')} />
+          )}
+          {features.tabs && (
+            <TileLink to='/account' icon={Wallet} label={t('transactions')} />
+          )}
         </Card>
       )}
 
@@ -269,6 +276,7 @@ function AboutDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const brandName = useBrandName()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -276,16 +284,8 @@ function AboutDialog({
           <DialogTitle>{t('about')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center gap-3 pb-2 text-center'>
-          <img
-            src='/images/cup.png'
-            alt=''
-            className='size-20 object-contain dark:invert'
-          />
-          <div className='text-lg font-bold'>{t('appTitle')}</div>
-          {/* Arabic script must not be letterspaced (app does the same) */}
-          <div className='text-muted-foreground text-xs tracking-widest uppercase rtl:tracking-normal'>
-            {t('cafeAndGaming')}
-          </div>
+          <BrandMark className='size-20 rounded-2xl text-3xl' />
+          <div className='text-lg font-bold'>{brandName}</div>
           <Badge variant='secondary'>
             {t('version', { version: __APP_VERSION__ })}
           </Badge>

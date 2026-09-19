@@ -11,6 +11,7 @@ import 'package:forui/forui.dart';
 import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/auth/auth_service.dart';
+import 'core/brand/brand_provider.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/current_place_provider.dart';
 import 'core/providers/locale_provider.dart';
@@ -34,6 +35,7 @@ void main() async {
   await initializeLocale();
   await initializeBranch();
   await initializeCurrentPlace();
+  await initializeBrand();
 
   // Initialize Firebase before setting up Crashlytics handlers
   try {
@@ -93,6 +95,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       ref.read(signalRServiceProvider).reconnectIfNeeded();
       ref.read(myStaysProvider.notifier).refresh();
       ref.read(branchProvider.notifier).refreshSilently();
+      ref.read(brandProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
       if (branchId != null) ref.invalidate(placesProvider(branchId));
       _reregisterNotificationsIfEnabled();
@@ -200,6 +203,8 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     );
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) async {
+        // The brand is edited on the same admin page as the branch settings
+        ref.read(brandProvider.notifier).refresh();
         await ref.read(branchProvider.notifier).refreshSilently();
         WidgetsBinding.instance.ensureVisualUpdate();
       }),
@@ -221,6 +226,8 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final router = ref.watch(routerProvider);
     final themeState = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
+    final brand = ref.watch(brandProvider);
+    final brandName = ref.watch(brandNameProvider);
 
     if (authState.isAuthenticated && !_wasAuthenticated) {
       _wasAuthenticated = true;
@@ -242,7 +249,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     }
 
     return MaterialApp.router(
-      title: 'Chillax',
+      title: brandName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       locale: locale,
@@ -250,7 +257,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppTheme.primaryColor,
+          seedColor: brand.primaryColor ?? AppTheme.primaryColor,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
@@ -263,7 +270,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppTheme.primaryColor,
+          seedColor: brand.primaryColor ?? AppTheme.primaryColor,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
@@ -281,7 +288,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
               : ThemeMode.system,
       builder: (context, child) {
         return FTheme(
-          data: themeState.getForuiTheme(context, locale: locale),
+          data: themeState.getForuiTheme(context, locale: locale, brandColor: brand.primaryColor),
           child: FToaster(
             child: child ?? const SizedBox.shrink(),
           ),

@@ -1,4 +1,5 @@
 import { type LinkProps } from '@tanstack/react-router'
+import { type FeatureKey } from '@/lib/brand'
 import { type TranslationKey } from '@/lib/i18n'
 
 type BaseNavItem = {
@@ -13,6 +14,8 @@ type NavLink = BaseNavItem & {
   items?: never
   /** Only shown to users holding the Owner realm role */
   ownerOnly?: boolean
+  /** Only shown while the tenant has this feature switched on */
+  feature?: FeatureKey
 }
 
 type NavCollapsible = BaseNavItem & {
@@ -27,6 +30,8 @@ type NavGroup = {
   items: NavItem[]
   /** Only shown to users holding the Owner realm role */
   ownerOnly?: boolean
+  /** Only shown while the tenant has this feature switched on */
+  feature?: FeatureKey
 }
 
 type SidebarData = {

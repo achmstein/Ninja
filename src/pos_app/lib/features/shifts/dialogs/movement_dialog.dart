@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -48,7 +49,21 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
   final String _requestId = const Uuid().v4();
 
   bool get _isOut => widget.type == CashMovementType.payOut;
-  List<CashMovementKind> get _kinds => _isOut ? CashMovementKind.forPayOut : CashMovementKind.forPayIn;
+
+  /// The kinds this tenant has somewhere to send: supplier, expense and
+  /// partner reach Finance, wage and advance reach Payroll; other always
+  List<CashMovementKind> get _kinds {
+    final features = ref.read(featuresProvider);
+    return [
+      for (final kind in _isOut ? CashMovementKind.forPayOut : CashMovementKind.forPayIn)
+        if (switch (kind) {
+          CashMovementKind.supplier || CashMovementKind.expense || CashMovementKind.partner => features.finance,
+          CashMovementKind.wage || CashMovementKind.advance => features.payroll,
+          CashMovementKind.other => true,
+        })
+          kind,
+    ];
+  }
   MovementPick? get _picks => _kind.picks;
 
   @override

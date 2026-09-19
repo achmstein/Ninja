@@ -18,6 +18,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { PLATFORM_NAME } from '@/lib/brand'
+import { PlatformMark } from '@/components/platform-mark'
 
 /**
  * The sidebar header, in the shadcn-admin team-switcher shape: the cup mark
@@ -64,14 +66,9 @@ export function BranchSwitcher() {
 
   const tile = (
     <>
-      {/* Black-on-transparent mark; invert on dark backgrounds */}
-      <img
-        src='/images/cup.png'
-        alt=''
-        className='size-8 shrink-0 object-contain dark:invert'
-      />
+      <PlatformMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{t('brandName')}</span>
+        <span className='truncate font-semibold'>{PLATFORM_NAME}</span>
         <span className='truncate text-xs'>{label}</span>
       </div>
     </>

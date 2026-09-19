@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -837,6 +838,7 @@ class _CustomerPointsLine extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(featuresProvider).loyalty) return const SizedBox.shrink();
     if (!ref.watch(onlineProvider)) return const SizedBox.shrink();
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;

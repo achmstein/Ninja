@@ -1,6 +1,5 @@
 {
   "@@locale": "ar",
-  "appTitle": "تشيلاكس ادمن",
   "dashboard": "لوحة التحكم",
   "pending": "معلّق",
   "active": "نشط",
@@ -244,7 +243,6 @@
   "enterName": "اكتب الاسم",
   "version": "الإصدار {version}",
   "needHelpContactUs": "محتاج مساعدة؟ تواصل معانا:",
-  "supportEmail": "support@chillax.com",
   "supportPhone": "+20 123 456 7890",
   "supportHours": "متاحين 24/7",
   "cafeAndGaming": "كافيه وجيمنج",

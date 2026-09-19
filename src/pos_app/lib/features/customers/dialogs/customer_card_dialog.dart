@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/money.dart';
@@ -50,9 +51,11 @@ class _CustomerCard extends ConsumerWidget {
     const tabular = [FontFeature.tabularFigures()];
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     final online = ref.watch(onlineProvider);
+    // A tenant without loyalty or tabs has no such block at all
+    final features = ref.watch(featuresProvider);
     // Nothing to read while offline: the hint stands in for both blocks
-    final loyalty = online ? ref.watch(loyaltyAccountProvider(customer.id)) : null;
-    final tab = online ? ref.watch(tabAccountProvider(customer.id)) : null;
+    final loyalty = online && features.loyalty ? ref.watch(loyaltyAccountProvider(customer.id)) : null;
+    final tab = online && features.tabs ? ref.watch(tabAccountProvider(customer.id)) : null;
 
     Widget block(IconData icon, String title, Widget body) => Container(
           padding: const EdgeInsets.all(12),
@@ -119,86 +122,91 @@ class _CustomerCard extends ConsumerWidget {
             ]),
           ],
           const SizedBox(height: 16),
-          block(
-            FIcons.award,
-            l10n.loyaltyPoints,
-            loyalty == null
-                ? offlineHint()
-                : loyalty.when(
-                    loading: () => loading,
-                    error: (_, _) => failed(() => ref.invalidate(loyaltyAccountProvider(customer.id))),
-                    data: (account) => account == null
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(l10n.notEnrolled, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                              Text(l10n.joinsFromApp, style: muted),
-                            ],
-                          )
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(l10n.pointsBalance(account.pointsBalance),
-                                  style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text(l10n.pointsWorth(money(context, account.worth)), style: muted.copyWith(fontFeatures: tabular))),
-                              if (account.tier.isNotEmpty)
-                                FBadge(variant: FBadgeVariant.secondary, child: Text(_tierLabel(l10n, account.tier))),
-                            ],
-                          ),
-                  ),
-          ),
-          const SizedBox(height: 12),
-          block(
-            FIcons.wallet,
-            l10n.tabBalance,
-            tab == null
-                ? offlineHint()
-                : tab.when(
-                    loading: () => loading,
-                    error: (_, _) => failed(() => ref.invalidate(tabAccountProvider(customer.id))),
-                    data: (account) {
-                      final owed = account?.balance ?? 0;
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: account == null
-                                ? Text(l10n.noTab, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500))
-                                : Text(
-                                    owed > 0
-                                        ? l10n.owesAmount(money(context, owed))
-                                        : owed < 0
-                                            ? l10n.creditAmount(money(context, -owed))
-                                            : l10n.settledUp,
-                                    style: theme.typography.xl2.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      fontFeatures: tabular,
-                                      color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
-                                    ),
-                                  ),
-                          ),
-                          // Money owed is paid down; anything beyond it, or
-                          // anything at all on an empty tab, is credit the
-                          // customer spends on account later - prepaid, money
-                          // in the drawer before the sale. Same slip either way.
-                          SizedBox(
-                            height: 44,
-                            child: FButton(
-                              mainAxisSize: MainAxisSize.min,
-                              onPress: () async {
-                                await showPayTabDialog(context, customer: customer, balance: owed);
-                                ref.invalidate(tabAccountProvider(customer.id));
-                              },
-                              child: Text(owed > 0 ? l10n.payTab : l10n.topUp, style: theme.typography.base.forButton),
+          if (features.loyalty) ...[
+            block(
+              FIcons.award,
+              l10n.loyaltyPoints,
+              loyalty == null
+                  ? offlineHint()
+                  : loyalty.when(
+                      loading: () => loading,
+                      error: (_, _) => failed(() => ref.invalidate(loyaltyAccountProvider(customer.id))),
+                      data: (account) => account == null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l10n.notEnrolled, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                                Text(l10n.joinsFromApp, style: muted),
+                              ],
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(l10n.pointsBalance(account.pointsBalance),
+                                    style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(l10n.pointsWorth(money(context, account.worth)), style: muted.copyWith(fontFeatures: tabular))),
+                                if (account.tier.isNotEmpty)
+                                  FBadge(variant: FBadgeVariant.secondary, child: Text(_tierLabel(l10n, account.tier))),
+                              ],
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-          const SizedBox(height: 16),
+                    ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (features.tabs) ...[
+            block(
+              FIcons.wallet,
+              l10n.tabBalance,
+              tab == null
+                  ? offlineHint()
+                  : tab.when(
+                      loading: () => loading,
+                      error: (_, _) => failed(() => ref.invalidate(tabAccountProvider(customer.id))),
+                      data: (account) {
+                        final owed = account?.balance ?? 0;
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: account == null
+                                  ? Text(l10n.noTab, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500))
+                                  : Text(
+                                      owed > 0
+                                          ? l10n.owesAmount(money(context, owed))
+                                          : owed < 0
+                                              ? l10n.creditAmount(money(context, -owed))
+                                              : l10n.settledUp,
+                                      style: theme.typography.xl2.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        fontFeatures: tabular,
+                                        color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
+                                      ),
+                                    ),
+                            ),
+                            // Money owed is paid down; anything beyond it, or
+                            // anything at all on an empty tab, is credit the
+                            // customer spends on account later - prepaid, money
+                            // in the drawer before the sale. Same slip either way.
+                            SizedBox(
+                              height: 44,
+                              child: FButton(
+                                mainAxisSize: MainAxisSize.min,
+                                onPress: () async {
+                                  await showPayTabDialog(context, customer: customer, balance: owed);
+                                  ref.invalidate(tabAccountProvider(customer.id));
+                                },
+                                child: Text(owed > 0 ? l10n.payTab : l10n.topUp, style: theme.typography.base.forButton),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 4),
           SizedBox(
             height: 48,
             child: FButton(

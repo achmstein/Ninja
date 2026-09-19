@@ -4,6 +4,8 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/brand/brand_mark.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/app_text.dart';
@@ -40,19 +42,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _loadData({bool silent = false}) async {
     final authState = ref.read(authServiceProvider);
+    final features = ref.read(featuresProvider);
     if (authState.isAuthenticated) {
-      if (silent) {
-        // Silent refresh - don't show loading indicator
-        await Future.wait([
-          ref.read(loyaltyProvider.notifier).refresh(),
-          ref.read(accountProvider.notifier).refresh(),
-        ]);
-      } else {
-        await Future.wait([
-          ref.read(loyaltyProvider.notifier).loadLoyaltyInfo(),
-          ref.read(accountProvider.notifier).loadAccount(),
-        ]);
-      }
+      final loyalty = ref.read(loyaltyProvider.notifier);
+      final account = ref.read(accountProvider.notifier);
+      // Silent refresh - don't show loading indicator
+      await Future.wait([
+        if (features.loyalty) silent ? loyalty.refresh() : loyalty.loadLoyaltyInfo(),
+        if (features.tabs) silent ? account.refresh() : account.loadAccount(),
+      ]);
     }
   }
 
@@ -63,6 +61,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final accountState = ref.watch(accountProvider);
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
+    final features = ref.watch(featuresProvider);
 
     return Column(
       children: [
@@ -111,14 +110,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                   // Balance card (only shown when customer has balance)
                   // Keep showing if we have data, even while reloading
-                  if (authState.isAuthenticated &&
+                  if (features.tabs &&
+                      authState.isAuthenticated &&
                       accountState.account != null &&
                       accountState.account!.hasBalance)
                     const BalanceCard(),
 
                   // Loyalty card
                   // Keep showing existing data while reloading to avoid flicker
-                  if (authState.isAuthenticated) ...[
+                  if (features.loyalty && authState.isAuthenticated) ...[
                     if (loyaltyState.loyaltyInfo != null)
                       LoyaltyCard(
                         loyaltyInfo: loyaltyState.loyaltyInfo!,
@@ -143,12 +143,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       suffix: const Icon(FIcons.chevronRight),
                       onPress: () => context.go('/bills'),
                     ),
-                    FTile(
-                      prefix: const Icon(FIcons.gamepad2),
-                      title: AppText(l10n.sessions),
-                      suffix: const Icon(FIcons.chevronRight),
-                      onPress: () => context.push('/stays'),
-                    ),
+                    if (features.rooms)
+                      FTile(
+                        prefix: const Icon(FIcons.gamepad2),
+                        title: AppText(l10n.sessions),
+                        suffix: const Icon(FIcons.chevronRight),
+                        onPress: () => context.push('/stays'),
+                      ),
                     FTile(
                       prefix: const Icon(FIcons.heart),
                       title: AppText(l10n.favorites),
@@ -277,11 +278,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 }
 
 /// Bottom sheet for About
-class _AboutSheet extends StatelessWidget {
+class _AboutSheet extends ConsumerWidget {
   const _AboutSheet();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
 
@@ -335,20 +336,15 @@ class _AboutSheet extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Logo
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 140,
-                    color: colors.foreground,
-                    filterQuality: FilterQuality.high,
-                  ),
-                  const SizedBox(height: 8),
+                  // Brand
+                  const BrandMark(size: 96),
+                  const SizedBox(height: 12),
                   AppText(
-                    l10n.cafeAndGaming,
+                    ref.watch(brandNameProvider),
                     style: TextStyle(
-                      fontSize: 14,
-                      color: colors.mutedForeground,
-                      letterSpacing: Localizations.localeOf(context).languageCode == 'ar' ? 0 : 2,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: colors.foreground,
                     ),
                   ),
                   const SizedBox(height: 16),

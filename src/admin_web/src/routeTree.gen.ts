@@ -31,6 +31,7 @@ import { Route as AuthenticatedMenuIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedLoyaltyIndexRouteImport } from './routes/_authenticated/loyalty/index'
 import { Route as AuthenticatedInventoryIndexRouteImport } from './routes/_authenticated/inventory/index'
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
+import { Route as AuthenticatedBrandIndexRouteImport } from './routes/_authenticated/brand/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
 import { Route as AuthenticatedTillTicketsRouteImport } from './routes/_authenticated/till/tickets'
@@ -174,6 +175,11 @@ const AuthenticatedCustomersIndexRoute =
     path: '/customers/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBrandIndexRoute = AuthenticatedBrandIndexRouteImport.update({
+  id: '/brand/',
+  path: '/brand/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBranchesIndexRoute =
   AuthenticatedBranchesIndexRouteImport.update({
     id: '/branches/',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
+  '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
   '/inventory': typeof AuthenticatedInventoryIndexRoute
   '/loyalty': typeof AuthenticatedLoyaltyIndexRoute
@@ -395,6 +402,7 @@ export interface FileRoutesByTo {
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
+  '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
   '/inventory': typeof AuthenticatedInventoryIndexRoute
   '/loyalty': typeof AuthenticatedLoyaltyIndexRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/_authenticated/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
+  '/_authenticated/brand/': typeof AuthenticatedBrandIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
   '/_authenticated/inventory/': typeof AuthenticatedInventoryIndexRoute
   '/_authenticated/loyalty/': typeof AuthenticatedLoyaltyIndexRoute
@@ -493,6 +502,7 @@ export interface FileRouteTypes {
     | '/till/tickets'
     | '/accounts'
     | '/branches'
+    | '/brand'
     | '/customers'
     | '/inventory'
     | '/loyalty'
@@ -540,6 +550,7 @@ export interface FileRouteTypes {
     | '/till/tickets'
     | '/accounts'
     | '/branches'
+    | '/brand'
     | '/customers'
     | '/inventory'
     | '/loyalty'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/_authenticated/till/tickets'
     | '/_authenticated/accounts/'
     | '/_authenticated/branches/'
+    | '/_authenticated/brand/'
     | '/_authenticated/customers/'
     | '/_authenticated/inventory/'
     | '/_authenticated/loyalty/'
@@ -772,6 +784,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof AuthenticatedCustomersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/brand/': {
+      id: '/_authenticated/brand/'
+      path: '/brand'
+      fullPath: '/brand'
+      preLoaderRoute: typeof AuthenticatedBrandIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/branches/': {
@@ -967,6 +986,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTillTicketsRoute: typeof AuthenticatedTillTicketsRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
+  AuthenticatedBrandIndexRoute: typeof AuthenticatedBrandIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
   AuthenticatedInventoryIndexRoute: typeof AuthenticatedInventoryIndexRoute
   AuthenticatedLoyaltyIndexRoute: typeof AuthenticatedLoyaltyIndexRoute
@@ -1007,6 +1027,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTillTicketsRoute: AuthenticatedTillTicketsRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
+  AuthenticatedBrandIndexRoute: AuthenticatedBrandIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
   AuthenticatedInventoryIndexRoute: AuthenticatedInventoryIndexRoute,
   AuthenticatedLoyaltyIndexRoute: AuthenticatedLoyaltyIndexRoute,

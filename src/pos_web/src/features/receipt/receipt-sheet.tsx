@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
 import { useBranchStore } from '@/stores/branch-store'
+import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { tenderLabelKey } from '@/features/ticket/tenders'
@@ -42,6 +43,8 @@ export function ReceiptSheet({
   const localized = useLocalized()
   const locale = useLocale()
   const money = useMoney()
+  const brand = useBrand()
+  const brandName = useBrandName()
 
   // Whose receipt: the active branch, off the same list the switcher uses
   const branchId = useBranchStore((s) => s.branchId)
@@ -76,12 +79,16 @@ export function ReceiptSheet({
   return createPortal(
     <div className='receipt-sheet'>
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
-        {/* The wordmark, about half the paper wide, as the tablet till prints it */}
-        <img
-          src='/images/logo.png'
-          alt={t('brandName')}
-          style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
-        />
+        {/* The wordmark, about half the paper wide; the name when there is no logo */}
+        {brand?.logoUrl ? (
+          <img
+            src={brand.logoUrl}
+            alt=''
+            style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
+          />
+        ) : (
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: '2mm' }}>{brandName}</div>
+        )}
         {branch && (
           <div style={{ fontSize: 11, marginBottom: '1.5mm' }}>
             <div style={{ fontSize: 12, fontWeight: 600 }}>{localized(branch.name)}</div>

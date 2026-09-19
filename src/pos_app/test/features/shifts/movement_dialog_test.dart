@@ -4,6 +4,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:pos_app/core/brand/brand_service.dart';
+import 'package:pos_app/core/brand/tenant_brand.dart';
 import 'package:pos_app/core/models/localized_text.dart';
 import 'package:pos_app/core/providers/branch_provider.dart';
 import 'package:pos_app/core/theme/app_theme.dart';
@@ -33,6 +35,12 @@ class _Picks implements TillPicksRepository {
       [const TillPick(id: 1, name: LocalizedText(en: 'Electricity', ar: 'كهرباء'))];
 }
 
+/// A tenant with every feature on, so every pay-out kind is offered
+class _Tenant implements TenantRepository {
+  @override
+  Future<TenantBrand> getBrand() async => TenantBrand.neutral;
+}
+
 /// Records what the dialog sends
 class _Shifts implements ShiftsRepository {
   CashMovementRequest? sent;
@@ -59,6 +67,7 @@ class _Shifts implements ShiftsRepository {
 Widget _app(_Shifts shifts, CashMovementType type) => ProviderScope(
       overrides: [
         selectedBranchIdProvider.overrideWithValue(1),
+        tenantRepositoryProvider.overrideWithValue(_Tenant()),
         shiftsRepositoryProvider.overrideWithValue(shifts),
         tillPicksRepositoryProvider.overrideWithValue(_Picks()),
       ],

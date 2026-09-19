@@ -518,3 +518,6 @@ ios-signing/
 # They are runtime data from whoever is running the app, not source.
 src/Catalog.API/Pics/[0-9]*_[0-9]*.*
 src/Catalog.API/Pics/bundle_[0-9]*_[0-9]*.*
+
+# Tenant logo and icons written by Branch.API in dev
+src/Branch.API/uploads/

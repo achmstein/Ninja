@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { RankedList } from '@/components/ranked-list'
 import { formatEgp } from '@/features/orders/status'
+import { useFeatures } from '@/lib/brand'
 
 const route = getRouteApi('/_authenticated/')
 
@@ -45,6 +46,7 @@ function localDayKey(date: Date): string {
  */
 export function Trends() {
   const t = useT()
+  const features = useFeatures()
   const locale = useLocale()
   const localized = useLocalized()
   const search = route.useSearch()
@@ -250,6 +252,7 @@ export function Trends() {
             <RankedList items={topItems} />
           )}
         </div>
+        {features.rooms && (
         <div>
           <h3 className='mb-1 text-sm font-medium'>{t('timeByPlace')}</h3>
           {stayStats.isError ? (
@@ -267,6 +270,7 @@ export function Trends() {
             <RankedList items={placeRows} />
           )}
         </div>
+        )}
       </div>
     </section>
   )

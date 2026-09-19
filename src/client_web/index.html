@@ -2,37 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/images/favicon.svg"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/images/favicon_light.svg"
-      media="(prefers-color-scheme: dark)"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      href="/images/favicon.png"
-      media="(prefers-color-scheme: light)"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      href="/images/favicon_light.png"
-      media="(prefers-color-scheme: dark)"
-    />
+    <!-- The brand's icon, manifest and title come from /api/tenant; brand.ts keeps them current -->
+    <link rel="icon" type="image/png" href="/api/tenant/icons/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Chillax</title>
-    <meta name="description" content="Order coffee and book PlayStation rooms at Chillax." />
+    <title>Menu</title>
+    <meta name="description" content="Order from your phone." />
     <meta name="theme-color" content="#18181b" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href="/api/tenant/manifest?app=client" />
     <!-- iOS ignores manifest icons; this is the home-screen icon there -->
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/api/tenant/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

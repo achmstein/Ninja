@@ -23,7 +23,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   // A device that opted into push keeps its subscription fresh
   useRefreshPush()
 
-  // "Orders · Chillax"-style browser-tab titles
+  // "Orders · <brand>"-style browser-tab titles
   usePageTitle()
 
   const defaultOpen = getCookie('sidebar_state') !== 'false'

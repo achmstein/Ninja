@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { tenderLabelKey } from '@/features/ticket/tenders'
+import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 
@@ -25,6 +26,8 @@ export function TabPaymentSheet({ slip }: { slip: TabPaymentSlip }) {
   const t = useT()
   const locale = useLocale()
   const money = useMoney()
+  const brand = useBrand()
+  const brandName = useBrandName()
 
   const key = tenderLabelKey[slip.tender]
   const tenderLabel = key ? t(key) : slip.tender
@@ -32,12 +35,16 @@ export function TabPaymentSheet({ slip }: { slip: TabPaymentSlip }) {
   return createPortal(
     <div className='receipt-sheet'>
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
-        {/* The wordmark, about half the paper wide, as the tablet till prints it */}
-        <img
-          src='/images/logo.png'
-          alt={t('brandName')}
-          style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
-        />
+        {/* The wordmark, about half the paper wide; the name when there is no logo */}
+        {brand?.logoUrl ? (
+          <img
+            src={brand.logoUrl}
+            alt=''
+            style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
+          />
+        ) : (
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: '2mm' }}>{brandName}</div>
+        )}
         <div style={{ fontSize: 13, fontWeight: 600 }}>{t('tabPaymentSlip')}</div>
         {slip.number > 0 && (
           <div style={{ fontSize: 13, fontWeight: 600 }}>

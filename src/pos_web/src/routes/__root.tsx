@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { Button } from '@/components/ui/button'
+import { useBrandEffects } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
@@ -52,15 +53,20 @@ function GeneralError() {
   )
 }
 
-export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient
-}>()({
-  component: () => (
+function RootComponent() {
+  useBrandEffects()
+  return (
     <>
       <Outlet />
       <AppToaster />
     </>
-  ),
+  )
+}
+
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient
+}>()({
+  component: RootComponent,
   notFoundComponent: NotFound,
   errorComponent: GeneralError,
 })

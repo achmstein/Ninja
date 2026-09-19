@@ -35,13 +35,7 @@ export function SettingsProfile() {
   // Roles from the token, minus Keycloak's built-in noise
   const realmRoles =
     (auth.user?.profile?.realm_access as { roles?: string[] })?.roles || []
-  const resourceRoles =
-    (auth.user?.profile?.resource_access as Record<
-      string,
-      { roles?: string[] }
-    >) || {}
-  const clientRoles = resourceRoles['chillax-admin']?.roles || []
-  const roles = [...new Set([...realmRoles, ...clientRoles])].filter(
+  const roles = [...new Set(realmRoles)].filter(
     (role) =>
       !role.startsWith('default-') &&
       !role.startsWith('uma_') &&

@@ -117,3 +117,9 @@ final branchesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
   return ApiClient(authService, baseUrl: AppConfig.branchesApiUrl);
 });
+
+/// Tenant brand — anonymous, no branch header
+final tenantApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.tenantApiUrl);
+});

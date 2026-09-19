@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
+import '../brand/ninja_mark.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
-import '../theme/app_theme.dart';
 
 /// Header branch switcher, same contract as pos_web's: the brand mark with
 /// the branch under it, and a menu of branches. Picking a branch scopes
@@ -19,7 +19,6 @@ class BranchSwitcher extends ConsumerWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final branchState = ref.watch(branchProvider);
-    final isDark = ref.watch(themeProvider).resolveBrightness(context) == Brightness.dark;
 
     final active = branchState.selectedBranch;
     final branchLabel = active?.name.localized(context) ?? l10n.branches;
@@ -28,18 +27,7 @@ class BranchSwitcher extends ConsumerWidget {
     Widget brand({required bool withChevron}) => Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Black-on-transparent mark; invert on dark backgrounds
-            ColorFiltered(
-              colorFilter: isDark
-                  ? const ColorFilter.matrix(<double>[
-                      -1, 0, 0, 0, 255,
-                      0, -1, 0, 0, 255,
-                      0, 0, -1, 0, 255,
-                      0, 0, 0, 1, 0,
-                    ])
-                  : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-              child: Image.asset('assets/images/cup.png', width: 32, height: 32, fit: BoxFit.contain),
-            ),
+            const NinjaMark(size: 32),
             const SizedBox(width: 8),
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -49,7 +37,7 @@ class BranchSwitcher extends ConsumerWidget {
                 // beside the button's own vertical padding (pos_web's
                 // `leading-tight`)
                 Text(
-                  l10n.brandName,
+                  ninjaName,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.0,

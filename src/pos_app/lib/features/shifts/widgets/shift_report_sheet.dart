@@ -11,8 +11,9 @@ class ShiftReportSheet extends StatelessWidget {
   final ShiftView shift;
   final AppLocalizations l10n;
   final Locale locale;
+  final String brandName;
 
-  const ShiftReportSheet({super.key, required this.shift, required this.l10n, required this.locale});
+  const ShiftReportSheet({super.key, required this.shift, required this.l10n, required this.locale, required this.brandName});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class ShiftReportSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          Text(l10n.brandName, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
+          Text(brandName, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
           Text(closed ? l10n.zReportTitle : l10n.xReportTitle, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600)),
           Text(l10n.shiftNumber(shift.id), style: const TextStyle(fontSize: 24)),
         ]),

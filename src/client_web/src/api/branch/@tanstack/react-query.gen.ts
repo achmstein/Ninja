@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, getAllBranches, getBranches, type Options, updateBranch, updateBranchSettings } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse } from '../types.gen';
+import { createBranch, deleteTenantLogo, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantLogo, getTenantManifest, type Options, updateBranch, updateBranchSettings, updateTenant, uploadTenantLogo } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchResponse, DeleteTenantLogoData, DeleteTenantLogoResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantLogoData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantLogoData, UploadTenantLogoError, UploadTenantLogoResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -126,3 +126,126 @@ export const updateBranchSettingsMutation = (options?: Partial<Options<UpdateBra
     };
     return mutationOptions;
 };
+
+export const getTenantQueryKey = (options?: Options<GetTenantData>) => createQueryKey('getTenant', options);
+
+/**
+ * The tenant's name, color, logo URLs and feature switches
+ */
+export const getTenantOptions = (options?: Options<GetTenantData>) => queryOptions<GetTenantResponse, AxiosError<DefaultError>, GetTenantResponse, ReturnType<typeof getTenantQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenant({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantQueryKey(options)
+});
+
+/**
+ * Change the name, the brand color or the feature switches
+ */
+export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>>): UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> => {
+    const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Remove the logo; the icons fall back to a tile in the brand color
+ */
+export const deleteTenantLogoMutation = (options?: Partial<Options<DeleteTenantLogoData>>): UseMutationOptions<DeleteTenantLogoResponse, AxiosError<DefaultError>, Options<DeleteTenantLogoData>> => {
+    const mutationOptions: UseMutationOptions<DeleteTenantLogoResponse, AxiosError<DefaultError>, Options<DeleteTenantLogoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteTenantLogo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantLogoQueryKey = (options?: Options<GetTenantLogoData>) => createQueryKey('getTenantLogo', options);
+
+/**
+ * The logo as PNG, transparent margins trimmed
+ */
+export const getTenantLogoOptions = (options?: Options<GetTenantLogoData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantLogoQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantLogo({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantLogoQueryKey(options)
+});
+
+/**
+ * Replace the logo; the icons are cut from it
+ */
+export const uploadTenantLogoMutation = (options?: Partial<Options<UploadTenantLogoData>>): UseMutationOptions<UploadTenantLogoResponse, AxiosError<UploadTenantLogoError>, Options<UploadTenantLogoData>> => {
+    const mutationOptions: UseMutationOptions<UploadTenantLogoResponse, AxiosError<UploadTenantLogoError>, Options<UploadTenantLogoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadTenantLogo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantIconQueryKey = (options: Options<GetTenantIconData>) => createQueryKey('getTenantIcon', options);
+
+/**
+ * One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png
+ */
+export const getTenantIconOptions = (options: Options<GetTenantIconData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantIconQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantIcon({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantIconQueryKey(options)
+});
+
+export const getTenantManifestQueryKey = (options?: Options<GetTenantManifestData>) => createQueryKey('getTenantManifest', options);
+
+/**
+ * The web app manifest for one surface, in the tenant's name
+ */
+export const getTenantManifestOptions = (options?: Options<GetTenantManifestData>) => queryOptions<unknown, AxiosError<GetTenantManifestError>, unknown, ReturnType<typeof getTenantManifestQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantManifest({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantManifestQueryKey(options)
+});

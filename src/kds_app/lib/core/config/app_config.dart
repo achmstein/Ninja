@@ -1,4 +1,4 @@
-/// Application configuration for the Chillax Kitchen tablet app
+/// Application configuration for the kitchen display tablet app
 class AppConfig {
   // Everything goes through the mobile BFF (YARP).
   // Debug: the Aspire AppHost on the dev machine, reached from the emulator
@@ -15,6 +15,8 @@ class AppConfig {
   // API endpoints (through BFF) - trailing slash required for Dio path resolution
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
+  /// The tenant's brand: one anonymous resource, no sub-paths
+  static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
 
   // Keycloak configuration
   // Release: dedicated auth subdomain (Caddy proxies straight to Keycloak).
@@ -44,8 +46,7 @@ class AppConfig {
   // the same gate kds_web applies
   static const List<String> posRoles = ['Admin', 'Owner', 'Cashier'];
 
-  // App info
-  static const String appName = 'Chillax Kitchen';
+  // App info (the name comes from the tenant brand)
   static const String appVersion = '1.0.0';
 
   // Poll fallback, mirroring kds_web (SignalR is the primary update path)

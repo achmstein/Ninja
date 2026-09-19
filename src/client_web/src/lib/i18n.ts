@@ -98,13 +98,13 @@ const webExtras = {
   // Installing the PWA — web only by definition
   installApp: { en: 'Install app', ar: 'نزّل الابلكيشن' },
   installAppTitle: {
-    en: 'Get the Chillax app now',
-    ar: 'نزل الابلكيشن عندك دلوقتي',
+    en: 'Get the {name} app',
+    ar: 'نزّل ابلكيشن {name}',
   },
   install: { en: 'Install', ar: 'تنزيل' },
   howTo: { en: 'How?', ar: 'إزاي؟' },
   notNow: { en: 'Not now', ar: 'مش دلوقتي' },
-  installChillax: { en: 'Install Chillax', ar: 'نزّل تشيلاكس' },
+  installBrand: { en: 'Install {name}', ar: 'نزّل {name}' },
   installIosStepShare: {
     en: 'Tap the Share button in Safari',
     ar: 'دوس على زرار المشاركة (Share) في سفاري',

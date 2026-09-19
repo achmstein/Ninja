@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { bilingual, useLocalized, useT } from '@/lib/i18n'
+import { useCustomerOrigin } from '@/lib/brand'
 import { placeQrUrl } from '@/lib/qr'
 import { QrSheet } from '@/components/qr-sheet'
 import { comparePlaces } from './status'
@@ -9,6 +10,7 @@ import { comparePlaces } from './status'
 export function PlaceQrSheet() {
   const t = useT()
   const localized = useLocalized()
+  const customerOrigin = useCustomerOrigin()
   const { data: places = [], isLoading } = useQuery(listPlacesOptions())
 
   // A closed place should not be inviting anyone from a printed card; one
@@ -19,7 +21,7 @@ export function PlaceQrSheet() {
     .map((place) => ({
       id: String(place.id),
       name: place.name,
-      url: placeQrUrl(Number(place.id)),
+      url: placeQrUrl(customerOrigin, Number(place.id)),
     }))
 
   return (

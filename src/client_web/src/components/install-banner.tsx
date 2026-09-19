@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
 import { Button } from '@/components/ui/button'
 import { InstallDialog } from './install-dialog'
+import { useBrandName } from '@/lib/brand'
 
 const DISMISSED_KEY = 'ninja-install-dismissed'
 
@@ -29,6 +30,7 @@ function writeDismissed() {
  *  sticks on this browser. */
 export function InstallBanner() {
   const t = useT()
+  const brandName = useBrandName()
   const { canInstall, install, isStandalone, isIos } = useInstallPrompt()
   const [dismissed, setDismissed] = useState(readDismissed)
   const [howOpen, setHowOpen] = useState(false)
@@ -52,7 +54,7 @@ export function InstallBanner() {
       <BorderBeam size='md' colorVariant='colorful' theme='auto' borderRadius={10}>
         <div className='bg-card flex items-center gap-2.5 rounded-[10px] border px-3 py-2'>
           <p className='font-display-ar text-primary min-w-0 flex-1 text-lg leading-tight'>
-            {t('installAppTitle')}
+            {t('installAppTitle', { name: brandName })}
           </p>
           <Button size='sm' className='h-8 shrink-0' onClick={onInstall}>
             {canInstall ? t('install') : t('howTo')}

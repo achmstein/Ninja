@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/brand/ninja_mark.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -107,19 +108,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Brand: the cup, then "Chillax POS"
-                  Center(
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 140,
-                      height: 140,
-                      color: theme.colors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  // Brand: the mark, then "Ninja POS"
+                  const Center(child: NinjaMark(size: 96)),
+                  const SizedBox(height: 16),
                   Center(
                     child: AppText(
-                      '${l10n.brandName} ${l10n.posName}',
+                      '$ninjaName ${l10n.posName}',
                       style: theme.typography.xl2.copyWith(
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.5,

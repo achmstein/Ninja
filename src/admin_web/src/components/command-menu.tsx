@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { getRealmRoles } from '@/config/oidc-config'
+import { useFeatures } from '@/lib/brand'
 import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
@@ -25,6 +26,7 @@ export function CommandMenu() {
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
   const isOwner = getRealmRoles(auth.user).includes('Owner')
+  const features = useFeatures()
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -35,9 +37,15 @@ export function CommandMenu() {
   )
 
   // Same gating as the sidebar: an admin must not be offered owner pages
-  const groups = sidebarData.navGroups.filter(
-    (group) => !group.ownerOnly || isOwner
-  )
+  const groups = sidebarData.navGroups
+    .filter((group) => !group.ownerOnly || isOwner)
+    .filter((group) => !group.feature || features[group.feature])
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => item.items || !item.feature || features[item.feature]
+      ),
+    }))
 
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>

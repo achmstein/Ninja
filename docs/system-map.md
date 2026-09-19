@@ -20,7 +20,7 @@
 | Accounts | Customer tabs | events |
 | Loyalty | Points | events |
 | Identity | Who can sign in (Keycloak) | — |
-| Branch | Branches, business-day window, settings | events |
+| Branch | Branches, business-day window, settings; the tenant's brand (name, color, logo, icons, manifest) and feature switches | events; `GET /api/tenant` read by every surface at boot |
 | Notification | SignalR hub, FCM push, announcements | consumes everyone's events |
 
 No service calls another over HTTP; where a screen needs two services' data, the SPA or the YARP BFF joins.

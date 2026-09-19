@@ -3,6 +3,7 @@ import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
 import { ThemeProvider, useTheme } from '@/context/theme-provider'
+import { useBrandEffects } from '@/lib/brand'
 import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
@@ -16,6 +17,8 @@ type RouterContext = {
 }
 
 function RootLayout() {
+  // The tenant's name, color and icons on the page, and in the tab's language
+  useBrandEffects()
   // One app-wide SignalR connection: order/room/branch events → refetches
   useHub()
   // Web push (no-op until the Firebase web config is provided)

@@ -20,6 +20,8 @@ import {
 import { DestinationChip } from '@/components/places/place-chip'
 import { BranchSwitcher } from './branch-switcher'
 import { SignInSheet } from './sign-in-options'
+import { useBrandName, useFeatures } from '@/lib/brand'
+import { BrandMark } from '@/components/brand-mark'
 
 // Mobile IA: primary nav is Menu / Places / Bills; everything else lives
 // under Profile. The places link is named after the visit.
@@ -34,6 +36,8 @@ const navLinks: ReadonlyArray<{
 ]
 
 export function AppHeader() {
+  const brandName = useBrandName()
+  const features = useFeatures()
   const t = useT()
   const visitTab = useVisitTab()
   const auth = useAuth()
@@ -56,13 +60,9 @@ export function AppHeader() {
     <header className='bg-background/95 sticky top-0 z-40 hidden border-b backdrop-blur md:block'>
       <div className='mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4'>
         <Link to='/' className='flex shrink-0 items-center gap-2'>
-          <img
-            src='/images/cup.png'
-            alt=''
-            className='size-7 object-contain dark:invert'
-          />
+          <BrandMark className='size-7 text-sm' />
           <span className='text-lg font-semibold tracking-tight'>
-            {t('appTitle')}
+            {brandName}
           </span>
         </Link>
 
@@ -141,9 +141,11 @@ export function AppHeader() {
               <DropdownMenuItem asChild>
                 <Link to='/profile'>{t('profile')}</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to='/loyalty'>{t('loyaltyRewards')}</Link>
-              </DropdownMenuItem>
+              {features.loyalty && (
+                <DropdownMenuItem asChild>
+                  <Link to='/loyalty'>{t('loyaltyRewards')}</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {auth.isAuthenticated ? (
                 <DropdownMenuItem

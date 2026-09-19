@@ -1,3 +1,4 @@
+import '../../core/brand/brand_provider.dart';
 import '../../core/providers/branch_provider.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -66,6 +67,8 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
     final locale = Localizations.localeOf(context);
     final ticket = ref.watch(ticketProvider(widget.ticketId));
     final number = ticket.value?.receiptNumber;
+    // The café's brand, as the printer lays it down
+    final brand = ref.watch(brandProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -96,8 +99,8 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                         textAlign: TextAlign.center,
                         style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                   ),
-                  data: (ticket) => FutureBuilder<ui.Image>(
-                    future: brandLogo(),
+                  data: (ticket) => FutureBuilder<ui.Image?>(
+                    future: brandLogo(brand.logoUrl),
                     builder: (context, logo) => FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.topCenter,
@@ -107,6 +110,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                             ticket: ticket,
                             l10n: l10n,
                             locale: locale,
+                            brandName: brand.displayName(locale),
                             logo: logo.data,
                             branch: ref.watch(branchProvider).selectedBranch),
                       ),

@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-  "appTitle": "Chillax Admin",
   "dashboard": "Dashboard",
   "pending": "Pending",
   "active": "Active",
@@ -376,7 +375,6 @@
     }
   },
   "needHelpContactUs": "Need help? Contact us:",
-  "supportEmail": "support@chillax.com",
   "supportPhone": "+20 123 456 7890",
   "supportHours": "Available 24/7",
   "cafeAndGaming": "CAFE & GAMING",

@@ -8,6 +8,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
+import 'core/brand/brand_provider.dart';
 import 'core/demo/demo.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
@@ -29,6 +30,7 @@ void main() async {
   // Initialize locale and branch before app starts
   await initializeLocale(override: kDemoMode ? kDemoLocale : null);
   await initializeBranch();
+  await initializeBrand();
 
   // A kitchen display that crashes costs money: every Flutter and async error goes to
   // Crashlytics. Without google-services.json (the app not yet registered

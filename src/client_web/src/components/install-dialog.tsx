@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useBrandName } from '@/lib/brand'
 
 /** iOS has no install prompt: this walks the customer through Safari's share
  *  sheet instead. Shared by the home banner and the Settings tile. */
@@ -17,12 +18,13 @@ export function InstallDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const brandName = useBrandName()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>{t('installChillax')}</DialogTitle>
+          <DialogTitle>{t('installBrand', { name: brandName })}</DialogTitle>
         </DialogHeader>
         <ol className='flex flex-col gap-3'>
           <Step number={1} icon={Share} text={t('installIosStepShare')} />

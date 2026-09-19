@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/business_day.dart';
@@ -216,6 +217,7 @@ class _OnYourTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.theme.colors;
+    if (!ref.watch(featuresProvider).tabs) return const SizedBox.shrink();
     final balance = ref.watch(accountProvider).account?.balance ?? 0;
     if (balance <= 0) return const SizedBox.shrink();
 

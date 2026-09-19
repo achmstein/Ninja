@@ -12,6 +12,25 @@ type LocalizedTextLike = {
 // Strings that only exist on the admin web (the mobile admin app has no
 // equivalent screens or phrasing). Egyptian Arabic, same voice as the ARBs.
 const webExtras = {
+  // The tenant's brand (Administration → Brand)
+  brandNav: { en: 'Brand', ar: 'الهوية' },
+  brandColor: { en: 'Brand color', ar: 'لون البراند' },
+  brandColorDefault: { en: 'Default', ar: 'الافتراضي' },
+  brandLogo: { en: 'Logo', ar: 'اللوجو' },
+  uploadLogo: { en: 'Upload', ar: 'ارفع' },
+  removeLogo: { en: 'Remove', ar: 'شيل' },
+  customerUrl: { en: 'Customer app URL', ar: 'لينك ابلكيشن العملاء' },
+  features: { en: 'Features', ar: 'المميزات' },
+  featureRooms: { en: 'Rooms', ar: 'الأوض' },
+  featureLoyalty: { en: 'Loyalty points', ar: 'نقط الولاء' },
+  featureTabs: { en: 'Customer tabs', ar: 'حسابات العملاء' },
+  featureInventory: { en: 'Inventory', ar: 'المخزن' },
+  featureFinance: { en: 'Finance', ar: 'الماليات' },
+  featurePayroll: { en: 'Payroll', ar: 'المرتبات' },
+  featureKds: { en: 'Kitchen display', ar: 'شاشة المطبخ' },
+  brandSaved: { en: 'Brand saved', ar: 'الهوية اتحفظت' },
+  brandSaveFailed: { en: 'Could not save the brand', ar: 'الهوية ماتحفظتش' },
+  logoRejected: { en: 'The image was not accepted', ar: 'الصورة ماتقبلتش' },
   // This browser as an admin device (the profile menu)
   pushNotifications: { en: 'Push notifications', ar: 'الإشعارات' },
   pushBlocked: { en: 'Notifications blocked by the browser', ar: 'المتصفح مانع الإشعارات' },
@@ -205,7 +224,6 @@ const webExtras = {
   navCatalog: { en: 'Catalog', ar: 'الكتالوج' },
   navCustomers: { en: 'Customers', ar: 'العملاء' },
   navAdministration: { en: 'Administration', ar: 'الإدارة' },
-  brandName: { en: 'Chillax', ar: 'تشيلاكس' },
   orderHistory: { en: 'Order History', ar: 'سجل الطلبات' },
   menuItems: { en: 'Menu Items', ar: 'أصناف المنيو' },
   announcements: { en: 'Announcements', ar: 'الإعلانات' },

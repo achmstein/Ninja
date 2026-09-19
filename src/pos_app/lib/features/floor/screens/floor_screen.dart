@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/network/api_errors.dart';
@@ -264,9 +265,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final placesLoading = placesState.isLoading && placesState.places.isEmpty;
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
     final sessions = placesState.openStays;
+    // A tenant without rooms has no holds to show and no room bills to filter
+    final rooms = ref.watch(featuresProvider).rooms;
     // Reservations are the one thing not yet a bill that the cashier must
     // not miss: somebody is on their way
-    final reserved = sessions.where((s) => s.isHeld).toList();
+    final reserved = rooms ? sessions.where((s) => s.isHeld).toList() : const <Stay>[];
     final now = DateTime.now();
     Stay? stayForTicket(TicketSummary t) =>
         t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isRunning).firstOrNull;
@@ -430,6 +433,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       },
                       filter: _filter,
                       onFilter: (filter) => setState(() => _filter = filter),
+                      rooms: rooms,
                     ),
                   ),
                 ),
@@ -450,6 +454,9 @@ class _Bills extends StatefulWidget {
   final _Filter filter;
   final ValueChanged<_Filter> onFilter;
 
+  /// Whether this tenant has rooms; without them there is no Room filter
+  final bool rooms;
+
   const _Bills({
     required this.bills,
     required this.above,
@@ -457,6 +464,7 @@ class _Bills extends StatefulWidget {
     required this.clocks,
     required this.filter,
     required this.onFilter,
+    required this.rooms,
   });
 
   @override
@@ -535,7 +543,7 @@ class _BillsState extends State<_Bills> {
             runSpacing: 8,
             children: [
               for (final f in _Filter.values)
-                if (f == _Filter.all || counts[f]! > 0)
+                if ((f == _Filter.all || counts[f]! > 0) && (f != _Filter.room || widget.rooms))
                   _FilterPill(
                     label: switch (f) {
                       _Filter.all => l10n.allBills,

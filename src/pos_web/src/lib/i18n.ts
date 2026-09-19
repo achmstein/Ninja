@@ -19,7 +19,6 @@ type Message =
 // the other apps: حساب = ticket, ترابيزة = table, اوضة = room.
 const dictionary = {
   // Brand / chrome
-  brandName: { en: 'Chillax', ar: 'تشيلاكس' },
   posName: { en: 'POS', ar: 'الكاشير' },
   branches: { en: 'Branches', ar: 'الفروع' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },

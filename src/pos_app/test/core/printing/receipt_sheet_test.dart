@@ -41,7 +41,7 @@ void main() {
         await initializeDateFormatting(locale.toString());
         final l10n = await AppLocalizations.delegate.load(locale);
         final image = await rasterizeWidget(
-          ReceiptSheet(ticket: ticket, l10n: l10n, locale: locale),
+          ReceiptSheet(ticket: ticket, l10n: l10n, locale: locale, brandName: 'Chillax'),
           width: receiptWidth,
         );
         expect(image.width, receiptWidth.toInt());

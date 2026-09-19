@@ -8,8 +8,6 @@ export type Message =
   | { plural: string; en: PluralForms; ar: PluralForms }
 
 export const messages = {
-  appTitle: { en: "Chillax", ar: "تشيلاكس" },
-  cafeAndGaming: { en: "Cafe & Gaming", ar: "كافيه وجيمنج" },
   done: { en: "Done", ar: "تم" },
   signIn: { en: "Sign In", ar: "دخول" },
   register: { en: "Register", ar: "تسجيل" },

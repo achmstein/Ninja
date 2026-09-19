@@ -9,9 +9,6 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get brandName => 'تشيلاكس';
-
-  @override
   String get posName => 'الكاشير';
 
   @override

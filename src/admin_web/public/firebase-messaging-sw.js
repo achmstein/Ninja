@@ -22,10 +22,10 @@ const messaging = firebase.messaging()
 
 // Background pushes: show the localized notification the server composed
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title ?? 'Chillax'
+  const title = payload.notification?.title ?? 'Ninja'
   self.registration.showNotification(title, {
     body: payload.notification?.body ?? '',
-    icon: '/icons/icon-192.png',
+    icon: '/api/tenant/icons/icon-192.png',
     data: payload.data ?? {},
   })
 })

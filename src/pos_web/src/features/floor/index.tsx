@@ -44,6 +44,7 @@ import {
   pendingForTicket,
   usePendingOrders,
 } from '@/features/orders/use-pending-orders'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
@@ -178,6 +179,7 @@ export function Floor() {
       return next
     })
   }
+  const features = useFeatures()
   const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
     'all',
   )
@@ -406,7 +408,7 @@ export function Floor() {
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
-        {reserved.length > 0 && (
+        {features.rooms && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
@@ -479,6 +481,7 @@ export function Floor() {
           <div className='flex flex-col gap-3'>
             <div className='flex flex-wrap items-center gap-2'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
+                if (key === 'Room' && !features.rooms) return null
                 if (key !== 'all' && counts[key] === 0) return null
                 const label =
                   key === 'all'

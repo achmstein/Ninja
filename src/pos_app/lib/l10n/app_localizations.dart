@@ -98,12 +98,6 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// No description provided for @brandName.
-  ///
-  /// In en, this message translates to:
-  /// **'Chillax'**
-  String get brandName;
-
   /// No description provided for @posName.
   ///
   /// In en, this message translates to:

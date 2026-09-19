@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { createPortal } from 'react-dom'
+import { useBrand, useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,15 +24,15 @@ type QrSheetProps = {
   emptyText: string
 }
 
-/** The mark sitting in the middle of every code. Level H correction tolerates
- *  ~30% loss, and the cup covers about 4% of the code's area, so scanning is
- *  unaffected. */
-const CENTER_MARK = {
-  src: '/images/cup.png',
+/** The tenant's logo sitting in the middle of every code, when there is one.
+ *  Level H correction tolerates ~30% loss, and the mark covers about 4% of
+ *  the code's area, so scanning is unaffected. */
+const centerMark = (src: string) => ({
+  src,
   height: 40,
   width: 40,
   excavate: true,
-}
+})
 
 /** Print-ready QR cards, one per place.
  *
@@ -48,6 +49,9 @@ export function QrSheet({
   emptyText,
 }: QrSheetProps) {
   const t = useT()
+  const brand = useBrand()
+  const brandName = useBrandName()
+  const customerHost = new URL(useCustomerOrigin()).host
 
   return createPortal(
     <div className='qr-sheet bg-background fixed inset-0 z-50 overflow-auto print:static print:overflow-visible'>
@@ -100,11 +104,13 @@ export function QrSheet({
                 key={card.id}
                 className='qr-sheet-card flex break-inside-avoid flex-col items-center gap-4 rounded-2xl border-2 border-black bg-white p-6 text-center text-black'
               >
-                <img
-                  src='/images/logo.png'
-                  alt='Chillax'
-                  className='h-7 w-auto'
-                />
+                {brand?.logoUrl ? (
+                  <img src={brand.logoUrl} alt='' className='h-7 w-auto' />
+                ) : (
+                  <div className='text-base font-bold tracking-tight'>
+                    {brandName}
+                  </div>
+                )}
 
                 {/* Both languages on the card - staff and customers read either */}
                 <div className='leading-tight'>
@@ -126,7 +132,9 @@ export function QrSheet({
                     marginSize={1}
                     bgColor='#ffffff'
                     fgColor='#000000'
-                    imageSettings={CENTER_MARK}
+                    imageSettings={
+                      brand?.logoUrl ? centerMark(brand.logoUrl) : undefined
+                    }
                   />
                 </div>
 
@@ -139,7 +147,7 @@ export function QrSheet({
 
                 {/* Typed by hand when a camera will not cooperate */}
                 <div className='text-[11px] tracking-[0.2em] text-black/60 uppercase'>
-                  chillax.site
+                  {customerHost}
                 </div>
               </div>
             ))}

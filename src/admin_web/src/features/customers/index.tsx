@@ -23,6 +23,7 @@ import { CustomerStats } from './components/customer-stats'
 import { customersKeys, useCustomerCount } from './hooks/use-customers'
 import { customersService } from './services/customers-service'
 import { getCustomerDisplayName } from './types'
+import { useFeatures } from '@/lib/brand'
 
 const route = getRouteApi('/_authenticated/customers/')
 
@@ -54,6 +55,7 @@ export function Customers() {
   const navigate = route.useNavigate()
   const query = (search.q ?? '').trim()
   const filter = search.filter
+  const features = useFeatures()
 
   const select = (customer: string | undefined) =>
     navigate({ search: (prev) => ({ ...prev, customer }) })
@@ -188,7 +190,7 @@ export function Customers() {
     return () => observer.disconnect()
   }, [filter, hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  const filters: {
+  const allFilters: {
     value: CustomerFilter | undefined
     label: string
     count?: number
@@ -197,6 +199,12 @@ export function Customers() {
     { value: 'owing', label: t('owing'), count: owingCount },
     { value: 'members', label: t('members'), count: members.data?.length },
   ]
+  // The owing and members views follow the tabs and loyalty switches
+  const filters = allFilters.filter(
+    (f) =>
+      (f.value !== 'owing' || features.tabs) &&
+      (f.value !== 'members' || features.loyalty)
+  )
 
   return (
     <Main fixed>

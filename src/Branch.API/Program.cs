@@ -18,5 +18,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapBranchApi();
+app.MapTenantApi();
 
 app.Run();

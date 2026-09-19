@@ -49,14 +49,14 @@ class Paper extends StatelessWidget {
   }
 }
 
-/// The brand at the top of a sheet: the wordmark when it has been decoded,
-/// the name in bold text otherwise (a missing asset must never stop a
-/// receipt). The image is drawn at its decoded size, 1:1 with the dots.
-class BrandMark extends StatelessWidget {
+/// The brand at the top of a sheet: the tenant's logo when it has been
+/// decoded, the name in bold text otherwise (a missing logo must never stop
+/// a receipt). The image is drawn at its decoded size, 1:1 with the dots.
+class SheetBrandMark extends StatelessWidget {
   final ui.Image? logo;
   final String text;
 
-  const BrandMark({super.key, required this.logo, required this.text});
+  const SheetBrandMark({super.key, required this.logo, required this.text});
 
   @override
   Widget build(BuildContext context) {

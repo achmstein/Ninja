@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures, type FeatureKey } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -27,19 +28,25 @@ export type MovementDirection = keyof typeof MOVEMENT_TYPE
 // names. Wage and Advance go to Payroll; Supplier, Expense and Partner to
 // Finance; Other is just a reason.
 type Picks = 'employee' | 'supplier' | 'partner' | 'category' | null
-type Kind = { value: number; key: TranslationKey; picks: Picks }
+type Kind = {
+  value: number
+  key: TranslationKey
+  picks: Picks
+  /** The module that keeps the ledger; the kind is off with it. */
+  feature?: FeatureKey
+}
 
 const OUT_KINDS: Kind[] = [
-  { value: 1, key: 'payOutSupplier', picks: 'supplier' },
-  { value: 2, key: 'payOutWage', picks: 'employee' },
-  { value: 3, key: 'payOutAdvance', picks: 'employee' },
-  { value: 4, key: 'payOutExpense', picks: 'category' },
-  { value: 5, key: 'payOutPartner', picks: 'partner' },
+  { value: 1, key: 'payOutSupplier', picks: 'supplier', feature: 'finance' },
+  { value: 2, key: 'payOutWage', picks: 'employee', feature: 'payroll' },
+  { value: 3, key: 'payOutAdvance', picks: 'employee', feature: 'payroll' },
+  { value: 4, key: 'payOutExpense', picks: 'category', feature: 'finance' },
+  { value: 5, key: 'payOutPartner', picks: 'partner', feature: 'finance' },
   { value: 0, key: 'payOutOther', picks: null },
 ]
 
 const IN_KINDS: Kind[] = [
-  { value: 5, key: 'payOutPartner', picks: 'partner' },
+  { value: 5, key: 'payOutPartner', picks: 'partner', feature: 'finance' },
   { value: 0, key: 'payOutOther', picks: null },
 ]
 
@@ -69,6 +76,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
+  const features = useFeatures()
   const queryClient = useQueryClient()
   const [amountStr, setAmountStr] = useState('')
   const [reason, setReason] = useState('')
@@ -76,7 +84,9 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
   const [picked, setPicked] = useState<Picked | null>(null)
 
   const isOut = direction === 'out'
-  const kinds = isOut ? OUT_KINDS : IN_KINDS
+  const kinds = (isOut ? OUT_KINDS : IN_KINDS).filter(
+    (k) => !k.feature || features[k.feature]
+  )
   const picks = kinds.find((k) => k.value === kind)?.picks ?? null
 
   // The lists behind the pickers, loaded only when their kind is picked

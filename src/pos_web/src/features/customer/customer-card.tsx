@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -48,11 +49,12 @@ type CustomerCardProps = {
 export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
   const t = useT()
   const money = useMoney()
+  const features = useFeatures()
   const [payOpen, setPayOpen] = useState(false)
 
   const open = customer !== null
-  const loyalty = useLoyalty(customer?.id, open)
-  const tab = useTab(customer?.id, open)
+  const loyalty = useLoyalty(customer?.id, open && features.loyalty)
+  const tab = useTab(customer?.id, open && features.tabs)
 
   const points = toNumber(loyalty.account?.pointsBalance)
   const tier = loyalty.account?.currentTier ?? ''
@@ -104,70 +106,72 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
             )}
           </DialogHeader>
 
-          {block(
-            <Award className='size-4' />,
-            t('loyaltyPoints'),
-            loyalty.isPending ? (
-              <Skeleton className='h-8 w-40' />
-            ) : loyalty.isError ? (
-              failed(() => loyalty.refetch())
-            ) : loyalty.notEnrolled ? (
-              <div>
-                <div className='font-medium'>{t('notEnrolled')}</div>
-                <div className='text-muted-foreground text-sm'>{t('joinsFromApp')}</div>
-              </div>
-            ) : (
-              <div className='flex items-baseline justify-between gap-3'>
-                <span>
-                  <span className='text-2xl font-bold tabular-nums'>
-                    {t('pointsBalance', { points })}
+          {features.loyalty &&
+            block(
+              <Award className='size-4' />,
+              t('loyaltyPoints'),
+              loyalty.isPending ? (
+                <Skeleton className='h-8 w-40' />
+              ) : loyalty.isError ? (
+                failed(() => loyalty.refetch())
+              ) : loyalty.notEnrolled ? (
+                <div>
+                  <div className='font-medium'>{t('notEnrolled')}</div>
+                  <div className='text-muted-foreground text-sm'>{t('joinsFromApp')}</div>
+                </div>
+              ) : (
+                <div className='flex items-baseline justify-between gap-3'>
+                  <span>
+                    <span className='text-2xl font-bold tabular-nums'>
+                      {t('pointsBalance', { points })}
+                    </span>
+                    <span className='text-muted-foreground ms-2 text-sm tabular-nums'>
+                      {t('pointsWorth', { amount: money(points / POINTS_PER_EGP) })}
+                    </span>
                   </span>
-                  <span className='text-muted-foreground ms-2 text-sm tabular-nums'>
-                    {t('pointsWorth', { amount: money(points / POINTS_PER_EGP) })}
-                  </span>
-                </span>
-                {tier && (
-                  <Badge variant='secondary'>
-                    {tierKey[tier] ? t(tierKey[tier]) : tier}
-                  </Badge>
-                )}
-              </div>
-            )
-          )}
-
-          {block(
-            <Wallet className='size-4' />,
-            t('tabBalance'),
-            tab.isPending ? (
-              <Skeleton className='h-8 w-40' />
-            ) : tab.isError ? (
-              failed(() => tab.refetch())
-            ) : (
-              <div className='flex items-center justify-between gap-3'>
-                <span
-                  className={cn(
-                    'text-2xl font-bold tabular-nums',
-                    tab.noTab ? 'font-medium' : owed > 0 ? 'text-destructive' : 'text-emerald-600'
+                  {tier && (
+                    <Badge variant='secondary'>
+                      {tierKey[tier] ? t(tierKey[tier]) : tier}
+                    </Badge>
                   )}
-                >
-                  {tab.noTab
-                    ? t('noTab')
-                    : owed > 0
-                      ? t('owesAmount', { amount: money(owed) })
-                      : owed < 0
-                        ? t('creditAmount', { amount: money(-owed) })
-                        : t('settledUp')}
-                </span>
-                {/* Money owed is paid down; anything beyond it, or anything
-                    at all on an empty tab, is credit the customer spends on
-                    account later - prepaid, money in the drawer before the
-                    sale. Same slip either way. */}
-                <Button className='h-11' onClick={() => setPayOpen(true)}>
-                  {owed > 0 ? t('payTab') : t('topUp')}
-                </Button>
-              </div>
-            )
-          )}
+                </div>
+              )
+            )}
+
+          {features.tabs &&
+            block(
+              <Wallet className='size-4' />,
+              t('tabBalance'),
+              tab.isPending ? (
+                <Skeleton className='h-8 w-40' />
+              ) : tab.isError ? (
+                failed(() => tab.refetch())
+              ) : (
+                <div className='flex items-center justify-between gap-3'>
+                  <span
+                    className={cn(
+                      'text-2xl font-bold tabular-nums',
+                      tab.noTab ? 'font-medium' : owed > 0 ? 'text-destructive' : 'text-emerald-600'
+                    )}
+                  >
+                    {tab.noTab
+                      ? t('noTab')
+                      : owed > 0
+                        ? t('owesAmount', { amount: money(owed) })
+                        : owed < 0
+                          ? t('creditAmount', { amount: money(-owed) })
+                          : t('settledUp')}
+                  </span>
+                  {/* Money owed is paid down; anything beyond it, or anything
+                      at all on an empty tab, is credit the customer spends on
+                      account later - prepaid, money in the drawer before the
+                      sale. Same slip either way. */}
+                  <Button className='h-11' onClick={() => setPayOpen(true)}>
+                    {owed > 0 ? t('payTab') : t('topUp')}
+                  </Button>
+                </div>
+              )
+            )}
 
           <Button
             variant='outline'
@@ -180,7 +184,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
         </DialogContent>
       </Dialog>
 
-      {customer && (
+      {features.tabs && customer && (
         <PayTabDialog
           customer={customer}
           balance={owed}

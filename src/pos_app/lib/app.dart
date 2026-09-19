@@ -5,6 +5,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'core/brand/brand_provider.dart';
+import 'core/brand/ninja_mark.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
@@ -80,6 +82,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       final authService = ref.read(authServiceProvider.notifier);
       authService.refreshToken();
       ref.read(signalRServiceProvider).reconnectIfNeeded();
+      ref.read(brandProvider.notifier).refresh();
       // Android drops immersive mode after some system UI; put it back
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       // A till that asked to be pinned stays pinned
@@ -169,6 +172,8 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) {
         ref.read(branchProvider.notifier).refresh();
+        // The brand is edited on the same admin page as the branch settings
+        ref.read(brandProvider.notifier).refresh();
       }),
     );
     _signalRSubscriptions.add(
@@ -181,6 +186,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         refreshRooms();
         refreshCatalog();
         ref.read(branchProvider.notifier).refresh();
+        ref.read(brandProvider.notifier).refresh();
       }),
     );
   }
@@ -203,7 +209,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         );
 
     return MaterialApp.router(
-      title: 'Chillax POS',
+      title: '$ninjaName POS',
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

@@ -13,7 +13,8 @@ var containerLifetime = isTestMode ? ContainerLifetime.Session : ContainerLifeti
 builder.AddForwardedHeaders();
 
 // Docker Compose deployment configuration
-builder.AddDockerComposeEnvironment("ninja");
+builder.AddDockerComposeEnvironment("ninja")
+    .ConfigureComposeFile(file => file.AddVolume(new Aspire.Hosting.Docker.Resources.ServiceNodes.Volume { Name = "branch-uploads" }));
 
 // Container registry prefix for GHCR images
 const string ImageRegistry = "ghcr.io/achmstein/ninja";
@@ -184,7 +185,12 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(keycloak)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
-    .WithEnvironment("Keycloak__Realm", "chillax");
+    .WithEnvironment("Keycloak__Realm", "chillax")
+    // The tenant this stack is provisioned for; seeded once into branchdb.
+    // Dev is Chillax, tenant one; a stamp gets its own values from its env.
+    .WithEnvironment("Tenant__Name__En", builder.Configuration["Tenant:Name:En"] ?? "Chillax")
+    .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
+    .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site");
 
 // AI assistant (Catalog localizes menu text, Inventory reads receipts,
 // Finance reads bills). Under test the services run a scripted fake;
@@ -258,7 +264,19 @@ notificationApi.PublishAsDockerComposeService((resource, service) =>
     });
 });
 ConfigureApiService(accountsApi, "accounts");
-ConfigureApiService(branchApi, "branch");
+branchApi.PublishAsDockerComposeService((resource, service) =>
+{
+    service.Image = $"{ImageRegistry}-branch:latest";
+    service.Restart = "unless-stopped";
+    // The tenant's logo and icons outlive the container
+    service.AddVolume(new Aspire.Hosting.Docker.Resources.ServiceNodes.Volume
+    {
+        Name = "branch-uploads",
+        Type = "volume",
+        Source = "branch-uploads",
+        Target = "/app/uploads",
+    });
+});
 
 // Reverse proxy - BFF for Flutter apps
 // Used by both mobile app and admin app

@@ -81,7 +81,7 @@ function PlacesPage() {
   )
 }
 
-/** The timed places of the branch — the PlayStation rooms and any table or
+/** The timed places of the branch — the rooms and any table or
  *  station with a clock — and the customer's hold on one while they walk
  *  over. */
 function PlacesList({ atTable }: { atTable: boolean }) {

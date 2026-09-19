@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
@@ -7,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'app_text.dart';
 import 'branch_switcher.dart';
 import 'destination_chip.dart';
+import '../brand/brand_provider.dart';
 import '../providers/current_place_provider.dart';
 import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';
@@ -25,6 +27,9 @@ class CurrentRouteNotifier extends Notifier<String> {
 final currentRouteProvider = NotifierProvider<CurrentRouteNotifier, String>(
   CurrentRouteNotifier.new,
 );
+
+/// One bottom tab: where it goes, how it looks
+typedef _Tab = ({String route, IconData icon, String label});
 
 /// Main scaffold with bottom navigation using Forui
 class MainScaffold extends ConsumerStatefulWidget {
@@ -69,8 +74,22 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _calculateSelectedIndex(context);
     final l10n = AppLocalizations.of(context)!;
+    // The rooms tab exists only for a tenant with rooms
+    final rooms = ref.watch(featuresProvider).rooms;
+    final tabs = <_Tab>[
+      (route: '/menu', icon: FIcons.utensils, label: l10n.menu),
+      if (rooms)
+        (
+          route: '/places',
+          icon: FIcons.gamepad2,
+          label: placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
+        ),
+      (route: '/bills', icon: FIcons.receipt, label: l10n.bills),
+      (route: '/profile', icon: FIcons.user, label: l10n.profile),
+    ];
+    final location = GoRouterState.of(context).matchedLocation;
+    final currentIndex = math.max(0, tabs.indexWhere((t) => location.startsWith(t.route)));
 
     return FScaffold(
       footer: Padding(
@@ -83,47 +102,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               : 0,
         ),
         child: FBottomNavigationBar(
-        index: currentIndex,
-        onChange: (index) => _onItemTapped(index, context),
-        children: [
-          FBottomNavigationBarItem(
-            icon: const Icon(FIcons.utensils),
-            label: AppText(
-              l10n.menu,
-              style: TextStyle(
-                fontWeight: currentIndex == 0 ? FontWeight.bold : FontWeight.normal,
+          index: currentIndex,
+          onChange: (index) => context.go(tabs[index].route),
+          children: [
+            for (final (index, tab) in tabs.indexed)
+              FBottomNavigationBarItem(
+                icon: Icon(tab.icon),
+                label: AppText(
+                  tab.label,
+                  style: TextStyle(
+                    fontWeight: currentIndex == index ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
               ),
-            ),
-          ),
-          FBottomNavigationBarItem(
-            icon: const Icon(FIcons.gamepad2),
-            label: AppText(
-              placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
-              style: TextStyle(
-                fontWeight: currentIndex == 1 ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-          FBottomNavigationBarItem(
-            icon: const Icon(FIcons.receipt),
-            label: AppText(
-              l10n.bills,
-              style: TextStyle(
-                fontWeight: currentIndex == 2 ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-          FBottomNavigationBarItem(
-            icon: const Icon(FIcons.user),
-            label: AppText(
-              l10n.profile,
-              style: TextStyle(
-                fontWeight: currentIndex == 3 ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
       child: SafeArea(
         bottom: false,
@@ -143,31 +136,5 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         ),
       ),
     );
-  }
-
-  int _calculateSelectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/menu')) return 0;
-    if (location.startsWith('/places')) return 1;
-    if (location.startsWith('/bills')) return 2;
-    if (location.startsWith('/profile')) return 3;
-    return 0;
-  }
-
-  void _onItemTapped(int index, BuildContext context) {
-    switch (index) {
-      case 0:
-        context.go('/menu');
-        break;
-      case 1:
-        context.go('/places');
-        break;
-      case 2:
-        context.go('/bills');
-        break;
-      case 3:
-        context.go('/profile');
-        break;
-    }
   }
 }

@@ -211,6 +211,265 @@
           { }
         ]
       }
+    },
+    "/api/tenant": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The tenant's name, color, logo URLs and feature switches",
+        "operationId": "GetTenant",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Change the name, the brand color or the feature switches",
+        "operationId": "UpdateTenant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tenant/logo": {
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Replace the logo; the icons are cut from it",
+        "operationId": "UploadTenantLogo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Remove the logo; the icons fall back to a tile in the brand color",
+        "operationId": "DeleteTenantLogo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The logo as PNG, transparent margins trimmed",
+        "operationId": "GetTenantLogo",
+        "parameters": [
+          {
+            "name": "v",
+            "in": "query",
+            "description": "Cache key; any value makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/tenant/icons/{name}": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png",
+        "operationId": "GetTenantIcon",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "description": "Cache key; any value makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "description": "The platform's own neutral icon, for the staff apps",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/tenant/manifest": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The web app manifest for one surface, in the tenant's name",
+        "operationId": "GetTenantManifest",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "query",
+            "description": "client, admin, pos or kds",
+            "schema": {
+              "type": "string",
+              "default": "client"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "en or ar",
+            "schema": {
+              "type": "string",
+              "default": "en"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -378,6 +637,10 @@
           }
         }
       },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
       "LocalizedText": {
         "type": "object",
         "properties": {
@@ -389,6 +652,155 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TenantFeatures": {
+        "required": [
+          "rooms",
+          "loyalty",
+          "tabs",
+          "inventory",
+          "finance",
+          "payroll",
+          "kds"
+        ],
+        "type": "object",
+        "properties": {
+          "rooms": {
+            "type": "boolean"
+          },
+          "loyalty": {
+            "type": "boolean"
+          },
+          "tabs": {
+            "type": "boolean"
+          },
+          "inventory": {
+            "type": "boolean"
+          },
+          "finance": {
+            "type": "boolean"
+          },
+          "payroll": {
+            "type": "boolean"
+          },
+          "kds": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TenantIcons": {
+        "required": [
+          "icon192",
+          "icon512",
+          "maskable512",
+          "appleTouch",
+          "favicon"
+        ],
+        "type": "object",
+        "properties": {
+          "icon192": {
+            "type": "string"
+          },
+          "icon512": {
+            "type": "string"
+          },
+          "maskable512": {
+            "type": "string"
+          },
+          "appleTouch": {
+            "type": "string"
+          },
+          "favicon": {
+            "type": "string"
+          }
+        }
+      },
+      "TenantResponse": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "logoUrl",
+          "icons",
+          "features",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "icons": {
+            "$ref": "#/components/schemas/TenantIcons"
+          },
+          "features": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -502,12 +914,44 @@
             ]
           }
         }
+      },
+      "UpdateTenantRequest": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "features"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "features": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Branches"
+    },
+    {
+      "name": "Tenant"
     }
   ]
 }

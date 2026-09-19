@@ -10,6 +10,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { PlatformMark } from '@/components/platform-mark'
+import { PLATFORM_NAME } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 
 /**
@@ -39,14 +41,9 @@ export function BranchSwitcher() {
 
   const brand = (
     <>
-      {/* Black-on-transparent mark; invert on dark backgrounds */}
-      <img
-        src='/images/cup.png'
-        alt=''
-        className='size-8 shrink-0 object-contain dark:invert'
-      />
+      <PlatformMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{t('brandName')}</span>
+        <span className='truncate font-semibold'>{PLATFORM_NAME}</span>
         <span className='text-muted-foreground truncate text-xs'>{label}</span>
       </div>
     </>

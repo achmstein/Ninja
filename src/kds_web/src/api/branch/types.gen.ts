@@ -17,6 +17,7 @@ export type BranchResponse = {
     dayEndTime: string;
     isOrderingEnabled: boolean;
     isReservationsEnabled: boolean;
+    requireSignInForTableOrders?: boolean;
 };
 
 export type CreateBranchRequest = {
@@ -32,9 +33,47 @@ export type CreateBranchRequest = {
     isReservationsEnabled?: boolean;
 };
 
+export type IFormFile = Blob | File;
+
 export type LocalizedText = {
     en?: string;
     ar?: null | string;
+};
+
+export type ProblemDetails = {
+    type?: null | string;
+    title?: null | string;
+    status?: null | number | string;
+    detail?: null | string;
+    instance?: null | string;
+};
+
+export type TenantFeatures = {
+    rooms: boolean;
+    loyalty: boolean;
+    tabs: boolean;
+    inventory: boolean;
+    finance: boolean;
+    payroll: boolean;
+    kds: boolean;
+};
+
+export type TenantIcons = {
+    icon192: string;
+    icon512: string;
+    maskable512: string;
+    appleTouch: string;
+    favicon: string;
+};
+
+export type TenantResponse = {
+    name: LocalizedText;
+    primaryColor: null | string;
+    customerUrl: null | string;
+    logoUrl: null | string;
+    icons: TenantIcons;
+    features: TenantFeatures;
+    version: number | string;
 };
 
 export type UpdateBranchRequest = {
@@ -49,11 +88,20 @@ export type UpdateBranchRequest = {
     dayEndTime?: null | string;
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
+    requireSignInForTableOrders?: null | boolean;
 };
 
 export type UpdateBranchSettingsRequest = {
     isOrderingEnabled?: null | boolean;
     isReservationsEnabled?: null | boolean;
+    requireSignInForTableOrders?: null | boolean;
+};
+
+export type UpdateTenantRequest = {
+    name: LocalizedText;
+    primaryColor: null | string;
+    customerUrl: null | string;
+    features: TenantFeatures;
 };
 
 export type GetBranchesData = {
@@ -197,3 +245,179 @@ export type UpdateBranchSettingsResponses = {
 };
 
 export type UpdateBranchSettingsResponse = UpdateBranchSettingsResponses[keyof UpdateBranchSettingsResponses];
+
+export type GetTenantData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant';
+};
+
+export type GetTenantResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type GetTenantResponse = GetTenantResponses[keyof GetTenantResponses];
+
+export type UpdateTenantData = {
+    body: UpdateTenantRequest;
+    path?: never;
+    query?: never;
+    url: '/api/tenant';
+};
+
+export type UpdateTenantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type UpdateTenantError = UpdateTenantErrors[keyof UpdateTenantErrors];
+
+export type UpdateTenantResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
+
+export type DeleteTenantLogoData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/logo';
+};
+
+export type DeleteTenantLogoErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DeleteTenantLogoResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type DeleteTenantLogoResponse = DeleteTenantLogoResponses[keyof DeleteTenantLogoResponses];
+
+export type GetTenantLogoData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Cache key; any value makes the answer immutable
+         */
+        v?: string;
+    };
+    url: '/api/tenant/logo';
+};
+
+export type GetTenantLogoErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadTenantLogoData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/tenant/logo';
+};
+
+export type UploadTenantLogoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type UploadTenantLogoError = UploadTenantLogoErrors[keyof UploadTenantLogoErrors];
+
+export type UploadTenantLogoResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type UploadTenantLogoResponse = UploadTenantLogoResponses[keyof UploadTenantLogoResponses];
+
+export type GetTenantIconData = {
+    body?: never;
+    path: {
+        name: string;
+    };
+    query?: {
+        /**
+         * Cache key; any value makes the answer immutable
+         */
+        v?: string;
+    };
+    url: '/api/tenant/icons/{name}';
+};
+
+export type GetTenantIconErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTenantManifestData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * client, admin, pos or kds
+         */
+        app?: string;
+        /**
+         * en or ar
+         */
+        lang?: string;
+    };
+    url: '/api/tenant/manifest';
+};
+
+export type GetTenantManifestErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type GetTenantManifestError = GetTenantManifestErrors[keyof GetTenantManifestErrors];

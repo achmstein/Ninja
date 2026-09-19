@@ -221,6 +221,9 @@ internal static class Extensions
             // Branch routes
             var branchCluster = yarp.AddCluster(branchApi);
             yarp.AddRoute("/api/branches/{*any}", branchCluster);
+            // The brand, icons and manifest: read by <link> and <img> tags, so no api-version
+            yarp.AddRoute("/api/tenant/{*any}", branchCluster)
+                .WithTransformXForwarded();
 
             // Health, one path per service, so the edge can ask each API
             // whether it is up and can reach its database and the bus:

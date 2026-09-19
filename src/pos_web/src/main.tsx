@@ -7,6 +7,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { bootBrand } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
 import { DirectionProvider } from './context/direction-provider'
@@ -77,9 +78,11 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// Render the app
+// Render the app, once the brand (name, color, icons) is on the page: from
+// the last visit's cache at once, or from the network on a first visit
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
+  await bootBrand(queryClient)
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 import '../auth/auth_service.dart';
+import '../brand/brand_mark.dart';
+import '../brand/brand_provider.dart';
 import '../../features/receipts/screens/receipt_screen.dart';
 import '../../features/menu/screens/menu_screen.dart';
 import '../../features/cart/screens/cart_screen.dart';
@@ -21,25 +23,22 @@ import '../../features/auth/screens/register_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 /// Splash screen shown while checking authentication
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
   static const _bgColor = Color(0xFF09090B);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brandColor = ref.watch(brandProvider).primaryColor;
     return Scaffold(
       backgroundColor: _bgColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/logo.png',
-              width: 150,
-              height: 150,
-              color: Colors.white,
-            ),
+            // The tile stands in for a logo; white when the brand has no color
+            BrandMark(size: 150, color: brandColor ?? Colors.white),
             const SizedBox(height: 32),
             const SizedBox(
               width: 24,
@@ -122,6 +121,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         _pendingLink = null;
         return pending ?? '/menu';
       }
+
+      // A feature the tenant turned off has no page
+      final features = ref.read(brandProvider).features;
+      if (!features.rooms && (currentLocation.startsWith('/places') || currentLocation.startsWith('/stays'))) {
+        return '/menu';
+      }
+      if (!features.loyalty && currentLocation.startsWith('/loyalty')) return '/menu';
+      if (!features.tabs && currentLocation.startsWith('/transactions')) return '/menu';
 
       return null;
     },

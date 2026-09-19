@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from 'sileo'
+import { useBrandEffects } from '@/lib/brand'
 import { useDirection } from '@/context/direction-provider'
 import { useTheme } from '@/context/theme-provider'
 import { NavigationProgress } from '@/components/navigation-progress'
@@ -24,25 +25,29 @@ function AppToaster() {
   )
 }
 
+function RootComponent() {
+  useBrandEffects()
+  return (
+    <>
+      <NavigationProgress />
+      <Outlet />
+      <AppToaster />
+      {import.meta.env.MODE === 'development' && (
+        <>
+          <ReactQueryDevtools buttonPosition='bottom-left' />
+          {/* Keep away from bottom-right: that corner belongs to toasts */}
+          <TanStackRouterDevtools position='bottom-left' />
+        </>
+      )}
+    </>
+  )
+}
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
-  component: () => {
-    return (
-      <>
-        <NavigationProgress />
-        <Outlet />
-        <AppToaster />
-        {import.meta.env.MODE === 'development' && (
-          <>
-            <ReactQueryDevtools buttonPosition='bottom-left' />
-            {/* Keep away from bottom-right: that corner belongs to toasts */}
-            <TanStackRouterDevtools position='bottom-left' />
-          </>
-        )}
-      </>
-    )
-  },
+  component: RootComponent,
   notFoundComponent: NotFoundError,
   errorComponent: GeneralError,
 })
+

@@ -18,6 +18,9 @@ public static class Extensions
 
         builder.Services.AddScoped<BranchSettingsService>();
 
+        builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));
+        builder.Services.AddSingleton<TenantBrandStore>();
+
         // The shift drives the flags: opening the drawer turns ordering and
         // reservations on, closing it turns both off
         builder.AddRabbitMqEventBus("eventbus")

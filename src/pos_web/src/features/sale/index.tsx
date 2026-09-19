@@ -34,6 +34,7 @@ import { useLoyalty } from '@/features/customer/use-customer-card'
 import { stayRoster } from '@/features/places/status'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import { API_VERSION, apiClient } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -206,6 +207,7 @@ function readLastCustomer(
 export function SalePad({ ticketId }: { ticketId?: number }) {
   const addingToTicket = ticketId !== undefined
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const money = useMoney()
   const language = useLanguage((s) => s.language)
@@ -783,7 +785,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                     <span className='block truncate font-medium'>
                       {customer.name}
                     </span>
-                    <CustomerPointsLine userId={customer.id} />
+                    {features.loyalty && (
+                      <CustomerPointsLine userId={customer.id} />
+                    )}
                   </span>
                 </button>
               ) : (

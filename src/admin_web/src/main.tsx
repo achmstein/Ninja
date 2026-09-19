@@ -9,6 +9,7 @@ import {
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 // Styles
 import 'sileo/styles.css'
+import { bootBrand } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
 import { translate } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -86,9 +87,11 @@ declare module '@tanstack/react-router' {
   }
 }
 
-// Render the app
+// Render the app, once the brand (name, color, icons) is on the page: from
+// the last visit's cache at once, or from the network on a first visit
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
+  await bootBrand(queryClient)
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>

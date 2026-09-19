@@ -18,6 +18,7 @@ import { NumericKeypad } from '@/components/numeric-keypad'
 import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -129,6 +130,7 @@ export function SettleDialog({
   onSettled,
 }: SettleDialogProps) {
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const money = useMoney()
   const queryClient = useQueryClient()
@@ -191,9 +193,12 @@ export function SettleDialog({
       body: { lineIds: [lineId], customerId: holder.id, customerName: holder.name },
     })
 
-  // Settling on account needs a tab to charge (the server enforces it too)
+  // Settling on account needs tabs switched on and a tab to charge (the
+  // server enforces both)
   const tenders =
-    accountHolders.length > 0 ? [...BASE_TENDERS, ACCOUNT_TENDER] : BASE_TENDERS
+    features.tabs && accountHolders.length > 0
+      ? [...BASE_TENDERS, ACCOUNT_TENDER]
+      : BASE_TENDERS
 
   const [payments, setPayments] = useState<PendingPayment[]>([])
   const [accountHolder, setAccountHolder] = useState<AccountHolder | null>(null)

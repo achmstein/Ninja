@@ -19,6 +19,7 @@ import { type OrderSummary } from '@/api/ordering'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { getPlaceStayHistoryOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useCustomerOrigin } from '@/lib/brand'
 import { placeQrUrl } from '@/lib/qr'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
@@ -86,6 +87,7 @@ export function PlaceDetailPanel({
   onStartHeld,
 }: PlaceDetailPanelProps) {
   const t = useT()
+  const customerOrigin = useCustomerOrigin()
   const locale = useLocale()
   const localized = useLocalized()
   const actions = useStayActions()
@@ -135,7 +137,7 @@ export function PlaceDetailPanel({
       : null
 
   const copyQrLink = () => {
-    navigator.clipboard.writeText(placeQrUrl(placeId))
+    navigator.clipboard.writeText(placeQrUrl(customerOrigin, placeId))
     toast.success(t('placeLinkCopied'))
   }
 

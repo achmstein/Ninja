@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useTheme } from '@/context/theme-provider'
+import { PLATFORM_NAME } from '@/lib/brand'
 import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
@@ -15,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PlatformMark } from '@/components/platform-mark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -106,13 +108,9 @@ function SignIn() {
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
-        <img
-          src='/images/cup.png'
-          alt=''
-          className='size-14 object-contain dark:invert'
-        />
+        <PlatformMark className='size-14 text-2xl' />
         <span className='text-2xl font-semibold tracking-tight'>
-          {t('brandName')} {t('appName')}
+          {PLATFORM_NAME} {t('appName')}
         </span>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>

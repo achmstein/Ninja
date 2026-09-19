@@ -6,6 +6,7 @@ import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Main } from '@/components/layout/main'
@@ -46,6 +47,7 @@ export function Dashboard() {
   const t = useT()
   const auth = useAuth()
   const owner = isOwner(auth.user)
+  const features = useFeatures()
   const locale = useLocale()
   const localized = useLocalized()
 
@@ -134,7 +136,7 @@ export function Dashboard() {
       detailClass: urgencyTextClass(oldestUrgency),
     })
   }
-  if (requestCount > 0) {
+  if (features.rooms && requestCount > 0) {
     attention.push({
       key: 'requests',
       to: '/requests',
@@ -142,7 +144,7 @@ export function Dashboard() {
       text: t('requestsWaitingLine', { count: requestCount }),
     })
   }
-  if (lowCount > 0) {
+  if (features.inventory && lowCount > 0) {
     attention.push({
       key: 'stock',
       to: '/inventory',
@@ -202,36 +204,42 @@ export function Dashboard() {
           loading={pendingQuery.isPending}
           to='/orders'
         />
-        <Stat
-          label={t('placesInUse')}
-          value={t('ofTotal', {
-            count: running.length,
-            total: timedInService,
-          })}
-          loading={floor.isPending}
-          to='/places'
-        />
-        <Stat
-          label={t('tablesInUse')}
-          value={t('ofTotal', { count: busyTables, total: activeTables })}
-          loading={floor.isPending}
-          to='/places'
-        />
+        {features.rooms && (
+          <Stat
+            label={t('placesInUse')}
+            value={t('ofTotal', {
+              count: running.length,
+              total: timedInService,
+            })}
+            loading={floor.isPending}
+            to='/places'
+          />
+        )}
+        {features.rooms && (
+          <Stat
+            label={t('tablesInUse')}
+            value={t('ofTotal', { count: busyTables, total: activeTables })}
+            loading={floor.isPending}
+            to='/places'
+          />
+        )}
       </StatStrip>
 
       <div className='grid gap-6 lg:grid-cols-2'>
-        <LiveFloor
-          stays={running}
-          places={places}
-          pending={pending}
-          nowMs={nowMs}
-          isLoading={pendingQuery.isLoading || floor.isLoading}
-          error={pendingQuery.error ?? floor.error}
-          onRetry={() => {
-            pendingQuery.refetch()
-            floor.refetch()
-          }}
-        />
+        {features.rooms && (
+          <LiveFloor
+            stays={running}
+            places={places}
+            pending={pending}
+            nowMs={nowMs}
+            isLoading={pendingQuery.isLoading || floor.isLoading}
+            error={pendingQuery.error ?? floor.error}
+            onRetry={() => {
+              pendingQuery.refetch()
+              floor.refetch()
+            }}
+          />
+        )}
         <TodaysTill
           report={report}
           isLoading={dayWindow === null || reportQuery.isPending}
@@ -241,7 +249,7 @@ export function Dashboard() {
       </div>
 
       {/* The owners' month: the profit feed is theirs alone */}
-      {owner && <MonthMoney />}
+      {owner && features.finance && <MonthMoney />}
 
       <Trends />
     </Main>

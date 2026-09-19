@@ -8,6 +8,7 @@ import { useOrderDestination } from '@/lib/order-destination'
 import { PLACE_ROOM, PLACE_STATION, PLACE_TABLE, placeIcon } from '@/lib/places'
 import { useActiveStay, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
+import { useFeatures } from '@/lib/brand'
 
 /** The branch's timed places, live: one query the tab and the nav share. */
 export function useTimedPlaces() {
@@ -74,6 +75,7 @@ export function useVisitTab(): {
   const t = useT()
   const localized = useLocalized()
   const { seat, hasTimedPlaces } = useVisit()
+  const features = useFeatures()
 
   if (seat.kind === 'stay') {
     const kind = Number(seat.stay.placeKind ?? PLACE_ROOM)
@@ -91,5 +93,9 @@ export function useVisitTab(): {
       visible: true,
     }
   }
-  return { label: t('rooms'), icon: Gamepad2, visible: hasTimedPlaces }
+  return {
+    label: t('rooms'),
+    icon: Gamepad2,
+    visible: hasTimedPlaces && features.rooms,
+  }
 }

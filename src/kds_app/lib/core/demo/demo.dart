@@ -1,6 +1,8 @@
 import '../../features/kitchen/models/kitchen_order.dart';
 import '../../features/kitchen/services/kitchen_service.dart';
 import '../auth/auth_service.dart';
+import '../brand/brand_service.dart';
+import '../brand/tenant_brand.dart';
 import '../models/branch.dart';
 import '../models/localized_text.dart';
 import '../services/branch_service.dart';
@@ -24,6 +26,7 @@ const bool kDemoEmpty = bool.fromEnvironment('KDS_DEMO_EMPTY');
 // list's type is inferred from its elements instead of being spelled out.
 final demoOverrides = [
   authServiceProvider.overrideWith(_DemoAuthService.new),
+  tenantRepositoryProvider.overrideWithValue(_DemoTenantRepository()),
   branchRepositoryProvider.overrideWithValue(_DemoBranchRepository()),
   kitchenRepositoryProvider.overrideWithValue(_DemoKitchenRepository()),
 ];
@@ -49,6 +52,13 @@ class _DemoAuthService extends AuthService {
 
   @override
   Future<void> signOut() async {}
+}
+
+/// The brand the demo runs under: a name in both languages, no logo, no
+/// color, every feature on
+class _DemoTenantRepository implements TenantRepository {
+  @override
+  Future<TenantBrand> getBrand() async => TenantBrand(name: LocalizedText.parse({'en': 'Chillax', 'ar': 'تشيلاكس'}));
 }
 
 class _DemoBranchRepository implements BranchRepository {

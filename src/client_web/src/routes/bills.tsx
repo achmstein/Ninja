@@ -55,6 +55,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { useFeatures } from '@/lib/brand'
 
 export const Route = createFileRoute('/bills')({
   component: BillsRoute,
@@ -219,15 +220,16 @@ function OnYourTab() {
   const t = useT()
   const price = usePrice()
   const auth = useAuth()
+  const features = useFeatures()
   const accountQuery = useQuery({
     ...getMyAccountOptions(),
-    enabled: auth.isAuthenticated,
+    enabled: auth.isAuthenticated && features.tabs,
     retry: false,
   })
   const balance = accountQuery.isError
     ? 0
     : Number(accountQuery.data?.balance ?? 0)
-  if (balance <= 0) return null
+  if (!features.tabs || balance <= 0) return null
 
   return (
     <Link to='/account' className='flex items-baseline justify-between py-2'>

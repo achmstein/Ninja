@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import type { ShiftView } from '@/api/sales/types.gen'
 import { tenderLabelKey } from '@/features/ticket/tenders'
+import { useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 
@@ -14,6 +15,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   const t = useT()
   const locale = useLocale()
   const money = useMoney()
+  const brandName = useBrandName()
 
   const dateTime = new Intl.DateTimeFormat(locale, {
     dateStyle: 'short',
@@ -56,7 +58,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   return createPortal(
     <div className='receipt-sheet'>
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>{t('brandName')}</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{brandName}</div>
         <div style={{ fontSize: 14, fontWeight: 600 }}>
           {t(closed ? 'zReportTitle' : 'xReportTitle')}
         </div>

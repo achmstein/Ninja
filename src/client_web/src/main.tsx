@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { AuthProvider } from 'react-oidc-context'
+import { bootBrand } from './lib/brand'
 import { oidcConfig } from './lib/oidc'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
@@ -31,8 +32,11 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Render once the brand (name, color, icons) is on the page: from the last
+// visit's cache at once, or from the network on a first visit
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
+  await bootBrand(queryClient)
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>

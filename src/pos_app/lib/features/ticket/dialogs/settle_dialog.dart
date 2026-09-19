@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/offline/offline_queue.dart';
@@ -106,7 +107,10 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
   double get _changeDue => _round2(math.max(0, _paid + _entered - _total));
 
-  List<PaymentTender> get _tenders => _holders.isNotEmpty && widget.offline == null ? [...baseTenders, PaymentTender.account] : baseTenders;
+  // Account joins when someone on the bill has one — and the tenant runs tabs
+  List<PaymentTender> get _tenders => _holders.isNotEmpty && widget.offline == null && ref.read(featuresProvider).tabs
+      ? [...baseTenders, PaymentTender.account]
+      : baseTenders;
 
   // One account holder needs no choosing
   _AccountHolder? get _chosenHolder => _accountHolder ?? (_holders.length == 1 ? _holders.first : null);

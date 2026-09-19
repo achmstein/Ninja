@@ -150,7 +150,7 @@ export function AddStaffDialog({
             <Input
               id='staffEmail'
               type='email'
-              placeholder='staff@chillax.cafe'
+              placeholder='name@example.com'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />

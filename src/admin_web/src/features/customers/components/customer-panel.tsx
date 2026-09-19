@@ -65,6 +65,7 @@ import {
   getCustomerInitials,
   type Customer,
 } from '../types'
+import { useFeatures } from '@/lib/brand'
 
 type CustomerPanelProps = {
   customerId: string
@@ -109,6 +110,7 @@ function CustomerHub({
   onBack: () => void
 }) {
   const t = useT()
+  const features = useFeatures()
   const locale = useLocale()
   const queryClient = useQueryClient()
   const name = getCustomerDisplayName(customer)
@@ -211,8 +213,8 @@ function CustomerHub({
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
-        <LoyaltySection customer={customer} />
-        <TabSection customer={customer} />
+        {features.loyalty && <LoyaltySection customer={customer} />}
+        {features.tabs && <TabSection customer={customer} />}
         <UsualOrder customerId={customer.id} />
         <RecentOrders customerId={customer.id} name={name} />
       </div>

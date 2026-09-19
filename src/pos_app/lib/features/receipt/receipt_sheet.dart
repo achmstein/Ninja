@@ -35,10 +35,13 @@ class ReceiptSheet extends StatelessWidget {
   /// the sale has been replayed
   final String? provisionalReceiptNumber;
 
-  /// The decoded wordmark; the name prints as text without it
+  /// The tenant's name in the sheet's language; prints as text without a logo
+  final String brandName;
+
+  /// The decoded logo; the name prints as text without it
   final ui.Image? logo;
 
-  /// Whose receipt: name, address, phone and tax number under the wordmark,
+  /// Whose receipt: name, address, phone and tax number under the brand,
   /// its own footer line at the bottom
   final Branch? branch;
 
@@ -47,6 +50,7 @@ class ReceiptSheet extends StatelessWidget {
     required this.ticket,
     required this.l10n,
     required this.locale,
+    required this.brandName,
     this.logo,
     this.branch,
     this.paymentsOverride,
@@ -69,7 +73,7 @@ class ReceiptSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          BrandMark(logo: logo, text: l10n.brandName),
+          SheetBrandMark(logo: logo, text: brandName),
           if (branch != null) ...[
             Text(branch!.name.getText(locale), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
             if ((branch!.address?.getText(locale) ?? '').isNotEmpty)
@@ -149,9 +153,10 @@ class ReceiptSheet extends StatelessWidget {
 class TestSheet extends StatelessWidget {
   final AppLocalizations l10n;
   final Locale locale;
+  final String brandName;
   final ui.Image? logo;
 
-  const TestSheet({super.key, required this.l10n, required this.locale, this.logo});
+  const TestSheet({super.key, required this.l10n, required this.locale, required this.brandName, this.logo});
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +164,7 @@ class TestSheet extends StatelessWidget {
       locale: locale,
       children: [
         SheetCentered(children: [
-          BrandMark(logo: logo, text: l10n.brandName),
+          SheetBrandMark(logo: logo, text: brandName),
           Text(l10n.testPrintTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
           Text(sheetDate(DateTime.now(), locale), style: const TextStyle(fontSize: 22)),
         ]),

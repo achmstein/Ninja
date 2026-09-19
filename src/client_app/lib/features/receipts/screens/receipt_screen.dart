@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/app_text.dart';
@@ -91,6 +92,7 @@ class _ReceiptBody extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
     final branch = ref.watch(branchProvider).branches.where((b) => b.id == receipt.branchId).firstOrNull;
+    final brand = ref.watch(brandProvider);
     String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
     // The paper the till prints: black on white whatever the theme
     const ink = Colors.black;
@@ -127,8 +129,13 @@ class _ReceiptBody extends ConsumerWidget {
           children: [
             Column(
               children: [
-                // The wordmark, about half the paper wide, as the till prints it
-                Image.asset('assets/images/logo.png', width: 136),
+                // The brand, about half the paper wide, as the till prints it:
+                // the logo, or the name in bold
+                if (brand.logoUrl case final logoUrl?)
+                  Image.network(logoUrl, width: 136)
+                else
+                  AppText(brand.displayName(Localizations.localeOf(context)),
+                      style: base.copyWith(fontSize: 20, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
                 if (branch != null) ...[
                   AppText(branch.name.localized(context), style: base.copyWith(fontWeight: FontWeight.w600)),

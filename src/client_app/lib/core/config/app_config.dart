@@ -27,6 +27,8 @@ class AppConfig {
   static String get accountsApiUrl => '$bffBaseUrl/api/accounts/';
   static String get identityApiUrl => '$bffBaseUrl/api/identity/';
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
+  /// The tenant's brand: one anonymous resource, no sub-paths
+  static String get tenantApiUrl => '$bffBaseUrl/api/tenant';
 
   // Keycloak configuration
   // Release: dedicated auth subdomain (Caddy proxies straight to Keycloak).
@@ -57,7 +59,6 @@ class AppConfig {
     'catalog',
   ];
 
-  // App info
-  static const String appName = 'Chillax';
+  // App info (the name comes from the tenant brand)
   static const String appVersion = '1.0.2';
 }

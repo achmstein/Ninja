@@ -98,18 +98,6 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Chillax'**
-  String get appTitle;
-
-  /// No description provided for @cafeAndGaming.
-  ///
-  /// In en, this message translates to:
-  /// **'Cafe & Gaming'**
-  String get cafeAndGaming;
-
   /// No description provided for @done.
   ///
   /// In en, this message translates to:
