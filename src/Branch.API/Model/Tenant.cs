@@ -30,6 +30,22 @@ public class Tenant
 
     public bool HasLogo => LogoVersion != 0;
 
+    /// <summary>
+    /// The wide (or tall) version of the logo for headers and sign-in, where
+    /// a square mark looks lost. Optional; the mark stands in without it. Its
+    /// size after trimming is kept so a surface can reserve the right box.
+    /// </summary>
+    public long WordmarkVersion { get; set; }
+
+    public int WordmarkWidth { get; set; }
+
+    public int WordmarkHeight { get; set; }
+
+    public bool HasWordmark => WordmarkVersion != 0;
+
+    /// <summary>The customer app's look beyond the primary color; every field optional, the platform's default when null.</summary>
+    public TenantTheme Theme { get; set; } = new();
+
     /// <summary>Rooms and their time billing (Spaces). Off for a café that only has tables.</summary>
     public bool RoomsEnabled { get; set; } = true;
 
@@ -52,4 +68,36 @@ public class Tenant
 
     /// <summary>Changes whenever anything a surface renders changes; the surfaces put it on every brand URL.</summary>
     public long Version => UpdatedAt.UtcTicks;
+}
+
+/// <summary>
+/// A handful of tokens, not a stylesheet: enough to make the customer app
+/// look like the café's design without a build per client. Colors are
+/// "#rrggbb"; the light scheme takes them as given and the dark scheme is
+/// derived. Null means the platform's default for that token.
+/// </summary>
+public class TenantTheme
+{
+    public static readonly string[] Radii = ["none", "sm", "md", "lg", "xl"];
+
+    /// <summary>Latin families the surfaces know how to load; Arabic always falls back to Cairo.</summary>
+    public static readonly string[] Fonts =
+    [
+        "Inter", "Manrope", "DM Sans", "Nunito", "Poppins", "Plus Jakarta Sans", "Playfair Display", "Cairo", "Tajawal", "Almarai",
+    ];
+
+    /// <summary>Highlights, chips and hovers.</summary>
+    public string? Accent { get; set; }
+
+    /// <summary>The page behind everything, light scheme.</summary>
+    public string? Background { get; set; }
+
+    /// <summary>Text on that page, light scheme.</summary>
+    public string? Foreground { get; set; }
+
+    /// <summary>One of <see cref="Radii"/>.</summary>
+    public string? Radius { get; set; }
+
+    /// <summary>One of <see cref="Fonts"/>.</summary>
+    public string? Font { get; set; }
 }

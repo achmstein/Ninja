@@ -27,10 +27,7 @@ class AppText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fontFamily = context.fontFamily;
-    final effectiveStyle = (style ?? const TextStyle()).copyWith(
-      fontFamily: fontFamily,
-    );
+    final effectiveStyle = context.localeText(style ?? const TextStyle());
 
     return Text(
       data,
@@ -47,8 +44,6 @@ class AppText extends StatelessWidget {
 
 /// Extension to easily apply locale font to any TextStyle
 extension LocalizedTextStyle on TextStyle {
-  /// Returns a copy of this TextStyle with the locale-appropriate font family
-  TextStyle withLocaleFont(BuildContext context) {
-    return copyWith(fontFamily: context.fontFamily);
-  }
+  /// Returns a copy of this TextStyle in the locale-appropriate font family
+  TextStyle withLocaleFont(BuildContext context) => context.localeText(this);
 }

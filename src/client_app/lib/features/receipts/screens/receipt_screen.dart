@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -130,12 +131,16 @@ class _ReceiptBody extends ConsumerWidget {
             Column(
               children: [
                 // The brand, about half the paper wide, as the till prints it:
-                // the logo, or the name in bold
-                if (brand.logoUrl case final logoUrl?)
-                  Image.network(logoUrl, width: 136)
-                else
-                  AppText(brand.displayName(Localizations.localeOf(context)),
-                      style: base.copyWith(fontSize: 20, fontWeight: FontWeight.w700)),
+                // the wordmark, else the logo, else the name in bold
+                BrandWordmark(
+                  height: 48,
+                  maxWidth: 136,
+                  fallback: switch (brand.logoUrl) {
+                    final logoUrl? => Image.network(logoUrl, width: 136),
+                    null => AppText(brand.displayName(Localizations.localeOf(context)),
+                        style: base.copyWith(fontSize: 20, fontWeight: FontWeight.w700)),
+                  },
+                ),
                 const SizedBox(height: 8),
                 if (branch != null) ...[
                   AppText(branch.name.localized(context), style: base.copyWith(fontWeight: FontWeight.w600)),

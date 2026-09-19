@@ -18,6 +18,7 @@ public sealed class TenantStorageOptions
 public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<TenantStorageOptions> options)
 {
     public const string LogoFile = "logo.png";
+    public const string WordmarkFile = "wordmark.png";
 
     /// <summary>File name → (side in px, share of the side the logo fills, opaque background).</summary>
     public static readonly IReadOnlyDictionary<string, IconSpec> Icons = new Dictionary<string, IconSpec>
@@ -35,6 +36,7 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
     public sealed record IconSpec(int Size, float Fill);
 
     private const int MaxLogoSide = 1024;
+    private const int MaxWordmarkSide = 1600;
     private const int MaxUploadBytes = 5 * 1024 * 1024;
 
     private string Root => options.Value.Path ?? System.IO.Path.Combine(environment.ContentRootPath, "uploads");
@@ -51,33 +53,21 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
     /// </summary>
     public async Task<string?> SaveLogoAsync(IFormFile file, CancellationToken ct)
     {
-        if (file.Length == 0)
-            return "The image is empty.";
-        if (file.Length > MaxUploadBytes)
-            return $"The image is too large; {MaxUploadBytes / (1024 * 1024)} MB at most.";
-
-        byte[] bytes;
-        await using (var stream = file.OpenReadStream())
-        using (var buffer = new MemoryStream((int)file.Length))
-        {
-            await stream.CopyToAsync(buffer, ct);
-            bytes = buffer.ToArray();
-        }
-
-        // A codec only comes back for bytes Skia recognises; anything else is not an image
-        using var codec = SKCodec.Create(new SKMemoryStream(bytes));
-        using var decoded = codec is null ? null : SKBitmap.Decode(codec);
+        var (decoded, error) = await DecodeAsync(file, ct);
         if (decoded is null)
-            return "The file must be a png, jpeg or webp image.";
+            return error;
 
-        using var trimmed = TrimTransparent(decoded);
-        using var logo = FitWithin(trimmed, MaxLogoSide);
+        using (decoded)
+        {
+            using var trimmed = TrimTransparent(decoded);
+            using var logo = FitWithin(trimmed, MaxLogoSide);
 
-        Directory.CreateDirectory(Root);
-        await File.WriteAllBytesAsync(PathOf(LogoFile), EncodePng(logo), ct);
+            Directory.CreateDirectory(Root);
+            await File.WriteAllBytesAsync(PathOf(LogoFile), EncodePng(logo), ct);
 
-        foreach (var (name, spec) in Icons)
-            await File.WriteAllBytesAsync(PathOf(name), RenderIcon(logo, spec, SKColors.White), ct);
+            foreach (var (name, spec) in Icons)
+                await File.WriteAllBytesAsync(PathOf(name), RenderIcon(logo, spec, SKColors.White), ct);
+        }
 
         return null;
     }
@@ -89,6 +79,55 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
             var path = PathOf(name);
             if (File.Exists(path)) File.Delete(path);
         }
+    }
+
+    /// <summary>
+    /// The wordmark: trimmed, kept within <see cref="MaxWordmarkSide"/>, saved
+    /// as PNG. Returns its size, or why the file was refused.
+    /// </summary>
+    public async Task<(int Width, int Height, string? Error)> SaveWordmarkAsync(IFormFile file, CancellationToken ct)
+    {
+        var (decoded, error) = await DecodeAsync(file, ct);
+        if (decoded is null)
+            return (0, 0, error);
+
+        using (decoded)
+        {
+            using var trimmed = TrimTransparent(decoded);
+            using var wordmark = FitWithin(trimmed, MaxWordmarkSide);
+
+            Directory.CreateDirectory(Root);
+            await File.WriteAllBytesAsync(PathOf(WordmarkFile), EncodePng(wordmark), ct);
+            return (wordmark.Width, wordmark.Height, null);
+        }
+    }
+
+    public void DeleteWordmark()
+    {
+        var path = PathOf(WordmarkFile);
+        if (File.Exists(path)) File.Delete(path);
+    }
+
+    /// <summary>The upload as a bitmap, or the one-line reason it is not usable.</summary>
+    private static async Task<(SKBitmap? Bitmap, string? Error)> DecodeAsync(IFormFile file, CancellationToken ct)
+    {
+        if (file.Length == 0)
+            return (null, "The image is empty.");
+        if (file.Length > MaxUploadBytes)
+            return (null, $"The image is too large; {MaxUploadBytes / (1024 * 1024)} MB at most.");
+
+        byte[] bytes;
+        await using (var stream = file.OpenReadStream())
+        using (var buffer = new MemoryStream((int)file.Length))
+        {
+            await stream.CopyToAsync(buffer, ct);
+            bytes = buffer.ToArray();
+        }
+
+        // A codec only comes back for bytes Skia recognises; anything else is not an image
+        using var codec = SKCodec.Create(new SKMemoryStream(bytes));
+        var decoded = codec is null ? null : SKBitmap.Decode(codec);
+        return decoded is null ? (null, "The file must be a png, jpeg or webp image.") : (decoded, null);
     }
 
     /// <summary>The icon to show when there is no logo: a tile in the brand color.</summary>

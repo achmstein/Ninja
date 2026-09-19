@@ -32,7 +32,9 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.OwnsOne(e => e.Name, b => b.ToJson());
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.CustomerUrl).HasMaxLength(200);
+            entity.OwnsOne(e => e.Theme, b => b.ToJson());
             entity.Ignore(e => e.HasLogo);
+            entity.Ignore(e => e.HasWordmark);
             entity.Ignore(e => e.Version);
         });
     }

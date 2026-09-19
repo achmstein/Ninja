@@ -71,9 +71,25 @@ export type TenantResponse = {
     primaryColor: null | string;
     customerUrl: null | string;
     logoUrl: null | string;
+    wordmark: null | TenantWordmark;
+    theme: TenantThemeDto;
     icons: TenantIcons;
     features: TenantFeatures;
     version: number | string;
+};
+
+export type TenantThemeDto = {
+    accent: null | string;
+    background: null | string;
+    foreground: null | string;
+    radius: null | string;
+    font: null | string;
+};
+
+export type TenantWordmark = {
+    url: string;
+    width: number | string;
+    height: number | string;
 };
 
 export type UpdateBranchRequest = {
@@ -102,6 +118,7 @@ export type UpdateTenantRequest = {
     primaryColor: null | string;
     customerUrl: null | string;
     features: TenantFeatures;
+    theme?: null | TenantThemeDto;
 };
 
 export type GetBranchesData = {
@@ -376,6 +393,87 @@ export type UploadTenantLogoResponses = {
 
 export type UploadTenantLogoResponse = UploadTenantLogoResponses[keyof UploadTenantLogoResponses];
 
+export type DeleteTenantWordmarkData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/wordmark';
+};
+
+export type DeleteTenantWordmarkErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type DeleteTenantWordmarkResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type DeleteTenantWordmarkResponse = DeleteTenantWordmarkResponses[keyof DeleteTenantWordmarkResponses];
+
+export type GetTenantWordmarkData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Cache key; any value makes the answer immutable
+         */
+        v?: string;
+    };
+    url: '/api/tenant/wordmark';
+};
+
+export type GetTenantWordmarkErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadTenantWordmarkData = {
+    body: {
+        file: IFormFile;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/tenant/wordmark';
+};
+
+export type UploadTenantWordmarkErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type UploadTenantWordmarkError = UploadTenantWordmarkErrors[keyof UploadTenantWordmarkErrors];
+
+export type UploadTenantWordmarkResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type UploadTenantWordmarkResponse = UploadTenantWordmarkResponses[keyof UploadTenantWordmarkResponses];
+
 export type GetTenantIconData = {
     body?: never;
     path: {
@@ -386,6 +484,10 @@ export type GetTenantIconData = {
          * Cache key; any value makes the answer immutable
          */
         v?: string;
+        /**
+         * The platform's own neutral icon, for the staff apps
+         */
+        platform?: boolean;
     };
     url: '/api/tenant/icons/{name}';
 };

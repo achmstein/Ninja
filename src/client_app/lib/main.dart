@@ -8,10 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/auth/auth_service.dart';
 import 'core/brand/brand_provider.dart';
+import 'core/brand/brand_theme.dart';
+import 'core/brand/tenant_brand.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/current_place_provider.dart';
 import 'core/providers/locale_provider.dart';
@@ -228,6 +231,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final locale = ref.watch(localeProvider);
     final brand = ref.watch(brandProvider);
     final brandName = ref.watch(brandNameProvider);
+    final brandFont = brandFontFamily(brand.theme.font);
 
     if (authState.isAuthenticated && !_wasAuthenticated) {
       _wasAuthenticated = true;
@@ -255,45 +259,45 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: brand.primaryColor ?? AppTheme.primaryColor,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: getFontFamily(locale),
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        tabBarTheme: const TabBarThemeData(
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-        ),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: brand.primaryColor ?? AppTheme.primaryColor,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        fontFamily: getFontFamily(locale),
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        tabBarTheme: const TabBarThemeData(
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-        ),
-      ),
+      theme: _materialTheme(Brightness.light, locale, brand, brandFont),
+      darkTheme: _materialTheme(Brightness.dark, locale, brand, brandFont),
       themeMode: themeState.themeMode == AppThemeMode.light
           ? ThemeMode.light
           : themeState.themeMode == AppThemeMode.dark
               ? ThemeMode.dark
               : ThemeMode.system,
       builder: (context, child) {
-        return FTheme(
-          data: themeState.getForuiTheme(context, locale: locale, brandColor: brand.primaryColor),
-          child: FToaster(
-            child: child ?? const SizedBox.shrink(),
+        return BrandFont(
+          family: brandFont,
+          child: FTheme(
+            data: themeState.getForuiTheme(context, locale: locale, brand: brand),
+            child: FToaster(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },
     );
+  }
+
+  /// Material's theme for the few Material widgets in use: seeded from the
+  /// brand color, set in the locale's family and, for Latin text, the
+  /// tenant's font
+  static ThemeData _materialTheme(Brightness brightness, Locale locale, TenantBrand brand, String? brandFont) {
+    final theme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: brand.primaryColor ?? AppTheme.primaryColor,
+        brightness: brightness,
+      ),
+      useMaterial3: true,
+      fontFamily: getFontFamily(locale),
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      tabBarTheme: const TabBarThemeData(
+        overlayColor: WidgetStatePropertyAll(Colors.transparent),
+      ),
+    );
+    if (!usesBrandFont(locale, brandFont)) return theme;
+    return theme.copyWith(textTheme: GoogleFonts.getTextTheme(brandFont!, theme.textTheme));
   }
 }

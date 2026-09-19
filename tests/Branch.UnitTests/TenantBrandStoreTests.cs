@@ -92,6 +92,23 @@ public sealed class TenantBrandStoreTests
     }
 
     [TestMethod]
+    public async Task Wordmark_is_trimmed_and_its_size_reported()
+    {
+        // A 1000×300 canvas with a 600×120 mark: the wordmark is the mark
+        var (width, height, error) = await _store.SaveWordmarkAsync(PngFile(1000, 300, SKRect.Create(200, 90, 600, 120)), CancellationToken.None);
+
+        Assert.IsNull(error);
+        Assert.AreEqual(600, width);
+        Assert.AreEqual(120, height);
+        using var saved = SKBitmap.Decode(_store.PathOf(TenantBrandStore.WordmarkFile));
+        Assert.AreEqual(600, saved.Width);
+        Assert.AreEqual(120, saved.Height);
+
+        _store.DeleteWordmark();
+        Assert.IsFalse(_store.Exists(TenantBrandStore.WordmarkFile));
+    }
+
+    [TestMethod]
     public void Placeholder_is_a_tile_in_the_brand_color()
     {
         var spec = TenantBrandStore.Icons["icon-192.png"];

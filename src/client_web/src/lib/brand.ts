@@ -80,7 +80,7 @@ export function applyBrand(brand: Brand, language: Language) {
   setLink('icon', brand.icons.favicon, 'image/png')
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
-  applyBrandTheme(brand.primaryColor)
+  applyBrandTheme(brand)
 }
 
 function setLink(rel: string, href: string, type?: string) {

@@ -45,6 +45,21 @@ public static partial class TenantApi
             .WithName("GetTenantLogo")
             .WithSummary("The logo as PNG, transparent margins trimmed");
 
+        api.MapPut("/wordmark", UploadWordmark)
+            .WithName("UploadTenantWordmark")
+            .WithSummary("Replace the wide logo used in headers and on sign-in")
+            .RequireAuthorization("Owner")
+            .DisableAntiforgery();
+
+        api.MapDelete("/wordmark", DeleteWordmark)
+            .WithName("DeleteTenantWordmark")
+            .WithSummary("Remove the wide logo; the mark and the name stand in")
+            .RequireAuthorization("Owner");
+
+        api.MapGet("/wordmark", GetWordmark)
+            .WithName("GetTenantWordmark")
+            .WithSummary("The wide logo as PNG, transparent margins trimmed");
+
         api.MapGet("/icons/{name}", GetIcon)
             .WithName("GetTenantIcon")
             .WithSummary("One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png");
@@ -56,14 +71,15 @@ public static partial class TenantApi
         return app;
     }
 
-    public static async Task<Ok<TenantResponse>> GetTenant(BranchContext context)
+    public static async Task<Ok<TenantResponse>> GetTenant(BranchContext context, IConfiguration configuration)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Tenant.SingletonId);
-        return TypedResults.Ok(TenantResponse.From(tenant));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UpdateTenant(
         BranchContext context,
+        IConfiguration configuration,
         UpdateTenantRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name.En))
@@ -78,10 +94,15 @@ public static partial class TenantApi
             && (!Uri.TryCreate(customerUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The customer URL must be an absolute http(s) URL." });
 
+        var theme = NormalizeTheme(request.Theme, out var themeError);
+        if (themeError is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = themeError });
+
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
         tenant.Name = request.Name;
         tenant.PrimaryColor = string.IsNullOrEmpty(color) ? null : color;
         tenant.CustomerUrl = string.IsNullOrEmpty(customerUrl) ? null : customerUrl;
+        tenant.Theme = theme;
         tenant.RoomsEnabled = request.Features.Rooms;
         tenant.LoyaltyEnabled = request.Features.Loyalty;
         tenant.TabsEnabled = request.Features.Tabs;
@@ -92,11 +113,12 @@ public static partial class TenantApi
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
-        return TypedResults.Ok(TenantResponse.From(tenant));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UploadLogo(
         BranchContext context,
+        IConfiguration configuration,
         TenantBrandStore store,
         IFormFile file,
         CancellationToken ct)
@@ -110,10 +132,10 @@ public static partial class TenantApi
         tenant.LogoVersion = tenant.UpdatedAt.UtcTicks;
         await context.SaveChangesAsync(ct);
 
-        return TypedResults.Ok(TenantResponse.From(tenant));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
-    public static async Task<Ok<TenantResponse>> DeleteLogo(BranchContext context, TenantBrandStore store)
+    public static async Task<Ok<TenantResponse>> DeleteLogo(BranchContext context, IConfiguration configuration, TenantBrandStore store)
     {
         store.DeleteLogo();
 
@@ -122,7 +144,54 @@ public static partial class TenantApi
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
-        return TypedResults.Ok(TenantResponse.From(tenant));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+    }
+
+    public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UploadWordmark(
+        BranchContext context,
+        IConfiguration configuration,
+        TenantBrandStore store,
+        IFormFile file,
+        CancellationToken ct)
+    {
+        var (width, height, error) = await store.SaveWordmarkAsync(file, ct);
+        if (error is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
+
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId, ct);
+        tenant.UpdatedAt = DateTimeOffset.UtcNow;
+        tenant.WordmarkVersion = tenant.UpdatedAt.UtcTicks;
+        tenant.WordmarkWidth = width;
+        tenant.WordmarkHeight = height;
+        await context.SaveChangesAsync(ct);
+
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+    }
+
+    public static async Task<Ok<TenantResponse>> DeleteWordmark(BranchContext context, IConfiguration configuration, TenantBrandStore store)
+    {
+        store.DeleteWordmark();
+
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
+        tenant.WordmarkVersion = 0;
+        tenant.WordmarkWidth = 0;
+        tenant.WordmarkHeight = 0;
+        tenant.UpdatedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync();
+
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+    }
+
+    public static Results<PhysicalFileHttpResult, NotFound> GetWordmark(
+        TenantBrandStore store,
+        HttpContext http,
+        [Description("Cache key; any value makes the answer immutable")] string? v)
+    {
+        if (!store.Exists(TenantBrandStore.WordmarkFile))
+            return TypedResults.NotFound();
+
+        SetCache(http, v);
+        return TypedResults.PhysicalFile(store.PathOf(TenantBrandStore.WordmarkFile), "image/png");
     }
 
     public static Results<PhysicalFileHttpResult, NotFound> GetLogo(
@@ -221,6 +290,49 @@ public static partial class TenantApi
             BackgroundColor: "#ffffff",
             Icons: icons);
 
+    /// <summary>Trimmed, lower-cased, checked against the allowlists; empty strings become null.</summary>
+    private static TenantTheme NormalizeTheme(TenantThemeDto? dto, out string? error)
+    {
+        error = null;
+        var theme = new TenantTheme();
+        if (dto is null) return theme;
+
+        static string? Color(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToLowerInvariant();
+
+        theme.Accent = Color(dto.Accent);
+        theme.Background = Color(dto.Background);
+        theme.Foreground = Color(dto.Foreground);
+        foreach (var (label, value) in new[] { ("accent", theme.Accent), ("background", theme.Background), ("foreground", theme.Foreground) })
+        {
+            if (value is not null && !HexColor().IsMatch(value))
+            {
+                error = $"The {label} color must be #rrggbb.";
+                return theme;
+            }
+        }
+
+        theme.Radius = string.IsNullOrWhiteSpace(dto.Radius) ? null : dto.Radius.Trim().ToLowerInvariant();
+        if (theme.Radius is not null && !TenantTheme.Radii.Contains(theme.Radius))
+        {
+            error = $"The radius must be one of {string.Join(", ", TenantTheme.Radii)}.";
+            return theme;
+        }
+
+        theme.Font = string.IsNullOrWhiteSpace(dto.Font) ? null : dto.Font.Trim();
+        if (theme.Font is not null)
+        {
+            var match = TenantTheme.Fonts.FirstOrDefault(f => string.Equals(f, theme.Font, StringComparison.OrdinalIgnoreCase));
+            if (match is null)
+            {
+                error = $"The font must be one of {string.Join(", ", TenantTheme.Fonts)}.";
+                return theme;
+            }
+            theme.Font = match;
+        }
+
+        return theme;
+    }
+
     private static void SetCache(HttpContext http, string? v)
         => http.Response.Headers.CacheControl = string.IsNullOrEmpty(v) ? "no-cache" : OneYear;
 
@@ -232,23 +344,41 @@ public record TenantFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory
 
 public record TenantIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
+/// <param name="Url">Versioned, immutable.</param>
+/// <param name="Width">Pixels after trimming, so a surface can reserve the box before the image loads.</param>
+public record TenantWordmark(string Url, int Width, int Height);
+
+public record TenantThemeDto(string? Accent, string? Background, string? Foreground, string? Radius, string? Font)
+{
+    public static TenantThemeDto From(TenantTheme t) => new(t.Accent, t.Background, t.Foreground, t.Radius, t.Font);
+}
+
+/// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
+public record TenantAuth(string Authority);
+
 public record TenantResponse(
     LocalizedText Name,
     string? PrimaryColor,
     string? CustomerUrl,
+    TenantAuth? Auth,
     string? LogoUrl,
+    TenantWordmark? Wordmark,
+    TenantThemeDto Theme,
     TenantIcons Icons,
     TenantFeatures Features,
     long Version)
 {
-    public static TenantResponse From(Tenant t)
+    public static TenantResponse From(Tenant t, string? authUrl)
     {
         var v = t.Version;
         return new(
             t.Name,
             t.PrimaryColor,
             t.CustomerUrl,
+            string.IsNullOrWhiteSpace(authUrl) ? null : new TenantAuth(authUrl.TrimEnd('/')),
             t.HasLogo ? $"/api/tenant/logo?v={t.LogoVersion}" : null,
+            t.HasWordmark ? new($"/api/tenant/wordmark?v={t.WordmarkVersion}", t.WordmarkWidth, t.WordmarkHeight) : null,
+            TenantThemeDto.From(t.Theme),
             new(
                 $"/api/tenant/icons/icon-192.png?v={v}",
                 $"/api/tenant/icons/icon-512.png?v={v}",
@@ -260,7 +390,7 @@ public record TenantResponse(
     }
 }
 
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features);
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

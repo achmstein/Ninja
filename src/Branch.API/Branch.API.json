@@ -389,6 +389,114 @@
         }
       }
     },
+    "/api/tenant/wordmark": {
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Replace the wide logo used in headers and on sign-in",
+        "operationId": "UploadTenantWordmark",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Remove the wide logo; the mark and the name stand in",
+        "operationId": "DeleteTenantWordmark",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The wide logo as PNG, transparent margins trimmed",
+        "operationId": "GetTenantWordmark",
+        "parameters": [
+          {
+            "name": "v",
+            "in": "query",
+            "description": "Cache key; any value makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/tenant/icons/{name}": {
       "get": {
         "tags": [
@@ -761,6 +869,8 @@
           "primaryColor",
           "customerUrl",
           "logoUrl",
+          "wordmark",
+          "theme",
           "icons",
           "features",
           "version"
@@ -788,6 +898,19 @@
               "string"
             ]
           },
+          "wordmark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
+          },
+          "theme": {
+            "$ref": "#/components/schemas/TenantThemeDto"
+          },
           "icons": {
             "$ref": "#/components/schemas/TenantIcons"
           },
@@ -801,6 +924,77 @@
               "string"
             ],
             "format": "int64"
+          }
+        }
+      },
+      "TenantThemeDto": {
+        "required": [
+          "accent",
+          "background",
+          "foreground",
+          "radius",
+          "font"
+        ],
+        "type": "object",
+        "properties": {
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "background": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "foreground": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "radius": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "font": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TenantWordmark": {
+        "required": [
+          "url",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -941,6 +1135,16 @@
           },
           "features": {
             "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantThemeDto"
+              }
+            ]
           }
         }
       }

@@ -31,3 +31,42 @@ export function BrandMark({ className }: { className?: string }) {
     </span>
   )
 }
+
+/**
+ * The brand as a header shows it: the wide logo when the tenant uploaded
+ * one (its box reserved from the stored size, so nothing jumps), otherwise
+ * the mark beside the name. `className` sizes the wordmark by height.
+ */
+export function BrandWordmark({
+  className,
+  markClassName,
+  textClassName,
+}: {
+  className?: string
+  markClassName?: string
+  textClassName?: string
+}) {
+  const brand = useBrand()
+  const name = useBrandName()
+
+  if (brand?.wordmark) {
+    const { url, width, height } = brand.wordmark
+    return (
+      <img
+        src={url}
+        alt={name}
+        style={{ aspectRatio: `${width} / ${height}` }}
+        className={cn('block h-7 w-auto max-w-full object-contain', className)}
+      />
+    )
+  }
+
+  return (
+    <>
+      <BrandMark className={cn('size-7 text-sm', markClassName)} />
+      <span className={cn('truncate text-lg font-semibold tracking-tight', textClassName)}>
+        {name}
+      </span>
+    </>
+  )
+}

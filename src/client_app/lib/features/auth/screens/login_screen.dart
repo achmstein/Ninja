@@ -4,7 +4,6 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_mark.dart';
-import '../../../core/brand/brand_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -118,13 +117,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Brand: the mark, then the name
-                const Center(child: BrandMark(size: 120)),
-                const SizedBox(height: 12),
+                // Brand: the wordmark, or the mark then the name
                 Center(
-                  child: AppText(
-                    ref.watch(brandNameProvider),
-                    style: TextStyle(
+                  child: BrandWordmark(
+                    height: 120,
+                    nameStyle: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: colors.foreground,

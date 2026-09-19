@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantLogoData, DeleteTenantLogoErrors, DeleteTenantLogoResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantLogoData, GetTenantLogoErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantLogoData, UploadTenantLogoErrors, UploadTenantLogoResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantLogoData, DeleteTenantLogoErrors, DeleteTenantLogoResponses, DeleteTenantWordmarkData, DeleteTenantWordmarkErrors, DeleteTenantWordmarkResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantLogoData, GetTenantLogoErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, GetTenantWordmarkData, GetTenantWordmarkErrors, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantLogoData, UploadTenantLogoErrors, UploadTenantLogoResponses, UploadTenantWordmarkData, UploadTenantWordmarkErrors, UploadTenantWordmarkResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -118,6 +118,34 @@ export const uploadTenantLogo = <ThrowOnError extends boolean = false>(options: 
     ...formDataBodySerializer,
     responseType: 'json',
     url: '/api/tenant/logo',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Remove the wide logo; the mark and the name stand in
+ */
+export const deleteTenantWordmark = <ThrowOnError extends boolean = false>(options?: Options<DeleteTenantWordmarkData, ThrowOnError>): RequestResult<DeleteTenantWordmarkResponses, DeleteTenantWordmarkErrors, ThrowOnError> => (options?.client ?? client).delete<DeleteTenantWordmarkResponses, DeleteTenantWordmarkErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/wordmark',
+    ...options
+});
+
+/**
+ * The wide logo as PNG, transparent margins trimmed
+ */
+export const getTenantWordmark = <ThrowOnError extends boolean = false>(options?: Options<GetTenantWordmarkData, ThrowOnError>): RequestResult<unknown, GetTenantWordmarkErrors, ThrowOnError> => (options?.client ?? client).get<unknown, GetTenantWordmarkErrors, ThrowOnError>({ url: '/api/tenant/wordmark', ...options });
+
+/**
+ * Replace the wide logo used in headers and on sign-in
+ */
+export const uploadTenantWordmark = <ThrowOnError extends boolean = false>(options: Options<UploadTenantWordmarkData, ThrowOnError>): RequestResult<UploadTenantWordmarkResponses, UploadTenantWordmarkErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantWordmarkResponses, UploadTenantWordmarkErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    responseType: 'json',
+    url: '/api/tenant/wordmark',
     ...options,
     headers: {
         'Content-Type': null,

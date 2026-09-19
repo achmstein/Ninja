@@ -2,7 +2,7 @@
 
 **Goal:** sell what Chillax runs on. A café or restaurant subscribes, gets a branded self-ordering menu (web, and native apps on the higher plan) and runs the rest — till, kitchen, stock, money, staff — under the Ninja name. Setting a new client up for a demo is one command plus a photo of their menu.
 
-**Status:** decided 2026-09-19 (four decisions below, all agreed). Phase 1 done (`09949837`); Phase 2 built 2026-09-19.
+**Status:** decided 2026-09-19 (four decisions below, all agreed). Phase 1 `09949837`, Phase 2 `2fc5ae38`, Phase 2.5 built 2026-09-19; the control plane (Phases 3 + 6 together) in progress.
 
 **Repo:** this repository (`NinjaPlatform`) is a copy of `achmstein/Chillax` at `c43fee71`, detached from that remote. It is *not* the older `achmstein/Ninja` repository (a food-delivery experiment); the two share nothing and must not be merged. Chillax keeps running from its own repo until Phase 3 moves it onto a Ninja stamp; after that the Chillax repo is history.
 
@@ -52,6 +52,12 @@ Deliberately **not** renamed here, because they are tenant one's data and move i
 - Flutter: `lib/core/brand/` in each app (a `TenantBrand` model, `initializeBrand()` from SharedPreferences before `runApp`, a Riverpod notifier that fetches `GET /api/tenant` and refreshes on resume). client_app wears the brand (title, sign-in, About, Forui primary color, receipt mirror) and gates rooms/loyalty/tabs; pos_app prints the café's name and logo (downloaded and cached under the documents dir, `path_provider`) and gates the same things as pos_web; kds_app is Ninja. App ids, launcher icons and splash stay for Phase 5; there is no Ninja logo asset yet, the N tile stands in.
 - Switches are enforced on the surfaces only: with one stack per tenant the owner is gating their own screens, and the services need no tenant knowledge.
 - Still Chillax's in the build, on purpose: the `chillax` realm and its login theme ("Sign in to Chillax" — Phase 3 templates the realm and passes the display name), the `*.chillax.site` hosts and the marketing site under `deploy/website`, `com.chillax.*` ids and the native folders (Phase 5).
+
+### Phase 2.5 — The customer app's theme *(built 2026-09-19)*
+- `Tenant` gains a **wordmark** (the wide or tall logo, trimmed, capped at 1600 px, stored with its size so a box is reserved before it loads; `PUT|DELETE|GET /api/tenant/wordmark`) and a **theme** of five optional tokens: `accent`, `background`, `foreground` (#rrggbb), `radius` (none|sm|md|lg|xl), `font` (an allowlist of ten Google families; Arabic always falls back to Cairo). Validated server-side; empty means the platform default.
+- `brand-theme.ts` (one copy per app) turns the tokens into CSS variables: primary → `--primary/--primary-foreground/--ring`; accent → `--secondary` and a tint for `--accent`; background/foreground → the page, cards and popovers in the light scheme only (dark stays neutral); radius → `--radius`; font → `--font-sans` plus a Google Fonts `<link>` loaded on demand. The admin's Brand page is now *Brand & theme*: two image slots, four colors, corners, font, and a live preview of the customer home painted with the same token math (`brandTokens()`).
+- client_web shows the wordmark in the header, top bar, About and receipt (`BrandWordmark`), the mark and name when there is none. client_app mirrors all of it: `TenantBrand` carries wordmark + theme, `brandedColors()` maps the tokens onto Forui (secondary, background, foreground, `FLerpBorderRadius`), the font goes through `google_fonts` for Latin text, `BrandWordmark` at sign-in, register, splash, About and the receipt mirror. Staff apps ignore the theme.
+- Not done: a Ninja logo asset (the N tile stands in), the splash background for a dark-ink wordmark.
 
 ### Phase 3 — Provisioning
 - `deploy/` becomes templates: `docker-compose.tenant.yml` (services only, `-p ninja-<slug>`, env file per tenant), shared `docker-compose.infra.yml` (Postgres, Keycloak, RabbitMQ, Redis, Caddy), `realm.template.json` with `{slug}`, `{hosts}`; Caddy with `*.<platform-domain>` (DNS challenge) routing by host label, on-demand TLS for custom domains.

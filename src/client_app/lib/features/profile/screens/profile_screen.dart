@@ -337,11 +337,9 @@ class _AboutSheet extends ConsumerWidget {
               child: Column(
                 children: [
                   // Brand
-                  const BrandMark(size: 96),
-                  const SizedBox(height: 12),
-                  AppText(
-                    ref.watch(brandNameProvider),
-                    style: TextStyle(
+                  BrandWordmark(
+                    height: 96,
+                    nameStyle: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: colors.foreground,

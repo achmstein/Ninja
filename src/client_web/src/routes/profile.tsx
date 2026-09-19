@@ -43,8 +43,8 @@ import { Card } from '@/components/ui/card'
 import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
 import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
-import { useBrandName, useFeatures } from '@/lib/brand'
-import { BrandMark } from '@/components/brand-mark'
+import { useBrand, useBrandName, useFeatures } from '@/lib/brand'
+import { BrandMark, BrandWordmark } from '@/components/brand-mark'
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
@@ -277,6 +277,7 @@ function AboutDialog({
 }) {
   const t = useT()
   const brandName = useBrandName()
+  const brand = useBrand()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -284,8 +285,14 @@ function AboutDialog({
           <DialogTitle>{t('about')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center gap-3 pb-2 text-center'>
-          <BrandMark className='size-20 rounded-2xl text-3xl' />
-          <div className='text-lg font-bold'>{brandName}</div>
+          {brand?.wordmark ? (
+            <BrandWordmark className='h-14 max-w-[70vw]' />
+          ) : (
+            <>
+              <BrandMark className='size-20 rounded-2xl text-3xl' />
+              <div className='text-lg font-bold'>{brandName}</div>
+            </>
+          )}
           <Badge variant='secondary'>
             {t('version', { version: __APP_VERSION__ })}
           </Badge>

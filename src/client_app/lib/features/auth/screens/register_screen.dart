@@ -138,7 +138,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Brand
-                const Center(child: BrandMark(size: 96)),
+                const Center(child: BrandWordmark(height: 96)),
                 const SizedBox(height: 24),
 
                 // Title

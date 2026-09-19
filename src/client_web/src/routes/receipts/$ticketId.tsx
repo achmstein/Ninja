@@ -130,8 +130,15 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
     // theme, the wordmark on top, 72mm wide
     <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
       <div className='flex flex-col items-center text-center'>
-        {brand?.logoUrl ? (
-          <img src={brand.logoUrl} alt='' className='mb-2 block h-auto w-36' />
+        {brand?.wordmark ? (
+          <img
+            src={brand.wordmark.url}
+            alt=''
+            style={{ aspectRatio: `${brand.wordmark.width} / ${brand.wordmark.height}` }}
+            className='mb-2 block h-auto w-40 max-h-16 object-contain'
+          />
+        ) : brand?.logoUrl ? (
+          <img src={brand.logoUrl} alt='' className='mb-2 block h-auto w-24' />
         ) : (
           <div className='mb-2 text-lg font-bold tracking-tight'>{brandName}</div>
         )}
