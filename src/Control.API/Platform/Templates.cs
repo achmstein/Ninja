@@ -230,9 +230,6 @@ public static partial class Templates
         yield return ("/api/orders/{*any}", "ordering", v1, none);
         yield return ("/api/places/{*any}", "spaces", v1, none);
         yield return ("/api/stays/{*any}", "spaces", v1, none);
-        yield return ("/api/rooms/{*any}", "spaces", v1, none);
-        yield return ("/api/sessions/{*any}", "spaces", v1, none);
-        yield return ("/api/tables/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);

@@ -870,9 +870,7 @@ function OrderTile({ order }: { order: OrderSummary }) {
   )
   const discount = Number(order.loyaltyDiscount ?? 0)
   const promoDiscount = Number(order.promoDiscount ?? 0)
-  // LEGACY(places): roomName is the fallback for orders from before the
-  // Places remodel — remove when Ordering stops filling the old room fields.
-  const placeName = localized(order.placeName ?? order.roomName)
+  const placeName = localized(order.placeName)
 
   return (
     <div className='flex items-start gap-2 py-3'>

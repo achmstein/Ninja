@@ -202,7 +202,7 @@ public static partial class OrdersApi
             // Ordering without saying where to bring it is ordering ahead, and
             // that is for account holders — there is nobody to hand a guest's
             // order to and nothing tying it to a visit
-            if (request.PlaceId is null && request.TableId is null && request.RoomName is null)
+            if (request.PlaceId is null)
             {
                 return TypedResults.BadRequest("A table or room is required to order as a guest.");
             }
@@ -230,12 +230,9 @@ public static partial class OrdersApi
             }
         }
 
-        // The place behind the order, from Spaces' projection: a client on
-        // the new vocabulary names it; an older one names a room or a table
-        // id and the place is looked up. A place taken out of service
-        // refuses the order — nobody would bring it.
-        // LEGACY(places): the RoomId/TableId arguments resolve an old room/table id — remove when the printed room/table stickers are reprinted with /p/{id}.
-        var place = await services.Places.ResolveAsync(request.PlaceId, request.RoomId, request.TableId);
+        // The place behind the order, from Spaces' projection. A place taken
+        // out of service refuses the order — nobody would bring it.
+        var place = request.PlaceId is int placeId ? await services.Places.FindAsync(placeId) : null;
         if (place is { IsActive: false })
         {
             services.Logger.LogWarning("Order rejected - place {PlaceId} ({Name}) is not taking customers", place.PlaceId, place.Name.En);
@@ -252,9 +249,9 @@ public static partial class OrdersApi
                 : services.IdentityService.GetUserName() ?? "Customer";
 
         services.Logger.LogInformation(
-            "Creating order for {Customer}, Room: {RoomName}",
+            "Creating order for {Customer}, Place: {PlaceId}",
             isGuest ? "a guest" : $"user {signedInUserId}",
-            request.RoomName);
+            request.PlaceId);
 
         var branchId = httpContext.GetRequiredBranchId();
 
@@ -275,20 +272,17 @@ public static partial class OrdersApi
                 isGuest ? string.Empty : signedInUserId!,
                 userName,
                 branchId,
-                request.RoomName,
                 request.CustomerNote,
                 // Loyalty is account-only; the validator rejects a guest that
                 // tries to redeem, rather than silently discounting the order.
                 // The discount itself is computed server-side from the points.
                 request.PointsToRedeem,
-                request.TableId,
-                request.TableName,
                 guestId,
                 isGuest ? request.GuestName : null,
                 isGuest ? request.GuestPhone : null,
                 sessionId: request.SessionId,
-                roomId: request.RoomId,
-                placeId: request.PlaceId ?? place?.PlaceId,
+                placeId: request.PlaceId,
+                // The projection fills in what the client left out
                 placeKind: request.PlaceKind ?? place?.Kind,
                 placeName: request.PlaceName ?? place?.Name,
                 promoCode: request.PromoCode);
@@ -361,10 +355,9 @@ public static partial class OrdersApi
             services.IdentityService.GetUserIdentity(),
             attachCustomer ? request.CustomerUserId : "walk-in");
 
-        // The till may name a place by either vocabulary; never gated — the
+        // The place the till named, from Spaces' projection; never gated — the
         // cashier standing there knows whether the place takes customers
-        // LEGACY(places): the TableId argument resolves an old table id — remove when the printed room/table stickers are reprinted with /p/{id}.
-        var posPlace = await services.Places.ResolveAsync(request.PlaceId, null, request.TableId);
+        var posPlace = request.PlaceId is int posPlaceId ? await services.Places.FindAsync(posPlaceId) : null;
 
         using (services.Logger.BeginScope(new List<KeyValuePair<string, object>> { new("IdentifiedCommandId", requestId) }))
         {
@@ -373,17 +366,15 @@ public static partial class OrdersApi
                 attachCustomer ? request.CustomerUserId! : string.Empty,
                 attachCustomer ? request.CustomerUserName! : string.Empty,
                 branchId,
-                request.RoomName,
                 request.CustomerNote,
                 request.PointsToRedeem,
-                request.TableId,
-                request.TableName,
                 guestName: request.CustomerName,
                 source: OrderSource.Pos,
                 ticketId: request.TicketId,
                 placedAt: request.PlacedAt,
                 replay: request.Replay,
-                placeId: request.PlaceId ?? posPlace?.PlaceId,
+                placeId: request.PlaceId,
+                // The projection fills in what the till left out
                 placeKind: request.PlaceKind ?? posPlace?.Kind,
                 placeName: request.PlaceName ?? posPlace?.Name);
 
@@ -862,25 +853,17 @@ public static partial class OrdersApi
 /// <param name="GuestName">Required when ordering without an account.</param>
 /// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
 /// <param name="SessionId">The active stay the order belongs to, when ordering from a timed place.</param>
-/// <param name="RoomName">LEGACY(places): old room name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="TableId">LEGACY(places): old table id field beside <paramref name="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="TableName">LEGACY(places): old table name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="RoomId">LEGACY(places): the room behind <paramref name="SessionId"/> (older clients; newer ones send <paramref name="PlaceId"/>) — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="PlaceId">The Spaces place the order goes to. Newer clients send this instead of a room or table id.</param>
+/// <param name="PlaceId">The Spaces place the order goes to; null for an order-ahead.</param>
 public record CreateOrderRequest(
     string UserId,
     string UserName,
-    LocalizedText? RoomName,
     string? CustomerNote,
     int PointsToRedeem,
     double LoyaltyDiscount,
     List<BasketItem> Items,
-    int? TableId = null,
-    LocalizedText? TableName = null,
     string? GuestName = null,
     string? GuestPhone = null,
     int? SessionId = null,
-    int? RoomId = null,
     int? PlaceId = null,
     string? PlaceKind = null,
     LocalizedText? PlaceName = null,
@@ -894,15 +877,9 @@ public record CreateOrderRequest(
 /// </summary>
 /// <param name="CustomerUserId">Attach the sale to a customer account (optional).</param>
 /// <param name="CustomerUserName">Display name for <paramref name="CustomerUserId"/>.</param>
-/// <param name="TableId">LEGACY(places): old table id field beside <paramref name="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="TableName">LEGACY(places): old table name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
-/// <param name="RoomName">LEGACY(places): old room name field beside <paramref name="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.</param>
 public record PosOrderRequest(
     List<BasketItem> Items,
     string? CustomerNote = null,
-    int? TableId = null,
-    LocalizedText? TableName = null,
-    LocalizedText? RoomName = null,
     string? CustomerUserId = null,
     string? CustomerUserName = null,
     int PointsToRedeem = 0,
@@ -913,7 +890,7 @@ public record PosOrderRequest(
     /// up while offline. Dates the order then instead of now.
     /// </summary>
     DateTime? PlacedAt = null,
-    /// <summary>The Spaces place the order goes to; newer tills send this instead of a table id.</summary>
+    /// <summary>The Spaces place the order goes to; null for a counter sale.</summary>
     int? PlaceId = null,
     string? PlaceKind = null,
     LocalizedText? PlaceName = null,

@@ -16,11 +16,11 @@ public static class Housekeeping
         var cashier = day.Cashier;
         var owner = day.Owner;
 
-        // Sessions first: a room ticket cannot be voided or settled while its clock runs.
-        foreach (var session in await cashier.ActiveSessionsAsync(ct))
+        // Stays first: a room ticket cannot be voided or settled while its clock runs.
+        foreach (var stay in await cashier.OpenStaysAsync(ct))
         {
-            try { await cashier.EndSessionAsync(session.Id, ct); }
-            catch (ApiException) { await cashier.CancelSessionAsync(session.Id, ct); }
+            try { await cashier.EndStayAsync(stay.Id, ct); }
+            catch (ApiException) { await cashier.CancelStayAsync(stay.Id, ct); }
         }
 
         foreach (var order in await cashier.PendingAsync(ct))

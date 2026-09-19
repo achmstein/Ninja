@@ -22,9 +22,7 @@ public class SessionMemberJoinedIntegrationEventHandler(
         await hubContext.Clients.Group($"user:{@event.MemberUserId}").SendAsync("RoomStatusChanged", new
         {
             type = "member_joined",
-            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-            roomId = @event.RoomId,
-            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeId = @event.PlaceId,
             placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
@@ -51,20 +49,18 @@ public class SessionMemberJoinedIntegrationEventHandler(
         {
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
-            var roomName = @event.RoomName.GetText(lang);
-
             var data = new Dictionary<string, string>
             {
                 { "type", "session_started" },
                 { "sessionId", @event.ReservationId.ToString() },
-                { "roomId", @event.RoomId.ToString() },
-                { "roomName", roomName },
-                { "roomNameEn", @event.RoomName.GetText("en") },
-                { "roomNameAr", @event.RoomName.GetText("ar") ?? @event.RoomName.GetText("en") },
+                { "placeId", @event.PlaceId.ToString() },
+                { "placeKind", @event.PlaceKind },
+                { "placeName", @event.PlaceName.GetText(lang) },
+                { "placeNameEn", @event.PlaceName.GetText("en") },
+                { "placeNameAr", @event.PlaceName.GetText("ar") },
                 { "startTimeMs", startTimeMs },
                 { "locale", lang },
-                // LEGACY(places): the option's English name; the customer app will read an option code — remove when every till and customer app is on /api/places and /api/stays.
-                { "playerMode", @event.PlayerMode ?? "Single" }
+                { "optionCode", @event.OptionCode ?? string.Empty }
             };
 
             var result = await fcmService.SendBatchDataMessagesAsync(tokens, data);

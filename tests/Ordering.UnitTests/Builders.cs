@@ -17,18 +17,10 @@ public class OrderBuilder
             "userId",
             "fakeName",
             branchId: 1,
-            roomName: "Room 1",
-            customerNote: "Test note");
-    }
-
-    public OrderBuilder(string? roomName = null, string? customerNote = null)
-    {
-        order = new Order(
-            "userId",
-            "fakeName",
-            branchId: 1,
-            roomName: roomName,
-            customerNote: customerNote);
+            customerNote: "Test note",
+            placeId: 1,
+            placeKind: "Room",
+            placeName: "Room 1");
     }
 
     public OrderBuilder AddOne(

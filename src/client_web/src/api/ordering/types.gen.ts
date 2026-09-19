@@ -54,17 +54,13 @@ export type CreateOrderDraftCommand = {
 export type CreateOrderRequest = {
     userId: string;
     userName: string;
-    roomName: null | LocalizedText;
     customerNote: null | string;
     pointsToRedeem: number | string;
     loyaltyDiscount: number | string;
     items: Array<BasketItem>;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     guestName?: null | string;
     guestPhone?: null | string;
     sessionId?: null | number | string;
-    roomId?: null | number | string;
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
@@ -80,8 +76,6 @@ export type KitchenOrder = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
-    tableName?: null | LocalizedText;
     customerName?: null | string;
     customerNote?: null | string;
     items?: Array<KitchenOrderItem>;
@@ -107,12 +101,8 @@ export type Order = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     sessionId?: null | number | string;
-    roomId?: null | number | string;
     source?: string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     customerNote?: null | string;
     guestName?: null | string;
     guestPhone?: null | string;
@@ -198,11 +188,8 @@ export type OrderSummary = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     userName?: null | string;
     userId?: null | string;
     guestPhone?: null | string;
@@ -226,9 +213,6 @@ export type PaginatedResultOfOrderSummary = {
 export type PosOrderRequest = {
     items: Array<BasketItem>;
     customerNote?: null | string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     customerUserId?: null | string;
     customerUserName?: null | string;
     pointsToRedeem?: number | string;

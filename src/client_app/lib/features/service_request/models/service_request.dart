@@ -80,11 +80,11 @@ class CreateServiceRequest {
 class ServiceRequestResponse {
   final int id;
   final String userName;
-  /// LEGACY(places): reads the older roomId/roomName fields of the response
-  /// — remove when Ordering and Notification stop reading the old room/table
-  /// fields.
-  final int? roomId;
-  final LocalizedText roomName;
+
+  /// The place the request came from, as the server resolved it
+  final int? placeId;
+  final PlaceKind? placeKind;
+  final LocalizedText? placeName;
   final ServiceRequestType requestType;
   final ServiceRequestStatus status;
   final DateTime createdAt;
@@ -92,8 +92,9 @@ class ServiceRequestResponse {
   ServiceRequestResponse({
     required this.id,
     required this.userName,
-    required this.roomId,
-    required this.roomName,
+    this.placeId,
+    this.placeKind,
+    this.placeName,
     required this.requestType,
     required this.status,
     required this.createdAt,
@@ -103,9 +104,9 @@ class ServiceRequestResponse {
     return ServiceRequestResponse(
       id: json['id'] as int,
       userName: json['userName'] as String,
-      // LEGACY(places): parses the older roomId/roomName fields — remove when Ordering and Notification stop reading the old room/table fields.
-      roomId: json['roomId'] as int?,
-      roomName: LocalizedText.parse(json['roomName']),
+      placeId: json['placeId'] as int?,
+      placeKind: PlaceKind.fromWireName(json['placeKind'] as String?),
+      placeName: LocalizedText.parseNullable(json['placeName']),
       requestType: ServiceRequestType.fromValue(json['requestType'] as int)!,
       status: ServiceRequestStatus.values.firstWhere(
         (e) => e.value == json['status'],

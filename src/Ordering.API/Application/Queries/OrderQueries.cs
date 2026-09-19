@@ -27,12 +27,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             PlaceId = order.PlaceId,
             PlaceKind = order.PlaceKind,
             PlaceName = order.PlaceName,
-            RoomName = order.RoomName,
             SessionId = order.SessionId,
-            RoomId = order.RoomId,
             Source = order.Source.ToString(),
-            TableId = order.TableId,
-            TableName = order.TableName,
             CustomerNote = order.CustomerNote,
             // Only an admin or the customer themselves can read an order, so
             // the guest's contact details are safe to carry here — and staff
@@ -133,10 +129,6 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
                 SessionId = o.SessionId,
-                // LEGACY(places): the old room and table names beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-                RoomName = o.RoomName,
-                TableId = o.TableId,
-                TableName = o.TableName,
                 RatingValue = o.Rating != null ? (int?)o.Rating.RatingValue : null
             })
             .ToListAsync();
@@ -173,8 +165,6 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
-                RoomName = o.RoomName,
-                TableName = o.TableName,
                 CustomerName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 CustomerNote = o.CustomerNote,
                 Items = o.OrderItems.Select(oi => new KitchenOrderItem
@@ -217,11 +207,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
-                RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
-                TableId = o.TableId,
-                TableName = o.TableName,
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.
@@ -412,11 +399,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
-                RoomName = o.RoomName,
                 SessionId = o.SessionId,
                 Source = o.Source.ToString(),
-                TableId = o.TableId,
-                TableName = o.TableName,
                 // A guest has no Buyer row, so the name they left at checkout
                 // is what staff see; UserId stays null, which is what tells
                 // the admin board there is no customer profile to open.

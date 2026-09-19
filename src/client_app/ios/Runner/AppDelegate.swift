@@ -79,8 +79,8 @@ import UserNotifications
 
     switch actionIdentifier {
     case UNNotificationDefaultActionIdentifier:
-      // User tapped the notification itself — navigate to rooms
-      SessionNotificationHelper.shared.navigateTo(route: "/rooms")
+      // User tapped the notification itself — navigate to places
+      SessionNotificationHelper.shared.navigateTo(route: "/places")
 
     case UNNotificationDismissActionIdentifier:
       // User dismissed the notification

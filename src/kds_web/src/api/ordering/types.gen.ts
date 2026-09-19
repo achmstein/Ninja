@@ -34,6 +34,14 @@ export type CancelOrderCommand = {
     orderNumber: number | string;
 };
 
+export type ClaimGuestOrdersRequest = {
+    guestId: string;
+};
+
+export type ClaimGuestOrdersResponse = {
+    claimed: number | string;
+};
+
 export type ConfirmOrderCommand = {
     orderNumber: number | string;
 };
@@ -46,20 +54,17 @@ export type CreateOrderDraftCommand = {
 export type CreateOrderRequest = {
     userId: string;
     userName: string;
-    roomName: null | LocalizedText;
     customerNote: null | string;
     pointsToRedeem: number | string;
     loyaltyDiscount: number | string;
     items: Array<BasketItem>;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     guestName?: null | string;
     guestPhone?: null | string;
     sessionId?: null | number | string;
-    roomId?: null | number | string;
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
+    promoCode?: null | string;
 };
 
 export type KitchenOrder = {
@@ -71,8 +76,6 @@ export type KitchenOrder = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
-    tableName?: null | LocalizedText;
     customerName?: null | string;
     customerNote?: null | string;
     items?: Array<KitchenOrderItem>;
@@ -98,12 +101,8 @@ export type Order = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     sessionId?: null | number | string;
-    roomId?: null | number | string;
     source?: string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     customerNote?: null | string;
     guestName?: null | string;
     guestPhone?: null | string;
@@ -111,6 +110,8 @@ export type Order = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    promoCode?: null | string;
+    promoDiscount?: number | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -176,6 +177,8 @@ export type OrderSummary = {
     total?: number | string;
     pointsToRedeem?: number | string;
     loyaltyDiscount?: number | string;
+    promoCode?: null | string;
+    promoDiscount?: number | string;
     paidAt?: null | string;
     receiptNumber?: null | number | string;
     paidWith?: null | string;
@@ -185,17 +188,16 @@ export type OrderSummary = {
     placeId?: null | number | string;
     placeKind?: null | string;
     placeName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     sessionId?: null | number | string;
     source?: string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     userName?: null | string;
     userId?: null | string;
     guestPhone?: null | string;
+    guestOrdersBefore?: null | number | string;
     ratingValue?: null | number | string;
     customerNote?: null | string;
     items?: null | Array<Orderitem>;
+    isMine?: boolean;
 };
 
 export type PaginatedResultOfOrderSummary = {
@@ -211,9 +213,6 @@ export type PaginatedResultOfOrderSummary = {
 export type PosOrderRequest = {
     items: Array<BasketItem>;
     customerNote?: null | string;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
-    roomName?: null | LocalizedText;
     customerUserId?: null | string;
     customerUserName?: null | string;
     pointsToRedeem?: number | string;
@@ -433,6 +432,53 @@ export type CancelOrderResponses = {
     200: unknown;
 };
 
+export type RejectGuestOrderData = {
+    body?: never;
+    headers: {
+        'x-requestid': string;
+    };
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/reject-guest';
+};
+
+export type RejectGuestOrderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type RejectGuestOrderError = RejectGuestOrderErrors[keyof RejectGuestOrderErrors];
+
+export type RejectGuestOrderResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RejectGuestOrderResponse = RejectGuestOrderResponses[keyof RejectGuestOrderResponses];
+
 export type AssignOrderCustomerData = {
     body: AssignOrderCustomerRequest;
     headers: {
@@ -479,6 +525,44 @@ export type AssignOrderCustomerResponses = {
 };
 
 export type AssignOrderCustomerResponse = AssignOrderCustomerResponses[keyof AssignOrderCustomerResponses];
+
+export type ClaimGuestOrdersData = {
+    body: ClaimGuestOrdersRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/claim-guest';
+};
+
+export type ClaimGuestOrdersErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ClaimGuestOrdersError = ClaimGuestOrdersErrors[keyof ClaimGuestOrdersErrors];
+
+export type ClaimGuestOrdersResponses = {
+    /**
+     * OK
+     */
+    200: ClaimGuestOrdersResponse;
+};
+
+export type ClaimGuestOrdersResponse2 = ClaimGuestOrdersResponses[keyof ClaimGuestOrdersResponses];
 
 export type DeleteOrderData = {
     body?: never;
@@ -592,6 +676,40 @@ export type RateOrderResponses = {
      */
     200: unknown;
 };
+
+export type GetOpenOrdersAtPlaceData = {
+    body?: never;
+    path: {
+        placeId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/place/{placeId}/open';
+};
+
+export type GetOpenOrdersAtPlaceErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOpenOrdersAtPlaceResponses = {
+    /**
+     * OK
+     */
+    200: Array<OrderSummary>;
+};
+
+export type GetOpenOrdersAtPlaceResponse = GetOpenOrdersAtPlaceResponses[keyof GetOpenOrdersAtPlaceResponses];
 
 export type GetPendingOrdersData = {
     body?: never;

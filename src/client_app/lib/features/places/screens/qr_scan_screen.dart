@@ -8,24 +8,9 @@ import '../../../core/providers/current_place_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../tables/services/table_service.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
 import 'places_screen.dart';
-
-/// A scanned chillax.site QR: a place (/p/{id}), or one of the older room
-/// (/room/{id}) and table (/table/{id}) stickers.
-class _ScannedTarget {
-  /// LEGACY(places): the old table sticker flag — remove when the printed
-  /// room/table stickers are reprinted with /p/{id}.
-  ///
-  /// The older table stickers carry the id the table had before the Places
-  /// remodel, which is not the place id; it is resolved first.
-  final bool isLegacyTable;
-  final int id;
-
-  const _ScannedTarget({required this.isLegacyTable, required this.id});
-}
 
 class QrScanScreen extends ConsumerStatefulWidget {
   const QrScanScreen({super.key});
@@ -44,19 +29,14 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     super.dispose();
   }
 
-  /// Match https://chillax.site/p/{id}, and the older /room/{id} (rooms kept
-  /// their ids) and /table/{id} stickers
-  _ScannedTarget? _parseTarget(String url) {
+  /// The place id in a sticker's https://chillax.site/p/{id}
+  int? _parsePlaceId(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
     if (uri.host != 'chillax.site') return null;
     final segments = uri.pathSegments;
-    if (segments.length != 2) return null;
-    // LEGACY(places): accepting the old 'room' and 'table' segments — remove when the printed room/table stickers are reprinted with /p/{id}.
-    if (segments[0] != 'p' && segments[0] != 'room' && segments[0] != 'table') return null;
-    final id = int.tryParse(segments[1]);
-    if (id == null) return null;
-    return _ScannedTarget(isLegacyTable: segments[0] == 'table', id: id);
+    if (segments.length != 2 || segments[0] != 'p') return null;
+    return int.tryParse(segments[1]);
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -64,8 +44,8 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     final barcode = capture.barcodes.firstOrNull;
     if (barcode == null || barcode.rawValue == null) return;
 
-    final target = _parseTarget(barcode.rawValue!);
-    if (target == null) {
+    final placeId = _parsePlaceId(barcode.rawValue!);
+    if (placeId == null) {
       _showInvalidQr();
       return;
     }
@@ -74,11 +54,6 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     _scannerController.stop();
 
     try {
-      // LEGACY(places): resolving an old table sticker id through /api/tables — remove when the printed room/table stickers are reprinted with /p/{id}.
-      final placeId = target.isLegacyTable
-          ? (await ref.read(tableRepositoryProvider).getTable(target.id)).placeId
-          : target.id;
-      if (!mounted) return;
       await _handlePlace(placeId);
     } catch (e) {
       if (mounted) {

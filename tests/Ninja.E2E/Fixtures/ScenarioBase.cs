@@ -88,8 +88,8 @@ public abstract class ScenarioBase(NinjaApp app, DaySetup day) : ScenarioTest(ap
     protected Task<HubMessage> ExpectOrderStatusAsync(Checkpoint since, string type, int? orderId = null)
         => Hub.WaitForOrderStatusAsync(type, Ct, since.Hub, orderId is null ? null : m => m.Int("orderId") == orderId);
 
-    protected Task<HubMessage> ExpectRoomStatusAsync(Checkpoint since, string type, int? roomId = null)
-        => Hub.WaitForRoomStatusAsync(type, Ct, since.Hub, roomId is null ? null : m => m.Int("roomId") == roomId);
+    protected Task<HubMessage> ExpectRoomStatusAsync(Checkpoint since, string type, int? placeId = null)
+        => Hub.WaitForRoomStatusAsync(type, Ct, since.Hub, placeId is null ? null : m => m.Int("placeId") == placeId);
 
     /// <summary>Polls a GET until the assertion holds; the default 20 s covers a RabbitMQ hop and a handler.</summary>
     protected Task ExpectAsync(string because, Func<Task> assertion, TimeSpan? timeout = null)

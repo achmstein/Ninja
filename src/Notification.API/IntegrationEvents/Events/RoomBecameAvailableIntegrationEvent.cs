@@ -4,10 +4,7 @@ using Ninja.Notification.API.Model;
 namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 public record RoomBecameAvailableIntegrationEvent(
-    // LEGACY(places): old RoomId/RoomName Spaces still fills beside PlaceId/PlaceKind/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    int RoomId,
-    LocalizedText RoomName,
-    int BranchId = 1,
-    int PlaceId = 0,
-    string PlaceKind = "Room",
-    LocalizedText? PlaceName = null) : IntegrationEvent;
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
+    int BranchId = 1) : IntegrationEvent;

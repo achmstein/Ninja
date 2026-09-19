@@ -422,7 +422,7 @@ public class OrdersWebApiTest
     {
         // Act â€” nothing anchors this to someone in the building, and ordering
         // ahead to collect is reserved for account holders
-        var result = await CreateGuestOrderAsync(GuestRequest(tableId: null));
+        var result = await CreateGuestOrderAsync(GuestRequest(placeId: null));
 
         // Assert
         Assert.IsInstanceOfType<BadRequest<string>>(result.Result);
@@ -441,7 +441,7 @@ public class OrdersWebApiTest
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
 
-        var request = GuestRequest(tableId: null) with { UserName = "Nadia" };
+        var request = GuestRequest(placeId: null) with { UserName = "Nadia" };
 
         // Act
         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
@@ -520,19 +520,19 @@ public class OrdersWebApiTest
     private static CreateOrderRequest GuestRequest(
         string? guestName = "Nadia",
         string? guestPhone = "01012345678",
-        int? tableId = 7) =>
+        int? placeId = 7) =>
         new(
             UserId: string.Empty,
             UserName: string.Empty,
-            RoomName: null,
             CustomerNote: null,
             PointsToRedeem: 0,
             LoyaltyDiscount: 0,
             Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = "Latte", UnitPrice = 50, Quantity = 1 }],
-            TableId: tableId,
-            TableName: tableId is null ? null : "Table 7",
             GuestName: guestName,
-            GuestPhone: guestPhone);
+            GuestPhone: guestPhone,
+            PlaceId: placeId,
+            PlaceKind: placeId is null ? null : "Table",
+            PlaceName: placeId is null ? null : "Table 7");
 
     private Task<Results<Ok, BadRequest<string>>> CreateGuestOrderAsync(
         CreateOrderRequest request,

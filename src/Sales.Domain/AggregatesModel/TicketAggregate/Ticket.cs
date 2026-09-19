@@ -40,22 +40,12 @@ public class Ticket : Entity, IAggregateRoot
 
     /// <summary>
     /// The Spaces place this bill is for — a room, a table, a station. Null
-    /// on a counter sale. RoomId and TableId below are the ids the older
-    /// events carried and keep being filled for one release.
+    /// on a counter sale.
     /// </summary>
     public int? PlaceId { get; private set; }
 
     /// <summary>"Room", "Table" or "Station", as Spaces names it.</summary>
     public string? PlaceKind { get; private set; }
-
-    // LEGACY(places): the old RoomId column kept next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    public int? RoomId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): the old TableId column kept next to PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    /// The café table a Table ticket accumulates for (the id the order named).
-    /// </summary>
-    public int? TableId { get; private set; }
 
     /// <summary>Place name snapshot for display and receipts.</summary>
     public LocalizedText? LocationName { get; private set; }
@@ -253,31 +243,21 @@ public class Ticket : Entity, IAggregateRoot
             SessionId = sessionId,
             PlaceId = placeId,
             PlaceKind = placeKind,
-            // LEGACY(places): fills the old RoomId from the place id — remove when every till and customer app is on /api/places and /api/stays.
-            RoomId = isRoom ? placeId : null,
             LocationName = placeName,
         };
     }
 
     /// <summary>
     /// Opened lazily by a table's first confirmed order, or by the till (Q7:
-    /// one open ticket per table). The place id is the table as Spaces knows
-    /// it; the table id is what an older sticker or client named. One of
-    /// the two is required.
+    /// one open ticket per table). The place is the table as Spaces knows it.
     /// </summary>
-    public static Ticket OpenForTable(int? tableId, LocalizedText? tableName, int branchId, int? placeId = null)
-    {
-        if (tableId is null && placeId is null)
-            throw new SalesDomainException("A table ticket names its table.");
-        return new(TicketType.Table, branchId)
+    public static Ticket OpenForTable(int placeId, LocalizedText? placeName, int branchId)
+        => new(TicketType.Table, branchId)
         {
-            // LEGACY(places): the old table id an older sticker or client named — remove when every till and customer app is on /api/places and /api/stays.
-            TableId = tableId,
             PlaceId = placeId,
             PlaceKind = "Table",
-            LocationName = tableName,
+            LocationName = placeName,
         };
-    }
 
     /// <summary>
     /// One counter sale — a POS walk-in, or an order-ahead paid at the
@@ -388,20 +368,6 @@ public class Ticket : Entity, IAggregateRoot
 
         Touch();
     }
-
-    /// <summary>
-    /// LEGACY(places): the Single/Multi overload for a SessionCompleted event without Costs — remove when every till and customer app is on /api/places and /api/stays.
-    /// The two-option room tariff as the older SessionCompleted event carries it.
-    /// </summary>
-    public void AppendSessionTime(
-        decimal singleHours,
-        decimal singleCost,
-        decimal multiHours,
-        decimal multiCost)
-        => AppendSessionTime([
-            new SessionTimeLine(new LocalizedText("Single", "سنجل"), singleHours, singleCost),
-            new SessionTimeLine(new LocalizedText("Multi", "ملتي"), multiHours, multiCost),
-        ]);
 
     public void AddManualLine(LocalizedText description, decimal qty, decimal unitPrice, decimal discount, string addedBy, string? customerName = null)
     {
@@ -760,11 +726,9 @@ public class Ticket : Entity, IAggregateRoot
         var target = Type switch
         {
             TicketType.Table => OpenForTable(
-                // LEGACY(places): carries the old TableId onto the turnover ticket — remove when every till and customer app is on /api/places and /api/stays.
-                TableId,
+                PlaceId ?? throw new SalesDomainException("A table ticket names its place."),
                 LocationName is null ? null : new LocalizedText(LocationName.En, LocationName.Ar),
-                BranchId,
-                PlaceId),
+                BranchId),
             _ => OpenForCounter(BranchId),
         };
 

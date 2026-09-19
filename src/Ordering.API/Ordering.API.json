@@ -1500,7 +1500,6 @@
         "required": [
           "userId",
           "userName",
-          "roomName",
           "customerNote",
           "pointsToRedeem",
           "loyaltyDiscount",
@@ -1513,16 +1512,6 @@
           },
           "userName": {
             "type": "string"
-          },
-          "roomName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
           },
           "customerNote": {
             "type": [
@@ -1552,25 +1541,6 @@
               "$ref": "#/components/schemas/BasketItem"
             }
           },
-          "tableId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "tableName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
           "guestName": {
             "type": [
               "null",
@@ -1584,15 +1554,6 @@
             ]
           },
           "sessionId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "roomId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -1682,26 +1643,6 @@
             ]
           },
           "placeName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
-          "roomName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
-          "tableName": {
             "oneOf": [
               {
                 "type": "null"
@@ -1826,26 +1767,7 @@
               }
             ]
           },
-          "roomName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
           "sessionId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "roomId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -1856,25 +1778,6 @@
           },
           "source": {
             "type": "string"
-          },
-          "tableId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "tableName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
           },
           "customerNote": {
             "type": [
@@ -2353,16 +2256,6 @@
               }
             ]
           },
-          "roomName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
           "sessionId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -2374,25 +2267,6 @@
           },
           "source": {
             "type": "string"
-          },
-          "tableId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "tableName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
           },
           "userName": {
             "type": [
@@ -2515,35 +2389,6 @@
             "type": [
               "null",
               "string"
-            ]
-          },
-          "tableId": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "tableName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
-          "roomName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
             ]
           },
           "customerUserId": {

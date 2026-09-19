@@ -35,18 +35,10 @@ public record Order
     /// <summary>"Room", "Table" or "Station".</summary>
     public string? PlaceKind { get; init; }
     public LocalizedText? PlaceName { get; init; }
-    // LEGACY(places): old room name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? RoomName { get; init; }
     /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
-    // LEGACY(places): old room id beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    public int? RoomId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
     public string Source { get; init; } = string.Empty;
-    // LEGACY(places): old table id beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    public int? TableId { get; init; }
-    // LEGACY(places): old table name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? TableName { get; init; }
     public string? CustomerNote { get; init; }
     /// <summary>Name a guest left at checkout; null on orders placed by a signed-in customer.</summary>
     public string? GuestName { get; init; }
@@ -92,10 +84,6 @@ public record KitchenOrder
     public int? PlaceId { get; init; }
     public string? PlaceKind { get; init; }
     public LocalizedText? PlaceName { get; init; }
-    // LEGACY(places): old room name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? RoomName { get; init; }
-    // LEGACY(places): old table name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? TableName { get; init; }
     /// <summary>The buyer's name, or the name a guest or the cashier left.</summary>
     public string? CustomerName { get; init; }
     public string? CustomerNote { get; init; }
@@ -161,16 +149,10 @@ public record OrderSummary
     public int? PlaceId { get; init; }
     public string? PlaceKind { get; init; }
     public LocalizedText? PlaceName { get; init; }
-    // LEGACY(places): old room name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? RoomName { get; init; }
     /// <summary>The stay the order was placed into, when ordered from a timed place.</summary>
     public int? SessionId { get; init; }
     /// <summary>Who placed the order: Customer, Guest, or Pos.</summary>
     public string Source { get; init; } = string.Empty;
-    // LEGACY(places): old table id beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    public int? TableId { get; init; }
-    // LEGACY(places): old table name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? TableName { get; init; }
     /// <summary>Buyer's name, or the name a guest left at checkout.</summary>
     public string? UserName { get; init; }
     /// <summary>

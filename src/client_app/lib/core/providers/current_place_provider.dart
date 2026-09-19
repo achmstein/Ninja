@@ -151,11 +151,6 @@ class OrderDestination {
   });
 
   bool get isStay => kind == OrderDestinationKind.stay;
-
-  /// LEGACY(places): whether the older room fields apply (the order carries
-  /// them beside the place fields) — remove when Ordering and Notification
-  /// stop reading the old room/table fields.
-  bool get isRoom => placeKind == PlaceKind.room;
 }
 
 /// A running clock beats a scanned table, and forgets it: moving to a room

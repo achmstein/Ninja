@@ -30,8 +30,8 @@ public sealed class SmokeTests(NinjaApp app) : ScenarioTest(app)
         var items = await App.Cashier.GetJsonAsync("/api/catalog/items", Ct);
         Assert.True(items.GetArrayLength() > 10, "seeded menu");
 
-        var rooms = await App.Cashier.GetJsonAsync("/api/rooms", Ct);
-        Assert.True(rooms.GetArrayLength() >= 6, "seeded rooms");
+        var places = await App.Cashier.GetJsonAsync("/api/places", Ct);
+        Assert.True(places.GetArrayLength() >= 6, "seeded rooms and tables");
 
         using var noShift = await App.Cashier.SendAsync(HttpMethod.Get, "/api/shifts/current", null, Ct, ensureSuccess: false);
         Assert.Equal(HttpStatusCode.NotFound, noShift.StatusCode);

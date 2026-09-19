@@ -30,12 +30,4 @@ public class PlaceRepository : IPlaceRepository
         => await _context.Places.Where(p => p.PhysicalStatus == status).OrderBy(p => p.Name.En).ToListAsync();
 
     public async Task<bool> ExistsAsync(int placeId) => await _context.Places.AnyAsync(p => p.Id == placeId);
-
-    // LEGACY(places): finder by the old room sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
-    public async Task<Place?> GetByLegacyRoomIdAsync(int roomId)
-        => await _context.Places.FirstOrDefaultAsync(p => p.LegacyRoomId == roomId);
-
-    // LEGACY(places): finder by the old table sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
-    public async Task<Place?> GetByLegacyTableIdAsync(int tableId)
-        => await _context.Places.FirstOrDefaultAsync(p => p.LegacyTableId == tableId);
 }

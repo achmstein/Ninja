@@ -38,31 +38,35 @@ struct SessionActionIntent: LiveActivityIntent {
     @Parameter(title: "Session ID")
     var sessionId: Int
 
-    @Parameter(title: "Room ID")
-    var roomId: Int
+    @Parameter(title: "Place ID")
+    var placeId: Int
+
+    @Parameter(title: "Place Kind")
+    var placeKind: String?
 
     @Parameter(title: "Branch ID")
     var branchId: Int
 
-    @Parameter(title: "Room Name EN")
-    var roomNameEn: String
+    @Parameter(title: "Place Name EN")
+    var placeNameEn: String
 
-    @Parameter(title: "Room Name AR")
-    var roomNameAr: String?
+    @Parameter(title: "Place Name AR")
+    var placeNameAr: String?
 
     init() {}
 
     init(actionId: String, accessToken: String, apiBaseUrl: String,
-         sessionId: Int, roomId: Int, branchId: Int,
-         roomNameEn: String, roomNameAr: String?) {
+         sessionId: Int, placeId: Int, placeKind: String?, branchId: Int,
+         placeNameEn: String, placeNameAr: String?) {
         self.actionId = actionId
         self.accessToken = accessToken
         self.apiBaseUrl = apiBaseUrl
         self.sessionId = sessionId
-        self.roomId = roomId
+        self.placeId = placeId
+        self.placeKind = placeKind
         self.branchId = branchId
-        self.roomNameEn = roomNameEn
-        self.roomNameAr = roomNameAr
+        self.placeNameEn = placeNameEn
+        self.placeNameAr = placeNameAr
     }
 
     func perform() async throws -> some IntentResult {
@@ -73,15 +77,16 @@ struct SessionActionIntent: LiveActivityIntent {
         default: return .result()
         }
 
-        var roomNameJson: [String: Any] = ["en": roomNameEn]
-        if let ar = roomNameAr { roomNameJson["ar"] = ar }
+        var placeNameJson: [String: Any] = ["en": placeNameEn]
+        if let ar = placeNameAr { placeNameJson["ar"] = ar }
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "sessionId": sessionId,
-            "roomId": roomId,
-            "roomName": roomNameJson,
+            "placeId": placeId,
+            "placeName": placeNameJson,
             "requestType": requestType
         ]
+        if let kind = placeKind { body["placeKind"] = kind }
 
         guard let url = URL(string: "\(apiBaseUrl)service-requests?api-version=1.0"),
               let jsonData = try? JSONSerialization.data(withJSONObject: body) else {

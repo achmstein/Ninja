@@ -135,10 +135,10 @@ public static class Codes
         public const int ReceiptToPay = 3;
     }
 
-    /// <summary>Spaces player modes are strings on the wire.</summary>
-    public static class PlayerMode
+    /// <summary>The rate options of a room's tariff, by code.</summary>
+    public static class RateOption
     {
-        public const string Single = "Single";
-        public const string Multi = "Multi";
+        public const string Single = "single";
+        public const string Multi = "multi";
     }
 }

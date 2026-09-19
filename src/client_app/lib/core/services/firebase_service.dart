@@ -26,8 +26,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Show notification natively from background
     try {
       await _nativeChannel.invokeMethod('show', {
-        // LEGACY(places): the push's older 'roomName' field, passed on the native channel's 'roomName' key — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-        'roomName': data['roomName'] ?? '',
+        'placeName': data['placeName'] ?? '',
         'duration': '00:00:00',
         'startTimeMs': int.tryParse(data['startTimeMs'] ?? ''),
         'locale': data['locale'] ?? 'en',
@@ -36,17 +35,23 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       // Method channel may not be available in background isolate
     }
 
-    // Save session info for action handling
+    // Save the stay and its place for the native action fallback
     final prefs = await SharedPreferences.getInstance();
     if (data['sessionId'] != null) {
       await prefs.setInt('active_session_id', int.parse(data['sessionId']));
     }
-    // LEGACY(places): the push's older roomId/roomName fields, stored under the native side's 'active_session_room_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-    if (data['roomId'] != null) {
-      await prefs.setInt('active_session_room_id', int.parse(data['roomId']));
+    if (data['placeId'] != null) {
+      await prefs.setInt('active_session_place_id', int.parse(data['placeId']));
     }
-    if (data['roomName'] != null) {
-      await prefs.setString('active_session_room_name_en', data['roomName']);
+    if (data['placeKind'] != null) {
+      await prefs.setString('active_session_place_kind', data['placeKind']);
+    }
+    if (data['placeNameEn'] != null) {
+      await prefs.setString('active_session_place_name_en', data['placeNameEn']);
+    }
+    final placeNameAr = data['placeNameAr'] as String?;
+    if (placeNameAr != null && placeNameAr.isNotEmpty) {
+      await prefs.setString('active_session_place_name_ar', placeNameAr);
     }
     if (data['accessToken'] != null) {
       await prefs.setString('active_session_access_token', data['accessToken']);

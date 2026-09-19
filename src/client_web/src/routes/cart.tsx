@@ -48,7 +48,7 @@ import { SignInSheet } from '@/components/sign-in-options'
 import { cartTotal, lineKey, useCart } from '@/lib/cart'
 import { useSelectedBranch } from '@/lib/branch'
 import { useOrderDestination } from '@/lib/order-destination'
-import { PLACE_ROOM, PLACE_TABLE, PlaceIcon, placeKindName } from '@/lib/places'
+import { PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { StillHereCard } from '@/components/places/still-here'
@@ -278,22 +278,6 @@ function CartPage() {
           ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
           : null,
         sessionId: destination?.sessionId ?? null,
-        // LEGACY(places): the older roomName/roomId/tableId/tableName fields
-        // ride along beside placeId/placeKind/placeName — remove when Ordering
-        // and Notification stop reading the old room/table fields.
-        roomName:
-          destination?.kind === 'stay' && destination.placeKind === PLACE_ROOM
-            ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
-            : null,
-        roomId:
-          destination?.kind === 'stay' && destination.placeKind === PLACE_ROOM
-            ? destination.placeId
-            : null,
-        tableId: null,
-        tableName:
-          destination?.placeKind === PLACE_TABLE
-            ? { en: destination.name.en ?? '', ar: destination.name.ar ?? null }
-            : null,
         customerNote: note.trim() || null,
         // Only a code the quote accepted; the server drops one that no
         // longer applies rather than failing the order

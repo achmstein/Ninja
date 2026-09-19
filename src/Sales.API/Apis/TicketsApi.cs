@@ -411,7 +411,7 @@ public static class TicketsApi
         try
         {
             var ticketId = await mediator.SendIdentified<OpenTicketCommand, int>(requestId, new OpenTicketCommand(
-                request.Type, branchId, request.TableId, request.TableName, request.Label, request.PlaceId, request.PlaceName));
+                request.Type, branchId, request.Label, request.PlaceId, request.PlaceName));
 
             return TypedResults.Ok(new OpenTicketResponse(ticketId));
         }
@@ -632,7 +632,7 @@ public static class TicketsApi
                 request.TargetTicketId,
                 request.NewTicket is null
                     ? null
-                    : new NewTicketTarget(request.NewTicket.Type, request.NewTicket.TableId, request.NewTicket.TableName, request.NewTicket.Label, request.NewTicket.PlaceId, request.NewTicket.PlaceName)));
+                    : new NewTicketTarget(request.NewTicket.Type, request.NewTicket.Label, request.NewTicket.PlaceId, request.NewTicket.PlaceName)));
             return TypedResults.Ok(new OpenTicketResponse(targetTicketId));
         }
         catch (SalesDomainException ex)
@@ -643,9 +643,8 @@ public static class TicketsApi
 }
 
 /// <param name="Label">What to call a counter tab — a name for humans, not a customer.</param>
-/// <param name="PlaceId">The Spaces place of a table bill; newer tills send this, older ones the table id.</param>
-// LEGACY(places): the TableId/TableName request fields older tills send instead of PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-public record OpenTicketRequest(TicketType Type, int? TableId = null, LocalizedText? TableName = null, string? Label = null, int? PlaceId = null, LocalizedText? PlaceName = null);
+/// <param name="PlaceId">The Spaces place of a table bill.</param>
+public record OpenTicketRequest(TicketType Type, string? Label = null, int? PlaceId = null, LocalizedText? PlaceName = null);
 
 public record OpenTicketResponse(int TicketId);
 
@@ -662,8 +661,7 @@ public record MoveLinesRequest(List<int> LineIds, int? TargetTicketId = null, Ne
 public record AssignLinesCustomerRequest(List<int> LineIds, string? CustomerId, string CustomerName);
 
 /// <summary>A ticket to open for moved lines: a counter tab (with an optional name), or a table's bill.</summary>
-// LEGACY(places): the TableId/TableName request fields older tills send instead of PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-public record NewTicketRequest(TicketType Type, int? TableId = null, LocalizedText? TableName = null, string? Label = null, int? PlaceId = null, LocalizedText? PlaceName = null);
+public record NewTicketRequest(TicketType Type, string? Label = null, int? PlaceId = null, LocalizedText? PlaceName = null);
 
 public record VoidTicketRequest(string Reason);
 

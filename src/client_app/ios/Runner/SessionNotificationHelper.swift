@@ -22,7 +22,7 @@ class SessionNotificationHelper: NSObject {
     private var sessionChannel: FlutterMethodChannel?
     private var navigationChannel: FlutterMethodChannel?
 
-    private var lastRoomName = ""
+    private var lastPlaceName = ""
     private var lastDuration = ""
     private var lastStartTimeMs: Int64?
     private var lastLocale = "en"
@@ -131,7 +131,7 @@ class SessionNotificationHelper: NSObject {
                     result(FlutterError(code: "INVALID_ARGS", message: "Invalid arguments", details: nil))
                     return
                 }
-                let roomName = args["roomName"] as? String ?? ""
+                let placeName = args["placeName"] as? String ?? ""
                 let duration = args["duration"] as? String ?? ""
                 let startTimeMs = args["startTimeMs"] as? Int64
                 let locale = args["locale"] as? String ?? "en"
@@ -140,15 +140,16 @@ class SessionNotificationHelper: NSObject {
                 let accessToken = args["accessToken"] as? String
                 let apiBaseUrl = args["apiBaseUrl"] as? String
                 let sessionId = args["sessionId"] as? Int
-                let roomId = args["roomId"] as? Int
+                let placeId = args["placeId"] as? Int
+                let placeKind = args["placeKind"] as? String
                 let branchId = args["branchId"] as? Int
-                let roomNameEn = args["roomNameEn"] as? String
-                let roomNameAr = args["roomNameAr"] as? String
-                self.show(roomName: roomName, duration: duration, startTimeMs: startTimeMs, locale: locale,
+                let placeNameEn = args["placeNameEn"] as? String
+                let placeNameAr = args["placeNameAr"] as? String
+                self.show(placeName: placeName, duration: duration, startTimeMs: startTimeMs, locale: locale,
                           drink1Name: drink1Name, drink2Name: drink2Name,
                           accessToken: accessToken, apiBaseUrl: apiBaseUrl,
-                          sessionId: sessionId, roomId: roomId, branchId: branchId,
-                          roomNameEn: roomNameEn, roomNameAr: roomNameAr)
+                          sessionId: sessionId, placeId: placeId, placeKind: placeKind, branchId: branchId,
+                          placeNameEn: placeNameEn, placeNameAr: placeNameAr)
                 result(nil)
 
             case "dismiss":
@@ -165,12 +166,12 @@ class SessionNotificationHelper: NSObject {
 
     /// Show or update the session notification.
     /// Uses Live Activities on iOS 16.2+, falls back to regular notification on older versions.
-    func show(roomName: String, duration: String, startTimeMs: Int64?, locale: String,
+    func show(placeName: String, duration: String, startTimeMs: Int64?, locale: String,
               drink1Name: String? = nil, drink2Name: String? = nil,
               accessToken: String? = nil, apiBaseUrl: String? = nil,
-              sessionId: Int? = nil, roomId: Int? = nil, branchId: Int? = nil,
-              roomNameEn: String? = nil, roomNameAr: String? = nil) {
-        lastRoomName = roomName
+              sessionId: Int? = nil, placeId: Int? = nil, placeKind: String? = nil, branchId: Int? = nil,
+              placeNameEn: String? = nil, placeNameAr: String? = nil) {
+        lastPlaceName = placeName
         lastDuration = duration
         lastStartTimeMs = startTimeMs
         lastLocale = locale
@@ -178,13 +179,13 @@ class SessionNotificationHelper: NSObject {
         lastDrink2Name = drink2Name
 
         if #available(iOS 16.2, *) {
-            showLiveActivity(roomName: roomName, startTimeMs: startTimeMs, locale: locale,
+            showLiveActivity(placeName: placeName, startTimeMs: startTimeMs, locale: locale,
                              drink1Name: drink1Name, drink2Name: drink2Name,
                              accessToken: accessToken, apiBaseUrl: apiBaseUrl,
-                             sessionId: sessionId, roomId: roomId, branchId: branchId,
-                             roomNameEn: roomNameEn, roomNameAr: roomNameAr)
+                             sessionId: sessionId, placeId: placeId, placeKind: placeKind, branchId: branchId,
+                             placeNameEn: placeNameEn, placeNameAr: placeNameAr)
         } else {
-            showLegacyNotification(roomName: roomName, locale: locale)
+            showLegacyNotification(placeName: placeName, locale: locale)
         }
     }
 
@@ -198,7 +199,7 @@ class SessionNotificationHelper: NSObject {
             dismissLiveActivity()
         }
 
-        lastRoomName = ""
+        lastPlaceName = ""
         lastDrink1Name = nil
         lastDrink2Name = nil
 
@@ -214,11 +215,11 @@ class SessionNotificationHelper: NSObject {
     // MARK: - Live Activity (iOS 16.2+)
 
     @available(iOS 16.2, *)
-    private func showLiveActivity(roomName: String, startTimeMs: Int64?, locale: String,
+    private func showLiveActivity(placeName: String, startTimeMs: Int64?, locale: String,
                                   drink1Name: String?, drink2Name: String?,
                                   accessToken: String? = nil, apiBaseUrl: String? = nil,
-                                  sessionId: Int? = nil, roomId: Int? = nil, branchId: Int? = nil,
-                                  roomNameEn: String? = nil, roomNameAr: String? = nil) {
+                                  sessionId: Int? = nil, placeId: Int? = nil, placeKind: String? = nil, branchId: Int? = nil,
+                                  placeNameEn: String? = nil, placeNameAr: String? = nil) {
         let startDate: Date
         if let ms = startTimeMs {
             startDate = Date(timeIntervalSince1970: Double(ms) / 1000.0)
@@ -233,10 +234,11 @@ class SessionNotificationHelper: NSObject {
             accessToken: accessToken,
             apiBaseUrl: apiBaseUrl,
             sessionId: sessionId,
-            roomId: roomId,
+            placeId: placeId,
+            placeKind: placeKind,
             branchId: branchId,
-            roomNameEn: roomNameEn,
-            roomNameAr: roomNameAr
+            placeNameEn: placeNameEn,
+            placeNameAr: placeNameAr
         )
 
         if let activity = currentActivity,
@@ -256,7 +258,7 @@ class SessionNotificationHelper: NSObject {
             endAllActivities()
 
             // Start new activity
-            let attributes = SessionActivityAttributes(roomName: roomName, locale: locale)
+            let attributes = SessionActivityAttributes(placeName: placeName, locale: locale)
             let content = ActivityContent(state: state, staleDate: nil)
 
             do {
@@ -268,7 +270,7 @@ class SessionNotificationHelper: NSObject {
             } catch {
                 print("Failed to start Live Activity: \(error)")
                 // Fall back to legacy notification
-                showLegacyNotification(roomName: roomName, locale: locale)
+                showLegacyNotification(placeName: placeName, locale: locale)
             }
         }
     }
@@ -300,7 +302,7 @@ class SessionNotificationHelper: NSObject {
 
     // MARK: - Legacy Notification (iOS < 16.2)
 
-    private func showLegacyNotification(roomName: String, locale: String) {
+    private func showLegacyNotification(placeName: String, locale: String) {
         updateCategoryActions(locale: locale, drink1Name: lastDrink1Name, drink2Name: lastDrink2Name)
 
         let content = UNMutableNotificationContent()
@@ -310,7 +312,7 @@ class SessionNotificationHelper: NSObject {
 
         let isArabic = locale == "ar"
         let sessionLabel = isArabic ? "الاوضه شغالة" : "Session active"
-        content.body = "\(roomName) · \(sessionLabel)"
+        content.body = "\(placeName) · \(sessionLabel)"
 
         let request = UNNotificationRequest(
             identifier: SessionNotificationHelper.notificationId,
@@ -383,10 +385,11 @@ class SessionNotificationHelper: NSObject {
         }
 
         let sessionId = defaults.integer(forKey: "flutter.active_session_id")
-        let roomId = defaults.integer(forKey: "flutter.active_session_room_id")
+        let placeId = defaults.integer(forKey: "flutter.active_session_place_id")
+        let placeKind = defaults.string(forKey: "flutter.active_session_place_kind")
         let branchId = defaults.integer(forKey: "flutter.active_session_branch_id")
-        let roomNameEn = defaults.string(forKey: "flutter.active_session_room_name_en") ?? ""
-        let roomNameAr = defaults.string(forKey: "flutter.active_session_room_name_ar")
+        let placeNameEn = defaults.string(forKey: "flutter.active_session_place_name_en") ?? ""
+        let placeNameAr = defaults.string(forKey: "flutter.active_session_place_name_ar")
 
         let requestType: Int
         switch actionId {
@@ -395,15 +398,16 @@ class SessionNotificationHelper: NSObject {
         default: return
         }
 
-        var roomNameJson: [String: Any] = ["en": roomNameEn]
-        if let ar = roomNameAr { roomNameJson["ar"] = ar }
+        var placeNameJson: [String: Any] = ["en": placeNameEn]
+        if let ar = placeNameAr { placeNameJson["ar"] = ar }
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "sessionId": sessionId,
-            "roomId": roomId,
-            "roomName": roomNameJson,
+            "placeId": placeId,
+            "placeName": placeNameJson,
             "requestType": requestType
         ]
+        if let kind = placeKind { body["placeKind"] = kind }
 
         let baseUrl = defaults.string(forKey: "flutter.notifications_api_url")
             ?? "https://chillax.site/notifications-api/"

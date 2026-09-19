@@ -14,12 +14,12 @@ import androidx.core.app.ServiceCompat
 class SessionForegroundService : Service() {
     companion object {
         fun start(
-            context: Context, roomName: String, duration: String, startTimeMs: Long?, locale: String,
+            context: Context, placeName: String, duration: String, startTimeMs: Long?, locale: String,
             drink1Id: Int? = null, drink1Name: String? = null,
             drink2Id: Int? = null, drink2Name: String? = null
         ) {
             val intent = Intent(context, SessionForegroundService::class.java).apply {
-                putExtra("roomName", roomName)
+                putExtra("placeName", placeName)
                 putExtra("duration", duration)
                 if (startTimeMs != null) putExtra("startTimeMs", startTimeMs)
                 putExtra("locale", locale)
@@ -44,7 +44,7 @@ class SessionForegroundService : Service() {
             return START_NOT_STICKY
         }
 
-        val roomName = intent.getStringExtra("roomName") ?: ""
+        val placeName = intent.getStringExtra("placeName") ?: ""
         val duration = intent.getStringExtra("duration") ?: ""
         val startTimeMs = if (intent.hasExtra("startTimeMs")) intent.getLongExtra("startTimeMs", 0) else null
         val locale = intent.getStringExtra("locale") ?: "en"
@@ -55,8 +55,8 @@ class SessionForegroundService : Service() {
 
         // Build notification — try helper first, fall back to basic notification
         val notification = SessionNotificationHelper.instance?.buildNotification(
-            roomName, duration, startTimeMs, locale, drink1Id, drink1Name, drink2Id, drink2Name
-        ) ?: buildFallbackNotification(roomName, duration, startTimeMs, locale)
+            placeName, duration, startTimeMs, locale, drink1Id, drink1Name, drink2Id, drink2Name
+        ) ?: buildFallbackNotification(placeName, duration, startTimeMs, locale)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(
@@ -72,9 +72,9 @@ class SessionForegroundService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun buildFallbackNotification(roomName: String, duration: String, startTimeMs: Long?, locale: String): Notification {
+    private fun buildFallbackNotification(placeName: String, duration: String, startTimeMs: Long?, locale: String): Notification {
         val openIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            putExtra("navigate_to", "/rooms")
+            putExtra("navigate_to", "/places")
         }
         val openPendingIntent = PendingIntent.getActivity(
             this, 0, openIntent,
@@ -91,7 +91,7 @@ class SessionForegroundService : Service() {
         val builder = NotificationCompat.Builder(this, SessionNotificationHelper.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Chillax")
-            .setContentText(roomName)
+            .setContentText(placeName)
             .setContentIntent(openPendingIntent)
             .setOngoing(true)
             .setSilent(true)

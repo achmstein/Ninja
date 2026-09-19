@@ -16,8 +16,8 @@ public class RoomBecameAvailableIntegrationEventHandler(
 {
     public async Task Handle(RoomBecameAvailableIntegrationEvent @event)
     {
-        logger.LogInformation("Handling RoomBecameAvailableIntegrationEvent for room {RoomId}: {RoomName}",
-            @event.RoomId, @event.RoomName.En);
+        logger.LogInformation("Handling RoomBecameAvailableIntegrationEvent for place {PlaceId}: {PlaceName}",
+            @event.PlaceId, @event.PlaceName.En);
 
         // Get room availability subscriptions for this branch
         var subscriptions = await context.Subscriptions
@@ -36,7 +36,7 @@ public class RoomBecameAvailableIntegrationEventHandler(
                 var lang = group.Key;
                 var tokens = group.Select(s => s.FcmToken).ToList();
                 var title = NotificationMessages.RoomAvailableTitle.GetText(lang);
-                var body = NotificationMessages.RoomAvailableBody(@event.RoomName, lang).GetText(lang);
+                var body = NotificationMessages.RoomAvailableBody(@event.PlaceName, lang).GetText(lang);
 
                 var result = await fcmService.SendBatchNotificationsAsync(
                     tokens,
@@ -45,8 +45,9 @@ public class RoomBecameAvailableIntegrationEventHandler(
                     new Dictionary<string, string>
                     {
                         { "type", "room_available" },
-                        { "roomId", @event.RoomId.ToString() },
-                        { "roomName", @event.RoomName.GetText(lang) }
+                        { "placeId", @event.PlaceId.ToString() },
+                        { "placeKind", @event.PlaceKind },
+                        { "placeName", @event.PlaceName.GetText(lang) }
                     });
 
                 totalSuccess += result.SuccessCount;
@@ -72,9 +73,7 @@ public class RoomBecameAvailableIntegrationEventHandler(
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
         {
             type = "room_available",
-            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-            roomId = @event.RoomId,
-            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeId = @event.PlaceId,
             placeKind = @event.PlaceKind
         });
     }

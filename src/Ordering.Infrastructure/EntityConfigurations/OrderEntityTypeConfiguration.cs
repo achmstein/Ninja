@@ -50,16 +50,10 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             .Property(o => o.GuestPhone)
             .HasMaxLength(30);
 
-        // The Spaces place, alongside the older room/table columns
+        // The Spaces place the order goes to
         orderConfiguration.Property(o => o.PlaceKind).HasMaxLength(20);
         orderConfiguration.OwnsOne(o => o.PlaceName, b => b.ToJson());
         orderConfiguration.Ignore(o => o.Destination);
-
-        // LEGACY(places): the old RoomName JSON column beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-        orderConfiguration.OwnsOne(o => o.RoomName, b => b.ToJson());
-
-        // LEGACY(places): the old TableName JSON column beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-        orderConfiguration.OwnsOne(o => o.TableName, b => b.ToJson());
 
         orderConfiguration.HasOne(o => o.Buyer)
             .WithMany()

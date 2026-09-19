@@ -15,8 +15,7 @@ export const Route = createFileRoute('/p/$placeId')({
 })
 
 /**
- * What a place's QR opens: https://chillax.site/p/{id}. The older stickers
- * (/room/{id}, /table/{id}) resolve into this page. It never shows
+ * What a place's QR opens: https://chillax.site/p/{id}. It never shows
  * anything itself — a spinner for the moment the place loads — and sends
  * the customer on:
  *

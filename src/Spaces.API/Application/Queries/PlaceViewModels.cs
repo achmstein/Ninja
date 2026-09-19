@@ -41,16 +41,6 @@ public record PlaceViewModel
     public bool HasOptions { get; init; }
     public bool CanReserve { get; init; }
     public bool TakesControllerRequests { get; init; }
-    /// <summary>
-    /// LEGACY(places): the old room sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
-    /// The id a printed room sticker (/room/{id}) carries.
-    /// </summary>
-    public int? LegacyRoomId { get; init; }
-    /// <summary>
-    /// LEGACY(places): the old table sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
-    /// The id a printed table sticker (/table/{id}) carries.
-    /// </summary>
-    public int? LegacyTableId { get; init; }
     /// <summary>The held or running stay on it, if any.</summary>
     public StayPreviewViewModel? CurrentStay { get; init; }
 }
@@ -233,9 +223,6 @@ public static class ViewModelMapping
             HasOptions = place.HasOptions,
             CanReserve = place.CanReserve,
             TakesControllerRequests = place.TakesControllerRequests,
-            // LEGACY(places): the old sticker ids on the place view model — remove when the printed room/table stickers are reprinted with /p/{id}.
-            LegacyRoomId = place.LegacyRoomId,
-            LegacyTableId = place.LegacyTableId,
             CurrentStay = current?.ToPreview(place),
         };
     }

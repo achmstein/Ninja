@@ -12,17 +12,11 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     int OrderId,
     string BuyerName,
     string BuyerIdentityGuid,
-    // LEGACY(places): the old RoomName, superseded by PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    LocalizedText? RoomName,
     decimal OrderTotal,
     int PointsToRedeem,
     string? GuestId,
     int BranchId,
     int? SessionId,
-    // LEGACY(places): the old RoomId/TableId/TableName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    int? RoomId,
-    int? TableId,
-    LocalizedText? TableName,
     string Source,
     string? GuestPhone,
     double LoyaltyDiscount,
@@ -39,10 +33,7 @@ public record OrderStatusChangedToConfirmedIntegrationEvent(
     /// for a walk-in. Null when nobody was named.
     /// </summary>
     string? CustomerName = null,
-    /// <summary>
-    /// The Spaces place the order is for, as newer Ordering builds send it
-    /// alongside the older RoomId/TableId. Null from older publishers.
-    /// </summary>
+    /// <summary>The Spaces place the order is for; null for an order-ahead or a counter sale.</summary>
     int? PlaceId = null,
     string? PlaceKind = null,
     LocalizedText? PlaceName = null,

@@ -39,7 +39,7 @@ public sealed record TenderTotal(string Tender, decimal Amount, int Count);
 
 public sealed record TabPaymentView(int Id, int Number, int BranchId, string CustomerId, string? CustomerName, string Tender, decimal Amount, int? ShiftId);
 
-public sealed record TicketSummary(int Id, string Type, string Status, LocalizedText? LocationName, int? SessionId, int? RoomId, int? TableId,
+public sealed record TicketSummary(int Id, string Type, string Status, LocalizedText? LocationName, int? SessionId, int? PlaceId, string? PlaceKind,
     string? Label, int LineCount, decimal Total, List<string> CustomerIds);
 
 public sealed record TicketDetail(
@@ -50,8 +50,8 @@ public sealed record TicketDetail(
     LocalizedText? LocationName,
     int? SessionId,
     DateTime? SessionEndedAt,
-    int? RoomId,
-    int? TableId,
+    int? PlaceId,
+    string? PlaceKind,
     string? Label,
     DateTime? SettledAt,
     int? ShiftId,
@@ -94,12 +94,12 @@ public sealed record PricingView(int BranchId, decimal VatRate, bool PricesInclu
 
 public sealed record PosOrderResponse(int OrderId);
 
-public sealed record OrderSummary(int OrderNumber, DateTime Date, string Status, double Total, string Source, int? TableId, int? SessionId,
+public sealed record OrderSummary(int OrderNumber, DateTime Date, string Status, double Total, string Source, int? PlaceId, int? SessionId,
     string? UserName, string? UserId, List<OrderItemView>? Items);
 
 public sealed record OrderItemView(LocalizedText ProductName, int Units, double UnitPrice);
 
-public sealed record OrderView(int OrderNumber, string Status, string Source, int? TableId, int? SessionId, List<OrderItemView> OrderItems, decimal Total);
+public sealed record OrderView(int OrderNumber, string Status, string Source, int? PlaceId, int? SessionId, List<OrderItemView> OrderItems, decimal Total);
 
 public sealed record KitchenOrder(int OrderNumber, DateTime? ConfirmedAt, DateTime? ReadyAt, string Source, string? CustomerName, List<KitchenOrderItem> Items);
 
@@ -107,17 +107,24 @@ public sealed record KitchenOrderItem(LocalizedText ProductName, int Units);
 
 // --- Spaces ------------------------------------------------------------------
 
-public sealed record StartWalkInSessionResult(int ReservationId);
+public sealed record StartWalkInStayResult(int StayId);
 
-public sealed record RoomView(int Id, LocalizedText Name, decimal SingleRate, decimal MultiRate, int Status);
+public sealed record RateOptionView(string Code, LocalizedText Name, decimal HourlyRate);
 
-public sealed record ReservationView(int Id, int RoomId, LocalizedText RoomName, string? CustomerId, string? CustomerName,
-    DateTime? ActualStartTime, DateTime? EndTime, decimal? TotalCost, string? CurrentPlayerMode, decimal SingleCost, decimal MultiCost,
-    int Status, List<SessionMemberView> Members);
+public sealed record TariffView(List<RateOptionView> Options, int RoundingMinutes);
 
-public sealed record SessionMemberView(string CustomerId, string? CustomerName, string Role);
+public sealed record PlaceView(int Id, LocalizedText Name, int BranchId, int Status, bool IsActive, bool IsTimed, TariffView? Tariff)
+{
+    /// <summary>The hourly rate of one option of the tariff ("single", "multi").</summary>
+    public decimal Rate(string optionCode)
+        => Tariff?.Options.FirstOrDefault(o => o.Code == optionCode)?.HourlyRate
+           ?? throw new InvalidOperationException($"{Name.En} has no {optionCode} rate");
+}
 
-public sealed record TableView(int Id, LocalizedText Name, bool IsActive);
+public sealed record StayView(int Id, int PlaceId, LocalizedText PlaceName, string? CustomerId, string? CustomerName,
+    DateTime? StartedAt, DateTime? EndedAt, decimal? TotalCost, string? CurrentOptionCode, int Status, List<StayMemberView> Members);
+
+public sealed record StayMemberView(string CustomerId, string? CustomerName, string Role);
 
 // --- Inventory ---------------------------------------------------------------
 
@@ -307,4 +314,4 @@ public sealed record CatalogItem(int Id, LocalizedText Name, decimal Price, int 
 
 public sealed record BranchView(int Id, LocalizedText Name, bool IsActive, bool IsOrderingEnabled, bool IsReservationsEnabled);
 
-public sealed record ServiceRequestResponse(int Id, int RoomId, int RequestType, int Status);
+public sealed record ServiceRequestResponse(int Id, int? PlaceId, int RequestType, int Status);

@@ -22,7 +22,7 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
     /// IsOrderingEnabled projection, which lands a moment after the shift
     /// opens, so a "not taking orders" 400 is retried for a while.
     /// </summary>
-    public async Task<int> PlaceOrderAsync(MenuLookup menu, SaleLine[] lines, CancellationToken ct, int? tableId = null, string? tableNameEn = null,
+    public async Task<int> PlaceOrderAsync(MenuLookup menu, SaleLine[] lines, CancellationToken ct, int? placeId = null, string? placeNameEn = null,
         int pointsToRedeem = 0, bool retryWhileClosed = true)
     {
         var before = DateTime.UtcNow.AddSeconds(-5);
@@ -30,7 +30,6 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
         {
             userId = "",
             userName = DisplayName,
-            roomName = (object?)null,
             customerNote = (string?)null,
             pointsToRedeem,
             loyaltyDiscount = 0.0,
@@ -49,12 +48,12 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
                     selectedCustomizations = Array.Empty<object>(),
                 };
             }).ToArray(),
-            tableId,
-            tableName = tableNameEn is null ? null : new { en = tableNameEn, ar = tableNameEn },
+            placeId,
+            placeKind = placeId is null ? null : "Table",
+            placeName = placeNameEn is null ? null : new { en = placeNameEn, ar = placeNameEn },
             guestName = (string?)null,
             guestPhone = (string?)null,
             sessionId = (int?)null,
-            roomId = (int?)null,
         };
 
         if (retryWhileClosed)
@@ -80,7 +79,7 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
         {
             var pending = await staff.GetAsync<List<OrderSummary>>("/api/orders/pending", ct);
             var mine = pending
-                .Where(o => o.UserId == UserId && o.Date >= before && (tableId is null || o.TableId == tableId))
+                .Where(o => o.UserId == UserId && o.Date >= before && (placeId is null || o.PlaceId == placeId))
                 .OrderByDescending(o => o.OrderNumber)
                 .FirstOrDefault();
             return mine?.OrderNumber;
@@ -88,7 +87,7 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
         return number!.Value;
     }
 
-    public Task<HttpResponseMessage> TryPlaceOrderAsync(MenuLookup menu, SaleLine[] lines, CancellationToken ct, int? tableId = null, string? tableNameEn = null)
+    public Task<HttpResponseMessage> TryPlaceOrderAsync(MenuLookup menu, SaleLine[] lines, CancellationToken ct, int? placeId = null, string? placeNameEn = null)
     {
         var m = menu.Item(lines[0].Item);
         return Api.PostAsync("/api/orders", new
@@ -110,12 +109,12 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
                 specialInstructions = (string?)null,
                 selectedCustomizations = Array.Empty<object>(),
             }).ToArray(),
-            tableId,
-            tableName = tableNameEn is null ? null : new { en = tableNameEn, ar = tableNameEn },
+            placeId,
+            placeKind = placeId is null ? null : "Table",
+            placeName = placeNameEn is null ? null : new { en = placeNameEn, ar = placeNameEn },
             guestName = (string?)null,
             guestPhone = (string?)null,
             sessionId = (int?)null,
-            roomId = (int?)null,
         }, ct, ensureSuccess: false);
     }
 
@@ -131,12 +130,13 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
         => Api.GetOrDefaultAsync<AccountView>("/api/accounts/my", ct);
 
     /// <summary>In-room "call the waiter" (lib/services/notifications.ts).</summary>
-    public Task<ServiceRequestResponse> RequestServiceAsync(int sessionId, int roomId, string roomNameEn, int requestType, CancellationToken ct)
+    public Task<ServiceRequestResponse> RequestServiceAsync(int stayId, int placeId, string placeNameEn, int requestType, CancellationToken ct)
         => Api.PostAsync<ServiceRequestResponse>("/api/notifications/service-requests", new
         {
-            sessionId,
-            roomId,
-            roomName = new { en = roomNameEn, ar = roomNameEn },
+            sessionId = stayId,
+            placeId,
+            placeKind = "Room",
+            placeName = new { en = placeNameEn, ar = placeNameEn },
             requestType,
         }, ct);
 }

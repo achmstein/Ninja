@@ -14,6 +14,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONObject
 
 class SessionNotificationHelper(
     private val context: Context,
@@ -36,7 +37,7 @@ class SessionNotificationHelper(
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var lastRoomName = ""
+    private var lastPlaceName = ""
     private var lastDuration = ""
     private var lastStartTimeMs: Long? = null
     private var lastLocale = "en"
@@ -51,12 +52,12 @@ class SessionNotificationHelper(
     }
 
     fun show(
-        roomName: String, duration: String, startTimeMs: Long?, locale: String,
+        placeName: String, duration: String, startTimeMs: Long?, locale: String,
         drink1Id: Int? = null, drink1Name: String? = null,
         drink2Id: Int? = null, drink2Name: String? = null
     ) {
         instance = this
-        lastRoomName = roomName
+        lastPlaceName = placeName
         lastDuration = duration
         lastStartTimeMs = startTimeMs
         lastLocale = locale
@@ -68,7 +69,7 @@ class SessionNotificationHelper(
         // Always route through the foreground service so the notification
         // stays bound to it and cannot be dismissed by the user.
         try {
-            SessionForegroundService.start(context, roomName, duration, startTimeMs, locale,
+            SessionForegroundService.start(context, placeName, duration, startTimeMs, locale,
                 drink1Id, drink1Name, drink2Id, drink2Name)
             serviceStarted = true
         } catch (_: Exception) {
@@ -76,14 +77,14 @@ class SessionNotificationHelper(
     }
 
     fun buildNotification(
-        roomName: String, duration: String, startTimeMs: Long?, locale: String,
+        placeName: String, duration: String, startTimeMs: Long?, locale: String,
         drink1Id: Int? = null, drink1Name: String? = null,
         drink2Id: Int? = null, drink2Name: String? = null
     ): Notification {
         val isArabic = locale == "ar"
 
         val openIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
-            putExtra("navigate_to", "/rooms")
+            putExtra("navigate_to", "/places")
         }
         val openPendingIntent = PendingIntent.getActivity(
             context, 0, openIntent,
@@ -107,7 +108,7 @@ class SessionNotificationHelper(
         }
 
         val expandedView = RemoteViews(context.packageName, R.layout.notification_session_expanded).apply {
-            setTextViewText(R.id.room_name, roomName)
+            setTextViewText(R.id.place_name, placeName)
             setTextViewText(R.id.label_waiter, waiterLabel)
             setTextViewText(R.id.label_controller, controllerLabel)
             setChronometer(R.id.chronometer, chronometerBase, null, true)
@@ -134,7 +135,7 @@ class SessionNotificationHelper(
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Chillax")
-            .setContentText(roomName)
+            .setContentText(placeName)
             .setContentIntent(openPendingIntent)
             .setOngoing(true)
             .setAutoCancel(false)
@@ -165,7 +166,7 @@ class SessionNotificationHelper(
     }
 
     fun refresh() {
-        show(lastRoomName, lastDuration, lastStartTimeMs, lastLocale,
+        show(lastPlaceName, lastDuration, lastStartTimeMs, lastLocale,
             lastDrink1Id, lastDrink1Name, lastDrink2Id, lastDrink2Name)
     }
 
@@ -230,13 +231,14 @@ class SessionActionReceiver : BroadcastReceiver() {
         fun sendDirectRequest(context: Context, action: String) {
             val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             val sessionId = prefs.getLong("flutter.active_session_id", -1)
-            val roomId = prefs.getLong("flutter.active_session_room_id", -1)
+            val placeId = prefs.getLong("flutter.active_session_place_id", -1)
+            val placeKind = prefs.getString("flutter.active_session_place_kind", null)
             val accessToken = prefs.getString("flutter.active_session_access_token", null)
             val branchId = prefs.getLong("flutter.active_session_branch_id", -1)
-            val roomNameEn = prefs.getString("flutter.active_session_room_name_en", "") ?: ""
-            val roomNameAr = prefs.getString("flutter.active_session_room_name_ar", null)
+            val placeNameEn = prefs.getString("flutter.active_session_place_name_en", "") ?: ""
+            val placeNameAr = prefs.getString("flutter.active_session_place_name_ar", null)
 
-            if (sessionId == -1L || roomId == -1L || accessToken == null) return
+            if (sessionId == -1L || placeId == -1L || accessToken == null) return
 
             val requestType = when (action) {
                 SessionNotificationHelper.ACTION_CALL_WAITER -> 1
@@ -256,14 +258,16 @@ class SessionActionReceiver : BroadcastReceiver() {
                     }
                     conn.doOutput = true
 
-                    val roomNameJson = if (roomNameAr != null) {
-                        """{"en":"$roomNameEn","ar":"$roomNameAr"}"""
-                    } else {
-                        """{"en":"$roomNameEn"}"""
-                    }
+                    val placeNameJson = JSONObject().put("en", placeNameEn)
+                    if (placeNameAr != null) placeNameJson.put("ar", placeNameAr)
 
-                    val body = """{"sessionId":$sessionId,"roomId":$roomId,"roomName":$roomNameJson,"requestType":$requestType}"""
-                    conn.outputStream.bufferedWriter().use { it.write(body) }
+                    val body = JSONObject()
+                        .put("sessionId", sessionId)
+                        .put("placeId", placeId)
+                        .putOpt("placeKind", placeKind)
+                        .put("placeName", placeNameJson)
+                        .put("requestType", requestType)
+                    conn.outputStream.bufferedWriter().use { it.write(body.toString()) }
                     conn.responseCode
                     conn.disconnect()
                 } catch (_: Exception) {

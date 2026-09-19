@@ -10,9 +10,6 @@ namespace Ninja.Sales.API.Application.Commands;
 public record OpenTicketCommand(
     TicketType Type,
     int BranchId,
-    // LEGACY(places): the old TableId/TableName from older tills — remove when every till and customer app is on /api/places and /api/stays.
-    int? TableId,
-    LocalizedText? TableName,
     string? Label,
     int? PlaceId = null,
     LocalizedText? PlaceName = null) : IRequest<int>;
@@ -31,24 +28,17 @@ public class OpenTicketCommandHandler(
                 ticket = Ticket.OpenForCounter(command.BranchId, command.Label);
                 break;
 
-            case TicketType.Table when command.PlaceId is int placeId || command.TableId is int:
-                // Q7: one open ticket per table — reuse an existing one, by
-                // the place or by the older table id
-                var existing = command.PlaceId is int byPlace
-                    ? await ticketRepository.FindOpenByPlaceAsync(byPlace, command.BranchId)
-                    : null;
-                // LEGACY(places): falls back to the old TableId — remove when every till and customer app is on /api/places and /api/stays.
-                existing ??= command.TableId is int byTable
-                    ? await ticketRepository.FindOpenByTableAsync(byTable, command.BranchId)
-                    : null;
+            case TicketType.Table when command.PlaceId is int placeId:
+                // Q7: one open ticket per table — reuse the one it has
+                var existing = await ticketRepository.FindOpenByPlaceAsync(placeId, command.BranchId);
                 if (existing is not null)
                     return existing.Id;
 
-                ticket = Ticket.OpenForTable(command.TableId, command.TableName ?? command.PlaceName, command.BranchId, command.PlaceId);
+                ticket = Ticket.OpenForTable(placeId, command.PlaceName, command.BranchId);
                 break;
 
             case TicketType.Table:
-                throw new SalesDomainException("Opening a table ticket takes a table id.");
+                throw new SalesDomainException("Opening a table ticket takes the table's place.");
 
             default:
                 throw new SalesDomainException("Only counter and table tickets can be opened by hand — room tickets follow their session.");

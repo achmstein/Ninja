@@ -25,11 +25,6 @@ public class TicketRepository : ITicketRepository
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.SessionId == sessionId && t.Status == TicketStatus.Open);
 
-    // LEGACY(places): finder by the old TableId — remove when every till and customer app is on /api/places and /api/stays.
-    public async Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId)
-        => await _context.Tickets
-            .FirstOrDefaultAsync(t => t.TableId == tableId && t.BranchId == branchId && t.Status == TicketStatus.Open);
-
     public async Task<Ticket?> FindOpenByPlaceAsync(int placeId, int branchId)
         => await _context.Tickets
             .FirstOrDefaultAsync(t => t.PlaceId == placeId && t.SessionId == null && t.BranchId == branchId && t.Status == TicketStatus.Open);
@@ -49,33 +44,11 @@ public class TicketRepository : ITicketRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Ticket?> FindOpenRoomAsync(int branchId, int? roomId, LocalizedText? roomName)
-    {
-        var open = await _context.Tickets
-            .Where(t => t.BranchId == branchId && t.Type == TicketType.Room && t.Status == TicketStatus.Open)
-            .ToListAsync();
-
-        // A room has at most one open ticket and room names are unique within a
-        // branch, so either key is unambiguous. LocationName is jsonb (awkward
-        // to compare in SQL) and there are only a handful of open room tickets,
-        // so the name match is done in memory.
-        if (roomId is int id)
-        {
-            // LEGACY(places): also matches the old RoomId column — remove when every till and customer app is on /api/places and /api/stays.
-            var byId = open.FirstOrDefault(t => t.PlaceId == id || t.RoomId == id);
-            if (byId is not null) return byId;
-        }
-
-        if (roomName is { } name && !string.IsNullOrWhiteSpace(name.En))
-        {
-            return open.FirstOrDefault(t =>
-                t.LocationName is { } loc &&
-                (string.Equals(loc.En, name.En, StringComparison.OrdinalIgnoreCase) ||
-                 (loc.Ar is not null && name.Ar is not null && string.Equals(loc.Ar, name.Ar, StringComparison.Ordinal))));
-        }
-
-        return null;
-    }
+    public async Task<Ticket?> FindOpenRoomAsync(int placeId, int branchId)
+        => await _context.Tickets
+            .Where(t => t.PlaceId == placeId && t.BranchId == branchId && t.Status == TicketStatus.Open)
+            .OrderByDescending(t => t.OpenedAt)
+            .FirstOrDefaultAsync();
 
     public async Task<bool> HasOrderAsync(int orderId)
         => await _context.Tickets.AnyAsync(t => t.Lines.Any(l => l.OrderId == orderId));

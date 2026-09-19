@@ -17,15 +17,13 @@ public class SessionCustomerAssignedIntegrationEventHandler(
 {
     public async Task Handle(SessionCustomerAssignedIntegrationEvent @event)
     {
-        logger.LogInformation("Session {ReservationId} in room {RoomId} assigned to {CustomerId} - notifying rooms group",
-            @event.ReservationId, @event.RoomId, @event.CustomerId);
+        logger.LogInformation("Session {ReservationId} at place {PlaceId} assigned to {CustomerId} - notifying rooms group",
+            @event.ReservationId, @event.PlaceId, @event.CustomerId);
 
         var payload = new
         {
             type = "customer_assigned",
-            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-            roomId = @event.RoomId,
-            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeId = @event.PlaceId,
             placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         };

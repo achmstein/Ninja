@@ -10,12 +10,9 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 /// </summary>
 public record ReservationCancelledIntegrationEvent(
     int ReservationId,
-    // LEGACY(places): the old RoomId/RoomName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    int RoomId,
-    LocalizedText RoomName,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
     string? CustomerId,
     string? CustomerName,
-    int BranchId = 1,
-    int PlaceId = 0,
-    string PlaceKind = "Room",
-    LocalizedText? PlaceName = null) : IntegrationEvent;
+    int BranchId = 1) : IntegrationEvent;

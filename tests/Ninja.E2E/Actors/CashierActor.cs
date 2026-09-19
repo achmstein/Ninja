@@ -151,12 +151,12 @@ public sealed class CashierActor(ApiClient api)
         => Api.GetAsync<PagedResult<TicketHistoryRow>>($"/api/tickets/history?status={status}&pageIndex=0&pageSize=50", ct);
 
     /// <summary>floor: open a table bill or a labelled counter tab before any order lands on it.</summary>
-    public async Task<int> OpenTicketAsync(int type, CancellationToken ct, int? tableId = null, string? tableNameEn = null, string? label = null)
+    public async Task<int> OpenTicketAsync(int type, CancellationToken ct, int? placeId = null, string? placeNameEn = null, string? label = null)
         => (await Api.PostAsync<OpenTicketResponse>("/api/tickets", new
         {
             type,
-            tableId,
-            tableName = tableNameEn is null ? null : new { en = tableNameEn, ar = tableNameEn },
+            placeId,
+            placeName = placeNameEn is null ? null : new { en = placeNameEn, ar = placeNameEn },
             label,
         }, ct)).TicketId;
 
@@ -180,7 +180,7 @@ public sealed class CashierActor(ApiClient api)
         {
             lineIds,
             targetTicketId = (int?)null,
-            newTicket = new { type = Codes.TicketType.Counter, tableId = (int?)null, tableName = (object?)null, label },
+            newTicket = new { type = Codes.TicketType.Counter, placeId = (int?)null, placeName = (object?)null, label },
         }, ct)).TicketId;
 
     public async Task<int> MoveLinesToAsync(int ticketId, int[] lineIds, int targetTicketId, CancellationToken ct)
@@ -229,44 +229,49 @@ public sealed class CashierActor(ApiClient api)
         using var r = await Api.PutAsync($"/api/orders/{orderId}/customer", new { customerUserId, customerName }, ct);
     }
 
-    // --- Rooms -----------------------------------------------------------------
+    // --- Places and stays -------------------------------------------------------
 
-    public Task<List<RoomView>> RoomsAsync(CancellationToken ct) => Api.GetAsync<List<RoomView>>("/api/rooms", ct);
+    public Task<List<PlaceView>> PlacesAsync(CancellationToken ct) => Api.GetAsync<List<PlaceView>>("/api/places", ct);
 
-    /// <summary>features/rooms: a walk-in starts the clock straight away.</summary>
-    public async Task<int> StartWalkInAsync(int roomId, CancellationToken ct, string playerMode = Codes.PlayerMode.Single)
-        => (await Api.PostAsync<StartWalkInSessionResult>($"/api/rooms/sessions/walk-in/{roomId}", new { notes = (string?)null, playerMode }, ct)).ReservationId;
+    /// <summary>The seeded place with this English name on branch 1 ("Room 1", "Table 1").</summary>
+    public async Task<PlaceView> PlaceAsync(string nameEn, CancellationToken ct)
+        => (await PlacesAsync(ct)).FirstOrDefault(p => p.Name.En == nameEn)
+           ?? throw new InvalidOperationException($"no place named {nameEn} on branch 1");
 
-    public async Task StartSessionAsync(int sessionId, CancellationToken ct, string playerMode = Codes.PlayerMode.Single)
+    /// <summary>features/places: a walk-in starts the clock straight away.</summary>
+    public async Task<int> StartWalkInAsync(int placeId, CancellationToken ct, string optionCode = Codes.RateOption.Single)
+        => (await Api.PostAsync<StartWalkInStayResult>($"/api/places/{placeId}/walk-in", new { notes = (string?)null, optionCode }, ct)).StayId;
+
+    public async Task StartStayAsync(int stayId, CancellationToken ct, string optionCode = Codes.RateOption.Single)
     {
-        using var r = await Api.PostAsync($"/api/rooms/sessions/{sessionId}/start", new { playerMode }, ct);
+        using var r = await Api.PostAsync($"/api/stays/{stayId}/start", new { optionCode }, ct);
     }
 
-    public async Task EndSessionAsync(int sessionId, CancellationToken ct)
+    public async Task EndStayAsync(int stayId, CancellationToken ct)
     {
-        using var r = await Api.PostAsync($"/api/rooms/sessions/{sessionId}/end", null, ct);
+        using var r = await Api.PostAsync($"/api/stays/{stayId}/end", null, ct);
     }
 
-    public async Task CancelSessionAsync(int sessionId, CancellationToken ct)
+    public async Task CancelStayAsync(int stayId, CancellationToken ct)
     {
-        using var r = await Api.PostAsync($"/api/rooms/sessions/{sessionId}/cancel", null, ct);
+        using var r = await Api.PostAsync($"/api/stays/{stayId}/cancel", null, ct);
     }
 
-    public async Task SetPlayerModeAsync(int sessionId, string playerMode, CancellationToken ct)
+    public async Task ChangeStayOptionAsync(int stayId, string optionCode, CancellationToken ct)
     {
-        using var r = await Api.PutAsync($"/api/rooms/sessions/{sessionId}/player-mode", new { playerMode }, ct);
+        using var r = await Api.PutAsync($"/api/stays/{stayId}/option", new { optionCode }, ct);
     }
 
-    public async Task AddMemberAsync(int sessionId, string customerId, string? customerName, CancellationToken ct)
+    public async Task AddMemberAsync(int stayId, string customerId, string? customerName, CancellationToken ct)
     {
-        using var r = await Api.PostAsync($"/api/rooms/sessions/{sessionId}/members", new { customerId, customerName }, ct);
+        using var r = await Api.PostAsync($"/api/stays/{stayId}/members", new { customerId, customerName }, ct);
     }
 
-    public Task<ReservationView?> SessionAsync(int sessionId, CancellationToken ct)
-        => Api.GetOrDefaultAsync<ReservationView>($"/api/rooms/sessions/{sessionId}", ct);
+    public Task<StayView?> StayAsync(int stayId, CancellationToken ct)
+        => Api.GetOrDefaultAsync<StayView>($"/api/stays/{stayId}", ct);
 
-    public Task<List<ReservationView>> ActiveSessionsAsync(CancellationToken ct)
-        => Api.GetAsync<List<ReservationView>>("/api/rooms/sessions/active", ct);
+    public Task<List<StayView>> OpenStaysAsync(CancellationToken ct)
+        => Api.GetAsync<List<StayView>>("/api/stays/open", ct);
 
     // --- Customer card ---------------------------------------------------------
 

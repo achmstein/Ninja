@@ -24,9 +24,7 @@ public class SessionPaidIntegrationEventHandler(
             {
                 type = "session_paid",
                 sessionId = @event.ReservationId,
-                // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-                roomId = @event.RoomId,
-                placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                placeId = @event.PlaceId,
                 placeKind = @event.PlaceKind,
                 receiptNumber = @event.ReceiptNumber
             });

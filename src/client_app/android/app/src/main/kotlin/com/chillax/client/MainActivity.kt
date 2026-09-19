@@ -37,7 +37,7 @@ class MainActivity : FlutterActivity() {
                 "show" -> {
                     try {
                         val args = call.arguments as? Map<*, *>
-                        val roomName = call.argument<String>("roomName") ?: ""
+                        val placeName = call.argument<String>("placeName") ?: ""
                         val duration = call.argument<String>("duration") ?: ""
                         val startTimeMs = (args?.get("startTimeMs") as? Number)?.toLong()
                         val locale = call.argument<String>("locale") ?: "en"
@@ -45,7 +45,7 @@ class MainActivity : FlutterActivity() {
                         val drink1Name = call.argument<String>("drink1Name")
                         val drink2Id = (args?.get("drink2Id") as? Number)?.toInt()
                         val drink2Name = call.argument<String>("drink2Name")
-                        notificationHelper?.show(roomName, duration, startTimeMs, locale,
+                        notificationHelper?.show(placeName, duration, startTimeMs, locale,
                             drink1Id, drink1Name, drink2Id, drink2Name)
                         result.success(null)
                     } catch (e: Exception) {

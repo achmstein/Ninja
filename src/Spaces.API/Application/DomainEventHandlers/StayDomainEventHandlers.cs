@@ -21,8 +21,6 @@ internal static class StayEventFields
     public static string PlaceKind(this Stay stay) => (stay.Place?.Kind ?? Domain.AggregatesModel.PlaceAggregate.PlaceKind.Room).ToString();
     public static LocalizedText PlaceName(this Stay stay) => stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}");
     public static int BranchId(this Stay stay) => stay.Place?.BranchId ?? 1;
-    // LEGACY(places): the old PlayerMode word ("Single"/"Multi") the events carry next to OptionCode — remove when every till and customer app is on /api/places and /api/stays.
-    public static string? OptionWord(this Stay stay) => stay.CurrentOption?.Name.En;
 
     /// <summary>Everyone in the party, owner included, each once.</summary>
     public static List<string> PartyIds(this Stay stay)
@@ -44,16 +42,13 @@ public class StayHeldDomainEventHandler(ISpacesIntegrationEventService outbox, I
 
         await outbox.AddAndSaveEventAsync(new RoomReservedIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
+            stay.PlaceKind(),
             stay.PlaceName(),
             stay.CustomerId,
             stay.CustomerName,
             stay.ExpiresAt,
             stay.BranchId(),
-            stay.PlaceId,
-            stay.PlaceKind(),
-            stay.PlaceName(),
             stay.StartOnConfirm));
     }
 }
@@ -68,18 +63,13 @@ public class StayStartedDomainEventHandler(ISpacesIntegrationEventService outbox
 
         await outbox.AddAndSaveEventAsync(new SessionStartedIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-            stay.PlaceId,
-            stay.PlaceName(),
-            stay.CustomerId,
-            stay.StartedAt,
-            // LEGACY(places): fills the old PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
-            stay.OptionWord(),
-            stay.BranchId(),
             stay.PlaceId,
             stay.PlaceKind(),
             stay.PlaceName(),
-            stay.CurrentOptionCode));
+            stay.CustomerId,
+            stay.StartedAt,
+            stay.CurrentOptionCode,
+            stay.BranchId()));
     }
 }
 
@@ -92,16 +82,12 @@ public class StayEndedDomainEventHandler(ISpacesIntegrationEventService outbox, 
         logger.LogInformation("Stay ended: {StayId} at place {PlaceId}, cost {Cost}", stay.Id, stay.PlaceId, stay.TotalCost);
 
         // The party's devices drop their stay notification
-        // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
         await outbox.AddAndSaveEventAsync(new SessionEndedIntegrationEvent(
-            stay.Id, stay.PlaceId, stay.PlaceName(), stay.PartyIds(),
-            stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+            stay.Id, stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.PartyIds()));
 
         // Whoever asked to be told the place is free
-        // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
         await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
-            stay.PlaceId, stay.PlaceName(), stay.BranchId(),
-            stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+            stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
 
         // The bill. Every real stay gets one — a walk-in nobody claimed is
         // still a bill Sales has to settle; CustomerId simply travels null.
@@ -114,24 +100,15 @@ public class StayEndedDomainEventHandler(ISpacesIntegrationEventService outbox, 
             await outbox.AddAndSaveEventAsync(new SessionCompletedIntegrationEvent(
                 stay.Id,
                 stay.CustomerId,
-                // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-                stay.PlaceId,
-                stay.PlaceName(),
-                // LEGACY(places): fills the old SingleCost/MultiCost from the options of those codes — remove when every till and customer app is on /api/places and /api/stays.
-                stay.CostFor(Tariff.SingleCode),
-                stay.CostFor(Tariff.MultiCode),
-                stay.TotalCost ?? 0,
-                // LEGACY(places): fills the old SingleDuration/MultiDuration from the options of those codes — remove when every till and customer app is on /api/places and /api/stays.
-                stay.HoursFor(Tariff.SingleCode),
-                stay.HoursFor(Tariff.MultiCode),
-                started,
-                ended,
-                ended - started,
-                stay.BranchId(),
                 stay.PlaceId,
                 stay.PlaceKind(),
                 stay.PlaceName(),
-                costs));
+                costs,
+                stay.TotalCost ?? 0,
+                started,
+                ended,
+                ended - started,
+                stay.BranchId()));
         }
     }
 }
@@ -146,24 +123,19 @@ public class StayCancelledDomainEventHandler(ISpacesIntegrationEventService outb
 
         await outbox.AddAndSaveEventAsync(new ReservationCancelledIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             stay.PlaceId,
+            stay.PlaceKind(),
             stay.PlaceName(),
             stay.CustomerId,
             stay.CustomerName,
             stay.BranchId(),
-            stay.PlaceId,
-            stay.PlaceKind(),
-            stay.PlaceName(),
             notification.PreviousStatus == StayStatus.Running));
 
         // A hold and a running stay both kept the place; either way it is free now
         if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
         {
-            // LEGACY(places): the first PlaceId/PlaceName pair fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
             await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
-                stay.PlaceId, stay.PlaceName(), stay.BranchId(),
-                stay.PlaceId, stay.PlaceKind(), stay.PlaceName()));
+                stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
         }
     }
 }
@@ -178,16 +150,11 @@ public class StayMemberJoinedDomainEventHandler(ISpacesIntegrationEventService o
 
         await outbox.AddAndSaveEventAsync(new SessionMemberJoinedIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-            stay.PlaceId,
-            stay.PlaceName(),
-            notification.MemberUserId,
-            stay.StartedAt,
-            // LEGACY(places): fills the old PlayerMode word — remove when every till and customer app is on /api/places and /api/stays.
-            stay.OptionWord(),
             stay.PlaceId,
             stay.PlaceKind(),
             stay.PlaceName(),
+            notification.MemberUserId,
+            stay.StartedAt,
             stay.CurrentOptionCode));
     }
 }
@@ -202,14 +169,12 @@ public class StayCustomerAssignedDomainEventHandler(ISpacesIntegrationEventServi
 
         await outbox.AddAndSaveEventAsync(new SessionCustomerAssignedIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
-            stay.PlaceId,
-            notification.CustomerId,
-            stay.CustomerName,
-            stay.BranchId(),
             stay.PlaceId,
             stay.PlaceKind(),
-            stay.PlaceName()));
+            stay.PlaceName(),
+            notification.CustomerId,
+            stay.CustomerName,
+            stay.BranchId()));
     }
 }
 
@@ -235,9 +200,6 @@ public static class PlaceEventMapping
         place.IsTimed,
         place.HasOptions,
         place.IsActive,
-        // LEGACY(places): projects the old sticker ids to other services — remove when the printed room/table stickers are reprinted with /p/{id}.
-        place.LegacyRoomId,
-        place.LegacyTableId,
         deleted);
 }
 
@@ -252,14 +214,12 @@ public class StayPaidDomainEventHandler(ISpacesIntegrationEventService outbox, I
 
         await outbox.AddAndSaveEventAsync(new SessionPaidIntegrationEvent(
             stay.Id,
-            // LEGACY(places): fills the old RoomId — remove when every till and customer app is on /api/places and /api/stays.
-            stay.PlaceId,
-            stay.PartyIds(),
-            notification.ReceiptNumber,
-            notification.BranchId,
             stay.PlaceId,
             stay.PlaceKind(),
-            stay.PlaceName()));
+            stay.PlaceName(),
+            stay.PartyIds(),
+            notification.ReceiptNumber,
+            notification.BranchId));
     }
 }
 

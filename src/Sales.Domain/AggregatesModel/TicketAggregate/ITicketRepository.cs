@@ -13,22 +13,17 @@ public interface ITicketRepository : IRepository<Ticket>
     /// <summary>The open ticket billing a room session, if one exists.</summary>
     Task<Ticket?> FindOpenBySessionAsync(int sessionId);
 
-    /// <summary>
-    /// LEGACY(places): finder by the old TableId — remove when every till and customer app is on /api/places and /api/stays.
-    /// The open ticket accumulating for a table, by the id an older sticker or client named.
-    /// </summary>
-    Task<Ticket?> FindOpenByTableAsync(int tableId, int branchId);
-
     /// <summary>The open ticket accumulating for a place (a table with no clock running), if one exists.</summary>
     Task<Ticket?> FindOpenByPlaceAsync(int placeId, int branchId);
 
     /// <summary>
-    /// The open room ticket for a room in a branch, matched by room id when
-    /// given and otherwise by room name. The fallback for a confirmed order
-    /// that names its room but, from an older app build, carries no session
-    /// or room id — so it still lands on the room's bill, not a counter tab.
+    /// The open ticket at a room — the newest, should the last stay's bill
+    /// still sit unsettled beside the running one's. For a confirmed order
+    /// that names the room but no stay (the customer scanned its sticker and
+    /// ordered before the clock started, or after it stopped), so it still
+    /// lands on the room's bill, not a counter tab.
     /// </summary>
-    Task<Ticket?> FindOpenRoomAsync(int branchId, int? roomId, LocalizedText? roomName);
+    Task<Ticket?> FindOpenRoomAsync(int placeId, int branchId);
 
     /// <summary>
     /// The open counter ticket in a branch that already carries lines for a

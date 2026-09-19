@@ -35,38 +35,10 @@ public class CreateOrderCommand : IRequest<int>
     public LocalizedText? PlaceName { get; private set; }
 
     /// <summary>
-    /// LEGACY(places): old room name field beside <see cref="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// Room name for the session (e.g., "VIP") - localized
-    /// </summary>
-    [DataMember]
-    public LocalizedText? RoomName { get; private set; }
-
-    /// <summary>
-    /// The Spaces session this order belongs to, when ordered from a room
+    /// The Spaces stay this order belongs to, when ordered from a timed place with its clock running
     /// </summary>
     [DataMember]
     public int? SessionId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old room id field beside <see cref="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// The room behind <see cref="SessionId"/>
-    /// </summary>
-    [DataMember]
-    public int? RoomId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old table id field beside <see cref="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// Café table the order is delivered to, when the customer is not in a room
-    /// </summary>
-    [DataMember]
-    public int? TableId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old table name field beside <see cref="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// Table name (e.g., "Table 3") - localized
-    /// </summary>
-    [DataMember]
-    public LocalizedText? TableName { get; private set; }
 
     /// <summary>
     /// The already-open Sales ticket this order belongs on, when a cashier
@@ -151,8 +123,7 @@ public class CreateOrderCommand : IRequest<int>
     /// Whether the order says where it goes. Mirrors Order.HasDestination —
     /// the aggregate is the one that enforces it.
     /// </summary>
-    // LEGACY(places): the RoomName/TableId fallbacks answer for a command that only carries the old fields — remove when every till and customer app is on /api/places and /api/stays.
-    public bool HasDestination => PlaceId.HasValue || RoomName is not null || TableId.HasValue;
+    public bool HasDestination => PlaceId.HasValue;
 
     public CreateOrderCommand()
     {
@@ -164,17 +135,13 @@ public class CreateOrderCommand : IRequest<int>
         string userId,
         string userName,
         int branchId,
-        LocalizedText? roomName = null,
         string? customerNote = null,
         int pointsToRedeem = 0,
-        int? tableId = null,
-        LocalizedText? tableName = null,
         string? guestId = null,
         string? guestName = null,
         string? guestPhone = null,
         OrderSource? source = null,
         int? sessionId = null,
-        int? roomId = null,
         int? ticketId = null,
         DateTime? placedAt = null,
         bool replay = false,
@@ -193,11 +160,7 @@ public class CreateOrderCommand : IRequest<int>
         UserId = userId;
         UserName = userName;
         BranchId = branchId;
-        RoomName = roomName;
         SessionId = sessionId;
-        RoomId = roomId;
-        TableId = tableId;
-        TableName = tableName;
         TicketId = ticketId;
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;

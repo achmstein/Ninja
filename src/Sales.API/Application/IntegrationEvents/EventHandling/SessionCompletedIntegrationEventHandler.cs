@@ -21,17 +21,26 @@ public class SessionCompletedIntegrationEventHandler(
 
     private async Task Assemble(SessionCompletedIntegrationEvent @event)
     {
+        // Every tariff has at least one rate option, so a stay that ends
+        // without its breakdown is a broken contract, not free time: it
+        // dead-letters rather than landing as no time at all
+        if (@event.Costs is not { Count: > 0 } costs)
+            throw new SalesDomainException($"Session {@event.ReservationId} completed without its cost breakdown - its time cannot land.");
+
         var ticket = await ticketRepository.FindOpenBySessionAsync(@event.ReservationId);
 
         if (ticket is null)
         {
             // The time is the bulk of a room bill — never drop it just
-            // because the start event was missed
+            // because the start event was missed. A stay is always
+            // somewhere, so one that names no place is a broken contract.
+            if (@event.PlaceId == 0)
+                throw new SalesDomainException($"Session {@event.ReservationId} completed without a place - no ticket to open its time on.");
+
             ticket = ticketRepository.Add(Ticket.OpenForSession(
                 @event.ReservationId,
-                // LEGACY(places): falls back to the old RoomId/RoomName from a publisher older than the remodel — remove when every till and customer app is on /api/places and /api/stays.
-                @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
-                @event.PlaceName ?? @event.RoomName,
+                @event.PlaceId,
+                @event.PlaceName,
                 @event.BranchId,
                 @event.PlaceKind));
 
@@ -42,18 +51,9 @@ public class SessionCompletedIntegrationEventHandler(
         // heading on the bill, and the group splits it at settle however they
         // agree, each share typed onto its own tab. Stamping the owner on it
         // used to put the whole room on one person with a single tap.
-        if (@event.Costs is { Count: > 0 } costs)
-        {
-            ticket.AppendSessionTime(costs
-                .Select(c => new SessionTimeLine(c.OptionName, c.Hours, c.Cost))
-                .ToList());
-        }
-        else
-        {
-            // LEGACY(places): a publisher older than the Places remodel sends no Costs, only the two room rates — remove when every till and customer app is on /api/places and /api/stays.
-            ticket.AppendSessionTime(
-                @event.SingleDuration, @event.SingleCost, @event.MultiDuration, @event.MultiCost);
-        }
+        ticket.AppendSessionTime(costs
+            .Select(c => new SessionTimeLine(c.OptionName, c.Hours, c.Cost))
+            .ToList());
 
         // Nothing ever landed — no time billed, no orders. An empty room ticket
         // left open would keep the room busy on the floor and block the next

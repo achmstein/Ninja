@@ -12,7 +12,6 @@ import '../../features/bills/screens/bills_screen.dart';
 import '../../features/places/screens/places_screen.dart';
 import '../../features/places/screens/stays_screen.dart';
 import '../../features/places/screens/place_link_screen.dart';
-import '../../features/tables/screens/table_link_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/transactions_screen.dart';
 import '../../features/profile/screens/favorites_screen.dart';
@@ -63,9 +62,9 @@ class _AuthNotifier extends ChangeNotifier {
   }
 }
 
-/// A scanned room link held across the sign-in detour. Joining or reserving
+/// A scanned place link held across the sign-in detour. Joining or holding
 /// needs an account, and without this the customer would land on login and have
-/// to walk back to the room to scan the sticker again.
+/// to walk back to the place to scan the sticker again.
 String? _pendingLink;
 
 /// A place page that needs an account (joining or holding a timed place)
@@ -93,8 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // just remembers where the customer is sitting, and bouncing them to
       // login would lose it. The page sends them on itself; a timed place
       // asks for sign-in only when they join or hold.
-      // LEGACY(places): the '/table/' prefix — remove when the printed room/table stickers are reprinted with /p/{id}.
-      final isTableLink = currentLocation.startsWith('/table/') || currentLocation.startsWith('/p/');
+      final isPlaceLink = currentLocation.startsWith('/p/');
 
       // While initializing, stay on or go to splash
       if (isInitializing) {
@@ -107,16 +105,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect to login if not authenticated
-      if (!isAuthenticated && !isLoggingIn && !isRegistering && !isTableLink) {
-        // LEGACY(places): remembers an old /room/{id} sticker link across sign-in — remove when the printed room/table stickers are reprinted with /p/{id}.
-        if (currentLocation.startsWith('/room/')) {
-          _pendingLink = state.uri.toString();
-        }
+      if (!isAuthenticated && !isLoggingIn && !isRegistering && !isPlaceLink) {
         return '/login';
       }
 
       // Redirect to menu if authenticated and on login/register page, or back
-      // to the room link they arrived on before being sent to sign in
+      // to the place link they arrived on before being sent to sign in
       if (isAuthenticated && (isLoggingIn || isRegistering)) {
         final pending = _pendingLink;
         _pendingLink = null;
@@ -152,28 +146,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreen(),
       ),
 
-      // LEGACY(places): the /table/{id} sticker route — remove when the printed room/table stickers are reprinted with /p/{id}.
-      // Printed table QR opened as an App Link (chillax.site/table/{id})
-      GoRoute(
-        path: '/table/:tableId',
-        builder: (context, state) => TableLinkScreen(
-          tableId: int.tryParse(state.pathParameters['tableId'] ?? '') ?? 0,
-        ),
-      ),
-
       // A place's QR opened as an App Link (chillax.site/p/{id})
       GoRoute(
         path: '/p/:placeId',
         builder: (context, state) => PlaceLinkScreen(
           placeId: int.tryParse(state.pathParameters['placeId'] ?? '') ?? 0,
         ),
-      ),
-
-      // LEGACY(places): the /room/{id} sticker redirect — remove when the printed room/table stickers are reprinted with /p/{id}.
-      // The older room stickers (chillax.site/room/{id}); rooms kept their ids
-      GoRoute(
-        path: '/room/:roomId',
-        redirect: (context, state) => '/p/${state.pathParameters['roomId']}',
       ),
 
       // Cart route (separate from shell for push navigation)

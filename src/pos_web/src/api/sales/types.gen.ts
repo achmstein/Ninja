@@ -151,8 +151,6 @@ export type MoveLinesRequest = {
 
 export type NewTicketRequest = {
     type: TicketType;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     label?: null | string;
     placeId?: null | number | string;
     placeName?: null | LocalizedText;
@@ -168,8 +166,6 @@ export type OpenShiftResponse = {
 
 export type OpenTicketRequest = {
     type: TicketType;
-    tableId?: null | number | string;
-    tableName?: null | LocalizedText;
     label?: null | string;
     placeId?: null | number | string;
     placeName?: null | LocalizedText;
@@ -466,8 +462,6 @@ export type TicketDetail = {
     sessionEndedAt?: null | string;
     placeId?: null | number | string;
     placeKind?: null | string;
-    roomId?: null | number | string;
-    tableId?: null | number | string;
     label?: null | string;
     guestPhone?: null | string;
     openedAt?: string;
@@ -537,8 +531,6 @@ export type TicketSummary = {
     sessionId?: null | number | string;
     placeId?: null | number | string;
     placeKind?: null | string;
-    roomId?: null | number | string;
-    tableId?: null | number | string;
     label?: null | string;
     openedAt?: string;
     lastActivityAt?: string;

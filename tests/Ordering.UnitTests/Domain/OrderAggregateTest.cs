@@ -114,12 +114,11 @@ public class OrderAggregateTest
         // Arrange
         var userId = "1";
         var userName = "fakeName";
-        var roomName = "VIP";
         var customerNote = "No sugar please";
         var expectedResult = 1;
 
         // Act
-        var fakeOrder = new Order(userId, userName, 1, roomName, customerNote);
+        var fakeOrder = new Order(userId, userName, 1, customerNote);
 
         // Assert
         Assert.HasCount(expectedResult, fakeOrder.DomainEvents);
@@ -131,11 +130,10 @@ public class OrderAggregateTest
         // Arrange
         var userId = "1";
         var userName = "fakeName";
-        var roomName = "VIP";
         var expectedResult = 2;
 
         // Act
-        var fakeOrder = new Order(userId, userName, 1, roomName);
+        var fakeOrder = new Order(userId, userName, 1);
         fakeOrder.AddDomainEvent(new OrderStartedDomainEvent(fakeOrder, userId, userName));
 
         // Assert
@@ -164,7 +162,7 @@ public class OrderAggregateTest
     public void Order_status_transitions_correctly()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
 
         // Assert initial status
         Assert.AreEqual(OrderStatus.AwaitingValidation, order.OrderStatus);
@@ -181,7 +179,7 @@ public class OrderAggregateTest
     public void Order_can_be_cancelled_when_submitted()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
 
         // Act
@@ -195,7 +193,7 @@ public class OrderAggregateTest
     public void Order_cannot_be_cancelled_when_confirmed()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
         order.SetConfirmedStatus();
 
@@ -205,7 +203,7 @@ public class OrderAggregateTest
 
     private static Order ConfirmedOrder()
     {
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
         order.SetConfirmedStatus();
         return order;
@@ -215,7 +213,7 @@ public class OrderAggregateTest
     public void Confirming_an_order_starts_the_kitchen_clock()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
         Assert.IsNull(order.ConfirmedAt);
 
@@ -280,7 +278,7 @@ public class OrderAggregateTest
     public void Kitchen_cannot_touch_an_order_that_is_not_confirmed()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
 
         // Act - Assert
@@ -291,7 +289,7 @@ public class OrderAggregateTest
     public void Order_cannot_be_confirmed_when_cancelled()
     {
         // Arrange
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
+        var order = new Order("userId", "userName", 1);
         order.SetStockConfirmedStatus();
         order.SetCancelledStatus();
 
@@ -300,54 +298,33 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
-    public void Order_keeps_the_table_it_was_placed_from()
+    public void Order_keeps_the_place_it_was_placed_from()
     {
         // Arrange
-        var tableName = new LocalizedText("Table 3", "ترابيزة 3");
+        var placeName = new LocalizedText("Table 3", "ترابيزة 3");
 
         // Act
-        var order = new Order("userId", "userName", 1, tableId: 3, tableName: tableName);
+        var order = new Order("userId", "userName", 1, placeId: 3, placeKind: "Table", placeName: placeName);
 
         // Assert
-        Assert.AreEqual(3, order.TableId);
-        Assert.AreEqual("Table 3", order.TableName?.En);
-        Assert.AreEqual("ترابيزة 3", order.TableName?.Ar);
-        Assert.IsNull(order.RoomName);
+        Assert.AreEqual(3, order.PlaceId);
+        Assert.AreEqual("Table", order.PlaceKind);
+        Assert.AreEqual("Table 3", order.PlaceName?.En);
+        Assert.AreEqual("ترابيزة 3", order.PlaceName?.Ar);
+        Assert.IsTrue(order.Destination.IsSet);
     }
 
     [TestMethod]
-    public void Order_placed_from_a_room_has_no_table()
+    public void Guest_order_at_a_place_is_valid()
     {
         // Act
-        var order = new Order("userId", "userName", 1, roomName: "Room 1");
-
-        // Assert
-        Assert.IsNull(order.TableId);
-        Assert.IsNull(order.TableName);
-        Assert.AreEqual("Room 1", order.RoomName?.En);
-    }
-
-    [TestMethod]
-    public void Guest_order_at_a_table_is_valid()
-    {
-        // Act
-        var order = NewGuestOrder(tableId: 3);
+        var order = NewGuestOrder(placeId: 3);
 
         // Assert
         Assert.IsTrue(order.IsGuestOrder);
         Assert.IsTrue(order.HasDestination);
         Assert.AreEqual("Nadia", order.GuestName);
         Assert.IsNull(order.BuyerId);
-    }
-
-    [TestMethod]
-    public void Guest_order_in_a_room_is_valid()
-    {
-        // Act
-        var order = NewGuestOrder(roomName: "Room 1");
-
-        // Assert
-        Assert.IsTrue(order.HasDestination);
     }
 
     [TestMethod]
@@ -374,16 +351,15 @@ public class OrderAggregateTest
     public void Guest_order_without_contact_details_is_refused()
     {
         Assert.ThrowsExactly<OrderingDomainException>(
-            () => NewGuestOrder(tableId: 3, guestName: null));
+            () => NewGuestOrder(placeId: 3, guestName: null));
         Assert.ThrowsExactly<OrderingDomainException>(
-            () => NewGuestOrder(tableId: 3, guestPhone: null));
+            () => NewGuestOrder(placeId: 3, guestPhone: null));
         Assert.ThrowsExactly<OrderingDomainException>(
-            () => NewGuestOrder(tableId: 3, guestId: null));
+            () => NewGuestOrder(placeId: 3, guestId: null));
     }
 
     private static Order NewGuestOrder(
-        int? tableId = null,
-        LocalizedText? roomName = null,
+        int? placeId = null,
         string? guestId = "guest-1",
         string? guestName = "Nadia",
         string? guestPhone = "01012345678") =>
@@ -391,12 +367,12 @@ public class OrderAggregateTest
             userId: string.Empty,
             userName: string.Empty,
             branchId: 1,
-            roomName: roomName,
-            tableId: tableId,
-            tableName: tableId is null ? null : new LocalizedText("Table 3"),
             guestId: guestId,
             guestName: guestName,
-            guestPhone: guestPhone);
+            guestPhone: guestPhone,
+            placeId: placeId,
+            placeKind: placeId is null ? null : "Table",
+            placeName: placeId is null ? null : new LocalizedText("Table 3"));
 
     [TestMethod]
     public void Total_is_net_of_line_discounts_and_loyalty_discount()
@@ -441,7 +417,7 @@ public class OrderAggregateTest
     public void Source_derives_from_identity_when_not_stated()
     {
         var customerOrder = new Order("user-1", "Nadia", branchId: 1);
-        var guestOrder = NewGuestOrder(tableId: 3);
+        var guestOrder = NewGuestOrder(placeId: 3);
 
         Assert.AreEqual(OrderSource.Customer, customerOrder.Source);
         Assert.AreEqual(OrderSource.Guest, guestOrder.Source);
@@ -460,13 +436,14 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
-    public void Order_carries_its_session_and_room_ids()
+    public void Order_carries_its_stay_and_place_ids()
     {
         var order = new Order("user-1", "Nadia", branchId: 1,
-            roomName: new LocalizedText("VIP"), sessionId: 42, roomId: 7);
+            sessionId: 42, placeId: 7, placeKind: "Room", placeName: new LocalizedText("VIP"));
 
         Assert.AreEqual(42, order.SessionId);
-        Assert.AreEqual(7, order.RoomId);
+        Assert.AreEqual(7, order.PlaceId);
+        Assert.AreEqual(new OrderDestination(7, "Room", order.PlaceName, 42), order.Destination);
     }
 
     [TestMethod]

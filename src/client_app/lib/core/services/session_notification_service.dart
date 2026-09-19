@@ -105,30 +105,30 @@ class SessionNotificationService {
     _saveSessionInfo(session);
 
     final isArabic = locale == 'ar';
-    final roomName = isArabic
+    final placeName = isArabic
         ? (session.placeName.ar ?? session.placeName.en)
         : session.placeName.en;
 
-    // Session context for iOS Live Activity intents (background actions)
+    // Session context for iOS Live Activity intents (background actions):
+    // the place the stay runs at, as a service request names it
     final accessToken = await _ref.read(authServiceProvider.notifier).getAccessToken();
     final branchId = _ref.read(selectedBranchIdProvider);
     final sessionContext = <String, dynamic>{
       if (accessToken != null) 'accessToken': accessToken,
       'apiBaseUrl': AppConfig.notificationsApiUrl,
       'sessionId': session.id,
-      // LEGACY(places): the native channel's 'roomId'/'roomNameEn'/'roomNameAr' keys carry the place — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-      'roomId': session.placeId,
+      'placeId': session.placeId,
+      'placeKind': session.placeKind.wireName,
       if (branchId != null) 'branchId': branchId,
-      'roomNameEn': session.placeName.en,
-      if (session.placeName.ar != null) 'roomNameAr': session.placeName.ar,
+      'placeNameEn': session.placeName.en,
+      if (session.placeName.ar != null) 'placeNameAr': session.placeName.ar,
     };
 
-    // Show Live Activity immediately with basic info (room + timer + waiter/controller)
+    // Show Live Activity immediately with basic info (place + timer + waiter/controller)
     try {
       final cached = _cachedDrinks ?? [];
       await _channel.invokeMethod('show', {
-        // LEGACY(places): the native channel's 'roomName' key carries the place name — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-        'roomName': roomName,
+        'placeName': placeName,
         'duration': session.formattedDuration,
         'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
         'locale': locale,
@@ -157,8 +157,7 @@ class SessionNotificationService {
 
         try {
           await _channel.invokeMethod('show', {
-            // LEGACY(places): the native channel's 'roomName' key carries the place name — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-            'roomName': roomName,
+            'placeName': placeName,
             'duration': session.formattedDuration,
             'startTimeMs': session.startedAt?.millisecondsSinceEpoch,
             'locale': locale,
@@ -283,9 +282,9 @@ class SessionNotificationService {
 
       await dio.post('service-requests', data: {
         'sessionId': _activeSession!.id,
-        // LEGACY(places): the notification action sends the older roomId/roomName fields (no placeId yet) — remove when Ordering and Notification stop reading the old room/table fields.
-        'roomId': _activeSession!.placeId,
-        'roomName': _activeSession!.placeName.toJson(),
+        'placeId': _activeSession!.placeId,
+        'placeKind': _activeSession!.placeKind.wireName,
+        'placeName': _activeSession!.placeName.toJson(),
         'requestType': requestType,
       });
     } catch (e) {
@@ -309,10 +308,10 @@ class SessionNotificationService {
         item: item,
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
-        // LEGACY(places): the notification's drink order sends the older roomName/roomId fields (no placeId yet) — remove when Ordering and Notification stop reading the old room/table fields.
-        roomName: _activeSession!.placeName.toJson(),
+        placeId: _activeSession!.placeId,
+        placeKind: _activeSession!.placeKind.wireName,
+        placeName: _activeSession!.placeName.toJson(),
         sessionId: _activeSession!.id,
-        roomId: _activeSession!.placeId,
         preference: preference,
       );
 
@@ -332,11 +331,11 @@ class SessionNotificationService {
     final branchId = _ref.read(selectedBranchIdProvider);
 
     await prefs.setInt('active_session_id', session.id);
-    // LEGACY(places): the native side reads the place from the 'active_session_room_id'/'active_session_room_name_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-    await prefs.setInt('active_session_room_id', session.placeId);
-    await prefs.setString('active_session_room_name_en', session.placeName.en);
+    await prefs.setInt('active_session_place_id', session.placeId);
+    await prefs.setString('active_session_place_kind', session.placeKind.wireName);
+    await prefs.setString('active_session_place_name_en', session.placeName.en);
     if (session.placeName.ar != null) {
-      await prefs.setString('active_session_room_name_ar', session.placeName.ar!);
+      await prefs.setString('active_session_place_name_ar', session.placeName.ar!);
     }
     if (accessToken != null) {
       await prefs.setString('active_session_access_token', accessToken);
@@ -349,10 +348,10 @@ class SessionNotificationService {
   Future<void> _clearSessionInfo() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('active_session_id');
-    // LEGACY(places): the native side's 'active_session_room_*' keys — remove when the Live Activity / native channel is updated to place keys (the native side must change first).
-    await prefs.remove('active_session_room_id');
-    await prefs.remove('active_session_room_name_en');
-    await prefs.remove('active_session_room_name_ar');
+    await prefs.remove('active_session_place_id');
+    await prefs.remove('active_session_place_kind');
+    await prefs.remove('active_session_place_name_en');
+    await prefs.remove('active_session_place_name_ar');
     await prefs.remove('active_session_access_token');
     await prefs.remove('active_session_branch_id');
   }

@@ -108,53 +108,44 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (@event.SessionId is int sessionId)
         {
             var sessionTicket = await ticketRepository.FindOpenBySessionAsync(sessionId);
+            if (sessionTicket is not null)
+                return sessionTicket;
 
             // The session may predate Sales (or its start event was lost) —
-            // the order still has to land somewhere, so open the ticket now
-            return sessionTicket ?? ticketRepository.Add(Ticket.OpenForSession(
-                sessionId,
-                // LEGACY(places): falls back to the old RoomId/RoomName from older publishers — remove when every till and customer app is on /api/places and /api/stays.
-                @event.PlaceId ?? @event.RoomId ?? 0,
-                @event.PlaceName ?? @event.RoomName ?? new LocalizedText("Room"),
-                @event.BranchId,
-                @event.PlaceKind ?? "Room"));
+            // the order still has to land somewhere, so open the ticket now.
+            // A stay is always somewhere: an order that names one but no
+            // place is a broken contract, and dead-letters instead.
+            if (@event is not { PlaceId: int stayPlace, PlaceKind: { } stayPlaceKind, PlaceName: { } stayPlaceName })
+                throw new SalesDomainException($"Order {@event.OrderId} is for session {sessionId} but names no place to open its ticket at.");
+
+            return ticketRepository.Add(Ticket.OpenForSession(sessionId, stayPlace, stayPlaceName, @event.BranchId, stayPlaceKind));
         }
 
-        // A place with no clock running (a table, timed or not, between
-        // stays): the newer clients name it by its place id
-        if (@event.PlaceId is int placeId && !string.Equals(@event.PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
+        if (@event.PlaceId is int placeId)
         {
-            var placeTicket = await ticketRepository.FindOpenByPlaceAsync(placeId, @event.BranchId)
-                // LEGACY(places): falls back to a ticket an older till opened by TableId — remove when every till and customer app is on /api/places and /api/stays.
-                ?? (@event.TableId is int namedTable ? await ticketRepository.FindOpenByTableAsync(namedTable, @event.BranchId) : null);
-
-            return placeTicket ?? ticketRepository.Add(Ticket.OpenForTable(@event.TableId, @event.PlaceName ?? @event.TableName, @event.BranchId, placeId));
-        }
-
-        // LEGACY(places): the TableId-only route for orders from older publishers without a PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-        if (@event.TableId is int tableId)
-        {
-            var tableTicket = await ticketRepository.FindOpenByTableAsync(tableId, @event.BranchId);
-
-            return tableTicket ?? ticketRepository.Add(Ticket.OpenForTable(tableId, @event.PlaceName ?? @event.TableName, @event.BranchId, @event.PlaceId));
-        }
-
-        // A room order from an older customer app build names its room but
-        // carries no session or room id (newer builds send the ids, matched
-        // above). Land it on the room's open ticket by name so it joins the
-        // session's bill instead of opening a stray counter tab in the
-        // customer's name.
-        // LEGACY(places): matches the room's open ticket by the old RoomId/RoomName — remove when every till and customer app is on /api/places and /api/stays.
-        if (@event.SessionId is null && @event.TableId is null &&
-            (@event.RoomId is not null || @event.RoomName is not null))
-        {
-            var roomTicket = await ticketRepository.FindOpenRoomAsync(@event.BranchId, @event.RoomId, @event.RoomName);
-            if (roomTicket is not null)
+            if (string.Equals(@event.PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
             {
-                logger.LogInformation(
-                    "Order {OrderId} matched open room ticket {TicketId} by {Key}",
-                    @event.OrderId, roomTicket.Id, @event.RoomId is not null ? "room id" : "room name");
-                return roomTicket;
+                // A room named without a stay: the customer scanned its
+                // sticker and ordered before the clock started, or after it
+                // stopped. The room's open bill takes the order so it joins
+                // the session's instead of a stray counter tab opening in the
+                // customer's name; a room with no bill open is a counter sale
+                // like any other.
+                var roomTicket = await ticketRepository.FindOpenRoomAsync(placeId, @event.BranchId);
+                if (roomTicket is not null)
+                {
+                    logger.LogInformation("Order {OrderId} joins the open ticket {TicketId} of room {PlaceId}", @event.OrderId, roomTicket.Id, placeId);
+                    return roomTicket;
+                }
+            }
+            else
+            {
+                // A place with no clock running (a table, timed or not,
+                // between stays): its open bill, or one opened lazily by this
+                // first order — Q7: one open ticket per table
+                var placeTicket = await ticketRepository.FindOpenByPlaceAsync(placeId, @event.BranchId);
+
+                return placeTicket ?? ticketRepository.Add(Ticket.OpenForTable(placeId, @event.PlaceName, @event.BranchId));
             }
         }
 

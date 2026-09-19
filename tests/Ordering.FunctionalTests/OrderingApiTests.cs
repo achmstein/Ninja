@@ -135,8 +135,9 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             Quantity = 1,
             PictureUrl = null
         };
-        // Simplified CreateOrderRequest for cafe: UserId, UserName, RoomName, CustomerNote, PointsToRedeem, LoyaltyDiscount, Items
-        var OrderRequest = new CreateOrderRequest("1", "TestUser", "VIP", "No ice please", 0, 0, new List<BasketItem> { item });
+        // Simplified CreateOrderRequest for cafe: UserId, UserName, CustomerNote, PointsToRedeem, LoyaltyDiscount, Items, then the place
+        var OrderRequest = new CreateOrderRequest("1", "TestUser", "No ice please", 0, 0, new List<BasketItem> { item },
+            PlaceId: 1, PlaceKind: "Room", PlaceName: new LocalizedText("VIP"));
         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
         {
             Headers = { { "x-requestid", Guid.NewGuid().ToString() } }
@@ -162,9 +163,9 @@ public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
             Quantity = 1,
             PictureUrl = null
         };
-        // A customer seated at a table rather than in a room: no RoomName, but TableId/TableName
-        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, null, 0, 0, new List<BasketItem> { item },
-            TableId: 3, TableName: new LocalizedText("Table 3", "ترابيزة 3"));
+        // A customer seated at a table rather than in a room: the place is a Table
+        var OrderRequest = new CreateOrderRequest("1", "TestUser", null, 0, 0, new List<BasketItem> { item },
+            PlaceId: 3, PlaceKind: "Table", PlaceName: new LocalizedText("Table 3", "ترابيزة 3"));
         var content = new StringContent(JsonSerializer.Serialize(OrderRequest), UTF8Encoding.UTF8, "application/json")
         {
             Headers = { { "x-requestid", Guid.NewGuid().ToString() }, { "X-Branch-Id", "1" } }

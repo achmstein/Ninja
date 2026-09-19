@@ -142,9 +142,10 @@ public sealed class ShiftLifecycleScenario(NinjaApp app, DaySetup day) : Scenari
         await ExpectHubAsync(close, "BranchSettingsChanged", m => m.Int("branchId") == 1 && !m.Bool("isOrderingEnabled"));
 
         // 8. With the branch closed, Ordering turns customers away (its projection of the flag).
+        var table1 = await Cashier.PlaceAsync("Table 1", Ct);
         await ExpectAsync("Ordering refuses customer orders while the branch is closed", async () =>
         {
-            using var r = await Customer.TryPlaceOrderAsync(Menu, Lines((MenuLookup.Tea, 1)), Ct, tableId: 1, tableNameEn: "Table 1");
+            using var r = await Customer.TryPlaceOrderAsync(Menu, Lines((MenuLookup.Tea, 1)), Ct, placeId: table1.Id, placeNameEn: "Table 1");
             Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
             Assert.Contains("not taking orders", await r.Content.ReadAsStringAsync(Ct), StringComparison.OrdinalIgnoreCase);
         });

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
+import type { AddFavoriteData, AddFavoriteErrors, AddFavoriteResponses, BatchGetItemsData, BatchGetItemsErrors, BatchGetItemsResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateCustomizationData, CreateCustomizationErrors, CreateCustomizationResponses, CreateItemData, CreateItemErrors, CreateItemResponses, CreatePromoData, CreatePromoErrors, CreatePromoResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteCustomizationData, DeleteCustomizationErrors, DeleteCustomizationResponses, DeleteItemData, DeleteItemErrors, DeleteItemPictureData, DeleteItemPictureErrors, DeleteItemPictureResponses, DeleteItemResponses, DeletePromoData, DeletePromoErrors, DeletePromoResponses, GetAvailableItemsData, GetAvailableItemsErrors, GetAvailableItemsResponses, GetBranchOverridesData, GetBranchOverridesErrors, GetBranchOverridesResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetCustomerTopItemsData, GetCustomerTopItemsErrors, GetCustomerTopItemsResponses, GetItemCustomizationsData, GetItemCustomizationsErrors, GetItemCustomizationsResponses, GetItemData, GetItemErrors, GetItemPictureData, GetItemPictureErrors, GetItemPictureResponses, GetItemResponses, GetItemsByNameData, GetItemsByNameErrors, GetItemsByNameResponses, GetItemsByTypeData, GetItemsByTypeErrors, GetItemsByTypeResponses, GetMyTopItemsData, GetMyTopItemsErrors, GetMyTopItemsResponses, GetUserFavoritesData, GetUserFavoritesErrors, GetUserFavoritesResponses, GetUserPreferenceData, GetUserPreferenceErrors, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerErrors, GetUserPreferenceForCustomerResponses, GetUserPreferenceResponses, GetUserPreferencesData, GetUserPreferencesErrors, GetUserPreferencesForItemsData, GetUserPreferencesForItemsErrors, GetUserPreferencesForItemsResponses, GetUserPreferencesResponses, ListCategoriesData, ListCategoriesResponses, ListItemsData, ListItemsErrors, ListItemsResponses, ListPromosData, ListPromosErrors, ListPromosResponses, LocalizeMenuTextData, LocalizeMenuTextErrors, LocalizeMenuTextResponses, QuotePromoData, QuotePromoErrors, QuotePromoResponses, RemoveBranchItemOverrideData, RemoveBranchItemOverrideErrors, RemoveBranchItemOverrideResponses, RemoveFavoriteData, RemoveFavoriteErrors, RemoveFavoriteResponses, ReorderCategoriesData, ReorderCategoriesErrors, ReorderCategoriesResponses, ReorderItemsData, ReorderItemsErrors, ReorderItemsResponses, SaveUserPreferencesData, SaveUserPreferencesErrors, SaveUserPreferencesForCustomerData, SaveUserPreferencesForCustomerErrors, SaveUserPreferencesForCustomerResponses, SaveUserPreferencesResponses, ScanMenuData, ScanMenuErrors, ScanMenuResponses, SetBranchItemOverrideData, SetBranchItemOverrideErrors, SetBranchItemOverrideResponses, SetItemOfferData, SetItemOfferErrors, SetItemOfferResponses, SetPromoActiveData, SetPromoActiveErrors, SetPromoActiveResponses, SuggestCustomizationsData, SuggestCustomizationsErrors, SuggestCustomizationsResponses, ToggleItemAvailabilityData, ToggleItemAvailabilityErrors, ToggleItemAvailabilityResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateCustomizationData, UpdateCustomizationErrors, UpdateCustomizationResponses, UpdateItemData, UpdateItemErrors, UpdateItemResponses, UpdatePromoData, UpdatePromoErrors, UpdatePromoResponses, UploadItemPictureData, UploadItemPictureErrors, UploadItemPictureResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -60,6 +60,70 @@ export const scanMenu = <ThrowOnError extends boolean = false>(options: Options<
     ...options,
     headers: {
         'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * What a promo code is worth against a cart
+ *
+ * Checks a code against the items subtotal for the caller (the signed-in customer, or the guest device named by X-Guest-Id) and returns the discount it would give, or why it gives none. Nothing is redeemed: the order redeems the code when it is placed.
+ */
+export const quotePromo = <ThrowOnError extends boolean = false>(options: Options<QuotePromoData, ThrowOnError>): RequestResult<QuotePromoResponses, QuotePromoErrors, ThrowOnError> => (options.client ?? client).get<QuotePromoResponses, QuotePromoErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/promos/quote',
+    ...options
+});
+
+/**
+ * Every promo code, newest first (Admin only)
+ */
+export const listPromos = <ThrowOnError extends boolean = false>(options?: Options<ListPromosData, ThrowOnError>): RequestResult<ListPromosResponses, ListPromosErrors, ThrowOnError> => (options?.client ?? client).get<ListPromosResponses, ListPromosErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/promos',
+    ...options
+});
+
+/**
+ * Create a promo code (Admin only)
+ */
+export const createPromo = <ThrowOnError extends boolean = false>(options: Options<CreatePromoData, ThrowOnError>): RequestResult<CreatePromoResponses, CreatePromoErrors, ThrowOnError> => (options.client ?? client).post<CreatePromoResponses, CreatePromoErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/promos',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a promo code; the orders that used it keep their discount (Admin only)
+ */
+export const deletePromo = <ThrowOnError extends boolean = false>(options: Options<DeletePromoData, ThrowOnError>): RequestResult<DeletePromoResponses, DeletePromoErrors, ThrowOnError> => (options.client ?? client).delete<DeletePromoResponses, DeletePromoErrors, ThrowOnError>({ url: '/api/catalog/promos/{id}', ...options });
+
+/**
+ * Change a promo code's rules (Admin only)
+ */
+export const updatePromo = <ThrowOnError extends boolean = false>(options: Options<UpdatePromoData, ThrowOnError>): RequestResult<UpdatePromoResponses, UpdatePromoErrors, ThrowOnError> => (options.client ?? client).put<UpdatePromoResponses, UpdatePromoErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/promos/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Switch a promo code on or off (Admin only)
+ */
+export const setPromoActive = <ThrowOnError extends boolean = false>(options: Options<SetPromoActiveData, ThrowOnError>): RequestResult<SetPromoActiveResponses, SetPromoActiveErrors, ThrowOnError> => (options.client ?? client).patch<SetPromoActiveResponses, SetPromoActiveErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/catalog/promos/{id}/active',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
         ...options.headers
     }
 });

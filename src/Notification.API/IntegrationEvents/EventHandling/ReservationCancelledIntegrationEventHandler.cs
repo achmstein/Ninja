@@ -16,17 +16,15 @@ public class ReservationCancelledIntegrationEventHandler(
 {
     public async Task Handle(ReservationCancelledIntegrationEvent @event)
     {
-        logger.LogInformation("Handling ReservationCancelledIntegrationEvent: ReservationId={ReservationId}, Room={RoomName}, Customer={CustomerName}",
-            @event.ReservationId, @event.RoomName.En, @event.CustomerName);
+        logger.LogInformation("Handling ReservationCancelledIntegrationEvent: ReservationId={ReservationId}, Place={PlaceName}, Customer={CustomerName}",
+            @event.ReservationId, @event.PlaceName.En, @event.CustomerName);
 
         // Broadcast via SignalR first — live dashboards must not depend on
         // whether any FCM push subscriptions exist
         await hubContext.Clients.Group("rooms").SendAsync("RoomStatusChanged", new
         {
             type = "reservation_cancelled",
-            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-            roomId = @event.RoomId,
-            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeId = @event.PlaceId,
             placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         });
@@ -36,9 +34,7 @@ public class ReservationCancelledIntegrationEventHandler(
             await hubContext.Clients.Group($"user:{@event.CustomerId}").SendAsync("RoomStatusChanged", new
             {
                 type = "reservation_cancelled",
-                // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-                roomId = @event.RoomId,
-                placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+                placeId = @event.PlaceId,
                 placeKind = @event.PlaceKind,
                 reservationId = @event.ReservationId
             });
@@ -68,7 +64,7 @@ public class ReservationCancelledIntegrationEventHandler(
             var lang = group.Key;
             var tokens = group.Select(s => s.FcmToken).ToList();
             var title = NotificationMessages.ReservationCancelledTitle.GetText(lang);
-            var body = NotificationMessages.ReservationCancelledBody(customerDisplay, @event.RoomName, lang).GetText(lang);
+            var body = NotificationMessages.ReservationCancelledBody(customerDisplay, @event.PlaceName, lang).GetText(lang);
 
             var result = await fcmService.SendBatchNotificationsAsync(
                 tokens,
@@ -78,8 +74,9 @@ public class ReservationCancelledIntegrationEventHandler(
                 {
                     { "type", "reservation_cancelled" },
                     { "reservationId", @event.ReservationId.ToString() },
-                    { "roomId", @event.RoomId.ToString() },
-                    { "roomName", @event.RoomName.GetText(lang) },
+                    { "placeId", @event.PlaceId.ToString() },
+                    { "placeKind", @event.PlaceKind },
+                    { "placeName", @event.PlaceName.GetText(lang) },
                     { "customerName", @event.CustomerName ?? "" },
                     { "customerId", @event.CustomerId ?? "" }
                 });
@@ -114,7 +111,7 @@ public class ReservationCancelledIntegrationEventHandler(
             {
                 var lang = subscription.PreferredLanguage;
                 var title = NotificationMessages.YourReservationCancelledTitle.GetText(lang);
-                var body = NotificationMessages.YourReservationCancelledBody(@event.RoomName, lang).GetText(lang);
+                var body = NotificationMessages.YourReservationCancelledBody(@event.PlaceName, lang).GetText(lang);
 
                 var success = await fcmService.SendNotificationAsync(
                     subscription.FcmToken,
@@ -124,8 +121,9 @@ public class ReservationCancelledIntegrationEventHandler(
                     {
                         { "type", "reservation_cancelled" },
                         { "reservationId", @event.ReservationId.ToString() },
-                        { "roomId", @event.RoomId.ToString() },
-                        { "roomName", @event.RoomName.GetText(lang) }
+                        { "placeId", @event.PlaceId.ToString() },
+                        { "placeKind", @event.PlaceKind },
+                        { "placeName", @event.PlaceName.GetText(lang) }
                     });
 
                 logger.LogInformation("FCM reservation cancelled notification to customer {CustomerId} ({Lang}): {Result}",

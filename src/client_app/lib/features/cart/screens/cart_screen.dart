@@ -707,8 +707,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final redemption = ref.read(loyaltyRedemptionProvider);
     final promo = ref.read(promoProvider);
 
-    // Make sure the destination reflects a session that may have started while
-    // the cart was open; room-beats-table lives in orderDestinationProvider.
+    // Make sure the destination reflects a stay that may have started while
+    // the cart was open; stay-beats-table lives in orderDestinationProvider.
     await ref.read(myStaysProvider.notifier).refresh();
     final destination = ref.read(orderDestinationProvider);
 
@@ -718,16 +718,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           placeKind: destination?.placeKind.wireName,
           placeName: destination?.name.toJson(),
           sessionId: destination?.sessionId,
-          // LEGACY(places): the older roomName/roomId/tableName fields ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-          roomName: destination != null && destination.isStay && destination.isRoom
-              ? destination.name.toJson()
-              : null,
-          roomId: destination != null && destination.isStay && destination.isRoom
-              ? destination.placeId
-              : null,
-          tableName: destination != null && !destination.isRoom
-              ? destination.name.toJson()
-              : null,
           customerNote: note,
           pointsToRedeem: redemption.pointsToRedeem,
           loyaltyDiscount: redemption.serverDiscount ?? 0,

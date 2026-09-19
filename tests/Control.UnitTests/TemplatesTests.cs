@@ -126,7 +126,7 @@ public sealed class TemplatesTests
         var declared = Regex.Matches(extensions, @"yarp\.AddRoute\(""(?<path>[^""]+)"",\s*(?<cluster>\w+)Cluster\)")
             .Select(m => (Path: m.Groups["path"].Value, Cluster: m.Groups["cluster"].Value))
             .ToList();
-        Assert.IsTrue(declared.Count >= 20, "the AppHost route table was not found");
+        Assert.IsTrue(declared.Count >= 15, "the AppHost route table was not found");
 
         var stamped = Templates.GatewayRoutes().Select(r => (r.Path, r.Cluster)).ToHashSet();
         foreach (var (path, cluster) in declared)

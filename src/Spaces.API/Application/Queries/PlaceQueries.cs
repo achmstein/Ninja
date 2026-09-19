@@ -49,13 +49,6 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         return place.ToViewModel(open);
     }
 
-    // LEGACY(places): lookup by the old table sticker id — remove when the printed room/table stickers are reprinted with /p/{id}.
-    public async Task<PlaceViewModel?> GetPlaceByLegacyTableIdAsync(int tableId)
-    {
-        var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.LegacyTableId == tableId);
-        return place is null ? null : await GetPlaceByIdAsync(place.Id);
-    }
-
     public async Task<IEnumerable<StayViewModel>> GetCustomerStaysAsync(string customerId, int pageIndex = 0, int pageSize = 20)
     {
         // Owner or member. Paged: the app polls this, and a regular's history

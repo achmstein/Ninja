@@ -48,10 +48,11 @@ public sealed class FullDayScenario(NinjaApp app, DaySetup day) : ScenarioBase(a
 
         // --- Morning: a customer at a table -------------------------------------
         Step("A customer orders at Table 1 from the app; the cashier confirms; the kitchen makes it");
-        var tableOrder = await Customer.PlaceOrderAsync(Menu, Lines((MenuLookup.Cappuccino, 1), (MenuLookup.TurkishCoffee, 1)), Ct, 1, "Table 1");
+        var table1 = await Cashier.PlaceAsync("Table 1", Ct);
+        var tableOrder = await Customer.PlaceOrderAsync(Menu, Lines((MenuLookup.Cappuccino, 1), (MenuLookup.TurkishCoffee, 1)), Ct, table1.Id, "Table 1");
         await Cashier.ConfirmAsync(tableOrder, Ct);
         var tableTicket = await ExpectValueAsync("the table bill", async () =>
-            (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.TableId == 1 && t.LineCount == 2));
+            (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.PlaceId == table1.Id && t.LineCount == 2));
         goods += coffeeGoods;
         await Kitchen.MarkReadyAsync(tableOrder, Ct);
 
@@ -79,7 +80,7 @@ public sealed class FullDayScenario(NinjaApp app, DaySetup day) : ScenarioBase(a
 
         // --- Midday: the rooms -------------------------------------------------------
         Step("A group walks into Room 1, a member joins, they order, call the waiter, and leave");
-        var room1 = (await Cashier.RoomsAsync(Ct)).First(r => r.Name.En == "Room 1");
+        var room1 = await Cashier.PlaceAsync("Room 1", Ct);
         var session = await Cashier.StartWalkInAsync(room1.Id, Ct);
         var roomTicket = await ExpectValueAsync("the room bill", async () =>
             (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.SessionId == session));
@@ -87,21 +88,21 @@ public sealed class FullDayScenario(NinjaApp app, DaySetup day) : ScenarioBase(a
         await Cashier.RingUpAsync(Menu, Lines((MenuLookup.TurkishCoffee, 1)), Ct, ticketId: roomTicket.Id);
         goods += coffeeGoods;
         await Customer.RequestServiceAsync(session, room1.Id, room1.Name.En, Codes.ServiceRequest.CallWaiter, Ct);
-        await Cashier.EndSessionAsync(session, Ct);
+        await Cashier.EndStayAsync(session, Ct);
         await ExpectAsync("the room bill is free to settle", async () => Assert.NotNull((await TicketAsync(roomTicket.Id)).SessionEndedAt));
         var roomBill = Money.Bill(coffee.EffectivePrice, served: coffee.EffectivePrice, vat, service);
         await Cashier.SettleAsync(roomTicket.Id, Ct, Tender.Cash(roomBill.Total));
         sales += roomBill.Total; vatTotal += roomBill.Vat; cashIn += roomBill.Total;
 
         Step("Room 2 is started by mistake and cancelled; Room 3 ends with nothing on it");
-        var room2 = (await Cashier.RoomsAsync(Ct)).First(r => r.Name.En == "Room 2");
+        var room2 = await Cashier.PlaceAsync("Room 2", Ct);
         var wrong = await Cashier.StartWalkInAsync(room2.Id, Ct);
         await ExpectValueAsync("Room 2's bill", async () => (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.SessionId == wrong));
-        await Cashier.CancelSessionAsync(wrong, Ct);
-        var room3 = (await Cashier.RoomsAsync(Ct)).First(r => r.Name.En == "Room 3");
+        await Cashier.CancelStayAsync(wrong, Ct);
+        var room3 = await Cashier.PlaceAsync("Room 3", Ct);
         var empty = await Cashier.StartWalkInAsync(room3.Id, Ct);
         await ExpectValueAsync("Room 3's bill", async () => (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.SessionId == empty));
-        await Cashier.EndSessionAsync(empty, Ct);
+        await Cashier.EndStayAsync(empty, Ct);
 
         // --- Afternoon: walk-ups ----------------------------------------------------
         Step("A regular buys two coffees for cash and brings one back; a walk-in's tea is voided");

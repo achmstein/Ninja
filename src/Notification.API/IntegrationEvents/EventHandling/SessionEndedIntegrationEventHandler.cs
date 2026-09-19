@@ -15,15 +15,13 @@ public class SessionEndedIntegrationEventHandler(
 {
     public async Task Handle(SessionEndedIntegrationEvent @event)
     {
-        logger.LogInformation("Handling SessionEndedIntegrationEvent: ReservationId={ReservationId}, RoomId={RoomId}, Members={MemberCount}",
-            @event.ReservationId, @event.RoomId, @event.MemberUserIds.Count);
+        logger.LogInformation("Handling SessionEndedIntegrationEvent: ReservationId={ReservationId}, PlaceId={PlaceId}, Members={MemberCount}",
+            @event.ReservationId, @event.PlaceId, @event.MemberUserIds.Count);
 
         var change = new
         {
             type = "session_ended",
-            // LEGACY(places): roomId beside placeId, and the RoomId fallback for a PlaceId-less event — remove when every till and customer app is on /api/places and /api/stays.
-            roomId = @event.RoomId,
-            placeId = @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
+            placeId = @event.PlaceId,
             placeKind = @event.PlaceKind,
             reservationId = @event.ReservationId
         };
@@ -70,7 +68,8 @@ public class SessionEndedIntegrationEventHandler(
         {
             { "type", "session_ended" },
             { "sessionId", @event.ReservationId.ToString() },
-            { "roomId", @event.RoomId.ToString() }
+            { "placeId", @event.PlaceId.ToString() },
+            { "placeKind", @event.PlaceKind }
         };
 
         var tokens = subscriptions.Select(s => s.FcmToken).ToList();

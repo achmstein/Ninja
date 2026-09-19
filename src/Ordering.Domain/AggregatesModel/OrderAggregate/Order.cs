@@ -22,9 +22,7 @@ public class Order
 
     /// <summary>
     /// The Spaces place the order goes to — a room, a table, a station.
-    /// Null for an order-ahead or a counter sale. RoomName/RoomId/TableId/
-    /// TableName below are what the older clients and events carry; they
-    /// keep being filled, both ways, for one release.
+    /// Null for an order-ahead or a counter sale.
     /// </summary>
     public int? PlaceId { get; private set; }
 
@@ -38,43 +36,17 @@ public class Order
     public OrderDestination Destination => new(PlaceId, PlaceKind, PlaceName, SessionId);
 
     /// <summary>
-    /// LEGACY(places): old room name column kept beside <see cref="PlaceName"/> for older clients and events — remove when every till and customer app is on /api/places and /api/stays.
-    /// Room name for the session (e.g., "VIP", "Room 1") - localized
-    /// </summary>
-    public LocalizedText? RoomName { get; private set; }
-
-    /// <summary>
-    /// The Spaces session (reservation) this order was placed into, when the
-    /// customer ordered from an active room session. The name snapshot above
-    /// is for display; this id is what lets a bill be assembled per session.
+    /// The Spaces stay this order was placed into, when the customer ordered
+    /// from a timed place with its clock running. <see cref="PlaceName"/> is
+    /// for display; this id is what lets a bill be assembled per stay.
     /// </summary>
     public int? SessionId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old room id column kept beside <see cref="PlaceId"/> for older clients and events — remove when every till and customer app is on /api/places and /api/stays.
-    /// The room behind <see cref="SessionId"/>, captured so per-room queries
-    /// don't need to resolve the session.
-    /// </summary>
-    public int? RoomId { get; private set; }
 
     /// <summary>
     /// Who put this order into the system — a signed-in customer, a guest at
     /// a table, or staff at the counter POS.
     /// </summary>
     public OrderSource Source { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old table id column (the id a printed sticker carries) kept beside <see cref="PlaceId"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// The café table the order is delivered to, when the customer is not in a room.
-    /// Kept as an id as well as a name so open orders can be counted per table.
-    /// </summary>
-    public int? TableId { get; private set; }
-
-    /// <summary>
-    /// LEGACY(places): old table name column kept beside <see cref="PlaceName"/> — remove when every till and customer app is on /api/places and /api/stays.
-    /// Table name captured at order time (e.g., "Table 3") - localized
-    /// </summary>
-    public LocalizedText? TableName { get; private set; }
 
     /// <summary>
     /// The Sales ticket this order must land on, when the cashier rang it up
@@ -108,12 +80,8 @@ public class Order
 
     public bool IsPaid => PaidAt != null;
 
-    /// <summary>
-    /// Whether the order says where it is going. A running room session wins
-    /// over a scanned table on the way in, so at most one of the two is set.
-    /// </summary>
-    // LEGACY(places): the RoomName/TableId fallbacks answer for an order that only carries the old fields — remove when every till and customer app is on /api/places and /api/stays.
-    public bool HasDestination => PlaceId.HasValue || RoomName is not null || TableId.HasValue;
+    /// <summary>Whether the order says where it is going: a place was named.</summary>
+    public bool HasDestination => PlaceId.HasValue;
 
     /// <summary>
     /// Special instructions or notes from the customer
@@ -212,9 +180,6 @@ public class Order
 
     public bool IsReady => ReadyAt != null;
 
-    private static LocalizedText? Copy(LocalizedText? text)
-        => text is null ? null : new LocalizedText(text.En, text.Ar);
-
     public static Order NewDraft()
     {
         var order = new Order
@@ -230,54 +195,22 @@ public class Order
         _isDraft = false;
     }
 
-    public Order(string userId, string userName, int branchId, LocalizedText? roomName = null, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, int? tableId = null, LocalizedText? tableName = null, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? roomId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null) : this()
+    public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null) : this()
     {
         BuyerId = buyerId;
         PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode.Trim().ToUpperInvariant();
         OrderStatus = OrderStatus.AwaitingValidation;
         // A replayed offline sale is dated when it was rung up, not when it reached us
         OrderDate = placedAt ?? DateTime.UtcNow;
-        RoomName = roomName;
         SessionId = sessionId;
-        RoomId = roomId;
-        TableId = tableId;
-        TableName = tableName;
         TicketId = ticketId;
 
-        // LEGACY(places): the place and the older room/table fields are filled from each
-        // other, so a client on either vocabulary lands the same order — remove when
-        // every till and customer app is on /api/places and /api/stays.
-        // Each name is its own copy: the names are owned JSON columns, and EF
-        // refuses one LocalizedText instance hanging off two of them.
+        // The kind and the name only mean something with the place id
         if (placeId is not null)
         {
             PlaceId = placeId;
-            PlaceKind = placeKind ?? (tableId is not null ? "Table" : "Room");
-            PlaceName = Copy(placeName ?? roomName ?? tableName);
-            if (string.Equals(PlaceKind, "Room", StringComparison.OrdinalIgnoreCase))
-            {
-                RoomId ??= placeId;
-                RoomName ??= Copy(PlaceName);
-            }
-            else
-            {
-                TableName ??= Copy(PlaceName);
-            }
-        }
-        // LEGACY(places): an order named only by the old room or table fields — remove when every till and customer app is on /api/places and /api/stays.
-        else if (roomName is not null || roomId is not null)
-        {
-            // Rooms kept their ids in the Places remodel
-            PlaceId = roomId;
-            PlaceKind = "Room";
-            PlaceName = Copy(roomName);
-        }
-        else if (tableId is not null)
-        {
-            // The table id a printed sticker carries is not the place id;
-            // the place, when known, is resolved before the order is created
-            PlaceKind = "Table";
-            PlaceName = Copy(tableName);
+            PlaceKind = placeKind;
+            PlaceName = placeName;
         }
         CustomerNote = customerNote;
         PointsToRedeem = pointsToRedeem;

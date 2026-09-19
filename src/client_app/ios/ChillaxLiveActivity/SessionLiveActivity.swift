@@ -19,7 +19,7 @@ struct SessionLiveActivity: Widget {
                         Image(systemName: "play.fill")
                             .font(.caption2)
                             .foregroundColor(.green)
-                        Text(context.attributes.roomName)
+                        Text(context.attributes.placeName)
                             .font(.headline)
                             .lineLimit(1)
                     }
@@ -43,7 +43,7 @@ struct SessionLiveActivity: Widget {
                         .font(.caption)
                 }
             } compactTrailing: {
-                Text(context.attributes.roomName)
+                Text(context.attributes.placeName)
                     .lineLimit(1)
                     .font(.caption)
             } minimal: {
@@ -62,13 +62,13 @@ private struct SessionLockScreenView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Room name + timer
+            // Place name + timer
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: "play.fill")
                         .font(.caption)
                         .foregroundColor(.green)
-                    Text(context.attributes.roomName)
+                    Text(context.attributes.placeName)
                         .font(.headline)
                         .foregroundColor(.white)
                 }
@@ -143,17 +143,18 @@ private struct SessionActionsView: View {
            let accessToken = state.accessToken,
            let apiBaseUrl = state.apiBaseUrl,
            let sessionId = state.sessionId,
-           let roomId = state.roomId {
+           let placeId = state.placeId {
             // iOS 17+: background intent — no app launch
             Button(intent: SessionActionIntent(
                 actionId: actionId,
                 accessToken: accessToken,
                 apiBaseUrl: apiBaseUrl,
                 sessionId: sessionId,
-                roomId: roomId,
+                placeId: placeId,
+                placeKind: state.placeKind,
                 branchId: state.branchId ?? 0,
-                roomNameEn: state.roomNameEn ?? "",
-                roomNameAr: state.roomNameAr
+                placeNameEn: state.placeNameEn ?? "",
+                placeNameAr: state.placeNameAr
             )) {
                 actionLabel(label: label, icon: icon)
             }

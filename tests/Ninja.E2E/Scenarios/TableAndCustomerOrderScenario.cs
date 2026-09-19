@@ -14,7 +14,6 @@ namespace Ninja.E2E.Scenarios;
 /// </summary>
 public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : ScenarioBase(app, day)
 {
-    private const int TableId = 1;
     private const string TableName = "Table 1";
 
     [Fact]
@@ -27,8 +26,9 @@ public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : 
         var balanceBefore = (await Cashier.AccountBalanceAsync(Customer.UserId, Ct))?.Balance ?? 0m;
 
         // 1. The customer orders a cappuccino and a coffee to Table 1 from the app.
+        var table1 = await Cashier.PlaceAsync(TableName, Ct);
         var place = Step("Customer places an order at Table 1");
-        var orderId = await Customer.PlaceOrderAsync(Menu, Lines((MenuLookup.Cappuccino, 1), (MenuLookup.TurkishCoffee, 1)), Ct, TableId, TableName);
+        var orderId = await Customer.PlaceOrderAsync(Menu, Lines((MenuLookup.Cappuccino, 1), (MenuLookup.TurkishCoffee, 1)), Ct, table1.Id, TableName);
         var tableMenu = cappuccino.EffectivePrice + coffee.EffectivePrice; // 75.00
 
         await ExpectEventAsync(place, "OrderStarted");
@@ -42,7 +42,7 @@ public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : 
 
         var pending = Assert.Single(await Cashier.PendingAsync(Ct), o => o.OrderNumber == orderId);
         Assert.Equal("Submitted", pending.Status);
-        Assert.Equal(TableId, pending.TableId);
+        Assert.Equal(table1.Id, pending.PlaceId);
         Assert.Equal(Customer.UserId, pending.UserId);
         Assert.Equal(2, pending.Items!.Count);
         await ExpectOrderStatusAsync(place, "order_submitted", orderId);
@@ -52,13 +52,13 @@ public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : 
         await Cashier.ConfirmAsync(orderId, Ct);
         var confirmed = await ExpectEventAsync(confirm, "OrderStatusChangedToConfirmed", e => e.Int("OrderId") == orderId);
         Assert.Equal("Customer", confirmed.Str("Source"));
-        Assert.Equal(TableId, confirmed.Int("TableId"));
+        Assert.Equal(table1.Id, confirmed.Int("PlaceId"));
         Assert.Null(confirmed.Str("TicketId"));
         var consumed = await ExpectEventAsync(confirm, "StockConsumed", e => e.Str("Reference") == $"order:{orderId}");
         Assert.Equal(DaySetup.BeansPerCoffeeGrams * DaySetup.BeansUnitCost, consumed.Dec("Cost")); // only the coffee has a recipe
 
         var table = await ExpectValueAsync("Sales opened the table's bill", async () =>
-            (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.TableId == TableId && t.LineCount == 2));
+            (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.PlaceId == table1.Id && t.LineCount == 2));
         Assert.Equal("Table", table.Type);
         Assert.Contains(Customer.UserId, table.CustomerIds);
         var expectedPoints = Money.LoyaltyPoints(tableMenu, loyaltyBefore.CurrentTier);

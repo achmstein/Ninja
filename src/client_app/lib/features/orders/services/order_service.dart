@@ -27,12 +27,7 @@ abstract class OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
-    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-    Map<String, dynamic>? roomName,
     int? sessionId,
-    int? roomId,
-    int? tableId,
-    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem,
     double loyaltyDiscount,
@@ -45,12 +40,7 @@ abstract class OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
-    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-    Map<String, dynamic>? roomName,
     int? sessionId,
-    int? roomId,
-    int? tableId,
-    Map<String, dynamic>? tableName,
     UserItemPreference? preference,
   });
   Future<void> cancelOrder(int id);
@@ -110,12 +100,7 @@ class ApiOrderRepository implements OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
-    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-    Map<String, dynamic>? roomName,
     int? sessionId,
-    int? roomId,
-    int? tableId,
-    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
@@ -131,12 +116,7 @@ class ApiOrderRepository implements OrderRepository {
         'placeId': placeId,
         'placeKind': placeKind,
         'placeName': placeName,
-        // LEGACY(places): the older roomName/roomId/tableId/tableName fields ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-        'roomName': roomName,
         'sessionId': sessionId,
-        'roomId': roomId,
-        'tableId': tableId,
-        'tableName': tableName,
         'customerNote': customerNote,
         'pointsToRedeem': pointsToRedeem,
         'loyaltyDiscount': loyaltyDiscount,
@@ -157,12 +137,7 @@ class ApiOrderRepository implements OrderRepository {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
-    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-    Map<String, dynamic>? roomName,
     int? sessionId,
-    int? roomId,
-    int? tableId,
-    Map<String, dynamic>? tableName,
     UserItemPreference? preference,
   }) async {
     final selectedCustomizations = <SelectedCustomization>[];
@@ -239,12 +214,7 @@ class ApiOrderRepository implements OrderRepository {
       placeId: placeId,
       placeKind: placeKind,
       placeName: placeName,
-      // LEGACY(places): the older roomName/roomId/tableId/tableName arguments — remove when Ordering and Notification stop reading the old room/table fields.
-      roomName: roomName,
       sessionId: sessionId,
-      roomId: roomId,
-      tableId: tableId,
-      tableName: tableName,
     );
   }
 
@@ -396,12 +366,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
     int? placeId,
     String? placeKind,
     Map<String, dynamic>? placeName,
-    // LEGACY(places): the older roomName/roomId/tableId/tableName parameters ride along beside placeId/placeKind/placeName — remove when Ordering and Notification stop reading the old room/table fields.
-    Map<String, dynamic>? roomName,
     int? sessionId,
-    int? roomId,
-    int? tableId,
-    Map<String, dynamic>? tableName,
     String? customerNote,
     int pointsToRedeem = 0,
     double loyaltyDiscount = 0,
@@ -414,8 +379,6 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       'items': items.map((item) => item.toJson()).toList(),
       'placeId': placeId,
       'sessionId': sessionId,
-      // LEGACY(places): the older tableId in the retry signature — remove when Ordering and Notification stop reading the old room/table fields.
-      'tableId': tableId,
       'customerNote': customerNote,
       'pointsToRedeem': pointsToRedeem,
       'loyaltyDiscount': loyaltyDiscount,
@@ -435,12 +398,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         placeId: placeId,
         placeKind: placeKind,
         placeName: placeName,
-        // LEGACY(places): the older roomName/roomId/tableId/tableName arguments — remove when Ordering and Notification stop reading the old room/table fields.
-        roomName: roomName,
         sessionId: sessionId,
-        roomId: roomId,
-        tableId: tableId,
-        tableName: tableName,
         customerNote: customerNote,
         pointsToRedeem: pointsToRedeem,
         loyaltyDiscount: loyaltyDiscount,

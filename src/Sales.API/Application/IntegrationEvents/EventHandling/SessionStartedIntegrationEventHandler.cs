@@ -32,11 +32,15 @@ public class SessionStartedIntegrationEventHandler(
             return;
         }
 
-        // LEGACY(places): a publisher older than the Places remodel sends no place fields; its RoomId/RoomName are the place's — remove when every till and customer app is on /api/places and /api/stays.
+        // A stay is always somewhere: one that names no place is a broken
+        // contract, and dead-letters rather than opening a ticket nowhere
+        if (@event.PlaceId == 0)
+            throw new SalesDomainException($"Session {@event.ReservationId} started without a place - no ticket to open.");
+
         var ticket = Ticket.OpenForSession(
             @event.ReservationId,
-            @event.PlaceId != 0 ? @event.PlaceId : @event.RoomId,
-            @event.PlaceName ?? @event.RoomName,
+            @event.PlaceId,
+            @event.PlaceName,
             @event.BranchId,
             @event.PlaceKind);
 

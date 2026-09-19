@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, localizeMenuText, type Options, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, uploadItemPicture } from '../sdk.gen';
-import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
+import { addFavorite, batchGetItems, createCategory, createCustomization, createItem, createPromo, deleteCategory, deleteCustomization, deleteItem, deleteItemPicture, deletePromo, getAvailableItems, getBranchOverrides, getCategory, getCustomerTopItems, getItem, getItemCustomizations, getItemPicture, getItemsByName, getItemsByType, getMyTopItems, getUserFavorites, getUserPreference, getUserPreferenceForCustomer, getUserPreferences, getUserPreferencesForItems, listCategories, listItems, listPromos, localizeMenuText, type Options, quotePromo, removeBranchItemOverride, removeFavorite, reorderCategories, reorderItems, saveUserPreferences, saveUserPreferencesForCustomer, scanMenu, setBranchItemOverride, setItemOffer, setPromoActive, suggestCustomizations, toggleItemAvailability, updateCategory, updateCustomization, updateItem, updatePromo, uploadItemPicture } from '../sdk.gen';
+import type { AddFavoriteData, BatchGetItemsData, BatchGetItemsError, BatchGetItemsResponse, CreateCategoryData, CreateCategoryResponse, CreateCustomizationData, CreateCustomizationResponse, CreateItemData, CreateItemError, CreateItemResponse, CreatePromoData, CreatePromoError, CreatePromoResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteCustomizationData, DeleteCustomizationResponse, DeleteItemData, DeleteItemPictureData, DeleteItemPictureResponse, DeleteItemResponse, DeletePromoData, DeletePromoResponse, GetAvailableItemsData, GetAvailableItemsError, GetAvailableItemsResponse, GetBranchOverridesData, GetBranchOverridesResponse, GetCategoryData, GetCategoryResponse, GetCustomerTopItemsData, GetCustomerTopItemsResponse, GetItemCustomizationsData, GetItemCustomizationsResponse, GetItemData, GetItemError, GetItemPictureData, GetItemPictureResponse, GetItemResponse, GetItemsByNameData, GetItemsByNameError, GetItemsByNameResponse, GetItemsByTypeData, GetItemsByTypeError, GetItemsByTypeResponse, GetMyTopItemsData, GetMyTopItemsResponse, GetUserFavoritesData, GetUserFavoritesResponse, GetUserPreferenceData, GetUserPreferenceForCustomerData, GetUserPreferenceForCustomerResponse, GetUserPreferenceResponse, GetUserPreferencesData, GetUserPreferencesForItemsData, GetUserPreferencesForItemsResponse, GetUserPreferencesResponse, ListCategoriesData, ListCategoriesResponse, ListItemsData, ListItemsError, ListItemsResponse, ListPromosData, ListPromosResponse, LocalizeMenuTextData, LocalizeMenuTextError, LocalizeMenuTextResponse, QuotePromoData, QuotePromoError, QuotePromoResponse, RemoveBranchItemOverrideData, RemoveBranchItemOverrideResponse, RemoveFavoriteData, ReorderCategoriesData, ReorderItemsData, SaveUserPreferencesData, SaveUserPreferencesForCustomerData, ScanMenuData, ScanMenuError, ScanMenuResponse, SetBranchItemOverrideData, SetBranchItemOverrideResponse, SetItemOfferData, SetItemOfferError, SetItemOfferResponse, SetPromoActiveData, SetPromoActiveResponse, SuggestCustomizationsData, SuggestCustomizationsError, SuggestCustomizationsResponse2, ToggleItemAvailabilityData, ToggleItemAvailabilityError, ToggleItemAvailabilityResponse, UpdateCategoryData, UpdateCategoryResponse, UpdateCustomizationData, UpdateCustomizationResponse, UpdateItemData, UpdateItemError, UpdatePromoData, UpdatePromoError, UpdatePromoResponse, UploadItemPictureData, UploadItemPictureError, UploadItemPictureResponse } from '../types.gen';
 
 /**
  * Fill in what a menu text is missing
@@ -95,6 +95,112 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
         params.query = options.query;
     }
     return [params];
+};
+
+export const quotePromoQueryKey = (options: Options<QuotePromoData>) => createQueryKey('quotePromo', options);
+
+/**
+ * What a promo code is worth against a cart
+ *
+ * Checks a code against the items subtotal for the caller (the signed-in customer, or the guest device named by X-Guest-Id) and returns the discount it would give, or why it gives none. Nothing is redeemed: the order redeems the code when it is placed.
+ */
+export const quotePromoOptions = (options: Options<QuotePromoData>) => queryOptions<QuotePromoResponse, AxiosError<QuotePromoError>, QuotePromoResponse, ReturnType<typeof quotePromoQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await quotePromo({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: quotePromoQueryKey(options)
+});
+
+export const listPromosQueryKey = (options?: Options<ListPromosData>) => createQueryKey('listPromos', options);
+
+/**
+ * Every promo code, newest first (Admin only)
+ */
+export const listPromosOptions = (options?: Options<ListPromosData>) => queryOptions<ListPromosResponse, AxiosError<DefaultError>, ListPromosResponse, ReturnType<typeof listPromosQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listPromos({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listPromosQueryKey(options)
+});
+
+/**
+ * Create a promo code (Admin only)
+ */
+export const createPromoMutation = (options?: Partial<Options<CreatePromoData>>): UseMutationOptions<CreatePromoResponse, AxiosError<CreatePromoError>, Options<CreatePromoData>> => {
+    const mutationOptions: UseMutationOptions<CreatePromoResponse, AxiosError<CreatePromoError>, Options<CreatePromoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createPromo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete a promo code; the orders that used it keep their discount (Admin only)
+ */
+export const deletePromoMutation = (options?: Partial<Options<DeletePromoData>>): UseMutationOptions<DeletePromoResponse, AxiosError<DefaultError>, Options<DeletePromoData>> => {
+    const mutationOptions: UseMutationOptions<DeletePromoResponse, AxiosError<DefaultError>, Options<DeletePromoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deletePromo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Change a promo code's rules (Admin only)
+ */
+export const updatePromoMutation = (options?: Partial<Options<UpdatePromoData>>): UseMutationOptions<UpdatePromoResponse, AxiosError<UpdatePromoError>, Options<UpdatePromoData>> => {
+    const mutationOptions: UseMutationOptions<UpdatePromoResponse, AxiosError<UpdatePromoError>, Options<UpdatePromoData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updatePromo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Switch a promo code on or off (Admin only)
+ */
+export const setPromoActiveMutation = (options?: Partial<Options<SetPromoActiveData>>): UseMutationOptions<SetPromoActiveResponse, AxiosError<DefaultError>, Options<SetPromoActiveData>> => {
+    const mutationOptions: UseMutationOptions<SetPromoActiveResponse, AxiosError<DefaultError>, Options<SetPromoActiveData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPromoActive({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
 };
 
 export const listItemsQueryKey = (options?: Options<ListItemsData>) => createQueryKey('listItems', options);

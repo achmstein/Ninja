@@ -10,25 +10,16 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 public record SessionCompletedIntegrationEvent(
     int ReservationId,
     string? CustomerId,
-    // LEGACY(places): the old RoomId/RoomName, superseded by PlaceId/PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    int RoomId,
-    LocalizedText RoomName,
-    // LEGACY(places): the old two-rate SingleCost/MultiCost, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
-    decimal SingleCost,
-    decimal MultiCost,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
     decimal TotalCost,
-    // LEGACY(places): the old two-rate SingleDuration/MultiDuration, superseded by Costs — remove when every till and customer app is on /api/places and /api/stays.
-    decimal SingleDuration,
-    decimal MultiDuration,
     DateTime StartTime,
     DateTime EndTime,
     TimeSpan Duration,
-    int BranchId = 0,
-    int PlaceId = 0,
-    string PlaceKind = "Room",
-    LocalizedText? PlaceName = null,
-    /// <summary>One line per rate option of the stay's tariff; null from a publisher older than the Places remodel.</summary>
-    List<SessionCostLine>? Costs = null) : IntegrationEvent;
+    /// <summary>One line per rate option of the stay's tariff: the lines the bill prints.</summary>
+    List<SessionCostLine> Costs,
+    int BranchId = 0) : IntegrationEvent;
 
 /// <summary>What one rate option of a stay cost: the line the bill prints.</summary>
 public record SessionCostLine(

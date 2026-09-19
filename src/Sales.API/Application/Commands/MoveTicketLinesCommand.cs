@@ -3,8 +3,7 @@ using Ninja.Sales.Infrastructure.Idempotency;
 namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
-// LEGACY(places): the old TableId/TableName from older tills — remove when every till and customer app is on /api/places and /api/stays.
-public record NewTicketTarget(TicketType Type, int? TableId, LocalizedText? TableName, string? Label, int? PlaceId = null, LocalizedText? PlaceName = null);
+public record NewTicketTarget(TicketType Type, string? Label, int? PlaceId = null, LocalizedText? PlaceName = null);
 
 /// <summary>
 /// Move lines off a ticket. Three destinations: none given is the turnover
@@ -84,20 +83,14 @@ public class MoveTicketLinesCommandHandler(
             case TicketType.Counter:
                 return ticketRepository.Add(Ticket.OpenForCounter(source.BranchId, wanted.Label));
 
-            case TicketType.Table when wanted.PlaceId is int || wanted.TableId is int:
+            case TicketType.Table when wanted.PlaceId is int placeId:
                 // Q7: one open ticket per table — a table that already has a
                 // bill takes the lines onto it rather than growing a second
-                var open = wanted.PlaceId is int byPlace
-                    ? await ticketRepository.FindOpenByPlaceAsync(byPlace, source.BranchId)
-                    : null;
-                // LEGACY(places): falls back to the old TableId — remove when every till and customer app is on /api/places and /api/stays.
-                open ??= wanted.TableId is int byTable
-                    ? await ticketRepository.FindOpenByTableAsync(byTable, source.BranchId)
-                    : null;
-                return open ?? ticketRepository.Add(Ticket.OpenForTable(wanted.TableId, wanted.TableName ?? wanted.PlaceName, source.BranchId, wanted.PlaceId));
+                var open = await ticketRepository.FindOpenByPlaceAsync(placeId, source.BranchId);
+                return open ?? ticketRepository.Add(Ticket.OpenForTable(placeId, wanted.PlaceName, source.BranchId));
 
             case TicketType.Table:
-                throw new SalesDomainException("Moving to a table takes the table.");
+                throw new SalesDomainException("Moving to a table takes the table's place.");
 
             default:
                 throw new SalesDomainException("Room tickets follow their sessions — move onto the room's open bill instead.");

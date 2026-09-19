@@ -23,7 +23,7 @@ class OrderTile extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
     final details = ref.watch(orderProvider(order.id));
-    final place = order.place?.localized(context);
+    final place = order.placeName?.localized(context);
     final discount = order.loyaltyDiscount;
 
     return Padding(

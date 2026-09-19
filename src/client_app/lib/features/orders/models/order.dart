@@ -84,11 +84,6 @@ class Order {
   final DateTime date;
   final OrderStatus status;
   final String? description;
-  /// LEGACY(places): reads the older roomName/tableName fields instead of
-  /// placeName — remove when Ordering and Notification stop reading the old
-  /// room/table fields.
-  final LocalizedText? roomName;
-  final LocalizedText? tableName;
 
   /// Where the order went, as Ordering names the place
   final LocalizedText? placeName;
@@ -124,18 +119,11 @@ class Order {
 
   bool get isPaid => paidAt != null;
 
-  /// LEGACY(places): roomName/tableName are the fallback for orders from
-  /// before the Places remodel — remove when Ordering stops filling the old
-  /// room fields.
-  LocalizedText? get place => placeName ?? roomName ?? tableName;
-
   Order({
     required this.id,
     required this.date,
     required this.status,
     this.description,
-    this.roomName,
-    this.tableName,
     this.placeName,
     this.placeKind = PlaceKind.room,
     this.ratingValue,
@@ -174,9 +162,6 @@ class Order {
       date: DateTime.parse(json['date'] as String),
       status: status,
       description: json['description'] as String?,
-      // LEGACY(places): parses the older roomName/tableName fields — remove when Ordering and Notification stop reading the old room/table fields.
-      roomName: json['roomName'] != null ? OrderItem._parseLocalizedText(json['roomName']) : null,
-      tableName: json['tableName'] != null ? OrderItem._parseLocalizedText(json['tableName']) : null,
       placeName: json['placeName'] != null ? OrderItem._parseLocalizedText(json['placeName']) : null,
       placeKind: PlaceKind.fromWireName(json['placeKind'] as String?) ?? PlaceKind.room,
       ratingValue: (json['ratingValue'] as num?)?.toInt(),
@@ -235,33 +220,5 @@ class PaginatedOrders {
       hasNextPage: json['hasNextPage'] as bool,
       hasPreviousPage: json['hasPreviousPage'] as bool,
     );
-  }
-}
-
-/// LEGACY(places): an unused request shape carrying only the older
-/// roomName/tableId/tableName fields — remove when Ordering and Notification
-/// stop reading the old room/table fields.
-///
-/// Create order request
-class CreateOrderRequest {
-  final Map<String, dynamic>? roomName;
-  final int? tableId;
-  final Map<String, dynamic>? tableName;
-  final String? customerNote;
-
-  CreateOrderRequest({
-    this.roomName,
-    this.tableId,
-    this.tableName,
-    this.customerNote,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      if (roomName != null) 'roomName': roomName,
-      if (tableId != null) 'tableId': tableId,
-      if (tableName != null) 'tableName': tableName,
-      if (customerNote != null) 'customerNote': customerNote,
-    };
   }
 }

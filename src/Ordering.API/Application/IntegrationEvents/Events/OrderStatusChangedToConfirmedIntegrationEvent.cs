@@ -15,8 +15,6 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
     public OrderStatus OrderStatus { get; }
     public string BuyerName { get; }
     public string BuyerIdentityGuid { get; }
-    // LEGACY(places): old room name beside PlaceName, still read by older consumers — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? RoomName { get; }
     public decimal OrderTotal { get; }
     public int PointsToRedeem { get; }
 
@@ -28,20 +26,8 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     public int BranchId { get; }
 
-    /// <summary>The room session the order belongs to, when ordered from a room.</summary>
+    /// <summary>The stay the order belongs to, when ordered from a timed place with its clock running.</summary>
     public int? SessionId { get; }
-
-    // LEGACY(places): old room id beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    public int? RoomId { get; }
-
-    /// <summary>
-    /// LEGACY(places): old table id beside PlaceId — remove when every till and customer app is on /api/places and /api/stays.
-    /// The café table the order is delivered to, when not in a room.
-    /// </summary>
-    public int? TableId { get; }
-
-    // LEGACY(places): old table name beside PlaceName — remove when every till and customer app is on /api/places and /api/stays.
-    public LocalizedText? TableName { get; }
 
     /// <summary>The Spaces place the order goes to; null for an order-ahead or a counter sale.</summary>
     public int? PlaceId { get; }
@@ -53,8 +39,8 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
 
     /// <summary>
     /// The exact ticket this order must land on, set when a cashier added
-    /// items to an already-open bill. Takes precedence over the session/table
-    /// routing below, which cannot name a counter tab.
+    /// items to an already-open bill. Takes precedence over the stay/place
+    /// routing above, which cannot name a counter tab.
     /// </summary>
     public int? TicketId { get; }
 
@@ -94,15 +80,11 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         OrderStatus orderStatus,
         string buyerName,
         string buyerIdentityGuid,
-        LocalizedText? roomName,
         decimal orderTotal,
         int pointsToRedeem = 0,
         string? guestId = null,
         int branchId = 0,
         int? sessionId = null,
-        int? roomId = null,
-        int? tableId = null,
-        LocalizedText? tableName = null,
         int? ticketId = null,
         string? customerName = null,
         string source = "Customer",
@@ -119,15 +101,11 @@ public record OrderStatusChangedToConfirmedIntegrationEvent : IntegrationEvent
         OrderStatus = orderStatus;
         BuyerName = buyerName;
         BuyerIdentityGuid = buyerIdentityGuid;
-        RoomName = roomName;
         OrderTotal = orderTotal;
         PointsToRedeem = pointsToRedeem;
         GuestId = guestId;
         BranchId = branchId;
         SessionId = sessionId;
-        RoomId = roomId;
-        TableId = tableId;
-        TableName = tableName;
         TicketId = ticketId;
         CustomerName = customerName;
         Source = source;

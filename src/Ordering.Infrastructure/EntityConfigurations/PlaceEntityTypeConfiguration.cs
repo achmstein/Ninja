@@ -14,9 +14,5 @@ class PlaceEntityTypeConfiguration : IEntityTypeConfiguration<Place>
 
         builder.Property(p => p.Kind).HasMaxLength(20).IsRequired();
         builder.OwnsOne(p => p.Name, b => b.ToJson());
-
-        // LEGACY(places): lookup indexes for the old room/table ids — remove when the printed room/table stickers are reprinted with /p/{id}.
-        builder.HasIndex(p => p.LegacyRoomId);
-        builder.HasIndex(p => p.LegacyTableId);
     }
 }

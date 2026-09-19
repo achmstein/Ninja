@@ -4,7 +4,7 @@ import Foundation
 @available(iOS 16.2, *)
 struct SessionActivityAttributes: ActivityAttributes {
     /// Static data — doesn't change during the activity
-    let roomName: String
+    let placeName: String
     let locale: String
 
     /// Dynamic data — updated while the activity is running
@@ -17,10 +17,11 @@ struct SessionActivityAttributes: ActivityAttributes {
         var accessToken: String?
         var apiBaseUrl: String?
         var sessionId: Int?
-        var roomId: Int?
+        var placeId: Int?
+        var placeKind: String?
         var branchId: Int?
-        var roomNameEn: String?
-        var roomNameAr: String?
+        var placeNameEn: String?
+        var placeNameAr: String?
 
         // Cooldown timestamps — set after a button is tapped
         var waiterCooldownEnd: Date?
