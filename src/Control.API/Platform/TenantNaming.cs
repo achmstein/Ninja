@@ -58,6 +58,9 @@ public static partial class TenantNaming
 
     public static string UploadsVolume(string slug) => $"{slug}-branch-uploads";
 
+    /// <summary>The volume as docker names it: compose prefixes the project, so anything outside the compose file (a backup) must too.</summary>
+    public static string UploadsVolumeOnDocker(string slug) => $"{Project(slug)}_{UploadsVolume(slug)}";
+
     /// <summary>A URL-safe secret of 32 characters.</summary>
     public static string NewSecret()
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_');

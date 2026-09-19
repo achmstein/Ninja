@@ -1,6 +1,7 @@
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
+import { formatMoney, useCurrency } from '@/lib/currency'
 import {
-  translate,
+  useLanguage,
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
@@ -67,8 +68,9 @@ export function orderPlace(order: {
 
 // Localized currency suffix (EGP / ج.م). Callers all live inside components
 // that re-render on language change, so reading the store here stays fresh.
+/** A price in the café's currency: `12.50 EGP` / `12.50 ج.م`. */
 export function formatEgp(value: number | string | undefined | null): string {
-  return `${Number(value ?? 0).toFixed(2)} ${translate('currency')}`
+  return formatMoney(value, useCurrency.getState().code, useLanguage.getState().language)
 }
 
 export function relativeTime(

@@ -3,6 +3,7 @@ import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse, type TenantWordmark } from '@/api/branch'
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
+import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
 
@@ -84,6 +85,7 @@ export function applyBrand(brand: Brand, language: Language) {
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
   applyBrandTheme(brand)
+  useCurrency.getState().set(brand.locale.currency)
 }
 
 function setLink(rel: string, href: string, type?: string) {

@@ -21,6 +21,7 @@ import {
   updateCustomizationMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -85,6 +86,7 @@ function bodyFromDto(
  */
 export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const itemId = Number(item.id)
@@ -376,7 +378,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                           <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
                             {formatAdjustment(
                               Number(option.priceAdjustment ?? 0),
-                              t
+                              currency
                             )}
                           </span>
                         </div>
@@ -605,6 +607,7 @@ function GroupEditor({
   onSaved: () => void
 }) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const isEditing = !!group
 
   const [name, setName] = useState<LocalizedValue>(
@@ -735,7 +738,7 @@ function GroupEditor({
         <div className='space-y-1.5'>
           <div className='text-muted-foreground grid grid-cols-[1fr_64px_36px_28px] items-center gap-1.5 px-0.5 text-xs'>
             <span>{t('name')}</span>
-            <span>± {t('currency')}</span>
+            <span>± {currency}</span>
             <span className='text-center'>{t('defaultOption')}</span>
             <span />
           </div>

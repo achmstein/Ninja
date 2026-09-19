@@ -8,6 +8,7 @@ import {
   updateTenantMutation,
   uploadTenantImageMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
+import { useCurrencyLabel } from '@/lib/currency'
 import { brandQueryKey, useBrand, type Brand } from '@/lib/brand'
 import { imageOf, isMark, wordmarkFor, type ImageSlot } from '@/lib/brand-slots'
 import { brandTokens, ensureFontLoaded, FONTS, RADII } from '@/lib/brand-theme'
@@ -497,6 +498,7 @@ function Preview({
   name: LocalizedValue
 }) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const language = useLanguage((s) => s.language)
   const tokens = brandTokens(draft)
   useEffect(() => ensureFontLoaded(tokens.font), [tokens.font])
@@ -554,7 +556,7 @@ function Preview({
             <div>
               <div className='text-sm font-medium'>{item.name}</div>
               <div className='text-muted-foreground text-xs'>
-                {item.price} {t('currency')}
+                {item.price} {currency}
               </div>
             </div>
             <span className='bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-xs font-medium'>

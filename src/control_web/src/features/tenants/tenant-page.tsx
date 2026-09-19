@@ -1,66 +1,102 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
 import {
-  ArrowLeft,
-  ExternalLink,
-  Loader2,
+  AlertCircle,
+  ArrowUpCircle,
+  CalendarPlus,
+  LogIn,
+  MoreHorizontal,
   Play,
   RotateCw,
   Square,
   Trash2,
-  ArrowUpCircle,
-  CalendarPlus,
+  UserCheck,
 } from 'lucide-react'
 import {
+  convertTenantMutation,
   destroyTenantMutation,
   extendDemoMutation,
   getTenantOptions,
   getTenantQueryKey,
+  impersonateOwnerMutation,
   listTenantsQueryKey,
   provisionTenantMutation,
   startTenantMutation,
   stopTenantMutation,
   upgradeTenantMutation,
 } from '@/api/control/@tanstack/react-query.gen'
-import type { TenantDetail } from '@/api/control'
-import { Button } from '@/components/ui/button'
-import { CopyButton } from '@/components/copy-button'
+import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge } from '@/components/tenant-badges'
-import { useFormat } from '@/lib/format'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
+  canConvert,
   canDestroy,
+  canImpersonate,
   canProvision,
   canStart,
   canStop,
   canUpgrade,
   isBusy,
+  planLabelKey,
   tenantKind,
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { DestroyDialog, ExtendDialog, UpgradeDialog } from './dialogs'
-import { Steps } from './steps'
+import { ConvertDialog, DestroyDialog, ExtendDialog, UpgradeDialog } from './dialogs'
+import { AuditTab } from './tabs/audit'
+import { BackupsTab } from './tabs/backups'
+import { HealthTab } from './tabs/health'
+import { OverviewTab } from './tabs/overview'
 
-const HOSTS: { key: keyof TenantDetail['hosts']; label: TranslationKey }[] = [
-  { key: 'customer', label: 'hostCustomer' },
-  { key: 'admin', label: 'hostAdmin' },
-  { key: 'pos', label: 'hostPos' },
-  { key: 'kds', label: 'hostKds' },
-  { key: 'api', label: 'hostApi' },
-]
+// Recharts and the brand editor only load once their tab opens
+const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
+const MetricsTab = lazy(() => import('./tabs/metrics').then((m) => ({ default: m.MetricsTab })))
+
+export const TENANT_TABS = ['overview', 'brand', 'health', 'metrics', 'backups', 'audit'] as const
+export type TenantTab = (typeof TENANT_TABS)[number]
+
+const TAB_LABELS: Record<TenantTab, TranslationKey> = {
+  overview: 'tabOverview',
+  brand: 'tabBrand',
+  health: 'tabHealth',
+  metrics: 'tabMetrics',
+  backups: 'tabBackups',
+  audit: 'tabAudit',
+}
+
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'convert' | null
+
+function Loading() {
+  return (
+    <div className='flex items-center justify-center py-24'>
+      <Spinner className='size-8' />
+    </div>
+  )
+}
 
 /**
- * One tenant: where it is, where it lives, who owns it, what the last run
- * did, and the actions its status allows. Polls while the stack is moving.
+ * One tenant: its name, state and the actions its status allows on top;
+ * the rest behind tabs the URL remembers. Polls while the stack is moving.
  */
-export function TenantPage({ slug }: { slug: string }) {
+export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const t = useT()
-  const format = useFormat()
   const language = useLanguage((s) => s.language)
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const query = useQuery({
@@ -69,12 +105,11 @@ export function TenantPage({ slug }: { slug: string }) {
       q.state.data && isBusy(tenantStatus(q.state.data.status)) ? 5_000 : false,
   })
 
-  const [dialog, setDialog] = useState<'extend' | 'upgrade' | 'destroy' | null>(
-    null
-  )
+  const [dialog, setDialog] = useState<OpenDialog>(null)
 
+  const tenantKey = getTenantQueryKey({ path: { slug } })
   const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: getTenantQueryKey({ path: { slug } }) })
+    queryClient.invalidateQueries({ queryKey: tenantKey })
     queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
   }
   const queued = () => {
@@ -93,21 +128,40 @@ export function TenantPage({ slug }: { slug: string }) {
   const extend = useMutation({
     ...extendDemoMutation(),
     onSuccess: (detail) => {
-      queryClient.setQueryData(getTenantQueryKey({ path: { slug } }), detail)
+      queryClient.setQueryData(tenantKey, detail)
       queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
       toast.success(t('extended'))
       setDialog(null)
     },
     onError: failed,
   })
+  const convert = useMutation({
+    ...convertTenantMutation(),
+    onSuccess: (detail) => {
+      queryClient.setQueryData(tenantKey, detail)
+      queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
+      toast.success(t('converted'))
+      setDialog(null)
+    },
+    onError: failed,
+  })
+  const impersonate = useMutation(impersonateOwnerMutation())
 
-  if (query.isLoading) {
-    return (
-      <div className='flex items-center justify-center py-24'>
-        <Loader2 className='size-8 animate-spin' />
-      </div>
-    )
+  // The tab is opened before the call, while the click is still a user
+  // gesture; otherwise popup blockers eat it. The link then lands in it.
+  const signInAsOwner = async () => {
+    const w = window.open('', '_blank')
+    try {
+      const link = await impersonate.mutateAsync({ path: { slug } })
+      if (w) w.location.href = link.url
+      else window.open(link.url, '_blank')
+    } catch (e) {
+      w?.close()
+      toast.error(problemDetail(e) || t('signInLinkFailed'))
+    }
   }
+
+  if (query.isLoading) return <Loading />
 
   const tenant = query.data
   if (!tenant) {
@@ -136,137 +190,152 @@ export function TenantPage({ slug }: { slug: string }) {
     upgrade.isPending ||
     destroy.isPending
   const path = { path: { slug } }
+  const alive = status !== 'Destroying' && status !== 'Destroyed'
+  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status)
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-wrap items-center gap-2'>
-        <Button asChild variant='ghost' size='icon' className='-ms-2 size-9'>
-          <Link to='/' aria-label={t('backToTenants')}>
-            <ArrowLeft className='rtl:rotate-180' />
-          </Link>
-        </Button>
-        <h1 className='text-2xl font-bold tracking-tight'>{name}</h1>
-        <StatusBadge status={tenant.status} />
-        <KindBadge kind={tenant.kind} />
-        <span className='text-muted-foreground font-mono text-xs'>{tenant.slug}</span>
-
-        <div className='ms-auto flex flex-wrap items-center gap-2'>
-          {canProvision(status) && (
-            <Button
-              size='sm'
-              disabled={busy}
-              onClick={() => provision.mutate(path)}
-            >
-              {status === 'Failed' ? <RotateCw className='size-4' /> : <Play className='size-4' />}
-              {status === 'Failed' ? t('retryProvision') : t('provision')}
-            </Button>
-          )}
-          {canStop(status) && (
-            <Button size='sm' variant='outline' disabled={busy} onClick={() => stop.mutate(path)}>
-              <Square className='size-4' />
-              {t('stop')}
-            </Button>
-          )}
-          {canStart(status) && (
-            <Button size='sm' disabled={busy} onClick={() => start.mutate(path)}>
-              <Play className='size-4' />
-              {t('start')}
-            </Button>
-          )}
-          {canUpgrade(status) && (
-            <Button size='sm' variant='outline' disabled={busy} onClick={() => setDialog('upgrade')}>
-              <ArrowUpCircle className='size-4' />
-              {t('upgrade')}
-            </Button>
-          )}
-          {canDestroy(status) && (
-            <Button size='sm' variant='destructive' disabled={busy} onClick={() => setDialog('destroy')}>
-              <Trash2 className='size-4' />
-              {t('destroy')}
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        back={{ to: '/' }}
+        title={name}
+        badge={
+          <>
+            <StatusBadge status={tenant.status} />
+            <KindBadge kind={tenant.kind} />
+            <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
+            <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
+              {tenant.slug}
+            </span>
+          </>
+        }
+        actions={
+          <>
+            {canProvision(status) && (
+              <Button size='sm' disabled={busy} onClick={() => provision.mutate(path)}>
+                {status === 'Failed' ? <RotateCw /> : <Play />}
+                {status === 'Failed' ? t('retryProvision') : t('provision')}
+              </Button>
+            )}
+            {canStop(status) && (
+              <Button size='sm' variant='outline' disabled={busy} onClick={() => stop.mutate(path)}>
+                <Square />
+                {t('stop')}
+              </Button>
+            )}
+            {canStart(status) && (
+              <Button size='sm' disabled={busy} onClick={() => start.mutate(path)}>
+                <Play />
+                {t('start')}
+              </Button>
+            )}
+            {canImpersonate(status) && (
+              <Button
+                size='sm'
+                variant='outline'
+                disabled={impersonate.isPending}
+                onClick={signInAsOwner}
+              >
+                {impersonate.isPending ? <Spinner /> : <LogIn />}
+                {t('signInAsOwner')}
+              </Button>
+            )}
+            {showMore && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size='icon' variant='outline' className='size-8' aria-label={t('more')}>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  {kind === 'Demo' && alive && (
+                    <DropdownMenuItem onSelect={() => setDialog('extend')}>
+                      <CalendarPlus />
+                      {t('extend')}
+                    </DropdownMenuItem>
+                  )}
+                  {canUpgrade(status) && (
+                    <DropdownMenuItem disabled={busy} onSelect={() => setDialog('upgrade')}>
+                      <ArrowUpCircle />
+                      {t('upgrade')}
+                    </DropdownMenuItem>
+                  )}
+                  {canConvert(kind, status) && (
+                    <DropdownMenuItem onSelect={() => setDialog('convert')}>
+                      <UserCheck />
+                      {t('convert')}
+                    </DropdownMenuItem>
+                  )}
+                  {canDestroy(status) && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant='destructive'
+                        disabled={busy}
+                        onSelect={() => setDialog('destroy')}
+                      >
+                        <Trash2 />
+                        {t('destroy')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </>
+        }
+      />
 
       {tenant.lastError && status === 'Failed' && (
-        <p className='text-destructive bg-destructive/10 rounded-md px-3 py-2 text-sm'>
-          {tenant.lastError}
-        </p>
+        <Alert variant='destructive'>
+          <AlertCircle />
+          <AlertTitle>{t('lastError')}</AlertTitle>
+          <AlertDescription className='font-mono text-xs break-all' dir='ltr'>
+            {tenant.lastError}
+          </AlertDescription>
+        </Alert>
       )}
 
-      <section className='grid gap-x-8 gap-y-6 md:grid-cols-2'>
-        <dl className='grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm'>
-          <dt className='text-muted-foreground'>{t('hosts')}</dt>
-          <dd className='flex flex-col gap-1'>
-            {HOSTS.map(({ key, label }) => (
-              <a
-                key={key}
-                href={tenant.hosts[key]}
-                target='_blank'
-                rel='noreferrer'
-                className='inline-flex items-center gap-1.5 hover:underline'
-              >
-                <span className='text-muted-foreground w-16 shrink-0'>{t(label)}</span>
-                <span className='truncate' dir='ltr'>
-                  {tenant.hosts[key].replace(/^https?:\/\//, '')}
-                </span>
-                <ExternalLink className='text-muted-foreground size-3 shrink-0' />
-              </a>
-            ))}
-          </dd>
-        </dl>
-
-        <dl className='grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm'>
-          <dt className='text-muted-foreground'>{t('owner')}</dt>
-          <dd className='flex items-center gap-1'>
-            <span className='truncate' dir='ltr'>{tenant.ownerEmail}</span>
-            <CopyButton value={tenant.ownerEmail} />
-          </dd>
-          {tenant.ownerInitialPassword && (
-            <>
-              <dt className='text-muted-foreground'>{t('initialPassword')}</dt>
-              <dd className='flex items-center gap-1'>
-                <span className='font-mono' dir='ltr'>{tenant.ownerInitialPassword}</span>
-                <CopyButton value={tenant.ownerInitialPassword} />
-              </dd>
-            </>
-          )}
-          {kind === 'Demo' && (
-            <>
-              <dt className='text-muted-foreground'>{t('expires')}</dt>
-              <dd className='flex items-center gap-2'>
-                <span>{format.dateTime(tenant.expiresAt) || '—'}</span>
-                {status !== 'Destroyed' && status !== 'Destroying' && (
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='h-7 px-2'
-                    onClick={() => setDialog('extend')}
-                  >
-                    <CalendarPlus className='size-4' />
-                    {t('extend')}
-                  </Button>
-                )}
-              </dd>
-            </>
-          )}
-          <dt className='text-muted-foreground'>{t('imageTag')}</dt>
-          <dd className='font-mono' dir='ltr'>{tenant.imageTag}</dd>
-          <dt className='text-muted-foreground'>{t('created')}</dt>
-          <dd>{format.dateTime(tenant.createdAt)}</dd>
-          {tenant.provisionedAt && (
-            <>
-              <dt className='text-muted-foreground'>{t('provisioned')}</dt>
-              <dd>{format.dateTime(tenant.provisionedAt)}</dd>
-            </>
-          )}
-        </dl>
-      </section>
-
-      <section className='flex flex-col gap-2'>
-        <h2 className='text-sm font-medium'>{t('steps')}</h2>
-        <Steps steps={tenant.steps} />
-      </section>
+      <Tabs
+        value={tab}
+        onValueChange={(v) =>
+          navigate({
+            to: '/t/$slug',
+            params: { slug },
+            search: { tab: v as TenantTab },
+            replace: true,
+          })
+        }
+      >
+        <TabsList variant='line' className='max-w-full overflow-x-auto'>
+          {TENANT_TABS.map((key) => (
+            <TabsTrigger key={key} value={key}>
+              {t(TAB_LABELS[key])}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value='overview' className='pt-2'>
+          <OverviewTab tenant={tenant} onExtend={() => setDialog('extend')} />
+        </TabsContent>
+        <TabsContent value='brand' className='pt-2'>
+          <Suspense fallback={<Loading />}>
+            <BrandTab tenant={tenant} />
+          </Suspense>
+        </TabsContent>
+        <TabsContent value='health' className='pt-2'>
+          <HealthTab tenant={tenant} />
+        </TabsContent>
+        <TabsContent value='metrics' className='pt-2'>
+          <Suspense fallback={<Loading />}>
+            <MetricsTab tenant={tenant} />
+          </Suspense>
+        </TabsContent>
+        <TabsContent value='backups' className='pt-2'>
+          <BackupsTab tenant={tenant} />
+        </TabsContent>
+        <TabsContent value='audit' className='pt-2'>
+          <AuditTab slug={slug} />
+        </TabsContent>
+      </Tabs>
 
       <ExtendDialog
         open={dialog === 'extend'}
@@ -282,6 +351,14 @@ export function TenantPage({ slug }: { slug: string }) {
         onConfirm={(imageTag) =>
           upgrade.mutate({ ...path, body: imageTag ? { imageTag } : null })
         }
+      />
+      <ConvertDialog
+        open={dialog === 'convert'}
+        onOpenChange={(v) => setDialog(v ? 'convert' : null)}
+        isPending={convert.isPending}
+        name={name}
+        currentPlan={tenant.record.plan}
+        onConfirm={(plan) => convert.mutate({ ...path, body: { plan } })}
       />
       <DestroyDialog
         open={dialog === 'destroy'}

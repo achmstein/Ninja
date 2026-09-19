@@ -16,6 +16,7 @@ import {
   uploadItemPictureMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -147,6 +148,7 @@ export function ItemDetailsForm({
   onCancel,
 }: ItemDetailsFormProps) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const locale = useLocale()
   const weekdayName = (day: number) =>
     new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(
@@ -521,7 +523,7 @@ export function ItemDetailsForm({
         <div className='grid grid-cols-3 gap-4'>
           <div className='space-y-2'>
             <Label htmlFor='item-price'>
-              {t('price')} ({t('currency')})
+              {t('price')} ({currency})
             </Label>
             <Input
               id='item-price'
@@ -609,7 +611,7 @@ export function ItemDetailsForm({
           {form.isOnOffer && (
             <div className='space-y-2'>
               <Label htmlFor='item-offerPrice'>
-                {t('offerPrice')} ({t('currency')})
+                {t('offerPrice')} ({currency})
               </Label>
               <Input
                 id='item-offerPrice'

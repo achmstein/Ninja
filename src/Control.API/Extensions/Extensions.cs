@@ -27,14 +27,19 @@ public static class Extensions
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();
         builder.Services.AddSingleton<ProvisioningQueue>();
         builder.Services.AddScoped<Provisioner>();
-        builder.Services.AddHostedService<ProvisioningWorker>();
-        builder.Services.AddHostedService<DemoExpiryService>();
         builder.Services.AddSingleton<CapacityCache>();
-        builder.Services.AddHostedService<CapacityMonitor>();
         builder.Services.AddSingleton<TenantOps>();
         builder.Services.AddSingleton<TenantMetricsCollector>();
         builder.Services.AddSingleton<BackupService>();
-        builder.Services.AddHostedService<NightlyBackupService>();
+
+        // The build boots the app once to write its OpenAPI document; there is no box, no database and no queue to serve then
+        if (!builder.Environment.IsBuild())
+        {
+            builder.Services.AddHostedService<ProvisioningWorker>();
+            builder.Services.AddHostedService<DemoExpiryService>();
+            builder.Services.AddHostedService<CapacityMonitor>();
+            builder.Services.AddHostedService<NightlyBackupService>();
+        }
 
         var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
         if (dryRun)

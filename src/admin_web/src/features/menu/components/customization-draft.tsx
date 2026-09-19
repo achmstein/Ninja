@@ -2,6 +2,7 @@ import {
   type ItemCustomization,
   type ProposedCustomization,
 } from '@/api/catalog'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
@@ -67,12 +68,9 @@ export function bodyFromDraft(
 }
 
 // Free options show nothing — pricing only appears where it differs
-export function formatAdjustment(
-  value: number,
-  t: ReturnType<typeof useT>
-): string {
+export function formatAdjustment(value: number, currency: string): string {
   if (!value) return ''
-  return `${value > 0 ? '+' : '−'}${Math.abs(value)} ${t('currency')}`
+  return `${value > 0 ? '+' : '−'}${Math.abs(value)} ${currency}`
 }
 
 /** Tiny radio/checkbox glyph: shape mirrors what the customer will see
@@ -109,6 +107,7 @@ export function DraftCard({
   actions: React.ReactNode
 }) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const localized = useLocalized()
 
   return (
@@ -137,7 +136,7 @@ export function DraftCard({
               {localized(option.name)}
             </span>
             <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
-              {formatAdjustment(option.priceAdjustment, t)}
+              {formatAdjustment(option.priceAdjustment, currency)}
             </span>
           </div>
         ))}

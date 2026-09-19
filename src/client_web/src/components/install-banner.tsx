@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { preview } from '@/lib/preview'
 import { BorderBeam } from 'border-beam'
 import { X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
@@ -35,7 +36,8 @@ export function InstallBanner() {
   const [dismissed, setDismissed] = useState(readDismissed)
   const [howOpen, setHowOpen] = useState(false)
 
-  if (isStandalone || dismissed || !(canInstall || isIos)) return null
+  // Nothing to install from inside the control panel's preview frame
+  if (preview.active || isStandalone || dismissed || !(canInstall || isIos)) return null
 
   const onInstall = () => {
     if (canInstall) void install()

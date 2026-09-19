@@ -1,5 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { formatMoney, useCurrency } from '@/lib/currency'
+import { preview } from '@/lib/preview'
 import type { LocalizedText } from '@/api/catalog'
 import { messages, type Message } from './i18n.gen'
 
@@ -124,10 +126,20 @@ type LanguageState = {
   setLanguage: (language: Language) => void
 }
 
+/** Under the control panel's preview the choice lives in memory only, so the frame never changes a real visitor's language */
+const memoryStorage = (() => {
+  const store = new Map<string, string>()
+  return {
+    getItem: (name: string) => store.get(name) ?? null,
+    setItem: (name: string, value: string) => void store.set(name, value),
+    removeItem: (name: string) => void store.delete(name),
+  }
+})()
+
 export const useLanguage = create<LanguageState>()(
   persist(
     (set) => ({
-      language: 'ar',
+      language: preview.language ?? 'ar',
       setLanguage: (language) => {
         applyDirection(language)
         set({ language })
@@ -135,8 +147,9 @@ export const useLanguage = create<LanguageState>()(
     }),
     {
       name: 'ninja-language',
+      storage: createJSONStorage(() => (preview.active ? memoryStorage : localStorage)),
       onRehydrateStorage: () => (state) => {
-        applyDirection(state?.language ?? 'ar')
+        applyDirection(state?.language ?? preview.language ?? 'ar')
       },
     }
   )
@@ -182,11 +195,11 @@ export function translate(
   return format(dictionary[key], useLanguage.getState().language, params)
 }
 
-// Localized price formatting, matching the mobile app ("£12.00" / "12.00 ج.م")
+// A price in the tenant's currency, matching the mobile app ("12.00 EGP" / "12.00 ج.م")
 export function usePrice() {
-  const t = useT()
-  return (value: number | string | null | undefined) =>
-    t('priceFormat', { price: Number(value ?? 0).toFixed(2) })
+  const language = useLanguage((s) => s.language)
+  const currency = useCurrency((s) => s.code)
+  return (value: number | string | null | undefined) => formatMoney(value, currency, language)
 }
 
 // Picks the right side of a LocalizedText for the active language

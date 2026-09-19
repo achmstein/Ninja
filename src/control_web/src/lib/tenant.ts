@@ -88,6 +88,38 @@ export const canUpgrade = (status: TenantStatusName) =>
   status === 'Running' || status === 'Stopped'
 export const canDestroy = (status: TenantStatusName) =>
   status !== 'Destroying' && status !== 'Destroyed'
+/** A demo becomes a customer; a customer already is one. */
+export const canConvert = (kind: TenantKindName, status: TenantStatusName) =>
+  kind === 'Demo' && status !== 'Destroying' && status !== 'Destroyed'
+export const canImpersonate = (status: TenantStatusName) => status === 'Running'
+export const canBackup = (status: TenantStatusName) =>
+  status === 'Running' || status === 'Stopped'
+/** A stack exists on the box: containers and logs can be read. */
+export const isStamped = (status: TenantStatusName) =>
+  status === 'Running' || status === 'Stopped' || status === 'Failed' || status === 'Provisioning'
+
+export const TENANT_SEEDS = ['None', 'Sample'] as const
+export type TenantSeedName = (typeof TENANT_SEEDS)[number]
+
+/** What a fresh stack is planted with, by kind: a demo looks alive, a customer starts empty. */
+export const SEED_DEFAULT: Record<TenantKindName, TenantSeedName> = {
+  Demo: 'Sample',
+  Customer: 'None',
+}
+
+export const seedLabelKey: Record<TenantSeedName, TranslationKey> = {
+  None: 'seedNone',
+  Sample: 'seedSample',
+}
+
+export const TENANT_PLANS = ['Free', 'Starter', 'Pro'] as const
+export type TenantPlanName = (typeof TENANT_PLANS)[number]
+
+export const planLabelKey: Record<TenantPlanName, TranslationKey> = {
+  Free: 'planFree',
+  Starter: 'planStarter',
+  Pro: 'planPro',
+}
 
 /** Lower-case letters, digits and single dashes, at most 24 characters. */
 export function slugFrom(name: string): string {

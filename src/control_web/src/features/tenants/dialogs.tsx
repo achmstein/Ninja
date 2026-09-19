@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,7 +20,16 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Spinner } from '@/components/ui/spinner'
 import { useT } from '@/lib/i18n'
+import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
 
 type DialogProps = {
   open: boolean
@@ -55,7 +73,7 @@ export function ExtendDialog({
             {t('cancel')}
           </Button>
           <Button disabled={!valid || isPending} onClick={() => onConfirm(value)}>
-            {isPending && <Loader2 className='size-4 animate-spin' />}
+            {isPending && <Spinner />}
             {t('extend')}
           </Button>
         </DialogFooter>
@@ -108,7 +126,7 @@ export function UpgradeDialog({
             disabled={isPending}
             onClick={() => onConfirm(tag.trim() || null)}
           >
-            {isPending && <Loader2 className='size-4 animate-spin' />}
+            {isPending && <Spinner />}
             {t('upgrade')}
           </Button>
         </DialogFooter>
@@ -131,18 +149,18 @@ export function DestroyDialog({
   const matches = typed.trim() === slug
 
   return (
-    <Dialog
+    <AlertDialog
       open={open}
       onOpenChange={(v) => {
         if (!v) setTyped('')
         onOpenChange(v)
       }}
     >
-      <DialogContent className='sm:max-w-sm'>
-        <DialogHeader>
-          <DialogTitle>{t('destroyTitle', { name })}</DialogTitle>
-          <DialogDescription className='sr-only'>{t('destroy')}</DialogDescription>
-        </DialogHeader>
+      <AlertDialogContent size='sm'>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('destroyTitle', { name })}</AlertDialogTitle>
+          <AlertDialogDescription className='sr-only'>{t('destroy')}</AlertDialogDescription>
+        </AlertDialogHeader>
         <div className='grid gap-2'>
           <Label htmlFor='destroy-slug'>
             {t('destroyConfirmLabel', { slug })}
@@ -157,20 +175,78 @@ export function DestroyDialog({
             autoFocus
           />
         </div>
-        <DialogFooter>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
-            {t('cancel')}
-          </Button>
-          <Button
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
             variant='destructive'
             disabled={!matches || isPending}
-            onClick={onConfirm}
+            // The dialog stays up until the call answers; the page closes it
+            onClick={(e) => {
+              e.preventDefault()
+              onConfirm()
+            }}
           >
-            {isPending && <Loader2 className='size-4 animate-spin' />}
+            {isPending && <Spinner />}
             {t('destroy')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+/** A demo becomes a customer, on the plan picked here. */
+export function ConvertDialog({
+  open,
+  onOpenChange,
+  isPending,
+  name,
+  currentPlan,
+  onConfirm,
+}: DialogProps & {
+  name: string
+  currentPlan: TenantPlanName
+  onConfirm: (plan: TenantPlanName) => void
+}) {
+  const t = useT()
+  const [plan, setPlan] = useState<TenantPlanName>(currentPlan)
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent size='sm'>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('convertTitle', { name })}</AlertDialogTitle>
+          <AlertDialogDescription>{t('convertNote')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className='grid gap-2'>
+          <Label htmlFor='convert-plan'>{t('plan')}</Label>
+          <Select value={plan} onValueChange={(v) => setPlan(v as TenantPlanName)}>
+            <SelectTrigger id='convert-plan' className='w-full'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TENANT_PLANS.map((p) => (
+                <SelectItem key={p} value={p}>
+                  {t(planLabelKey[p])}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isPending}
+            onClick={(e) => {
+              e.preventDefault()
+              onConfirm(plan)
+            }}
+          >
+            {isPending && <Spinner />}
+            {t('convert')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

@@ -47,6 +47,8 @@ public interface ITenantStack
     Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct);
     /// <summary>Puts the brand and the seed images (slot → file) through the stack's own API, as the control service account.</summary>
     Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct);
+    /// <summary>The brand as the stack serves it now (a restore keeps what the dump brought).</summary>
+    Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct);
 }
 
 public sealed class NpgsqlDatabaseAdmin(IOptions<PlatformOptions> options) : IDatabaseAdmin
@@ -241,6 +243,12 @@ public sealed class HttpTenantStack(IStackProxy proxy, ILogger<HttpTenantStack> 
         }
     }
 
+    public async Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct)
+    {
+        using var response = await proxy.SendAsync(tenant, HttpMethod.Get, "/api/tenant", null, StackAuth.Anonymous, ct);
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<JsonObject>(ct) : null;
+    }
+
     public async Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct)
     {
         using var put = await proxy.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(brand), StackAuth.Control, ct);
@@ -294,6 +302,7 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
 public sealed class DryRunTenantStack(DryRunStackProxy proxy, ILogger<DryRunTenantStack> logger) : ITenantStack
 {
     public Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct) { logger.LogInformation("(dry run) {Gateway} healthy", TenantNaming.Gateway(tenant.Slug)); return Task.CompletedTask; }
+    public Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct) => Task.FromResult<JsonObject?>(proxy.BrandOf(tenant));
     public async Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct)
     {
         // Through the same double the control app reads, so what was seeded is what it shows

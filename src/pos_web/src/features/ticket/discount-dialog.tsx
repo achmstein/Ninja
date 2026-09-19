@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail } from '@/api/sales'
 import {
@@ -35,6 +36,7 @@ type Kind = 'percent' | 'amount'
  */
 export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogProps) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const queryClient = useQueryClient()
   const [kind, setKind] = useState<Kind>('percent')
   const [value, setValue] = useState('')
@@ -121,7 +123,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
                 className='h-12 rounded-none px-4 text-base first:rounded-s-md last:rounded-e-md'
                 onClick={() => setKind(k)}
               >
-                {k === 'percent' ? '%' : t('currency')}
+                {k === 'percent' ? '%' : currency}
               </Button>
             ))}
           </div>

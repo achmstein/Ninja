@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useCurrency } from '@/lib/currency'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse } from '@/api/branch'
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
@@ -80,6 +81,8 @@ export async function bootBrand(queryClient: QueryClient) {
 
 /** Head tags and theme tokens: the platform's on a staff surface, the tenant's on the customer's. */
 export function applyBrand(brand: Brand, language: Language) {
+  // Prices are the café's whatever the surface wears
+  useCurrency.getState().set(brand.locale.currency)
   if (STAFF) {
     setLink('icon', '/api/tenant/icons/favicon.png?platform=1', 'image/png')
     setLink('apple-touch-icon', '/api/tenant/icons/apple-touch-icon.png?platform=1')

@@ -108,17 +108,23 @@ public sealed class Provisioner(
 
             await Step(tenant, runId, "brand", async () =>
             {
+                // A restored stack keeps the theme, switches and locale its dump brought; a fresh one starts with everything on
+                var kept = restore is null ? null : await stack.ReadBrandAsync(tenant, ct);
                 var brand = new JsonObject
                 {
                     ["name"] = new JsonObject { ["en"] = tenant.NameEn, ["ar"] = tenant.NameAr },
                     ["primaryColor"] = tenant.PrimaryColor,
                     ["customerUrl"] = hosts.CustomerUrl,
-                    ["features"] = new JsonObject
+                    ["features"] = kept?["features"]?.DeepClone() ?? new JsonObject
                     {
                         ["rooms"] = true, ["loyalty"] = true, ["tabs"] = true, ["inventory"] = true,
                         ["finance"] = true, ["payroll"] = true, ["kds"] = true,
                     },
-                    ["theme"] = new JsonObject(),
+                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject(),
+                    ["locale"] = new JsonObject
+                    {
+                        ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
+                    },
                 };
                 var images = SeedImages(tenant);
                 await stack.SeedBrandAsync(tenant, brand, images, ct);

@@ -8,6 +8,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -110,6 +111,7 @@ function OverrideForm({
   onChanged,
 }: OverrideFormProps) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const [price, setPrice] = useState(initial.price)
   const [onOffer, setOnOffer] = useState(initial.onOffer === true)
   const [offerPrice, setOfferPrice] = useState(initial.offerPrice)
@@ -163,7 +165,7 @@ function OverrideForm({
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-2'>
           <Label htmlFor='override-price'>
-            {t('priceAtBranch')} ({t('currency')})
+            {t('priceAtBranch')} ({currency})
           </Label>
           <Input
             id='override-price'

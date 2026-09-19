@@ -20,6 +20,20 @@ export function useFormat() {
   }
 }
 
+/** Megabytes as people read them: "512 MB", "1.5 GB", "120 GB". */
+export function megabytes(mb: number | null | undefined): string {
+  const n = mb ?? 0
+  if (n < 1024) return `${Math.round(n)} MB`
+  const gb = n / 1024
+  return `${gb < 10 ? gb.toFixed(1) : Math.round(gb)} GB`
+}
+
+/** A share as a whole percentage, never past 100. */
+export function percent(part: number, whole: number): number {
+  if (whole <= 0) return 0
+  return Math.min(100, Math.round((part / whole) * 100))
+}
+
 /** "3s", "1m 12s", "2h 05m": the span between two instants, or until now. */
 export function duration(
   from: string | null | undefined,

@@ -49,7 +49,7 @@ public sealed class BackupService(IShell shell, IOptions<PlatformOptions> option
             await using (var archive = File.Create(Path.Combine(dir, Uploads)))
             {
                 var result = await shell.RunAsync("docker",
-                    ["run", "--rm", "-v", $"{TenantNaming.UploadsVolume(tenant.Slug)}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."],
+                    ["run", "--rm", "-v", $"{TenantNaming.UploadsVolumeOnDocker(tenant.Slug)}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."],
                     null, null, archive, ct);
                 if (!result.Ok)
                 {
@@ -143,7 +143,7 @@ public sealed class BackupService(IShell shell, IOptions<PlatformOptions> option
         if (!File.Exists(archive)) return false;
         await using var file = File.OpenRead(archive);
         var result = await shell.RunAsync("docker",
-            ["run", "-i", "--rm", "-v", $"{TenantNaming.UploadsVolume(into.Slug)}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"],
+            ["run", "-i", "--rm", "-v", $"{TenantNaming.UploadsVolumeOnDocker(into.Slug)}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"],
             null, file, Stream.Null, ct);
         if (!result.Ok) throw new InvalidOperationException($"uploads: {result.Output}");
         return true;

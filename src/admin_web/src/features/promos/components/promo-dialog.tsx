@@ -8,6 +8,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -76,6 +77,7 @@ function PromoForm({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const currency = useCurrencyLabel()
   const queryClient = useQueryClient()
   const isEditing = !!promo
 
@@ -184,7 +186,7 @@ function PromoForm({
         </div>
         <div className='space-y-2'>
           <Label htmlFor='promo-value'>
-            {form.kind === PROMO_KIND.percent ? '%' : t('currency')}
+            {form.kind === PROMO_KIND.percent ? '%' : currency}
           </Label>
           <Input
             id='promo-value'
@@ -201,7 +203,7 @@ function PromoForm({
       <div className='grid grid-cols-2 gap-3'>
         <div className='space-y-2'>
           <Label htmlFor='promo-min'>
-            {t('minimumOrder')} ({t('currency')})
+            {t('minimumOrder')} ({currency})
           </Label>
           <Input
             id='promo-min'
