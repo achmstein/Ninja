@@ -218,6 +218,7 @@ export type TenantDetail = {
     primaryColor: null | string;
     customerDomain: null | string;
     hosts: TenantHostsDto;
+    logoUrl: null | string;
     ownerEmail: string;
     ownerInitialPassword: null | string;
     record: TenantRecordDto;
@@ -286,6 +287,7 @@ export type TenantSummary = {
     country: string;
     currency: string;
     customerUrl: string;
+    logoUrl: null | string;
     createdAt: string;
     expiresAt: null | string;
     imageTag: string;

@@ -25,3 +25,6 @@ function read(): Preview {
 }
 
 export const preview: Preview = read()
+
+// The frame is a phone: the stylesheet hides scrollbars under this mark
+if (preview.active) document.documentElement.dataset.preview = ''

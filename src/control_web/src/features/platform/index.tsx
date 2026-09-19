@@ -7,6 +7,7 @@ import {
   getPlatformOptions,
   listTenantsOptions,
 } from '@/api/control/@tanstack/react-query.gen'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
@@ -183,8 +184,15 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                   <Link
                     to='/t/$slug'
                     params={{ slug: tenant.slug }}
-                    className='hover:underline'
+                    className='inline-flex items-center gap-2 hover:underline'
                   >
+                    {/* The café's mark on a white tile, the way its app icon is cut; the initial until a stack serves one */}
+                    <Avatar className='rounded-md bg-white ring-1 ring-border'>
+                      <AvatarImage src={tenant.logoUrl ?? undefined} alt='' className='object-contain p-0.5' />
+                      <AvatarFallback className='rounded-md bg-muted font-semibold'>
+                        {name.trim().charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     {name}
                   </Link>
                 </TableCell>

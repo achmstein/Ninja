@@ -278,10 +278,17 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
     public static TenantHostsDto From(TenantHosts h) => new(h.CustomerUrl, h.AdminUrl, h.PosUrl, h.KdsUrl, h.ApiUrl);
 }
 
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
+/// <param name="LogoUrl">The café's mark as its running stack serves it, or null while there is no stack to serve one.</param>
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+    {
+        var hosts = TenantHosts.For(t, p);
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+    }
+
+    /// <summary>The stack's public mark; the light one, which the customer app's icons are cut from.</summary>
+    public static string? LogoUrlOf(Tenant t, TenantHosts hosts) => t.Status == TenantStatus.Running ? $"{hosts.CustomerUrl}/api/tenant/images/logo" : null;
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
@@ -306,6 +313,7 @@ public record TenantDetail(
     string? PrimaryColor,
     string? CustomerDomain,
     TenantHostsDto Hosts,
+    string? LogoUrl,
     string OwnerEmail,
     string? OwnerInitialPassword,
     TenantRecordDto Record,
@@ -318,7 +326,7 @@ public record TenantDetail(
     IReadOnlyList<string> SeedImages)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),

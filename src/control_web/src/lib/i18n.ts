@@ -269,6 +269,7 @@ const dictionary = {
   previewOrders: { en: 'Orders', ar: 'الطلبات' },
   previewProfile: { en: 'Me', ar: 'أنا' },
   openInNewTab: { en: 'Open in a new tab', ar: 'افتح في تبويب جديد' },
+  reload: { en: 'Reload', ar: 'حمّل من الأول' },
 
   // Health
   health: { en: 'Health', ar: 'الصحة' },

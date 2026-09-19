@@ -1,4 +1,5 @@
-import { ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { ExternalLink, RotateCw } from 'lucide-react'
 import { useT, type Language } from '@/lib/i18n'
 import type { Scheme } from '@/lib/brand-slots'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,8 @@ export function LivePreview({
   className?: string
 }) {
   const t = useT()
+  // Bumped by the reload button: the frame starts over at the app's home
+  const [reloads, setReloads] = useState(0)
   const url = new URL(customerUrl)
   url.searchParams.set('preview-theme', scheme)
   url.searchParams.set('lang', language)
@@ -31,9 +34,9 @@ export function LivePreview({
 
   return (
     <div className='space-y-2'>
-      <PhoneFrame className={className}>
+      <PhoneFrame scheme={scheme} className={className}>
         <iframe
-          key={`${version}-${scheme}-${language}`}
+          key={`${version}-${scheme}-${language}-${reloads}`}
           src={url.href}
           title={t('previewLive')}
           sandbox='allow-scripts allow-same-origin allow-forms'
@@ -41,7 +44,11 @@ export function LivePreview({
           className='h-full w-full border-0'
         />
       </PhoneFrame>
-      <div className='flex justify-center'>
+      <div className='flex justify-center gap-1'>
+        <Button variant='ghost' size='sm' onClick={() => setReloads((n) => n + 1)}>
+          <RotateCw className='me-1 size-3.5' />
+          {t('reload')}
+        </Button>
         <Button asChild variant='ghost' size='sm'>
           <a href={url.href} target='_blank' rel='noreferrer'>
             <ExternalLink className='me-1 size-3.5' />

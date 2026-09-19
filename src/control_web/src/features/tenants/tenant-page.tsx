@@ -306,13 +306,17 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
           })
         }
       >
-        <TabsList variant='line' className='max-w-full overflow-x-auto'>
-          {TENANT_TABS.map((key) => (
-            <TabsTrigger key={key} value={key}>
-              {t(TAB_LABELS[key])}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {/* The list scrolls sideways on a phone; its wrapper keeps the active
+            tab's underline (drawn below the list) inside the scroll box */}
+        <div className='max-w-full overflow-x-auto pb-2'>
+          <TabsList variant='line'>
+            {TENANT_TABS.map((key) => (
+              <TabsTrigger key={key} value={key}>
+                {t(TAB_LABELS[key])}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
         <TabsContent value='overview' className='pt-2'>
           <OverviewTab tenant={tenant} onExtend={() => setDialog('extend')} />
         </TabsContent>

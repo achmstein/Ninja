@@ -33,13 +33,13 @@ export function PreviewToggles({
   const t = useT()
   return (
     <div className='flex items-center justify-center gap-2'>
-      <ToggleGroup type='single' size='sm' value={language} onValueChange={(v) => v && onLanguage(v as Language)} aria-label={t('language')}>
-        <ToggleGroupItem value='en' className='px-3 text-xs font-semibold'>EN</ToggleGroupItem>
-        <ToggleGroupItem value='ar' className='px-3 text-xs font-semibold'>ع</ToggleGroupItem>
+      <ToggleGroup type='single' variant='outline' size='sm' value={language} onValueChange={(v) => v && onLanguage(v as Language)} aria-label={t('language')}>
+        <ToggleGroupItem value='en' aria-label={t('english')}>EN</ToggleGroupItem>
+        <ToggleGroupItem value='ar' aria-label={t('arabic')}>ع</ToggleGroupItem>
       </ToggleGroup>
-      <ToggleGroup type='single' size='sm' value={scheme} onValueChange={(v) => v && onScheme(v as Scheme)} aria-label={t('theme')}>
-        <ToggleGroupItem value='light' aria-label={t('light')}><Sun className='size-4' /></ToggleGroupItem>
-        <ToggleGroupItem value='dark' aria-label={t('dark')}><Moon className='size-4' /></ToggleGroupItem>
+      <ToggleGroup type='single' variant='outline' size='sm' value={scheme} onValueChange={(v) => v && onScheme(v as Scheme)} aria-label={t('theme')}>
+        <ToggleGroupItem value='light' aria-label={t('light')}><Sun /></ToggleGroupItem>
+        <ToggleGroupItem value='dark' aria-label={t('dark')}><Moon /></ToggleGroupItem>
       </ToggleGroup>
     </div>
   )
@@ -85,14 +85,14 @@ export function PhonePreview({
   const style = (scheme === 'dark' ? { ...tokens.light, ...tokens.dark } : tokens.light) as React.CSSProperties
 
   return (
-    <PhoneFrame className={className}>
+    <PhoneFrame scheme={scheme} className={className}>
       <div
         dir={language === 'ar' ? 'rtl' : 'ltr'}
         lang={language}
         style={style}
         className={cn('bg-background text-foreground flex h-full flex-col', scheme === 'dark' && 'dark')}
       >
-        <div className='flex items-center gap-2 border-b px-4 pt-7 pb-3'>
+        <div className='flex items-center gap-2 border-b px-4 py-3'>
           {wordmark ? (
             <img src={wordmark.url} alt='' style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}` }} className='h-6 w-auto max-w-[60%] object-contain' />
           ) : (

@@ -2823,6 +2823,7 @@
           "primaryColor",
           "customerDomain",
           "hosts",
+          "logoUrl",
           "ownerEmail",
           "ownerInitialPassword",
           "record",
@@ -2874,6 +2875,12 @@
           },
           "hosts": {
             "$ref": "#/components/schemas/TenantHostsDto"
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "ownerEmail": {
             "type": "string"
@@ -3160,6 +3167,7 @@
           "country",
           "currency",
           "customerUrl",
+          "logoUrl",
           "createdAt",
           "expiresAt",
           "imageTag",
@@ -3199,6 +3207,12 @@
           },
           "customerUrl": {
             "type": "string"
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "createdAt": {
             "type": "string",

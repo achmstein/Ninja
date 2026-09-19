@@ -127,3 +127,13 @@ body[data-scroll-locked][data-scroll-locked] {
 .font-display-ar {
   font-family: 'Lalezar', 'Cairo', system-ui, sans-serif;
 }
+
+/* Framed by the control panel as a phone: scrollbars are overlays there, so none show here */
+html[data-preview],
+html[data-preview] * {
+  scrollbar-width: none;
+}
+html[data-preview]::-webkit-scrollbar,
+html[data-preview] *::-webkit-scrollbar {
+  display: none;
+}
