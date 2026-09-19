@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 /// <summary>Where a stay is in its life: Held → Running → Ended, or Cancelled.</summary>
 public enum StayStatus

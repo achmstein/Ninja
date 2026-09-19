@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Payroll.API.Application.IntegrationEvents.Events;
-using Chillax.Payroll.API.Application.Services;
-using Chillax.Payroll.Infrastructure.Idempotency;
+using Ninja.Payroll.API.Application.IntegrationEvents.Events;
+using Ninja.Payroll.API.Application.Services;
+using Ninja.Payroll.Infrastructure.Idempotency;
 
-namespace Chillax.Payroll.API.Application.Commands;
+namespace Ninja.Payroll.API.Application.Commands;
 
 /// <summary>
 /// Generate the period's payslip for one employee, or for everyone employed

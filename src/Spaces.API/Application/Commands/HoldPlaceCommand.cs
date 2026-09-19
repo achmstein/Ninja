@@ -1,10 +1,10 @@
-using Chillax.Spaces.API.Application.Queries;
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.API.Application.Queries;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>
 /// A customer (or staff, for a walk-in) asks for a timed place. The hold

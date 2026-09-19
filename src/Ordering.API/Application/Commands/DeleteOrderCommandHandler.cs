@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Permanently removes an order. Only cancelled orders may be deleted —

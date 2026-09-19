@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.API.Application.Assist;
-using Chillax.Inventory.API.Application.Queries;
-using Chillax.Inventory.Domain.SeedWork;
+using Ninja.Inventory.API.Application.Assist;
+using Ninja.Inventory.API.Application.Queries;
+using Ninja.Inventory.Domain.SeedWork;
 
 namespace Inventory.UnitTests.Application;
 

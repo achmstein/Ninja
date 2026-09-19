@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.Infrastructure.Idempotency;
+using Ninja.Inventory.Infrastructure.Idempotency;
 
-namespace Chillax.Inventory.API.Application.Commands;
+namespace Ninja.Inventory.API.Application.Commands;
 
 /// <summary>
 /// The one-tap way to track a menu item sold as-is (a can, a bottle, a

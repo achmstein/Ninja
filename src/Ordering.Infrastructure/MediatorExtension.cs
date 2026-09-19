@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Infrastructure;
+﻿namespace Ninja.Ordering.Infrastructure;
 
 static class MediatorExtension
 {

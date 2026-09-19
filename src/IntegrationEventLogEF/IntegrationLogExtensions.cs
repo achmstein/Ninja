@@ -1,4 +1,4 @@
-﻿namespace Chillax.IntegrationEventLogEF;
+﻿namespace Ninja.IntegrationEventLogEF;
 
 public static class IntegrationLogExtensions
 {

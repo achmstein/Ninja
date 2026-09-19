@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
-using Chillax.Spaces.Infrastructure.Projections;
+using Ninja.IntegrationEventLogEF;
+using Ninja.Spaces.Infrastructure.Projections;
 
-namespace Chillax.Spaces.Infrastructure;
+namespace Ninja.Spaces.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Spaces.Infrastructure' project directory:

@@ -1,7 +1,7 @@
-using Chillax.EventBus.Events;
-using Chillax.Spaces.Infrastructure;
+using Ninja.EventBus.Events;
+using Ninja.Spaces.Infrastructure;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents;
+namespace Ninja.Spaces.API.Application.IntegrationEvents;
 
 /// <summary>
 /// The outbox, as Sales and Ordering have it. An integration event is written

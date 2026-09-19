@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Domain.AggregatesModel.BuyerAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;
 
 //This is just the RepositoryContracts or Interface defined at the Domain Layer
 //as requisite for the Buyer Aggregate

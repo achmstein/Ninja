@@ -1,7 +1,7 @@
-using Chillax.Notification.API.Model;
-using Chillax.EventBus.Events;
+using Ninja.Notification.API.Model;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Notification.API.IntegrationEvents.Events;
+namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Spaces publishes when a room bill was paid.

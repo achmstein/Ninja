@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
 public interface IPlaceRepository : IRepository<Place>
 {

@@ -1,10 +1,10 @@
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
+using Ninja.Inventory.API.Application.Queries;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Reads a supplier receipt photo and proposes the purchase lines: matched
@@ -12,7 +12,7 @@ namespace Chillax.Inventory.API.Application.Assist;
 /// where it is not. One vision call per receipt; the answer goes through
 /// <see cref="ReceiptProposalValidator"/> before anyone sees it.
 /// </summary>
-public sealed class ReceiptScanner(IChillaxAgentFactory factory, TimeProvider timeProvider)
+public sealed class ReceiptScanner(INinjaAgentFactory factory, TimeProvider timeProvider)
 {
     public const string AgentKey = "receipt-scanner";
 

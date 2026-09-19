@@ -1,19 +1,19 @@
 using System.Text.Json.Serialization;
-using Chillax.Spaces.API.Application.BackgroundServices;
-using Chillax.Spaces.API.Application.IntegrationEvents.Events;
-using Chillax.Spaces.API.Application.IntegrationEvents;
-using Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
-using Chillax.IntegrationEventLogEF.Services;
-using Chillax.Spaces.API.Application.Queries;
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.API.Infrastructure;
-using Chillax.Spaces.Infrastructure;
-using Chillax.Spaces.Infrastructure.Idempotency;
-using Chillax.Spaces.Infrastructure.Repositories;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
+using Ninja.Spaces.API.Application.BackgroundServices;
+using Ninja.Spaces.API.Application.IntegrationEvents.Events;
+using Ninja.Spaces.API.Application.IntegrationEvents;
+using Ninja.Spaces.API.Application.IntegrationEvents.EventHandling;
+using Ninja.IntegrationEventLogEF.Services;
+using Ninja.Spaces.API.Application.Queries;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.API.Infrastructure;
+using Ninja.Spaces.Infrastructure;
+using Ninja.Spaces.Infrastructure.Idempotency;
+using Ninja.Spaces.Infrastructure.Repositories;
+using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 
-namespace Chillax.Spaces.API.Extensions;
+namespace Ninja.Spaces.API.Extensions;
 
 public static class Extensions
 {

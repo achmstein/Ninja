@@ -1,4 +1,4 @@
-namespace Chillax.Notification.API.Model;
+namespace Ninja.Notification.API.Model;
 
 /// <summary>
 /// A broadcast push notification sent by staff to all opted-in customers.

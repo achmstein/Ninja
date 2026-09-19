@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.Infrastructure.Idempotency;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>
 /// Money off the whole bill: one of <paramref name="Rate"/> (a fraction) or

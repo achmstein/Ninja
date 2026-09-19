@@ -1,11 +1,11 @@
 #nullable enable
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
+using Ninja.Inventory.API.Application.Queries;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Proposes what one sale of each of a batch of menu items takes off the
@@ -13,7 +13,7 @@ namespace Chillax.Inventory.API.Application.Assist;
 /// the shelf is still missing. One text call per batch; the answer goes
 /// through <see cref="RecipeProposalValidator"/> before anyone sees it.
 /// </summary>
-public sealed class RecipeProposer(IChillaxAgentFactory factory)
+public sealed class RecipeProposer(INinjaAgentFactory factory)
 {
     public const string AgentKey = "recipe-proposer";
 

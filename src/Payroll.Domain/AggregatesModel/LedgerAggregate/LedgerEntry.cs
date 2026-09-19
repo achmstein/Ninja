@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
 /// One line of what the café owes an employee or has given them. Append

@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Payroll.API.Application.IntegrationEvents.Events;
+using Ninja.Payroll.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Payroll.API.Application.Services;
+namespace Ninja.Payroll.API.Application.Services;
 
 /// <summary>
 /// Makes or refreshes one employee's payslip for a period: the statement

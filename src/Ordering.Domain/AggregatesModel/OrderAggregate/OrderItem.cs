@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 public class OrderItem
     : Entity

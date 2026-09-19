@@ -1,6 +1,6 @@
-using Chillax.Ordering.Infrastructure.Projections;
+using Ninja.Ordering.Infrastructure.Projections;
 
-namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Keeps Ordering's projection of the branch flags: an upsert keyed by branch,

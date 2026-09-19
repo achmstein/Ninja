@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Command to put a customer on an order after the fact — the till rang the

@@ -1,7 +1,7 @@
-using Chillax.EventBus.Events;
-using Chillax.Notification.API.Model;
+using Ninja.EventBus.Events;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.IntegrationEvents.Events;
+namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 public record RoomBecameAvailableIntegrationEvent(
     // LEGACY(places): old RoomId/RoomName Spaces still fills beside PlaceId/PlaceKind/PlaceName — remove when every till and customer app is on /api/places and /api/stays.

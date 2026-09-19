@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using Chillax.AI.Json;
+using Ninja.AI.Json;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// Turns the model's proposed groups into ones the customization form can

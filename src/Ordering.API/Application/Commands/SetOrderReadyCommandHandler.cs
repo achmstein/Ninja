@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Marks a confirmed order ready in the kitchen, or brings it back. The

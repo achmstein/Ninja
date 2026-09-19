@@ -1,5 +1,5 @@
-using Chillax.Loyalty.API.Apis;
-using Chillax.Loyalty.API.Extensions;
+using Ninja.Loyalty.API.Apis;
+using Ninja.Loyalty.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

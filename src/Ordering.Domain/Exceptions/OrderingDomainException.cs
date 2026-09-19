@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Domain.Exceptions;
+﻿namespace Ninja.Ordering.Domain.Exceptions;
 
 /// <summary>
 /// Exception type for domain exceptions

@@ -57,7 +57,7 @@ internal static class Extensions
         services.AddScoped<IRequestManager, RequestManager>();
 
         // Background service for pending order reminders
-        services.AddHostedService<Chillax.Ordering.API.BackgroundServices.PendingOrderReminderService>();
+        services.AddHostedService<Ninja.Ordering.API.BackgroundServices.PendingOrderReminderService>();
     }
 
     private static void AddEventBusSubscriptions(this IEventBusBuilder eventBus)

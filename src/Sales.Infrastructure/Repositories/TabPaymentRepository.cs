@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 
-namespace Chillax.Sales.Infrastructure.Repositories;
+namespace Ninja.Sales.Infrastructure.Repositories;
 
 public class TabPaymentRepository : ITabPaymentRepository
 {

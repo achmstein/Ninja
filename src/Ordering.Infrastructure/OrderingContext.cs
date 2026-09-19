@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
-using Chillax.Ordering.Infrastructure.Projections;
+using Ninja.IntegrationEventLogEF;
+using Ninja.Ordering.Infrastructure.Projections;
 
-namespace Chillax.Ordering.Infrastructure;
+namespace Ninja.Ordering.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Ordering.Infrastructure' project directory:

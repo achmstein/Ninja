@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Per-branch override for a catalog item's availability and pricing.

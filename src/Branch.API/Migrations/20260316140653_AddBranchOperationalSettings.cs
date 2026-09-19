@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Chillax.Branch.API.Migrations
+namespace Ninja.Branch.API.Migrations
 {
     /// <inheritdoc />
     public partial class AddBranchOperationalSettings : Migration

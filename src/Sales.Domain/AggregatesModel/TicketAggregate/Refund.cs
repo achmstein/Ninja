@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.Events;
+using Ninja.Sales.Domain.Events;
 
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>A line and quantity a cashier asks to refund.</summary>
 public record RefundRequestLine(int LineId, decimal Qty);

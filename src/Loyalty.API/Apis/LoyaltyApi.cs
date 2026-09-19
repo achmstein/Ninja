@@ -1,13 +1,13 @@
 using System.ComponentModel;
 using System.Security.Claims;
-using Chillax.Loyalty.API.Infrastructure;
-using Chillax.Loyalty.API.Model;
-using Chillax.ServiceDefaults;
+using Ninja.Loyalty.API.Infrastructure;
+using Ninja.Loyalty.API.Model;
+using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Loyalty.API.Apis;
+namespace Ninja.Loyalty.API.Apis;
 
 public static class LoyaltyApi
 {

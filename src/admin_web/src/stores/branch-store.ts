@@ -26,7 +26,7 @@ export const useBranchStore = create<BranchState>()(
         if (next !== current) set({ branchId: next })
       },
     }),
-    { name: 'chillax-admin-branch' }
+    { name: 'ninja-admin-branch' }
   )
 )
 

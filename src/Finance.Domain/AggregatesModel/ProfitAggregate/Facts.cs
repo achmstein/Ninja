@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ProfitAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ProfitAggregate;
 
 /// <summary>
 /// The profit and loss is a projection: what other services told Finance,

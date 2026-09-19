@@ -1,9 +1,9 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
-using Chillax.Ordering.API.Application.Models;
-using Chillax.Ordering.API.Extensions;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.API.Application.Models;
+using Ninja.Ordering.API.Extensions;
+using Ninja.Ordering.Domain.Seedwork;
 
 /// <summary>
 /// Command to create a new cafe order.

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 /// <summary>
 /// What an expense was for, as the owner groups them: rent, electricity,

@@ -1,5 +1,5 @@
 
-namespace Chillax.Ordering.Domain.Events;
+namespace Ninja.Ordering.Domain.Events;
 
 /// <summary>
 /// Event used when a cafe order is created

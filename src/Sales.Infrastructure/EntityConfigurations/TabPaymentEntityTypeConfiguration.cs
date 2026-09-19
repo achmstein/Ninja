@@ -1,6 +1,6 @@
-using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 
-namespace Chillax.Sales.Infrastructure.EntityConfigurations;
+namespace Ninja.Sales.Infrastructure.EntityConfigurations;
 
 class TabPaymentEntityTypeConfiguration : IEntityTypeConfiguration<TabPayment>
 {

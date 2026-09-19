@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Models;
+﻿namespace Ninja.Ordering.API.Application.Models;
 
 public class CustomerBasket
 {

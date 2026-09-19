@@ -2,7 +2,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 
-namespace Chillax.Notification.API.Services;
+namespace Ninja.Notification.API.Services;
 
 public class FcmService : IFcmService
 {

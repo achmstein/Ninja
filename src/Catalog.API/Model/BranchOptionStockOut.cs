@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// A customization option Inventory has marked out of stock at a branch (its

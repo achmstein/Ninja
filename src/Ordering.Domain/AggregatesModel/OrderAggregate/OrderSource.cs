@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
 /// Who put the order into the system. Decides which invariants apply at

@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Finance.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Money the till moved lands where it belongs: a supplier's payment on

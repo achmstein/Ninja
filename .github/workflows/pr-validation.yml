@@ -1,4 +1,4 @@
-name: Chillax Pull Request Validation
+name: Ninja Pull Request Validation
 
 # Every client and every service that has tests, on every pull request. The
 # .NET job builds the solution filter and runs its unit and functional tests
@@ -23,9 +23,9 @@ jobs:
       - name: Setup .NET (global.json)
         uses: actions/setup-dotnet@v3
       - name: Build
-        run: dotnet build Chillax.Web.slnf
+        run: dotnet build Ninja.Web.slnf
       - name: Test
-        run: dotnet test --solution Chillax.Web.slnf --no-build --no-progress --output detailed
+        run: dotnet test --solution Ninja.Web.slnf --no-build --no-progress --output detailed
 
   web:
     runs-on: ubuntu-latest

@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel;
 using System.Security.Claims;
-using Chillax.Notification.API.Hubs;
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Model;
-using Chillax.Notification.API.Services;
-using Chillax.ServiceDefaults;
+using Ninja.Notification.API.Hubs;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Model;
+using Ninja.Notification.API.Services;
+using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
-using static Chillax.ServiceDefaults.BranchHeaderExtensions;
+using static Ninja.ServiceDefaults.BranchHeaderExtensions;
 
-using Chillax.Notification.API.Extensions;
+using Ninja.Notification.API.Extensions;
 
-namespace Chillax.Notification.API.Apis;
+namespace Ninja.Notification.API.Apis;
 
 public static class NotificationApi
 {

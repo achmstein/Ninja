@@ -1,4 +1,4 @@
-namespace Chillax.Inventory.Infrastructure.EntityConfigurations;
+namespace Ninja.Inventory.Infrastructure.EntityConfigurations;
 
 class RecipeEntityTypeConfiguration : IEntityTypeConfiguration<Recipe>
 {

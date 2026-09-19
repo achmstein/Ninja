@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Finance.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A delivery Inventory booked is an invoice on the supplier's account,

@@ -1,4 +1,4 @@
-﻿namespace Chillax.Finance.Domain.SeedWork;
+﻿namespace Ninja.Finance.Domain.SeedWork;
 
 public abstract class Entity
 {

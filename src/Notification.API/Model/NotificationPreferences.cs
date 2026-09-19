@@ -1,4 +1,4 @@
-namespace Chillax.Notification.API.Model;
+namespace Ninja.Notification.API.Model;
 
 public class NotificationPreferences
 {

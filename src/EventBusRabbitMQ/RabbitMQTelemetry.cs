@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using OpenTelemetry.Context.Propagation;
 
-namespace Chillax.EventBusRabbitMQ;
+namespace Ninja.EventBusRabbitMQ;
 
 public class RabbitMQTelemetry
 {

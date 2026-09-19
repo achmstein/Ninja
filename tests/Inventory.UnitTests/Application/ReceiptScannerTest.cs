@@ -1,10 +1,10 @@
 #nullable enable
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Fake;
-using Chillax.Inventory.API.Application.Assist;
-using Chillax.Inventory.API.Application.Queries;
-using Chillax.Inventory.Domain.SeedWork;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Fake;
+using Ninja.Inventory.API.Application.Assist;
+using Ninja.Inventory.API.Application.Queries;
+using Ninja.Inventory.Domain.SeedWork;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -27,7 +27,7 @@ public class ReceiptScannerTest
     private static ReceiptScanner Scanner(IChatClient? client)
     {
         var services = new ServiceCollection().BuildServiceProvider();
-        var factory = new ChillaxAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
+        var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
         return new ReceiptScanner(factory, new FixedClock(new DateTimeOffset(2026, 9, 14, 10, 0, 0, TimeSpan.Zero)));
     }
 

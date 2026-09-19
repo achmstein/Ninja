@@ -1,7 +1,7 @@
-namespace Chillax.Inventory.UnitTests.Domain;
+namespace Ninja.Inventory.UnitTests.Domain;
 
-using Chillax.Inventory.Domain.AggregatesModel.TransferAggregate;
-using Chillax.Inventory.Domain.Exceptions;
+using Ninja.Inventory.Domain.AggregatesModel.TransferAggregate;
+using Ninja.Inventory.Domain.Exceptions;
 
 [TestClass]
 public class TransferTest

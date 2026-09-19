@@ -1,4 +1,4 @@
-﻿namespace Chillax.IntegrationEventLogEF.Utilities;
+﻿namespace Ninja.IntegrationEventLogEF.Utilities;
 
 public class ResilientTransaction
 {

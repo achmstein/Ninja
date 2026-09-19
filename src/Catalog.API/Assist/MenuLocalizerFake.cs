@@ -1,8 +1,8 @@
 using System.Text.Json;
-using Chillax.AI.Fake;
-using Chillax.AI.Json;
+using Ninja.AI.Fake;
+using Ninja.AI.Json;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// What the localizer answers under test: the source text marked as fake

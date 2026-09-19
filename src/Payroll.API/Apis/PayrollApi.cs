@@ -1,10 +1,10 @@
 #nullable enable
-using Chillax.Payroll.API.Application.Commands;
-using Chillax.Payroll.API.Application.Queries;
+using Ninja.Payroll.API.Application.Commands;
+using Ninja.Payroll.API.Application.Queries;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Payroll.API.Apis;
+namespace Ninja.Payroll.API.Apis;
 
 public static class PayrollApi
 {

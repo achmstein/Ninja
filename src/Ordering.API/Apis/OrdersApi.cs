@@ -1,9 +1,9 @@
 #nullable enable
 using System.Text.RegularExpressions;
-using Chillax.ServiceDefaults;
+using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Chillax.Ordering.Domain.Seedwork;
-using Order = Chillax.Ordering.API.Application.Queries.Order;
+using Ninja.Ordering.Domain.Seedwork;
+using Order = Ninja.Ordering.API.Application.Queries.Order;
 
 public static partial class OrdersApi
 {

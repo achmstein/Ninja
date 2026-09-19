@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.Events;
+namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Received when an order is confirmed (Ordering publishes it for every

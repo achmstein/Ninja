@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.SeedWork;
-using Chillax.Spaces.Infrastructure;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.SeedWork;
+using Ninja.Spaces.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Spaces.API.Infrastructure;
+namespace Ninja.Spaces.API.Infrastructure;
 
 public class SpacesContextSeed(ILogger<SpacesContextSeed> logger) : IDbSeeder<SpacesContext>
 {

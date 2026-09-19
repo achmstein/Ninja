@@ -112,7 +112,7 @@ export const useSale = create<SaleState>()(
       clear: () => set({ lines: [], note: '', customer: null }),
     }),
     // Survives an accidental refresh mid-sale; cleared when the sale lands
-    { name: 'chillax-pos-sale' }
+    { name: 'ninja-pos-sale' }
   )
 )
 

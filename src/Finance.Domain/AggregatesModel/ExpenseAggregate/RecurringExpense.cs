@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 /// <summary>
 /// A bill that comes every month on the same day — rent, internet, a

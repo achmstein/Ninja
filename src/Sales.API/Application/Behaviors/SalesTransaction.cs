@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Infrastructure;
+using Ninja.Sales.Infrastructure;
 
-namespace Chillax.Sales.API.Application.Behaviors;
+namespace Ninja.Sales.API.Application.Behaviors;
 
 /// <summary>
 /// One unit of work, one database transaction, and the integration events it

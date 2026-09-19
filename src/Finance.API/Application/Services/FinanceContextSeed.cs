@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.Infrastructure;
+using Ninja.Finance.Infrastructure;
 
-namespace Chillax.Finance.API.Application.Services;
+namespace Ninja.Finance.API.Application.Services;
 
 /// <summary>
 /// The usual café expense categories, once, on an empty list. The owner

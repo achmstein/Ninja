@@ -1,8 +1,8 @@
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Microsoft.EntityFrameworkCore;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
+using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 
-namespace Chillax.Spaces.API.Application.BackgroundServices;
+namespace Ninja.Spaces.API.Application.BackgroundServices;
 
 /// <summary>Cancels holds nobody arrived for, once a minute.</summary>
 public class HoldExpirationService(

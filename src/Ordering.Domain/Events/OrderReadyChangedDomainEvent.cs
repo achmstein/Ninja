@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Domain.Events;
+namespace Ninja.Ordering.Domain.Events;
 
 /// <summary>
 /// The kitchen marked a confirmed order ready, or brought a ready one back.

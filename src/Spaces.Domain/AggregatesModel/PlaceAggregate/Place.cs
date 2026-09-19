@@ -1,6 +1,6 @@
-using Chillax.Spaces.Domain.Events;
+using Ninja.Spaces.Domain.Events;
 
-namespace Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
 /// <summary>
 /// A spot a party occupies: a room, a table, a station. One QR per place

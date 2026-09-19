@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 /// <summary>
 /// The photo (or PDF) of the bill behind an expense, kept with the

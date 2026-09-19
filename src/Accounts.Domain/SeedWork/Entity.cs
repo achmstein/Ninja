@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Domain.SeedWork;
+namespace Ninja.Accounts.Domain.SeedWork;
 
 public abstract class Entity
 {

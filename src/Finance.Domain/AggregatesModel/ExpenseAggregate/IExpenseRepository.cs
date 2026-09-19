@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 public interface IExpenseRepository : IRepository<Expense>
 {

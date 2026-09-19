@@ -1,8 +1,8 @@
 using System.Globalization;
-using Chillax.AI.Json;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI.Json;
+using Ninja.Inventory.API.Application.Queries;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Turns what the model read into a proposal the review sheet can trust:

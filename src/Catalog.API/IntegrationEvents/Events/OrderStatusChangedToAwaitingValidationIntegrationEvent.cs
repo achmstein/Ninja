@@ -1,4 +1,4 @@
-﻿namespace Chillax.Catalog.API.IntegrationEvents.Events;
+﻿namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy. The promo fields are what the customer typed at checkout

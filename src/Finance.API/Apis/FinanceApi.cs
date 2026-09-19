@@ -1,16 +1,16 @@
 #nullable enable
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Http;
-using Chillax.AI.Images;
-using Chillax.Finance.API.Application.Assist;
-using Chillax.Finance.API.Application.Commands;
-using Chillax.Finance.API.Application.Queries;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Http;
+using Ninja.AI.Images;
+using Ninja.Finance.API.Application.Assist;
+using Ninja.Finance.API.Application.Commands;
+using Ninja.Finance.API.Application.Queries;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Chillax.Finance.API.Apis;
+namespace Ninja.Finance.API.Apis;
 
 public static class FinanceApi
 {
@@ -46,7 +46,7 @@ public static class FinanceApi
             .WithSummary("Read the photo of a bill into a proposed expense")
             .WithDescription("The assistant reads the date, amount, category and vendor off the bill. Nothing is recorded: the form takes the proposal for the fields still empty, and the user saves.")
             .DisableAntiforgery()
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         // Recurring bills
         api.MapGet("/recurring", GetRecurring).WithName("GetRecurringExpenses")

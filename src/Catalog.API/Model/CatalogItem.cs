@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Represents a menu item in the cafe catalog (drinks, food, snacks, desserts)

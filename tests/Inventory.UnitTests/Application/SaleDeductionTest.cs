@@ -1,9 +1,9 @@
-namespace Chillax.Inventory.UnitTests.Application;
+namespace Ninja.Inventory.UnitTests.Application;
 
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
-using Chillax.Inventory.API.Application.Services;
-using Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
-using Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.API.Application.Services;
+using Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
+using Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
 
 [TestClass]
 public class SaleDeductionTest

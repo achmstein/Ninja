@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.Events;
+using Ninja.Sales.Domain.Events;
 
-namespace Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 /// <summary>
 /// Shift aggregate root — one cashier's custody of the drawer: opened with a

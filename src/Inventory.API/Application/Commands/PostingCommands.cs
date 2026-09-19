@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
-using Chillax.Inventory.API.Application.Services;
-using Chillax.Inventory.Infrastructure.Idempotency;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.API.Application.Services;
+using Ninja.Inventory.Infrastructure.Idempotency;
 
-namespace Chillax.Inventory.API.Application.Commands;
+namespace Ninja.Inventory.API.Application.Commands;
 
 public record PurchaseLineInput(int StockItemId, decimal Quantity, decimal UnitCost);
 

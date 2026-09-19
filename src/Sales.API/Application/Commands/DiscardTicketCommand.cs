@@ -1,6 +1,6 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-namespace Chillax.Sales.API.Application.Commands;
+using Ninja.Sales.Infrastructure.Idempotency;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>
 /// Delete an open ticket nothing ever landed on. Unlike a void there is no

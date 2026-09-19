@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.UnitTests.Domain.SeedWork;
+﻿namespace Ninja.Ordering.UnitTests.Domain.SeedWork;
 
 [TestClass]
 public class ValueObjectTests

@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
-using Chillax.Inventory.Infrastructure;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.Infrastructure;
 
-namespace Chillax.Inventory.API.Application.Services;
+namespace Ninja.Inventory.API.Application.Services;
 
 /// <summary>
 /// The one place stock is posted from: the sale handler, receipts, counts

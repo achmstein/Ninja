@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Catalog.API;
+namespace Ninja.Catalog.API;
 
 /// <summary>
 /// Promo codes: the cart's quote, and the admin's list. Redemption is not an

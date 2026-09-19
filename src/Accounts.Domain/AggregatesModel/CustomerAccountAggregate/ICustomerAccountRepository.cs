@@ -1,6 +1,6 @@
-using Chillax.Accounts.Domain.SeedWork;
+using Ninja.Accounts.Domain.SeedWork;
 
-namespace Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+namespace Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 
 public interface ICustomerAccountRepository : IRepository<CustomerAccount>
 {

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Notification.API.Extensions;
+namespace Ninja.Notification.API.Extensions;
 
 /// <summary>
 /// Reads the guest id the customer web app attaches to every request — the

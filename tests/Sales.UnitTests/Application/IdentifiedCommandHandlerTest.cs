@@ -1,12 +1,12 @@
 #nullable enable
-using Chillax.Sales.API.Application.Commands;
-using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
-using Chillax.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.API.Application.Commands;
+using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
+using Ninja.Sales.Infrastructure.Idempotency;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
-namespace Chillax.Sales.UnitTests.Application;
+namespace Ninja.Sales.UnitTests.Application;
 
 /// <summary>
 /// The till retries on café Wi-Fi: the same request id must run a command

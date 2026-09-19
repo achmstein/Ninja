@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+namespace Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 
 /// <summary>
 /// What put a line on the ledger. Staff key in manual charges and payments

@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.API.Extensions;
+namespace Ninja.Ordering.API.Extensions;
 
 public static class BasketItemExtensions
 {

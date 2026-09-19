@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
-using Chillax.Notification.API.IntegrationEvents.EventHandling;
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Services;
+using Ninja.Notification.API.IntegrationEvents.EventHandling;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Services;
 
-namespace Chillax.Notification.API.Extensions;
+namespace Ninja.Notification.API.Extensions;
 
 public static class Extensions
 {

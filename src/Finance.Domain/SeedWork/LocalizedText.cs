@@ -1,4 +1,4 @@
-﻿namespace Chillax.Finance.Domain.SeedWork;
+﻿namespace Ninja.Finance.Domain.SeedWork;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

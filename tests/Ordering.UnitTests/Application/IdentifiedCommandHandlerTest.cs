@@ -1,5 +1,5 @@
 ﻿#nullable enable
-namespace Chillax.Ordering.UnitTests.Application;
+namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
 /// Unit tests for IdentifiedCommandHandler.

@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Ordering.Infrastructure.Projections;
+using Ninja.Ordering.Infrastructure.Projections;
 
-namespace Chillax.Ordering.API.Application.Queries;
+namespace Ninja.Ordering.API.Application.Queries;
 
 /// <summary>Ordering's projection of the Spaces places (see <see cref="Place"/>).</summary>
 public interface IPlaceQueries

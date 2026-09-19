@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel;
-using Chillax.Accounts.API.Application.Commands;
-using Chillax.Accounts.API.Application.Queries;
-using Chillax.Accounts.Domain.Exceptions;
-using Chillax.ServiceDefaults;
+using Ninja.Accounts.API.Application.Commands;
+using Ninja.Accounts.API.Application.Queries;
+using Ninja.Accounts.Domain.Exceptions;
+using Ninja.ServiceDefaults;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Accounts.API.Apis;
+namespace Ninja.Accounts.API.Apis;
 
 public static class AccountsApi
 {

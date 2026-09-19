@@ -27,14 +27,14 @@ import 'features/tickets/providers/tickets_provider.dart';
 /// Global navigator key for dialogs shown from outside the widget tree
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-class ChillaxPosApp extends ConsumerStatefulWidget {
-  const ChillaxPosApp({super.key});
+class NinjaPosApp extends ConsumerStatefulWidget {
+  const NinjaPosApp({super.key});
 
   @override
-  ConsumerState<ChillaxPosApp> createState() => _ChillaxPosAppState();
+  ConsumerState<NinjaPosApp> createState() => _NinjaPosAppState();
 }
 
-class _ChillaxPosAppState extends ConsumerState<ChillaxPosApp> with WidgetsBindingObserver {
+class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingObserver {
   final List<StreamSubscription> _signalRSubscriptions = [];
 
   @override

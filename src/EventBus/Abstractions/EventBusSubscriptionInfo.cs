@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Chillax.EventBus.Abstractions;
+namespace Ninja.EventBus.Abstractions;
 
 public class EventBusSubscriptionInfo
 {

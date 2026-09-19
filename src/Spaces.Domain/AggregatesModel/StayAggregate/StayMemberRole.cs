@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 public enum StayMemberRole
 {

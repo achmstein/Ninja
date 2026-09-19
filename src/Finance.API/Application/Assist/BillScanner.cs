@@ -1,11 +1,11 @@
 #nullable enable
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
-using Chillax.Finance.API.Application.Queries;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
+using Ninja.Finance.API.Application.Queries;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Finance.API.Application.Assist;
+namespace Ninja.Finance.API.Application.Assist;
 
 /// <summary>
 /// Reads the photo of a bill (electricity, rent, a repair invoice, a cash
@@ -14,7 +14,7 @@ namespace Chillax.Finance.API.Application.Assist;
 /// the answer goes through <see cref="BillProposalValidator"/> before the
 /// form sees it.
 /// </summary>
-public sealed class BillScanner(IChillaxAgentFactory factory, TimeProvider timeProvider)
+public sealed class BillScanner(INinjaAgentFactory factory, TimeProvider timeProvider)
 {
     public const string AgentKey = "bill-scanner";
 

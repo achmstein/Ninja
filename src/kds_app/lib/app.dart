@@ -22,14 +22,14 @@ import 'features/kitchen/providers/kitchen_orders_provider.dart';
 /// Global navigator key for dialogs shown from outside the widget tree
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-class ChillaxKdsApp extends ConsumerStatefulWidget {
-  const ChillaxKdsApp({super.key});
+class NinjaKdsApp extends ConsumerStatefulWidget {
+  const NinjaKdsApp({super.key});
 
   @override
-  ConsumerState<ChillaxKdsApp> createState() => _ChillaxKdsAppState();
+  ConsumerState<NinjaKdsApp> createState() => _NinjaKdsAppState();
 }
 
-class _ChillaxKdsAppState extends ConsumerState<ChillaxKdsApp> with WidgetsBindingObserver {
+class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingObserver {
   final List<StreamSubscription> _signalRSubscriptions = [];
 
   @override

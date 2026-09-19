@@ -1,6 +1,6 @@
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
+using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 public class BranchSettingsQueries(SpacesContext context) : IBranchSettingsQueries
 {

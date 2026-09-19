@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 /// <summary>
 /// Cash moving in or out of the drawer for a reason other than a sale.

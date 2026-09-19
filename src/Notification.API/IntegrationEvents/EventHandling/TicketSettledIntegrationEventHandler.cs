@@ -1,9 +1,9 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.Notification.API.Hubs;
-using Chillax.Notification.API.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Notification.API.Hubs;
+using Ninja.Notification.API.IntegrationEvents.Events;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
+namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The bill for a place was paid: the sitting there is over for everyone

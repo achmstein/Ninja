@@ -1,4 +1,4 @@
-namespace Chillax.Notification.API.Services;
+namespace Ninja.Notification.API.Services;
 
 /// <summary>
 /// Result of a batch FCM send operation, including which tokens are no longer valid.

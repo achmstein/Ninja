@@ -1,6 +1,6 @@
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 
-namespace Chillax.Catalog.API.Dtos;
+namespace Ninja.Catalog.API.Dtos;
 
 /// <summary>
 /// Extension methods for mapping entities to DTOs

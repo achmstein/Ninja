@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.IntegrationEventLogEF;
+namespace Ninja.IntegrationEventLogEF;
 
 public class IntegrationEventLogEntry
 {

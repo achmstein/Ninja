@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Inventory.API.Application.IntegrationEvents.Events;
+namespace Ninja.Inventory.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// A delivery was booked. Finance puts its total on the supplier's account

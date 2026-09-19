@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents.Events;
+namespace Ninja.Finance.API.Application.IntegrationEvents.Events;
 
 // Partial views of other services' events — the class names must match
 // for routing; only the fields the profit projection reads are declared.

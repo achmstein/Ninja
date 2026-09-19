@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
 /// <summary>
 /// The physical state of a place, kept apart from holds: whether a hold is

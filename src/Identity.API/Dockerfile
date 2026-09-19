@@ -8,7 +8,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/Identity.API/Identity.API.csproj", "Identity.API/"]
 COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 
 # Restore dependencies
 RUN dotnet restore "Identity.API/Identity.API.csproj"
@@ -17,7 +17,7 @@ RUN dotnet restore "Identity.API/Identity.API.csproj"
 COPY ["src/Identity.API/", "Identity.API/"]
 COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 COPY ["src/Shared/", "Shared/"]
 
 # Build

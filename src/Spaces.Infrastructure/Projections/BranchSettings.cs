@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Spaces.Infrastructure.Projections;
+namespace Ninja.Spaces.Infrastructure.Projections;
 
 /// <summary>
 /// Spaces' own copy of a branch's operational flags, kept up to date from

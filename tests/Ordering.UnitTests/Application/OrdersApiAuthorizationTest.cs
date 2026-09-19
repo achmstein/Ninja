@@ -1,9 +1,9 @@
-namespace Chillax.Ordering.UnitTests.Application;
+namespace Ninja.Ordering.UnitTests.Application;
 
 using Asp.Versioning;
 using Asp.Versioning.Builder;
-using Chillax.Ordering.API.Application.Queries;
-using Chillax.Ordering.API.Extensions;
+using Ninja.Ordering.API.Application.Queries;
+using Ninja.Ordering.API.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

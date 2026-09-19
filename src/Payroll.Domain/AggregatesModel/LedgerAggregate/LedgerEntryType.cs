@@ -1,4 +1,4 @@
-namespace Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
 /// What a ledger line is. Earned and Bonus raise what the café owes;

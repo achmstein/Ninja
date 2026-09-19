@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Infrastructure.Repositories;
+namespace Ninja.Sales.Infrastructure.Repositories;
 
 public class TicketRepository : ITicketRepository
 {

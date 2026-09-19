@@ -1,10 +1,10 @@
 #nullable enable
 using System.IO;
 using System.Text.Json;
-using Chillax.AI.Json;
-using Chillax.Finance.API.Application.Assist;
-using Chillax.Finance.API.Application.Queries;
-using Chillax.Finance.Domain.SeedWork;
+using Ninja.AI.Json;
+using Ninja.Finance.API.Application.Assist;
+using Ninja.Finance.API.Application.Queries;
+using Ninja.Finance.Domain.SeedWork;
 using Microsoft.Extensions.AI;
 
 namespace Finance.UnitTests.Application;

@@ -1,6 +1,6 @@
 #nullable enable
-using Chillax.AI;
-using Chillax.AI.Agents;
+using Ninja.AI;
+using Ninja.AI.Agents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,7 +15,7 @@ namespace Finance.UnitTests.Application;
 /// </summary>
 internal static class LiveProvider
 {
-    public static IChillaxAgentFactory FactoryOrInconclusive()
+    public static INinjaAgentFactory FactoryOrInconclusive()
     {
         var key = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
         if (string.IsNullOrWhiteSpace(key))
@@ -32,6 +32,6 @@ internal static class LiveProvider
         });
         builder.Services.AddLogging();
         builder.AddAIServices();
-        return builder.Build().Services.GetRequiredService<IChillaxAgentFactory>();
+        return builder.Build().Services.GetRequiredService<INinjaAgentFactory>();
     }
 }

@@ -1,9 +1,9 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.Spaces.API.Application.IntegrationEvents.Events;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.EventBus.Abstractions;
+using Ninja.Spaces.API.Application.IntegrationEvents.Events;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.SeedWork;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Spaces.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The till paid a bill with a stay's time on it: the stay learns its

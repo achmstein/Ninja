@@ -1,6 +1,6 @@
-using Chillax.Branch.API.Model;
+using Ninja.Branch.API.Model;
 
-namespace Chillax.Branch.API.Infrastructure;
+namespace Ninja.Branch.API.Infrastructure;
 
 public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(options)
 {

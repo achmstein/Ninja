@@ -1,4 +1,4 @@
-namespace Chillax.Branch.API.Model;
+namespace Ninja.Branch.API.Model;
 
 public class Branch
 {

@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Money left the drawer for an employee: a daily worker's wage, or an

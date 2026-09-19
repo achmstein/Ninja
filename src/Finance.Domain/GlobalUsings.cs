@@ -1,3 +1,3 @@
 global using MediatR;
-global using Chillax.Finance.Domain.Exceptions;
-global using Chillax.Finance.Domain.SeedWork;
+global using Ninja.Finance.Domain.Exceptions;
+global using Ninja.Finance.Domain.SeedWork;

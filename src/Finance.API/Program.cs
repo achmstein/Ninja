@@ -1,5 +1,5 @@
-using Chillax.Finance.API.Apis;
-using Chillax.Finance.API.Extensions;
+using Ninja.Finance.API.Apis;
+using Ninja.Finance.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.EventHandling;
+namespace Ninja.Catalog.API.IntegrationEvents.EventHandling;
 
 public class OrderStatusChangedToPaidIntegrationEventHandler(
     ILogger<OrderStatusChangedToPaidIntegrationEventHandler> logger) :

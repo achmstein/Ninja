@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Infrastructure;
+namespace Ninja.Ordering.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating OrderingContext for EF migrations, so

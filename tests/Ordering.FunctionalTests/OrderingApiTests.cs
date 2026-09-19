@@ -3,13 +3,13 @@ using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
 using Asp.Versioning.Http;
-using Chillax.Ordering.API.Application.Commands;
-using Chillax.Ordering.API.Application.Models;
-using Chillax.Ordering.API.Application.Queries;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.API.Application.Commands;
+using Ninja.Ordering.API.Application.Models;
+using Ninja.Ordering.API.Application.Queries;
+using Ninja.Ordering.Domain.Seedwork;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Chillax.Ordering.FunctionalTests;
+namespace Ninja.Ordering.FunctionalTests;
 
 public sealed class OrderingApiTests : IClassFixture<OrderingApiFixture>
 {

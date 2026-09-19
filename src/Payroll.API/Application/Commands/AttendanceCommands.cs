@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Payroll.API.Application.Services;
+using Ninja.Payroll.API.Application.Services;
 
-namespace Chillax.Payroll.API.Application.Commands;
+namespace Ninja.Payroll.API.Application.Commands;
 
 /// <summary>One person's mark for a day; a null status clears it. Null overtime leaves the hours as they were.</summary>
 public record AttendanceMark(int EmployeeId, AttendanceStatus? Status, string? Note = null, decimal? OvertimeHours = null);

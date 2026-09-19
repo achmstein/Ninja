@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Infrastructure.Repositories;
+namespace Ninja.Finance.Infrastructure.Repositories;
 
 public class ExpenseRepository(FinanceContext context) : IExpenseRepository
 {

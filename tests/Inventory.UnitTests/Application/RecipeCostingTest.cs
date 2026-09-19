@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Inventory.API.Application.Services;
-using Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
-using Chillax.Inventory.Domain.AggregatesModel.StockItemAggregate;
-using Chillax.Inventory.Domain.SeedWork;
+using Ninja.Inventory.API.Application.Services;
+using Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
+using Ninja.Inventory.Domain.AggregatesModel.StockItemAggregate;
+using Ninja.Inventory.Domain.SeedWork;
 
 namespace Inventory.UnitTests.Application;
 

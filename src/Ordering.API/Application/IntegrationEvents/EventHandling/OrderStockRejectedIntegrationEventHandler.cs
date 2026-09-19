@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 public class OrderStockRejectedIntegrationEventHandler(
     IMediator mediator,

@@ -1,8 +1,8 @@
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Fake;
-using Chillax.Catalog.API.Assist;
-using Chillax.Catalog.API.Model;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Fake;
+using Ninja.Catalog.API.Assist;
+using Ninja.Catalog.API.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -17,7 +17,7 @@ public class CustomizationSuggesterTest
     {
         var services = new ServiceCollection().BuildServiceProvider();
         var client = new FakeChatClient([new FakeAgentScriptRegistration(CustomizationSuggester.AgentKey, CustomizationSuggesterFake.Respond)]);
-        var factory = new ChillaxAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
+        var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
         return new CustomizationSuggester(factory);
     }
 
@@ -89,7 +89,7 @@ public class CustomizationSuggesterTest
     public void Off_without_a_chat_client()
     {
         var services = new ServiceCollection().BuildServiceProvider();
-        var factory = new ChillaxAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services);
+        var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services);
 
         Assert.IsFalse(new CustomizationSuggester(factory).IsEnabled);
         Assert.IsTrue(Suggester().IsEnabled);

@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Integration event sent when a pending order has not been confirmed

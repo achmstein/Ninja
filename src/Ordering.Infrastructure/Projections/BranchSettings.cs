@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Infrastructure.Projections;
+namespace Ninja.Ordering.Infrastructure.Projections;
 
 /// <summary>
 /// Ordering's own copy of a branch's operational flags, kept up to date from

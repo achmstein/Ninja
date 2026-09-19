@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// The café's clock. Offers are set in local time ("2 to 5 pm on weekdays"),

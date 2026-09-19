@@ -1,8 +1,8 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.Events;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.Events;
+using Ninja.Spaces.Domain.Exceptions;
 
-namespace Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 /// <summary>
 /// One party's timed occupancy of a place: the hold before it, the running

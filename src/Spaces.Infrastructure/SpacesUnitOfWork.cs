@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Spaces.Infrastructure;
+namespace Ninja.Spaces.Infrastructure;
 
 /// <summary>
 /// One unit of work per save: a transaction around the rows and the outbox

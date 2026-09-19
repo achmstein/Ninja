@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
 /// Where an order goes: the Spaces place (room, table, station) and, when a

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Chillax.Notification.API.Hubs;
+namespace Ninja.Notification.API.Hubs;
 
 /// <summary>
 /// Realtime updates for customers and staff.

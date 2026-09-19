@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Infrastructure.EntityConfigurations;
+namespace Ninja.Ordering.Infrastructure.EntityConfigurations;
 
 class OrderRatingEntityTypeConfiguration : IEntityTypeConfiguration<OrderRating>
 {

@@ -1,3 +1,3 @@
-namespace Chillax.Spaces.Domain.SeedWork;
+namespace Ninja.Spaces.Domain.SeedWork;
 
 public interface IAggregateRoot { }

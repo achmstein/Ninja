@@ -1,7 +1,7 @@
-using Chillax.Notification.API.Apis;
-using Chillax.Notification.API.Extensions;
-using Chillax.Notification.API.Hubs;
-using Chillax.ServiceDefaults;
+using Ninja.Notification.API.Apis;
+using Ninja.Notification.API.Extensions;
+using Ninja.Notification.API.Hubs;
+using Ninja.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 

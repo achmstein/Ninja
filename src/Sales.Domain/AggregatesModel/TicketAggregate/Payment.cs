@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// One tender settling (part of) a ticket. Split payments are simply several

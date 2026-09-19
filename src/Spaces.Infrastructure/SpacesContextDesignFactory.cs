@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Chillax.Spaces.Infrastructure;
+namespace Ninja.Spaces.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating SpacesContext for EF migrations

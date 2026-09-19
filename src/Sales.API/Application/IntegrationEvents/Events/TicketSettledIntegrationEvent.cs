@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// A ticket was paid and frozen. Besides the floor refresh, this is the seam

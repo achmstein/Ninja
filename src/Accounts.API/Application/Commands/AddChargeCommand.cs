@@ -1,8 +1,8 @@
 using System.Runtime.Serialization;
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 using MediatR;
 
-namespace Chillax.Accounts.API.Application.Commands;
+namespace Ninja.Accounts.API.Application.Commands;
 
 [DataContract]
 public class AddChargeCommand : IRequest<bool>

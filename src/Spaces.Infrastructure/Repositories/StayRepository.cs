@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Infrastructure.Repositories;
+namespace Ninja.Spaces.Infrastructure.Repositories;
 
 public class StayRepository : IStayRepository
 {

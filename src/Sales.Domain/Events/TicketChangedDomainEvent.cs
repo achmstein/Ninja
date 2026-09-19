@@ -1,6 +1,6 @@
-using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
-namespace Chillax.Sales.Domain.Events;
+namespace Ninja.Sales.Domain.Events;
 
 /// <summary>
 /// A ticket opened or its lines changed — the POS floor should refresh.

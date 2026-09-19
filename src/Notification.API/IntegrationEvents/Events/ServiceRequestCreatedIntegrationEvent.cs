@@ -1,6 +1,6 @@
-using Chillax.Notification.API.Model;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.IntegrationEvents.Events;
+namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 public record ServiceRequestCreatedIntegrationEvent(
     int RequestId,

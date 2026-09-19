@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
 
 public interface IEmployeeRepository : IRepository<Employee>
 {

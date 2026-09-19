@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Sales.API.Application.Queries;
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.API.Application.Queries;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record PaymentDto(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
 
@@ -19,7 +19,7 @@ public record SettleTicketCommand(
 
 public class SettleTicketCommandHandler(
     ITicketRepository ticketRepository,
-    Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
+    Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
     ISalesIntegrationEventService integrationEvents,
     ILogger<SettleTicketCommandHandler> logger) : IRequestHandler<SettleTicketCommand, SettleResult>
 {

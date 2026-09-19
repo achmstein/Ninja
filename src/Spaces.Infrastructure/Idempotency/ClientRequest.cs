@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Spaces.Infrastructure.Idempotency;
+namespace Ninja.Spaces.Infrastructure.Idempotency;
 
 public class ClientRequest
 {

@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.Infrastructure.Idempotency;
+using Ninja.Finance.Infrastructure.Idempotency;
 
-namespace Chillax.Finance.API.Application.Commands;
+namespace Ninja.Finance.API.Application.Commands;
 
 // ---------------------------------------------------------------------------
 // Categories

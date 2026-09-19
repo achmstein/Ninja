@@ -1,4 +1,4 @@
-﻿namespace Chillax.Payroll.Domain.Exceptions;
+﻿namespace Ninja.Payroll.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a domain rule is violated

@@ -5,17 +5,17 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using MediatR;
 global using Microsoft.AspNetCore.Mvc;
-global using Chillax.Ordering.API.Application.Commands;
-global using Chillax.Ordering.API.Application.Models;
-global using Chillax.Ordering.API.Infrastructure.Services;
-global using Chillax.Ordering.Domain.AggregatesModel.BuyerAggregate;
-global using Chillax.Ordering.Domain.Events;
-global using Chillax.Ordering.Domain.Exceptions;
-global using Chillax.Ordering.Domain.SeedWork;
-global using Chillax.Ordering.Infrastructure.Idempotency;
+global using Ninja.Ordering.API.Application.Commands;
+global using Ninja.Ordering.API.Application.Models;
+global using Ninja.Ordering.API.Infrastructure.Services;
+global using Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;
+global using Ninja.Ordering.Domain.Events;
+global using Ninja.Ordering.Domain.Exceptions;
+global using Ninja.Ordering.Domain.SeedWork;
+global using Ninja.Ordering.Infrastructure.Idempotency;
 global using Microsoft.Extensions.Logging;
 global using NSubstitute;
-global using Chillax.Ordering.UnitTests;
+global using Ninja.Ordering.UnitTests;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]

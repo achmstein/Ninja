@@ -1,6 +1,6 @@
-using Chillax.Ordering.Infrastructure.Projections;
+using Ninja.Ordering.Infrastructure.Projections;
 
-namespace Chillax.Ordering.Infrastructure.EntityConfigurations;
+namespace Ninja.Ordering.Infrastructure.EntityConfigurations;
 
 class BranchSettingsEntityTypeConfiguration : IEntityTypeConfiguration<BranchSettings>
 {

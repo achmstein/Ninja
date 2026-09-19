@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// The bill an order sits on was paid, voided or partly refunded. Carries

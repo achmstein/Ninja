@@ -1,10 +1,10 @@
 #nullable enable
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Fake;
-using Chillax.Finance.API.Application.Assist;
-using Chillax.Finance.API.Application.Queries;
-using Chillax.Finance.Domain.SeedWork;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Fake;
+using Ninja.Finance.API.Application.Assist;
+using Ninja.Finance.API.Application.Queries;
+using Ninja.Finance.Domain.SeedWork;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -27,7 +27,7 @@ public class BillScannerTest
     private static BillScanner Scanner(IChatClient? client)
     {
         var services = new ServiceCollection().BuildServiceProvider();
-        var factory = new ChillaxAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
+        var factory = new NinjaAgentFactory(Options.Create(new AIOptions()), NullLoggerFactory.Instance, services, client);
         return new BillScanner(factory, new FixedClock(new DateTimeOffset(2026, 9, 15, 10, 0, 0, TimeSpan.Zero)));
     }
 

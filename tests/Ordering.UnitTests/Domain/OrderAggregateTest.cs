@@ -1,7 +1,7 @@
-namespace Chillax.Ordering.UnitTests.Domain;
+namespace Ninja.Ordering.UnitTests.Domain;
 
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
+using Ninja.Ordering.Domain.Seedwork;
 
 /// <summary>
 /// Unit tests for Order aggregate.

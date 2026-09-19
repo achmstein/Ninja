@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Spaces publishes when a reservation or an

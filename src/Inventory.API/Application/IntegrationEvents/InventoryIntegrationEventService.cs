@@ -1,8 +1,8 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Events;
-using Chillax.Inventory.Infrastructure;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
+using Ninja.Inventory.Infrastructure;
 
-namespace Chillax.Inventory.API.Application.IntegrationEvents;
+namespace Ninja.Inventory.API.Application.IntegrationEvents;
 
 /// <summary>
 /// Same outbox as Ordering's, over the Inventory context: the event log shares

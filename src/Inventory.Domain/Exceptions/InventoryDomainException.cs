@@ -1,4 +1,4 @@
-﻿namespace Chillax.Inventory.Domain.Exceptions;
+﻿namespace Ninja.Inventory.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a domain rule is violated

@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 /// <summary>Someone in the party: the owner or a member who scanned in or was named by the till.</summary>
 public class StayMember : Entity

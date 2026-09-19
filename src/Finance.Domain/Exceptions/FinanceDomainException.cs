@@ -1,4 +1,4 @@
-﻿namespace Chillax.Finance.Domain.Exceptions;
+﻿namespace Ninja.Finance.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a domain rule is violated

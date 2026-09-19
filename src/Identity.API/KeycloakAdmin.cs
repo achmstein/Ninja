@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Chillax.Identity.API;
+namespace Ninja.Identity.API;
 
 /// <summary>
 /// The Keycloak Admin REST calls the staff handlers share: a service-account

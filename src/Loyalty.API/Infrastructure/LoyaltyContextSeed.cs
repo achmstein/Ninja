@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Hosting;
 
-namespace Chillax.Loyalty.API.Infrastructure;
+namespace Ninja.Loyalty.API.Infrastructure;
 
 public class LoyaltyContextSeed : IDbSeeder<LoyaltyContext>
 {

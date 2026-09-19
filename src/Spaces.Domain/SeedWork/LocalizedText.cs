@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.SeedWork;
+namespace Ninja.Spaces.Domain.SeedWork;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

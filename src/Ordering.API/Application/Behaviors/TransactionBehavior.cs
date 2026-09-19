@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Behaviors;
+﻿namespace Ninja.Ordering.API.Application.Behaviors;
 
 using Microsoft.Extensions.Logging;
 

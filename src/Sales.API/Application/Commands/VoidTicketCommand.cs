@@ -1,6 +1,6 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-namespace Chillax.Sales.API.Application.Commands;
+using Ninja.Sales.Infrastructure.Idempotency;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record VoidTicketCommand(int TicketId, string Reason, string VoidedBy) : IRequest<bool>;
 

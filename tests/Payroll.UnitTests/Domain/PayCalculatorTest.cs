@@ -1,10 +1,10 @@
-namespace Chillax.Payroll.UnitTests.Domain;
+namespace Ninja.Payroll.UnitTests.Domain;
 
-using Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
-using Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
-using Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
-using Chillax.Payroll.Domain.Exceptions;
-using Chillax.Payroll.Domain.Services;
+using Ninja.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+using Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+using Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
+using Ninja.Payroll.Domain.Exceptions;
+using Ninja.Payroll.Domain.Services;
 
 [TestClass]
 public class PayCalculatorTest

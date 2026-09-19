@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.chillax" "\0"
-            VALUE "FileDescription", "chillax_mobile" "\0"
+            VALUE "FileDescription", "ninja_client" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "chillax_mobile" "\0"
+            VALUE "InternalName", "ninja_client" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.chillax. All rights reserved." "\0"
-            VALUE "OriginalFilename", "chillax_mobile.exe" "\0"
-            VALUE "ProductName", "chillax_mobile" "\0"
+            VALUE "OriginalFilename", "ninja_client.exe" "\0"
+            VALUE "ProductName", "ninja_client" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

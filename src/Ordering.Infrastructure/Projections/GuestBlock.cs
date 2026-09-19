@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Infrastructure.Projections;
+namespace Ninja.Ordering.Infrastructure.Projections;
 
 /// <summary>
 /// A guest id the till turned away: the cashier said nobody was at the table

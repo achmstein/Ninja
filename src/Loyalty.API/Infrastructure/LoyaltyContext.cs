@@ -1,7 +1,7 @@
-using Chillax.Loyalty.API.Model;
+using Ninja.Loyalty.API.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Loyalty.API.Infrastructure;
+namespace Ninja.Loyalty.API.Infrastructure;
 
 public class LoyaltyContext : DbContext
 {

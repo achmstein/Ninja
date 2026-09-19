@@ -1,8 +1,8 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Events;
-using Chillax.Payroll.Infrastructure;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
+using Ninja.Payroll.Infrastructure;
 
-namespace Chillax.Payroll.API.Application.IntegrationEvents;
+namespace Ninja.Payroll.API.Application.IntegrationEvents;
 
 /// <summary>
 /// Same outbox as Ordering's, over the Payroll context: the event log shares

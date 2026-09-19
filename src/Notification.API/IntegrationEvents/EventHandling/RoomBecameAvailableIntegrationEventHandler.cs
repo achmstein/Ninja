@@ -1,12 +1,12 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.Notification.API.Hubs;
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Localization;
-using Chillax.Notification.API.Model;
-using Chillax.Notification.API.Services;
+using Ninja.EventBus.Abstractions;
+using Ninja.Notification.API.Hubs;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Localization;
+using Ninja.Notification.API.Model;
+using Ninja.Notification.API.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
+namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
 public class RoomBecameAvailableIntegrationEventHandler(
     NotificationContext context,

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Finance.Infrastructure.Idempotency;
+namespace Ninja.Finance.Infrastructure.Idempotency;
 
 public class ClientRequest
 {

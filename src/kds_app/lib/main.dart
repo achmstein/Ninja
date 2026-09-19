@@ -49,7 +49,7 @@ void main() async {
     ProviderScope(
       // Design-time mode swaps auth, branches and the board for samples
       overrides: kDemoMode ? demoOverrides : const [],
-      child: const ChillaxKdsApp(),
+      child: const NinjaKdsApp(),
     ),
   );
 }

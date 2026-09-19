@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The till forgot the customer and Ordering was told afterwards: the order's

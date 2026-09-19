@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Notification.API.IntegrationEvents.Events;
+namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Integration event received when a pending order needs a reminder notification.

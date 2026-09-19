@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
-using Chillax.Sales.Domain.Events;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.Domain.Events;
 
-namespace Chillax.Sales.API.Application.DomainEventHandlers;
+namespace Ninja.Sales.API.Application.DomainEventHandlers;
 
 /// <summary>
 /// A supplier, expense or partner movement rides the outbox with the

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.API.Application.Queries;
+namespace Ninja.Finance.API.Application.Queries;
 
 public record ExpenseCategoryView(int Id, LocalizedText Name, int DisplayOrder, bool IsActive);
 

@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Infrastructure;
+namespace Ninja.Spaces.Infrastructure;
 
 /// <summary>
 /// The publishing half of the outbox, as the unit of work sees it: once a

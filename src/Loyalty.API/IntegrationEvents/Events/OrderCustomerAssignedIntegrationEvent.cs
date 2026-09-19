@@ -1,4 +1,4 @@
-namespace Chillax.Loyalty.API.IntegrationEvents.Events;
+namespace Ninja.Loyalty.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Integration event received when a customer is put on an order after it

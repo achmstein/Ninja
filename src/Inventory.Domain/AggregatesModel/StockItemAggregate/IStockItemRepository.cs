@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.StockItemAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.StockItemAggregate;
 
 public interface IStockItemRepository : IRepository<StockItem>
 {

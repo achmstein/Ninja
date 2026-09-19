@@ -1,4 +1,4 @@
-namespace Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 public enum ShiftStatus
 {

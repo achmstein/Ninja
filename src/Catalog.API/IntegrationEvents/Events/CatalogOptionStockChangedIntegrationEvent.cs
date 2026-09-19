@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.Events;
+namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Inventory publishes when a tracked ingredient a

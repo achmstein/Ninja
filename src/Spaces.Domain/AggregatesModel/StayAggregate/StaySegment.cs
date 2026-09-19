@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 /// <summary>A stretch of a stay charged at one rate option. A new segment opens whenever the option changes.</summary>
 public class StaySegment : Entity

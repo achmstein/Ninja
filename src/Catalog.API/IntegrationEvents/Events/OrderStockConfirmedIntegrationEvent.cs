@@ -1,4 +1,4 @@
-﻿namespace Chillax.Catalog.API.IntegrationEvents.Events;
+﻿namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Every item is available. When the order carried a promo code, this also

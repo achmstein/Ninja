@@ -1,4 +1,4 @@
-namespace Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
 /// <summary>
 /// What a pay-out was for. Staff kinds name the employee so Payroll can

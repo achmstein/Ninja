@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// A ticket opened or changed — published so Notification can nudge the POS

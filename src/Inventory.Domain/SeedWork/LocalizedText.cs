@@ -1,4 +1,4 @@
-﻿namespace Chillax.Inventory.Domain.SeedWork;
+﻿namespace Ninja.Inventory.Domain.SeedWork;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

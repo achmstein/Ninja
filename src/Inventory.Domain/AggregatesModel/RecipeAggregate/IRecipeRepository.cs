@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
 
 public interface IRecipeRepository : IRepository<Recipe>
 {

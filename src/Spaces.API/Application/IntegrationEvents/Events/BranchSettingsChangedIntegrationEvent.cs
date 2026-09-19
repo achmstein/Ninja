@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents.Events;
+namespace Ninja.Spaces.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Branch.API publishes whenever a branch's

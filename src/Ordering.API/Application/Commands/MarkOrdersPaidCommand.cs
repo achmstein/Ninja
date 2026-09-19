@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// A receipt covered these orders: stamp each with the receipt number, the

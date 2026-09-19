@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Domain.Exceptions;
+namespace Ninja.Accounts.Domain.Exceptions;
 
 public class AccountsDomainException : Exception
 {

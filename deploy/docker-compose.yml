@@ -69,7 +69,7 @@ services:
 
   # Application services (from GHCR)
   catalog-api:
-    image: ghcr.io/achmstein/chillax-catalog:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-catalog:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -89,7 +89,7 @@ services:
       - chillax
 
   ordering-api:
-    image: ghcr.io/achmstein/chillax-ordering:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-ordering:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -114,7 +114,7 @@ services:
       - chillax
 
   spaces-api:
-    image: ghcr.io/achmstein/chillax-spaces:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-spaces:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -134,7 +134,7 @@ services:
       - chillax
 
   sales-api:
-    image: ghcr.io/achmstein/chillax-sales:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-sales:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -154,7 +154,7 @@ services:
       - chillax
 
   inventory-api:
-    image: ghcr.io/achmstein/chillax-inventory:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-inventory:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -174,7 +174,7 @@ services:
       - chillax
 
   payroll-api:
-    image: ghcr.io/achmstein/chillax-payroll:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-payroll:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -194,7 +194,7 @@ services:
       - chillax
 
   finance-api:
-    image: ghcr.io/achmstein/chillax-finance:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-finance:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -214,7 +214,7 @@ services:
       - chillax
 
   identity-api:
-    image: ghcr.io/achmstein/chillax-identity:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-identity:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -235,7 +235,7 @@ services:
       - chillax
 
   loyalty-api:
-    image: ghcr.io/achmstein/chillax-loyalty:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-loyalty:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -255,7 +255,7 @@ services:
       - chillax
 
   notification-api:
-    image: ghcr.io/achmstein/chillax-notification:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-notification:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -277,7 +277,7 @@ services:
       - chillax
 
   accounts-api:
-    image: ghcr.io/achmstein/chillax-accounts:${IMAGE_TAG:-latest}
+    image: ghcr.io/achmstein/ninja-accounts:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -295,7 +295,7 @@ services:
 
   # Reverse proxy (optional - use if not behind another reverse proxy)
   # mobile-bff:
-  #   image: ghcr.io/achmstein/chillax-mobile-bff:${IMAGE_TAG:-latest}
+  #   image: ghcr.io/achmstein/ninja-mobile-bff:${IMAGE_TAG:-latest}
   #   restart: unless-stopped
   #   ports:
   #     - "27748:27748"

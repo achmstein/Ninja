@@ -1,6 +1,6 @@
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 
-namespace Chillax.Catalog.API.IntegrationEvents.EventHandling;
+namespace Ninja.Catalog.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Records what each customer orders, one purchase fact per (customer, item,

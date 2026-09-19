@@ -1,9 +1,9 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Queries;
+namespace Ninja.Ordering.API.Application.Queries;
 
 /// <summary>
 /// Reads Ordering's projection of the branch flags (see
-/// Chillax.Ordering.Infrastructure.Projections.BranchSettings).
+/// Ninja.Ordering.Infrastructure.Projections.BranchSettings).
 /// </summary>
 public interface IBranchSettingsQueries
 {

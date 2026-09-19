@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// A branch's pricing rules, owned by Sales because Sales owns the money:

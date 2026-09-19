@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
 /// How much of a stock item a branch has, kept beside the ledger so a level

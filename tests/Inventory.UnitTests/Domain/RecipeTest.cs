@@ -1,7 +1,7 @@
-namespace Chillax.Inventory.UnitTests.Domain;
+namespace Ninja.Inventory.UnitTests.Domain;
 
-using Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
-using Chillax.Inventory.Domain.Exceptions;
+using Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
+using Ninja.Inventory.Domain.Exceptions;
 
 [TestClass]
 public class RecipeTest

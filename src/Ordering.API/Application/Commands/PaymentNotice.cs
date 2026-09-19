@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Queues the "your bill changed" nudge for one order onto the outbox of
@@ -9,7 +9,7 @@ namespace Chillax.Ordering.API.Application.Commands;
 public static class PaymentNotice
 {
     public static async Task QueueAsync(
-        Chillax.Ordering.Domain.AggregatesModel.OrderAggregate.Order order,
+        Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order order,
         string change,
         IBuyerRepository buyers,
         IOrderingIntegrationEventService integrationEvents)

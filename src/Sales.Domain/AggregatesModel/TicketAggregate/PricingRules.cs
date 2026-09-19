@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// How a branch's menu prices become what the customer pays. Rates are

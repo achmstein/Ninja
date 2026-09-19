@@ -1,5 +1,5 @@
-using Chillax.Inventory.API.Apis;
-using Chillax.Inventory.API.Extensions;
+using Ninja.Inventory.API.Apis;
+using Ninja.Inventory.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

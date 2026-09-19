@@ -44,10 +44,10 @@ Rules that follow:
 
 ## 3. The AI assistant
 
-One shared library (`src/Chillax.AI`), one chat model, one agent per feature, owned by the service that owns the data, always proposing and never writing (`ai-assistant-plan.md`). Surfaces show the sparkle; services answer 503 when no model is configured and the surfaces hide it.
+One shared library (`src/Ninja.AI`), one chat model, one agent per feature, owned by the service that owns the data, always proposing and never writing (`ai-assistant-plan.md`). Surfaces show the sparkle; services answer 503 when no model is configured and the surfaces hide it.
 
 ## 4. What is not clean yet, in order
 
 1. ~~`admin_app`~~ retired 2026-09-18 (above).
 2. `*.FunctionalTests` — eShop-era in-process harnesses, stale; the E2E suite covers what they did.
-3. `README.md` still opens as eShop's; the Chillax sections start at "AI assistant".
+3. ~~`README.md` still opens as eShop's~~ rewritten 2026-09-19 as the Ninja README (see `ninja-plan.md`).

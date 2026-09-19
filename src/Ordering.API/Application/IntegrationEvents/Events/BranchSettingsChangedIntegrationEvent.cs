@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Branch.API publishes whenever a branch's

@@ -1,4 +1,4 @@
-﻿namespace Chillax.Sales.Domain.Exceptions;
+﻿namespace Ninja.Sales.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a domain rule is violated

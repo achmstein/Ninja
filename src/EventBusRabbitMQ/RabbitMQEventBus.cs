@@ -1,4 +1,4 @@
-﻿namespace Chillax.EventBusRabbitMQ;
+﻿namespace Ninja.EventBusRabbitMQ;
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -24,7 +24,7 @@ public sealed class RabbitMQEventBus(
     // dead message lands on dead-letters with an x-death header naming the
     // queue it came from and why. Nothing consumes it; backup.yml counts it
     // every morning and deploy/monitoring.md says what to do with one.
-    private const string DeadLetterExchange = "chillax_dead_letters";
+    private const string DeadLetterExchange = "ninja_dead_letters";
     private const string DeadLetterQueue = "dead-letters";
 
     private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(options.Value.RetryCount);

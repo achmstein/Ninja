@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Ordering.Domain.Seedwork;
-using Chillax.Ordering.Infrastructure.Projections;
+using Ninja.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Infrastructure.Projections;
 
-namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Keeps Ordering's projection of the places: an upsert keyed by place id,

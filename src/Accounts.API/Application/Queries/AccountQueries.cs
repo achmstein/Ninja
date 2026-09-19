@@ -1,8 +1,8 @@
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.Infrastructure;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Accounts.API.Application.Queries;
+namespace Ninja.Accounts.API.Application.Queries;
 
 public class AccountQueries : IAccountQueries
 {

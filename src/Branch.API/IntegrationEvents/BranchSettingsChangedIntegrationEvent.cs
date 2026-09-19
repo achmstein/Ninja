@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Branch.API.IntegrationEvents;
+namespace Ninja.Branch.API.IntegrationEvents;
 
 public record BranchSettingsChangedIntegrationEvent(
     int BranchId,

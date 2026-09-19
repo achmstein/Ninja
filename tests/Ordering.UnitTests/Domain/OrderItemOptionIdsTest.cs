@@ -1,9 +1,9 @@
-namespace Chillax.Ordering.UnitTests.Domain;
+namespace Ninja.Ordering.UnitTests.Domain;
 
-using Chillax.Ordering.API.Application.Models;
-using Chillax.Ordering.API.Extensions;
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.API.Application.Models;
+using Ninja.Ordering.API.Extensions;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
+using Ninja.Ordering.Domain.Seedwork;
 
 [TestClass]
 public class OrderItemOptionIdsTest

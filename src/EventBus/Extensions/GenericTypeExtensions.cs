@@ -1,4 +1,4 @@
-﻿namespace Chillax.EventBus.Extensions;
+﻿namespace Ninja.EventBus.Extensions;
 
 public static class GenericTypeExtensions
 {

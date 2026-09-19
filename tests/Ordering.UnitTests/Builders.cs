@@ -1,7 +1,7 @@
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.UnitTests.Domain;
+namespace Ninja.Ordering.UnitTests.Domain;
 
 /// <summary>
 /// Builder for creating Order instances in tests.

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
 
 /// <summary>
 /// Someone who works at the café. Its own record with its own name: a login

@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Domain.SeedWork;
+namespace Ninja.Accounts.Domain.SeedWork;
 
 public interface IRepository<T> where T : IAggregateRoot
 {

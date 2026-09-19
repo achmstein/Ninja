@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.UnitTests.Application;
+namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
 /// Unit tests for AssignOrderCustomerCommandHandler — the till forgot the

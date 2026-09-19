@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Payroll.API.Application.IntegrationEvents.Events;
+namespace Ninja.Payroll.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// What a period cost in wages for one employee, net of absence, as of

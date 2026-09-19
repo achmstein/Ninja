@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.API.Application.Commands;
+using Ninja.Inventory.API.Application.Commands;
 
-namespace Chillax.Inventory.API.Apis;
+namespace Ninja.Inventory.API.Apis;
 
 public static class IdempotencyExtensions
 {

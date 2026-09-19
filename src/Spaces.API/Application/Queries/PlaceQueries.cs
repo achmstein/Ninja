@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Microsoft.EntityFrameworkCore;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
+using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 public class PlaceQueries(SpacesContext context) : IPlaceQueries
 {

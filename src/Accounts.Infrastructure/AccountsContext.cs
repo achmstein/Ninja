@@ -1,6 +1,6 @@
 #nullable enable
 
-namespace Chillax.Accounts.Infrastructure;
+namespace Ninja.Accounts.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Accounts.Infrastructure' project directory:

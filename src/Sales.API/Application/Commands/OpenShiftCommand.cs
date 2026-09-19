@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Sales.API.Application.Queries;
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.API.Application.Queries;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record OpenShiftCommand(int BranchId, decimal OpeningFloat, string OpenedBy, string? OpenedByUserId = null) : IRequest<int>;
 

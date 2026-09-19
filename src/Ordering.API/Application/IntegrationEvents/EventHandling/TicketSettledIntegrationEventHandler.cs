@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The till paid a bill: every order on it learns its receipt number and

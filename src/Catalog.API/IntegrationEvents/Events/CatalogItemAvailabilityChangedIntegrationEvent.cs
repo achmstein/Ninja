@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.Events;
+namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// An item was marked available / sold out. BranchId is null when the global

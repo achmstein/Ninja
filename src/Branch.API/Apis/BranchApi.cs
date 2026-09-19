@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
-using Chillax.Branch.API.Model;
-using Chillax.Branch.API.Services;
+using Ninja.Branch.API.Model;
+using Ninja.Branch.API.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace Chillax.Branch.API.Apis;
+namespace Ninja.Branch.API.Apis;
 
 public static class BranchApi
 {

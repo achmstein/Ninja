@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>
 /// The till starts the clock for a party that walked in. With no customer,

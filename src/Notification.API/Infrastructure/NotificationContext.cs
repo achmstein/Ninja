@@ -1,6 +1,6 @@
-using Chillax.Notification.API.Model;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.Infrastructure;
+namespace Ninja.Notification.API.Infrastructure;
 
 public class NotificationContext(DbContextOptions<NotificationContext> options) : DbContext(options)
 {

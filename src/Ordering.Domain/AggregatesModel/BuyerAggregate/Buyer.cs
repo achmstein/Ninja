@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Ordering.Domain.AggregatesModel.BuyerAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;
 
 /// <summary>
 /// Buyer aggregate for cafe customers.

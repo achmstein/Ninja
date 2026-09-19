@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Infrastructure.Services;
+﻿namespace Ninja.Ordering.API.Infrastructure.Services;
 
 public class IdentityService(IHttpContextAccessor context) : IIdentityService
 {

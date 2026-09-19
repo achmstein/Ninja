@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.Infrastructure.Idempotency;
+using Ninja.Inventory.Infrastructure.Idempotency;
 
-namespace Chillax.Inventory.API.Application.Commands;
+namespace Ninja.Inventory.API.Application.Commands;
 
 public record CreateStockItemCommand(
     LocalizedText Name,

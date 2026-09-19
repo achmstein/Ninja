@@ -1,8 +1,8 @@
-using Chillax.Accounts.API.IntegrationEvents.Events;
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.EventBus.Abstractions;
+using Ninja.Accounts.API.IntegrationEvents.Events;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.EventBus.Abstractions;
 
-namespace Chillax.Accounts.API.IntegrationEvents.EventHandling;
+namespace Ninja.Accounts.API.IntegrationEvents.EventHandling;
 
 public class UserProfileUpdatedIntegrationEventHandler(
     ICustomerAccountRepository accountRepository,

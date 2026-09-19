@@ -1,9 +1,9 @@
-using Chillax.Loyalty.API.IntegrationEvents.Events;
-using Chillax.Loyalty.API.Infrastructure;
-using Chillax.Loyalty.API.Model;
+using Ninja.Loyalty.API.IntegrationEvents.Events;
+using Ninja.Loyalty.API.Infrastructure;
+using Ninja.Loyalty.API.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Loyalty.API.IntegrationEvents.EventHandling;
+namespace Ninja.Loyalty.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The one way points an order earned go back — behind a credit note and a

@@ -56,19 +56,19 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: ChillaxApp(),
+      child: NinjaApp(),
     ),
   );
 }
 
-class ChillaxApp extends ConsumerStatefulWidget {
-  const ChillaxApp({super.key});
+class NinjaApp extends ConsumerStatefulWidget {
+  const NinjaApp({super.key});
 
   @override
-  ConsumerState<ChillaxApp> createState() => _ChillaxAppState();
+  ConsumerState<NinjaApp> createState() => _NinjaAppState();
 }
 
-class _ChillaxAppState extends ConsumerState<ChillaxApp>
+class _NinjaAppState extends ConsumerState<NinjaApp>
     with WidgetsBindingObserver {
   final List<StreamSubscription> _signalRSubscriptions = [];
   bool _wasAuthenticated = false;

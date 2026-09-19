@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.DomainEventHandlers;
+namespace Ninja.Ordering.API.Application.DomainEventHandlers;
 
 /// <summary>
 /// Turns a kitchen move into the integration event that nudges every kitchen

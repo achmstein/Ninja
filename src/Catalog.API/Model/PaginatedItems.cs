@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 public class PaginatedItems<TEntity>(int pageIndex, int pageSize, long count, IEnumerable<TEntity> data) where TEntity : class
 {

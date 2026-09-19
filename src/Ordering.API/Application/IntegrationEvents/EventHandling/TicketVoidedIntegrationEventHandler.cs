@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// An owner voided an open bill: every order on it is stamped voided, so the

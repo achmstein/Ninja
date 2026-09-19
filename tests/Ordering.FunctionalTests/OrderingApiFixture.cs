@@ -4,7 +4,7 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
 
-namespace Chillax.Ordering.FunctionalTests;
+namespace Ninja.Ordering.FunctionalTests;
 
 public sealed class OrderingApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {

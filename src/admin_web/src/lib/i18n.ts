@@ -1955,7 +1955,7 @@ export const useLanguage = create<LanguageState>()(
       },
     }),
     {
-      name: 'chillax-admin-language',
+      name: 'ninja-admin-language',
       onRehydrateStorage: () => (state) => {
         document.documentElement.lang = state?.language ?? 'en'
       },

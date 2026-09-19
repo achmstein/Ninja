@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.Domain.Services;
+using Ninja.Inventory.Domain.Services;
 
-namespace Chillax.Inventory.Infrastructure;
+namespace Ninja.Inventory.Infrastructure;
 
 /// <summary>
 /// The ledger over Postgres. A level row is locked (SELECT ... FOR UPDATE)

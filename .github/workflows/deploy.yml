@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/chillax
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ninja
 
 jobs:
   deploy:
@@ -73,17 +73,17 @@ jobs:
           # Resolved so publish never waits on a prompt; the .env still gets an empty placeholder, filled below
           Parameters__gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          cd src/Chillax.AppHost
+          cd src/Ninja.AppHost
           aspire publish -o ../../deploy-artifacts
 
       - name: Prepare deployment artifacts
         run: |
-          cp src/Chillax.AppHost/KeycloakConfiguration/chillax-realm.json deploy-artifacts/chillax-realm.json
+          cp src/Ninja.AppHost/KeycloakConfiguration/chillax-realm.json deploy-artifacts/chillax-realm.json
           sed -i 's|source: ".*chillax-realm.json"|source: "./chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
           sed -i 's|target: "/opt/keycloak/data/import"|target: "/opt/keycloak/data/import/chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
 
           # Keycloak login theme travels the same way as the realm file
-          cp -r src/Chillax.AppHost/KeycloakConfiguration/themes deploy-artifacts/keycloak-themes
+          cp -r src/Ninja.AppHost/KeycloakConfiguration/themes deploy-artifacts/keycloak-themes
           sed -i 's|source: ".*KeycloakConfiguration/themes/chillax"|source: "./keycloak-themes/chillax"|g' deploy-artifacts/docker-compose.yaml
 
           # Aspire publish emits no restart policy on infrastructure services (postgres,
@@ -116,7 +116,7 @@ jobs:
 
           # The AI assistant's key: the AppHost's gemini-api-key parameter
           # (Gemini, or any OpenAI-compatible provider named in
-          # src/Chillax.AppHost/appsettings.json). An empty secret trips the
+          # src/Ninja.AppHost/appsettings.json). An empty secret trips the
           # guard below on purpose: ship without AI by choice, not by accident.
           sed -i 's|^GEMINI_API_KEY=$|GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}|' deploy-artifacts/.env
 
@@ -202,7 +202,7 @@ jobs:
             # the node may still be booting right after a recreate.
             for i in $(seq 1 12); do
               docker compose -f docker-compose.yaml -f docker-compose.caddy.yml exec -T eventbus \
-                rabbitmqctl set_policy dead-letter ".*" '{"dead-letter-exchange":"chillax_dead_letters"}' --apply-to queues \
+                rabbitmqctl set_policy dead-letter ".*" '{"dead-letter-exchange":"ninja_dead_letters"}' --apply-to queues \
                 && break
               [ "$i" -eq 12 ] && { echo "ERROR: could not set the dead-letter policy"; exit 1; }
               sleep 5

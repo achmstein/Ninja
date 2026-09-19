@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
 /// One line of the ledger: what moved, how much, why, who. Append-only; the

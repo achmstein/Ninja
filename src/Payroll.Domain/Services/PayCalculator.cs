@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
-using Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
-using Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+using Ninja.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+using Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+using Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
-namespace Chillax.Payroll.Domain.Services;
+namespace Ninja.Payroll.Domain.Services;
 
 /// <summary>
 /// What a payslip says, as numbers. <see cref="AmountDue"/> is the whole

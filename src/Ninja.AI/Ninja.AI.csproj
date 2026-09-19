@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The AI assistant's plumbing, shared by the services that own an AI
+    feature (Catalog: localize menu text; Inventory: read receipts). The
+    chat model reaches a service as the "chatModel" connection string the
+    AppHost hands out (eShop's pattern: Aspire.OpenAI registers IChatClient
+    from it, a Fake stands in under test), and Microsoft Agent Framework
+    agents with structured JSON output run on top, with rate limiting sized
+    for a free tier, image checks and the HTTP problem mapping. Nothing
+    here writes to a database.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Ninja.AI</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.OpenAI" />
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

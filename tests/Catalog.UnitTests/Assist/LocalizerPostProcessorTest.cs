@@ -1,5 +1,5 @@
-using Chillax.Catalog.API.Assist;
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Assist;
+using Ninja.Catalog.API.Model;
 
 namespace Catalog.UnitTests.Assist;
 

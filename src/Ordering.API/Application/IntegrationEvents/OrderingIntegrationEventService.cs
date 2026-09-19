@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.IntegrationEvents;
+﻿namespace Ninja.Ordering.API.Application.IntegrationEvents;
 
 public class OrderingIntegrationEventService(IEventBus eventBus,
     OrderingContext orderingContext,

@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Chillax.AI\Chillax.AI.csproj" />
-    <ProjectReference Include="..\Chillax.ServiceDefaults\Chillax.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Ninja.AI\Ninja.AI.csproj" />
+    <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
     <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
     <ProjectReference Include="..\IntegrationEventLogEF\IntegrationEventLogEF.csproj" />
     <ProjectReference Include="..\Finance.Domain\Finance.Domain.csproj" />

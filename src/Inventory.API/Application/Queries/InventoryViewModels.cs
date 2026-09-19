@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.API.Application.Queries;
+namespace Ninja.Inventory.API.Application.Queries;
 
 public record StockItemView(
     int Id,

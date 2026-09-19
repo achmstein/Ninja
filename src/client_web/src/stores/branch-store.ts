@@ -13,7 +13,7 @@ export const useBranchStore = create<BranchState>()(
       branchId: 1,
       setBranchId: (branchId) => set({ branchId }),
     }),
-    { name: 'chillax-branch' }
+    { name: 'ninja-branch' }
   )
 )
 

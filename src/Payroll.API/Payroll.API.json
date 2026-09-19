@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Payroll HTTP API",
+    "title": "Ninja - Payroll HTTP API",
     "description": "The Payroll Microservice HTTP API for employees, attendance, the employee ledger and payslips",
     "version": "1.0"
   },

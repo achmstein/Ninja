@@ -1,8 +1,8 @@
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>Switch a running stay to another rate option of its tariff (single → multi).</summary>
 public record ChangeStayOptionCommand(int StayId, string OptionCode) : IRequest<bool>;

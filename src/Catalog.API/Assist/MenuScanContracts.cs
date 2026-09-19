@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// What the assistant proposes from a photo of a menu — a printed menu, a

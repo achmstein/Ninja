@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+using Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
 
-namespace Chillax.Inventory.Domain.Services;
+namespace Ninja.Inventory.Domain.Services;
 
 /// <summary>
 /// A movement about to be posted. <paramref name="UnitCost"/> is what a base

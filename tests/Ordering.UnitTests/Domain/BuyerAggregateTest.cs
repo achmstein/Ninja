@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.UnitTests.Domain;
+namespace Ninja.Ordering.UnitTests.Domain;
 
 /// <summary>
 /// Unit tests for Buyer aggregate.

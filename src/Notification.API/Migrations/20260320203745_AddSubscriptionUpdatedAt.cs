@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Chillax.Notification.API.Migrations
+namespace Ninja.Notification.API.Migrations
 {
     /// <inheritdoc />
     public partial class AddSubscriptionUpdatedAt : Migration

@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Handler for the stock-confirmed transition. A command rather than a direct

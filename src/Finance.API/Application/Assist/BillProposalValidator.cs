@@ -1,10 +1,10 @@
 #nullable enable
 using System.Globalization;
-using Chillax.AI.Json;
-using Chillax.AI.Text;
-using Chillax.Finance.API.Application.Queries;
+using Ninja.AI.Json;
+using Ninja.AI.Text;
+using Ninja.Finance.API.Application.Queries;
 
-namespace Chillax.Finance.API.Application.Assist;
+namespace Ninja.Finance.API.Application.Assist;
 
 /// <summary>
 /// Turns what the model read into a proposal the expense form can trust:

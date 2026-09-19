@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Inventory HTTP API",
+    "title": "Ninja - Inventory HTTP API",
     "description": "The Inventory Microservice HTTP API for stock items, levels, receipts, counts and recipes",
     "version": "1.0"
   },

@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF;
 
-namespace Chillax.Payroll.Infrastructure;
+namespace Ninja.Payroll.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Payroll.Infrastructure' project directory:

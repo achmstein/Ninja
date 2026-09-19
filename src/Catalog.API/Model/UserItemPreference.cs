@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Stores a user's customization preferences for a specific catalog item.

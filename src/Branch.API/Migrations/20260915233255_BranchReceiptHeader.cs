@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Chillax.Branch.API.Migrations
+namespace Ninja.Branch.API.Migrations
 {
     /// <inheritdoc />
     public partial class BranchReceiptHeader : Migration

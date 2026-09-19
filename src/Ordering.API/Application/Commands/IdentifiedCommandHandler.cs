@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Commands;
+﻿namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Provides a base implementation for handling duplicate request and ensuring idempotent updates, in the cases where

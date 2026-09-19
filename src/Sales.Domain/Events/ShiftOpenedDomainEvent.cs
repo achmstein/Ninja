@@ -1,5 +1,5 @@
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.Domain.Events;
+namespace Ninja.Sales.Domain.Events;
 
 public record ShiftOpenedDomainEvent(Shift Shift) : INotification;

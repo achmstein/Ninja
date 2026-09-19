@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.PayslipAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.PayslipAggregate;
 
 public interface IPayslipRepository : IRepository<Payslip>
 {

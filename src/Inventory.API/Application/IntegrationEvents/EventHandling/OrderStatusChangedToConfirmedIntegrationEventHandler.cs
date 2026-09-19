@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
-using Chillax.Inventory.API.Application.Services;
+using Ninja.EventBus.Abstractions;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.API.Application.Services;
 
-namespace Chillax.Inventory.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Inventory.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A confirmed order takes its ingredients off the shelf. Idempotent per

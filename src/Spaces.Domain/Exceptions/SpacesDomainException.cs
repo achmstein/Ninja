@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.Exceptions;
+namespace Ninja.Spaces.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a domain rule is violated

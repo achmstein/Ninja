@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.PurchaseAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.PurchaseAggregate;
 
 public class PurchaseLine : Entity
 {

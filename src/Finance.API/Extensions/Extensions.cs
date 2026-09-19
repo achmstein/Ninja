@@ -1,17 +1,17 @@
 using System.Text.Json.Serialization;
-using Chillax.AI;
-using Chillax.Finance.API.Application.Assist;
-using Chillax.Finance.API.Application.IntegrationEvents.EventHandling;
-using Chillax.Finance.API.Application.IntegrationEvents.Events;
-using Chillax.Finance.API.Application.Queries;
-using Chillax.Finance.API.Application.Services;
-using Chillax.Finance.Infrastructure;
-using Chillax.Finance.Infrastructure.Idempotency;
-using Chillax.Finance.Infrastructure.Repositories;
-using Chillax.EventBus.Extensions;
+using Ninja.AI;
+using Ninja.Finance.API.Application.Assist;
+using Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
+using Ninja.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.Finance.API.Application.Queries;
+using Ninja.Finance.API.Application.Services;
+using Ninja.Finance.Infrastructure;
+using Ninja.Finance.Infrastructure.Idempotency;
+using Ninja.Finance.Infrastructure.Repositories;
+using Ninja.EventBus.Extensions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Chillax.Finance.API.Extensions;
+namespace Ninja.Finance.API.Extensions;
 
 public static class Extensions
 {

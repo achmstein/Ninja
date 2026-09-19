@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>
 /// The last thing Catalog was told about a customization option at a

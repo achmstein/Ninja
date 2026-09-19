@@ -1,8 +1,8 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.SeedWork;
 
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 // ---------------------------------------------------------------------------
 // LEGACY(places): the old /api/rooms and /api/tables view models and their mapping from Place/Stay — remove when every till and customer app is on /api/places and /api/stays.

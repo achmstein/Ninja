@@ -81,7 +81,7 @@ export const useCart = create<CartState>()(
         })),
       clear: () => set({ lines: [] }),
     }),
-    { name: 'chillax-cart' }
+    { name: 'ninja-cart' }
   )
 )
 

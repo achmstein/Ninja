@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.Services;
+namespace Ninja.Payroll.Domain.Services;
 
 /// <summary>
 /// The café's day, as attendance and wages count it: a shift that opens in

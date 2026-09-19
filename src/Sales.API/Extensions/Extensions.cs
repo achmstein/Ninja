@@ -1,13 +1,13 @@
 using System.Text.Json.Serialization;
-using Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
-using Chillax.Sales.API.Application.Queries;
-using Chillax.Sales.Infrastructure;
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.Infrastructure.Repositories;
-using Chillax.EventBus.Extensions;
+using Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.API.Application.Queries;
+using Ninja.Sales.Infrastructure;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.Infrastructure.Repositories;
+using Ninja.EventBus.Extensions;
 
-namespace Chillax.Sales.API.Extensions;
+namespace Ninja.Sales.API.Extensions;
 
 public static class Extensions
 {
@@ -54,8 +54,8 @@ public static class Extensions
         services.AddScoped<SalesTransaction>();
 
         services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
-        services.AddScoped<Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
+        services.AddScoped<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
+        services.AddScoped<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();

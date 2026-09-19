@@ -70,7 +70,7 @@ void main() {
 
   test('a persisted cart is whole before the first screen builds', () async {
     SharedPreferences.setMockInitialValues({
-      'chillax-pos-sale': json.encode(
+      'ninja-pos-sale': json.encode(
         SaleState(lines: [latte(quantity: 2)], note: 'no sugar', target: 104).toJson(),
       ),
     });

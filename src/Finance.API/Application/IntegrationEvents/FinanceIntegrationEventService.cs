@@ -1,8 +1,8 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Events;
-using Chillax.Finance.Infrastructure;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
+using Ninja.Finance.Infrastructure;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents;
+namespace Ninja.Finance.API.Application.IntegrationEvents;
 
 /// <summary>
 /// Same outbox as Ordering's, over the Finance context: the event log shares

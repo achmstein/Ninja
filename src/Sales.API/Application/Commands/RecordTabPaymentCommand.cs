@@ -1,10 +1,10 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
-using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record TabPaymentResult(int Id, int Number);
 

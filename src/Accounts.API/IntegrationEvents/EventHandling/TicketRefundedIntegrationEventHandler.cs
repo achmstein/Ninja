@@ -1,10 +1,10 @@
-using Chillax.Accounts.API.Application.Commands;
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.API.IntegrationEvents.Events;
-using Chillax.EventBus.Abstractions;
+using Ninja.Accounts.API.Application.Commands;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.API.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
 using MediatR;
 
-namespace Chillax.Accounts.API.IntegrationEvents.EventHandling;
+namespace Ninja.Accounts.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A refund that went back onto a tab is a payment on it: the balance owed

@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Finance HTTP API",
+    "title": "Ninja - Finance HTTP API",
     "description": "The Finance Microservice HTTP API for expenses, supplier accounts and partner accounts",
     "version": "1.0"
   },

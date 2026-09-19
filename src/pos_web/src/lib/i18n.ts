@@ -629,7 +629,7 @@ export const useLanguage = create<LanguageState>()(
       },
     }),
     {
-      name: 'chillax-pos-language',
+      name: 'ninja-pos-language',
       onRehydrateStorage: () => (state) => {
         applyLanguage(state?.language ?? 'en')
       },

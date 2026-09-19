@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Represents a user's favorite menu item

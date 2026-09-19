@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
 
 /// <summary>
 /// What an employee earns from a given day: the rate per day worked, or the

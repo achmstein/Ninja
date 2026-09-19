@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.Events;
-using Chillax.Spaces.Domain.Exceptions;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.Events;
+using Ninja.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.SeedWork;
 
-namespace Chillax.Spaces.UnitTests.Domain;
+namespace Ninja.Spaces.UnitTests.Domain;
 
 [TestClass]
 public sealed class PlaceTests

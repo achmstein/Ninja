@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

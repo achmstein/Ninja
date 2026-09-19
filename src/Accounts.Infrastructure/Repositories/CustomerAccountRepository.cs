@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Infrastructure.Repositories;
+namespace Ninja.Accounts.Infrastructure.Repositories;
 
 public class CustomerAccountRepository : ICustomerAccountRepository
 {

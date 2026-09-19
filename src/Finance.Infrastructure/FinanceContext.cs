@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF;
 
-namespace Chillax.Finance.Infrastructure;
+namespace Ninja.Finance.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Finance.Infrastructure' project directory:

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>What kind of text is being localized; the voice differs a little for each.</summary>
 public enum LocalizeKind

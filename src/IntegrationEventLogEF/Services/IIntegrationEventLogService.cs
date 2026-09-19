@@ -1,4 +1,4 @@
-﻿namespace Chillax.IntegrationEventLogEF.Services;
+﻿namespace Ninja.IntegrationEventLogEF.Services;
 
 public interface IIntegrationEventLogService
 {

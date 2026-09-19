@@ -1,4 +1,4 @@
-﻿namespace Chillax.Catalog.API;
+﻿namespace Ninja.Catalog.API;
 
 public class CatalogOptions
 {

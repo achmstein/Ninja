@@ -1,7 +1,7 @@
-namespace Chillax.Inventory.UnitTests.Domain;
+namespace Ninja.Inventory.UnitTests.Domain;
 
-using Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
-using Chillax.Inventory.Domain.Services;
+using Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
+using Ninja.Inventory.Domain.Services;
 
 [TestClass]
 public class StockTransitionsTest

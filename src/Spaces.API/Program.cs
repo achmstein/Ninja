@@ -1,5 +1,5 @@
-using Chillax.Spaces.API.Apis;
-using Chillax.Spaces.API.Extensions;
+using Ninja.Spaces.API.Apis;
+using Ninja.Spaces.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

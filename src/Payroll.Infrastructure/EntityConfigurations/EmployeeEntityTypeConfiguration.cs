@@ -1,4 +1,4 @@
-namespace Chillax.Payroll.Infrastructure.EntityConfigurations;
+namespace Ninja.Payroll.Infrastructure.EntityConfigurations;
 
 class EmployeeEntityTypeConfiguration : IEntityTypeConfiguration<Employee>
 {

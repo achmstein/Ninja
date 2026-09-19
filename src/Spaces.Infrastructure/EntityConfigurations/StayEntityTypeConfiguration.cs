@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Infrastructure.EntityConfigurations;
+namespace Ninja.Spaces.Infrastructure.EntityConfigurations;
 
 class StayEntityTypeConfiguration : IEntityTypeConfiguration<Stay>
 {

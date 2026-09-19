@@ -1,9 +1,9 @@
 #nullable enable
 using System.Text.Json;
-using Chillax.AI.Fake;
-using Chillax.AI.Json;
+using Ninja.AI.Fake;
+using Ninja.AI.Json;
 
-namespace Chillax.Finance.API.Application.Assist;
+namespace Ninja.Finance.API.Application.Assist;
 
 /// <summary>
 /// What the bill scanner answers under test, whatever the pixels: an

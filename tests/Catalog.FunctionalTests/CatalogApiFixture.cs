@@ -5,7 +5,7 @@ using Aspire.Hosting.ApplicationModel;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Chillax.Catalog.FunctionalTests;
+namespace Ninja.Catalog.FunctionalTests;
 
 public sealed class CatalogApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {

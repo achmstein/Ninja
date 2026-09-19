@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Extensions;
+﻿namespace Ninja.Ordering.API.Extensions;
 
 public static class LinqSelectExtensions
 {

@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// The kitchen marked a confirmed order ready, or brought it back to the

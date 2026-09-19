@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Infrastructure;
+namespace Ninja.Accounts.Infrastructure;
 
 public class AccountsContextDesignFactory : IDesignTimeDbContextFactory<AccountsContext>
 {

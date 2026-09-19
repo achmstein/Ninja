@@ -1,8 +1,8 @@
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 /// <summary>
 /// Reads Spaces' projection of the branch flags (see
-/// Chillax.Spaces.Infrastructure.Projections.BranchSettings).
+/// Ninja.Spaces.Infrastructure.Projections.BranchSettings).
 /// </summary>
 public interface IBranchSettingsQueries
 {

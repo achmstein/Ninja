@@ -1,11 +1,11 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Localization;
-using Chillax.Notification.API.Model;
-using Chillax.Notification.API.Services;
+using Ninja.EventBus.Abstractions;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Localization;
+using Ninja.Notification.API.Model;
+using Ninja.Notification.API.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
+namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The day's digest: when the till closes its shift, the Z figures go to the

@@ -55,7 +55,7 @@ void main() async {
     ProviderScope(
       // Design-time mode swaps auth, branches and tickets for samples
       overrides: kDemoMode ? demoOverrides : const [],
-      child: const ChillaxPosApp(),
+      child: const NinjaPosApp(),
     ),
   );
 }

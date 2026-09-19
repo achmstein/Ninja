@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Chillax.Notification.API.Migrations
+namespace Ninja.Notification.API.Migrations
 {
     /// <inheritdoc />
     public partial class AddAnnouncements : Migration

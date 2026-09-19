@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Domain.Events;
+﻿namespace Ninja.Ordering.Domain.Events;
 
 public class OrderCancelledDomainEvent : INotification
 {

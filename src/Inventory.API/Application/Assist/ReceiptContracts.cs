@@ -1,4 +1,4 @@
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// What the assistant proposes from a receipt photo. Nothing is posted:

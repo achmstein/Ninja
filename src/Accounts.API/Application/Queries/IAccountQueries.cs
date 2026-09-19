@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.API.Application.Queries;
+namespace Ninja.Accounts.API.Application.Queries;
 
 public interface IAccountQueries
 {

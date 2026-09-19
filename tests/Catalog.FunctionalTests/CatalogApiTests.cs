@@ -2,10 +2,10 @@
 using System.Text.Json;
 using Asp.Versioning;
 using Asp.Versioning.Http;
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Chillax.Catalog.FunctionalTests;
+namespace Ninja.Catalog.FunctionalTests;
 
 public sealed class CatalogApiTests : IClassFixture<CatalogApiFixture>
 {

@@ -1,4 +1,4 @@
-﻿namespace Chillax.EventBus.Abstractions;
+﻿namespace Ninja.EventBus.Abstractions;
 
 public interface IEventBus
 {

@@ -1,9 +1,9 @@
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// Reads a photo of a menu into proposed categories and items, in both
@@ -11,7 +11,7 @@ namespace Chillax.Catalog.API.Assist;
 /// answer goes through <see cref="MenuProposalValidator"/> — which also
 /// spots what is already on the menu — before anyone sees it.
 /// </summary>
-public sealed class MenuScanner(IChillaxAgentFactory factory)
+public sealed class MenuScanner(INinjaAgentFactory factory)
 {
     public const string AgentKey = "menu-scanner";
 

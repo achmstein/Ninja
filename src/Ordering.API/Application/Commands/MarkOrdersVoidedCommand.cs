@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// The bill these orders were on was voided before it was paid: stamp each,

@@ -1,12 +1,12 @@
-using Chillax.Spaces.API.Application.IntegrationEvents;
-using Chillax.Spaces.API.Application.IntegrationEvents.Events;
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Events;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.Spaces.API.Application.IntegrationEvents;
+using Ninja.Spaces.API.Application.IntegrationEvents.Events;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Events;
+using Ninja.Spaces.Domain.SeedWork;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.DomainEventHandlers;
+namespace Ninja.Spaces.API.Application.DomainEventHandlers;
 
 // Every handler here turns a domain event into the integration event the
 // other services and the screens listen for. They run inside the unit of

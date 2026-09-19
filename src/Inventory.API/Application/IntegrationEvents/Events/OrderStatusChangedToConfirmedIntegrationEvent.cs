@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Inventory.API.Application.IntegrationEvents.Events;
+namespace Ninja.Inventory.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Received when Ordering confirms an order: customer, guest, walk-in, POS

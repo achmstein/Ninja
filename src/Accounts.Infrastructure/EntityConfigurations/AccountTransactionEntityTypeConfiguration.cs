@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Infrastructure.EntityConfigurations;
+namespace Ninja.Accounts.Infrastructure.EntityConfigurations;
 
 class AccountTransactionEntityTypeConfiguration : IEntityTypeConfiguration<AccountTransaction>
 {

@@ -290,7 +290,7 @@ services:
     # ... rest of config
 ```
 
-**For .NET Aspire (Chillax.AppHost)**:
+**For .NET Aspire (Ninja.AppHost)**:
 If using Aspire's Keycloak integration, you may need to customize the Keycloak container to add these features.
 
 ### Step 1: Configure Google Identity Provider

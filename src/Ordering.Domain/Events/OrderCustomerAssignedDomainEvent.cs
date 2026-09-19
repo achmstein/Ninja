@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Domain.Events;
+namespace Ninja.Ordering.Domain.Events;
 
 /// <summary>
 /// Event used when a customer is put on an order after it was placed — the

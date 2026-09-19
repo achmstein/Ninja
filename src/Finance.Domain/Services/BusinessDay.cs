@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.Services;
+namespace Ninja.Finance.Domain.Services;
 
 /// <summary>
 /// The café's day, as attendance and wages count it: a shift that opens in

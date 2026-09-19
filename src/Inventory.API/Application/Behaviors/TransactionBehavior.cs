@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.EventBus.Extensions;
+using Ninja.EventBus.Extensions;
 
-namespace Chillax.Inventory.API.Application.Behaviors;
+namespace Ninja.Inventory.API.Application.Behaviors;
 
 /// <summary>
 /// Every command runs inside <see cref="InventoryTransaction"/>: one transaction

@@ -1,4 +1,4 @@
-namespace Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+namespace Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 
 public enum TransactionType
 {

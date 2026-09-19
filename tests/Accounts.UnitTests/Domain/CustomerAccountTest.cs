@@ -1,7 +1,7 @@
-namespace Chillax.Accounts.UnitTests.Domain;
+namespace Ninja.Accounts.UnitTests.Domain;
 
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.Domain.Exceptions;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Domain.Exceptions;
 
 [TestClass]
 public class CustomerAccountTest

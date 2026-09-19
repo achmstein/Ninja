@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
-namespace Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 
 /// <summary>
 /// Money a customer hands the till against their tab: cash into the drawer,

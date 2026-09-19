@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.API.Application.Queries;
+namespace Ninja.Sales.API.Application.Queries;
 
 /// <summary>
 /// A ticket as the POS floor lists it.

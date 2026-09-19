@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Infrastructure;
+namespace Ninja.Catalog.API.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Catalog.API' project directory:

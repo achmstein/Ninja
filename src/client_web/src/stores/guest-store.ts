@@ -45,7 +45,7 @@ export const useGuestStore = create<GuestState>()(
       setContact: (contact) => set({ contact }),
       clear: () => set({ guestId: null, contact: null }),
     }),
-    { name: 'chillax-guest' }
+    { name: 'ninja-guest' }
   )
 )
 

@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.BackgroundServices;
+﻿namespace Ninja.Ordering.API.BackgroundServices;
 
 /// <summary>
 /// Background service that periodically checks for pending (Submitted) orders

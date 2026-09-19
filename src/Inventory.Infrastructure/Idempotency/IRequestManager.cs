@@ -1,4 +1,4 @@
-﻿namespace Chillax.Inventory.Infrastructure.Idempotency;
+﻿namespace Ninja.Inventory.Infrastructure.Idempotency;
 
 public interface IRequestManager
 {

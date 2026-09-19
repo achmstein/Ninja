@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Domain.Events;
+namespace Ninja.Ordering.Domain.Events;
 
 /// <summary>
 /// Event used when an order passes the stock check and is ready for staff to

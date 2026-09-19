@@ -1,6 +1,6 @@
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.Infrastructure.EntityConfigurations;
+namespace Ninja.Sales.Infrastructure.EntityConfigurations;
 
 class ShiftEntityTypeConfiguration : IEntityTypeConfiguration<Shift>
 {

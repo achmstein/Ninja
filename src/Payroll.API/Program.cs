@@ -1,5 +1,5 @@
-using Chillax.Payroll.API.Apis;
-using Chillax.Payroll.API.Extensions;
+using Ninja.Payroll.API.Apis;
+using Ninja.Payroll.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

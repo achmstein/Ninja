@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.API.Application.Queries;
+namespace Ninja.Payroll.API.Application.Queries;
 
 public record PayTermsView(DateOnly EffectiveFrom, PayScheme Scheme, decimal Rate);
 

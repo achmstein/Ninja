@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
 /// <summary>
 /// One way time at a place can be charged: a code the segments refer to,

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Handler for assigning a customer to an order after it was placed.

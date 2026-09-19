@@ -1,4 +1,4 @@
-﻿namespace Chillax.Finance.Infrastructure;
+﻿namespace Ninja.Finance.Infrastructure;
 
 static class MediatorExtension
 {

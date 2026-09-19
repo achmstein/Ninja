@@ -1,17 +1,17 @@
 using System.Text.Json.Serialization;
-using Chillax.AI;
-using Chillax.Inventory.API.Application.Assist;
-using Chillax.Inventory.API.Application.IntegrationEvents.EventHandling;
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
-using Chillax.Inventory.API.Application.Queries;
-using Chillax.Inventory.API.Application.Services;
-using Chillax.Inventory.Infrastructure;
-using Chillax.Inventory.Infrastructure.Idempotency;
-using Chillax.Inventory.Infrastructure.Repositories;
-using Chillax.EventBus.Extensions;
+using Ninja.AI;
+using Ninja.Inventory.API.Application.Assist;
+using Ninja.Inventory.API.Application.IntegrationEvents.EventHandling;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.API.Application.Queries;
+using Ninja.Inventory.API.Application.Services;
+using Ninja.Inventory.Infrastructure;
+using Ninja.Inventory.Infrastructure.Idempotency;
+using Ninja.Inventory.Infrastructure.Repositories;
+using Ninja.EventBus.Extensions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Chillax.Inventory.API.Extensions;
+namespace Ninja.Inventory.API.Extensions;
 
 public static class Extensions
 {
@@ -68,7 +68,7 @@ public static class Extensions
         services.AddScoped<IRecipeRepository, RecipeRepository>();
         services.AddScoped<IPurchaseRepository, PurchaseRepository>();
         services.AddScoped<IStockCountRepository, StockCountRepository>();
-        services.AddScoped<Chillax.Inventory.Domain.AggregatesModel.TransferAggregate.ITransferRepository, TransferRepository>();
+        services.AddScoped<Ninja.Inventory.Domain.AggregatesModel.TransferAggregate.ITransferRepository, TransferRepository>();
         services.AddScoped<IStockLedger, StockLedger>();
         services.AddScoped<IStockPostingService, StockPostingService>();
         services.AddScoped<IRequestManager, RequestManager>();

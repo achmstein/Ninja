@@ -1,8 +1,8 @@
 ﻿#nullable enable
-namespace Chillax.Ordering.API.Application.Queries;
+namespace Ninja.Ordering.API.Application.Queries;
 
 using System.Linq.Expressions;
-using DomainOrder = Chillax.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
+using DomainOrder = Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
 
 /// <summary>
 /// Simplified order queries for cafe ordering system.

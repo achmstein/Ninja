@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
-using Chillax.Sales.Infrastructure;
+using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+using Ninja.Sales.Infrastructure;
 
-namespace Chillax.Sales.API.Application.Queries;
+namespace Ninja.Sales.API.Application.Queries;
 
 public interface ITicketQueries
 {

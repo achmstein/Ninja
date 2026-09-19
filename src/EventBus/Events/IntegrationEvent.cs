@@ -1,4 +1,4 @@
-﻿namespace Chillax.EventBus.Events;
+﻿namespace Ninja.EventBus.Events;
 
 public record IntegrationEvent
 {

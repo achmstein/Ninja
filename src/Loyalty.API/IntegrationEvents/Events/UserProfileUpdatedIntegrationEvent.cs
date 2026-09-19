@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Loyalty.API.IntegrationEvents.Events;
+namespace Ninja.Loyalty.API.IntegrationEvents.Events;
 
 public record UserProfileUpdatedIntegrationEvent(
     string UserId,

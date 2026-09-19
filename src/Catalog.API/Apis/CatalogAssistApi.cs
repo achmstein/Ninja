@@ -1,13 +1,13 @@
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Http;
-using Chillax.AI.Images;
-using Chillax.Catalog.API.Assist;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Http;
+using Ninja.AI.Images;
+using Ninja.Catalog.API.Assist;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Chillax.Catalog.API;
+namespace Ninja.Catalog.API;
 
 /// <summary>The assistant's endpoints on the catalog: proposals only, nothing here writes.</summary>
 public static class CatalogAssistApi
@@ -20,7 +20,7 @@ public static class CatalogAssistApi
             .WithDescription("Given a name in English or Arabic (or both), the assistant fills in the other language of the name and description, writes a description when asked, and suggests a category when asked. Nothing is saved (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         api.MapPost("/assist/customizations", SuggestCustomizations)
             .WithName("SuggestCustomizations")
@@ -28,7 +28,7 @@ public static class CatalogAssistApi
             .WithDescription("The assistant proposes the option groups (size, sugar, extras…) a menu item is ordered with, in the menu's own wording. The item is sent as the form has it, saved or not; groups it already has are left out. Nothing is saved: add the ones you want through the customization endpoints (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         api.MapPost("/assist/menu/scan", ScanMenu)
             .WithName("ScanMenu")
@@ -37,7 +37,7 @@ public static class CatalogAssistApi
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .DisableAntiforgery()
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         return api;
     }

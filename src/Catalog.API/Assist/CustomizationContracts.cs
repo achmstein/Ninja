@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// The assistant proposes the option groups a customer picks from when

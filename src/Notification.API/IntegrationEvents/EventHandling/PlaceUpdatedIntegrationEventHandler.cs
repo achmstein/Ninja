@@ -1,7 +1,7 @@
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Model;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.IntegrationEvents.EventHandling;
+namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Keeps Notification's projection of the places: an upsert keyed by place

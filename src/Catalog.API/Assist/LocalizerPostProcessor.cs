@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using Chillax.AI.Json;
+using Ninja.AI.Json;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// Decides what the assistant is asked to fill in, and turns its answer

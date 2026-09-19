@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>
 /// Catalog said every item is available: move the order from AwaitingValidation

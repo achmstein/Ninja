@@ -137,7 +137,7 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 # ...but not the end-to-end test project, whose folder name happens to match
-!tests/Chillax.E2E/
+!tests/Ninja.E2E/
 
 # TFS 2012 Local Workspace
 $tf/

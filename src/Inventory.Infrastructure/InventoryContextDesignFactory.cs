@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Chillax.Inventory.Infrastructure;
+namespace Ninja.Inventory.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating InventoryContext for EF migrations

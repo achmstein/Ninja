@@ -1,7 +1,7 @@
-using Chillax.Loyalty.API.IntegrationEvents.Events;
-using Chillax.Loyalty.API.Infrastructure;
+using Ninja.Loyalty.API.IntegrationEvents.Events;
+using Ninja.Loyalty.API.Infrastructure;
 
-namespace Chillax.Loyalty.API.IntegrationEvents.EventHandling;
+namespace Ninja.Loyalty.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A void undoes the sale — nothing was owed — so it undoes what the sale

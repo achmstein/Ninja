@@ -1,8 +1,8 @@
-namespace Chillax.Sales.UnitTests.Domain;
+namespace Ninja.Sales.UnitTests.Domain;
 
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
-using Chillax.Sales.Domain.Events;
-using Chillax.Sales.Domain.Exceptions;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.Events;
+using Ninja.Sales.Domain.Exceptions;
 
 [TestClass]
 public class ShiftAggregateTest

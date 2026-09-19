@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Domain.Seedwork;
+﻿namespace Ninja.Ordering.Domain.Seedwork;
 
 public interface IAggregateRoot { }
 

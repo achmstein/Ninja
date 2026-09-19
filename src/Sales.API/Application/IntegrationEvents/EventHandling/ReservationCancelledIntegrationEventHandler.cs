@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A session was cancelled rather than completed, so no time will ever land

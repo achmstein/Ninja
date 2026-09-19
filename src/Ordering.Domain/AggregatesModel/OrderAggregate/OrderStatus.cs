@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+namespace Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
 /// Order status for cafe orders.

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Catalog's answer: every item is available, and the promo code — if the

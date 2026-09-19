@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.EventHandling;
+namespace Ninja.Catalog.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Applies an Inventory option stock-out (or its end) to the branch's

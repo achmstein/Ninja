@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.EventBus.Extensions;
+using Ninja.EventBus.Extensions;
 
-namespace Chillax.Payroll.API.Application.Behaviors;
+namespace Ninja.Payroll.API.Application.Behaviors;
 
 /// <summary>
 /// Every command runs inside <see cref="PayrollTransaction"/>: one transaction

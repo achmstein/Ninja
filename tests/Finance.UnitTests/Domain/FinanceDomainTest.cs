@@ -1,10 +1,10 @@
-namespace Chillax.Finance.UnitTests.Domain;
+namespace Ninja.Finance.UnitTests.Domain;
 
-using Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
-using Chillax.Finance.Domain.AggregatesModel.PartnerAggregate;
-using Chillax.Finance.Domain.AggregatesModel.SupplierAggregate;
-using Chillax.Finance.Domain.Exceptions;
-using Chillax.Finance.Domain.SeedWork;
+using Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
+using Ninja.Finance.Domain.AggregatesModel.PartnerAggregate;
+using Ninja.Finance.Domain.AggregatesModel.SupplierAggregate;
+using Ninja.Finance.Domain.Exceptions;
+using Ninja.Finance.Domain.SeedWork;
 
 [TestClass]
 public class FinanceDomainTest

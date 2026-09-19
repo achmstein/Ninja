@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record AddCashMovementCommand(
     int ShiftId,

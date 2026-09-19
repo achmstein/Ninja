@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.Events;
+using Ninja.Sales.Domain.Events;
 
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// Ticket aggregate root — the open check for one visit: a room session, a

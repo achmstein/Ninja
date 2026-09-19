@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
 /// <summary>What one refund gave back against one order.</summary>
 public record OrderRefund(int OrderNumber, decimal Amount);

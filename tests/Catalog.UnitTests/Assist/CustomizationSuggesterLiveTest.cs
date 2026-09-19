@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Chillax.AI.Json;
-using Chillax.Catalog.API.Assist;
-using Chillax.Catalog.API.Model;
+using Ninja.AI.Json;
+using Ninja.Catalog.API.Assist;
+using Ninja.Catalog.API.Model;
 
 namespace Catalog.UnitTests.Assist;
 

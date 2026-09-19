@@ -1,12 +1,12 @@
-using Chillax.Identity.API;
-using Chillax.Identity.API.Directory;
+using Ninja.Identity.API;
+using Ninja.Identity.API.Directory;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Chillax.EventBus.Abstractions;
-using Chillax.Identity.API.IntegrationEvents;
-using Chillax.ServiceDefaults;
+using Ninja.EventBus.Abstractions;
+using Ninja.Identity.API.IntegrationEvents;
+using Ninja.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 

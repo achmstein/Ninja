@@ -1,3 +1,3 @@
 global using MediatR;
-global using Chillax.Spaces.Domain.SeedWork;
-global using Chillax.Spaces.Domain.Exceptions;
+global using Ninja.Spaces.Domain.SeedWork;
+global using Ninja.Spaces.Domain.Exceptions;

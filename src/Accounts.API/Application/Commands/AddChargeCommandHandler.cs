@@ -1,9 +1,9 @@
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.Domain.Exceptions;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Domain.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace Chillax.Accounts.API.Application.Commands;
+namespace Ninja.Accounts.API.Application.Commands;
 
 public class AddChargeCommandHandler : IRequestHandler<AddChargeCommand, bool>
 {

@@ -1,4 +1,4 @@
-﻿namespace Chillax.Catalog.API.Infrastructure.Exceptions;
+﻿namespace Ninja.Catalog.API.Infrastructure.Exceptions;
 
 /// <summary>
 /// Exception type for app exceptions

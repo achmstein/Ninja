@@ -1,6 +1,6 @@
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.Spaces.Domain.SeedWork;
 
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 /// <summary>
 /// LEGACY(places): TableViewModel, the old /api/tables table shape — remove when every till and customer app is on /api/places and /api/stays.

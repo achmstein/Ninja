@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.API.Application.Services;
+namespace Ninja.Finance.API.Application.Services;
 
 /// <summary>
 /// Posts the month's recurring bills once their day has come. Each posted

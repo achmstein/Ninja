@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+﻿namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 // Integration Events notes:
 // An Event is “something that has happened in the past”, therefore its name has to be

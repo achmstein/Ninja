@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Chillax.Finance.Infrastructure;
+namespace Ninja.Finance.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating FinanceContext for EF migrations

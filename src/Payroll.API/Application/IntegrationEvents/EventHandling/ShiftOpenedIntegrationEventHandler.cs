@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Payroll.API.Application.IntegrationEvents.Events;
-using Chillax.Payroll.API.Application.Services;
+using Ninja.EventBus.Abstractions;
+using Ninja.Payroll.API.Application.IntegrationEvents.Events;
+using Ninja.Payroll.API.Application.Services;
 
-namespace Chillax.Payroll.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Payroll.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A cashier who opens the drawer is at work: their day is marked Present

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.AttendanceAggregate;
 
 public interface IAttendanceRepository : IRepository<AttendanceDay>
 {

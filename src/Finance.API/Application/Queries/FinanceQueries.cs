@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.Infrastructure;
+using Ninja.Finance.Infrastructure;
 
-namespace Chillax.Finance.API.Application.Queries;
+namespace Ninja.Finance.API.Application.Queries;
 
 public interface IFinanceQueries
 {

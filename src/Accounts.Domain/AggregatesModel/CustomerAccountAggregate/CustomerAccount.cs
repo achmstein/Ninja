@@ -1,7 +1,7 @@
-using Chillax.Accounts.Domain.Exceptions;
-using Chillax.Accounts.Domain.SeedWork;
+using Ninja.Accounts.Domain.Exceptions;
+using Ninja.Accounts.Domain.SeedWork;
 
-namespace Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+namespace Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
 
 public class CustomerAccount : Entity, IAggregateRoot
 {

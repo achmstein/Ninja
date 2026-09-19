@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.PurchaseAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.PurchaseAggregate;
 
 /// <summary>
 /// Stock received into a branch: who it came from, what it cost, line by

@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Loyalty HTTP API",
+    "title": "Ninja - Loyalty HTTP API",
     "description": "The Loyalty Microservice HTTP API for managing customer loyalty points and rewards",
     "version": "1.0"
   },

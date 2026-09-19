@@ -1,4 +1,4 @@
-﻿namespace Chillax.Payroll.Infrastructure.Idempotency;
+﻿namespace Ninja.Payroll.Infrastructure.Idempotency;
 
 public class RequestManager : IRequestManager
 {

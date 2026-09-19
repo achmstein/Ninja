@@ -1,4 +1,4 @@
-﻿namespace Chillax.Payroll.Infrastructure;
+﻿namespace Ninja.Payroll.Infrastructure;
 
 static class MediatorExtension
 {

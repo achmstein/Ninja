@@ -2,7 +2,7 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace Chillax.Ordering.API.Extensions;
+namespace Ninja.Ordering.API.Extensions;
 
 /// <summary>
 /// Rate limiting for order creation.

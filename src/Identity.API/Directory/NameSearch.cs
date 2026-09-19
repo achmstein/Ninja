@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Chillax.Identity.API.Directory;
+namespace Ninja.Identity.API.Directory;
 
 /// <summary>
 /// How a cashier's typing is matched against a customer's name: the way

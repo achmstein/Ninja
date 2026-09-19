@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents;
+namespace Ninja.Sales.API.Application.IntegrationEvents;
 
 /// <summary>
 /// The outbox. An integration event is written to the event log inside the

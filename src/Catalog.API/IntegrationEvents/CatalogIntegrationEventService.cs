@@ -1,4 +1,4 @@
-﻿namespace Chillax.Catalog.API.IntegrationEvents;
+﻿namespace Ninja.Catalog.API.IntegrationEvents;
 
 public sealed class CatalogIntegrationEventService(ILogger<CatalogIntegrationEventService> logger,
     IEventBus eventBus,

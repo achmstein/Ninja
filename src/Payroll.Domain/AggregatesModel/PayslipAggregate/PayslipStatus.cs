@@ -1,4 +1,4 @@
-namespace Chillax.Payroll.Domain.AggregatesModel.PayslipAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.PayslipAggregate;
 
 public enum PayslipStatus
 {

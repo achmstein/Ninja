@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// What one rate option of a stay cost, as Spaces settled it: the line the

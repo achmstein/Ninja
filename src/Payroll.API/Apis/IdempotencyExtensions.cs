@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Payroll.API.Application.Commands;
+using Ninja.Payroll.API.Application.Commands;
 
-namespace Chillax.Payroll.API.Apis;
+namespace Ninja.Payroll.API.Apis;
 
 public static class IdempotencyExtensions
 {

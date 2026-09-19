@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Infrastructure.Repositories;
+namespace Ninja.Inventory.Infrastructure.Repositories;
 
 public class StockItemRepository(InventoryContext context) : IStockItemRepository
 {

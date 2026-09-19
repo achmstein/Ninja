@@ -1,4 +1,4 @@
-namespace Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.AttendanceAggregate;
 
 /// <summary>
 /// How a day was marked. <see cref="DayOff"/> is an agreed rest day; it is

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 public record PaginationRequest(
     [property: Description("Number of items to return in a single page of results")]

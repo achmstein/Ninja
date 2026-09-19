@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Chillax.Loyalty.API.Model;
+namespace Ninja.Loyalty.API.Model;
 
 /// <summary>
 /// Represents a customer's loyalty account

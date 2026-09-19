@@ -1,6 +1,6 @@
-namespace Chillax.Ordering.API.Application.Commands;
+namespace Ninja.Ordering.API.Application.Commands;
 
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
 /// <summary>
 /// Handler for creating cafe orders.

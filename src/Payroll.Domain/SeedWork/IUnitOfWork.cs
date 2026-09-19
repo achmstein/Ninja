@@ -1,4 +1,4 @@
-﻿namespace Chillax.Payroll.Domain.SeedWork;
+﻿namespace Ninja.Payroll.Domain.SeedWork;
 
 public interface IUnitOfWork : IDisposable
 {

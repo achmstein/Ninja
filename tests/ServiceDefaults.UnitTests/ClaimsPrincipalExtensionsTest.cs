@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Chillax.ServiceDefaults;
+using Ninja.ServiceDefaults;
 
 namespace ServiceDefaults.UnitTests;
 

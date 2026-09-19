@@ -1,4 +1,4 @@
-namespace Chillax.Loyalty.API.IntegrationEvents.Events;
+namespace Ninja.Loyalty.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the void Sales announces for an open ticket. Nothing was

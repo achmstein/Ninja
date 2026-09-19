@@ -85,7 +85,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'dotnet run --project src/Chillax.AppHost/Chillax.AppHost.csproj',
+    command: 'dotnet run --project src/Ninja.AppHost/Ninja.AppHost.csproj',
     url: 'http://localhost:5045',
     reuseExistingServer: !process.env.CI,
     stderr: 'pipe',

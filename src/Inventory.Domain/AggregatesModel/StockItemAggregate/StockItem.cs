@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.StockItemAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.StockItemAggregate;
 
 /// <summary>
 /// Something the storeroom holds and counts: an ingredient (milk, beans, cups)

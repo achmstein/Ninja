@@ -1,4 +1,4 @@
-namespace Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 /// <summary>
 /// What kind of visit the ticket bills. Decides how it opens and closes:

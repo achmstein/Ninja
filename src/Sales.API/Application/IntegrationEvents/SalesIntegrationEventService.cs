@@ -1,8 +1,8 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Events;
-using Chillax.Sales.Infrastructure;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
+using Ninja.Sales.Infrastructure;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents;
+namespace Ninja.Sales.API.Application.IntegrationEvents;
 
 /// <summary>
 /// Same outbox as Ordering's, over the Sales context: the event log shares

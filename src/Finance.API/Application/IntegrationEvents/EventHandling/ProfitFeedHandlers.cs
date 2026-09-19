@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.EventBus.Abstractions;
-using Chillax.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.EventBus.Abstractions;
+using Ninja.Finance.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The profit projection's feeds. Each handler writes one fact keyed on

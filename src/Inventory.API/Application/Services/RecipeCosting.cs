@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.Inventory.API.Application.Queries;
 
-namespace Chillax.Inventory.API.Application.Services;
+namespace Ninja.Inventory.API.Application.Services;
 
 /// <summary>
 /// What one sale of a menu item costs the branch in ingredients, at the

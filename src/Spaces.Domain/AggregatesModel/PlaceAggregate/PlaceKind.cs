@@ -1,4 +1,4 @@
-namespace Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+namespace Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
 /// <summary>
 /// What a place is, for icons and words. What it *does* comes from its

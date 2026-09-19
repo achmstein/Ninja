@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.API.Application.Assist;
-using Chillax.Finance.API.Application.Queries;
-using Chillax.Finance.Domain.SeedWork;
+using Ninja.Finance.API.Application.Assist;
+using Ninja.Finance.API.Application.Queries;
+using Ninja.Finance.Domain.SeedWork;
 
 namespace Finance.UnitTests.Application;
 

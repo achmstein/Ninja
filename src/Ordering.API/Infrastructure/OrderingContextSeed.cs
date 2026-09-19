@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Infrastructure;
+﻿namespace Ninja.Ordering.API.Infrastructure;
 
 /// <summary>
 /// Simplified ordering context seed for cafe.

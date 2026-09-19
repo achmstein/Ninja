@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
-using Chillax.Loyalty.API.IntegrationEvents.Events;
-using Chillax.Loyalty.API.IntegrationEvents.EventHandling;
+using Ninja.Loyalty.API.IntegrationEvents.Events;
+using Ninja.Loyalty.API.IntegrationEvents.EventHandling;
 
-namespace Chillax.Loyalty.API.Extensions;
+namespace Ninja.Loyalty.API.Extensions;
 
 public static class Extensions
 {

@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/chillax
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ninja
 
 jobs:
   detect-changes:
@@ -76,7 +76,7 @@ jobs:
             branch:
               - 'src/Branch.API/**'
             shared:
-              - 'src/Chillax.ServiceDefaults/**'
+              - 'src/Ninja.ServiceDefaults/**'
               - 'src/EventBus/**'
               - 'src/EventBusRabbitMQ/**'
               - 'src/IntegrationEventLogEF/**'

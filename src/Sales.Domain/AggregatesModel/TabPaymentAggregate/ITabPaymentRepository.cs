@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+namespace Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 
 public interface ITabPaymentRepository : IRepository<TabPayment>
 {

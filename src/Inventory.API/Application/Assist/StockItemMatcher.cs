@@ -1,7 +1,7 @@
-using Chillax.AI.Text;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI.Text;
+using Ninja.Inventory.API.Application.Queries;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Finds the stock items that look like a receipt line, so the review

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>
 /// The owner sets how a branch's menu prices become the bill. Rates are

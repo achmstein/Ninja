@@ -1,9 +1,9 @@
-namespace Chillax.Sales.UnitTests.Domain;
+namespace Ninja.Sales.UnitTests.Domain;
 
-using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
-using Chillax.Sales.Domain.Events;
-using Chillax.Sales.Domain.Exceptions;
-using Chillax.Sales.Domain.SeedWork;
+using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
+using Ninja.Sales.Domain.Events;
+using Ninja.Sales.Domain.Exceptions;
+using Ninja.Sales.Domain.SeedWork;
 
 [TestClass]
 public class TicketAggregateTest

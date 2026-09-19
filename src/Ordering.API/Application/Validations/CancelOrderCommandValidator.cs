@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Validations;
+﻿namespace Ninja.Ordering.API.Application.Validations;
 
 public class CancelOrderCommandValidator : AbstractValidator<CancelOrderCommand>
 {

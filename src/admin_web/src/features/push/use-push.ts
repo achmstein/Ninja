@@ -6,7 +6,7 @@ import { ensurePushToken, pushConfigured } from '@/lib/push'
 // Remembered per browser: this device opted in. The subscription itself
 // lives in Notification.API, keyed on the user; the flag only says whether
 // to refresh it on the next load.
-const KEY = 'chillax-admin-push'
+const KEY = 'ninja-admin-push'
 const optedIn = {
   get(): boolean {
     try {

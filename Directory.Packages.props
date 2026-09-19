@@ -98,7 +98,7 @@
     <PackageVersion Include="Scalar.AspNetCore" Version="2.8.6" />
     <!-- Before license change -->
     <PackageVersion Include="MediatR" Version="13.0.0" />
-    <!-- End-to-end harness (tests/Chillax.E2E) and static contract tests (tests/Chillax.Contracts.Tests) -->
+    <!-- End-to-end harness (tests/Ninja.E2E) and static contract tests (tests/Ninja.Contracts.Tests) -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="$(AspnetVersion)" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.1.2" />

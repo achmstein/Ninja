@@ -8,7 +8,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/Branch.API/Branch.API.csproj", "Branch.API/"]
 COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 COPY ["src/Shared/", "Shared/"]
 
 # Restore dependencies
@@ -18,7 +18,7 @@ RUN dotnet restore "Branch.API/Branch.API.csproj"
 COPY ["src/Branch.API/", "Branch.API/"]
 COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 
 # Build
 WORKDIR /src/Branch.API

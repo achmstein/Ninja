@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.API.Application.Queries;
+namespace Ninja.Sales.API.Application.Queries;
 
 /// <summary>
 /// A shift with its drawer math — the X report while open, the Z report once

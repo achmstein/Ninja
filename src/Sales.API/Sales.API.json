@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Sales HTTP API",
+    "title": "Ninja - Sales HTTP API",
     "description": "The Sales Microservice HTTP API for POS tickets, payments and receipts",
     "version": "1.0"
   },

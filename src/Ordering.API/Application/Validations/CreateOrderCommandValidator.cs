@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.API.Application.Validations;
+namespace Ninja.Ordering.API.Application.Validations;
 
 /// <summary>
 /// Simplified validator for cafe orders.

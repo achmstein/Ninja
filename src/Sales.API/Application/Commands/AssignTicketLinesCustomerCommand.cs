@@ -1,6 +1,6 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-namespace Chillax.Sales.API.Application.Commands;
+using Ninja.Sales.Infrastructure.Idempotency;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>
 /// Name the customer on a chosen set of lines. Sales-only: it is the snapshot

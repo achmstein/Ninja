@@ -1,10 +1,10 @@
-namespace Chillax.Inventory.UnitTests.Domain;
+namespace Ninja.Inventory.UnitTests.Domain;
 
-using Chillax.Inventory.Domain.AggregatesModel.PurchaseAggregate;
-using Chillax.Inventory.Domain.AggregatesModel.StockCountAggregate;
-using Chillax.Inventory.Domain.AggregatesModel.StockItemAggregate;
-using Chillax.Inventory.Domain.Exceptions;
-using Chillax.Inventory.Domain.SeedWork;
+using Ninja.Inventory.Domain.AggregatesModel.PurchaseAggregate;
+using Ninja.Inventory.Domain.AggregatesModel.StockCountAggregate;
+using Ninja.Inventory.Domain.AggregatesModel.StockItemAggregate;
+using Ninja.Inventory.Domain.Exceptions;
+using Ninja.Inventory.Domain.SeedWork;
 
 [TestClass]
 public class DocumentsTest

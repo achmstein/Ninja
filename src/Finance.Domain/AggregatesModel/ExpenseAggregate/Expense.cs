@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 /// <summary>
 /// Money spent on something that is neither stock nor staff: rent, a

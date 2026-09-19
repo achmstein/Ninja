@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Payroll.API.Application.Services;
-using Chillax.Payroll.Infrastructure.Idempotency;
+using Ninja.Payroll.API.Application.Services;
+using Ninja.Payroll.Infrastructure.Idempotency;
 
-namespace Chillax.Payroll.API.Application.Commands;
+namespace Ninja.Payroll.API.Application.Commands;
 
 /// <summary>Add someone to the register, with the terms they start on.</summary>
 public record HireEmployeeCommand(

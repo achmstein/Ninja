@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Domain.Seedwork;
+namespace Ninja.Ordering.Domain.Seedwork;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using Chillax.Catalog.API.Dtos;
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Dtos;
+using Ninja.Catalog.API.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Catalog.API;
+namespace Ninja.Catalog.API;
 
 public static class CatalogApi
 {

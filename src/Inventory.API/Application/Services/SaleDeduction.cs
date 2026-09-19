@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Inventory.API.Application.IntegrationEvents.Events;
+using Ninja.Inventory.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Inventory.API.Application.Services;
+namespace Ninja.Inventory.API.Application.Services;
 
 /// <summary>
 /// Turns a confirmed order's lines into the movements it costs: each line

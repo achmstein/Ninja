@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.LedgerAggregate;
 
 public interface ILedgerRepository : IRepository<LedgerEntry>
 {

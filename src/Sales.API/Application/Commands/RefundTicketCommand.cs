@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 public record RefundLineDto(int LineId, decimal Qty);
 
@@ -23,7 +23,7 @@ public record RefundTicketCommand(
 
 public class RefundTicketCommandHandler(
     ITicketRepository ticketRepository,
-    Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
+    Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
     ISalesIntegrationEventService integrationEvents,
     ILogger<RefundTicketCommandHandler> logger) : IRequestHandler<RefundTicketCommand, RefundResult>
 {

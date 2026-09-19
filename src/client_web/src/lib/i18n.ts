@@ -134,7 +134,7 @@ export const useLanguage = create<LanguageState>()(
       },
     }),
     {
-      name: 'chillax-language',
+      name: 'ninja-language',
       onRehydrateStorage: () => (state) => {
         applyDirection(state?.language ?? 'ar')
       },

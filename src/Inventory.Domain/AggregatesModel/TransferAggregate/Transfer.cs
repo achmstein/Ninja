@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.TransferAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.TransferAggregate;
 
 /// <summary>
 /// Stock moved from one branch to another, in one go: each line leaves the

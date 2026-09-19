@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Domain.AggregatesModel.AttendanceAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.AttendanceAggregate;
 
 /// <summary>
 /// One person, one day, as the manager marked it. Keyed by employee and

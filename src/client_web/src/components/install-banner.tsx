@@ -6,7 +6,7 @@ import { useInstallPrompt } from '@/lib/use-install-prompt'
 import { Button } from '@/components/ui/button'
 import { InstallDialog } from './install-dialog'
 
-const DISMISSED_KEY = 'chillax-install-dismissed'
+const DISMISSED_KEY = 'ninja-install-dismissed'
 
 function readDismissed(): boolean {
   try {

@@ -1,6 +1,6 @@
-namespace Chillax.Sales.UnitTests.Domain;
+namespace Ninja.Sales.UnitTests.Domain;
 
-using Chillax.Sales.Domain.AggregatesModel.TicketAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 [TestClass]
 public class PaymentTenderTest

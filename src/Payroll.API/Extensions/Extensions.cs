@@ -1,14 +1,14 @@
 using System.Text.Json.Serialization;
-using Chillax.Payroll.API.Application.IntegrationEvents.EventHandling;
-using Chillax.Payroll.API.Application.IntegrationEvents.Events;
-using Chillax.Payroll.API.Application.Queries;
-using Chillax.Payroll.API.Application.Services;
-using Chillax.Payroll.Infrastructure;
-using Chillax.Payroll.Infrastructure.Idempotency;
-using Chillax.Payroll.Infrastructure.Repositories;
-using Chillax.EventBus.Extensions;
+using Ninja.Payroll.API.Application.IntegrationEvents.EventHandling;
+using Ninja.Payroll.API.Application.IntegrationEvents.Events;
+using Ninja.Payroll.API.Application.Queries;
+using Ninja.Payroll.API.Application.Services;
+using Ninja.Payroll.Infrastructure;
+using Ninja.Payroll.Infrastructure.Idempotency;
+using Ninja.Payroll.Infrastructure.Repositories;
+using Ninja.EventBus.Extensions;
 
-namespace Chillax.Payroll.API.Extensions;
+namespace Ninja.Payroll.API.Extensions;
 
 public static class Extensions
 {

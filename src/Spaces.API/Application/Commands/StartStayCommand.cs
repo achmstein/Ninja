@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>The till starts the clock on a held stay. OptionCode null: the tariff's first option.</summary>
 public record StartStayCommand(int StayId, string? OptionCode = null) : IRequest<bool>;

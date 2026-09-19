@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Domain.SeedWork;
+﻿namespace Ninja.Ordering.Domain.SeedWork;
 
 public abstract class ValueObject
 {

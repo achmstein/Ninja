@@ -1,8 +1,8 @@
-using Chillax.Sales.API.Application.IntegrationEvents.Events;
-using Chillax.Sales.API.Application.Queries;
-using Chillax.Sales.Domain.Events;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
+using Ninja.Sales.API.Application.Queries;
+using Ninja.Sales.Domain.Events;
 
-namespace Chillax.Sales.API.Application.DomainEventHandlers;
+namespace Ninja.Sales.API.Application.DomainEventHandlers;
 
 /// <summary>
 /// Closing the shift closes the branch: same outbox path as the open, so the

@@ -8,7 +8,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/Notification.API/Notification.API.csproj", "Notification.API/"]
 COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 COPY ["src/Shared/", "Shared/"]
 
 # Restore dependencies
@@ -18,7 +18,7 @@ RUN dotnet restore "Notification.API/Notification.API.csproj"
 COPY ["src/Notification.API/", "Notification.API/"]
 COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
-COPY ["src/Chillax.ServiceDefaults/", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 
 # Build
 WORKDIR /src/Notification.API

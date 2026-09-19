@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.IntegrationEvents.Events;
+namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Integration event received when an order is confirmed, containing customization data

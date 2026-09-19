@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
 
 /// <summary>
 /// One line of a recipe slot. Lines sharing a <see cref="Slot"/> describe

@@ -1,13 +1,13 @@
 ﻿using System.Text.Json.Serialization;
-using Chillax.Accounts.API.Application.Queries;
-using Chillax.Accounts.API.IntegrationEvents.Events;
-using Chillax.Accounts.API.IntegrationEvents.EventHandling;
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.Infrastructure;
-using Chillax.Accounts.Infrastructure.Repositories;
-using Chillax.ServiceDefaults;
+using Ninja.Accounts.API.Application.Queries;
+using Ninja.Accounts.API.IntegrationEvents.Events;
+using Ninja.Accounts.API.IntegrationEvents.EventHandling;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Infrastructure;
+using Ninja.Accounts.Infrastructure.Repositories;
+using Ninja.ServiceDefaults;
 
-namespace Chillax.Accounts.API.Extensions;
+namespace Ninja.Accounts.API.Extensions;
 
 public static class Extensions
 {

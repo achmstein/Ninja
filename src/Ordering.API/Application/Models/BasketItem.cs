@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.API.Application.Models;
+namespace Ninja.Ordering.API.Application.Models;
 
 /// <summary>
 /// Represents a basket item received from the Basket API.

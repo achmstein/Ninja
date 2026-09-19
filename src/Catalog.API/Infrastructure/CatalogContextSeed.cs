@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 
-namespace Chillax.Catalog.API.Infrastructure;
+namespace Ninja.Catalog.API.Infrastructure;
 
 public partial class CatalogContextSeed(
     IWebHostEnvironment env,

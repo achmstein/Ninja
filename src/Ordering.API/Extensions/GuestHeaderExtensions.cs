@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Extensions;
+namespace Ninja.Ordering.API.Extensions;
 
 /// <summary>
 /// Reads the guest id the customer web app attaches to every request.

@@ -1,11 +1,11 @@
 #nullable enable
-using Chillax.Sales.API.Application.Commands;
-using Chillax.Sales.API.Application.Queries;
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.API.Application.Commands;
+using Ninja.Sales.API.Application.Queries;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Sales.API.Apis;
+namespace Ninja.Sales.API.Apis;
 
 public static class ShiftsApi
 {

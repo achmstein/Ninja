@@ -1,4 +1,4 @@
-namespace Chillax.Notification.API.Model;
+namespace Ninja.Notification.API.Model;
 
 /// <summary>
 /// Notification's own copy of a Spaces place, kept up to date from

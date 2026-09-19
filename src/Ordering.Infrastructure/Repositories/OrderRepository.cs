@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.Infrastructure.Repositories;
+﻿namespace Ninja.Ordering.Infrastructure.Repositories;
 
 public class OrderRepository
     : IOrderRepository

@@ -1,14 +1,14 @@
-﻿namespace Chillax.Ordering.UnitTests.Application;
+﻿namespace Ninja.Ordering.UnitTests.Application;
 
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Chillax.Ordering.API.Application.Models;
-using Chillax.Ordering.API.Application.Queries;
-using Chillax.Ordering.API.Extensions;
-using Chillax.ServiceDefaults;
-using Chillax.ServiceDefaults.Authorization;
-using Order = Chillax.Ordering.API.Application.Queries.Order;
+using Ninja.Ordering.API.Application.Models;
+using Ninja.Ordering.API.Application.Queries;
+using Ninja.Ordering.API.Extensions;
+using Ninja.ServiceDefaults;
+using Ninja.ServiceDefaults.Authorization;
+using Order = Ninja.Ordering.API.Application.Queries.Order;
 using NSubstitute.ExceptionExtensions;
 
 [TestClass]

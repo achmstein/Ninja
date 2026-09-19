@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>The till stops the clock; the cost is settled and Sales gets the bill.</summary>
 public record EndStayCommand(int StayId) : IRequest<bool>;

@@ -1,9 +1,9 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Events;
-using Chillax.IntegrationEventLogEF.Services;
-using Chillax.Spaces.Infrastructure;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
+using Ninja.IntegrationEventLogEF.Services;
+using Ninja.Spaces.Infrastructure;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents;
+namespace Ninja.Spaces.API.Application.IntegrationEvents;
 
 /// <summary>
 /// Same outbox as Sales', over the Spaces context: the event log shares the

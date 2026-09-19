@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Chillax.Sales.Infrastructure;
+namespace Ninja.Sales.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating SalesContext for EF migrations

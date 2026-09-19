@@ -1,4 +1,4 @@
-using Chillax.ServiceDefaults;
+using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http;
 
 namespace ServiceDefaults.UnitTests;

@@ -1,4 +1,4 @@
-namespace Chillax.Inventory.Domain.AggregatesModel.LedgerAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.LedgerAggregate;
 
 /// <summary>Why stock moved. Stored as text.</summary>
 public enum MovementType

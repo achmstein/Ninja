@@ -1,8 +1,8 @@
 ﻿global using System.Net.Sockets;
 global using System.Text;
 global using System.Text.Json;
-global using Chillax.EventBus.Abstractions;
-global using Chillax.EventBus.Events;
+global using Ninja.EventBus.Abstractions;
+global using Ninja.EventBus.Events;
 global using Microsoft.Extensions.Logging;
 global using Polly;
 global using RabbitMQ.Client;

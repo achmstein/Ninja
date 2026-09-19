@@ -1,4 +1,4 @@
-namespace Chillax.Loyalty.API.IntegrationEvents.Events;
+namespace Ninja.Loyalty.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the credit note Sales issues against a settled ticket.

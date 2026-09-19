@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Chillax.EventBus.Abstractions;
-using Chillax.EventBus.Extensions;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

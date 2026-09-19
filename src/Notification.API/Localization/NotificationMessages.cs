@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using Chillax.Notification.API.IntegrationEvents.Events;
-using Chillax.Notification.API.Model;
+using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.Localization;
+namespace Ninja.Notification.API.Localization;
 
 /// <summary>
 /// Localized notification messages for FCM notifications.

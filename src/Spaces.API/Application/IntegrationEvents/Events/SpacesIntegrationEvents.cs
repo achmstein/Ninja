@@ -1,7 +1,7 @@
-using Chillax.EventBus.Events;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.EventBus.Events;
+using Ninja.Spaces.Domain.SeedWork;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents.Events;
+namespace Ninja.Spaces.API.Application.IntegrationEvents.Events;
 
 // ---------------------------------------------------------------------------
 // LEGACY(places): the old RoomId/RoomName, PlayerMode and Single/Multi fields on every event below — remove when every till and customer app is on /api/places and /api/stays.

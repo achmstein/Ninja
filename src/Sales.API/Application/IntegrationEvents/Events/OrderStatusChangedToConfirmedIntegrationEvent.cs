@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Sales.API.Application.IntegrationEvents.Events;
+namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Ordering publishes when an order is confirmed.

@@ -1,9 +1,9 @@
-using Chillax.EventBus.Abstractions;
-using Chillax.Spaces.API.Application.IntegrationEvents.Events;
-using Chillax.Spaces.Infrastructure.Projections;
-using SpacesContext = Chillax.Spaces.Infrastructure.SpacesContext;
+using Ninja.EventBus.Abstractions;
+using Ninja.Spaces.API.Application.IntegrationEvents.Events;
+using Ninja.Spaces.Infrastructure.Projections;
+using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
 
-namespace Chillax.Spaces.API.Application.IntegrationEvents.EventHandling;
+namespace Ninja.Spaces.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// Keeps Spaces' projection of the branch flags: an upsert keyed by branch,

@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Inventory.Domain.AggregatesModel.TransferAggregate;
-using Chillax.Inventory.API.Application.Services;
-using Chillax.Inventory.Infrastructure;
+using Ninja.Inventory.Domain.AggregatesModel.TransferAggregate;
+using Ninja.Inventory.API.Application.Services;
+using Ninja.Inventory.Infrastructure;
 
-namespace Chillax.Inventory.API.Application.Queries;
+namespace Ninja.Inventory.API.Application.Queries;
 
 public interface IInventoryQueries
 {

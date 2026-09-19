@@ -1,8 +1,8 @@
 #nullable enable
-using Chillax.Payroll.Domain.AggregatesModel.EmployeeAggregate;
-using Chillax.Payroll.Domain.Services;
+using Ninja.Payroll.Domain.AggregatesModel.EmployeeAggregate;
+using Ninja.Payroll.Domain.Services;
 
-namespace Chillax.Payroll.Domain.AggregatesModel.PayslipAggregate;
+namespace Ninja.Payroll.Domain.AggregatesModel.PayslipAggregate;
 
 /// <summary>
 /// A period's statement for one employee, frozen from the ledger and the

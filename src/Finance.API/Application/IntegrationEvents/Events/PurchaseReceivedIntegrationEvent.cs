@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Finance.API.Application.IntegrationEvents.Events;
+namespace Ninja.Finance.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Received when Inventory books a delivery: an invoice on the supplier's

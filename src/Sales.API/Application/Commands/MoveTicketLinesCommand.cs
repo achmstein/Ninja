@@ -1,6 +1,6 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
-namespace Chillax.Sales.API.Application.Commands;
+using Ninja.Sales.Infrastructure.Idempotency;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
 // LEGACY(places): the old TableId/TableName from older tills — remove when every till and customer app is on /api/places and /api/stays.

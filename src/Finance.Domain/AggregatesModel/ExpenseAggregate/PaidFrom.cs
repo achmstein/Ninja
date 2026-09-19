@@ -1,4 +1,4 @@
-namespace Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
 /// <summary>Where the money came from: the drawer, the bank, or a partner's own pocket.</summary>
 public enum PaidFrom

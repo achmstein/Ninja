@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.API.Application.Queries;
+namespace Ninja.Ordering.API.Application.Queries;
 
 public record Orderitem
 {

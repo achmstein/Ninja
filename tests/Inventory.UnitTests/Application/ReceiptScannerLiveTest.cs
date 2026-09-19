@@ -1,10 +1,10 @@
 #nullable enable
 using System.IO;
 using System.Text.Json;
-using Chillax.AI.Json;
-using Chillax.Inventory.API.Application.Assist;
-using Chillax.Inventory.API.Application.Queries;
-using Chillax.Inventory.Domain.SeedWork;
+using Ninja.AI.Json;
+using Ninja.Inventory.API.Application.Assist;
+using Ninja.Inventory.API.Application.Queries;
+using Ninja.Inventory.Domain.SeedWork;
 using Microsoft.Extensions.AI;
 
 namespace Inventory.UnitTests.Application;

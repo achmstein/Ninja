@@ -1,9 +1,9 @@
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
-using Chillax.Spaces.Domain.SeedWork;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.SeedWork;
 using MediatR;
 
-namespace Chillax.Spaces.API.Application.Commands;
+namespace Ninja.Spaces.API.Application.Commands;
 
 /// <summary>A customer scanned a place's QR and joins the stay running there.</summary>
 public record JoinStayByPlaceCommand(int PlaceId, string CustomerId, string? CustomerName) : IRequest<JoinStayResult>;

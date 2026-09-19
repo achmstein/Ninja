@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Ordering.Domain.Seedwork;
+using Ninja.Ordering.Domain.Seedwork;
 
-namespace Chillax.Ordering.API.Application.IntegrationEvents.Events;
+namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Integration event sent when an order is confirmed by admin.

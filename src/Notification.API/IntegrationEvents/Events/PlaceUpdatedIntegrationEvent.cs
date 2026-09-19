@@ -1,6 +1,6 @@
-using Chillax.Notification.API.Model;
+using Ninja.Notification.API.Model;
 
-namespace Chillax.Notification.API.IntegrationEvents.Events;
+namespace Ninja.Notification.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the event Spaces publishes when a place is created,

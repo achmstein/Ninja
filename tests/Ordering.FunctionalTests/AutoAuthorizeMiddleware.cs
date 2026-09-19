@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.FunctionalTests;
+﻿namespace Ninja.Ordering.FunctionalTests;
 
 class AutoAuthorizeMiddleware
 {

@@ -1,7 +1,7 @@
-﻿using Chillax.Ordering.API.Application.IntegrationEvents;
-using Chillax.Ordering.Domain.AggregatesModel.OrderAggregate;
+﻿using Ninja.Ordering.API.Application.IntegrationEvents;
+using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 
-namespace Chillax.Ordering.UnitTests.Application;
+namespace Ninja.Ordering.UnitTests.Application;
 
 /// <summary>
 /// Unit tests for CreateOrderCommandHandler.

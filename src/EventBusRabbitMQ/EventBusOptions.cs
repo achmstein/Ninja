@@ -1,4 +1,4 @@
-﻿namespace Chillax.EventBusRabbitMQ;
+﻿namespace Ninja.EventBusRabbitMQ;
 
 public class EventBusOptions
 {

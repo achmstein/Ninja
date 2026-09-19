@@ -1,9 +1,9 @@
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// Fills in what a menu text is missing — the other language, a description
@@ -11,7 +11,7 @@ namespace Chillax.Catalog.API.Assist;
 /// speaks. One agent call per request; the answer is cleaned and checked by
 /// <see cref="LocalizerPostProcessor"/> before it leaves.
 /// </summary>
-public sealed class MenuLocalizer(IChillaxAgentFactory factory)
+public sealed class MenuLocalizer(INinjaAgentFactory factory)
 {
     public const string AgentKey = "menu-localizer";
 

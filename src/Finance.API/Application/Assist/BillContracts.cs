@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.API.Application.Assist;
+namespace Ninja.Finance.API.Application.Assist;
 
 /// <summary>
 /// What the assistant proposes from the photo of a bill. Nothing is

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.API.Application.Queries;
+namespace Ninja.Ordering.API.Application.Queries;
 
 public class BranchSettingsQueries(OrderingContext context) : IBranchSettingsQueries
 {

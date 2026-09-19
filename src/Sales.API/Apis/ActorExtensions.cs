@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.API.Apis;
+namespace Ninja.Sales.API.Apis;
 
 /// <summary>
 /// Who did it, as the till and the back office print it: the signed-in user's

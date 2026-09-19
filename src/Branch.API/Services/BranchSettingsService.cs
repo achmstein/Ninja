@@ -1,7 +1,7 @@
-using Chillax.Branch.API.IntegrationEvents;
-using Chillax.EventBus.Abstractions;
+using Ninja.Branch.API.IntegrationEvents;
+using Ninja.EventBus.Abstractions;
 
-namespace Chillax.Branch.API.Services;
+namespace Ninja.Branch.API.Services;
 
 /// <summary>
 /// The one place a branch's operational flags change — from the settings

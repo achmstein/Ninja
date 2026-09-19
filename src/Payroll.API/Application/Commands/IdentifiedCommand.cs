@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Payroll.Infrastructure.Idempotency;
+using Ninja.Payroll.Infrastructure.Idempotency;
 
-namespace Chillax.Payroll.API.Application.Commands;
+namespace Ninja.Payroll.API.Application.Commands;
 
 /// <summary>
 /// A command together with the client's request id. A till on café Wi-Fi

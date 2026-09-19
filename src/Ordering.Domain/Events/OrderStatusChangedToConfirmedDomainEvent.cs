@@ -1,4 +1,4 @@
-namespace Chillax.Ordering.Domain.Events;
+namespace Ninja.Ordering.Domain.Events;
 
 /// <summary>
 /// Event used when an order is confirmed by admin (ready for POS)

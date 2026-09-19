@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.API.Application.Commands;
+using Ninja.Finance.API.Application.Commands;
 
-namespace Chillax.Finance.API.Apis;
+namespace Ninja.Finance.API.Apis;
 
 public static class IdempotencyExtensions
 {

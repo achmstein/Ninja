@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Inventory.API.Application.IntegrationEvents.Events;
+namespace Ninja.Inventory.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// A stock item dropped to or below its reorder level at a branch, on this

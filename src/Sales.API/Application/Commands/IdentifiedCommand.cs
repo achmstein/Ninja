@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Infrastructure.Idempotency;
+using Ninja.Sales.Infrastructure.Idempotency;
 
-namespace Chillax.Sales.API.Application.Commands;
+namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>
 /// A command together with the client's request id. A till on café Wi-Fi

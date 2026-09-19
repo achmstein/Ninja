@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Chillax.Payroll.Infrastructure;
+namespace Ninja.Payroll.Infrastructure;
 
 /// <summary>
 /// Design-time factory for creating PayrollContext for EF migrations

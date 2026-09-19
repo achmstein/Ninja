@@ -1,4 +1,4 @@
-namespace Chillax.Inventory.Domain.Services;
+namespace Ninja.Inventory.Domain.Services;
 
 /// <summary>
 /// The crossings that matter, as pure rules over a before/after pair. A

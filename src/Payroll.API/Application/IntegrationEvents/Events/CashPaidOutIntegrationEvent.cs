@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Payroll.API.Application.IntegrationEvents.Events;
+namespace Ninja.Payroll.API.Application.IntegrationEvents.Events;
 
 /// <summary>
 /// Received when the till hands money to an employee: a wage or an

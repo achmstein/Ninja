@@ -1,5 +1,5 @@
-using Chillax.AI;
-using Chillax.Catalog.API.Assist;
+using Ninja.AI;
+using Ninja.Catalog.API.Assist;
 
 public static class Extensions
 {

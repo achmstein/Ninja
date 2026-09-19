@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.Infrastructure.Repositories;
+namespace Ninja.Sales.Infrastructure.Repositories;
 
 public class ShiftRepository : IShiftRepository
 {

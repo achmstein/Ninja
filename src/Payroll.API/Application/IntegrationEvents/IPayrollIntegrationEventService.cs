@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Payroll.API.Application.IntegrationEvents;
+namespace Ninja.Payroll.API.Application.IntegrationEvents;
 
 /// <summary>
 /// The outbox. An integration event is written to the event log inside the

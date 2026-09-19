@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF;
 
-namespace Chillax.Inventory.Infrastructure;
+namespace Ninja.Inventory.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Inventory.Infrastructure' project directory:

@@ -1,4 +1,4 @@
-# chillax_mobile
+# ninja_client
 
 A new Flutter project.
 

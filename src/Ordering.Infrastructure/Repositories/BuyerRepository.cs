@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Ordering.Infrastructure.Repositories;
+namespace Ninja.Ordering.Infrastructure.Repositories;
 
 public class BuyerRepository
     : IBuyerRepository

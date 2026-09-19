@@ -1,6 +1,6 @@
-using Chillax.Branch.API.Apis;
-using Chillax.Branch.API.Extensions;
-using Chillax.ServiceDefaults;
+using Ninja.Branch.API.Apis;
+using Ninja.Branch.API.Extensions;
+using Ninja.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 

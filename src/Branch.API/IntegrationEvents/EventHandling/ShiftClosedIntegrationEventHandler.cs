@@ -1,7 +1,7 @@
-using Chillax.Branch.API.Services;
-using Chillax.EventBus.Abstractions;
+using Ninja.Branch.API.Services;
+using Ninja.EventBus.Abstractions;
 
-namespace Chillax.Branch.API.IntegrationEvents.EventHandling;
+namespace Ninja.Branch.API.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// The shift closing is the branch closing: both flags go off.

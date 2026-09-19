@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.DomainEventHandlers;
+﻿namespace Ninja.Ordering.API.Application.DomainEventHandlers;
 
 public partial class OrderCancelledDomainEventHandler
                 : INotificationHandler<OrderCancelledDomainEvent>

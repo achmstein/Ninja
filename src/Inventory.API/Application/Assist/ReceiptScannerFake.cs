@@ -1,8 +1,8 @@
 using System.Text.Json;
-using Chillax.AI.Fake;
-using Chillax.AI.Json;
+using Ninja.AI.Fake;
+using Ninja.AI.Json;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// What the scanner answers under test, whatever the pixels: the first two

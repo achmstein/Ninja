@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.AI.Json;
-using Chillax.AI.Text;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI.Json;
+using Ninja.AI.Text;
+using Ninja.Inventory.API.Application.Queries;
 
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Turns what the model proposed into something the review sheet can

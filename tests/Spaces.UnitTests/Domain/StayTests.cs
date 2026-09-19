@@ -1,10 +1,10 @@
 using System.Reflection;
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Events;
-using Chillax.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Events;
+using Ninja.Spaces.Domain.Exceptions;
 
-namespace Chillax.Spaces.UnitTests.Domain;
+namespace Ninja.Spaces.UnitTests.Domain;
 
 [TestClass]
 public sealed class StayTests

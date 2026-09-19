@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Finance.Domain.AggregatesModel.ExpenseAggregate;
+using Ninja.Finance.Domain.AggregatesModel.ExpenseAggregate;
 
-namespace Chillax.Finance.Domain.AggregatesModel.PartnerAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.PartnerAggregate;
 
 /// <summary>
 /// An owner. Two at one branch, one at another: the branches they hold

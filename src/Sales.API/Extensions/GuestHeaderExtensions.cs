@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Sales.API.Extensions;
+namespace Ninja.Sales.API.Extensions;
 
 /// <summary>
 /// Reads the guest id the customer web app attaches to every request — the

@@ -1,14 +1,14 @@
 using System.ComponentModel;
-using Chillax.Spaces.API.Application.Queries;
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
-using Chillax.Spaces.Domain.AggregatesModel.StayAggregate;
-using Chillax.Spaces.Domain.Exceptions;
-using Chillax.Spaces.Domain.SeedWork;
-using Chillax.ServiceDefaults;
+using Ninja.Spaces.API.Application.Queries;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
+using Ninja.Spaces.Domain.Exceptions;
+using Ninja.Spaces.Domain.SeedWork;
+using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Chillax.Spaces.API.Apis;
+namespace Ninja.Spaces.API.Apis;
 
 /// <summary>
 /// LEGACY(places): the /api/tables alias routes — remove when every till and customer app is on /api/places and /api/stays.

@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.Domain.AggregatesModel.RecipeAggregate;
+namespace Ninja.Inventory.Domain.AggregatesModel.RecipeAggregate;
 
 /// <summary>
 /// What one unit of a menu item takes out of the storeroom, as slots: the

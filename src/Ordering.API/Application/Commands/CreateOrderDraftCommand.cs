@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Commands;
-using Chillax.Ordering.API.Application.Models;
+﻿namespace Ninja.Ordering.API.Application.Commands;
+using Ninja.Ordering.API.Application.Models;
 
 public record CreateOrderDraftCommand(string BuyerId, IEnumerable<BasketItem> Items) : IRequest<OrderDraftDTO>;

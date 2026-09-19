@@ -1,4 +1,4 @@
-namespace Chillax.Catalog.API.Infrastructure.EntityConfigurations;
+namespace Ninja.Catalog.API.Infrastructure.EntityConfigurations;
 
 class CatalogTypeEntityTypeConfiguration
     : IEntityTypeConfiguration<CatalogType>

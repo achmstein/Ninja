@@ -1,6 +1,6 @@
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 
-namespace Chillax.Catalog.API.IntegrationEvents.EventHandling;
+namespace Ninja.Catalog.API.IntegrationEvents.EventHandling;
 
 public class OrderConfirmedWithPreferencesIntegrationEventHandler(
     CatalogContext catalogContext,

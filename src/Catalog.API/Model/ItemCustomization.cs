@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Represents a customization group for a menu item (e.g., "Roasting", "Sugar Level", "Size")

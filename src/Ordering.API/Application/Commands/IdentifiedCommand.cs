@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Commands;
+﻿namespace Ninja.Ordering.API.Application.Commands;
 
 public class IdentifiedCommand<T, R> : IRequest<R>
     where T : IRequest<R>

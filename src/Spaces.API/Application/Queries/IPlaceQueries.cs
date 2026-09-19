@@ -1,6 +1,6 @@
-using Chillax.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
 
-namespace Chillax.Spaces.API.Application.Queries;
+namespace Ninja.Spaces.API.Application.Queries;
 
 public interface IPlaceQueries
 {

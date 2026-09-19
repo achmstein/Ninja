@@ -1,5 +1,5 @@
-using Chillax.Sales.API.Apis;
-using Chillax.Sales.API.Extensions;
+using Ninja.Sales.API.Apis;
+using Ninja.Sales.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

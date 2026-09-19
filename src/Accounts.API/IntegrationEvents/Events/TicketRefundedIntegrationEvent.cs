@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Accounts.API.IntegrationEvents.Events;
+namespace Ninja.Accounts.API.IntegrationEvents.Events;
 
 /// <summary>
 /// Consumer copy of the credit note Sales issues against a settled ticket

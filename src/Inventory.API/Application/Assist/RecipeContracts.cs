@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Inventory.API.Application.Assist;
+namespace Ninja.Inventory.API.Application.Assist;
 
 /// <summary>
 /// Menu items the back office wants tracked, as the menu page has them.

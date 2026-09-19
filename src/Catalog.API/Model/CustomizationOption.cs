@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Chillax.Catalog.API.Model;
+namespace Ninja.Catalog.API.Model;
 
 /// <summary>
 /// Represents a single option within a customization group (e.g., "Dark Roast", "Large", "No Sugar")

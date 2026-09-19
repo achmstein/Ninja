@@ -1,6 +1,6 @@
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 
-namespace Chillax.Sales.Domain.Events;
+namespace Ninja.Sales.Domain.Events;
 
 /// <summary>A wage or an advance left the drawer for a named employee.</summary>
 public record CashPaidOutToStaffDomainEvent(Shift Shift, CashMovement Movement) : INotification;

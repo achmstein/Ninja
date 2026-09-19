@@ -11,7 +11,7 @@ COPY ["src/Inventory.Infrastructure/Inventory.Infrastructure.csproj", "Inventory
 COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
 COPY ["src/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "IntegrationEventLogEF/"]
-COPY ["src/Chillax.ServiceDefaults/Chillax.ServiceDefaults.csproj", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 COPY ["src/Shared/", "Shared/"]
 
 # Restore dependencies
@@ -24,7 +24,7 @@ COPY ["src/Inventory.Infrastructure/", "Inventory.Infrastructure/"]
 COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
 COPY ["src/IntegrationEventLogEF/", "IntegrationEventLogEF/"]
-COPY ["src/Chillax.ServiceDefaults/", "Chillax.ServiceDefaults/"]
+COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 
 # Build
 WORKDIR /src/Inventory.API

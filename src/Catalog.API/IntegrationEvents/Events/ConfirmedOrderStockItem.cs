@@ -1,3 +1,3 @@
-﻿namespace Chillax.Catalog.API.IntegrationEvents.Events;
+﻿namespace Ninja.Catalog.API.IntegrationEvents.Events;
 
 public record ConfirmedOrderStockItem(int ProductId, bool HasStock);

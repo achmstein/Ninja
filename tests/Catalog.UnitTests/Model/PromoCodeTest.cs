@@ -1,4 +1,4 @@
-using Chillax.Catalog.API.Model;
+using Ninja.Catalog.API.Model;
 
 namespace Catalog.UnitTests.Model;
 

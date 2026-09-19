@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.Payroll.Infrastructure;
+using Ninja.Payroll.Infrastructure;
 
-namespace Chillax.Payroll.API.Application.Queries;
+namespace Ninja.Payroll.API.Application.Queries;
 
 public interface IPayrollQueries
 {

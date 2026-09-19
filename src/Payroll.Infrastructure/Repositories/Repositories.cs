@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Payroll.Infrastructure.Repositories;
+namespace Ninja.Payroll.Infrastructure.Repositories;
 
 public class EmployeeRepository(PayrollContext context) : IEmployeeRepository
 {

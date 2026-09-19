@@ -1,5 +1,5 @@
 #nullable enable
-namespace Chillax.Finance.Domain.AggregatesModel.SupplierAggregate;
+namespace Ninja.Finance.Domain.AggregatesModel.SupplierAggregate;
 
 /// <summary>
 /// Someone the café buys from. Inventory keeps only the id on a receipt;

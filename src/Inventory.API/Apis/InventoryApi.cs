@@ -1,16 +1,16 @@
 #nullable enable
-using Chillax.AI;
-using Chillax.AI.Agents;
-using Chillax.AI.Http;
-using Chillax.AI.Images;
-using Chillax.Inventory.API.Application.Assist;
-using Chillax.Inventory.API.Application.Commands;
-using Chillax.Inventory.API.Application.Queries;
+using Ninja.AI;
+using Ninja.AI.Agents;
+using Ninja.AI.Http;
+using Ninja.AI.Images;
+using Ninja.Inventory.API.Application.Assist;
+using Ninja.Inventory.API.Application.Commands;
+using Ninja.Inventory.API.Application.Queries;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace Chillax.Inventory.API.Apis;
+namespace Ninja.Inventory.API.Apis;
 
 public static class InventoryApi
 {
@@ -79,7 +79,7 @@ public static class InventoryApi
             .WithSummary("Read a receipt photo into proposed purchase lines")
             .WithDescription("The assistant matches each line to a stock item or proposes a new one. Nothing is posted: review the proposal, create the new items, then receive the purchase.")
             .DisableAntiforgery()
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         // Counts
         api.MapGet("/counts", GetStockCounts)
@@ -134,7 +134,7 @@ public static class InventoryApi
             .WithName("ProposeRecipes")
             .WithSummary("Propose the stock rule for a batch of menu items: sold as a unit, or a recipe with the ingredients the shelf is missing")
             .WithDescription("Nothing is saved: the review sheet creates the ingredients it agrees with, then sets each recipe or tracks the item by unit through the endpoints that already exist.")
-            .RequireRateLimiting(ChillaxAIRateLimiting.PolicyName);
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
         api.MapGet("/recipes/{catalogItemId:int}", GetRecipe)
             .WithName("GetRecipe");

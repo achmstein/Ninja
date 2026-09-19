@@ -1,4 +1,4 @@
-﻿namespace Chillax.Finance.Infrastructure.EntityConfigurations;
+﻿namespace Ninja.Finance.Infrastructure.EntityConfigurations;
 
 class ClientRequestEntityTypeConfiguration : IEntityTypeConfiguration<ClientRequest>
 {

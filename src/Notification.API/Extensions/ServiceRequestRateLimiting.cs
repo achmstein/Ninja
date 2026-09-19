@@ -2,7 +2,7 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace Chillax.Notification.API.Extensions;
+namespace Ninja.Notification.API.Extensions;
 
 /// <summary>
 /// Rate limiting for service requests, the same shape as Ordering's for

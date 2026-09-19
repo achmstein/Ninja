@@ -1,6 +1,6 @@
 {
-    "name": "chillax_mobile",
-    "short_name": "chillax_mobile",
+    "name": "ninja_client",
+    "short_name": "ninja_client",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

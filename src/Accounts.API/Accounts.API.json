@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Chillax - Accounts HTTP API",
+    "title": "Ninja - Accounts HTTP API",
     "description": "The Accounts Microservice HTTP API for customer balance tracking",
     "version": "1.0"
   },

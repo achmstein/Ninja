@@ -1,4 +1,4 @@
-﻿namespace Chillax.IntegrationEventLogEF.Services;
+﻿namespace Ninja.IntegrationEventLogEF.Services;
 
 public class IntegrationEventLogService<TContext> : IIntegrationEventLogService, IDisposable
     where TContext : DbContext

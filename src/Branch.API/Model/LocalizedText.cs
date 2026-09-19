@@ -1,4 +1,4 @@
-namespace Chillax.Branch.API.Model;
+namespace Ninja.Branch.API.Model;
 
 /// <summary>
 /// Value object for text that supports multiple languages.

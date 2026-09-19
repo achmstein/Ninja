@@ -1,9 +1,9 @@
 #nullable enable
-using Chillax.Sales.Domain.AggregatesModel.ShiftAggregate;
-using Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate;
-using Chillax.Sales.Infrastructure;
+using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
+using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
+using Ninja.Sales.Infrastructure;
 
-namespace Chillax.Sales.API.Application.Queries;
+namespace Ninja.Sales.API.Application.Queries;
 
 /// <summary>
 /// The cash figures a shift's tickets contributed to the drawer.

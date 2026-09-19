@@ -1,4 +1,4 @@
-﻿namespace Chillax.Ordering.API.Application.Behaviors;
+﻿namespace Ninja.Ordering.API.Application.Behaviors;
 
 public class ValidatorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
 {

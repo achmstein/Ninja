@@ -1,7 +1,7 @@
 #nullable enable
-using Chillax.IntegrationEventLogEF;
+using Ninja.IntegrationEventLogEF;
 
-namespace Chillax.Sales.Infrastructure;
+namespace Ninja.Sales.Infrastructure;
 
 /// <remarks>
 /// Add migrations using the following command inside the 'Sales.Infrastructure' project directory:
@@ -14,10 +14,10 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<TicketLine> TicketLines { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Receipt> Receipts { get; set; }
-    public DbSet<Chillax.Sales.Domain.AggregatesModel.ShiftAggregate.Shift> Shifts { get; set; }
+    public DbSet<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.Shift> Shifts { get; set; }
     public DbSet<BranchPricing> BranchPricings { get; set; }
     public DbSet<Refund> Refunds { get; set; }
-    public DbSet<Chillax.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment> TabPayments { get; set; }
+    public DbSet<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment> TabPayments { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;

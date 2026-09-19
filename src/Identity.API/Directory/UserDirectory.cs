@@ -1,4 +1,4 @@
-namespace Chillax.Identity.API.Directory;
+namespace Ninja.Identity.API.Directory;
 
 /// <summary>One user as the directory holds it: what Keycloak knows plus the normalized forms search runs on.</summary>
 public sealed record DirectoryUser(

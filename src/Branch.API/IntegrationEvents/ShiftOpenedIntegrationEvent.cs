@@ -1,6 +1,6 @@
-using Chillax.EventBus.Events;
+using Ninja.EventBus.Events;
 
-namespace Chillax.Branch.API.IntegrationEvents;
+namespace Ninja.Branch.API.IntegrationEvents;
 
 /// <summary>
 /// Consumer copy of the event Sales publishes when a drawer shift opens.

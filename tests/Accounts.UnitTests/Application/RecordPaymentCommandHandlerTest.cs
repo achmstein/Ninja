@@ -1,9 +1,9 @@
-namespace Chillax.Accounts.UnitTests.Application;
+namespace Ninja.Accounts.UnitTests.Application;
 
-using Chillax.Accounts.API.Application.Commands;
-using Chillax.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
-using Chillax.Accounts.Domain.Exceptions;
-using Chillax.Accounts.Domain.SeedWork;
+using Ninja.Accounts.API.Application.Commands;
+using Ninja.Accounts.Domain.AggregatesModel.CustomerAccountAggregate;
+using Ninja.Accounts.Domain.Exceptions;
+using Ninja.Accounts.Domain.SeedWork;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 

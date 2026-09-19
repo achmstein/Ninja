@@ -45,7 +45,7 @@ export const useSessionPlaceStore = create<SessionPlaceState>()(
       confirm: (placeId) => set({ confirmedPlaceId: placeId }),
     }),
     {
-      name: 'chillax-place-session',
+      name: 'ninja-place-session',
       storage: createJSONStorage(() => sessionStorage),
     },
   ),
@@ -70,7 +70,7 @@ export const usePlaceStore = create<PlaceState>()(
     }),
     // A new storage key: what was stored before the Places remodel carried
     // the printed sticker's id, which is not the place id
-    { name: 'chillax-place' },
+    { name: 'ninja-place' },
   ),
 )
 

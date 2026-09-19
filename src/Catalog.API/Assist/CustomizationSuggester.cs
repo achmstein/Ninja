@@ -1,9 +1,9 @@
 using System.Text.Json;
-using Chillax.AI.Agents;
-using Chillax.AI.Json;
+using Ninja.AI.Agents;
+using Ninja.AI.Json;
 using Microsoft.Extensions.AI;
 
-namespace Chillax.Catalog.API.Assist;
+namespace Ninja.Catalog.API.Assist;
 
 /// <summary>
 /// Proposes the customization groups for one menu item — saved or still
@@ -11,7 +11,7 @@ namespace Chillax.Catalog.API.Assist;
 /// examples. One agent call per request; the answer is checked by
 /// <see cref="CustomizationsPostProcessor"/> before it leaves.
 /// </summary>
-public sealed class CustomizationSuggester(IChillaxAgentFactory factory)
+public sealed class CustomizationSuggester(INinjaAgentFactory factory)
 {
     public const string AgentKey = "customization-suggester";
 
