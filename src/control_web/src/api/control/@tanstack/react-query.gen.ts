@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -411,6 +411,78 @@ export const listAuditOptions = (options?: Options<ListAuditData>) => queryOptio
         return data;
     },
     queryKey: listAuditQueryKey(options)
+});
+
+export const getTenantContainersQueryKey = (options: Options<GetTenantContainersData>) => createQueryKey('getTenantContainers', options);
+
+/**
+ * Every container of the stack, as docker compose ps reports it
+ */
+export const getTenantContainersOptions = (options: Options<GetTenantContainersData>) => queryOptions<GetTenantContainersResponse, AxiosError<GetTenantContainersError>, GetTenantContainersResponse, ReturnType<typeof getTenantContainersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantContainers({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantContainersQueryKey(options)
+});
+
+export const getTenantLogsQueryKey = (options: Options<GetTenantLogsData>) => createQueryKey('getTenantLogs', options);
+
+/**
+ * The last lines of one service's log, or the whole stack's
+ */
+export const getTenantLogsOptions = (options: Options<GetTenantLogsData>) => queryOptions<unknown, AxiosError<GetTenantLogsError>, unknown, ReturnType<typeof getTenantLogsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantLogs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantLogsQueryKey(options)
+});
+
+export const getTenantHealthQueryKey = (options: Options<GetTenantHealthData>) => createQueryKey('getTenantHealth', options);
+
+/**
+ * Each service's /health through the gateway, with how long it took
+ */
+export const getTenantHealthOptions = (options: Options<GetTenantHealthData>) => queryOptions<GetTenantHealthResponse, AxiosError<GetTenantHealthError>, GetTenantHealthResponse, ReturnType<typeof getTenantHealthQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantHealth({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantHealthQueryKey(options)
+});
+
+export const getTenantMetricsQueryKey = (options: Options<GetTenantMetricsData>) => createQueryKey('getTenantMetrics', options);
+
+/**
+ * Orders, sales, profit and loyalty over the last days, from the stack's own APIs
+ */
+export const getTenantMetricsOptions = (options: Options<GetTenantMetricsData>) => queryOptions<GetTenantMetricsResponse, AxiosError<GetTenantMetricsError>, GetTenantMetricsResponse, ReturnType<typeof getTenantMetricsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantMetrics({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantMetricsQueryKey(options)
 });
 
 export const tlsAskQueryKey = (options: Options<TlsAskData>) => createQueryKey('tlsAsk', options);

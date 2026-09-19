@@ -96,6 +96,16 @@ export type CapacityResponse = {
     tenants: Array<TenantUsage>;
 };
 
+export type ContainerInfo = {
+    service: string;
+    name: string;
+    state: string;
+    health: null | string;
+    status: string;
+    image: null | string;
+    exitCode: null | number | string;
+};
+
 export type ConvertRequest = {
     plan: null | TenantPlan;
 };
@@ -129,6 +139,18 @@ export type ExtendRequest = {
 
 export type IFormFile = Blob | File;
 
+export type MetricsDay = {
+    date: string;
+    orders: number | string;
+    revenue: number | string;
+};
+
+export type MetricsTopItem = {
+    name: string;
+    units: number | string;
+    revenue: number | string;
+};
+
 export type PlatformResponse = {
     domain: string;
     defaultImageTag: string;
@@ -145,6 +167,13 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type ServiceHealth = {
+    service: string;
+    ok: boolean;
+    ms: number | string;
+    detail: string;
 };
 
 export type StepDto = {
@@ -195,6 +224,20 @@ export type TenantLocaleDto = {
     currency: string;
     timeZone: string;
     language: string;
+};
+
+export type TenantMetrics = {
+    days: number | string;
+    branches: number | string;
+    orders: number | string;
+    revenue: number | string;
+    ticketsSettled: number | string;
+    netSales: number | string;
+    monthProfit: null | number | string;
+    loyaltyAccounts: number | string;
+    series: Array<MetricsDay>;
+    topItems: Array<MetricsTopItem>;
+    warnings: Array<string>;
 };
 
 export type TenantPlan = 'Free' | 'Starter' | 'Pro';
@@ -1074,6 +1117,171 @@ export type ListAuditResponses = {
 };
 
 export type ListAuditResponse = ListAuditResponses[keyof ListAuditResponses];
+
+export type GetTenantContainersData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/containers';
+};
+
+export type GetTenantContainersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GetTenantContainersError = GetTenantContainersErrors[keyof GetTenantContainersErrors];
+
+export type GetTenantContainersResponses = {
+    /**
+     * OK
+     */
+    200: Array<ContainerInfo>;
+};
+
+export type GetTenantContainersResponse = GetTenantContainersResponses[keyof GetTenantContainersResponses];
+
+export type GetTenantLogsData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: {
+        /**
+         * catalog, ordering, … or gateway; every service when left out
+         */
+        service?: string;
+        /**
+         * Lines from the end, 10 to 2000
+         */
+        tail?: number | string;
+    };
+    url: '/api/control/tenants/{slug}/logs';
+};
+
+export type GetTenantLogsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GetTenantLogsError = GetTenantLogsErrors[keyof GetTenantLogsErrors];
+
+export type GetTenantHealthData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/health';
+};
+
+export type GetTenantHealthErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GetTenantHealthError = GetTenantHealthErrors[keyof GetTenantHealthErrors];
+
+export type GetTenantHealthResponses = {
+    /**
+     * OK
+     */
+    200: Array<ServiceHealth>;
+};
+
+export type GetTenantHealthResponse = GetTenantHealthResponses[keyof GetTenantHealthResponses];
+
+export type GetTenantMetricsData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: {
+        /**
+         * How many days back, ending today; 1 to 90
+         */
+        days?: number | string;
+    };
+    url: '/api/control/tenants/{slug}/metrics';
+};
+
+export type GetTenantMetricsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GetTenantMetricsError = GetTenantMetricsErrors[keyof GetTenantMetricsErrors];
+
+export type GetTenantMetricsResponses = {
+    /**
+     * OK
+     */
+    200: TenantMetrics;
+};
+
+export type GetTenantMetricsResponse = GetTenantMetricsResponses[keyof GetTenantMetricsResponses];
 
 export type TlsAskData = {
     body?: never;

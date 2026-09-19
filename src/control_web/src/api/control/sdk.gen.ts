@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -212,6 +212,38 @@ export const convertTenant = <ThrowOnError extends boolean = false>(options: Opt
 export const listAudit = <ThrowOnError extends boolean = false>(options?: Options<ListAuditData, ThrowOnError>): RequestResult<ListAuditResponses, ListAuditErrors, ThrowOnError> => (options?.client ?? client).get<ListAuditResponses, ListAuditErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/control/audit',
+    ...options
+});
+
+/**
+ * Every container of the stack, as docker compose ps reports it
+ */
+export const getTenantContainers = <ThrowOnError extends boolean = false>(options: Options<GetTenantContainersData, ThrowOnError>): RequestResult<GetTenantContainersResponses, GetTenantContainersErrors, ThrowOnError> => (options.client ?? client).get<GetTenantContainersResponses, GetTenantContainersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/containers',
+    ...options
+});
+
+/**
+ * The last lines of one service's log, or the whole stack's
+ */
+export const getTenantLogs = <ThrowOnError extends boolean = false>(options: Options<GetTenantLogsData, ThrowOnError>): RequestResult<unknown, GetTenantLogsErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantLogsErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/logs', ...options });
+
+/**
+ * Each service's /health through the gateway, with how long it took
+ */
+export const getTenantHealth = <ThrowOnError extends boolean = false>(options: Options<GetTenantHealthData, ThrowOnError>): RequestResult<GetTenantHealthResponses, GetTenantHealthErrors, ThrowOnError> => (options.client ?? client).get<GetTenantHealthResponses, GetTenantHealthErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/health',
+    ...options
+});
+
+/**
+ * Orders, sales, profit and loyalty over the last days, from the stack's own APIs
+ */
+export const getTenantMetrics = <ThrowOnError extends boolean = false>(options: Options<GetTenantMetricsData, ThrowOnError>): RequestResult<GetTenantMetricsResponses, GetTenantMetricsErrors, ThrowOnError> => (options.client ?? client).get<GetTenantMetricsResponses, GetTenantMetricsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/metrics',
     ...options
 });
 

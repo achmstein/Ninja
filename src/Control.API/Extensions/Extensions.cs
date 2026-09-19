@@ -29,6 +29,8 @@ public static class Extensions
         builder.Services.AddHostedService<DemoExpiryService>();
         builder.Services.AddSingleton<CapacityCache>();
         builder.Services.AddHostedService<CapacityMonitor>();
+        builder.Services.AddSingleton<TenantOps>();
+        builder.Services.AddSingleton<TenantMetricsCollector>();
 
         var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
         if (dryRun)

@@ -138,10 +138,43 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         if (path.StartsWith("/api/tenant/images/", StringComparison.Ordinal))
             return method == HttpMethod.Get ? new(HttpStatusCode.NotFound) : Json(BrandOf(tenant));
 
+        // The café's figures, as its services would report them: steady numbers seeded by the slug
+        var seed = tenant.Slug.Aggregate(17, (h, c) => h * 31 + c) & 0x7fffffff;
+        switch (path)
+        {
+            case "/api/branches/all":
+                return Json(new JsonArray(new JsonObject { ["id"] = 1, ["name"] = new JsonObject { ["en"] = "Main", ["ar"] = "الرئيسي" }, ["isActive"] = true }));
+            case "/api/orders/stats":
+            {
+                var query = System.Web.HttpUtility.ParseQueryString(pathAndQuery.Contains('?') ? pathAndQuery[(pathAndQuery.IndexOf('?') + 1)..] : "");
+                var from = DateTime.TryParse(query["fromDate"], null, System.Globalization.DateTimeStyles.AdjustToUniversal, out var f) ? f.Date : DateTime.UtcNow.Date.AddDays(-6);
+                var to = DateTime.TryParse(query["toDate"], null, System.Globalization.DateTimeStyles.AdjustToUniversal, out var t) ? t.Date : DateTime.UtcNow.Date;
+                var days = new JsonArray();
+                for (var day = from; day <= to; day = day.AddDays(1))
+                {
+                    var n = 12 + (seed + day.DayOfYear) % 23;
+                    days.Add(new JsonObject { ["date"] = day.ToString("yyyy-MM-dd"), ["orders"] = n, ["revenue"] = n * 85.5 });
+                }
+                return Json(new JsonObject
+                {
+                    ["days"] = days,
+                    ["topItems"] = new JsonArray(
+                        new JsonObject { ["productName"] = new JsonObject { ["en"] = "Latte", ["ar"] = "لاتيه" }, ["units"] = 40 + seed % 30, ["revenue"] = (40 + seed % 30) * 50.0 },
+                        new JsonObject { ["productName"] = new JsonObject { ["en"] = "Tea", ["ar"] = "شاي" }, ["units"] = 25 + seed % 20, ["revenue"] = (25 + seed % 20) * 20.0 }),
+                });
+            }
+            case "/api/tickets/reports/range":
+                return Json(new JsonObject { ["ticketsSettled"] = 60 + seed % 40, ["net"] = 5400.25 + seed % 900 });
+            case "/api/finance/profit":
+                return Json(new JsonObject { ["netSales"] = 21000 + seed % 5000, ["profit"] = 6400 + seed % 1500 });
+            case "/api/loyalty/stats":
+                return Json(new JsonObject { ["totalAccounts"] = 120 + seed % 200 });
+        }
+
         return new(HttpStatusCode.NotFound) { Content = new StringContent($"(dry run) nothing answers {method} {path}") };
     }
 
-    private static HttpResponseMessage Json(JsonObject body)
+    private static HttpResponseMessage Json(JsonNode body)
         => new(HttpStatusCode.OK) { Content = new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json") };
 
     /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on.</summary>
