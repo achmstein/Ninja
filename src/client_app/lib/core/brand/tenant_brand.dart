@@ -206,39 +206,80 @@ class TenantLocale {
   int get hashCode => Object.hash(country, currency, timeZone, language);
 }
 
-/// The tenant's theme tokens on top of the neutral palette. Every field is
-/// optional; null keeps the platform default.
+/// The dark scheme's own seeds, for a brand whose lifted colours do not
+/// suit it; null derives everything from the light seeds.
+class TenantThemeDark {
+  final String? primaryHex;
+  final String? accentHex;
+  final String? surfaceHex;
+
+  const TenantThemeDark({this.primaryHex, this.accentHex, this.surfaceHex});
+
+  static TenantThemeDark? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    final dark = TenantThemeDark(
+      primaryHex: _hex(json['primary'] as String?),
+      accentHex: _hex(json['accent'] as String?),
+      surfaceHex: _hex(json['surface'] as String?),
+    );
+    return dark.primaryHex == null && dark.accentHex == null && dark.surfaceHex == null ? null : dark;
+  }
+
+  Map<String, dynamic> toJson() => {'primary': primaryHex, 'accent': accentHex, 'surface': surfaceHex};
+
+  Color? get primary => _color(primaryHex);
+  Color? get accent => _color(accentHex);
+  Color? get surface => _color(surfaceHex);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantThemeDark && other.primaryHex == primaryHex && other.accentHex == accentHex && other.surfaceHex == surfaceHex;
+
+  @override
+  int get hashCode => Object.hash(primaryHex, accentHex, surfaceHex);
+}
+
+/// The seeds of the tenant's design on top of the neutral palette: every
+/// field is optional; null keeps the platform default. The colours are
+/// derived for both schemes by [brandedColors], the same way the web apps do.
 class TenantTheme {
   static const radii = {'none', 'sm', 'md', 'lg', 'xl'};
 
-  /// `#rrggbb`: the secondary pair
+  /// `#rrggbb`: chips, badges and secondary buttons
   final String? accentHex;
 
-  /// `#rrggbb`: the light scheme's page
-  final String? backgroundHex;
-
-  /// `#rrggbb`: the light scheme's text
-  final String? foregroundHex;
+  /// `#rrggbb`: the page, light scheme; its hue tints the neutrals of both schemes
+  final String? surfaceHex;
 
   /// One of [radii]
   final String? radius;
 
-  /// A Google Fonts family name, for Latin text
-  final String? font;
+  /// Google Fonts family names, one per script
+  final String? fontLatin;
+  final String? fontArabic;
 
-  const TenantTheme({this.accentHex, this.backgroundHex, this.foregroundHex, this.radius, this.font});
+  /// The dark scheme's own seeds, when derived ones do not suit the brand
+  final TenantThemeDark? dark;
+
+  const TenantTheme({this.accentHex, this.surfaceHex, this.radius, this.fontLatin, this.fontArabic, this.dark});
 
   static const neutral = TenantTheme();
 
   factory TenantTheme.fromJson(Map<String, dynamic> json) {
     final radius = (json['radius'] as String?)?.trim().toLowerCase();
-    final font = (json['font'] as String?)?.trim();
+    String? font(String key) {
+      final value = (json[key] as String?)?.trim();
+      return value == null || value.isEmpty ? null : value;
+    }
+
     return TenantTheme(
       accentHex: _hex(json['accent'] as String?),
-      backgroundHex: _hex(json['background'] as String?),
-      foregroundHex: _hex(json['foreground'] as String?),
+      surfaceHex: _hex(json['surface'] as String?),
       radius: radius != null && radii.contains(radius) ? radius : null,
-      font: font == null || font.isEmpty ? null : font,
+      fontLatin: font('fontLatin'),
+      fontArabic: font('fontArabic'),
+      dark: TenantThemeDark.parse(json['dark']),
     );
   }
 
@@ -246,28 +287,29 @@ class TenantTheme {
 
   Map<String, dynamic> toJson() => {
         'accent': accentHex,
-        'background': backgroundHex,
-        'foreground': foregroundHex,
+        'surface': surfaceHex,
         'radius': radius,
-        'font': font,
+        'fontLatin': fontLatin,
+        'fontArabic': fontArabic,
+        'dark': dark?.toJson(),
       };
 
   Color? get accent => _color(accentHex);
-  Color? get background => _color(backgroundHex);
-  Color? get foreground => _color(foregroundHex);
+  Color? get surface => _color(surfaceHex);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is TenantTheme &&
           other.accentHex == accentHex &&
-          other.backgroundHex == backgroundHex &&
-          other.foregroundHex == foregroundHex &&
+          other.surfaceHex == surfaceHex &&
           other.radius == radius &&
-          other.font == font;
+          other.fontLatin == fontLatin &&
+          other.fontArabic == fontArabic &&
+          other.dark == dark;
 
   @override
-  int get hashCode => Object.hash(accentHex, backgroundHex, foregroundHex, radius, font);
+  int get hashCode => Object.hash(accentHex, surfaceHex, radius, fontLatin, fontArabic, dark);
 }
 
 /// The tenant this build runs for: name, brand color, logo, wordmark, theme

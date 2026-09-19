@@ -92,12 +92,19 @@ export type TenantResponse = {
     version: number | string;
 };
 
+export type TenantThemeDarkDto = {
+    primary: null | string;
+    accent: null | string;
+    surface: null | string;
+};
+
 export type TenantThemeDto = {
     accent: null | string;
-    background: null | string;
-    foreground: null | string;
+    surface: null | string;
     radius: null | string;
-    font: null | string;
+    fontLatin: null | string;
+    fontArabic: null | string;
+    dark: null | TenantThemeDarkDto;
 };
 
 export type TenantWordmark = {

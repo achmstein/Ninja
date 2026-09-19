@@ -902,13 +902,42 @@
           }
         }
       },
+      "TenantThemeDarkDto": {
+        "required": [
+          "primary",
+          "accent",
+          "surface"
+        ],
+        "type": "object",
+        "properties": {
+          "primary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "surface": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "TenantThemeDto": {
         "required": [
           "accent",
-          "background",
-          "foreground",
+          "surface",
           "radius",
-          "font"
+          "fontLatin",
+          "fontArabic",
+          "dark"
         ],
         "type": "object",
         "properties": {
@@ -918,13 +947,7 @@
               "string"
             ]
           },
-          "background": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "foreground": {
+          "surface": {
             "type": [
               "null",
               "string"
@@ -936,10 +959,26 @@
               "string"
             ]
           },
-          "font": {
+          "fontLatin": {
             "type": [
               "null",
               "string"
+            ]
+          },
+          "fontArabic": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantThemeDarkDto"
+              }
             ]
           }
         }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Info } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import type { BrandDto, BrandFeatures, TenantDetail } from '@/api/control'
 import {
   deleteTenantBrandImageMutation,
@@ -10,6 +10,7 @@ import {
   uploadTenantBrandImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { ColorField } from '@/components/brand/color-field'
+import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
@@ -22,6 +23,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -41,7 +43,7 @@ import {
   type BrandImages,
   type ImageSlot,
 } from '@/lib/brand-slots'
-import { FONTS, RADII } from '@/lib/brand-theme'
+import { ARABIC_FONTS, LATIN_FONTS, RADII, type BrandThemeInput } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { isHexColor, tenantStatus } from '@/lib/tenant'
@@ -174,10 +176,13 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [name, setName] = useState(toLocalizedValue(brand.name))
   const [primary, setPrimary] = useState(brand.primaryColor ?? '')
   const [accent, setAccent] = useState(brand.theme.accent ?? '')
-  const [background, setBackground] = useState(brand.theme.background ?? '')
-  const [foreground, setForeground] = useState(brand.theme.foreground ?? '')
+  const [surface, setSurface] = useState(brand.theme.surface ?? '')
   const [radius, setRadius] = useState(brand.theme.radius ?? DEFAULT)
-  const [font, setFont] = useState(brand.theme.font ?? DEFAULT)
+  const [fontLatin, setFontLatin] = useState(brand.theme.fontLatin ?? DEFAULT)
+  const [fontArabic, setFontArabic] = useState(brand.theme.fontArabic ?? DEFAULT)
+  const [darkPrimary, setDarkPrimary] = useState(brand.theme.dark?.primary ?? '')
+  const [darkAccent, setDarkAccent] = useState(brand.theme.dark?.accent ?? '')
+  const [darkSurface, setDarkSurface] = useState(brand.theme.dark?.surface ?? '')
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
 
@@ -192,29 +197,47 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (accent: string, background: string, foreground: string, radius: string, font: string) => ({
-    accent: orNull(accent),
-    background: orNull(background),
-    foreground: orNull(foreground),
-    radius: radius === DEFAULT ? null : radius,
-    font: font === DEFAULT ? null : font,
-  })
+  const themeOf = (f: { accent: string; surface: string; radius: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
+    const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
+    return {
+      accent: orNull(f.accent),
+      surface: orNull(f.surface),
+      radius: f.radius === DEFAULT ? null : f.radius,
+      fontLatin: f.fontLatin === DEFAULT ? null : f.fontLatin,
+      fontArabic: f.fontArabic === DEFAULT ? null : f.fontArabic,
+      dark: dark.primary || dark.accent || dark.surface ? dark : null,
+    }
+  }
+  const theme = useMemo(
+    () => themeOf({ accent, surface, radius, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [accent, surface, radius, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
+  )
   const draft = useMemo<PreviewDraft>(
     () => ({
       name: { en: name.en, ar: name.ar },
       primaryColor: orNull(primary),
-      theme: themeOf(accent, background, foreground, radius, font),
+      theme,
       images: imagesOf(brand),
       currency: brand.locale.currency,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [name, primary, accent, background, foreground, radius, font, brand]
+    [name, primary, theme, brand]
   )
   const saved = useMemo(
     () => ({
       name: toLocalizedValue(brand.name),
       primaryColor: orNull(brand.primaryColor ?? ''),
-      theme: themeOf(brand.theme.accent ?? '', brand.theme.background ?? '', brand.theme.foreground ?? '', brand.theme.radius ?? DEFAULT, brand.theme.font ?? DEFAULT),
+      theme: themeOf({
+        accent: brand.theme.accent ?? '',
+        surface: brand.theme.surface ?? '',
+        radius: brand.theme.radius ?? DEFAULT,
+        fontLatin: brand.theme.fontLatin ?? DEFAULT,
+        fontArabic: brand.theme.fontArabic ?? DEFAULT,
+        darkPrimary: brand.theme.dark?.primary ?? '',
+        darkAccent: brand.theme.dark?.accent ?? '',
+        darkSurface: brand.theme.dark?.surface ?? '',
+      }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [brand]
@@ -226,7 +249,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const colorOk = (v: string) => v === '' || isHexColor(v)
   const canSubmit =
     name.en.trim().length > 0 &&
-    [primary, accent, background, foreground].every(colorOk) &&
+    [primary, accent, surface, darkPrimary, darkAccent, darkSurface].every(colorOk) &&
     !save.isPending
 
   const submit = (e: React.FormEvent) => {
@@ -239,13 +262,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         primaryColor: orNull(primary),
         customerUrl: customerUrl.trim() || null,
         features,
-        theme: {
-          accent: orNull(accent),
-          background: orNull(background),
-          foreground: orNull(foreground),
-          radius: radius === DEFAULT ? null : radius,
-          font: font === DEFAULT ? null : font,
-        },
+        theme,
         locale: brand.locale,
       },
     })
@@ -264,19 +281,11 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             swatchesFrom={brand.logoUrl}
             eyedropper
           />
-          <div className='grid gap-4 sm:grid-cols-3'>
-            <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper />
-            <ColorField
-              id='brand-background'
-              label={t('backgroundColor')}
-              value={background}
-              onChange={setBackground}
-              fallback='#ffffff'
-              eyedropper
-            />
-            <ColorField id='brand-foreground' label={t('textColor')} value={foreground} onChange={setForeground} eyedropper />
-          </div>
           <div className='grid gap-4 sm:grid-cols-2'>
+            <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper />
+            <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper />
+          </div>
+          <div className='grid gap-4 sm:grid-cols-3'>
             <div className='grid gap-2'>
               <Label htmlFor='brand-radius' className='text-xs'>{t('cornerRadius')}</Label>
               <Select value={radius} onValueChange={setRadius}>
@@ -293,23 +302,23 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
                 </SelectContent>
               </Select>
             </div>
-            <div className='grid gap-2'>
-              <Label htmlFor='brand-font' className='text-xs'>{t('fontFamily')}</Label>
-              <Select value={font} onValueChange={setFont}>
-                <SelectTrigger id='brand-font' className='w-full'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={DEFAULT}>{t('defaultOption')}</SelectItem>
-                  {FONTS.map((f) => (
-                    <SelectItem key={f} value={f}>
-                      {f}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FontSelect id='brand-font-latin' label={t('fontLatin')} value={fontLatin} onChange={setFontLatin} fonts={LATIN_FONTS} />
+            <FontSelect id='brand-font-arabic' label={t('fontArabic')} value={fontArabic} onChange={setFontArabic} fonts={ARABIC_FONTS} />
           </div>
+          <Collapsible defaultOpen={Boolean(darkPrimary || darkAccent || darkSurface)}>
+            <CollapsibleTrigger asChild>
+              <Button type='button' variant='ghost' size='sm' className='group -ms-2'>
+                <ChevronDown className='transition-transform group-data-[state=open]:rotate-180' />
+                {t('darkScheme')}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className='grid gap-4 pt-3 sm:grid-cols-3'>
+              <ColorField id='brand-dark-primary' label={t('brandColor')} value={darkPrimary} onChange={setDarkPrimary} placeholder={t('derived')} eyedropper />
+              <ColorField id='brand-dark-accent' label={t('accentColor')} value={darkAccent} onChange={setDarkAccent} placeholder={t('derived')} eyedropper />
+              <ColorField id='brand-dark-surface' label={t('surfaceColor')} value={darkSurface} onChange={setDarkSurface} fallback='#111111' placeholder={t('derived')} eyedropper />
+            </CollapsibleContent>
+          </Collapsible>
+          <ContrastNotice input={{ primaryColor: orNull(primary), theme } satisfies BrandThemeInput} />
           <div className='grid gap-2'>
             <Label htmlFor='brand-url' className='text-xs'>{t('customerUrl')}</Label>
             <Input
@@ -347,6 +356,28 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         </form>
       </CardContent>
     </Card>
+  )
+}
+
+function FontSelect({ id, label, value, onChange, fonts }: { id: string; label: string; value: string; onChange: (v: string) => void; fonts: readonly string[] }) {
+  const t = useT()
+  return (
+    <div className='grid gap-2'>
+      <Label htmlFor={id} className='text-xs'>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id} className='w-full'>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={DEFAULT}>{t('defaultOption')}</SelectItem>
+          {fonts.map((f) => (
+            <SelectItem key={f} value={f} style={{ fontFamily: `'${f}'` }}>
+              {f}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
 

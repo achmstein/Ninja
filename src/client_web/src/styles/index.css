@@ -22,9 +22,9 @@
     @apply bg-background text-foreground min-h-svh w-full antialiased;
   }
 
-  /* Arabic UI renders in Cairo */
+  /* Arabic UI reads in the Arabic family first */
   :root[dir='rtl'] body {
-    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+    font-family: var(--font-arabic), var(--font-latin), system-ui, sans-serif;
   }
 
   button:not(:disabled),

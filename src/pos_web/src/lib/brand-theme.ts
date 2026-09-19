@@ -1,26 +1,43 @@
 /**
- * The tenant's theme tokens, turned into the CSS variables of the theme.
- * A handful of tokens, not a stylesheet: primary, accent, background,
- * foreground, corner radius and font. Everything else stays the neutral
- * palette in styles/theme.css. The light scheme takes the colors as given;
- * the dark scheme is derived so it still reads on a near-black page.
+ * The tenant's theme, as the customer app's design tokens.
  *
- * Injected as a <style> after the theme file: same specificity, later in the
- * cascade, so it wins in both :root and .dark without touching either. The
- * same token math feeds the admin's live preview through brandTokens().
+ * A brand supplies seeds, not values: a primary, an optional accent, an
+ * optional surface tint, a corner radius and a font per script. Each seed
+ * becomes a tonal scale in OKLCH and each scheme takes its steps by role,
+ * so light and dark are two mappings of the same semantic tokens and the
+ * text on any fill is chosen by contrast rather than stored. A brand that
+ * needs a specific dark fill or page gives it under `dark`; everything
+ * else is derived. Whatever the brand leaves unset keeps the neutral
+ * palette in styles/theme.css.
+ *
+ * The tokens are the CSS variables shadcn's components read, injected as
+ * one <style> after the theme file: same specificity, later in the
+ * cascade, so they win in both :root and .dark without touching either.
+ * The same maths feeds the previews, and the Flutter customer app carries
+ * a port of it, so every surface derives the same colours from the same
+ * seeds.
  */
 
 const STYLE_ID = 'brand-theme'
 const FONT_LINK_ID = 'brand-font'
 
+export type BrandThemeDark = {
+  primary?: string | null
+  accent?: string | null
+  surface?: string | null
+}
+
 export type BrandThemeInput = {
   primaryColor?: string | null
   theme?: {
     accent?: string | null
-    background?: string | null
-    foreground?: string | null
+    /** The page's colour, light scheme; its hue tints every neutral in both schemes */
+    surface?: string | null
     radius?: string | null
-    font?: string | null
+    fontLatin?: string | null
+    fontArabic?: string | null
+    /** What the dark scheme must use instead of what is derived */
+    dark?: BrandThemeDark | null
   } | null
 }
 
@@ -32,8 +49,8 @@ export const RADII: Record<string, string> = {
   xl: '1.5rem',
 }
 
-/** Latin families the app knows how to load from Google Fonts; Arabic always falls back to Cairo. */
-export const FONTS = [
+/** Latin families the apps know how to load from Google Fonts. */
+export const LATIN_FONTS = [
   'Inter',
   'Manrope',
   'DM Sans',
@@ -41,18 +58,37 @@ export const FONTS = [
   'Poppins',
   'Plus Jakarta Sans',
   'Playfair Display',
+] as const
+
+/** Arabic families, likewise. */
+export const ARABIC_FONTS = [
   'Cairo',
   'Tajawal',
   'Almarai',
+  'IBM Plex Sans Arabic',
+  'Noto Kufi Arabic',
+  'Changa',
 ] as const
 
-type Oklch = { l: number; c: number; h: number }
+export const DEFAULT_FONT_LATIN = 'Inter'
+export const DEFAULT_FONT_ARABIC = 'Cairo'
+
+export type Scheme = 'light' | 'dark'
+
+// ---------------------------------------------------------------- colour maths
+
+export type Oklch = { l: number; c: number; h: number }
 
 function srgbToLinear(c: number): number {
   return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
 
-/** "#rrggbb" to OKLCH; null when the string is not a color. */
+function linearToSrgb(c: number): number {
+  const v = c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055
+  return Math.min(1, Math.max(0, v))
+}
+
+/** "#rrggbb" to OKLCH; null when the string is not a colour. */
 export function hexToOklch(hex: string): Oklch | null {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!m) return null
@@ -74,87 +110,255 @@ export function hexToOklch(hex: string): Oklch | null {
   return { l: L, c, h }
 }
 
-const oklch = ({ l, c, h }: Oklch) =>
-  `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${h.toFixed(1)})`
+/** OKLCH to linear sRGB, clipped to the gamut. */
+function toLinearRgb({ l, c, h }: Oklch): [number, number, number] {
+  const a = c * Math.cos((h * Math.PI) / 180)
+  const b = c * Math.sin((h * Math.PI) / 180)
+  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
+  const clip = (v: number) => Math.min(1, Math.max(0, v))
+  return [
+    clip(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
+    clip(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
+    clip(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
+  ]
+}
 
-const clamp = (v: number, lo: number, hi: number) =>
-  Math.min(hi, Math.max(lo, v))
+/** OKLCH to "#rrggbb" (for places that cannot read oklch(), such as the theme-color meta). */
+export function oklchToHex(color: Oklch): string {
+  return (
+    '#' +
+    toLinearRgb(color)
+      .map((v) => Math.round(linearToSrgb(v) * 255).toString(16).padStart(2, '0'))
+      .join('')
+  )
+}
 
-/** White-ish or near-black, whichever reads on a fill of this lightness. */
-const textOn = (fill: Oklch) =>
-  fill.l > 0.66 ? `oklch(0.15 0.02 ${fill.h.toFixed(1)})` : 'oklch(0.985 0 0)'
+/** WCAG relative luminance. */
+function luminance(color: Oklch): number {
+  const [r, g, b] = toLinearRgb(color)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** WCAG contrast ratio between two colours, 1 to 21. */
+export function contrastRatio(a: Oklch, b: Oklch): number {
+  const la = luminance(a)
+  const lb = luminance(b)
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
+}
+
+const oklch = ({ l, c, h }: Oklch) => `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${h.toFixed(1)})`
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
+
+const WHITE: Oklch = { l: 0.985, c: 0, h: 0 }
+
+/** Ink for a fill of this hue: near-black with a trace of it. */
+const inkOn = (h: number): Oklch => ({ l: 0.15, c: 0.02, h })
+
+/** White or near-black, whichever contrasts more with the fill. */
+function textOn(fill: Oklch): Oklch {
+  const ink = inkOn(fill.h)
+  return contrastRatio(fill, WHITE) >= contrastRatio(fill, ink) ? WHITE : ink
+}
+
+// ---------------------------------------------------------------- tokens
+
+/** The colours a scheme resolves to, by role; only the roles the seeds set. */
+export type SchemeColors = Partial<
+  Record<
+    | 'background'
+    | 'foreground'
+    | 'card'
+    | 'cardForeground'
+    | 'popover'
+    | 'popoverForeground'
+    | 'muted'
+    | 'mutedForeground'
+    | 'border'
+    | 'input'
+    | 'primary'
+    | 'primaryForeground'
+    | 'ring'
+    | 'secondary'
+    | 'secondaryForeground'
+    | 'accent'
+    | 'accentForeground',
+    Oklch
+  >
+>
+
+const seed = (value: string | null | undefined): Oklch | null => (value ? hexToOklch(value) : null)
+
+/** The neutral scale: the page and everything that sits quietly on it, tinted by the surface's hue. */
+function neutrals(surface: Oklch | null, darkSurface: Oklch | null): { light: SchemeColors; dark: SchemeColors } {
+  const light: SchemeColors = {}
+  const dark: SchemeColors = {}
+
+  if (surface) {
+    const h = surface.h
+    const c = Math.min(surface.c, 0.03)
+    // The page is the colour given, kept light enough to be a page
+    const background: Oklch = { l: clamp(surface.l, 0.9, 1), c, h }
+    light.background = background
+    light.card = background
+    light.popover = background
+    light.foreground = { l: 0.17, c: Math.min(c, 0.02), h }
+    light.cardForeground = light.foreground
+    light.popoverForeground = light.foreground
+    light.muted = { l: 0.955, c: c * 0.7, h }
+    light.mutedForeground = { l: 0.52, c: Math.min(c, 0.02), h }
+    light.border = { l: 0.9, c: c * 0.7, h }
+    light.input = light.border
+  }
+
+  const darkSeed = darkSurface ?? surface
+  if (darkSeed) {
+    const h = darkSeed.h
+    const c = Math.min(darkSeed.c, 0.02)
+    // Given a dark page, it is used as such; derived, it is the light page's hue at night
+    const background: Oklch = darkSurface ? { l: clamp(darkSurface.l, 0.1, 0.3), c, h } : { l: 0.16, c, h }
+    dark.background = background
+    dark.foreground = { l: 0.985, c: c * 0.3, h }
+    dark.card = { l: background.l + 0.05, c, h }
+    dark.cardForeground = dark.foreground
+    dark.popover = dark.card
+    dark.popoverForeground = dark.foreground
+    dark.muted = { l: background.l + 0.12, c, h }
+    dark.mutedForeground = { l: 0.72, c: Math.min(c, 0.015), h }
+  }
+
+  return { light, dark }
+}
+
+/** Every role each scheme resolves to from these seeds; empty when nothing is set. */
+export function brandColors(input: BrandThemeInput | null | undefined): { light: SchemeColors; dark: SchemeColors } {
+  const theme = input?.theme
+  const { light, dark } = neutrals(seed(theme?.surface), seed(theme?.dark?.surface))
+
+  const primary = seed(input?.primaryColor)
+  if (primary) {
+    // Kept off the extremes so it still reads as a fill; lifted and calmed on dark unless the brand said otherwise
+    const l: Oklch = { ...primary, l: clamp(primary.l, 0.25, 0.85) }
+    const given = seed(theme?.dark?.primary)
+    const d: Oklch = given ?? { l: Math.max(primary.l, 0.74), c: Math.min(primary.c, 0.17), h: primary.h }
+    light.primary = l
+    light.primaryForeground = textOn(l)
+    light.ring = l
+    dark.primary = d
+    dark.primaryForeground = textOn(d)
+    dark.ring = d
+  }
+
+  const accent = seed(theme?.accent)
+  if (accent) {
+    // Chips, badges and secondary buttons carry it; hovers get a tint of it
+    const l: Oklch = { ...accent, l: clamp(accent.l, 0.3, 0.9) }
+    const given = seed(theme?.dark?.accent)
+    const d: Oklch = given ?? { l: 0.32, c: Math.min(accent.c, 0.09), h: accent.h }
+    light.secondary = l
+    light.secondaryForeground = textOn(l)
+    light.accent = { l: 0.95, c: Math.min(accent.c, 0.05), h: accent.h }
+    light.accentForeground = { l: 0.2, c: 0.03, h: accent.h }
+    dark.secondary = d
+    dark.secondaryForeground = textOn(d)
+    dark.accent = { l: 0.26, c: Math.min(accent.c, 0.05), h: accent.h }
+    dark.accentForeground = WHITE
+  }
+
+  return { light, dark }
+}
+
+const VAR_OF: Record<keyof SchemeColors, string> = {
+  background: '--background',
+  foreground: '--foreground',
+  card: '--card',
+  cardForeground: '--card-foreground',
+  popover: '--popover',
+  popoverForeground: '--popover-foreground',
+  muted: '--muted',
+  mutedForeground: '--muted-foreground',
+  border: '--border',
+  input: '--input',
+  primary: '--primary',
+  primaryForeground: '--primary-foreground',
+  ring: '--ring',
+  secondary: '--secondary',
+  secondaryForeground: '--secondary-foreground',
+  accent: '--accent',
+  accentForeground: '--accent-foreground',
+}
 
 export type BrandTokens = {
   light: Record<string, string>
   dark: Record<string, string>
-  /** The Latin family to load and put first in --font-sans, when the tenant chose one. */
-  font: string | null
+  /** The families to load, when the tenant chose them. */
+  fontLatin: string | null
+  fontArabic: string | null
 }
 
-/** The variables each scheme gets from these tokens; empty when nothing is set. */
+const knownFont = (value: string | null | undefined, list: readonly string[]) =>
+  value && list.includes(value) ? value : null
+
+/** The variables each scheme gets from these seeds; empty when nothing is set. */
 export function brandTokens(input: BrandThemeInput | null | undefined): BrandTokens {
+  const colors = brandColors(input)
   const light: Record<string, string> = {}
   const dark: Record<string, string> = {}
+  for (const [role, value] of Object.entries(colors.light)) light[VAR_OF[role as keyof SchemeColors]] = oklch(value)
+  for (const [role, value] of Object.entries(colors.dark)) dark[VAR_OF[role as keyof SchemeColors]] = oklch(value)
+
   const theme = input?.theme
+  if (theme?.radius && RADII[theme.radius]) light['--radius'] = RADII[theme.radius]
 
-  const primary = input?.primaryColor ? hexToOklch(input.primaryColor) : null
-  if (primary) {
-    // Kept off the extremes so it still reads as a fill; lifted and calmed on dark
-    const l: Oklch = { ...primary, l: clamp(primary.l, 0.25, 0.85) }
-    const d: Oklch = { l: Math.max(primary.l, 0.74), c: Math.min(primary.c, 0.17), h: primary.h }
-    light['--primary'] = oklch(l)
-    light['--primary-foreground'] = textOn(l)
-    light['--ring'] = oklch(l)
-    dark['--primary'] = oklch(d)
-    dark['--primary-foreground'] = `oklch(0.18 0.02 ${primary.h.toFixed(1)})`
-    dark['--ring'] = oklch(d)
-  }
+  const fontLatin = knownFont(theme?.fontLatin, LATIN_FONTS)
+  const fontArabic = knownFont(theme?.fontArabic, ARABIC_FONTS)
+  if (fontLatin) light['--font-latin'] = `'${fontLatin}'`
+  if (fontArabic) light['--font-arabic'] = `'${fontArabic}'`
 
-  const accent = theme?.accent ? hexToOklch(theme.accent) : null
-  if (accent) {
-    // Chips, badges and secondary buttons carry it; hovers get a tint of it
-    const l: Oklch = { ...accent, l: clamp(accent.l, 0.3, 0.9) }
-    const d: Oklch = { l: 0.32, c: Math.min(accent.c, 0.09), h: accent.h }
-    light['--secondary'] = oklch(l)
-    light['--secondary-foreground'] = textOn(l)
-    light['--accent'] = oklch({ l: 0.95, c: Math.min(accent.c, 0.05), h: accent.h })
-    light['--accent-foreground'] = `oklch(0.2 0.03 ${accent.h.toFixed(1)})`
-    dark['--secondary'] = oklch(d)
-    dark['--secondary-foreground'] = 'oklch(0.985 0 0)'
-    dark['--accent'] = oklch({ l: 0.26, c: Math.min(accent.c, 0.05), h: accent.h })
-    dark['--accent-foreground'] = 'oklch(0.985 0 0)'
-  }
-
-  // The page and its text: light scheme only; dark keeps the neutral dark page
-  const background = theme?.background ? hexToOklch(theme.background) : null
-  if (background) {
-    const v = oklch(background)
-    light['--background'] = v
-    light['--card'] = v
-    light['--popover'] = v
-  }
-  const foreground = theme?.foreground ? hexToOklch(theme.foreground) : null
-  if (foreground) {
-    const v = oklch(foreground)
-    light['--foreground'] = v
-    light['--card-foreground'] = v
-    light['--popover-foreground'] = v
-  }
-
-  if (theme?.radius && RADII[theme.radius]) {
-    light['--radius'] = RADII[theme.radius]
-  }
-
-  const font =
-    theme?.font && (FONTS as readonly string[]).includes(theme.font)
-      ? theme.font
-      : null
-  if (font) {
-    light['--font-sans'] = `'${font}', 'Cairo', system-ui, sans-serif`
-  }
-
-  return { light, dark, font }
+  return { light, dark, fontLatin, fontArabic }
 }
+
+// ---------------------------------------------------------------- contrast
+
+/** What the neutral theme resolves to when the seeds leave a role unset (styles/theme.css). */
+const NEUTRAL: Record<Scheme, Required<Pick<SchemeColors, 'background' | 'foreground'>>> = {
+  light: { background: { l: 1, c: 0, h: 0 }, foreground: { l: 0.129, c: 0.042, h: 264.7 } },
+  dark: { background: { l: 0.129, c: 0.042, h: 264.7 }, foreground: { l: 0.984, c: 0.003, h: 247.9 } },
+}
+
+/** WCAG AA for normal text. */
+export const MIN_CONTRAST = 4.5
+
+export type ContrastIssue = {
+  scheme: Scheme
+  /** The pair that fails: text on the page, on the primary fill, on the secondary fill. */
+  pair: 'foreground' | 'primary' | 'secondary'
+  ratio: number
+}
+
+/** Every text-on-fill pair these seeds produce that reads below AA, in either scheme. */
+export function contrastIssues(input: BrandThemeInput | null | undefined): ContrastIssue[] {
+  const colors = brandColors(input)
+  const issues: ContrastIssue[] = []
+  for (const scheme of ['light', 'dark'] as const) {
+    const c = colors[scheme]
+    const pairs: [ContrastIssue['pair'], Oklch | undefined, Oklch | undefined][] = [
+      ['foreground', c.background ?? NEUTRAL[scheme].background, c.foreground ?? NEUTRAL[scheme].foreground],
+      ['primary', c.primary, c.primaryForeground],
+      ['secondary', c.secondary, c.secondaryForeground],
+    ]
+    for (const [pair, fill, text] of pairs) {
+      if (!fill || !text) continue
+      const ratio = contrastRatio(fill, text)
+      if (ratio < MIN_CONTRAST) issues.push({ scheme, pair, ratio: Math.round(ratio * 10) / 10 })
+    }
+  }
+  return issues
+}
+
+// ---------------------------------------------------------------- the page
 
 const block = (selector: string, vars: Record<string, string>) =>
   Object.keys(vars).length
@@ -163,11 +367,17 @@ const block = (selector: string, vars: Record<string, string>) =>
         .join(';')}}`
     : ''
 
-/** The CSS for these tokens, or null when they set nothing. */
+/** The CSS for these seeds, or null when they set nothing. */
 export function brandThemeCss(input: BrandThemeInput | null | undefined): string | null {
   const { light, dark } = brandTokens(input)
   const css = [block(':root', light), block('.dark', dark)].filter(Boolean).join('\n')
   return css || null
+}
+
+/** The page colour behind a scheme, for the browser's chrome (theme-color); null keeps the neutral one. */
+export function brandThemeColor(input: BrandThemeInput | null | undefined, scheme: Scheme): string | null {
+  const background = brandColors(input)[scheme].background
+  return background ? oklchToHex(background) : null
 }
 
 /** Google Fonts stylesheet for one family, the four weights the app uses. */
@@ -176,27 +386,43 @@ export function fontStylesheetUrl(family: string): string {
   return `https://fonts.googleapis.com/css2?family=${name}:wght@400;500;600;700&display=swap`
 }
 
-/** Loads the tenant's Latin family once; no-op for a family already on the page. */
-export function ensureFontLoaded(family: string | null) {
-  const existing = document.getElementById(FONT_LINK_ID) as HTMLLinkElement | null
-  if (!family) {
-    existing?.remove()
-    return
+/** Loads the tenant's families once; a family already on the page is left alone, a dropped one is removed. */
+export function ensureFontsLoaded(families: { latin: string | null; arabic: string | null }) {
+  for (const [script, family] of Object.entries(families)) {
+    const id = `${FONT_LINK_ID}-${script}`
+    const existing = document.getElementById(id) as HTMLLinkElement | null
+    if (!family) {
+      existing?.remove()
+      continue
+    }
+    const href = fontStylesheetUrl(family)
+    if (existing?.href === href) continue
+    const link = existing ?? document.createElement('link')
+    link.id = id
+    link.rel = 'stylesheet'
+    link.href = href
+    if (!existing) document.head.appendChild(link)
   }
-  const href = fontStylesheetUrl(family)
-  if (existing?.href === href) return
-  const link = existing ?? document.createElement('link')
-  link.id = FONT_LINK_ID
-  link.rel = 'stylesheet'
-  link.href = href
-  if (!existing) document.head.appendChild(link)
+}
+
+/** The theme on the page, for the chrome colour to follow when the scheme changes. */
+let applied: BrandThemeInput | null = null
+
+/** The browser's chrome takes the page's colour: the brand's when it set one, the neutral theme's otherwise. */
+export function applyThemeColor(scheme: Scheme) {
+  const meta = document.head.querySelector<HTMLMetaElement>("meta[name='theme-color']")
+  if (!meta) return
+  const color = brandThemeColor(applied, scheme) ?? oklchToHex(NEUTRAL[scheme].background)
+  if (meta.content !== color) meta.content = color
 }
 
 /** Puts the tenant's theme on the page, or takes it off when there is none. */
 export function applyBrandTheme(input: BrandThemeInput | null | undefined) {
+  applied = input ?? null
+  applyThemeColor(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
   const existing = document.getElementById(STYLE_ID)
   const tokens = brandTokens(input)
-  ensureFontLoaded(tokens.font)
+  ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic })
   const css = brandThemeCss(input)
   if (!css) {
     existing?.remove()

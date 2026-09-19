@@ -263,9 +263,15 @@ public static partial class TenantApi
         static string? Color(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToLowerInvariant();
 
         theme.Accent = Color(dto.Accent);
-        theme.Background = Color(dto.Background);
-        theme.Foreground = Color(dto.Foreground);
-        foreach (var (label, value) in new[] { ("accent", theme.Accent), ("background", theme.Background), ("foreground", theme.Foreground) })
+        theme.Surface = Color(dto.Surface);
+        if (dto.Dark is { } dark && (dark.Primary ?? dark.Accent ?? dark.Surface) is not null)
+            theme.Dark = new TenantThemeDark { Primary = Color(dark.Primary), Accent = Color(dark.Accent), Surface = Color(dark.Surface) };
+        var colors = new[]
+        {
+            ("accent", theme.Accent), ("surface", theme.Surface),
+            ("dark primary", theme.Dark?.Primary), ("dark accent", theme.Dark?.Accent), ("dark surface", theme.Dark?.Surface),
+        };
+        foreach (var (label, value) in colors)
         {
             if (value is not null && !HexColor().IsMatch(value))
             {
@@ -281,19 +287,20 @@ public static partial class TenantApi
             return theme;
         }
 
-        theme.Font = string.IsNullOrWhiteSpace(dto.Font) ? null : dto.Font.Trim();
-        if (theme.Font is not null)
-        {
-            var match = TenantTheme.Fonts.FirstOrDefault(f => string.Equals(f, theme.Font, StringComparison.OrdinalIgnoreCase));
-            if (match is null)
-            {
-                error = $"The font must be one of {string.Join(", ", TenantTheme.Fonts)}.";
-                return theme;
-            }
-            theme.Font = match;
-        }
-
+        theme.FontLatin = Font(dto.FontLatin, TenantTheme.LatinFonts, "Latin", out error);
+        if (error is not null) return theme;
+        theme.FontArabic = Font(dto.FontArabic, TenantTheme.ArabicFonts, "Arabic", out error);
         return theme;
+    }
+
+    /// <summary>The family as the allowlist spells it, null for none, an error for a family the surfaces cannot load.</summary>
+    private static string? Font(string? value, string[] allowed, string script, out string? error)
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var match = allowed.FirstOrDefault(f => string.Equals(f, value.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (match is null) error = $"The {script} font must be one of {string.Join(", ", allowed)}.";
+        return match;
     }
 
     /// <summary>Upper-cased codes, a zone the runtime knows, ar or en; null leaves the locale as it is.</summary>
@@ -358,10 +365,15 @@ public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, Tenant
         TenantWordmark.From(t, TenantImageSlots.WordmarkArDark));
 }
 
-public record TenantThemeDto(string? Accent, string? Background, string? Foreground, string? Radius, string? Font)
+/// <param name="Surface">The page's colour, light scheme; its hue tints the neutrals of both schemes.</param>
+/// <param name="Dark">The dark scheme's own seeds, when derived ones do not suit the brand.</param>
+public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark)
 {
-    public static TenantThemeDto From(TenantTheme t) => new(t.Accent, t.Background, t.Foreground, t.Radius, t.Font);
+    public static TenantThemeDto From(TenantTheme t)
+        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface));
 }
+
+public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
 
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
 public record TenantAuth(string Authority);

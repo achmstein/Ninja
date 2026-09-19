@@ -1,6 +1,11 @@
 /* Same design tokens as admin_web. Dark mode is class-based (.dark on the
- * root element), applied by the ThemeProvider (light/dark/system toggle). */
+ * root element), applied by the ThemeProvider (light/dark/system toggle).
+ * The brand's theme (lib/brand-theme.ts) overrides these variables from a
+ * <style> injected after this file; it never edits them here. */
 :root {
+  /* One family per script; the brand may set either */
+  --font-latin: 'Inter';
+  --font-arabic: 'Cairo';
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
@@ -44,7 +49,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Cairo', system-ui, sans-serif;
+  /* Inlined as var() references, so the brand's --font-latin / --font-arabic reach every utility and the page */
+  --font-sans: var(--font-latin), var(--font-arabic), system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

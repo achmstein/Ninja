@@ -70,10 +70,17 @@ export type BrandText = {
 
 export type BrandTheme = {
     accent: null | string;
-    background: null | string;
-    foreground: null | string;
+    surface: null | string;
     radius: null | string;
-    font: null | string;
+    fontLatin: null | string;
+    fontArabic: null | string;
+    dark: null | BrandThemeDark;
+};
+
+export type BrandThemeDark = {
+    primary: null | string;
+    accent: null | string;
+    surface: null | string;
 };
 
 export type BrandWordmark = {

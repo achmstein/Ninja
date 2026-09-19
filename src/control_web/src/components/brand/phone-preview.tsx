@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Home, Moon, Receipt, Search, Sun, User } from 'lucide-react'
 import { useLanguage, useT, type Language } from '@/lib/i18n'
 import { logoFor, wordmarkFor, type BrandImages, type Scheme } from '@/lib/brand-slots'
-import { brandTokens, ensureFontLoaded, type BrandThemeInput } from '@/lib/brand-theme'
+import { brandTokens, ensureFontsLoaded, type BrandThemeInput } from '@/lib/brand-theme'
 import { formatMoney } from '@/lib/locale'
 import { useTheme } from '@/context/theme-provider'
 import { cn } from '@/lib/utils'
@@ -73,7 +73,7 @@ export function PhonePreview({
 }) {
   const t = useT()
   const tokens = brandTokens(draft)
-  useEffect(() => ensureFontLoaded(tokens.font), [tokens.font])
+  useEffect(() => ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic }), [tokens.fontLatin, tokens.fontArabic])
 
   const name = (language === 'ar' ? draft.name.ar : draft.name.en) || draft.name.en || draft.name.ar || ''
   const wordmark = wordmarkFor(draft.images, language, scheme)
@@ -82,7 +82,13 @@ export function PhonePreview({
     { name: t('previewLatte'), price: 65 },
     { name: t('previewCroissant'), price: 45 },
   ]
-  const style = (scheme === 'dark' ? { ...tokens.light, ...tokens.dark } : tokens.light) as React.CSSProperties
+  const style = {
+    ...(scheme === 'dark' ? { ...tokens.light, ...tokens.dark } : tokens.light),
+    fontFamily:
+      language === 'ar'
+        ? "var(--font-arabic, 'Cairo'), var(--font-latin, 'Inter'), system-ui, sans-serif"
+        : "var(--font-latin, 'Inter'), var(--font-arabic, 'Cairo'), system-ui, sans-serif",
+  } as React.CSSProperties
 
   return (
     <PhoneFrame scheme={scheme} className={className}>

@@ -187,7 +187,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         ["logoUrl"] = null,
         ["logoDarkUrl"] = null,
         ["wordmarks"] = new JsonObject { ["en"] = null, ["enDark"] = null, ["ar"] = null, ["arDark"] = null },
-        ["theme"] = new JsonObject { ["accent"] = null, ["background"] = null, ["foreground"] = null, ["radius"] = null, ["font"] = null },
+        ["theme"] = new JsonObject { ["accent"] = null, ["surface"] = null, ["radius"] = null, ["fontLatin"] = null, ["fontArabic"] = null, ["dark"] = null },
         ["icons"] = new JsonObject
         {
             ["icon192"] = "/api/tenant/icons/icon-192.png?v=0",

@@ -77,35 +77,56 @@ public class Tenant
 }
 
 /// <summary>
-/// A handful of tokens, not a stylesheet: enough to make the customer app
-/// look like the café's design without a build per client. Colors are
-/// "#rrggbb"; the light scheme takes them as given and the dark scheme is
-/// derived. Null means the platform's default for that token.
+/// The seeds of the customer app's design, not a stylesheet: a handful of
+/// colours, a corner radius and a font per script, from which every surface
+/// derives its light and dark tokens the same way (text on a fill by
+/// contrast, the dark scheme lifted from the light one). Colors are
+/// "#rrggbb". Null means the platform's default for that seed.
 /// </summary>
 public class TenantTheme
 {
     public static readonly string[] Radii = ["none", "sm", "md", "lg", "xl"];
 
-    /// <summary>Latin families the surfaces know how to load; Arabic always falls back to Cairo.</summary>
-    public static readonly string[] Fonts =
+    /// <summary>Latin families the surfaces know how to load.</summary>
+    public static readonly string[] LatinFonts =
     [
-        "Inter", "Manrope", "DM Sans", "Nunito", "Poppins", "Plus Jakarta Sans", "Playfair Display", "Cairo", "Tajawal", "Almarai",
+        "Inter", "Manrope", "DM Sans", "Nunito", "Poppins", "Plus Jakarta Sans", "Playfair Display",
+    ];
+
+    /// <summary>Arabic families, likewise.</summary>
+    public static readonly string[] ArabicFonts =
+    [
+        "Cairo", "Tajawal", "Almarai", "IBM Plex Sans Arabic", "Noto Kufi Arabic", "Changa",
     ];
 
     /// <summary>Highlights, chips and hovers.</summary>
     public string? Accent { get; set; }
 
-    /// <summary>The page behind everything, light scheme.</summary>
-    public string? Background { get; set; }
-
-    /// <summary>Text on that page, light scheme.</summary>
-    public string? Foreground { get; set; }
+    /// <summary>The page behind everything, light scheme; its hue tints every neutral in both schemes.</summary>
+    public string? Surface { get; set; }
 
     /// <summary>One of <see cref="Radii"/>.</summary>
     public string? Radius { get; set; }
 
-    /// <summary>One of <see cref="Fonts"/>.</summary>
-    public string? Font { get; set; }
+    /// <summary>One of <see cref="LatinFonts"/>.</summary>
+    public string? FontLatin { get; set; }
+
+    /// <summary>One of <see cref="ArabicFonts"/>.</summary>
+    public string? FontArabic { get; set; }
+
+    /// <summary>What the dark scheme must use instead of what is derived; null derives everything.</summary>
+    public TenantThemeDark? Dark { get; set; }
+}
+
+/// <summary>The dark scheme's own seeds, for a brand whose lifted colours do not suit it.</summary>
+public class TenantThemeDark
+{
+    public string? Primary { get; set; }
+
+    public string? Accent { get; set; }
+
+    /// <summary>The dark page, kept dark.</summary>
+    public string? Surface { get; set; }
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

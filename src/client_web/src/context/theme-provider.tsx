@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { preview } from '@/lib/preview'
+import { applyThemeColor } from '@/lib/brand-theme'
 
 type Theme = 'dark' | 'light' | 'system'
 export type ResolvedTheme = Exclude<Theme, 'system'>
@@ -61,6 +62,8 @@ export function ThemeProvider({
     const applyTheme = (currentResolvedTheme: ResolvedTheme) => {
       root.classList.remove('light', 'dark') // Remove existing theme classes
       root.classList.add(currentResolvedTheme) // Add the new theme class
+      root.style.colorScheme = currentResolvedTheme
+      applyThemeColor(currentResolvedTheme)
     }
 
     const handleChange = () => {

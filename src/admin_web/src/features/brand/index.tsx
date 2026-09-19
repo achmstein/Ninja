@@ -10,7 +10,7 @@ import {
 } from '@/api/branch/@tanstack/react-query.gen'
 import { brandQueryKey, useBrand, useCustomerOrigin, type Brand } from '@/lib/brand'
 import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
-import { FONTS, RADII } from '@/lib/brand-theme'
+import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -42,6 +42,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
+import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
@@ -88,27 +89,39 @@ function problemDetail(e: unknown): string | undefined {
 
 type ThemeForm = {
   accent: string
-  background: string
-  foreground: string
+  surface: string
   radius: string
-  font: string
+  fontLatin: string
+  fontArabic: string
+  darkPrimary: string
+  darkAccent: string
+  darkSurface: string
 }
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   accent: t.accent ?? '',
-  background: t.background ?? '',
-  foreground: t.foreground ?? '',
+  surface: t.surface ?? '',
   radius: t.radius ?? '',
-  font: t.font ?? '',
+  fontLatin: t.fontLatin ?? '',
+  fontArabic: t.fontArabic ?? '',
+  darkPrimary: t.dark?.primary ?? '',
+  darkAccent: t.dark?.accent ?? '',
+  darkSurface: t.dark?.surface ?? '',
 })
 
-const fromThemeForm = (f: ThemeForm): TenantThemeDto => ({
-  accent: f.accent.trim() || null,
-  background: f.background.trim() || null,
-  foreground: f.foreground.trim() || null,
-  radius: f.radius || null,
-  font: f.font || null,
-})
+const orNull = (v: string) => v.trim().toLowerCase() || null
+
+const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
+  const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
+  return {
+    accent: orNull(f.accent),
+    surface: orNull(f.surface),
+    radius: f.radius || null,
+    fontLatin: f.fontLatin || null,
+    fontArabic: f.fontArabic || null,
+    dark: dark.primary || dark.accent || dark.surface ? dark : null,
+  }
+}
 
 /** The tenant's brand: name, marks, the customer app's theme, where customers order, and which parts of the platform are on. */
 export function BrandSettings() {
@@ -264,17 +277,11 @@ function BrandForm({ brand }: { brand: Brand }) {
                   onChange={(accent) => setTheme({ ...theme, accent })}
                 />
                 <ColorField
-                  id='brand-background'
-                  label={t('backgroundColor')}
-                  value={theme.background}
-                  onChange={(background) => setTheme({ ...theme, background })}
+                  id='brand-surface'
+                  label={t('surfaceColor')}
+                  value={theme.surface}
+                  onChange={(surface) => setTheme({ ...theme, surface })}
                   fallback='#ffffff'
-                />
-                <ColorField
-                  id='brand-foreground'
-                  label={t('textColor')}
-                  value={theme.foreground}
-                  onChange={(foreground) => setTheme({ ...theme, foreground })}
                 />
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-radius' className='text-xs'>
@@ -299,30 +306,54 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className='space-y-1.5'>
-                  <Label htmlFor='brand-font' className='text-xs'>
-                    {t('fontFamily')}
-                  </Label>
-                  <Select
-                    value={theme.font || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, font: v === NONE ? '' : v })
-                    }
-                  >
-                    <SelectTrigger id='brand-font' className='w-full'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>{t('defaultOption')}</SelectItem>
-                      {FONTS.map((f) => (
-                        <SelectItem key={f} value={f}>
-                          {f}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FontSelect
+                  id='brand-font-latin'
+                  label={t('fontLatin')}
+                  value={theme.fontLatin}
+                  onChange={(fontLatin) => setTheme({ ...theme, fontLatin })}
+                  fonts={LATIN_FONTS}
+                />
+                <FontSelect
+                  id='brand-font-arabic'
+                  label={t('fontArabic')}
+                  value={theme.fontArabic}
+                  onChange={(fontArabic) => setTheme({ ...theme, fontArabic })}
+                  fonts={ARABIC_FONTS}
+                />
               </div>
+              <Collapsible defaultOpen={Boolean(theme.darkPrimary || theme.darkAccent || theme.darkSurface)}>
+                <CollapsibleTrigger asChild>
+                  <Button type='button' variant='ghost' size='sm' className='-ms-2 group'>
+                    <ChevronDown className='me-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180' />
+                    {t('darkScheme')}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className='grid gap-3 pt-3 sm:grid-cols-3'>
+                  <ColorField
+                    id='brand-dark-primary'
+                    label={t('brandColor')}
+                    value={theme.darkPrimary}
+                    onChange={(darkPrimary) => setTheme({ ...theme, darkPrimary })}
+                    placeholder={t('derived')}
+                  />
+                  <ColorField
+                    id='brand-dark-accent'
+                    label={t('accentColor')}
+                    value={theme.darkAccent}
+                    onChange={(darkAccent) => setTheme({ ...theme, darkAccent })}
+                    placeholder={t('derived')}
+                  />
+                  <ColorField
+                    id='brand-dark-surface'
+                    label={t('surfaceColor')}
+                    value={theme.darkSurface}
+                    onChange={(darkSurface) => setTheme({ ...theme, darkSurface })}
+                    fallback='#111111'
+                    placeholder={t('derived')}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+              <ContrastNotice input={{ primaryColor: orNull(color), theme: fromThemeForm(theme) }} />
             </div>
 
             <div className='space-y-2'>
@@ -475,18 +506,57 @@ function ImageSlotField({
   )
 }
 
+function FontSelect({
+  id,
+  label,
+  value,
+  onChange,
+  fonts,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (v: string) => void
+  fonts: readonly string[]
+}) {
+  const t = useT()
+  return (
+    <div className='space-y-1.5'>
+      <Label htmlFor={id} className='text-xs'>
+        {label}
+      </Label>
+      <Select value={value || NONE} onValueChange={(v) => onChange(v === NONE ? '' : v)}>
+        <SelectTrigger id={id} className='w-full'>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NONE}>{t('defaultOption')}</SelectItem>
+          {fonts.map((f) => (
+            <SelectItem key={f} value={f} style={{ fontFamily: `'${f}'` }}>
+              {f}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
 function ColorField({
   id,
   label,
   value,
   onChange,
   fallback = DEFAULT_COLOR,
+  placeholder,
 }: {
   id: string
   label: string
   value: string
   onChange: (v: string) => void
   fallback?: string
+  /** What the empty field says; the default is the platform's own colour */
+  placeholder?: string
 }) {
   const t = useT()
   return (
@@ -505,7 +575,7 @@ function ColorField({
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={t('defaultOption')}
+          placeholder={placeholder ?? t('defaultOption')}
           className='font-mono'
           dir='ltr'
         />

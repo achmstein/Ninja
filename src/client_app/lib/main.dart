@@ -231,7 +231,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final locale = ref.watch(localeProvider);
     final brand = ref.watch(brandProvider);
     final brandName = ref.watch(brandNameProvider);
-    final brandFont = brandFontFamily(brand.theme.font);
+    final brandFont = brandFontFor(brand.theme, locale);
 
     if (authState.isAuthenticated && !_wasAuthenticated) {
       _wasAuthenticated = true;
@@ -281,8 +281,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
   }
 
   /// Material's theme for the few Material widgets in use: seeded from the
-  /// brand color, set in the locale's family and, for Latin text, the
-  /// tenant's font
+  /// brand color, set in the locale's family or the tenant's font for it
   static ThemeData _materialTheme(Brightness brightness, Locale locale, TenantBrand brand, String? brandFont) {
     final theme = ThemeData(
       colorScheme: ColorScheme.fromSeed(
@@ -297,7 +296,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
         overlayColor: WidgetStatePropertyAll(Colors.transparent),
       ),
     );
-    if (!usesBrandFont(locale, brandFont)) return theme;
-    return theme.copyWith(textTheme: GoogleFonts.getTextTheme(brandFont!, theme.textTheme));
+    if (brandFont == null) return theme;
+    return theme.copyWith(textTheme: GoogleFonts.getTextTheme(brandFont, theme.textTheme));
   }
 }

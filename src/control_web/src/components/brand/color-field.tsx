@@ -16,6 +16,8 @@ type ColorFieldProps = {
   value: string
   onChange: (value: string) => void
   fallback?: string
+  /** What the empty field says; the default is the platform's own colour */
+  placeholder?: string
   /** An image whose colours are offered as swatches (a file being picked, or a URL) */
   swatchesFrom?: File | string | null
   /** The eyedropper, where the browser has one */
@@ -34,6 +36,7 @@ export function ColorField({
   value,
   onChange,
   fallback = DEFAULT_COLOR,
+  placeholder,
   swatchesFrom,
   eyedropper,
   className,
@@ -77,7 +80,7 @@ export function ColorField({
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value.toLowerCase())}
-          placeholder={t('defaultOption')}
+          placeholder={placeholder ?? t('defaultOption')}
           className='font-mono'
           dir='ltr'
           maxLength={7}

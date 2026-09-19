@@ -8,20 +8,17 @@ import '../brand/tenant_brand.dart';
 
 enum AppThemeMode { light, dark, system }
 
-/// The bundled family for [locale]: Arabic always sets in NotoSansArabic;
-/// Latin in Inter unless the tenant chose a font (see [localeTextStyle])
+/// The bundled family for [locale]: Arabic sets in NotoSansArabic and Latin
+/// in Inter, unless the tenant chose a font for that script (see [localeTextStyle])
 String getFontFamily(Locale locale) {
   return locale.languageCode == 'ar' ? 'NotoSansArabic' : 'Inter';
 }
 
-/// Whether the tenant's Latin font applies to text in [locale]
-bool usesBrandFont(Locale locale, String? brandFont) => brandFont != null && locale.languageCode != 'ar';
-
-/// [style] in the app's face for [locale]: the tenant's family when it set
-/// one and the text is Latin, weight resolved by google_fonts; otherwise the
-/// bundled family
+/// [style] in the app's face for [locale]: the tenant's family for the
+/// locale's script when it chose one, weight resolved by google_fonts;
+/// otherwise the bundled family
 TextStyle localeTextStyle(Locale locale, TextStyle style, {String? brandFont}) {
-  if (usesBrandFont(locale, brandFont)) return GoogleFonts.getFont(brandFont!, textStyle: style);
+  if (brandFont != null) return GoogleFonts.getFont(brandFont, textStyle: style);
   return style.copyWith(fontFamily: getFontFamily(locale));
 }
 
@@ -58,9 +55,9 @@ class ThemeState {
     );
   }
 
-  /// The zinc theme with the tenant's tokens on top: its primary and accent,
-  /// its light background and foreground, its corner radius and, for Latin
-  /// text, its font. Whatever [brand] leaves unset stays zinc.
+  /// The zinc theme with the tenant's seeds on top: its colours derived for
+  /// this brightness, its corner radius and its font for the locale's script.
+  /// Whatever [brand] leaves unset stays zinc.
   FThemeData getForuiTheme(BuildContext context, {Locale? locale, TenantBrand brand = TenantBrand.neutral}) {
     final Brightness brightness;
     switch (themeMode) {
@@ -81,15 +78,15 @@ class ThemeState {
       brand,
     );
 
-    // Typography in the locale's bundled family, then the tenant's font over
-    // the Latin one when it chose a family google_fonts knows
-    final brandFont = brandFontFamily(brand.theme.font);
+    // Typography in the locale's bundled family, then the tenant's family
+    // for that script when it chose one google_fonts knows
+    final brandFont = brandFontFor(brand.theme, locale ?? const Locale('en'));
     var typography = FTypography.inherit(
       colors: colors,
       defaultFontFamily: locale != null ? getFontFamily(locale) : 'Inter',
     );
-    if (usesBrandFont(locale ?? const Locale('en'), brandFont)) {
-      typography = brandedTypography(typography, brandFont!);
+    if (brandFont != null) {
+      typography = brandedTypography(typography, brandFont);
     }
 
     // Style inherits from colors and typography; the tenant's corners on top

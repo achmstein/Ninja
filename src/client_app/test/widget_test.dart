@@ -64,7 +64,7 @@ void main() {
       expect(brand.wordmarks, TenantWordmarks.none);
       expect(brand.theme, TenantTheme.neutral);
       expect(brand.theme.accent, isNull);
-      expect(brand.theme.font, isNull);
+      expect(brand.theme.fontLatin, isNull);
       expect(brand.features.rooms, isFalse);
     });
 
@@ -82,10 +82,11 @@ void main() {
         },
         'theme': {
           'accent': '#F59E0B',
-          'background': '#fffbf5',
-          'foreground': null,
+          'surface': '#fffbf5',
           'radius': 'lg',
-          'font': 'Poppins',
+          'fontLatin': 'Poppins',
+          'fontArabic': 'Tajawal',
+          'dark': {'primary': null, 'accent': null, 'surface': '#1a1412'},
         },
         'features': {},
         'version': 7,
@@ -97,17 +98,19 @@ void main() {
       expect(brand.wordmarks.en!.aspectRatio, 5.0);
       expect(brand.theme.accentHex, '#f59e0b');
       expect(brand.theme.accent, const Color(0xFFF59E0B));
-      expect(brand.theme.background, const Color(0xFFFFFBF5));
-      expect(brand.theme.foreground, isNull);
+      expect(brand.theme.surface, const Color(0xFFFFFBF5));
       expect(brand.theme.radius, 'lg');
-      expect(brand.theme.font, 'Poppins');
+      expect(brand.theme.fontLatin, 'Poppins');
+      expect(brand.theme.fontArabic, 'Tajawal');
+      expect(brand.theme.dark?.surfaceHex, '#1a1412');
+      expect(brand.theme.dark?.primary, isNull);
 
       // What the cache writes reads back the same
       expect(TenantBrand.fromJson(brand.toJson()), brand);
     });
 
     test('a radius or color off the allowlist is dropped, not kept', () {
-      final theme = TenantTheme.fromJson({'accent': 'orange', 'radius': 'round', 'font': ' '});
+      final theme = TenantTheme.fromJson({'accent': 'orange', 'radius': 'round', 'fontLatin': ' ', 'dark': {'surface': 'black'}});
       expect(theme, TenantTheme.neutral);
     });
   });
@@ -116,22 +119,48 @@ void main() {
     const brand = TenantBrand(
       name: LocalizedText(en: 'Chillax'),
       primaryColorHex: '#0ea5e9',
-      theme: TenantTheme(accentHex: '#f59e0b', backgroundHex: '#fffbf5', foregroundHex: '#1c1917', radius: 'xl'),
+      theme: TenantTheme(accentHex: '#f59e0b', surfaceHex: '#fffbf5', radius: 'xl'),
     );
 
-    test('light: the tenant colors as given; dark: keeps the zinc page and lifts the fills', () {
+    Color rgb(Color c) => Color.fromARGB(255, (c.r * 255).round(), (c.g * 255).round(), (c.b * 255).round());
+
+    test('light: the seeds as given with text by contrast; dark: derived from the same seeds', () {
       final light = brandedColors(FThemes.zinc.light.colors, brand);
-      expect(light.primary, const Color(0xFF0EA5E9));
-      expect(light.secondary, const Color(0xFFF59E0B));
-      expect(light.background, const Color(0xFFFFFBF5));
-      expect(light.foreground, const Color(0xFF1C1917));
+      expect(rgb(light.primary), const Color(0xFF0EA5E9));
+      expect(rgb(light.secondary), const Color(0xFFF59E0B));
+      expect(rgb(light.background), const Color(0xFFFFFBF5));
+      // Amber is light: near-black ink on it, not white
+      expect(Oklch.fromColor(light.secondaryForeground).l, lessThan(0.3));
+      expect(contrastRatio(Oklch.fromColor(light.background), Oklch.fromColor(light.foreground)), greaterThan(10));
 
       final dark = brandedColors(FThemes.zinc.dark.colors, brand);
-      expect(dark.background, FThemes.zinc.dark.colors.background);
-      expect(dark.foreground, FThemes.zinc.dark.colors.foreground);
-      // Lifted to 0.72, give or take 8-bit rounding on the way back to a Color
-      expect(HSLColor.fromColor(dark.primary).lightness, closeTo(0.72, 0.005));
-      expect(HSLColor.fromColor(dark.secondary).lightness, closeTo(0.30, 0.01));
+      // The dark page carries the surface's warm hue at night
+      final page = Oklch.fromColor(dark.background);
+      expect(page.l, closeTo(0.16, 0.01));
+      expect(page.h, closeTo(Oklch.fromColor(const Color(0xFFFFFBF5)).h, 5));
+      expect(Oklch.fromColor(dark.foreground).l, greaterThan(0.95));
+      // The primary is lifted to read on that page
+      expect(Oklch.fromColor(dark.primary).l, closeTo(0.74, 0.01));
+      expect(Oklch.fromColor(dark.secondary).l, closeTo(0.32, 0.01));
+    });
+
+    test('the dark seeds replace what would be derived', () {
+      const given = TenantBrand(
+        name: LocalizedText(en: 'Chillax'),
+        primaryColorHex: '#0ea5e9',
+        theme: TenantTheme(dark: TenantThemeDark(primaryHex: '#7dd3fc', surfaceHex: '#1a1412')),
+      );
+      final dark = brandedColors(FThemes.zinc.dark.colors, given);
+      expect(rgb(dark.primary), const Color(0xFF7DD3FC));
+      expect(Oklch.fromColor(dark.background).l, closeTo(Oklch.fromColor(const Color(0xFF1A1412)).l, 0.01));
+      // And the light scheme is untouched by them
+      expect(brandedColors(FThemes.zinc.light.colors, given).background, FThemes.zinc.light.colors.background);
+    });
+
+    test('a colour survives the trip through OKLCH', () {
+      for (final hex in [0xFF0EA5E9, 0xFFF59E0B, 0xFF18181B, 0xFFFFFFFF]) {
+        expect(rgb(Oklch.fromColor(Color(hex)).toColor()), Color(hex));
+      }
     });
 
     test('nothing set leaves zinc untouched', () {
@@ -148,10 +177,14 @@ void main() {
       expect(style.borderRadius.topLeft, const Radius.circular(16));
     });
 
-    test('a font google_fonts does not know falls back silently', () {
+    test('a font google_fonts does not know falls back silently, and each script gets its own', () {
       expect(brandFontFamily('Poppins'), 'Poppins');
       expect(brandFontFamily('Comic Sans MS'), isNull);
       expect(brandFontFamily(null), isNull);
+      const theme = TenantTheme(fontLatin: 'Poppins', fontArabic: 'Tajawal');
+      expect(brandFontFor(theme, const Locale('en')), 'Poppins');
+      expect(brandFontFor(theme, const Locale('ar')), 'Tajawal');
+      expect(brandFontFor(const TenantTheme(fontLatin: 'Poppins'), const Locale('ar')), isNull);
     });
   });
 

@@ -174,7 +174,9 @@ public record BrandWordmark(string Url, int Width, int Height)
 
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
-public record BrandTheme(string? Accent, string? Background, string? Foreground, string? Radius, string? Font);
+public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark);
+
+public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 

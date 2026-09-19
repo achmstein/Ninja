@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Check, SunMoon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
@@ -22,13 +21,6 @@ const themeLabel: Record<string, TranslationKey> = {
 export function ThemeSwitch() {
   const { theme, setTheme } = useTheme()
   const t = useT()
-
-  // Keep the browser chrome color in sync with the theme
-  useEffect(() => {
-    const themeColor = theme === 'dark' ? '#020618' : '#fff'
-    const metaThemeColor = document.querySelector("meta[name='theme-color']")
-    if (metaThemeColor) metaThemeColor.setAttribute('content', themeColor)
-  }, [theme])
 
   return (
     <DropdownMenu modal={false}>

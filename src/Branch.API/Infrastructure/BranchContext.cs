@@ -38,7 +38,11 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
             entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
             entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
-            entity.OwnsOne(e => e.Theme, b => b.ToJson());
+            entity.OwnsOne(e => e.Theme, b =>
+            {
+                b.ToJson();
+                b.OwnsOne(t => t.Dark);
+            });
             // A dictionary cannot be an owned JSON type; it is one jsonb document
             entity.Property(e => e.Images)
                 .HasColumnType("jsonb")
