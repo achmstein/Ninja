@@ -521,3 +521,8 @@ src/Catalog.API/Pics/bundle_[0-9]*_[0-9]*.*
 
 # Tenant logo and icons written by Branch.API in dev
 src/Branch.API/uploads/
+
+# Local platform run: built web apps, rendered realm, secrets
+deploy/platform/local/web/
+deploy/platform/local/realms/
+deploy/platform/local/.env

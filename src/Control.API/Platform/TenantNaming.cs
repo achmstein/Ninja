@@ -74,7 +74,7 @@ public static partial class TenantNaming
 }
 
 /// <summary>The public hosts one tenant gets; the customer one may be the café's own domain.</summary>
-public sealed record TenantHosts(string Customer, string Admin, string Pos, string Kds, string Api)
+public sealed record TenantHosts(string Customer, string Admin, string Pos, string Kds, string Api, string Scheme = "https")
 {
     public static TenantHosts For(Tenant tenant, PlatformOptions platform)
     {
@@ -85,14 +85,15 @@ public sealed record TenantHosts(string Customer, string Admin, string Pos, stri
             Admin: $"admin.{slug}.{d}",
             Pos: $"pos.{slug}.{d}",
             Kds: $"kds.{slug}.{d}",
-            Api: $"api.{slug}.{d}");
+            Api: $"api.{slug}.{d}",
+            Scheme: platform.Scheme);
     }
 
-    public string CustomerUrl => $"https://{Customer}";
-    public string AdminUrl => $"https://{Admin}";
-    public string PosUrl => $"https://{Pos}";
-    public string KdsUrl => $"https://{Kds}";
-    public string ApiUrl => $"https://{Api}";
+    public string CustomerUrl => $"{Scheme}://{Customer}";
+    public string AdminUrl => $"{Scheme}://{Admin}";
+    public string PosUrl => $"{Scheme}://{Pos}";
+    public string KdsUrl => $"{Scheme}://{Kds}";
+    public string ApiUrl => $"{Scheme}://{Api}";
 
     public IEnumerable<string> All => [Customer, Admin, Pos, Kds, Api];
 }

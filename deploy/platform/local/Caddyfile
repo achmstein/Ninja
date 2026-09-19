@@ -1,0 +1,73 @@
+# The edge on a laptop: the production Caddyfile without TLS, on *.localhost.
+# {labels.1} is the slug in admin.cove.localhost (labels.0 = localhost).
+
+{
+	auto_https off
+}
+
+(spa) {
+	root * {args[0]}
+	try_files {path} /index.html
+	file_server
+	header Cache-Control "no-cache"
+}
+
+(tenant_api) {
+	handle /api/* {
+		reverse_proxy {args[0]}:5000
+	}
+	handle /hub/* {
+		reverse_proxy {args[0]}:5000
+	}
+}
+
+http://localhost {
+	redir http://control.localhost{uri}
+}
+
+http://auth.localhost {
+	reverse_proxy keycloak:8080
+}
+
+http://control.localhost {
+	handle /api/* {
+		reverse_proxy control-api:8080
+	}
+	handle {
+		import spa /srv/control-web
+	}
+}
+
+import custom-domains.caddy
+
+http://admin.*.localhost {
+	import tenant_api {labels.1}-gateway
+	handle {
+		import spa /srv/admin-web
+	}
+}
+
+http://pos.*.localhost {
+	import tenant_api {labels.1}-gateway
+	handle {
+		import spa /srv/pos-web
+	}
+}
+
+http://kds.*.localhost {
+	import tenant_api {labels.1}-gateway
+	handle {
+		import spa /srv/kds-web
+	}
+}
+
+http://api.*.localhost {
+	reverse_proxy {labels.1}-gateway:5000
+}
+
+http://*.localhost {
+	import tenant_api {labels.1}-gateway
+	handle {
+		import spa /srv/client-web
+	}
+}

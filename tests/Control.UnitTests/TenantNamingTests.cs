@@ -44,6 +44,9 @@ public sealed class TenantNamingTests
         tenant.CustomerDomain = "menu.bluebottle.com";
         Assert.AreEqual("https://menu.bluebottle.com", TenantHosts.For(tenant, platform).CustomerUrl);
         Assert.AreEqual("https://admin.blue.ninja.app", TenantHosts.For(tenant, platform).AdminUrl);
+
+        var laptop = new PlatformOptions { Domain = "localhost", Scheme = "http" };
+        Assert.AreEqual("http://admin.blue.localhost", TenantHosts.For(new Tenant { Slug = "blue" }, laptop).AdminUrl);
     }
 
     [TestMethod]

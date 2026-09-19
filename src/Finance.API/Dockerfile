@@ -12,6 +12,7 @@ COPY ["src/EventBus/EventBus.csproj", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/EventBusRabbitMQ.csproj", "EventBusRabbitMQ/"]
 COPY ["src/IntegrationEventLogEF/IntegrationEventLogEF.csproj", "IntegrationEventLogEF/"]
 COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
+COPY ["src/Ninja.AI/Ninja.AI.csproj", "Ninja.AI/"]
 COPY ["src/Shared/", "Shared/"]
 
 # Restore dependencies
@@ -25,6 +26,7 @@ COPY ["src/EventBus/", "EventBus/"]
 COPY ["src/EventBusRabbitMQ/", "EventBusRabbitMQ/"]
 COPY ["src/IntegrationEventLogEF/", "IntegrationEventLogEF/"]
 COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
+COPY ["src/Ninja.AI/", "Ninja.AI/"]
 
 # Build
 WORKDIR /src/Finance.API

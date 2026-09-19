@@ -233,15 +233,47 @@ public sealed class HttpTenantStack(IHttpClientFactory httpClientFactory, IOptio
 
         if (logoPath is not null && File.Exists(logoPath))
         {
+            var bytes = await File.ReadAllBytesAsync(logoPath, ct);
+            // A wide image is a wordmark (headers, sign-in); the square mark and the icons stay the neutral tile until one is uploaded
+            var slot = ImageShape.IsWide(bytes) ? "wordmark" : "logo";
             using var form = new MultipartFormDataContent();
-            var file = new ByteArrayContent(await File.ReadAllBytesAsync(logoPath, ct));
+            var file = new ByteArrayContent(bytes);
             file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
             form.Add(file, "file", "logo.png");
-            var logo = await client.PutAsync($"http://{gateway}:5000/api/tenant/logo", form, ct);
-            if (!logo.IsSuccessStatusCode)
-                throw new InvalidOperationException($"The stack refused the logo ({(int)logo.StatusCode}): {await logo.Content.ReadAsStringAsync(ct)}");
+            var upload = await client.PutAsync($"http://{gateway}:5000/api/tenant/{slot}", form, ct);
+            if (!upload.IsSuccessStatusCode)
+                throw new InvalidOperationException($"The stack refused the {slot} ({(int)upload.StatusCode}): {await upload.Content.ReadAsStringAsync(ct)}");
         }
     }
+}
+
+/// <summary>Enough of PNG and JPEG headers to tell a wide wordmark from a square mark; anything unreadable counts as square.</summary>
+public static class ImageShape
+{
+    public static bool IsWide(ReadOnlySpan<byte> bytes) => Dimensions(bytes) is (var w, var h) && h > 0 && w >= h * 1.5;
+
+    public static (int Width, int Height)? Dimensions(ReadOnlySpan<byte> b)
+    {
+        if (b.Length >= 24 && b[0] == 0x89 && b[1] == (byte)'P' && b[2] == (byte)'N' && b[3] == (byte)'G')
+            return (ReadBigEndian(b[16..20]), ReadBigEndian(b[20..24]));
+
+        if (b.Length >= 4 && b[0] == 0xFF && b[1] == 0xD8)
+        {
+            var i = 2;
+            while (i + 9 < b.Length)
+            {
+                if (b[i] != 0xFF) { i++; continue; }
+                var marker = b[i + 1];
+                if (marker is 0xC0 or 0xC1 or 0xC2)
+                    return ((b[i + 7] << 8) | b[i + 8], (b[i + 5] << 8) | b[i + 6]);
+                if (marker is 0xD8 or 0x01 or >= 0xD0 and <= 0xD7) { i += 2; continue; }
+                i += 2 + ((b[i + 2] << 8) | b[i + 3]);
+            }
+        }
+        return null;
+    }
+
+    private static int ReadBigEndian(ReadOnlySpan<byte> b) => (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
 }
 
 // ---------- dry run: records, answers yes ----------

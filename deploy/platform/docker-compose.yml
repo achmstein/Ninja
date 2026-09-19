@@ -19,8 +19,11 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Keycloak cannot create its own database; the control plane creates the tenants'
+      POSTGRES_MULTIPLE_DATABASES: keycloak,controldb
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
     networks: [aspire]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]

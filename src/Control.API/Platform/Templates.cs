@@ -149,9 +149,10 @@ public static partial class Templates
                 for (var v = 0; v < versions.Length; v++)
                     sb.AppendLine($"      {r}__MATCH__QUERYPARAMETERS__0__VALUES__{v}: \"{versions[v]}\"");
             }
-            var t = 0;
-            foreach (var (key, value) in transforms)
-                sb.AppendLine($"      {r}__TRANSFORMS__{t++}__{key}: \"{value}\"");
+            // One transform is one object: X-Forwarded and its HeaderPrefix share an index
+            for (var t = 0; t < transforms.Length; t++)
+                foreach (var (key, value) in transforms[t])
+                    sb.AppendLine($"      {r}__TRANSFORMS__{t}__{key}: \"{value}\"");
         }
         foreach (var service in TenantNaming.Services)
             sb.AppendLine($"      REVERSEPROXY__CLUSTERS__{service}__DESTINATIONS__d1__ADDRESS: \"http://{TenantNaming.Service(slug, service)}:8080\"");
@@ -213,10 +214,10 @@ public static partial class Templates
     }
 
     /// <summary>The gateway's route table, the one ConfigureMobileBffRoutes declares; kept in step by tests/Ninja.Contracts.Tests.</summary>
-    internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[] Transforms)> GatewayRoutes()
+    internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[][] Transforms)> GatewayRoutes()
     {
-        (string, string)[] forwarded = [("X-Forwarded", "Set"), ("HeaderPrefix", "X-Forwarded-")];
-        (string, string)[] none = [];
+        (string, string)[][] forwarded = [[("X-Forwarded", "Set"), ("HeaderPrefix", "X-Forwarded-")]];
+        (string, string)[][] none = [];
         string[] v1 = ["1.0", "1"];
         yield return ("/api/catalog/items/{id}/pic", "catalog", null, forwarded);
         yield return ("/api/catalog/{*any}", "catalog", ["1.0", "1", "2.0"], forwarded);
@@ -239,7 +240,7 @@ public static partial class Templates
         yield return ("/api/branches/{*any}", "branch", null, none);
         yield return ("/api/tenant/{*any}", "branch", null, forwarded);
         foreach (var service in TenantNaming.Services)
-            yield return ($"/health/{service}", service, null, [("PathSet", "/health")]);
+            yield return ($"/health/{service}", service, null, [[("PathSet", "/health")]]);
     }
 
     private static string Yaml(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");

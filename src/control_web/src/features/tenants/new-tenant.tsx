@@ -47,7 +47,7 @@ export function NewTenantPage() {
   const [kind, setKind] = useState<TenantKindName>('Demo')
   const [slug, setSlug] = useState('')
   const [slugTouched, setSlugTouched] = useState(false)
-  const [color, setColor] = useState(DEFAULT_COLOR)
+  const [color, setColor] = useState('')
   const [customerDomain, setCustomerDomain] = useState('')
   const [demoDays, setDemoDays] = useState('')
   const [logo, setLogo] = useState<File | null>(null)
@@ -94,7 +94,7 @@ export function NewTenantPage() {
         ownerEmail: ownerEmail.trim(),
         kind,
         slug: effectiveSlug,
-        primaryColor: color.toLowerCase(),
+        primaryColor: color.trim() ? color.toLowerCase() : null,
         customerDomain:
           kind === 'Customer' ? customerDomain.trim() || null : null,
         demoDays:

@@ -1,0 +1,134 @@
+# The platform on a laptop: the same shape as ../docker-compose.yml, on
+# plain http under *.localhost (browsers resolve any *.localhost to this
+# machine, several labels deep, with no hosts-file entry). Images are built
+# here, not pulled; the control plane runs in Docker and stamps tenants
+# through the host's daemon.
+#
+#   ./build-images.ps1        (once, and after code changes)
+#   docker compose up -d      (project: ninja-local)
+#   http://control.localhost  platform / Local123$
+#
+# Hosts a tenant gets: http://cove.localhost, http://admin.cove.localhost,
+# http://pos.cove.localhost, http://kds.cove.localhost, http://api.cove.localhost
+
+name: ninja-local
+
+services:
+  postgres:
+    image: docker.io/ankane/pgvector:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local
+      POSTGRES_MULTIPLE_DATABASES: keycloak,controldb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
+    networks: [ninja-local]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  eventbus:
+    image: docker.io/library/rabbitmq:4.2
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: local
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks: [ninja-local]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: local
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
+      KC_FEATURES: token-exchange,admin-fine-grained-authz:v1
+      KC_HOSTNAME: http://auth.localhost
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: local
+    volumes:
+      - ./realms:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [ninja-local]
+
+  control-api:
+    build:
+      context: ../../..
+      dockerfile: src/Control.API/Dockerfile
+    image: ninja-control:local
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "8080"
+      ConnectionStrings__controldb: Host=postgres;Port=5432;Username=postgres;Password=local;Database=controldb
+      Identity__Url: http://keycloak:8080/realms/ninja
+      Keycloak__Realm: ninja
+      Platform__Domain: localhost
+      Platform__Scheme: http
+      Platform__ControlUrl: http://control.localhost
+      Platform__TenantsRoot: /opt/ninja/tenants
+      Platform__ImageRegistry: ninja
+      Platform__DefaultImageTag: local
+      Platform__PullImages: "false"
+      Platform__Network: ninja-local
+      Platform__PostgresPassword: local
+      Platform__RabbitPassword: local
+      Platform__RabbitContainer: ninja-local-eventbus-1
+      Platform__EdgeContainer: ninja-local-caddy-1
+      Platform__EdgeSnippetPath: /opt/ninja/platform/custom-domains.caddy
+      Platform__KeycloakPublicUrl: http://auth.localhost
+      Platform__KeycloakAdminPassword: local
+      Platform__DemoDays: "14"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - tenants:/opt/ninja/tenants
+      - ./custom-domains.caddy:/opt/ninja/platform/custom-domains.caddy
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks: [ninja-local]
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./custom-domains.caddy:/etc/caddy/custom-domains.caddy:ro
+      - ./web/admin-web:/srv/admin-web:ro
+      - ./web/client-web:/srv/client-web:ro
+      - ./web/pos-web:/srv/pos-web:ro
+      - ./web/kds-web:/srv/kds-web:ro
+      - ./web/control-web:/srv/control-web:ro
+    depends_on:
+      - control-api
+    networks: [ninja-local]
+
+networks:
+  ninja-local:
+    name: ninja-local
+    driver: bridge
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  tenants:

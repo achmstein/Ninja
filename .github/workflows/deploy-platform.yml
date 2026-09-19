@@ -96,6 +96,7 @@ jobs:
           mkdir -p platform-artifacts/realms
           cp deploy/platform/docker-compose.yml platform-artifacts/
           cp deploy/platform/Caddyfile platform-artifacts/
+          cp deploy/platform/init-multiple-databases.sh platform-artifacts/
           cp deploy/platform/README.md platform-artifacts/
           # The control plane rewrites this file; only seed it when the server has none
           cp deploy/platform/custom-domains.caddy platform-artifacts/custom-domains.caddy.seed

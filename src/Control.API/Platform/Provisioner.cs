@@ -65,7 +65,7 @@ public sealed class Provisioner(
                 Directory.CreateDirectory(dir);
                 await File.WriteAllTextAsync(Path.Combine(dir, "docker-compose.yaml"), Templates.Compose(tenant, hosts, Platform), ct);
                 await File.WriteAllTextAsync(Path.Combine(dir, ".env"), Templates.Env(tenant, Platform), ct);
-                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--pull", "always", "--remove-orphans"], dir, ct);
+                var result = await shell.RunAsync("docker", UpArgs(tenant), dir, ct);
                 if (!result.Ok) throw new InvalidOperationException(result.Output);
                 return result.Output;
             }, ct);
@@ -94,7 +94,7 @@ public sealed class Provisioner(
                 };
                 var logo = File.Exists(LogoPath(tenant)) ? LogoPath(tenant) : null;
                 await stack.SeedBrandAsync(TenantNaming.Gateway(tenant.Slug), TenantNaming.Realm(tenant.Slug), tenant.ControlSecret, brand, logo, ct);
-                return logo is null ? "name and color" : "name, color and logo";
+                return logo is null ? "name and color" : ImageShape.IsWide(File.ReadAllBytes(logo)) ? "name, color and wordmark" : "name, color and logo";
             }, ct);
 
             await Step(tenant, runId, "owner", async () =>
@@ -189,7 +189,7 @@ public sealed class Provisioner(
                 {
                     "stop" => ["compose", "-p", TenantNaming.Project(tenant.Slug), "stop"],
                     "start" => ["compose", "-p", TenantNaming.Project(tenant.Slug), "start"],
-                    "upgrade" => ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--pull", "always", "--remove-orphans"],
+                    "upgrade" => UpArgs(tenant),
                     _ => throw new ArgumentOutOfRangeException(nameof(action)),
                 };
                 if (action == "upgrade")
@@ -214,6 +214,11 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
         }
     }
+
+    private string[] UpArgs(Tenant tenant)
+        => Platform.PullImages
+            ? ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--pull", "always", "--remove-orphans"]
+            : ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"];
 
     /// <summary>The custom-domain sites of every live tenant, then a Caddy reload; nothing when no café has its own domain yet.</summary>
     private async Task<string> WriteEdgeAsync(CancellationToken ct)

@@ -99,6 +99,10 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__branch__DESTINATIONS__d1__ADDRESS: \"http://blue-branch-api:8080\"");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH: \"/api/catalog/items/{id}/pic\"");
+        // The forwarded-headers transform is one object with two keys; YARP rejects HeaderPrefix on its own
+        StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__X-Forwarded: \"Set\"");
+        StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__HeaderPrefix: \"X-Forwarded-\"");
+        Assert.IsFalse(yaml.Contains("TRANSFORMS__1__HeaderPrefix"));
 
         // Identity has no database; the assistant is off without a key
         Assert.IsFalse(yaml.Contains("ConnectionStrings__identitydb"));
@@ -134,6 +138,22 @@ public sealed class TemplatesTests
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted café needs no site of its own");
+    }
+
+    [TestMethod]
+    public void A_wide_image_is_a_wordmark_and_a_square_one_a_mark()
+    {
+        static byte[] Png(int w, int h)
+        {
+            var b = new byte[24];
+            new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }.CopyTo(b, 0);
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(b.AsSpan(16), w);
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(b.AsSpan(20), h);
+            return b;
+        }
+        Assert.IsTrue(ImageShape.IsWide(Png(908, 275)));
+        Assert.IsFalse(ImageShape.IsWide(Png(512, 512)));
+        Assert.IsFalse(ImageShape.IsWide([1, 2, 3]));
     }
 
     [TestMethod]

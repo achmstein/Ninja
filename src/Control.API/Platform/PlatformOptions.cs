@@ -12,6 +12,12 @@ public sealed class PlatformOptions
     /// <summary>The domain tenants hang off: {slug}.{Domain} for customers, admin.{slug}.{Domain} and so on for staff.</summary>
     public string Domain { get; set; } = "ninja.local";
 
+    /// <summary>https everywhere but on a laptop, where the edge speaks plain http on *.localhost.</summary>
+    public string Scheme { get; set; } = "https";
+
+    /// <summary>Pull images before bringing a stack up; off when the images were built on this box.</summary>
+    public bool PullImages { get; set; } = true;
+
     /// <summary>Where the control app itself is served; goes into the platform realm's client.</summary>
     public string ControlUrl { get; set; } = "http://localhost:5177";
 

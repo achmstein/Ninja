@@ -17,17 +17,13 @@ WORKDIR /src/Control.API
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage: the control plane stamps stacks with the docker CLI against
-# the host's socket (mounted at /var/run/docker.sock), so the CLI and the
-# compose plugin ride along.
+# the host's socket (mounted at /var/run/docker.sock). The CLI and the compose
+# plugin are static binaries copied from the official image; no apt needed.
+FROM docker:cli AS dockercli
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
-    && install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
-    && echo "deb [signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce-cli docker-compose-plugin \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=dockercli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
 WORKDIR /app
 EXPOSE 8080
 
