@@ -32,13 +32,16 @@ public sealed class TemplatesTests
     public void Tenant_realm_is_valid_json_named_after_the_slug_with_every_slot_filled()
     {
         var tenant = Blue();
-        var json = Templates.TenantRealm(tenant, TenantHosts.For(tenant, Platform));
+        var json = Templates.TenantRealm(tenant, TenantHosts.For(tenant, Platform), Platform);
 
         var realm = JsonNode.Parse(json)!.AsObject();
         Assert.AreEqual("blue", realm["realm"]!.GetValue<string>());
         Assert.AreEqual("Blue \"Bottle\"", realm["displayName"]!.GetValue<string>());
         Assert.IsFalse(json.Contains("{{"), "an unfilled slot survived");
         Assert.IsFalse(json.Contains("chillax", StringComparison.OrdinalIgnoreCase), "the template still names the first tenant");
+        Assert.AreEqual("external", realm["sslRequired"]!.GetValue<string>());
+        var local = JsonNode.Parse(Templates.TenantRealm(tenant, TenantHosts.For(tenant, Platform), new PlatformOptions { Domain = "localhost", Scheme = "http" }))!;
+        Assert.AreEqual("none", local["sslRequired"]!.GetValue<string>(), "plain http cannot carry Secure cookies");
 
         var clients = realm["clients"]!.AsArray().ToDictionary(c => c!["clientId"]!.GetValue<string>(), c => c!.AsObject());
         CollectionAssert.AreEquivalent(

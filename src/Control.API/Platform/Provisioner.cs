@@ -55,7 +55,7 @@ public sealed class Provisioner(
             {
                 var realm = TenantNaming.Realm(tenant.Slug);
                 if (await keycloak.RealmExistsAsync(realm, ct)) return $"realm {realm} already there";
-                await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts), ct);
+                await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts, Platform), ct);
                 return $"realm {realm}";
             }, ct);
 

@@ -1,15 +1,15 @@
-# The platform on a laptop: the same shape as ../docker-compose.yml, on
-# plain http under *.localhost (browsers resolve any *.localhost to this
-# machine, several labels deep, with no hosts-file entry). Images are built
+# The platform on a laptop: the same shape as ../docker-compose.yml, under
+# *.localhost (browsers resolve any *.localhost to this machine, several
+# labels deep, with no hosts-file entry) with Caddy's local CA for TLS. Images are built
 # here, not pulled; the control plane runs in Docker and stamps tenants
 # through the host's daemon.
 #
 #   ./build-images.ps1        (once, and after code changes)
 #   docker compose up -d      (project: ninja-local)
-#   http://control.localhost  platform / Local123$
+#   https://control.localhost platform / Local123$   (trust the CA first, see README)
 #
-# Hosts a tenant gets: http://cove.localhost, http://admin.cove.localhost,
-# http://pos.cove.localhost, http://kds.cove.localhost, http://api.cove.localhost
+# Hosts a tenant gets: https://cove.localhost, https://admin.cove.localhost,
+# https://pos.cove.localhost, https://kds.cove.localhost, https://api.cove.localhost
 
 name: ninja-local
 
@@ -55,7 +55,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: xforwarded
       KC_FEATURES: token-exchange,admin-fine-grained-authz:v1
-      KC_HOSTNAME: http://auth.localhost
+      KC_HOSTNAME: https://auth.localhost
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
@@ -81,8 +81,8 @@ services:
       Identity__Url: http://keycloak:8080/realms/ninja
       Keycloak__Realm: ninja
       Platform__Domain: localhost
-      Platform__Scheme: http
-      Platform__ControlUrl: http://control.localhost
+      Platform__Scheme: https
+      Platform__ControlUrl: https://control.localhost
       Platform__TenantsRoot: /opt/ninja/tenants
       Platform__ImageRegistry: ninja
       Platform__DefaultImageTag: local
@@ -93,7 +93,7 @@ services:
       Platform__RabbitContainer: ninja-local-eventbus-1
       Platform__EdgeContainer: ninja-local-caddy-1
       Platform__EdgeSnippetPath: /opt/ninja/platform/custom-domains.caddy
-      Platform__KeycloakPublicUrl: http://auth.localhost
+      Platform__KeycloakPublicUrl: https://auth.localhost
       Platform__KeycloakAdminPassword: local
       Platform__DemoDays: "14"
     volumes:
@@ -111,8 +111,11 @@ services:
     image: caddy:2-alpine
     ports:
       - "80:80"
+      - "443:443"
+      - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
       - ./custom-domains.caddy:/etc/caddy/custom-domains.caddy:ro
       - ./web/admin-web:/srv/admin-web:ro
       - ./web/client-web:/srv/client-web:ro
@@ -132,3 +135,4 @@ volumes:
   postgres-data:
   rabbitmq-data:
   tenants:
+  caddy-data:

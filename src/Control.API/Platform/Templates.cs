@@ -32,7 +32,10 @@ public static partial class Templates
             values.TryGetValue(m.Groups[1].Value, out var v) ? v : throw new InvalidOperationException($"No value for {{{{{m.Groups[1].Value}}}}}"));
 
     /// <summary>The tenant's realm, from the template.</summary>
-    public static string TenantRealm(Tenant tenant, TenantHosts hosts)
+    /// <summary>Over https every external request must be TLS; a local http platform cannot set Secure cookies, so none.</summary>
+    private static string SslRequired(PlatformOptions platform) => platform.Scheme == "https" ? "external" : "none";
+
+    public static string TenantRealm(Tenant tenant, TenantHosts hosts, PlatformOptions platform)
         => Render(Read("tenant-realm.json"), new Dictionary<string, string>
         {
             ["slug"] = tenant.Slug,
@@ -43,6 +46,7 @@ public static partial class Templates
             ["kdsUrl"] = hosts.KdsUrl,
             ["identitySecret"] = tenant.IdentitySecret,
             ["controlSecret"] = tenant.ControlSecret,
+            ["sslRequired"] = SslRequired(platform),
         });
 
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
@@ -52,6 +56,7 @@ public static partial class Templates
             ["controlUrl"] = platform.ControlUrl,
             ["platformDomain"] = platform.Domain,
             ["platformPassword"] = JsonEscape(initialPassword),
+            ["sslRequired"] = SslRequired(platform),
         });
 
     private static string JsonEscape(string s) => System.Text.Json.JsonEncodedText.Encode(s).ToString();

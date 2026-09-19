@@ -13,7 +13,7 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": false,
   "bruteForceProtected": true,
-  "sslRequired": "external",
+  "sslRequired": "{{sslRequired}}",
   "accessTokenLifespan": 3600,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 7776000,

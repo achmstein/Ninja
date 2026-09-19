@@ -1,10 +1,12 @@
 # The platform on your laptop
 
-The same shape as production (`../docker-compose.yml`), with three
-differences: plain http, the domain `localhost` (browsers resolve
-`cove.localhost` and `admin.cove.localhost` to this machine with no
-hosts-file entry; Chrome, Edge and Firefox do, Safari does not), and images
-built here for this machine's CPU instead of pulled from GHCR.
+The same shape as production (`../docker-compose.yml`), with two
+differences: the domain `localhost` (browsers resolve `cove.localhost` and
+`admin.cove.localhost` to this machine with no hosts-file entry; Chrome,
+Edge and Firefox do, Safari does not) with certificates from Caddy's own
+local CA, and images built here for this machine's CPU instead of pulled
+from GHCR. It is https because Keycloak only sets Secure cookies; plain
+http cannot sign anyone in.
 
 ```
 cd deploy/platform/local
@@ -12,17 +14,17 @@ cd deploy/platform/local
 docker compose up -d --build
 ```
 
-Then `http://control.localhost`, sign in as `platform` / `Local123$`, and
+Then `https://control.localhost`, sign in as `platform` / `Local123$`, and
 create a tenant. Give it a slug like `cove` and, once its steps are done,
 open:
 
 | What | Where |
 |---|---|
-| Customer app | `http://cove.localhost` |
-| Admin | `http://admin.cove.localhost` (the owner email you gave, temporary password on the tenant page) |
-| Till | `http://pos.cove.localhost` |
-| Kitchen | `http://kds.cove.localhost` |
-| Keycloak | `http://auth.localhost` (admin / local) |
+| Customer app | `https://cove.localhost` |
+| Admin | `https://admin.cove.localhost` (the owner email you gave, temporary password on the tenant page) |
+| Till | `https://pos.cove.localhost` |
+| Kitchen | `https://kds.cove.localhost` |
+| Keycloak | `https://auth.localhost` (admin / local) |
 
 Docker Desktop needs about 3 GB of memory for the platform plus one tenant;
 raise its limit if containers get killed. Stop the Aspire dev AppHost first

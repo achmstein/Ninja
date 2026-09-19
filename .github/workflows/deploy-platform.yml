@@ -119,6 +119,7 @@ jobs:
           t = open('src/Control.API/Templates/platform-realm.json', encoding='utf-8').read()
           t = t.replace('{{controlUrl}}', f"https://control.{os.environ['PLATFORM_DOMAIN']}")
           t = t.replace('{{platformDomain}}', os.environ['PLATFORM_DOMAIN'])
+          t = t.replace('{{sslRequired}}', 'external')
           t = t.replace('{{platformPassword}}', json.dumps(os.environ['PLATFORM_ADMIN_PASSWORD'])[1:-1])
           json.loads(t)
           open('platform-artifacts/realms/ninja-realm.json', 'w', encoding='utf-8').write(t)

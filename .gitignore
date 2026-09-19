@@ -526,3 +526,4 @@ src/Branch.API/uploads/
 deploy/platform/local/web/
 deploy/platform/local/realms/
 deploy/platform/local/.env
+deploy/platform/local/caddy-root.crt

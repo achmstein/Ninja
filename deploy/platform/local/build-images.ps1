@@ -23,7 +23,7 @@ $all = -not $Web -and -not $Images -and -not $Only
 $realms = Join-Path $here 'realms'
 New-Item -ItemType Directory -Force $realms | Out-Null
 $template = Get-Content (Join-Path $root 'src\Control.API\Templates\platform-realm.json') -Raw -Encoding UTF8
-$realm = $template.Replace('{{controlUrl}}', 'http://control.localhost').Replace('{{platformDomain}}', 'localhost').Replace('{{platformPassword}}', 'Local123$').Replace('"temporary": true', '"temporary": false')
+$realm = $template.Replace('{{controlUrl}}', 'https://control.localhost').Replace('{{platformDomain}}', 'localhost').Replace('{{platformPassword}}', 'Local123$').Replace('{{sslRequired}}', 'external').Replace('"temporary": true', '"temporary": false')
 [System.IO.File]::WriteAllText((Join-Path $realms 'ninja-realm.json'), $realm, (New-Object System.Text.UTF8Encoding $false))
 Write-Host 'realm  ninja-realm.json (platform / Local123$)'
 
@@ -48,7 +48,7 @@ if ($all -or $Images -or $Only) {
 }
 
 if ($all -or $Web) {
-    $env:VITE_KEYCLOAK_URL = 'http://auth.localhost'
+    $env:VITE_KEYCLOAK_URL = 'https://auth.localhost'
     foreach ($app in @('admin_web', 'client_web', 'pos_web', 'kds_web', 'control_web')) {
         $name = $app.Replace('_web', '-web')
         Write-Host "web    $name"
@@ -72,4 +72,4 @@ if ($all -or $Web) {
 }
 
 Write-Host ''
-Write-Host 'Next: docker compose up -d --build    then open http://control.localhost'
+Write-Host 'Next: docker compose up -d --build, trust the CA (README), then open https://control.localhost'

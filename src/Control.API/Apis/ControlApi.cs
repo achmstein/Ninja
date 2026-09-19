@@ -119,7 +119,8 @@ public static partial class ControlApi
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
-        => Enqueue(context, queue, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running], ct);
+        // A destroyed tenant can be brought back under the same slug: the steps recreate everything
+        => Enqueue(context, queue, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct);
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
         => Enqueue(context, queue, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);

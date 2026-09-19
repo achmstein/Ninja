@@ -17,7 +17,7 @@
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "verifyEmail": false,
-  "sslRequired": "external",
+  "sslRequired": "{{sslRequired}}",
   "requiredActions": [
     {
       "alias": "CONFIGURE_TOTP",
