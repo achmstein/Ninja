@@ -32,6 +32,13 @@ public interface IKeycloakAdmin
     Task DeleteRealmAsync(string realm, CancellationToken ct);
     /// <summary>Creates the user with the roles and a temporary password, or leaves an existing one alone. Returns the user id.</summary>
     Task<string> EnsureUserAsync(string realm, string email, string firstName, string password, IReadOnlyList<string> realmRoles, CancellationToken ct);
+    Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct);
+    /// <summary>
+    /// Signs the user in without their password, as the master admin may: a
+    /// browser session in their realm, returned as the Set-Cookie headers a
+    /// browser on <paramref name="publicAuthHost"/> would have received.
+    /// </summary>
+    Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct);
 }
 
 public interface ITenantStack
@@ -186,6 +193,26 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
         mapped.EnsureSuccessStatusCode();
         return id;
     }
+
+    public async Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var users = await client.GetFromJsonAsync<JsonArray>($"{Base}/admin/realms/{realm}/users?email={Uri.EscapeDataString(email)}&exact=true", ct);
+        return users is { Count: > 0 } ? users[0]!["id"]!.GetValue<string>() : null;
+    }
+
+    public async Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{Base}/admin/realms/{realm}/users/{userId}/impersonation");
+        // Keycloak (KC_PROXY_HEADERS=xforwarded) mints the cookies for the host and scheme the browser will use, not for the internal name
+        request.Headers.Add("X-Forwarded-Proto", "https");
+        request.Headers.Add("X-Forwarded-Host", publicAuthHost);
+        using var response = await client.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Keycloak refused the impersonation ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
+        return response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies.ToList() : [];
+    }
 }
 
 /// <summary>Talks to a freshly stamped stack through its gateway on the shared network.</summary>
@@ -259,6 +286,9 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         logger.LogInformation("(dry run) owner {Email} in {Realm} with {Roles}", email, realm, string.Join(",", realmRoles));
         return Task.FromResult(Guid.NewGuid().ToString());
     }
+    public Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct) => Task.FromResult<string?>($"dry-run-{email}");
+    public Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
+        => Task.FromResult<IReadOnlyList<string>>([$"KEYCLOAK_IDENTITY=dry-run; Path=/realms/{realm}/; Secure; HttpOnly; SameSite=None"]);
 }
 
 public sealed class DryRunTenantStack(DryRunStackProxy proxy, ILogger<DryRunTenantStack> logger) : ITenantStack

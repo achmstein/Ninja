@@ -18,7 +18,9 @@ public static class Extensions
         // Kinds and statuses travel as their names, not their numbers
         builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-        builder.Services.AddHttpClient("keycloak");
+        // No cookie jar: the impersonation call's Set-Cookie headers are read off the response and handed to a browser
+        builder.Services.AddHttpClient("keycloak").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
+        builder.Services.AddSingleton<ImpersonationTickets>();
         builder.Services.AddHttpClient("stack", client => client.Timeout = TimeSpan.FromSeconds(30));
 
         builder.Services.AddHttpContextAccessor();

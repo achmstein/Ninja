@@ -42,7 +42,13 @@ https:// {
 
 	@auth host auth.localhost
 	handle @auth {
-		reverse_proxy keycloak:8080
+		# "Sign in as the owner": the owner's session cookies, handed over on this host
+		handle /api/control/impersonate/* {
+			reverse_proxy control-api:8080
+		}
+		handle {
+			reverse_proxy keycloak:8080
+		}
 	}
 
 	@control host control.localhost

@@ -52,7 +52,14 @@
 }
 
 auth.{$PLATFORM_DOMAIN} {
-	reverse_proxy keycloak:8080
+	# "Sign in as the owner": the control plane hands the owner's session
+	# cookies to the browser from this host, where they belong
+	handle /api/control/impersonate/* {
+		reverse_proxy control-api:8080
+	}
+	handle {
+		reverse_proxy keycloak:8080
+	}
 }
 
 control.{$PLATFORM_DOMAIN} {

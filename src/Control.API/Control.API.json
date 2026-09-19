@@ -1455,6 +1455,90 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/impersonate": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "A one-time link that opens the café's admin app signed in as its owner",
+        "operationId": "ImpersonateOwner",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpersonationLink"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/impersonate/{ticket}": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Opened on the auth host: sets the owner's session and goes to the admin app",
+        "operationId": "RedeemImpersonation",
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -2164,6 +2248,22 @@
       "IFormFile": {
         "type": "string",
         "format": "binary"
+      },
+      "ImpersonationLink": {
+        "required": [
+          "url",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       },
       "MetricsDay": {
         "required": [

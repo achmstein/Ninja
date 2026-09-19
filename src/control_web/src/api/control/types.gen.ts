@@ -139,6 +139,11 @@ export type ExtendRequest = {
 
 export type IFormFile = Blob | File;
 
+export type ImpersonationLink = {
+    url: string;
+    expiresAt: string;
+};
+
 export type MetricsDay = {
     date: string;
     orders: number | string;
@@ -1282,6 +1287,63 @@ export type GetTenantMetricsResponses = {
 };
 
 export type GetTenantMetricsResponse = GetTenantMetricsResponses[keyof GetTenantMetricsResponses];
+
+export type ImpersonateOwnerData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/impersonate';
+};
+
+export type ImpersonateOwnerErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ImpersonateOwnerError = ImpersonateOwnerErrors[keyof ImpersonateOwnerErrors];
+
+export type ImpersonateOwnerResponses = {
+    /**
+     * OK
+     */
+    200: ImpersonationLink;
+};
+
+export type ImpersonateOwnerResponse = ImpersonateOwnerResponses[keyof ImpersonateOwnerResponses];
+
+export type RedeemImpersonationData = {
+    body?: never;
+    path: {
+        ticket: string;
+    };
+    query?: never;
+    url: '/api/control/impersonate/{ticket}';
+};
+
+export type RedeemImpersonationErrors = {
+    /**
+     * Not Found
+     */
+    404: string;
+};
+
+export type RedeemImpersonationError = RedeemImpersonationErrors[keyof RedeemImpersonationErrors];
 
 export type TlsAskData = {
     body?: never;

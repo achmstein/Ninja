@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RedeemImpersonationData, RedeemImpersonationErrors, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -246,6 +246,20 @@ export const getTenantMetrics = <ThrowOnError extends boolean = false>(options: 
     url: '/api/control/tenants/{slug}/metrics',
     ...options
 });
+
+/**
+ * A one-time link that opens the café's admin app signed in as its owner
+ */
+export const impersonateOwner = <ThrowOnError extends boolean = false>(options: Options<ImpersonateOwnerData, ThrowOnError>): RequestResult<ImpersonateOwnerResponses, ImpersonateOwnerErrors, ThrowOnError> => (options.client ?? client).post<ImpersonateOwnerResponses, ImpersonateOwnerErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/impersonate',
+    ...options
+});
+
+/**
+ * Opened on the auth host: sets the owner's session and goes to the admin app
+ */
+export const redeemImpersonation = <ThrowOnError extends boolean = false>(options: Options<RedeemImpersonationData, ThrowOnError>): RequestResult<unknown, RedeemImpersonationErrors, ThrowOnError> => (options.client ?? client).get<unknown, RedeemImpersonationErrors, ThrowOnError>({ url: '/api/control/impersonate/{ticket}', ...options });
 
 /**
  * 200 when the host belongs to a tenant, 404 otherwise

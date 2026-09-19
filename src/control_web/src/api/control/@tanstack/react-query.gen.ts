@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, impersonateOwner, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, redeemImpersonation, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RedeemImpersonationData, RedeemImpersonationError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -483,6 +483,41 @@ export const getTenantMetricsOptions = (options: Options<GetTenantMetricsData>) 
         return data;
     },
     queryKey: getTenantMetricsQueryKey(options)
+});
+
+/**
+ * A one-time link that opens the café's admin app signed in as its owner
+ */
+export const impersonateOwnerMutation = (options?: Partial<Options<ImpersonateOwnerData>>): UseMutationOptions<ImpersonateOwnerResponse, AxiosError<ImpersonateOwnerError>, Options<ImpersonateOwnerData>> => {
+    const mutationOptions: UseMutationOptions<ImpersonateOwnerResponse, AxiosError<ImpersonateOwnerError>, Options<ImpersonateOwnerData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await impersonateOwner({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const redeemImpersonationQueryKey = (options: Options<RedeemImpersonationData>) => createQueryKey('redeemImpersonation', options);
+
+/**
+ * Opened on the auth host: sets the owner's session and goes to the admin app
+ */
+export const redeemImpersonationOptions = (options: Options<RedeemImpersonationData>) => queryOptions<unknown, AxiosError<RedeemImpersonationError>, unknown, ReturnType<typeof redeemImpersonationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await redeemImpersonation({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: redeemImpersonationQueryKey(options)
 });
 
 export const tlsAskQueryKey = (options: Options<TlsAskData>) => createQueryKey('tlsAsk', options);
