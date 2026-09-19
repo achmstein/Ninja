@@ -139,7 +139,21 @@ export function useFeatures(): TenantFeatures {
   return useBrand()?.features ?? ALL_FEATURES
 }
 
-/** Where customers open the menu; this origin when provisioning has not said. */
+/** Where customers open the menu: the brand's customerUrl, else the platform's default for this host. */
 export function useCustomerOrigin(): string {
-  return useBrand()?.customerUrl ?? window.location.origin
+  return useBrand()?.customerUrl ?? defaultCustomerOrigin()
+}
+
+/**
+ * Where the customer app lives when the brand does not say. A build may be
+ * told (VITE_CUSTOMER_URL: the dev AppHost points it at client-web); otherwise
+ * it is this host without its `admin.` label, which is the platform's rule —
+ * the café's admin is always admin.{customer host}, and the customer app
+ * lets exactly that host frame it.
+ */
+export function defaultCustomerOrigin(): string {
+  const configured = import.meta.env.VITE_CUSTOMER_URL as string | undefined
+  if (configured) return configured.replace(/\/+$/, '')
+  const { protocol, host } = window.location
+  return `${protocol}//${host.replace(/^admin\./, '')}`
 }

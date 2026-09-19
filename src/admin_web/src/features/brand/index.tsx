@@ -8,7 +8,7 @@ import {
   updateTenantMutation,
   uploadTenantImageMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
-import { brandQueryKey, useBrand, useCustomerOrigin, type Brand } from '@/lib/brand'
+import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, type Brand } from '@/lib/brand'
 import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
@@ -363,7 +363,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                 type='url'
                 value={customerUrl}
                 onChange={(e) => setCustomerUrl(e.target.value)}
-                placeholder={window.location.origin}
+                placeholder={defaultCustomerOrigin()}
                 dir='ltr'
               />
             </div>

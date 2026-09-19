@@ -330,9 +330,28 @@ var mobileBff = builder.AddYarp("mobile-bff")
 
 if (!isTestMode)
 {
-    // Admin web app (React + Vite). The Vite dev server proxies /api and /hub to
-    // the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
-    // directly to Keycloak (the admin-panel realm client allows the 5173 origin).
+    // Customer web app (React + Vite). The Vite dev server proxies /api and /hub
+    // to the BFF, so API calls stay same-origin and need no CORS setup. Auth goes
+    // directly to Keycloak (the client-web realm client allows the 5174 origin).
+    var clientWeb = builder.AddViteApp("client-web", "../client_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            // Fixed port: the Keycloak client-web realm client whitelists
+            // http://localhost:5174 redirect URIs.
+            endpoint.Port = 5174;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(mobileBff)
+        // Not part of the Docker Compose publish yet; deployment gets its own
+        // static build + Caddy route once the app is ready to ship.
+        .ExcludeFromManifest();
+
+    // Admin web app (React + Vite), same wiring as client-web. Its brand page
+    // frames the customer app in a phone; in production that is the admin's
+    // host minus its `admin.` label, here it is client-web's port.
     builder.AddViteApp("admin-web", "../admin_web")
         .WithNpm()
         .WithEndpoint("http", endpoint =>
@@ -344,9 +363,8 @@ if (!isTestMode)
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
         .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WithEnvironment("VITE_CUSTOMER_URL", clientWeb.GetEndpoint("http"))
         .WaitFor(mobileBff)
-        // Not part of the Docker Compose publish yet; deployment gets its own
-        // static build + Caddy route once the app is ready to ship.
         .ExcludeFromManifest();
 
     // The control app (React + Vite): the platform's staff, realm ninja.
@@ -385,21 +403,6 @@ if (!isTestMode)
             // Fixed port: the Keycloak kds-web realm client whitelists
             // http://localhost:5176 redirect URIs.
             endpoint.Port = 5176;
-            endpoint.IsProxied = false;
-        })
-        .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
-        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
-        .WaitFor(mobileBff)
-        .ExcludeFromManifest();
-
-    // Customer web app (React + Vite), same wiring as admin-web.
-    builder.AddViteApp("client-web", "../client_web")
-        .WithNpm()
-        .WithEndpoint("http", endpoint =>
-        {
-            // Fixed port: the Keycloak client-web realm client whitelists
-            // http://localhost:5174 redirect URIs.
-            endpoint.Port = 5174;
             endpoint.IsProxied = false;
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
