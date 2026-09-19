@@ -88,6 +88,11 @@ public sealed class PlatformOptions
     /// <summary>The platform's own clock (the nightly jobs), IANA.</summary>
     public string TimeZone { get; set; } = "Africa/Cairo";
 
+    /// <summary>When the nightly backup runs, in that zone, and how many backups each tenant keeps.</summary>
+    public int BackupHour { get; set; } = 3;
+
+    public int BackupsKeep { get; set; } = 7;
+
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
 }

@@ -26,6 +26,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.IdentitySecret).HasMaxLength(64).IsRequired();
             entity.Property(e => e.ControlSecret).HasMaxLength(64).IsRequired();
             entity.Property(e => e.ImageTag).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.RestoreFrom).HasMaxLength(48);
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Kind).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Seed).HasConversion<string>().HasMaxLength(16);

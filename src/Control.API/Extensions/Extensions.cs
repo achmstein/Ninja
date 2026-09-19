@@ -33,6 +33,8 @@ public static class Extensions
         builder.Services.AddHostedService<CapacityMonitor>();
         builder.Services.AddSingleton<TenantOps>();
         builder.Services.AddSingleton<TenantMetricsCollector>();
+        builder.Services.AddSingleton<BackupService>();
+        builder.Services.AddHostedService<NightlyBackupService>();
 
         var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
         if (dryRun)

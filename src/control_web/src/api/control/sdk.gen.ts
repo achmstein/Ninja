@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RedeemImpersonationData, RedeemImpersonationErrors, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DownloadTenantBackupData, DownloadTenantBackupErrors, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RedeemImpersonationData, RedeemImpersonationErrors, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -260,6 +260,40 @@ export const impersonateOwner = <ThrowOnError extends boolean = false>(options: 
  * Opened on the auth host: sets the owner's session and goes to the admin app
  */
 export const redeemImpersonation = <ThrowOnError extends boolean = false>(options: Options<RedeemImpersonationData, ThrowOnError>): RequestResult<unknown, RedeemImpersonationErrors, ThrowOnError> => (options.client ?? client).get<unknown, RedeemImpersonationErrors, ThrowOnError>({ url: '/api/control/impersonate/{ticket}', ...options });
+
+/**
+ * Every backup kept for the tenant, newest first
+ */
+export const listTenantBackups = <ThrowOnError extends boolean = false>(options: Options<ListTenantBackupsData, ThrowOnError>): RequestResult<ListTenantBackupsResponses, ListTenantBackupsErrors, ThrowOnError> => (options.client ?? client).get<ListTenantBackupsResponses, ListTenantBackupsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/backups',
+    ...options
+});
+
+/**
+ * Dump the databases and the uploads now (queued behind any stamp in progress)
+ */
+export const createTenantBackup = <ThrowOnError extends boolean = false>(options: Options<CreateTenantBackupData, ThrowOnError>): RequestResult<CreateTenantBackupResponses, CreateTenantBackupErrors, ThrowOnError> => (options.client ?? client).post<CreateTenantBackupResponses, CreateTenantBackupErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/backups', ...options });
+
+/**
+ * The backup as one .tar.gz
+ */
+export const downloadTenantBackup = <ThrowOnError extends boolean = false>(options: Options<DownloadTenantBackupData, ThrowOnError>): RequestResult<unknown, DownloadTenantBackupErrors, ThrowOnError> => (options.client ?? client).get<unknown, DownloadTenantBackupErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/backups/{id}/download', ...options });
+
+export const deleteTenantBackup = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantBackupData, ThrowOnError>): RequestResult<DeleteTenantBackupResponses, DeleteTenantBackupErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTenantBackupResponses, DeleteTenantBackupErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/backups/{id}', ...options });
+
+/**
+ * A new tenant, stamped from this backup: its databases and uploads, a fresh realm and owner
+ */
+export const restoreTenantBackup = <ThrowOnError extends boolean = false>(options: Options<RestoreTenantBackupData, ThrowOnError>): RequestResult<RestoreTenantBackupResponses, RestoreTenantBackupErrors, ThrowOnError> => (options.client ?? client).post<RestoreTenantBackupResponses, RestoreTenantBackupErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/backups/{id}/restore',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * 200 when the host belongs to a tenant, 404 otherwise

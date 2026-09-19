@@ -20,6 +20,7 @@ public sealed class Provisioner(
     IKeycloakAdmin keycloak,
     ITenantStack stack,
     IAuditWriter audit,
+    BackupService backups,
     ILogger<Provisioner> logger)
 {
     private const string Source = "provisioner";
@@ -52,6 +53,19 @@ public sealed class Provisioner(
                     await databases.EnsureDatabaseAsync(TenantNaming.Database(tenant.Slug, db), ct);
                 return $"{TenantNaming.Databases.Length} databases";
             }, ct);
+
+            // A restore loads the dumps into the empty databases now, before any
+            // service boots: the dumps carry the migration history, so newer
+            // images apply only what came after the backup
+            var restore = BackupService.ParseRestoreFrom(tenant.RestoreFrom);
+            if (restore is { } source)
+            {
+                await Step(tenant, runId, "restore-databases", async () =>
+                {
+                    await backups.RestoreDatabasesAsync(source.Slug, source.Id, tenant, ct);
+                    return $"{TenantNaming.Databases.Length} databases from {tenant.RestoreFrom}";
+                }, ct);
+            }
 
             await Step(tenant, runId, "broker", async () =>
             {
@@ -86,6 +100,12 @@ public sealed class Provisioner(
                 return "every service answers";
             }, ct);
 
+            if (restore is { } uploads)
+            {
+                await Step(tenant, runId, "restore-uploads", async () =>
+                    await backups.RestoreUploadsAsync(uploads.Slug, uploads.Id, tenant, ct) ? $"uploads from {tenant.RestoreFrom}" : "the backup had no uploads", ct);
+            }
+
             await Step(tenant, runId, "brand", async () =>
             {
                 var brand = new JsonObject
@@ -114,8 +134,9 @@ public sealed class Provisioner(
 
             tenant.Status = TenantStatus.Running;
             tenant.ProvisionedAt ??= DateTimeOffset.UtcNow;
+            tenant.RestoreFrom = null;
             await context.SaveChangesAsync(ct);
-            await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag }, ct, Source);
+            await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag, restoredFrom = restore?.Slug }, ct, Source);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -230,6 +251,27 @@ public sealed class Provisioner(
         }
     }
 
+    /// <summary>A backup of the databases and the uploads, then the oldest go once there are more than kept.</summary>
+    public async Task BackupAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        try
+        {
+            var info = await Step(tenant, Guid.NewGuid(), "backup", async () =>
+            {
+                var created = await backups.CreateAsync(tenant, ct);
+                var pruned = backups.Prune(tenant.Slug, Platform.BackupsKeep);
+                return $"{created.Id}: {created.SizeBytes / (1024 * 1024)} MB{(pruned > 0 ? $", {pruned} older removed" : "")}";
+            }, ct);
+            await audit.WriteAsync("backup.done", tenant.Slug, new { output = info }, ct, "backup");
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Backup of {Slug} failed", tenant.Slug);
+            await audit.WriteAsync("backup.failed", tenant.Slug, new { error = ex.Message }, ct, "backup");
+        }
+    }
+
     /// <summary>Rewrite the edge's custom-domain sites after a domain changed on the record.</summary>
     public async Task EdgeAsync(Guid tenantId, CancellationToken ct)
     {
@@ -269,7 +311,8 @@ public sealed class Provisioner(
         return $"{live.Count} custom domain(s)";
     }
 
-    private async Task Step(Tenant tenant, Guid runId, string name, Func<Task<string>> work, CancellationToken ct)
+    /// <summary>Runs one step and records it; returns what the step said.</summary>
+    private async Task<string> Step(Tenant tenant, Guid runId, string name, Func<Task<string>> work, CancellationToken ct)
     {
         var step = new ProvisioningStep { TenantId = tenant.Id, RunId = runId, Name = name, Status = StepStatus.Running };
         context.Steps.Add(step);
@@ -279,6 +322,7 @@ public sealed class Provisioner(
             var output = await work();
             step.Status = StepStatus.Done;
             step.Output = Truncate(output);
+            return output;
         }
         catch (Exception ex)
         {
@@ -322,6 +366,7 @@ public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFac
                 case "provision": await provisioner.ProvisionAsync(job.TenantId, stoppingToken); break;
                 case "destroy": await provisioner.DestroyAsync(job.TenantId, stoppingToken); break;
                 case "edge": await provisioner.EdgeAsync(job.TenantId, stoppingToken); break;
+                case "backup": await provisioner.BackupAsync(job.TenantId, stoppingToken); break;
                 default: await provisioner.ComposeAsync(job.TenantId, job.Action, stoppingToken); break;
             }
         }

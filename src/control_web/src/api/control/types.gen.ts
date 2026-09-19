@@ -15,6 +15,15 @@ export type AuditEntry = {
     details: null | string;
 };
 
+export type BackupInfo = {
+    id: string;
+    at: string;
+    sizeBytes: number | string;
+    databases: Array<string>;
+    hasUploads: boolean;
+    imageTag: string;
+};
+
 export type BrandDto = {
     name: BrandText;
     primaryColor: null | string;
@@ -172,6 +181,13 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type RestoreRequest = {
+    intoSlug: string;
+    nameEn?: null | string;
+    ownerEmail?: null | string;
+    force?: boolean;
 };
 
 export type ServiceHealth = {
@@ -1344,6 +1360,179 @@ export type RedeemImpersonationErrors = {
 };
 
 export type RedeemImpersonationError = RedeemImpersonationErrors[keyof RedeemImpersonationErrors];
+
+export type ListTenantBackupsData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/backups';
+};
+
+export type ListTenantBackupsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ListTenantBackupsResponses = {
+    /**
+     * OK
+     */
+    200: Array<BackupInfo>;
+};
+
+export type ListTenantBackupsResponse = ListTenantBackupsResponses[keyof ListTenantBackupsResponses];
+
+export type CreateTenantBackupData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/backups';
+};
+
+export type CreateTenantBackupErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type CreateTenantBackupError = CreateTenantBackupErrors[keyof CreateTenantBackupErrors];
+
+export type CreateTenantBackupResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type DownloadTenantBackupData = {
+    body?: never;
+    path: {
+        slug: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/backups/{id}/download';
+};
+
+export type DownloadTenantBackupErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteTenantBackupData = {
+    body?: never;
+    path: {
+        slug: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/backups/{id}';
+};
+
+export type DeleteTenantBackupErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteTenantBackupResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteTenantBackupResponse = DeleteTenantBackupResponses[keyof DeleteTenantBackupResponses];
+
+export type RestoreTenantBackupData = {
+    body: RestoreRequest;
+    path: {
+        slug: string;
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/backups/{id}/restore';
+};
+
+export type RestoreTenantBackupErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RestoreTenantBackupError = RestoreTenantBackupErrors[keyof RestoreTenantBackupErrors];
+
+export type RestoreTenantBackupResponses = {
+    /**
+     * Created
+     */
+    201: TenantDetail;
+};
+
+export type RestoreTenantBackupResponse = RestoreTenantBackupResponses[keyof RestoreTenantBackupResponses];
 
 export type TlsAskData = {
     body?: never;

@@ -114,6 +114,9 @@ public class Tenant
     /// <summary>The image tag the stack runs; upgrade moves it.</summary>
     public string ImageTag { get; set; } = "latest";
 
+    /// <summary>"{slug}/{backupId}" while a stamp is to load another tenant's backup into this one; cleared once it has.</summary>
+    public string? RestoreFrom { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>Demos only: when the stack is stopped; destroyed a week later.</summary>

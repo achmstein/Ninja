@@ -33,6 +33,7 @@ public static partial class ControlApi
         MapRecordApi(api);
         MapOpsApi(api);
         MapImpersonationApi(api);
+        MapBackupsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();

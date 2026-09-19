@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, impersonateOwner, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, redeemImpersonation, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RedeemImpersonationData, RedeemImpersonationError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { convertTenant, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, downloadTenantBackup, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, redeemImpersonation, restoreTenantBackup, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RedeemImpersonationData, RedeemImpersonationError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -519,6 +519,90 @@ export const redeemImpersonationOptions = (options: Options<RedeemImpersonationD
     },
     queryKey: redeemImpersonationQueryKey(options)
 });
+
+export const listTenantBackupsQueryKey = (options: Options<ListTenantBackupsData>) => createQueryKey('listTenantBackups', options);
+
+/**
+ * Every backup kept for the tenant, newest first
+ */
+export const listTenantBackupsOptions = (options: Options<ListTenantBackupsData>) => queryOptions<ListTenantBackupsResponse, AxiosError<DefaultError>, ListTenantBackupsResponse, ReturnType<typeof listTenantBackupsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listTenantBackups({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listTenantBackupsQueryKey(options)
+});
+
+/**
+ * Dump the databases and the uploads now (queued behind any stamp in progress)
+ */
+export const createTenantBackupMutation = (options?: Partial<Options<CreateTenantBackupData>>): UseMutationOptions<unknown, AxiosError<CreateTenantBackupError>, Options<CreateTenantBackupData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<CreateTenantBackupError>, Options<CreateTenantBackupData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createTenantBackup({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const downloadTenantBackupQueryKey = (options: Options<DownloadTenantBackupData>) => createQueryKey('downloadTenantBackup', options);
+
+/**
+ * The backup as one .tar.gz
+ */
+export const downloadTenantBackupOptions = (options: Options<DownloadTenantBackupData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof downloadTenantBackupQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await downloadTenantBackup({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: downloadTenantBackupQueryKey(options)
+});
+
+export const deleteTenantBackupMutation = (options?: Partial<Options<DeleteTenantBackupData>>): UseMutationOptions<DeleteTenantBackupResponse, AxiosError<DefaultError>, Options<DeleteTenantBackupData>> => {
+    const mutationOptions: UseMutationOptions<DeleteTenantBackupResponse, AxiosError<DefaultError>, Options<DeleteTenantBackupData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteTenantBackup({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * A new tenant, stamped from this backup: its databases and uploads, a fresh realm and owner
+ */
+export const restoreTenantBackupMutation = (options?: Partial<Options<RestoreTenantBackupData>>): UseMutationOptions<RestoreTenantBackupResponse, AxiosError<RestoreTenantBackupError>, Options<RestoreTenantBackupData>> => {
+    const mutationOptions: UseMutationOptions<RestoreTenantBackupResponse, AxiosError<RestoreTenantBackupError>, Options<RestoreTenantBackupData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreTenantBackup({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const tlsAskQueryKey = (options: Options<TlsAskData>) => createQueryKey('tlsAsk', options);
 
