@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pos_app/core/models/localized_text.dart';
+import 'package:pos_app/core/models/money.dart';
 import 'package:pos_app/core/printing/escpos_builder.dart';
 import 'package:pos_app/core/printing/image_raster.dart';
 import 'package:pos_app/core/printing/widget_rasterizer.dart';
@@ -41,7 +42,7 @@ void main() {
         await initializeDateFormatting(locale.toString());
         final l10n = await AppLocalizations.delegate.load(locale);
         final image = await rasterizeWidget(
-          ReceiptSheet(ticket: ticket, l10n: l10n, locale: locale, brandName: 'Chillax'),
+          ReceiptSheet(ticket: ticket, l10n: l10n, locale: locale, money: MoneyFormat('EGP', locale), brandName: 'Chillax'),
           width: receiptWidth,
         );
         expect(image.width, receiptWidth.toInt());

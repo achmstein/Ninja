@@ -353,7 +353,7 @@ abstract class AppLocalizations {
   /// No description provided for @optionRateFormat.
   ///
   /// In en, this message translates to:
-  /// **'{option} £{rate}'**
+  /// **'{option} {rate}'**
   String optionRateFormat(String option, String rate);
 
   /// No description provided for @perHourShort.
@@ -773,26 +773,8 @@ abstract class AppLocalizations {
   /// No description provided for @hourlyRateFormat.
   ///
   /// In en, this message translates to:
-  /// **'£{rate}/hour'**
+  /// **'{rate}/hour'**
   String hourlyRateFormat(String rate);
-
-  /// No description provided for @dualRateFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'£{singleRate} · £{multiRate} /hr'**
-  String dualRateFormat(String singleRate, String multiRate);
-
-  /// No description provided for @singlePlayerRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Single: £{rate}/hr'**
-  String singlePlayerRate(String rate);
-
-  /// No description provided for @multiPlayerRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Multi: £{rate}/hr'**
-  String multiPlayerRate(String rate);
 
   /// No description provided for @sessions.
   ///
@@ -920,40 +902,22 @@ abstract class AppLocalizations {
   /// **'Arabic'**
   String get arabic;
 
-  /// No description provided for @currency.
-  ///
-  /// In en, this message translates to:
-  /// **'EGP'**
-  String get currency;
-
-  /// No description provided for @priceFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'£{price}'**
-  String priceFormat(String price);
-
   /// No description provided for @priceAdjustmentPlus.
   ///
   /// In en, this message translates to:
-  /// **'(+£{price})'**
+  /// **'(+{price})'**
   String priceAdjustmentPlus(String price);
 
   /// No description provided for @priceAdjustmentMinus.
   ///
   /// In en, this message translates to:
-  /// **'(-£{price})'**
+  /// **'(-{price})'**
   String priceAdjustmentMinus(String price);
-
-  /// No description provided for @discountFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'-£{price}'**
-  String discountFormat(String price);
 
   /// No description provided for @basePrice.
   ///
   /// In en, this message translates to:
-  /// **'Base price: £{price}'**
+  /// **'Base price: {price}'**
   String basePrice(String price);
 
   /// No description provided for @specialInstructions.
@@ -1327,12 +1291,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Points redeemed for order #{orderId}'**
   String pointsRedeemedForOrder(String orderId);
-
-  /// No description provided for @balanceAmount.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} {currency}'**
-  String balanceAmount(String amount, String currency);
 
   /// No description provided for @customizable.
   ///

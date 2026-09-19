@@ -8,6 +8,7 @@ import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../bills/models/bill.dart';
 import '../../bills/services/bills_service.dart';
 import '../../bills/widgets/bill_slip.dart';
@@ -94,7 +95,7 @@ class _ReceiptBody extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final branch = ref.watch(branchProvider).branches.where((b) => b.id == receipt.branchId).firstOrNull;
     final brand = ref.watch(brandProvider);
-    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    final money = ref.watch(moneyProvider);
     // The paper the till prints: black on white whatever the theme
     const ink = Colors.black;
     const base = TextStyle(fontSize: 12, color: ink, height: 1.3);

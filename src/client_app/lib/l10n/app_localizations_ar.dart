@@ -139,7 +139,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String optionRateFormat(String option, String rate) {
-    return '$option $rate ج.م';
+    return '$option $rate';
   }
 
   @override
@@ -359,22 +359,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String hourlyRateFormat(String rate) {
-    return '$rate ج.م/ساعة';
-  }
-
-  @override
-  String dualRateFormat(String singleRate, String multiRate) {
-    return '$singleRate · $multiRate ج.م/ساعة';
-  }
-
-  @override
-  String singlePlayerRate(String rate) {
-    return 'سنجل: $rate ج.م./ساعة';
-  }
-
-  @override
-  String multiPlayerRate(String rate) {
-    return 'مالتي: $rate ج.م./ساعة';
+    return '$rate/ساعة';
   }
 
   @override
@@ -443,31 +428,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get arabic => 'عربي';
 
   @override
-  String get currency => 'ج.م';
-
-  @override
-  String priceFormat(String price) {
-    return '$price ج.م';
-  }
-
-  @override
   String priceAdjustmentPlus(String price) {
-    return '(+$price ج.م)';
+    return '(+$price)';
   }
 
   @override
   String priceAdjustmentMinus(String price) {
-    return '(-$price ج.م)';
-  }
-
-  @override
-  String discountFormat(String price) {
-    return '-$price ج.م';
+    return '(-$price)';
   }
 
   @override
   String basePrice(String price) {
-    return 'السعر: $price ج.م';
+    return 'السعر: $price';
   }
 
   @override
@@ -676,11 +648,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String pointsRedeemedForOrder(String orderId) {
     return 'نقط مستخدمة في طلب #$orderId';
-  }
-
-  @override
-  String balanceAmount(String amount, String currency) {
-    return '$amount $currency';
   }
 
   @override

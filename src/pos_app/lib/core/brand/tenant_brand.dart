@@ -45,9 +45,69 @@ class TenantFeatures {
       };
 }
 
-/// The tenant this build runs for: name, one brand color, a logo and the
-/// feature switches (`GET /api/tenant`). Cached between runs, so the app
-/// paints the right brand before the network answers.
+/// Where the tenant trades: what its prices are counted in, what its
+/// clock says and which language its customers read first. Tenant one's
+/// values stand in until the brand is known.
+class TenantLocale {
+  /// ISO 3166-1 alpha-2
+  final String country;
+
+  /// ISO 4217
+  final String currency;
+
+  /// IANA
+  final String timeZone;
+
+  /// `ar` or `en`
+  final String language;
+
+  const TenantLocale({
+    this.country = 'EG',
+    this.currency = 'EGP',
+    this.timeZone = 'Africa/Cairo',
+    this.language = 'ar',
+  });
+
+  static const egypt = TenantLocale();
+
+  static TenantLocale parse(Object? json) {
+    if (json is! Map<String, dynamic>) return egypt;
+    String read(String key, String fallback) {
+      final value = (json[key] as String?)?.trim();
+      return value == null || value.isEmpty ? fallback : value;
+    }
+
+    return TenantLocale(
+      country: read('country', egypt.country).toUpperCase(),
+      currency: read('currency', egypt.currency).toUpperCase(),
+      timeZone: read('timeZone', egypt.timeZone),
+      language: read('language', egypt.language).toLowerCase(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'country': country,
+        'currency': currency,
+        'timeZone': timeZone,
+        'language': language,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantLocale &&
+          other.country == country &&
+          other.currency == currency &&
+          other.timeZone == timeZone &&
+          other.language == language;
+
+  @override
+  int get hashCode => Object.hash(country, currency, timeZone, language);
+}
+
+/// The tenant this build runs for: name, one brand color, a logo, its locale
+/// and the feature switches (`GET /api/tenant`). Cached between runs, so the
+/// app paints the right brand before the network answers.
 class TenantBrand {
   final LocalizedText name;
 
@@ -59,6 +119,7 @@ class TenantBrand {
 
   /// Absolute URL of the English wide logo, the one paper prints
   final String? wordmarkUrl;
+  final TenantLocale locale;
   final TenantFeatures features;
   final int version;
 
@@ -67,6 +128,7 @@ class TenantBrand {
     this.primaryColorHex,
     this.logoUrl,
     this.wordmarkUrl,
+    this.locale = TenantLocale.egypt,
     this.features = TenantFeatures.all,
     this.version = 0,
   });
@@ -91,6 +153,7 @@ class TenantBrand {
       primaryColorHex: _hex(json['primaryColor'] as String?),
       logoUrl: absolute(logo),
       wordmarkUrl: absolute(wordmark),
+      locale: TenantLocale.parse(json['locale']),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
@@ -104,6 +167,7 @@ class TenantBrand {
         primaryColorHex: _hex(json['primaryColor'] as String?),
         logoUrl: json['logoUrl'] as String?,
         wordmarkUrl: json['wordmarkUrl'] as String?,
+        locale: TenantLocale.parse(json['locale']),
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
@@ -115,6 +179,7 @@ class TenantBrand {
         'primaryColor': primaryColorHex,
         'logoUrl': logoUrl,
         'wordmarkUrl': wordmarkUrl,
+        'locale': locale.toJson(),
         'features': features.toJson(),
         'version': version,
       };

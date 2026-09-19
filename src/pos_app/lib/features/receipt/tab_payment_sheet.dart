@@ -36,6 +36,7 @@ class TabPaymentSheet extends StatelessWidget {
   final TabPaymentSlip slip;
   final AppLocalizations l10n;
   final Locale locale;
+  final MoneyFormat money;
   final String brandName;
   final ui.Image? logo;
 
@@ -44,6 +45,7 @@ class TabPaymentSheet extends StatelessWidget {
     required this.slip,
     required this.l10n,
     required this.locale,
+    required this.money,
     required this.brandName,
     this.logo,
   });
@@ -64,9 +66,9 @@ class TabPaymentSheet extends StatelessWidget {
         const Dashes(),
         const SizedBox(height: 8),
         SheetRow(l10n.customer, slip.customerName.isNotEmpty ? slip.customerName : l10n.guest),
-        SheetRow(l10n.tabBalanceBefore, moneyWith(l10n, slip.balanceBefore)),
-        SheetRow(tenderLabel(l10n, slip.tender), '−${moneyWith(l10n, slip.amount)}', size: 30, weight: FontWeight.w700),
-        SheetRow(l10n.newBalance, moneyWith(l10n, slip.balanceAfter < 0 ? 0 : slip.balanceAfter), weight: FontWeight.w600),
+        SheetRow(l10n.tabBalanceBefore, money(slip.balanceBefore)),
+        SheetRow(tenderLabel(l10n, slip.tender), '−${money(slip.amount)}', size: 30, weight: FontWeight.w700),
+        SheetRow(l10n.newBalance, money(slip.balanceAfter < 0 ? 0 : slip.balanceAfter), weight: FontWeight.w600),
         const SizedBox(height: 16),
         SheetCentered(children: [Text(l10n.receiptThanks)]),
       ],

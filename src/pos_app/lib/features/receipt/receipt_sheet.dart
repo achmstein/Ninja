@@ -28,6 +28,7 @@ class ReceiptSheet extends StatelessWidget {
   final TicketDetail ticket;
   final AppLocalizations l10n;
   final Locale locale;
+  final MoneyFormat money;
   final List<ReceiptPayment>? paymentsOverride;
   final int? receiptNumberOverride;
 
@@ -50,6 +51,7 @@ class ReceiptSheet extends StatelessWidget {
     required this.ticket,
     required this.l10n,
     required this.locale,
+    required this.money,
     required this.brandName,
     this.logo,
     this.branch,
@@ -95,11 +97,11 @@ class ReceiptSheet extends StatelessWidget {
         const Dashes(),
         const SizedBox(height: 8),
         for (final line in ticket.lines) ...[
-          SheetRow(line.description?.getText(locale) ?? '', moneyWith(l10n, line.total)),
+          SheetRow(line.description?.getText(locale) ?? '', money(line.total)),
           Text(
             line.discount > 0
-                ? '${_qty(line.qty)} × ${moneyWith(l10n, line.unitPrice)} − ${moneyWith(l10n, line.discount)} (${l10n.discount})'
-                : '${_qty(line.qty)} × ${moneyWith(l10n, line.unitPrice)}',
+                ? '${_qty(line.qty)} × ${money(line.unitPrice)} − ${money(line.discount)} (${l10n.discount})'
+                : '${_qty(line.qty)} × ${money(line.unitPrice)}',
             style: const TextStyle(fontSize: 20),
           ),
           if (line.details?.getText(locale) case final details? when details.isNotEmpty)
@@ -110,28 +112,28 @@ class ReceiptSheet extends StatelessWidget {
         const Dashes(),
         const SizedBox(height: 8),
         if (hasBreakdown) ...[
-          SheetRow(l10n.subtotal, moneyWith(l10n, ticket.subtotal), size: 22),
-          if (ticket.discount > 0) SheetRow(l10n.discount, '−${moneyWith(l10n, ticket.discount)}', size: 22),
+          SheetRow(l10n.subtotal, money(ticket.subtotal), size: 22),
+          if (ticket.discount > 0) SheetRow(l10n.discount, '−${money(ticket.discount)}', size: 22),
           if (ticket.serviceCharge > 0)
-            SheetRow(l10n.serviceCharge(rateText(ticket.serviceChargeRate)), moneyWith(l10n, ticket.serviceCharge), size: 22),
+            SheetRow(l10n.serviceCharge(rateText(ticket.serviceChargeRate)), money(ticket.serviceCharge), size: 22),
           if (ticket.vat > 0 && !ticket.vatIncluded)
-            SheetRow(l10n.vat(rateText(ticket.vatRate)), moneyWith(l10n, ticket.vat), size: 22),
+            SheetRow(l10n.vat(rateText(ticket.vatRate)), money(ticket.vat), size: 22),
         ],
-        SheetRow(l10n.total, moneyWith(l10n, ticket.total), size: 30, weight: FontWeight.w700),
+        SheetRow(l10n.total, money(ticket.total), size: 30, weight: FontWeight.w700),
         if (ticket.vat > 0 && ticket.vatIncluded)
-          SheetRow(l10n.vatIncluded(rateText(ticket.vatRate)), moneyWith(l10n, ticket.vat), size: 20),
-        for (final payment in payments) SheetRow(tenderLabel(l10n, payment.tender), moneyWith(l10n, payment.amount)),
-        if (change > 0) SheetRow(l10n.changeDue, moneyWith(l10n, change), weight: FontWeight.w600),
+          SheetRow(l10n.vatIncluded(rateText(ticket.vatRate)), money(ticket.vat), size: 20),
+        for (final payment in payments) SheetRow(tenderLabel(l10n, payment.tender), money(payment.amount)),
+        if (change > 0) SheetRow(l10n.changeDue, money(change), weight: FontWeight.w600),
         if (ticket.refunds.isNotEmpty) ...[
           const SizedBox(height: 8),
           const Dashes(),
           const SizedBox(height: 8),
           for (final refund in ticket.refunds) ...[
-            SheetRow(l10n.creditNote(refund.number), '−${moneyWith(l10n, refund.amount)}'),
+            SheetRow(l10n.creditNote(refund.number), '−${money(refund.amount)}'),
             Text(refund.reason, style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 4),
           ],
-          SheetRow(l10n.refundedSoFar, '−${moneyWith(l10n, ticket.refundedTotal)}', weight: FontWeight.w600),
+          SheetRow(l10n.refundedSoFar, '−${money(ticket.refundedTotal)}', weight: FontWeight.w600),
         ],
         const SizedBox(height: 16),
         SheetCentered(children: [

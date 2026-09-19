@@ -12,7 +12,9 @@ the control plane writes it, brings it up and takes it down.
   platform/            this folder: docker-compose.yml, Caddyfile, .env, realms/, web/
   platform/web/        the five SPA builds (admin, client, pos, kds, control), shared by every tenant
   platform/realms/     ninja-realm.json (the platform realm, imported on first boot)
-  tenants/{slug}/      docker-compose.yaml, .env, logo.png — written by the control plane
+  tenants/{slug}/      docker-compose.yaml, .env — written by the control plane
+  tenants/{slug}/seed/     brand images uploaded before the stamp ({slot}.png)
+  tenants/{slug}/backups/  one folder per backup: eleven *.dump, uploads.tar.gz, manifest.json
 ```
 
 ## Deploying
@@ -34,6 +36,14 @@ rebuild the web apps. It needs the `platform` environment with secrets
 The platform needs its own box while the Chillax stack still owns ports
 80/443 on the current one; once Chillax moves onto a stamp they share.
 
+Optional `Platform__*` keys on the `control-api` service, with their
+defaults: `PostgresContainer` (`ninja-postgres-1`, for `pg_dump` and
+`pg_restore` through `docker exec`), `StackFootprintMb` (2048) and
+`ReserveMb` (1024) for the capacity guard, `CapacityRefreshSeconds` (30),
+`TimeZone` (`Africa/Cairo`, the platform's own clock), `BackupHour` (3) and
+`BackupsKeep` (7) for the nightly backups. Size the footprint to what a stack
+really takes on the box: the Capacity tab shows per-stack memory.
+
 ## First time, by hand
 
 1. DNS: `A` records for `{domain}`, `auth.{domain}`, `control.{domain}`, and
@@ -50,24 +60,35 @@ The platform needs its own box while the Chillax stack still owns ports
 5. `docker compose up -d` (the project is named `ninja` in the file).
 6. Sign in at `https://control.{domain}` as `platform` and create the first tenant.
 
+The Caddyfile carries two hooks the control plane relies on: the auth host
+forwards `/api/control/impersonate/*` to `control-api` (the sign-in-as-owner
+link lands there so Keycloak's cookies are set on its own host), and every
+customer site sends `Content-Security-Policy: frame-ancestors 'self'
+https://control.{domain}` so only the control app can frame the live preview.
+
 ## What a stamp does
 
 `databases` (eleven `{slug}_*db` on the shared Postgres) → `broker` (vhost
 `{slug}` with the dead-letter policy) → `realm` (from
 `Templates/tenant-realm.json`: the eight clients, the `ninja-control` service
-account) → `stack` (compose up, images pulled) → `health` (every service
-answers through the gateway) → `brand` (name, color, logo through the
-stack's own API) → `owner` (the first Owner in the realm, temporary
-password shown once in the control app).
+account, the phone rule for the tenant's country) → `stack` (compose up,
+images pulled; `Seed__Profile` and `Tenant__*` in every service's env) →
+`health` (every service answers through the gateway) → `brand` (name,
+colour, locale and the seed images through the stack's own API) → `owner`
+(the first Owner in the realm, temporary password shown once in the control
+app). A restore adds `restore-databases` after `databases` and
+`restore-uploads` after `health`.
 
 Demos carry an expiry: stopped when it passes, destroyed a week later.
 Destroy is the reverse: compose down with volumes, realm, vhost, databases.
+Backups are kept on disk under `tenants/{slug}/backups/`, nightly for every
+running tenant and on demand; a restore stamps a new slug from one.
 
 ## Not yet
 
 - The Chillax stack still deploys on its own (`.github/workflows/deploy.yml`);
   moving it here is the last step of Phase 3 in `docs/ninja-plan.md`.
-- Backups per tenant (`deploy/backup.sh` dumps every database on the server,
-  which now covers every tenant, but the per-tenant `*-branch-uploads`
-  volumes are not in it).
+- Per-tenant Postgres roles and RabbitMQ users; the stacks still connect as
+  the shared superuser and `guest`.
+- SMTP for the realms; the Keycloak admin console is reachable from anywhere.
 - Social sign-in per tenant (a café's own Google and Apple apps).

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/models/localized_text.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../places/models/place.dart';
 import '../../places/services/place_service.dart';
 import '../models/bill.dart';
@@ -43,7 +44,7 @@ class BillSlip extends ConsumerWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final now = ref.watch(minuteClockProvider).value ?? DateTime.now();
     final running = runningTime(bill, activeStayOf(ref), now);
-    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    final money = ref.watch(moneyProvider);
     const ink = Colors.black;
     const base = TextStyle(fontSize: 12, color: ink, height: 1.3);
     const muted = TextStyle(fontSize: 11, color: ink, height: 1.3);
@@ -144,7 +145,7 @@ class BillSlip extends ConsumerWidget {
 }
 
 /// The clock still running: its time so far, as the till will bill it
-class RunningTimeLine extends StatelessWidget {
+class RunningTimeLine extends ConsumerWidget {
   final Bill bill;
   final RunningTime running;
 
@@ -154,10 +155,10 @@ class RunningTimeLine extends StatelessWidget {
   const RunningTimeLine({super.key, required this.bill, required this.running, this.slip = false});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.theme.colors;
-    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    final money = ref.watch(moneyProvider);
     final place = bill.locationName?.localized(context) ?? '';
     final hours = running.minutes ~/ 60;
     final minutes = (running.minutes % 60).floor();

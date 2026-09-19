@@ -12,6 +12,7 @@ import '../../../core/widgets/profile_gate.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../models/menu_item.dart';
@@ -356,7 +357,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                       ),
                     ),
                     AppText(
-                      btnL10n.priceFormat(cart.totalPrice.toStringAsFixed(2)),
+                      ref.watch(moneyProvider)(cart.totalPrice),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -806,6 +807,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     final cart = ref.watch(cartProvider);
     final cartQuantity = _getCartQuantity(cart, widget.item.id);
     final favoritesState = ref.watch(favoritesProvider);
@@ -938,7 +940,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
                   ],
                   const SizedBox(height: 4),
                   AppText(
-                    l10n.priceFormat(item.effectivePrice.toStringAsFixed(2)),
+                    money(item.effectivePrice),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -947,7 +949,7 @@ class _MenuItemTileState extends ConsumerState<MenuItemTile> {
                   ),
                   if (item.isOnOffer && item.offerPrice != null)
                     AppText(
-                      l10n.priceFormat(item.price.toStringAsFixed(2)),
+                      money(item.price),
                       style: TextStyle(
                         fontSize: 12,
                         color: colors.mutedForeground,
@@ -1150,7 +1152,7 @@ class _OfferItemCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colors;
-    final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
 
     return GestureDetector(
       onTap: () {
@@ -1238,7 +1240,7 @@ class _OfferItemCard extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               AppText(
-                                l10n.priceFormat(item.effectivePrice.toStringAsFixed(2)),
+                                money(item.effectivePrice),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -1246,7 +1248,7 @@ class _OfferItemCard extends ConsumerWidget {
                                 ),
                               ),
                               AppText(
-                                l10n.priceFormat(item.price.toStringAsFixed(2)),
+                                money(item.price),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: colors.mutedForeground,

@@ -8,6 +8,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../orders/models/order.dart';
 import '../../places/models/place.dart';
 import '../../places/services/place_service.dart';
@@ -39,7 +40,7 @@ class BillTile extends ConsumerWidget {
     final colors = context.theme.colors;
     final locale = ref.watch(localeProvider);
     final now = ref.watch(minuteClockProvider).value ?? DateTime.now();
-    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    final money = ref.watch(moneyProvider);
 
     final mine = bill.lines.where((line) => line.isMine && !line.isTime);
     final unassigned = bill.lines.where((line) => line.isUnassigned);
@@ -191,16 +192,16 @@ class _BillPill extends StatelessWidget {
 
 /// One of the customer's own lines, or the place's time, whole. A round the
 /// till named nobody for is muted: on the bill, but not read as theirs.
-class _BillLine extends StatelessWidget {
+class _BillLine extends ConsumerWidget {
   final BillLine line;
 
   const _BillLine({required this.line});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.theme.colors;
-    String money(double v) => l10n.priceFormat(v.toStringAsFixed(2));
+    final money = ref.watch(moneyProvider);
     final details = line.details?.localized(context);
     final ink = line.isUnassigned ? colors.mutedForeground : colors.foreground;
 

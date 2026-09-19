@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
@@ -431,7 +432,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> {
                     const SizedBox(height: 8),
                     AppText(
                       AppLocalizations.of(context)!.hourlyRateFormat(
-                        session.currentHourlyRate!.toStringAsFixed(0),
+                        ref.watch(moneyProvider).whole(session.currentHourlyRate!),
                       ),
                       style: TextStyle(
                         color: colors.primaryForeground.withValues(alpha: 0.7),
@@ -1097,7 +1098,7 @@ class PlaceListItem extends ConsumerWidget {
                     children: [
                       Flexible(
                         child: AppText(
-                          tariffLine(context, room.options),
+                          tariffLine(context, ref.watch(moneyProvider), room.options),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -1249,7 +1250,7 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
               ),
               const SizedBox(height: 8),
               AppText(
-                tariffLine(context, widget.room.options),
+                tariffLine(context, ref.watch(moneyProvider), widget.room.options),
                 style: TextStyle(
                   color: colors.mutedForeground,
                   fontSize: 14,
@@ -1422,13 +1423,13 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
 }
 
 /// The rate as the tariff has it: one figure for a one-rate place, one per
-/// option when there is a choice ("Single £50 · Multi £80 /hr").
-String tariffLine(BuildContext context, List<RateOption> options) {
+/// option when there is a choice ("Single 50 EGP · Multi 80 EGP /hr").
+String tariffLine(BuildContext context, MoneyFormat money, List<RateOption> options) {
   final l10n = AppLocalizations.of(context)!;
   if (options.isEmpty) return '';
-  if (options.length == 1) return l10n.hourlyRateFormat(options.first.hourlyRate.toStringAsFixed(0));
+  if (options.length == 1) return l10n.hourlyRateFormat(money.whole(options.first.hourlyRate));
   final parts = options
-      .map((o) => l10n.optionRateFormat(o.name.localized(context), o.hourlyRate.toStringAsFixed(0)))
+      .map((o) => l10n.optionRateFormat(o.name.localized(context), money.whole(o.hourlyRate)))
       .join(' · ');
   return '$parts ${l10n.perHourShort}';
 }
@@ -1436,7 +1437,7 @@ String tariffLine(BuildContext context, List<RateOption> options) {
 /// One rate to start at, as a tile: the option's dot in its colour, its
 /// name, its price. The first option reads as the base rate, the second as
 /// the upgrade, the way Single and Multi always did.
-class _RateChoice extends StatelessWidget {
+class _RateChoice extends ConsumerWidget {
   final RateOption option;
   final bool selected;
   final bool upgrade;
@@ -1450,7 +1451,7 @@ class _RateChoice extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
     final dot = upgrade ? Colors.orange : colors.primary;
@@ -1485,7 +1486,7 @@ class _RateChoice extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             AppText(
-              l10n.hourlyRateFormat(option.hourlyRate.toStringAsFixed(0)),
+              l10n.hourlyRateFormat(ref.watch(moneyProvider).whole(option.hourlyRate)),
               style: TextStyle(fontSize: 12, color: colors.mutedForeground),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../providers/account_provider.dart';
 
 /// Balance card widget for profile screen
@@ -74,7 +75,7 @@ class BalanceCard extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             AppText(
-              l10n.balanceAmount(account.balance.abs().toStringAsFixed(2), l10n.currency),
+              ref.watch(moneyProvider)(account.balance.abs()),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

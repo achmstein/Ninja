@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../core/models/money.dart';
 import '../../core/network/api_errors.dart';
 import '../../core/printing/brand_logo.dart';
 import '../../core/printing/print_service.dart';
@@ -110,6 +111,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                             ticket: ticket,
                             l10n: l10n,
                             locale: locale,
+                            money: MoneyFormat(brand.locale.currency, locale),
                             brandName: brand.displayName(locale),
                             logo: logo.data,
                             branch: ref.watch(branchProvider).selectedBranch),

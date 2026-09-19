@@ -26,6 +26,14 @@ open:
 | Kitchen | `https://kds.cove.localhost` |
 | Keycloak | `https://auth.localhost` (admin / local) |
 
+The control app's Capacity tab reads Docker Desktop's VM, not the laptop:
+with two stacks up it will say there is room for none, and a third stamp
+needs the force switch. Backups land in the `ninja-local` tenants volume
+(`/opt/ninja/tenants/{slug}/backups` inside the control container).
+
+From a shell, `*.localhost` does not resolve and Caddy's CA is not trusted:
+`curl --resolve control.localhost:443:127.0.0.1 -k https://control.localhost/api/control/platform`.
+
 Docker Desktop needs about 3 GB of memory for the platform plus one tenant;
 raise its limit if containers get killed. Stop the Aspire dev AppHost first
 if it is running: they do not conflict on ports, but they do compete for

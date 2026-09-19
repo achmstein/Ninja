@@ -9,6 +9,7 @@ import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
 
@@ -348,7 +349,7 @@ class _ShiftGroup {
 // Session Tile
 // ════════════════════════════════════════════════════════════════════
 
-class SessionTile extends StatefulWidget {
+class SessionTile extends ConsumerStatefulWidget {
   final Stay session;
   final String? currentUserId;
   final bool showTimeOnly;
@@ -361,10 +362,10 @@ class SessionTile extends StatefulWidget {
   });
 
   @override
-  State<SessionTile> createState() => _SessionTileState();
+  ConsumerState<SessionTile> createState() => _SessionTileState();
 }
 
-class _SessionTileState extends State<SessionTile> {
+class _SessionTileState extends ConsumerState<SessionTile> {
   late final bool _isActive;
 
   @override
@@ -458,7 +459,7 @@ class _SessionTileState extends State<SessionTile> {
               if (session.totalCost != null) ...[
                 const Spacer(),
                 AppText(
-                  l10n.priceFormat(session.totalCost!.toStringAsFixed(2)),
+                  ref.watch(moneyProvider)(session.totalCost!),
                   style: TextStyle(color: colors.mutedForeground, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],

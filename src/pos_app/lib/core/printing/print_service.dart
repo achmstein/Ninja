@@ -3,6 +3,7 @@ import '../providers/branch_provider.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/money.dart';
 import '../../features/receipt/receipt_sheet.dart';
 import '../../features/receipt/tab_payment_sheet.dart';
 import '../../features/shifts/models/shift.dart';
@@ -59,6 +60,7 @@ class PrintService {
       ticket: ticket,
       l10n: l10n,
       locale: locale,
+      money: _money(locale),
       brandName: _brandName(locale),
       logo: await _logo(),
       branch: _ref.read(branchProvider).selectedBranch,
@@ -72,14 +74,14 @@ class PrintService {
   Future<void> printTabPayment(TabPaymentSlip slip, {required AppLocalizations l10n, required Locale locale, bool kickDrawer = false}) async {
     final printer = _printer();
     await printer.send(await _job(
-      TabPaymentSheet(slip: slip, l10n: l10n, locale: locale, brandName: _brandName(locale), logo: await _logo()),
+      TabPaymentSheet(slip: slip, l10n: l10n, locale: locale, money: _money(locale), brandName: _brandName(locale), logo: await _logo()),
       kickDrawer: kickDrawer,
     ));
   }
 
   Future<void> printShiftReport(ShiftView shift, {required AppLocalizations l10n, required Locale locale}) async {
     final printer = _printer();
-    await printer.send(await _job(ShiftReportSheet(shift: shift, l10n: l10n, locale: locale, brandName: _brandName(locale))));
+    await printer.send(await _job(ShiftReportSheet(shift: shift, l10n: l10n, locale: locale, money: _money(locale), brandName: _brandName(locale))));
   }
 
   Future<void> testPrint({required AppLocalizations l10n, required Locale locale}) async {
@@ -92,6 +94,9 @@ class PrintService {
   /// The tenant's name in the sheet's language: what prints when there is
   /// no logo, and the top line of the shift report either way
   String _brandName(Locale locale) => _ref.read(brandProvider).displayName(locale);
+
+  /// The tenant's currency, labelled in the sheet's language
+  MoneyFormat _money(Locale locale) => MoneyFormat(_ref.read(brandProvider).locale.currency, locale);
 
   /// The tenant's logo, or nothing when there is none or it cannot be
   /// fetched: the sheet falls back to the name in text rather than the

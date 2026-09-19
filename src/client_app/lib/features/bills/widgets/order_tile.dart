@@ -7,6 +7,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
 
@@ -22,6 +23,7 @@ class OrderTile extends ConsumerWidget {
     final colors = context.theme.colors;
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     final details = ref.watch(orderProvider(order.id));
     final place = order.placeName?.localized(context);
     final discount = order.loyaltyDiscount;
@@ -75,7 +77,7 @@ class OrderTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               AppText(
-                l10n.priceFormat((order.total - discount).toStringAsFixed(2)),
+                money(order.total - discount),
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: colors.foreground),
               ),
               if (order.promoDiscount > 0)
@@ -85,7 +87,7 @@ class OrderTile extends ConsumerWidget {
                     Icon(Icons.local_offer, size: 12, color: Colors.green.shade600),
                     const SizedBox(width: 2),
                     AppText(
-                      l10n.discountFormat(order.promoDiscount.toStringAsFixed(2)),
+                      money.discount(order.promoDiscount),
                       style: TextStyle(fontSize: 12, color: Colors.green.shade600),
                     ),
                   ],
@@ -97,7 +99,7 @@ class OrderTile extends ConsumerWidget {
                     Icon(Icons.stars, size: 12, color: Colors.green.shade600),
                     const SizedBox(width: 2),
                     AppText(
-                      l10n.discountFormat(discount.toStringAsFixed(2)),
+                      money.discount(discount),
                       style: TextStyle(fontSize: 12, color: Colors.green.shade600),
                     ),
                   ],

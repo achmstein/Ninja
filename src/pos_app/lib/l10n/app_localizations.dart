@@ -2078,12 +2078,6 @@ abstract class AppLocalizations {
   /// **'Shift'**
   String get backToShift;
 
-  /// No description provided for @currency.
-  ///
-  /// In en, this message translates to:
-  /// **'EGP'**
-  String get currency;
-
   /// No description provided for @receipts.
   ///
   /// In en, this message translates to:

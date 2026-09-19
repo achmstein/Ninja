@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../models/account_balance.dart';
 import '../services/account_service.dart';
 import '../providers/account_provider.dart';
@@ -192,7 +193,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
           const SizedBox(height: 8),
           AppText(
-            AppLocalizations.of(context)!.balanceAmount(account.balance.abs().toStringAsFixed(2), AppLocalizations.of(context)!.currency),
+            ref.watch(moneyProvider)(account.balance.abs()),
             style: TextStyle(
               color: Colors.white,
               fontSize: 28,

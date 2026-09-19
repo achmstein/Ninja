@@ -1110,9 +1110,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backToShift => 'الوردية';
 
   @override
-  String get currency => 'ج.م';
-
-  @override
   String get receipts => 'الإيصالات';
 
   @override

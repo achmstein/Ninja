@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../models/menu_item.dart';
 import '../models/user_preference.dart';
@@ -262,6 +263,7 @@ class _ItemCustomizationSheetState
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     final locale = ref.watch(localeProvider);
     return Container(
       height: MediaQuery.of(context).size.height,
@@ -320,7 +322,7 @@ class _ItemCustomizationSheetState
                   ],
                   const SizedBox(height: 8),
                   AppText(
-                    l10n.basePrice(widget.item.effectivePrice.toStringAsFixed(2)),
+                    l10n.basePrice(money(widget.item.effectivePrice)),
                     style: TextStyle(fontWeight: FontWeight.bold, color: colors.foreground),
                   ),
                   const SizedBox(height: 24),
@@ -440,7 +442,7 @@ class _ItemCustomizationSheetState
                           Padding(
                             padding: const EdgeInsetsDirectional.only(end: 6),
                             child: AppText(
-                              l10n.priceFormat(_originalTotalPrice.toStringAsFixed(2)),
+                              money(_originalTotalPrice),
                               style: TextStyle(
                                 fontSize: 13,
                                 decoration: TextDecoration.lineThrough,
@@ -449,7 +451,7 @@ class _ItemCustomizationSheetState
                             ),
                           ),
                         AppText(
-                          l10n.priceFormat(_totalPrice.toStringAsFixed(2)),
+                          money(_totalPrice),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -508,15 +510,16 @@ class _ItemCustomizationSheetState
 
   Widget _buildRadioOptions(BuildContext context, ItemCustomization customization, List<int> selectedIds, Locale locale, AppLocalizations l10n) {
     final colors = context.theme.colors;
+    final money = ref.watch(moneyProvider);
     final selectedId = selectedIds.isNotEmpty ? selectedIds.first : null;
 
     return Column(
       children: customization.options.map((option) {
         final isSelected = selectedId == option.id;
         final priceText = option.priceAdjustment > 0
-            ? ' ${l10n.priceAdjustmentPlus(option.priceAdjustment.toStringAsFixed(2))}'
+            ? ' ${l10n.priceAdjustmentPlus(money(option.priceAdjustment))}'
             : option.priceAdjustment < 0
-                ? ' ${l10n.priceAdjustmentMinus(option.priceAdjustment.abs().toStringAsFixed(2))}'
+                ? ' ${l10n.priceAdjustmentMinus(money(option.priceAdjustment.abs()))}'
                 : '';
 
         return InkWell(
@@ -590,14 +593,15 @@ class _ItemCustomizationSheetState
 
   Widget _buildCheckboxOptions(BuildContext context, ItemCustomization customization, List<int> selectedIds, Locale locale, AppLocalizations l10n) {
     final colors = context.theme.colors;
+    final money = ref.watch(moneyProvider);
 
     return Column(
       children: customization.options.map((option) {
         final isSelected = selectedIds.contains(option.id);
         final priceText = option.priceAdjustment > 0
-            ? ' ${l10n.priceAdjustmentPlus(option.priceAdjustment.toStringAsFixed(2))}'
+            ? ' ${l10n.priceAdjustmentPlus(money(option.priceAdjustment))}'
             : option.priceAdjustment < 0
-                ? ' ${l10n.priceAdjustmentMinus(option.priceAdjustment.abs().toStringAsFixed(2))}'
+                ? ' ${l10n.priceAdjustmentMinus(money(option.priceAdjustment.abs()))}'
                 : '';
 
         return InkWell(

@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../core/widgets/profile_gate.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../services/promo_service.dart';
@@ -407,6 +408,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   Widget _buildPointsRedemption(double orderTotal, dynamic colors) {
     final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     final loyaltyState = ref.watch(loyaltyProvider);
     final redemption = ref.watch(loyaltyRedemptionProvider);
     final loyaltyInfo = loyaltyState.loyaltyInfo;
@@ -504,7 +506,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   ),
                 ),
                 AppText(
-                  l10n.discountFormat(discount.toStringAsFixed(2)),
+                  money.discount(discount),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppTheme.successColor,
@@ -550,6 +552,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   Widget _buildTotalSection(double orderTotal, dynamic colors) {
     final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     final redemption = ref.watch(loyaltyRedemptionProvider);
     final promo = ref.watch(promoProvider);
     final discount = redemption.serverDiscount ?? 0.0;
@@ -572,7 +575,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
               AppText(
-                l10n.priceFormat(orderTotal.toStringAsFixed(2)),
+                money(orderTotal),
                 style: TextStyle(
                   fontSize: 14,
                   color: colors.mutedForeground,
@@ -590,7 +593,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   style: TextStyle(fontSize: 14, color: AppTheme.successColor),
                 ),
                 AppText(
-                  l10n.discountFormat(promoDiscount.toStringAsFixed(2)),
+                  money.discount(promoDiscount),
                   style: TextStyle(fontSize: 14, color: AppTheme.successColor),
                 ),
               ],
@@ -609,7 +612,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
               AppText(
-                l10n.discountFormat(discount.toStringAsFixed(2)),
+                money.discount(discount),
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.successColor,
@@ -632,7 +635,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
             ),
             AppText(
-              l10n.priceFormat(finalTotal.toStringAsFixed(2)),
+              money(finalTotal),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -769,7 +772,7 @@ class CartItemTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colors;
     final locale = ref.watch(localeProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final money = ref.watch(moneyProvider);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -913,7 +916,7 @@ class CartItemTile extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         AppText(
-                          l10n.priceFormat(item.totalPrice.toStringAsFixed(2)),
+                          money(item.totalPrice),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -921,7 +924,7 @@ class CartItemTile extends ConsumerWidget {
                         ),
                         if (item.isOnOffer)
                           AppText(
-                            l10n.priceFormat(item.originalTotalPrice.toStringAsFixed(2)),
+                            money(item.originalTotalPrice),
                             style: TextStyle(
                               fontSize: 12,
                               decoration: TextDecoration.lineThrough,

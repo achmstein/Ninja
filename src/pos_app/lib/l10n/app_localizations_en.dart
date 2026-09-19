@@ -1103,9 +1103,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backToShift => 'Shift';
 
   @override
-  String get currency => 'EGP';
-
-  @override
   String get receipts => 'Receipts';
 
   @override

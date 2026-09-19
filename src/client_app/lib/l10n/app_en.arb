@@ -49,7 +49,7 @@
   "yourRoom": "Your room",
   "yourTable": "Your table",
   "yourStation": "Your station",
-  "optionRateFormat": "{option} £{rate}",
+  "optionRateFormat": "{option} {rate}",
   "@optionRateFormat": {
     "placeholders": {
       "option": {
@@ -157,35 +157,8 @@
   "statusActive": "Active",
   "statusCompleted": "Completed",
   "statusCancelled": "Cancelled",
-  "hourlyRateFormat": "£{rate}/hour",
+  "hourlyRateFormat": "{rate}/hour",
   "@hourlyRateFormat": {
-    "placeholders": {
-      "rate": {
-        "type": "String"
-      }
-    }
-  },
-  "dualRateFormat": "£{singleRate} · £{multiRate} /hr",
-  "@dualRateFormat": {
-    "placeholders": {
-      "singleRate": {
-        "type": "String"
-      },
-      "multiRate": {
-        "type": "String"
-      }
-    }
-  },
-  "singlePlayerRate": "Single: £{rate}/hr",
-  "@singlePlayerRate": {
-    "placeholders": {
-      "rate": {
-        "type": "String"
-      }
-    }
-  },
-  "multiPlayerRate": "Multi: £{rate}/hr",
-  "@multiPlayerRate": {
     "placeholders": {
       "rate": {
         "type": "String"
@@ -220,16 +193,7 @@
   "language": "Language",
   "english": "English",
   "arabic": "Arabic",
-  "currency": "EGP",
-  "priceFormat": "£{price}",
-  "@priceFormat": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "priceAdjustmentPlus": "(+£{price})",
+  "priceAdjustmentPlus": "(+{price})",
   "@priceAdjustmentPlus": {
     "placeholders": {
       "price": {
@@ -237,7 +201,7 @@
       }
     }
   },
-  "priceAdjustmentMinus": "(-£{price})",
+  "priceAdjustmentMinus": "(-{price})",
   "@priceAdjustmentMinus": {
     "placeholders": {
       "price": {
@@ -245,15 +209,7 @@
       }
     }
   },
-  "discountFormat": "-£{price}",
-  "@discountFormat": {
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "basePrice": "Base price: £{price}",
+  "basePrice": "Base price: {price}",
   "@basePrice": {
     "placeholders": {
       "price": {
@@ -399,17 +355,6 @@
   "@pointsRedeemedForOrder": {
     "placeholders": {
       "orderId": {
-        "type": "String"
-      }
-    }
-  },
-  "balanceAmount": "{amount} {currency}",
-  "@balanceAmount": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "currency": {
         "type": "String"
       }
     }

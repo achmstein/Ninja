@@ -33,6 +33,11 @@ public sealed class LocaleTests
         Assert.IsNull(error);
         Assert.AreEqual(("SA", "SAR", "Asia/Riyadh", "en"), (c2, cur2, tz2, lang2));
 
+        // A country alone implies the rest; an unknown country keeps tenant one's defaults
+        Assert.AreEqual(("SA", "SAR", "Asia/Riyadh", "ar"), LocaleFields.Normalize("SA", null, null, null, out error));
+        Assert.AreEqual(("GB", "GBP", "Europe/London", "en"), LocaleFields.Normalize("gb", null, null, null, out error));
+        Assert.AreEqual(("ZZ", "EGP", "Africa/Cairo", "ar"), LocaleFields.Normalize("ZZ", null, null, null, out error));
+
         LocaleFields.Normalize("Egypt", null, null, null, out error);
         StringAssert.Contains(error, "country");
         LocaleFields.Normalize(null, "pounds", null, null, out error);

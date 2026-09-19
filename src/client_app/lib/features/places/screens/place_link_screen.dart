@@ -10,6 +10,7 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
 import 'places_screen.dart';
@@ -219,7 +220,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
             ),
             const SizedBox(height: 6),
             AppText(
-              tariffLine(context, scan.options),
+              tariffLine(context, ref.watch(moneyProvider), scan.options),
               style: TextStyle(fontSize: 14, color: colors.mutedForeground),
             ),
             const SizedBox(height: 24),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -133,7 +134,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
               const SizedBox(width: 8),
               kind(_Kind.percent, '%'),
               const SizedBox(width: 4),
-              kind(_Kind.amount, l10n.currency),
+              kind(_Kind.amount, MoneyFormat.of(context).label),
             ],
           ),
           const SizedBox(height: 12),

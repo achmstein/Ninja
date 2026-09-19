@@ -9,6 +9,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/business_day.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/money.dart';
 import '../../orders/models/order.dart';
 import '../../orders/services/order_service.dart';
 import '../../profile/providers/account_provider.dart';
@@ -232,7 +233,7 @@ class _OnYourTab extends ConsumerWidget {
           children: [
             Expanded(child: AppText(l10n.onYourTab, style: TextStyle(fontSize: 13, color: colors.mutedForeground))),
             AppText(
-              l10n.priceFormat(balance.toStringAsFixed(2)),
+              ref.watch(moneyProvider)(balance),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

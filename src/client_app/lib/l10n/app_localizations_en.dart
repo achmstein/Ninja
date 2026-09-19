@@ -142,7 +142,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String optionRateFormat(String option, String rate) {
-    return '$option £$rate';
+    return '$option $rate';
   }
 
   @override
@@ -364,22 +364,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String hourlyRateFormat(String rate) {
-    return '£$rate/hour';
-  }
-
-  @override
-  String dualRateFormat(String singleRate, String multiRate) {
-    return '£$singleRate · £$multiRate /hr';
-  }
-
-  @override
-  String singlePlayerRate(String rate) {
-    return 'Single: £$rate/hr';
-  }
-
-  @override
-  String multiPlayerRate(String rate) {
-    return 'Multi: £$rate/hr';
+    return '$rate/hour';
   }
 
   @override
@@ -448,31 +433,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get arabic => 'Arabic';
 
   @override
-  String get currency => 'EGP';
-
-  @override
-  String priceFormat(String price) {
-    return '£$price';
-  }
-
-  @override
   String priceAdjustmentPlus(String price) {
-    return '(+£$price)';
+    return '(+$price)';
   }
 
   @override
   String priceAdjustmentMinus(String price) {
-    return '(-£$price)';
-  }
-
-  @override
-  String discountFormat(String price) {
-    return '-£$price';
+    return '(-$price)';
   }
 
   @override
   String basePrice(String price) {
-    return 'Base price: £$price';
+    return 'Base price: $price';
   }
 
   @override
@@ -682,11 +654,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String pointsRedeemedForOrder(String orderId) {
     return 'Points redeemed for order #$orderId';
-  }
-
-  @override
-  String balanceAmount(String amount, String currency) {
-    return '$amount $currency';
   }
 
   @override
