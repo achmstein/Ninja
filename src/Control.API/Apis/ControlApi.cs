@@ -16,7 +16,8 @@ public static partial class ControlApi
     {
         var api = app.MapGroup("api/control").WithTags("Control");
 
-        api.MapGet("/platform", GetPlatform).WithName("GetPlatform").WithSummary("The platform's domain and counts").RequireAuthorization("Platform");
+        api.MapGet("/platform", GetPlatform).WithName("GetPlatform").WithSummary("The platform's domain, counts and room for more").RequireAuthorization("Platform");
+        api.MapGet("/platform/capacity", GetCapacity).WithName("GetPlatformCapacity").WithSummary("What the box has and what each stack takes; refresh=true reads it now").RequireAuthorization("Platform");
 
         api.MapGet("/tenants", ListTenants).WithName("ListTenants").WithSummary("Every tenant, newest first").RequireAuthorization("Platform");
         api.MapPost("/tenants", CreateTenant).WithName("CreateTenant").WithSummary("Register a tenant and stamp its stack").RequireAuthorization("Platform");
@@ -37,16 +38,35 @@ public static partial class ControlApi
         return app;
     }
 
-    public static async Task<Ok<PlatformResponse>> GetPlatform(ControlContext context, IOptions<PlatformOptions> options)
+    public static async Task<Ok<PlatformResponse>> GetPlatform(ControlContext context, CapacityCache capacity, IOptions<PlatformOptions> options, CancellationToken ct)
     {
-        var counts = await context.Tenants.GroupBy(t => t.Status).Select(g => new { g.Key, Count = g.Count() }).ToListAsync();
+        var counts = await context.Tenants.GroupBy(t => t.Status).Select(g => new { g.Key, Count = g.Count() }).ToListAsync(ct);
+        var snapshot = await capacity.GetAsync(refresh: false, ct);
         return TypedResults.Ok(new PlatformResponse(
             options.Value.Domain,
             options.Value.DefaultImageTag,
             options.Value.DemoDays,
             options.Value.DryRun,
             counts.Where(c => c.Key == TenantStatus.Running).Sum(c => c.Count),
-            counts.Where(c => c.Key != TenantStatus.Destroyed).Sum(c => c.Count)));
+            counts.Where(c => c.Key != TenantStatus.Destroyed).Sum(c => c.Count),
+            capacity.RoomFor(snapshot)));
+    }
+
+    public static async Task<Ok<CapacityResponse>> GetCapacity(
+        ControlContext context, CapacityCache capacity, IOptions<PlatformOptions> options,
+        [Description("Read the box now instead of the last snapshot")] bool refresh = false,
+        CancellationToken ct = default)
+    {
+        var snapshot = await capacity.GetAsync(refresh, ct);
+        // Compose projects are ninja-{slug}; the platform's own project is the shared services
+        var slugs = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed).Select(t => t.Slug).ToListAsync(ct);
+        var tenants = snapshot.Projects
+            .Select(p => new TenantUsage(p.Project, slugs.FirstOrDefault(s => TenantNaming.Project(s) == p.Project), p.Containers, p.Running, p.MemoryMb, p.CpuPercent))
+            .ToList();
+        return TypedResults.Ok(new CapacityResponse(
+            snapshot.At, snapshot.MemTotalMb, snapshot.MemAvailableMb, snapshot.Load, snapshot.Cpus,
+            snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, snapshot.DockerUsedMb, snapshot.DockerReclaimableMb,
+            options.Value.StackFootprintMb, options.Value.ReserveMb, capacity.RoomFor(snapshot), tenants));
     }
 
     public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, IOptions<PlatformOptions> options)
@@ -59,6 +79,7 @@ public static partial class ControlApi
         ControlContext context,
         ProvisioningQueue queue,
         IAuditWriter audit,
+        CapacityCache capacity,
         IOptions<PlatformOptions> options,
         CreateTenantRequest request,
         CancellationToken ct)
@@ -78,6 +99,8 @@ public static partial class ControlApi
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
         if (await context.Tenants.AnyAsync(t => t.Slug == slug, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is taken." });
+        if ((request.Provision ?? true) && !(request.Force ?? false) && !capacity.HasRoom)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
 
         var tenant = new Tenant
         {
@@ -122,9 +145,22 @@ public static partial class ControlApi
         return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
     }
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, CapacityCache capacity, IOptions<PlatformOptions> options, string slug,
+        [Description("Stamp even when the box reports no room for another stack")] bool force = false,
+        CancellationToken ct = default)
+    {
+        // A stack that is already up takes no more room; a new one must fit
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.Status is not (TenantStatus.Running or TenantStatus.Stopped) && !force && !capacity.HasRoom)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
         // A destroyed tenant can be brought back under the same slug: the steps recreate everything
-        => Enqueue(context, queue, audit, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct);
+        return await Enqueue(context, queue, audit, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct, new { force });
+    }
+
+    private static string NoRoom(CapacityCache capacity, PlatformOptions options)
+        => $"No room for another stack: {capacity.Latest?.MemAvailableMb ?? 0} MB free, {options.ReserveMb} MB kept for the shared services, {options.StackFootprintMb} MB per stack. Pass force=true to stamp anyway.";
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
         => Enqueue(context, queue, audit, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);
@@ -187,7 +223,26 @@ public static partial class ControlApi
     private static partial Regex HexColor();
 }
 
-public record PlatformResponse(string Domain, string DefaultImageTag, int DemoDays, bool DryRun, int Running, int Total);
+/// <param name="RoomFor">How many more stacks the box takes before the guard refuses a stamp.</param>
+public record PlatformResponse(string Domain, string DefaultImageTag, int DemoDays, bool DryRun, int Running, int Total, int RoomFor);
+
+/// <param name="Slug">The tenant a compose project belongs to; null for the platform's own project.</param>
+public record TenantUsage(string Project, string? Slug, int Containers, int Running, long MemoryMb, double CpuPercent);
+
+public record CapacityResponse(
+    DateTimeOffset At,
+    long MemTotalMb,
+    long MemAvailableMb,
+    double[] Load,
+    int Cpus,
+    long TenantsDiskFreeMb,
+    long TenantsDiskTotalMb,
+    long DockerUsedMb,
+    long DockerReclaimableMb,
+    int StackFootprintMb,
+    int ReserveMb,
+    int RoomFor,
+    IReadOnlyList<TenantUsage> Tenants);
 
 public record CreateTenantRequest(
     string NameEn,
@@ -208,7 +263,8 @@ public record CreateTenantRequest(
     string? Address = null,
     TenantPlan Plan = TenantPlan.Free,
     string? Notes = null,
-    bool? Provision = true);
+    bool? Provision = true,
+    bool? Force = null);
 
 public record UpgradeRequest(string? ImageTag);
 

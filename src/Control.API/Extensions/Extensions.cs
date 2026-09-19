@@ -27,6 +27,8 @@ public static class Extensions
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddHostedService<ProvisioningWorker>();
         builder.Services.AddHostedService<DemoExpiryService>();
+        builder.Services.AddSingleton<CapacityCache>();
+        builder.Services.AddHostedService<CapacityMonitor>();
 
         var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
         if (dryRun)
@@ -42,6 +44,7 @@ public static class Extensions
             builder.Services.AddSingleton<DryRunStackProxy>();
             builder.Services.AddSingleton<IStackProxy>(sp => sp.GetRequiredService<DryRunStackProxy>());
             builder.Services.AddSingleton<ITenantStack, DryRunTenantStack>();
+            builder.Services.AddSingleton<IHostCapacity, DryRunHostCapacity>();
         }
         else
         {
@@ -52,6 +55,7 @@ public static class Extensions
             builder.Services.AddSingleton<IStackTokenProvider, KeycloakStackTokenProvider>();
             builder.Services.AddSingleton<IStackProxy, HttpStackProxy>();
             builder.Services.AddSingleton<ITenantStack, HttpTenantStack>();
+            builder.Services.AddSingleton<IHostCapacity, ProcHostCapacity>();
         }
 
         // The people who run the platform hold PlatformAdmin in the ninja realm

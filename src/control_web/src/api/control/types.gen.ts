@@ -80,6 +80,22 @@ export type BrandWordmarks = {
     arDark: null | BrandWordmark;
 };
 
+export type CapacityResponse = {
+    at: string;
+    memTotalMb: number | string;
+    memAvailableMb: number | string;
+    load: Array<number | string>;
+    cpus: number | string;
+    tenantsDiskFreeMb: number | string;
+    tenantsDiskTotalMb: number | string;
+    dockerUsedMb: number | string;
+    dockerReclaimableMb: number | string;
+    stackFootprintMb: number | string;
+    reserveMb: number | string;
+    roomFor: number | string;
+    tenants: Array<TenantUsage>;
+};
+
 export type ConvertRequest = {
     plan: null | TenantPlan;
 };
@@ -104,6 +120,7 @@ export type CreateTenantRequest = {
     plan?: TenantPlan;
     notes?: null | string;
     provision?: null | boolean;
+    force?: null | boolean;
 };
 
 export type ExtendRequest = {
@@ -119,6 +136,7 @@ export type PlatformResponse = {
     dryRun: boolean;
     running: number | string;
     total: number | string;
+    roomFor: number | string;
 };
 
 export type ProblemDetails = {
@@ -210,6 +228,15 @@ export type TenantSummary = {
     lastError: null | string;
 };
 
+export type TenantUsage = {
+    project: string;
+    slug: null | string;
+    containers: number | string;
+    running: number | string;
+    memoryMb: number | string;
+    cpuPercent: number | string;
+};
+
 export type UpdateBrandRequest = {
     name: BrandText;
     primaryColor: null | string;
@@ -265,6 +292,38 @@ export type GetPlatformResponses = {
 };
 
 export type GetPlatformResponse = GetPlatformResponses[keyof GetPlatformResponses];
+
+export type GetPlatformCapacityData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Read the box now instead of the last snapshot
+         */
+        refresh?: boolean;
+    };
+    url: '/api/control/platform/capacity';
+};
+
+export type GetPlatformCapacityErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlatformCapacityResponses = {
+    /**
+     * OK
+     */
+    200: CapacityResponse;
+};
+
+export type GetPlatformCapacityResponse = GetPlatformCapacityResponses[keyof GetPlatformCapacityResponses];
 
 export type ListTenantsData = {
     body?: never;
@@ -444,7 +503,12 @@ export type ProvisionTenantData = {
     path: {
         slug: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Stamp even when the box reports no room for another stack
+         */
+        force?: boolean;
+    };
     url: '/api/control/tenants/{slug}/provision';
 };
 

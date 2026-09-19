@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getTenant, getTenantBrand, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { convertTenant, createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantSeedImage, listAudit, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListAuditData, ListAuditResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -43,7 +43,7 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
 export const getPlatformQueryKey = (options?: Options<GetPlatformData>) => createQueryKey('getPlatform', options);
 
 /**
- * The platform's domain and counts
+ * The platform's domain, counts and room for more
  */
 export const getPlatformOptions = (options?: Options<GetPlatformData>) => queryOptions<GetPlatformResponse, AxiosError<DefaultError>, GetPlatformResponse, ReturnType<typeof getPlatformQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -56,6 +56,24 @@ export const getPlatformOptions = (options?: Options<GetPlatformData>) => queryO
         return data;
     },
     queryKey: getPlatformQueryKey(options)
+});
+
+export const getPlatformCapacityQueryKey = (options?: Options<GetPlatformCapacityData>) => createQueryKey('getPlatformCapacity', options);
+
+/**
+ * What the box has and what each stack takes; refresh=true reads it now
+ */
+export const getPlatformCapacityOptions = (options?: Options<GetPlatformCapacityData>) => queryOptions<GetPlatformCapacityResponse, AxiosError<DefaultError>, GetPlatformCapacityResponse, ReturnType<typeof getPlatformCapacityQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlatformCapacity({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlatformCapacityQueryKey(options)
 });
 
 export const listTenantsQueryKey = (options?: Options<ListTenantsData>) => createQueryKey('listTenants', options);

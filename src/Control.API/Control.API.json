@@ -10,7 +10,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "The platform's domain and counts",
+        "summary": "The platform's domain, counts and room for more",
         "operationId": "GetPlatform",
         "responses": {
           "200": {
@@ -19,6 +19,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PlatformResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/capacity": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "What the box has and what each stack takes; refresh=true reads it now",
+        "operationId": "GetPlatformCapacity",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "description": "Read the box now instead of the last snapshot",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacityResponse"
                 }
               }
             }
@@ -288,6 +329,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "description": "Stamp even when the box reports no room for another stack",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -1529,6 +1579,127 @@
           }
         }
       },
+      "CapacityResponse": {
+        "required": [
+          "at",
+          "memTotalMb",
+          "memAvailableMb",
+          "load",
+          "cpus",
+          "tenantsDiskFreeMb",
+          "tenantsDiskTotalMb",
+          "dockerUsedMb",
+          "dockerReclaimableMb",
+          "stackFootprintMb",
+          "reserveMb",
+          "roomFor",
+          "tenants"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "memTotalMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "memAvailableMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "load": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          },
+          "cpus": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tenantsDiskFreeMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "tenantsDiskTotalMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "dockerUsedMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "dockerReclaimableMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "stackFootprintMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reserveMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "roomFor": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tenants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantUsage"
+            }
+          }
+        }
+      },
       "ConvertRequest": {
         "required": [
           "plan"
@@ -1664,6 +1835,12 @@
               "boolean"
             ],
             "default": true
+          },
+          "force": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -1694,7 +1871,8 @@
           "demoDays",
           "dryRun",
           "running",
-          "total"
+          "total",
+          "roomFor"
         ],
         "type": "object",
         "properties": {
@@ -1724,6 +1902,14 @@
             "format": "int32"
           },
           "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "roomFor": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -2123,6 +2309,60 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "TenantUsage": {
+        "required": [
+          "project",
+          "slug",
+          "containers",
+          "running",
+          "memoryMb",
+          "cpuPercent"
+        ],
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "slug": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "containers": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "running": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "memoryMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "cpuPercent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

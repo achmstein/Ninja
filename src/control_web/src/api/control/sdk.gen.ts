@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,11 +19,20 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * The platform's domain and counts
+ * The platform's domain, counts and room for more
  */
 export const getPlatform = <ThrowOnError extends boolean = false>(options?: Options<GetPlatformData, ThrowOnError>): RequestResult<GetPlatformResponses, GetPlatformErrors, ThrowOnError> => (options?.client ?? client).get<GetPlatformResponses, GetPlatformErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/control/platform',
+    ...options
+});
+
+/**
+ * What the box has and what each stack takes; refresh=true reads it now
+ */
+export const getPlatformCapacity = <ThrowOnError extends boolean = false>(options?: Options<GetPlatformCapacityData, ThrowOnError>): RequestResult<GetPlatformCapacityResponses, GetPlatformCapacityErrors, ThrowOnError> => (options?.client ?? client).get<GetPlatformCapacityResponses, GetPlatformCapacityErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/capacity',
     ...options
 });
 

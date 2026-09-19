@@ -3,7 +3,9 @@ using System.Text;
 
 namespace Ninja.Control.API.Platform;
 
-public sealed record ShellResult(int ExitCode, string Output)
+/// <param name="Output">What the command printed on both streams, in order: a log, not something to parse.</param>
+/// <param name="Stdout">Its standard output alone, for output that is data (JSON, a dump).</param>
+public sealed record ShellResult(int ExitCode, string Output, string Stdout = "")
 {
     public bool Ok => ExitCode == 0;
 }
@@ -12,38 +14,71 @@ public sealed record ShellResult(int ExitCode, string Output)
 public interface IShell
 {
     Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct);
+
+    /// <summary>The same, with standard output copied raw into <paramref name="stdout"/> (a dump, an archive) and only stderr kept as the log.</summary>
+    Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct);
 }
 
 public sealed class ProcessShell(ILogger<ProcessShell> logger) : IShell
 {
     public async Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct)
     {
+        using var process = Start(file, args, workingDirectory, redirectStdin: false);
+
+        var combined = new StringBuilder();
+        var output = new StringBuilder();
+        var stdout = PumpAsync(process.StandardOutput, combined, output);
+        var stderr = PumpAsync(process.StandardError, combined, null);
+        await process.WaitForExitAsync(ct);
+        await Task.WhenAll(stdout, stderr);
+
+        return new ShellResult(process.ExitCode, combined.ToString(), output.ToString());
+    }
+
+    public async Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
+    {
+        using var process = Start(file, args, workingDirectory, redirectStdin: stdin is not null);
+
+        var errors = new StringBuilder();
+        var stderr = PumpAsync(process.StandardError, errors, null);
+        var copyOut = process.StandardOutput.BaseStream.CopyToAsync(stdout, ct);
+        if (stdin is not null)
+        {
+            await stdin.CopyToAsync(process.StandardInput.BaseStream, ct);
+            process.StandardInput.Close();
+        }
+        await copyOut;
+        await process.WaitForExitAsync(ct);
+        await stderr;
+
+        return new ShellResult(process.ExitCode, errors.ToString());
+    }
+
+    private Process Start(string file, IReadOnlyList<string> args, string? workingDirectory, bool redirectStdin)
+    {
         var psi = new ProcessStartInfo(file)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = redirectStdin,
             UseShellExecute = false,
             WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,
         };
         foreach (var a in args) psi.ArgumentList.Add(a);
 
         logger.LogInformation("$ {File} {Args}", file, string.Join(' ', args));
-        using var process = Process.Start(psi) ?? throw new InvalidOperationException($"Could not start {file}");
-
-        var output = new StringBuilder();
-        var stdout = PumpAsync(process.StandardOutput, output);
-        var stderr = PumpAsync(process.StandardError, output);
-        await process.WaitForExitAsync(ct);
-        await Task.WhenAll(stdout, stderr);
-
-        return new ShellResult(process.ExitCode, output.ToString());
+        return Process.Start(psi) ?? throw new InvalidOperationException($"Could not start {file}");
     }
 
-    private static async Task PumpAsync(StreamReader reader, StringBuilder into)
+    private static async Task PumpAsync(StreamReader reader, StringBuilder combined, StringBuilder? own)
     {
         while (await reader.ReadLineAsync() is { } line)
         {
-            lock (into) into.AppendLine(line);
+            lock (combined)
+            {
+                combined.AppendLine(line);
+                own?.AppendLine(line);
+            }
         }
     }
 }
@@ -55,9 +90,21 @@ public sealed class RecordingShell(ILogger<RecordingShell> logger) : IShell
 
     public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct)
     {
+        var line = Record(file, args);
+        return Task.FromResult(new ShellResult(0, $"(dry run) {line}"));
+    }
+
+    public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
+    {
+        var line = Record(file, args);
+        return Task.FromResult(new ShellResult(0, $"(dry run) {line}"));
+    }
+
+    private string Record(string file, IReadOnlyList<string> args)
+    {
         var line = $"{file} {string.Join(' ', args)}";
         lock (Commands) Commands.Add(line);
         logger.LogInformation("(dry run) $ {Line}", line);
-        return Task.FromResult(new ShellResult(0, $"(dry run) {line}"));
+        return line;
     }
 }

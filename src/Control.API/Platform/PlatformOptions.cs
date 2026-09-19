@@ -74,6 +74,20 @@ public sealed class PlatformOptions
 
     public string EdgeContainer { get; set; } = "ninja-caddy-1";
 
+    /// <summary>The shared Postgres container (for pg_dump and pg_restore through docker exec).</summary>
+    public string PostgresContainer { get; set; } = "ninja-postgres-1";
+
+    /// <summary>What one stack takes on the box, and what to keep free for the shared services; a stamp is refused when they do not fit.</summary>
+    public int StackFootprintMb { get; set; } = 2048;
+
+    public int ReserveMb { get; set; } = 1024;
+
+    /// <summary>How often the box is read for the capacity view.</summary>
+    public int CapacityRefreshSeconds { get; set; } = 30;
+
+    /// <summary>The platform's own clock (the nightly jobs), IANA.</summary>
+    public string TimeZone { get; set; } = "Africa/Cairo";
+
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
 }
