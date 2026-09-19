@@ -15,7 +15,26 @@ the control plane writes it, brings it up and takes it down.
   tenants/{slug}/      docker-compose.yaml, .env, logo.png — written by the control plane
 ```
 
-## First time
+## Deploying
+
+`.github/workflows/deploy-platform.yml` does all of it: builds the five web
+apps against `https://auth.{domain}`, renders the platform realm, writes
+`.env` from the secrets, ships this folder to `/opt/ninja/platform` on the
+platform box, installs docker on a fresh box, brings the `ninja` project up,
+and smokes `auth.`, `control.` and the control plane's `tls/ask` through the
+edge. Inputs: the image tag (control plane and new tenants), whether to
+rebuild the web apps. It needs the `platform` environment with secrets
+`PLATFORM_SERVER_HOST/USER/SSH_KEY`, `PLATFORM_POSTGRES_PASSWORD`,
+`PLATFORM_EVENTBUS_PASSWORD`, `PLATFORM_KEYCLOAK_PASSWORD`,
+`PLATFORM_ADMIN_PASSWORD`, `GHCR_TOKEN` (+ optional `GEMINI_API_KEY`,
+`FIREBASE_WEB_*`) and the repository variables `PLATFORM_DOMAIN`,
+`PLATFORM_SLUG_LABEL`, `ACME_EMAIL`. The control image itself comes from
+`docker-build.yml` (`services: control`).
+
+The platform needs its own box while the Chillax stack still owns ports
+80/443 on the current one; once Chillax moves onto a stamp they share.
+
+## First time, by hand
 
 1. DNS: `A` records for `{domain}`, `auth.{domain}`, `control.{domain}`, and
    wildcards `*.{domain}` and `*.*.{domain}` to this box. Certificates are
@@ -28,7 +47,7 @@ the control plane writes it, brings it up and takes it down.
    `src/Control.API/Templates/platform-realm.json` with `{{controlUrl}}`,
    `{{platformDomain}}` and a `{{platformPassword}}` for the first
    `platform` user (temporary; changed on first sign-in).
-5. `docker compose -p ninja-platform up -d`.
+5. `docker compose up -d` (the project is named `ninja` in the file).
 6. Sign in at `https://control.{domain}` as `platform` and create the first tenant.
 
 ## What a stamp does

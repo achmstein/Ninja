@@ -1,0 +1,210 @@
+name: Deploy Platform
+
+# The shared box every tenant runs on: Postgres, RabbitMQ, Keycloak, Caddy,
+# the control plane, and the five web builds served once for everyone.
+# Tenant stacks are not touched here; the control plane stamps and upgrades
+# those. Runs on its own server (PLATFORM_* secrets): the Chillax stack owns
+# ports 80/443 on its box until it moves onto a stamp.
+#
+# Secrets: PLATFORM_SERVER_HOST, PLATFORM_SERVER_USER, PLATFORM_SERVER_SSH_KEY,
+#   PLATFORM_POSTGRES_PASSWORD, PLATFORM_EVENTBUS_PASSWORD, PLATFORM_KEYCLOAK_PASSWORD,
+#   PLATFORM_ADMIN_PASSWORD (first password of the `platform` user, temporary),
+#   GHCR_TOKEN, GEMINI_API_KEY (optional), FIREBASE_WEB_* (optional, web push).
+# Variables: PLATFORM_DOMAIN (e.g. ninja.app), PLATFORM_SLUG_LABEL (2 for a
+#   two-label domain, 3 for co.uk-style), ACME_EMAIL.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag for the control plane and for new tenants"
+        default: latest
+        type: string
+      web:
+        description: "Rebuild and ship the five web apps"
+        default: true
+        type: boolean
+
+env:
+  DEPLOY_DIR: /opt/ninja/platform
+  PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the platform domain is set
+        run: |
+          if [ -z "$PLATFORM_DOMAIN" ]; then
+            echo "::error::Set the PLATFORM_DOMAIN repository variable (e.g. ninja.app) first."
+            exit 1
+          fi
+          echo "Platform domain: $PLATFORM_DOMAIN"
+
+      - name: Setup Node
+        if: ${{ inputs.web }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Every tenant is served the same build; the realm and colours come from
+      # /api/tenant at runtime. Only Keycloak's host is baked in.
+      - name: Build web apps
+        if: ${{ inputs.web }}
+        env:
+          VITE_KEYCLOAK_URL: https://auth.${{ vars.PLATFORM_DOMAIN }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_WEB_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_WEB_PROJECT_ID }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_WEB_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
+          VITE_FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_WEB_VAPID_KEY }}
+        run: |
+          set -e
+          mkdir -p web-artifacts
+          for app in admin_web client_web pos_web kds_web control_web; do
+            name="${app%_web}-web"
+            echo "::group::$name"
+            (cd "src/$app" && npm ci && npm run build)
+            cp -r "src/$app/dist" "web-artifacts/$name"
+            echo "::endgroup::"
+          done
+
+      - name: Prepare platform artifacts
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.PLATFORM_POSTGRES_PASSWORD }}
+          EVENTBUS_PASSWORD: ${{ secrets.PLATFORM_EVENTBUS_PASSWORD }}
+          KEYCLOAK_PASSWORD: ${{ secrets.PLATFORM_KEYCLOAK_PASSWORD }}
+          PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ACME_EMAIL: ${{ vars.ACME_EMAIL }}
+          PLATFORM_SLUG_LABEL: ${{ vars.PLATFORM_SLUG_LABEL }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -e
+          for v in POSTGRES_PASSWORD EVENTBUS_PASSWORD KEYCLOAK_PASSWORD PLATFORM_ADMIN_PASSWORD ACME_EMAIL; do
+            if [ -z "${!v}" ]; then echo "::error::$v is empty"; exit 1; fi
+          done
+
+          mkdir -p platform-artifacts/realms
+          cp deploy/platform/docker-compose.yml platform-artifacts/
+          cp deploy/platform/Caddyfile platform-artifacts/
+          cp deploy/platform/README.md platform-artifacts/
+          # The control plane rewrites this file; only seed it when the server has none
+          cp deploy/platform/custom-domains.caddy platform-artifacts/custom-domains.caddy.seed
+
+          cat > platform-artifacts/.env <<EOF
+          PLATFORM_DOMAIN=$PLATFORM_DOMAIN
+          PLATFORM_SLUG_LABEL=${PLATFORM_SLUG_LABEL:-2}
+          ACME_EMAIL=$ACME_EMAIL
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          EVENTBUS_PASSWORD=$EVENTBUS_PASSWORD
+          KEYCLOAK_PASSWORD=$KEYCLOAK_PASSWORD
+          GEMINI_API_KEY=$GEMINI_API_KEY
+          IMAGE_REGISTRY=ghcr.io/${{ github.repository_owner }}/ninja
+          IMAGE_TAG=${IMAGE_TAG:-latest}
+          EOF
+
+          # The platform realm, imported by Keycloak on its first boot
+          python3 - <<'PY'
+          import json, os
+          t = open('src/Control.API/Templates/platform-realm.json', encoding='utf-8').read()
+          t = t.replace('{{controlUrl}}', f"https://control.{os.environ['PLATFORM_DOMAIN']}")
+          t = t.replace('{{platformDomain}}', os.environ['PLATFORM_DOMAIN'])
+          t = t.replace('{{platformPassword}}', json.dumps(os.environ['PLATFORM_ADMIN_PASSWORD'])[1:-1])
+          json.loads(t)
+          open('platform-artifacts/realms/ninja-realm.json', 'w', encoding='utf-8').write(t)
+          PY
+
+          if [ -d web-artifacts ]; then
+            mkdir -p platform-artifacts/web-incoming
+            cp -r web-artifacts/. platform-artifacts/web-incoming/
+          fi
+          find platform-artifacts -maxdepth 2 -not -path '*/web-incoming/*' | sort
+
+      - name: Copy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          source: "platform-artifacts/*,platform-artifacts/.env"
+          target: ${{ env.DEPLOY_DIR }}
+          strip_components: 1
+
+      - name: Bring the platform up
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
+          SHIP_WEB: ${{ inputs.web }}
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER,DEPLOY_DIR,SHIP_WEB
+          script: |
+            set -e
+
+            # First time on a box: docker, the folders, the firewall
+            if ! command -v docker >/dev/null 2>&1; then
+              curl -fsSL https://get.docker.com | sh
+              sudo usermod -aG docker "$USER"
+              sudo systemctl enable --now docker
+            fi
+            sudo mkdir -p /opt/ninja/tenants "$DEPLOY_DIR/web"
+            sudo chown -R "$USER:$USER" /opt/ninja
+            if command -v ufw >/dev/null 2>&1; then
+              sudo ufw allow 22/tcp >/dev/null; sudo ufw allow 80/tcp >/dev/null; sudo ufw allow 443/tcp >/dev/null; sudo ufw allow 443/udp >/dev/null
+            fi
+
+            cd "$DEPLOY_DIR"
+            chmod 600 .env
+            [ -f custom-domains.caddy ] || cp custom-domains.caddy.seed custom-domains.caddy
+
+            # The web builds are bind-mounted into Caddy: sync INTO the folders,
+            # never replace them, or Caddy keeps serving the detached inode
+            if [ "$SHIP_WEB" = "true" ] && [ -d web-incoming ]; then
+              for name in admin-web client-web pos-web kds-web control-web; do
+                [ -d "web-incoming/$name" ] || continue
+                mkdir -p "web/$name"
+                find "web/$name" -mindepth 1 -delete
+                cp -a "web-incoming/$name/." "web/$name/"
+                echo "Deployed $name"
+              done
+              rm -rf web-incoming
+            fi
+            for name in admin-web client-web pos-web kds-web control-web; do mkdir -p "web/$name"; done
+
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            docker compose pull
+            docker compose up -d --remove-orphans
+            # The Caddyfile is a single-file bind mount; scp replaced the inode
+            docker compose up -d --force-recreate caddy
+
+            docker image prune -f >/dev/null
+            docker compose ps
+
+      # Through the edge, so DNS, certificates, Caddy, Keycloak and the control
+      # plane are all on the path
+      - name: Smoke test
+        run: |
+          set -e
+          check() {
+            local url="$1" tries="${2:-24}"
+            for i in $(seq 1 "$tries"); do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)
+              if [ "$code" = "200" ]; then echo "OK   $url"; return 0; fi
+              echo "wait $url ($code)"; sleep 10
+            done
+            echo "::error::$url never answered 200"; return 1
+          }
+          check "https://auth.$PLATFORM_DOMAIN/realms/ninja"
+          check "https://control.$PLATFORM_DOMAIN/"
+          # Anonymous, and proves the control plane is up behind Caddy
+          check "https://control.$PLATFORM_DOMAIN/api/control/tls/ask?domain=auth.$PLATFORM_DOMAIN"

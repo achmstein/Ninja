@@ -3,12 +3,12 @@
 # control plane stamps into /opt/ninja/tenants/{slug} and joins to the
 # `aspire` network declared here.
 #
-#   docker compose -p ninja-platform up -d
+#   docker compose up -d        (project name: ninja)
 #
 # Fill .env from .env.example. Wildcard DNS for PLATFORM_DOMAIN must point
 # here before the first tenant; see deploy/platform/README.md.
 
-name: ninja-platform
+name: ninja
 
 services:
   postgres:
@@ -87,7 +87,6 @@ services:
       Platform__DefaultImageTag: ${IMAGE_TAG:-latest}
       Platform__PostgresPassword: ${POSTGRES_PASSWORD}
       Platform__RabbitPassword: ${EVENTBUS_PASSWORD}
-      Platform__RabbitContainer: ninja-platform-eventbus-1
       Platform__KeycloakPublicUrl: https://auth.${PLATFORM_DOMAIN}
       Platform__KeycloakAdminPassword: ${KEYCLOAK_PASSWORD}
       Platform__GeminiApiKey: ${GEMINI_API_KEY}

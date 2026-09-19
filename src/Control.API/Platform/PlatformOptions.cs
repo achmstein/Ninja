@@ -38,7 +38,7 @@ public sealed class PlatformOptions
     public string PostgresPassword { get; set; } = "postgres";
 
     /// <summary>The shared RabbitMQ container (for rabbitmqctl) and the user the stacks connect as.</summary>
-    public string RabbitContainer { get; set; } = "eventbus";
+    public string RabbitContainer { get; set; } = "ninja-eventbus-1";
 
     public string RabbitHost { get; set; } = "eventbus";
 
@@ -66,7 +66,7 @@ public sealed class PlatformOptions
     /// <summary>The Caddy snippet holding one site per custom customer domain, and the edge container to reload after writing it.</summary>
     public string EdgeSnippetPath { get; set; } = "/opt/ninja/platform/custom-domains.caddy";
 
-    public string EdgeContainer { get; set; } = "ninja-platform-caddy-1";
+    public string EdgeContainer { get; set; } = "ninja-caddy-1";
 
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
