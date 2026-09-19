@@ -48,6 +48,10 @@ export type ProblemDetails = {
     instance?: null | string;
 };
 
+export type TenantAuth = {
+    authority: string;
+};
+
 export type TenantFeatures = {
     rooms: boolean;
     loyalty: boolean;
@@ -70,8 +74,10 @@ export type TenantResponse = {
     name: LocalizedText;
     primaryColor: null | string;
     customerUrl: null | string;
+    auth: null | TenantAuth;
     logoUrl: null | string;
-    wordmark: null | TenantWordmark;
+    logoDarkUrl: null | string;
+    wordmarks: TenantWordmarks;
     theme: TenantThemeDto;
     icons: TenantIcons;
     features: TenantFeatures;
@@ -90,6 +96,13 @@ export type TenantWordmark = {
     url: string;
     width: number | string;
     height: number | string;
+};
+
+export type TenantWordmarks = {
+    en: null | TenantWordmark;
+    enDark: null | TenantWordmark;
+    ar: null | TenantWordmark;
+    arDark: null | TenantWordmark;
 };
 
 export type UpdateBranchRequest = {
@@ -312,14 +325,16 @@ export type UpdateTenantResponses = {
 
 export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
 
-export type DeleteTenantLogoData = {
+export type DeleteTenantImageData = {
     body?: never;
-    path?: never;
+    path: {
+        slot: string;
+    };
     query?: never;
-    url: '/api/tenant/logo';
+    url: '/api/tenant/images/{slot}';
 };
 
-export type DeleteTenantLogoErrors = {
+export type DeleteTenantImageErrors = {
     /**
      * Unauthorized
      */
@@ -328,46 +343,54 @@ export type DeleteTenantLogoErrors = {
      * Forbidden
      */
     403: unknown;
-};
-
-export type DeleteTenantLogoResponses = {
-    /**
-     * OK
-     */
-    200: TenantResponse;
-};
-
-export type DeleteTenantLogoResponse = DeleteTenantLogoResponses[keyof DeleteTenantLogoResponses];
-
-export type GetTenantLogoData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Cache key; any value makes the answer immutable
-         */
-        v?: string;
-    };
-    url: '/api/tenant/logo';
-};
-
-export type GetTenantLogoErrors = {
     /**
      * Not Found
      */
     404: unknown;
 };
 
-export type UploadTenantLogoData = {
+export type DeleteTenantImageResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type DeleteTenantImageResponse = DeleteTenantImageResponses[keyof DeleteTenantImageResponses];
+
+export type GetTenantImageData = {
+    body?: never;
+    path: {
+        slot: string;
+    };
+    query?: {
+        /**
+         * Cache key; any value makes the answer immutable
+         */
+        v?: string;
+    };
+    url: '/api/tenant/images/{slot}';
+};
+
+export type GetTenantImageErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadTenantImageData = {
     body: {
         file: IFormFile;
     };
-    path?: never;
+    path: {
+        slot: string;
+    };
     query?: never;
-    url: '/api/tenant/logo';
+    url: '/api/tenant/images/{slot}';
 };
 
-export type UploadTenantLogoErrors = {
+export type UploadTenantImageErrors = {
     /**
      * Bad Request
      */
@@ -380,99 +403,22 @@ export type UploadTenantLogoErrors = {
      * Forbidden
      */
     403: unknown;
-};
-
-export type UploadTenantLogoError = UploadTenantLogoErrors[keyof UploadTenantLogoErrors];
-
-export type UploadTenantLogoResponses = {
-    /**
-     * OK
-     */
-    200: TenantResponse;
-};
-
-export type UploadTenantLogoResponse = UploadTenantLogoResponses[keyof UploadTenantLogoResponses];
-
-export type DeleteTenantWordmarkData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/tenant/wordmark';
-};
-
-export type DeleteTenantWordmarkErrors = {
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-};
-
-export type DeleteTenantWordmarkResponses = {
-    /**
-     * OK
-     */
-    200: TenantResponse;
-};
-
-export type DeleteTenantWordmarkResponse = DeleteTenantWordmarkResponses[keyof DeleteTenantWordmarkResponses];
-
-export type GetTenantWordmarkData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Cache key; any value makes the answer immutable
-         */
-        v?: string;
-    };
-    url: '/api/tenant/wordmark';
-};
-
-export type GetTenantWordmarkErrors = {
     /**
      * Not Found
      */
     404: unknown;
 };
 
-export type UploadTenantWordmarkData = {
-    body: {
-        file: IFormFile;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/tenant/wordmark';
-};
+export type UploadTenantImageError = UploadTenantImageErrors[keyof UploadTenantImageErrors];
 
-export type UploadTenantWordmarkErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-};
-
-export type UploadTenantWordmarkError = UploadTenantWordmarkErrors[keyof UploadTenantWordmarkErrors];
-
-export type UploadTenantWordmarkResponses = {
+export type UploadTenantImageResponses = {
     /**
      * OK
      */
     200: TenantResponse;
 };
 
-export type UploadTenantWordmarkResponse = UploadTenantWordmarkResponses[keyof UploadTenantWordmarkResponses];
+export type UploadTenantImageResponse = UploadTenantImageResponses[keyof UploadTenantImageResponses];
 
 export type GetTenantIconData = {
     body?: never;

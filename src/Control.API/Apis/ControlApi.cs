@@ -21,13 +21,14 @@ public static partial class ControlApi
         api.MapGet("/tenants", ListTenants).WithName("ListTenants").WithSummary("Every tenant, newest first").RequireAuthorization("Platform");
         api.MapPost("/tenants", CreateTenant).WithName("CreateTenant").WithSummary("Register a tenant and stamp its stack").RequireAuthorization("Platform");
         api.MapGet("/tenants/{slug}", GetTenant).WithName("GetTenant").WithSummary("One tenant with its latest run").RequireAuthorization("Platform");
-        api.MapPut("/tenants/{slug}/logo", UploadLogo).WithName("UploadTenantSeedLogo").WithSummary("The logo seeded into the stack on the next provision").RequireAuthorization("Platform").DisableAntiforgery();
         api.MapPost("/tenants/{slug}/provision", Provision).WithName("ProvisionTenant").WithSummary("Run (or retry) provisioning").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/stop", Stop).WithName("StopTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/start", Start).WithName("StartTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Re-stamp on a tag and pull").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
+
+        MapBrandApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();
@@ -94,29 +95,16 @@ public static partial class ControlApi
         if (request.Provision ?? true)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "provision"), ct);
 
-        return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], options.Value));
+        return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], [], options.Value));
     }
 
-    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, IOptions<PlatformOptions> options, string slug)
+    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, IOptions<PlatformOptions> options, string slug)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug);
         if (tenant is null) return TypedResults.NotFound();
         var lastRun = await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id).OrderByDescending(s => s.Id).Select(s => s.RunId).FirstOrDefaultAsync();
         var steps = lastRun == Guid.Empty ? [] : await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id && s.RunId == lastRun).OrderBy(s => s.Id).ToListAsync();
-        return TypedResults.Ok(TenantDetail.From(tenant, steps, options.Value));
-    }
-
-    public static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> UploadLogo(ControlContext context, Provisioner provisioner, string slug, IFormFile file, CancellationToken ct)
-    {
-        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
-        if (tenant is null) return TypedResults.NotFound();
-        if (file.Length == 0 || file.Length > 5 * 1024 * 1024)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The image must be between 1 byte and 5 MB." });
-        var path = provisioner.LogoPath(tenant);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var target = File.Create(path);
-        await file.CopyToAsync(target, ct);
-        return TypedResults.NoContent();
+        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
@@ -150,7 +138,7 @@ public static partial class ControlApi
         var from = tenant.ExpiresAt is { } e && e > DateTimeOffset.UtcNow ? e : DateTimeOffset.UtcNow;
         tenant.ExpiresAt = from.AddDays(Math.Clamp(request.Days, 1, 365));
         await context.SaveChangesAsync(ct);
-        return TypedResults.Ok(TenantDetail.From(tenant, [], options.Value));
+        return TypedResults.Ok(TenantDetail.From(tenant, [], [], options.Value));
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Destroy(ControlContext context, ProvisioningQueue queue, string slug, CancellationToken ct)
@@ -228,10 +216,12 @@ public record TenantDetail(
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? ProvisionedAt,
     string? LastError,
-    IReadOnlyList<StepDto> Steps)
+    IReadOnlyList<StepDto> Steps,
+    IReadOnlyList<string> SeedImages)
 {
-    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, PlatformOptions p)
+    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
-            steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList());
+            steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),
+            seedImages);
 }

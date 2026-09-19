@@ -25,23 +25,17 @@ public class Tenant
     /// </summary>
     public string? CustomerUrl { get; set; }
 
-    /// <summary>Ticks of the last logo upload; 0 when there is no logo. Doubles as the cache key of the logo and icon URLs.</summary>
-    public long LogoVersion { get; set; }
-
-    public bool HasLogo => LogoVersion != 0;
-
     /// <summary>
-    /// The wide (or tall) version of the logo for headers and sign-in, where
-    /// a square mark looks lost. Optional; the mark stands in without it. Its
-    /// size after trimming is kept so a surface can reserve the right box.
+    /// The uploaded images by slot (<see cref="TenantImageSlots"/>): the square
+    /// mark and the wordmarks per language and scheme. A slot that is absent
+    /// falls back on the surfaces (dark → light, Arabic → English); the icons
+    /// are always cut from <see cref="TenantImageSlots.Logo"/>.
     /// </summary>
-    public long WordmarkVersion { get; set; }
+    public Dictionary<string, TenantImage> Images { get; set; } = new();
 
-    public int WordmarkWidth { get; set; }
+    public bool HasLogo => Images.ContainsKey(TenantImageSlots.Logo);
 
-    public int WordmarkHeight { get; set; }
-
-    public bool HasWordmark => WordmarkVersion != 0;
+    public TenantImage? Image(string slot) => Images.GetValueOrDefault(slot);
 
     /// <summary>The customer app's look beyond the primary color; every field optional, the platform's default when null.</summary>
     public TenantTheme Theme { get; set; } = new();
@@ -100,4 +94,36 @@ public class TenantTheme
 
     /// <summary>One of <see cref="Fonts"/>.</summary>
     public string? Font { get; set; }
+}
+
+/// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>
+public sealed class TenantImage
+{
+    public long Version { get; set; }
+
+    public int Width { get; set; }
+
+    public int Height { get; set; }
+}
+
+/// <summary>
+/// The images a brand is made of. The mark is square and language-neutral;
+/// a wordmark is the wide lockup with the name, one per language, each with
+/// an optional dark-scheme version.
+/// </summary>
+public static class TenantImageSlots
+{
+    public const string Logo = "logo";
+    public const string LogoDark = "logo-dark";
+    public const string WordmarkEn = "wordmark-en";
+    public const string WordmarkEnDark = "wordmark-en-dark";
+    public const string WordmarkAr = "wordmark-ar";
+    public const string WordmarkArDark = "wordmark-ar-dark";
+
+    public static readonly string[] All = [Logo, LogoDark, WordmarkEn, WordmarkEnDark, WordmarkAr, WordmarkArDark];
+
+    public static bool IsKnown(string slot) => Array.IndexOf(All, slot) >= 0;
+
+    /// <summary>The square marks, as opposed to the wide wordmarks.</summary>
+    public static bool IsMark(string slot) => slot.StartsWith(Logo, StringComparison.Ordinal);
 }

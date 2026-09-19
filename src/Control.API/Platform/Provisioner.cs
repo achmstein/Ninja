@@ -25,7 +25,12 @@ public sealed class Provisioner(
 
     private string Dir(Tenant tenant) => Path.Combine(Platform.TenantsRoot, tenant.Slug);
 
-    public string LogoPath(Tenant tenant) => Path.Combine(Dir(tenant), "logo.png");
+    /// <summary>Where an image uploaded before provisioning waits for the brand step: {tenants}/{slug}/seed/{slot}.png.</summary>
+    public string SeedImagePath(Tenant tenant, string slot) => Path.Combine(Dir(tenant), "seed", $"{slot}.png");
+
+    /// <summary>The seed images on disk, by slot.</summary>
+    public IReadOnlyDictionary<string, string> SeedImages(Tenant tenant)
+        => BrandImageSlots.All.Where(slot => File.Exists(SeedImagePath(tenant, slot))).ToDictionary(slot => slot, slot => SeedImagePath(tenant, slot));
 
     public async Task ProvisionAsync(Guid tenantId, CancellationToken ct)
     {
@@ -74,7 +79,7 @@ public sealed class Provisioner(
 
             await Step(tenant, runId, "health", async () =>
             {
-                await stack.WaitHealthyAsync(TenantNaming.Gateway(tenant.Slug), TimeSpan.FromMinutes(5), ct);
+                await stack.WaitHealthyAsync(tenant, TimeSpan.FromMinutes(5), ct);
                 return "every service answers";
             }, ct);
 
@@ -92,9 +97,9 @@ public sealed class Provisioner(
                     },
                     ["theme"] = new JsonObject(),
                 };
-                var logo = File.Exists(LogoPath(tenant)) ? LogoPath(tenant) : null;
-                await stack.SeedBrandAsync(TenantNaming.Gateway(tenant.Slug), TenantNaming.Realm(tenant.Slug), tenant.ControlSecret, brand, logo, ct);
-                return logo is null ? "name and color" : ImageShape.IsWide(File.ReadAllBytes(logo)) ? "name, color and wordmark" : "name, color and logo";
+                var images = SeedImages(tenant);
+                await stack.SeedBrandAsync(tenant, brand, images, ct);
+                return images.Count == 0 ? "name and color" : $"name, color and {string.Join(", ", images.Keys)}";
             }, ct);
 
             await Step(tenant, runId, "owner", async () =>
@@ -224,7 +229,7 @@ public sealed class Provisioner(
     private async Task<string> WriteEdgeAsync(CancellationToken ct)
     {
         var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying && t.CustomerDomain != null).ToListAsync(ct);
-        var snippet = Templates.CustomDomains(live);
+        var snippet = Templates.CustomDomains(live, Platform);
         var path = Platform.EdgeSnippetPath;
         if (File.Exists(path) && await File.ReadAllTextAsync(path, ct) == snippet)
             return "unchanged";

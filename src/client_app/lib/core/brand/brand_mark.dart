@@ -5,20 +5,23 @@ import '../widgets/app_text.dart';
 import 'brand_provider.dart';
 import 'brand_theme.dart';
 
-/// The tenant's mark, square: the logo when one is uploaded, otherwise a
-/// rounded tile in the brand color with the name's first letter (the web
-/// apps' BrandMark). [color] sets the tile where the theme's primary would
-/// not read, such as a splash on a fixed background.
+/// The tenant's mark, square: the logo when one is uploaded (the dark one
+/// on a dark page), otherwise a rounded tile in the brand color with the
+/// name's first letter (the web apps' BrandMark). [color] sets the tile
+/// where the theme's primary would not read, such as a splash on a fixed
+/// background; [brightness] picks the logo where the page is not the
+/// theme's, such as that same splash.
 class BrandMark extends ConsumerWidget {
   final double size;
   final Color? color;
+  final Brightness? brightness;
 
-  const BrandMark({super.key, required this.size, this.color});
+  const BrandMark({super.key, required this.size, this.color, this.brightness});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brand = ref.watch(brandProvider);
-    final logoUrl = brand.logoUrl;
+    final logoUrl = brand.logoFor(brightness ?? Theme.of(context).brightness);
     if (logoUrl != null) {
       return Image.network(
         logoUrl,
@@ -49,17 +52,21 @@ class BrandMark extends ConsumerWidget {
   }
 }
 
-/// The tenant's brand as a header shows it: the wide wordmark when one is
-/// uploaded, in a box of its own aspect ratio no taller than [height] and
-/// no wider than [maxWidth] (the room it has, when null). Without one, the
-/// square [BrandMark] at [height], with the name under it in [nameStyle]
-/// when that is given, or [fallback] when the caller has its own stand-in.
+/// The tenant's brand as a header shows it: the wide wordmark for the
+/// page's language and brightness when one is uploaded, in a box of its
+/// own aspect ratio no taller than [height] and no wider than [maxWidth]
+/// (the room it has, when null). Without one, the square [BrandMark] at
+/// [height], with the name under it in [nameStyle] when that is given, or
+/// [fallback] when the caller has its own stand-in.
 class BrandWordmark extends ConsumerWidget {
   final double height;
   final double? maxWidth;
 
   /// The tile's color, see [BrandMark.color]
   final Color? color;
+
+  /// The page's brightness where it is not the theme's, see [BrandMark.brightness]
+  final Brightness? brightness;
   final TextStyle? nameStyle;
   final double gap;
   final Widget? fallback;
@@ -69,6 +76,7 @@ class BrandWordmark extends ConsumerWidget {
     required this.height,
     this.maxWidth,
     this.color,
+    this.brightness,
     this.nameStyle,
     this.gap = 12,
     this.fallback,
@@ -76,7 +84,9 @@ class BrandWordmark extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wordmark = ref.watch(brandProvider.select((b) => b.wordmark));
+    final page = brightness ?? Theme.of(context).brightness;
+    final locale = Localizations.localeOf(context);
+    final wordmark = ref.watch(brandProvider.select((b) => b.wordmarkFor(locale, page)));
     if (wordmark == null) return _standIn(context, ref);
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: height, maxWidth: maxWidth ?? double.infinity),
@@ -97,7 +107,7 @@ class BrandWordmark extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        BrandMark(size: height, color: color),
+        BrandMark(size: height, color: color, brightness: brightness),
         if (nameStyle != null) ...[
           SizedBox(height: gap),
           AppText(ref.watch(brandNameProvider), style: nameStyle, textAlign: TextAlign.center),

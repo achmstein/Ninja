@@ -37,8 +37,9 @@ public static class Extensions
             builder.Services.AddSingleton<IBrokerAdmin, DryRunBrokerAdmin>();
             builder.Services.AddSingleton<DryRunKeycloakAdmin>();
             builder.Services.AddSingleton<IKeycloakAdmin>(sp => sp.GetRequiredService<DryRunKeycloakAdmin>());
-            builder.Services.AddSingleton<DryRunTenantStack>();
-            builder.Services.AddSingleton<ITenantStack>(sp => sp.GetRequiredService<DryRunTenantStack>());
+            builder.Services.AddSingleton<DryRunStackProxy>();
+            builder.Services.AddSingleton<IStackProxy>(sp => sp.GetRequiredService<DryRunStackProxy>());
+            builder.Services.AddSingleton<ITenantStack, DryRunTenantStack>();
         }
         else
         {
@@ -46,6 +47,8 @@ public static class Extensions
             builder.Services.AddSingleton<IDatabaseAdmin, NpgsqlDatabaseAdmin>();
             builder.Services.AddSingleton<IBrokerAdmin, RabbitCtlBrokerAdmin>();
             builder.Services.AddSingleton<IKeycloakAdmin, KeycloakRestAdmin>();
+            builder.Services.AddSingleton<IStackTokenProvider, KeycloakStackTokenProvider>();
+            builder.Services.AddSingleton<IStackProxy, HttpStackProxy>();
             builder.Services.AddSingleton<ITenantStack, HttpTenantStack>();
         }
 

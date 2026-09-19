@@ -6,7 +6,7 @@ import {
   createTenantMutation,
   getPlatformOptions,
   listTenantsQueryKey,
-  uploadTenantSeedLogoMutation,
+  uploadTenantSeedImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,7 +56,7 @@ export function NewTenantPage() {
   const effectiveSlug = slugTouched ? slug : slugFrom(nameEn)
 
   const uploadLogo = useMutation({
-    ...uploadTenantSeedLogoMutation(),
+    ...uploadTenantSeedImageMutation(),
     // The tenant exists either way; a failed logo is a toast, not a stop
     onError: (e) => toast.error(problemDetail(e) || t('logoUploadFailed')),
   })
@@ -67,7 +67,7 @@ export function NewTenantPage() {
       queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
       if (logo) {
         await uploadLogo
-          .mutateAsync({ path: { slug: tenant.slug }, body: { file: logo } })
+          .mutateAsync({ path: { slug: tenant.slug, slot: 'logo' }, body: { file: logo } })
           .catch(() => undefined)
       }
       toast.success(t('tenantCreated'))

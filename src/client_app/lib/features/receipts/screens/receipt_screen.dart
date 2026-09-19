@@ -135,6 +135,8 @@ class _ReceiptBody extends ConsumerWidget {
                 BrandWordmark(
                   height: 48,
                   maxWidth: 136,
+                  // Paper is white, whatever the screen
+                  brightness: Brightness.light,
                   fallback: switch (brand.logoUrl) {
                     final logoUrl? => Image.network(logoUrl, width: 136),
                     null => AppText(brand.displayName(Localizations.localeOf(context)),

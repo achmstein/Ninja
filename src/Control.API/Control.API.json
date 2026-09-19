@@ -213,70 +213,6 @@
         ]
       }
     },
-    "/api/control/tenants/{slug}/logo": {
-      "put": {
-        "tags": [
-          "Control"
-        ],
-        "summary": "The logo seeded into the stack on the next provision",
-        "operationId": "UploadTenantSeedLogo",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "required": [
-                  "file"
-                ],
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "$ref": "#/components/schemas/IFormFile"
-                  }
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
     "/api/control/tenants/{slug}/provision": {
       "post": {
         "tags": [
@@ -538,6 +474,496 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/brand": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The brand as the running stack serves it; image URLs point at the customer host",
+        "operationId": "GetTenantBrand",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Change the name, colors, theme, customer URL or feature switches on the running stack",
+        "operationId": "UpdateTenantBrand",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/brand/images/{slot}": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark",
+        "operationId": "UploadTenantBrandImage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Remove one image from the running stack",
+        "operationId": "DeleteTenantBrandImage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/seed-images": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The slots with an image waiting for the next provision",
+        "operationId": "ListTenantSeedImages",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/seed-images/{slot}": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "One image waiting for the next provision",
+        "operationId": "GetTenantSeedImage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "An image the brand step uploads into the stack on the next provision",
+        "operationId": "UploadTenantSeedImage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Control"
+        ],
+        "operationId": "DeleteTenantSeedImage",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -569,6 +995,272 @@
   },
   "components": {
     "schemas": {
+      "BrandDto": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "logoUrl",
+          "logoDarkUrl",
+          "wordmarks",
+          "theme",
+          "icons",
+          "features",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/BrandText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoDarkUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "wordmarks": {
+            "$ref": "#/components/schemas/BrandWordmarks"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/BrandTheme"
+          },
+          "icons": {
+            "$ref": "#/components/schemas/BrandIcons"
+          },
+          "features": {
+            "$ref": "#/components/schemas/BrandFeatures"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "BrandFeatures": {
+        "required": [
+          "rooms",
+          "loyalty",
+          "tabs",
+          "inventory",
+          "finance",
+          "payroll",
+          "kds"
+        ],
+        "type": "object",
+        "properties": {
+          "rooms": {
+            "type": "boolean"
+          },
+          "loyalty": {
+            "type": "boolean"
+          },
+          "tabs": {
+            "type": "boolean"
+          },
+          "inventory": {
+            "type": "boolean"
+          },
+          "finance": {
+            "type": "boolean"
+          },
+          "payroll": {
+            "type": "boolean"
+          },
+          "kds": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BrandIcons": {
+        "required": [
+          "icon192",
+          "icon512",
+          "maskable512",
+          "appleTouch",
+          "favicon"
+        ],
+        "type": "object",
+        "properties": {
+          "icon192": {
+            "type": "string"
+          },
+          "icon512": {
+            "type": "string"
+          },
+          "maskable512": {
+            "type": "string"
+          },
+          "appleTouch": {
+            "type": "string"
+          },
+          "favicon": {
+            "type": "string"
+          }
+        }
+      },
+      "BrandText": {
+        "required": [
+          "en",
+          "ar"
+        ],
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BrandTheme": {
+        "required": [
+          "accent",
+          "background",
+          "foreground",
+          "radius",
+          "font"
+        ],
+        "type": "object",
+        "properties": {
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "background": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "foreground": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "radius": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "font": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BrandWordmark": {
+        "required": [
+          "url",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "BrandWordmarks": {
+        "required": [
+          "en",
+          "enDark",
+          "ar",
+          "arDark"
+        ],
+        "type": "object",
+        "properties": {
+          "en": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandWordmark"
+              }
+            ]
+          },
+          "enDark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandWordmark"
+              }
+            ]
+          },
+          "ar": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandWordmark"
+              }
+            ]
+          },
+          "arDark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandWordmark"
+              }
+            ]
+          }
+        }
+      },
       "CreateTenantRequest": {
         "required": [
           "nameEn",
@@ -803,7 +1495,8 @@
           "expiresAt",
           "provisionedAt",
           "lastError",
-          "steps"
+          "steps",
+          "seedImages"
         ],
         "type": "object",
         "properties": {
@@ -877,6 +1570,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/StepDto"
+            }
+          },
+          "seedImages": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -989,6 +1688,45 @@
             "type": [
               "null",
               "string"
+            ]
+          }
+        }
+      },
+      "UpdateBrandRequest": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "features"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/BrandText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "features": {
+            "$ref": "#/components/schemas/BrandFeatures"
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandTheme"
+              }
             ]
           }
         }

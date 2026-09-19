@@ -28,7 +28,7 @@ class _Tenant implements TenantRepository {
   Future<TenantBrand> getBrand() async => brand;
 }
 
-const _wordmark = TenantWordmark(url: 'https://api.test/api/tenant/wordmark?v=7', width: 600, height: 120);
+const _wordmark = TenantWordmark(url: 'https://api.test/api/tenant/images/wordmark-en?v=7', width: 600, height: 120);
 
 void main() {
   // First, before anything has warmed the brand: a cold start is neutral
@@ -53,7 +53,7 @@ void main() {
   });
 
   group('TenantBrand', () {
-    test('a cache from before the wordmark and the theme still parses', () {
+    test('a cache from an older build still parses', () {
       final brand = TenantBrand.fromJson({
         'name': {'en': 'Chillax'},
         'primaryColor': '#0ea5e9',
@@ -61,19 +61,25 @@ void main() {
         'features': {'rooms': false},
         'version': 3,
       });
-      expect(brand.wordmark, isNull);
+      expect(brand.wordmarks, TenantWordmarks.none);
       expect(brand.theme, TenantTheme.neutral);
       expect(brand.theme.accent, isNull);
       expect(brand.theme.font, isNull);
       expect(brand.features.rooms, isFalse);
     });
 
-    test('the API shape carries the wordmark and the theme; the wordmark URL is made absolute', () {
+    test('the API shape carries the wordmarks and the theme; the URLs are made absolute', () {
       final brand = TenantBrand.fromApi({
         'name': {'en': 'Chillax'},
         'primaryColor': '#0ea5e9',
-        'logoUrl': '/api/tenant/logo?v=1',
-        'wordmark': {'url': '/api/tenant/wordmark?v=7', 'width': 600, 'height': 120},
+        'logoUrl': '/api/tenant/images/logo?v=1',
+        'logoDarkUrl': null,
+        'wordmarks': {
+          'en': {'url': '/api/tenant/images/wordmark-en?v=7', 'width': 600, 'height': 120},
+          'enDark': null,
+          'ar': null,
+          'arDark': null,
+        },
         'theme': {
           'accent': '#F59E0B',
           'background': '#fffbf5',
@@ -85,9 +91,10 @@ void main() {
         'version': 7,
       }, baseUrl: 'https://api.test');
 
-      expect(brand.logoUrl, 'https://api.test/api/tenant/logo?v=1');
-      expect(brand.wordmark, _wordmark);
-      expect(brand.wordmark!.aspectRatio, 5.0);
+      expect(brand.logoUrl, 'https://api.test/api/tenant/images/logo?v=1');
+      expect(brand.logoFor(Brightness.dark), brand.logoUrl);
+      expect(brand.wordmarks.en, _wordmark);
+      expect(brand.wordmarks.en!.aspectRatio, 5.0);
       expect(brand.theme.accentHex, '#f59e0b');
       expect(brand.theme.accent, const Color(0xFFF59E0B));
       expect(brand.theme.background, const Color(0xFFFFFBF5));
@@ -150,7 +157,7 @@ void main() {
 
   testWidgets('the wordmark renders in its own aspect ratio when the tenant has one', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    const tenant = _Tenant(TenantBrand(name: LocalizedText(en: 'Chillax'), wordmark: _wordmark));
+    const tenant = _Tenant(TenantBrand(name: LocalizedText(en: 'Chillax'), wordmarks: TenantWordmarks(en: _wordmark)));
     await tester.pumpWidget(
       ProviderScope(
         overrides: [tenantRepositoryProvider.overrideWithValue(tenant)],
@@ -165,6 +172,24 @@ void main() {
     expect((image.image as NetworkImage).url, _wordmark.url);
     // No taller than asked, as wide as the ratio makes it
     expect(tester.getSize(find.byType(AspectRatio)), const Size(280, 56));
+  });
+
+  test('the wordmark falls back from Arabic dark to Arabic to English dark to English', () {
+    const en = TenantWordmark(url: 'https://x/en', width: 5, height: 1);
+    const enDark = TenantWordmark(url: 'https://x/en-dark', width: 5, height: 1);
+    const ar = TenantWordmark(url: 'https://x/ar', width: 5, height: 1);
+    const arabic = Locale('ar');
+    const english = Locale('en');
+
+    const all = TenantWordmarks(en: en, enDark: enDark, ar: ar);
+    expect(all.resolve(arabic, Brightness.dark), ar);
+    expect(all.resolve(arabic, Brightness.light), ar);
+    expect(all.resolve(english, Brightness.dark), enDark);
+    expect(all.resolve(english, Brightness.light), en);
+
+    const onlyEnglish = TenantWordmarks(en: en);
+    expect(onlyEnglish.resolve(arabic, Brightness.dark), en);
+    expect(TenantWordmarks.none.resolve(arabic, Brightness.dark), isNull);
   });
 
   testWidgets('without a wordmark the mark and the name stand in', (tester) async {

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateTenantData, CreateTenantErrors, CreateTenantResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantData, GetTenantErrors, GetTenantResponses, ListTenantsData, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantSeedLogoData, UploadTenantSeedLogoErrors, UploadTenantSeedLogoResponses } from './types.gen';
+import type { CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantData, GetTenantErrors, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -64,19 +64,6 @@ export const getTenant = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * The logo seeded into the stack on the next provision
- */
-export const uploadTenantSeedLogo = <ThrowOnError extends boolean = false>(options: Options<UploadTenantSeedLogoData, ThrowOnError>): RequestResult<UploadTenantSeedLogoResponses, UploadTenantSeedLogoErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantSeedLogoResponses, UploadTenantSeedLogoErrors, ThrowOnError>({
-    ...formDataBodySerializer,
-    url: '/api/control/tenants/{slug}/logo',
-    ...options,
-    headers: {
-        'Content-Type': null,
-        ...options.headers
-    }
-});
-
-/**
  * Run (or retry) provisioning
  */
 export const provisionTenant = <ThrowOnError extends boolean = false>(options: Options<ProvisionTenantData, ThrowOnError>): RequestResult<ProvisionTenantResponses, ProvisionTenantErrors, ThrowOnError> => (options.client ?? client).post<ProvisionTenantResponses, ProvisionTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/provision', ...options });
@@ -106,6 +93,80 @@ export const extendDemo = <ThrowOnError extends boolean = false>(options: Option
     ...options,
     headers: {
         'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The brand as the running stack serves it; image URLs point at the customer host
+ */
+export const getTenantBrand = <ThrowOnError extends boolean = false>(options: Options<GetTenantBrandData, ThrowOnError>): RequestResult<GetTenantBrandResponses, GetTenantBrandErrors, ThrowOnError> => (options.client ?? client).get<GetTenantBrandResponses, GetTenantBrandErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/brand',
+    ...options
+});
+
+/**
+ * Change the name, colors, theme, customer URL or feature switches on the running stack
+ */
+export const updateTenantBrand = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantBrandData, ThrowOnError>): RequestResult<UpdateTenantBrandResponses, UpdateTenantBrandErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantBrandResponses, UpdateTenantBrandErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/brand',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove one image from the running stack
+ */
+export const deleteTenantBrandImage = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantBrandImageData, ThrowOnError>): RequestResult<DeleteTenantBrandImageResponses, DeleteTenantBrandImageErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTenantBrandImageResponses, DeleteTenantBrandImageErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/brand/images/{slot}',
+    ...options
+});
+
+/**
+ * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark
+ */
+export const uploadTenantBrandImage = <ThrowOnError extends boolean = false>(options: Options<UploadTenantBrandImageData, ThrowOnError>): RequestResult<UploadTenantBrandImageResponses, UploadTenantBrandImageErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantBrandImageResponses, UploadTenantBrandImageErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/brand/images/{slot}',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * The slots with an image waiting for the next provision
+ */
+export const listTenantSeedImages = <ThrowOnError extends boolean = false>(options: Options<ListTenantSeedImagesData, ThrowOnError>): RequestResult<ListTenantSeedImagesResponses, ListTenantSeedImagesErrors, ThrowOnError> => (options.client ?? client).get<ListTenantSeedImagesResponses, ListTenantSeedImagesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/seed-images',
+    ...options
+});
+
+export const deleteTenantSeedImage = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantSeedImageData, ThrowOnError>): RequestResult<DeleteTenantSeedImageResponses, DeleteTenantSeedImageErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTenantSeedImageResponses, DeleteTenantSeedImageErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/seed-images/{slot}', ...options });
+
+/**
+ * One image waiting for the next provision
+ */
+export const getTenantSeedImage = <ThrowOnError extends boolean = false>(options: Options<GetTenantSeedImageData, ThrowOnError>): RequestResult<unknown, GetTenantSeedImageErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantSeedImageErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/seed-images/{slot}', ...options });
+
+/**
+ * An image the brand step uploads into the stack on the next provision
+ */
+export const uploadTenantSeedImage = <ThrowOnError extends boolean = false>(options: Options<UploadTenantSeedImageData, ThrowOnError>): RequestResult<UploadTenantSeedImageResponses, UploadTenantSeedImageErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantSeedImageResponses, UploadTenantSeedImageErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    url: '/api/control/tenants/{slug}/seed-images/{slot}',
+    ...options,
+    headers: {
+        'Content-Type': null,
         ...options.headers
     }
 });

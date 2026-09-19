@@ -189,7 +189,7 @@ public static partial class Templates
     /// gateway; imported by the platform Caddyfile, rewritten on every
     /// provision and destroy. The wildcard blocks cover the platform hosts.
     /// </summary>
-    public static string CustomDomains(IEnumerable<Tenant> tenants)
+    public static string CustomDomains(IEnumerable<Tenant> tenants, PlatformOptions platform)
     {
         var sb = new StringBuilder();
         sb.AppendLine("# Cafés on their own domains, written by the control plane; do not edit.");
@@ -200,6 +200,8 @@ public static partial class Templates
             sb.AppendLine("\ttls {");
             sb.AppendLine("\t\ton_demand");
             sb.AppendLine("\t}");
+            // Only the control app may frame the customer app (its live brand preview)
+            sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')}\"");
             sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
             sb.AppendLine("\thandle {");
             sb.AppendLine("\t\timport spa /srv/client-web");

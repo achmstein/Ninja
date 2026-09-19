@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Ninja.Branch.API.Model;
 using Ninja.Branch.API.Services;
 using SkiaSharp;
 
@@ -34,9 +35,11 @@ public sealed class TenantBrandStoreTests
     public async Task Upload_trims_the_transparent_margins_and_cuts_every_icon()
     {
         // A 400×200 canvas with a 200×100 red mark in the middle and nothing around it
-        var error = await _store.SaveLogoAsync(PngFile(400, 200, SKRect.Create(100, 50, 200, 100)), CancellationToken.None);
+        var (width, height, error) = await _store.SaveAsync(TenantImageSlots.Logo, PngFile(400, 200, SKRect.Create(100, 50, 200, 100)), CancellationToken.None);
 
         Assert.IsNull(error);
+        Assert.AreEqual(200, width);
+        Assert.AreEqual(100, height);
 
         using var logo = SKBitmap.Decode(_store.PathOf(TenantBrandStore.LogoFile));
         Assert.AreEqual(200, logo.Width);
@@ -59,7 +62,7 @@ public sealed class TenantBrandStoreTests
     [TestMethod]
     public async Task Upload_keeps_the_logo_within_the_size_cap()
     {
-        var error = await _store.SaveLogoAsync(PngFile(3000, 1500, SKRect.Create(0, 0, 3000, 1500)), CancellationToken.None);
+        var (_, _, error) = await _store.SaveAsync(TenantImageSlots.Logo, PngFile(3000, 1500, SKRect.Create(0, 0, 3000, 1500)), CancellationToken.None);
 
         Assert.IsNull(error);
         using var logo = SKBitmap.Decode(_store.PathOf(TenantBrandStore.LogoFile));
@@ -73,7 +76,7 @@ public sealed class TenantBrandStoreTests
         var bytes = "<svg xmlns='http://www.w3.org/2000/svg'/>"u8.ToArray();
         var file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "logo.svg");
 
-        var error = await _store.SaveLogoAsync(file, CancellationToken.None);
+        var (_, _, error) = await _store.SaveAsync(TenantImageSlots.Logo, file, CancellationToken.None);
 
         Assert.IsNotNull(error);
         Assert.IsFalse(_store.Exists(TenantBrandStore.LogoFile));
@@ -82,9 +85,9 @@ public sealed class TenantBrandStoreTests
     [TestMethod]
     public async Task Delete_removes_the_logo_and_the_icons()
     {
-        await _store.SaveLogoAsync(PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
+        await _store.SaveAsync(TenantImageSlots.Logo, PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
 
-        _store.DeleteLogo();
+        _store.Delete(TenantImageSlots.Logo);
 
         Assert.IsFalse(_store.Exists(TenantBrandStore.LogoFile));
         foreach (var name in TenantBrandStore.Icons.Keys)
@@ -95,17 +98,40 @@ public sealed class TenantBrandStoreTests
     public async Task Wordmark_is_trimmed_and_its_size_reported()
     {
         // A 1000×300 canvas with a 600×120 mark: the wordmark is the mark
-        var (width, height, error) = await _store.SaveWordmarkAsync(PngFile(1000, 300, SKRect.Create(200, 90, 600, 120)), CancellationToken.None);
+        var (width, height, error) = await _store.SaveAsync(TenantImageSlots.WordmarkAr, PngFile(1000, 300, SKRect.Create(200, 90, 600, 120)), CancellationToken.None);
 
         Assert.IsNull(error);
         Assert.AreEqual(600, width);
         Assert.AreEqual(120, height);
-        using var saved = SKBitmap.Decode(_store.PathOf(TenantBrandStore.WordmarkFile));
+        using var saved = SKBitmap.Decode(_store.PathOfSlot(TenantImageSlots.WordmarkAr));
         Assert.AreEqual(600, saved.Width);
         Assert.AreEqual(120, saved.Height);
+        // Only the mark cuts icons
+        Assert.IsFalse(_store.Exists("icon-192.png"));
 
-        _store.DeleteWordmark();
-        Assert.IsFalse(_store.Exists(TenantBrandStore.WordmarkFile));
+        _store.Delete(TenantImageSlots.WordmarkAr);
+        Assert.IsFalse(_store.HasImage(TenantImageSlots.WordmarkAr));
+    }
+
+    [TestMethod]
+    public async Task Dark_mark_does_not_touch_the_icons()
+    {
+        await _store.SaveAsync(TenantImageSlots.Logo, PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
+        var before = File.ReadAllBytes(_store.PathOf("icon-192.png"));
+
+        await _store.SaveAsync(TenantImageSlots.LogoDark, PngFile(64, 64, SKRect.Create(0, 0, 32, 32)), CancellationToken.None);
+
+        Assert.IsTrue(_store.HasImage(TenantImageSlots.LogoDark));
+        CollectionAssert.AreEqual(before, File.ReadAllBytes(_store.PathOf("icon-192.png")));
+    }
+
+    [TestMethod]
+    public async Task Unknown_slot_is_refused()
+    {
+        var (_, _, error) = await _store.SaveAsync("banner", PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
+
+        Assert.IsNotNull(error);
+        Assert.IsFalse(Directory.Exists(_root) && Directory.EnumerateFiles(_root).Any());
     }
 
     [TestMethod]

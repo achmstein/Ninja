@@ -43,7 +43,7 @@ import { Card } from '@/components/ui/card'
 import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
 import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
-import { useBrand, useBrandName, useFeatures } from '@/lib/brand'
+import { useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
 import { BrandMark, BrandWordmark } from '@/components/brand-mark'
 
 export const Route = createFileRoute('/profile')({
@@ -277,7 +277,7 @@ function AboutDialog({
 }) {
   const t = useT()
   const brandName = useBrandName()
-  const brand = useBrand()
+  const wordmark = useBrandWordmark()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -285,7 +285,7 @@ function AboutDialog({
           <DialogTitle>{t('about')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col items-center gap-3 pb-2 text-center'>
-          {brand?.wordmark ? (
+          {wordmark ? (
             <BrandWordmark className='h-14 max-w-[70vw]' />
           ) : (
             <>

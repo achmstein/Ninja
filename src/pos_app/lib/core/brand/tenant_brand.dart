@@ -54,8 +54,11 @@ class TenantBrand {
   /// `#rrggbb`, or null when the tenant keeps the neutral palette
   final String? primaryColorHex;
 
-  /// Absolute URL of the uploaded logo, or null when there is none
+  /// Absolute URL of the uploaded mark, or null when there is none
   final String? logoUrl;
+
+  /// Absolute URL of the English wide logo, the one paper prints
+  final String? wordmarkUrl;
   final TenantFeatures features;
   final int version;
 
@@ -63,9 +66,13 @@ class TenantBrand {
     required this.name,
     this.primaryColorHex,
     this.logoUrl,
+    this.wordmarkUrl,
     this.features = TenantFeatures.all,
     this.version = 0,
   });
+
+  /// What a receipt prints at the top: the wide logo, else the mark, else nothing (the name stands in)
+  String? get receiptImageUrl => wordmarkUrl ?? logoUrl;
 
   /// What shows until anything is known: a neutral name, no color, no logo,
   /// every feature on
@@ -74,10 +81,16 @@ class TenantBrand {
   /// The API's shape; relative URLs are relative to [baseUrl]
   factory TenantBrand.fromApi(Map<String, dynamic> json, {required String baseUrl}) {
     final logo = json['logoUrl'] as String?;
+    final wordmarks = json['wordmarks'];
+    final wordmark = wordmarks is Map<String, dynamic> && wordmarks['en'] is Map<String, dynamic>
+        ? (wordmarks['en'] as Map<String, dynamic>)['url'] as String?
+        : null;
+    String? absolute(String? url) => url == null ? null : (url.startsWith('http') ? url : '$baseUrl$url');
     return TenantBrand(
       name: LocalizedText.parse(json['name']),
       primaryColorHex: _hex(json['primaryColor'] as String?),
-      logoUrl: logo == null ? null : (logo.startsWith('http') ? logo : '$baseUrl$logo'),
+      logoUrl: absolute(logo),
+      wordmarkUrl: absolute(wordmark),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
@@ -90,6 +103,7 @@ class TenantBrand {
         name: LocalizedText.parse(json['name']),
         primaryColorHex: _hex(json['primaryColor'] as String?),
         logoUrl: json['logoUrl'] as String?,
+        wordmarkUrl: json['wordmarkUrl'] as String?,
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
@@ -100,6 +114,7 @@ class TenantBrand {
         'name': name.toJson(),
         'primaryColor': primaryColorHex,
         'logoUrl': logoUrl,
+        'wordmarkUrl': wordmarkUrl,
         'features': features.toJson(),
         'version': version,
       };

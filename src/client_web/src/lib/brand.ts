@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { type TenantFeatures, type TenantResponse } from '@/api/branch'
+import { type TenantFeatures, type TenantResponse, type TenantWordmark } from '@/api/branch'
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
 
@@ -39,7 +40,9 @@ export const brandQueryKey = () => getTenantOptions().queryKey
 function readCachedBrand(): Brand | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
-    return raw ? (JSON.parse(raw) as Brand) : null
+    const brand = raw ? (JSON.parse(raw) as Partial<Brand>) : null
+    // A cache written by an older build lacks fields this one reads
+    return brand?.wordmarks ? (brand as Brand) : null
   } catch {
     return null
   }
@@ -119,6 +122,47 @@ export function useBrandName(): string {
 export function brandDisplayName(brand: Brand | undefined, language: Language): string {
   if (!brand) return ''
   return (language === 'ar' ? brand.name.ar : brand.name.en) || brand.name.en || brand.name.ar || ''
+}
+
+/**
+ * The wide lockup for a language and colour scheme, falling back the way
+ * the slots are meant to: the dark one to the light one, Arabic to English,
+ * and null when the tenant has none (the mark and the name stand in).
+ */
+export function wordmarkFor(
+  brand: Brand | undefined,
+  language: Language,
+  scheme: ResolvedTheme
+): TenantWordmark | null {
+  if (!brand) return null
+  const w = brand.wordmarks
+  const order =
+    language === 'ar'
+      ? scheme === 'dark'
+        ? [w.arDark, w.ar, w.enDark, w.en]
+        : [w.ar, w.en]
+      : scheme === 'dark'
+        ? [w.enDark, w.en]
+        : [w.en]
+  return order.find((x) => x != null) ?? null
+}
+
+/** The square mark for a colour scheme; the dark one falls back to the light one. */
+export function logoFor(brand: Brand | undefined, scheme: ResolvedTheme): string | null {
+  if (!brand) return null
+  return (scheme === 'dark' ? brand.logoDarkUrl : null) ?? brand.logoUrl ?? null
+}
+
+export function useBrandWordmark(): TenantWordmark | null {
+  const brand = useBrand()
+  const language = useLanguage((s) => s.language)
+  const { resolvedTheme } = useTheme()
+  return wordmarkFor(brand, language, resolvedTheme)
+}
+
+export function useBrandLogo(): string | null {
+  const { resolvedTheme } = useTheme()
+  return logoFor(useBrand(), resolvedTheme)
 }
 
 /** Every switch on until the brand is known, so nothing flashes off and back. */

@@ -96,7 +96,7 @@ class PrintService {
   /// The tenant's logo, or nothing when there is none or it cannot be
   /// fetched: the sheet falls back to the name in text rather than the
   /// receipt not printing
-  Future<ui.Image?> _logo() => brandLogo(_ref.read(brandProvider).logoUrl);
+  Future<ui.Image?> _logo() => brandLogo(_ref.read(brandProvider).receiptImageUrl);
 
   Future<List<int>> _job(Widget sheet, {bool kickDrawer = false}) async {
     final image = await rasterizeWidget(sheet, width: receiptWidth);

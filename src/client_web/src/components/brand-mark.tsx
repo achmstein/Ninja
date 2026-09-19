@@ -1,18 +1,19 @@
-import { useBrand, useBrandName } from '@/lib/brand'
+import { useBrandLogo, useBrandName, useBrandWordmark } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
 /**
- * The tenant's mark: the logo when one is uploaded, otherwise a tile in the
- * brand color with the name's first letter. Square; size it with className.
+ * The tenant's mark: the logo when one is uploaded (the dark one on a dark
+ * page), otherwise a tile in the brand color with the name's first letter.
+ * Square; size it with className.
  */
 export function BrandMark({ className }: { className?: string }) {
-  const brand = useBrand()
+  const logo = useBrandLogo()
   const name = useBrandName()
 
-  if (brand?.logoUrl) {
+  if (logo) {
     return (
       <img
-        src={brand.logoUrl}
+        src={logo}
         alt=''
         className={cn('shrink-0 object-contain', className)}
       />
@@ -33,9 +34,10 @@ export function BrandMark({ className }: { className?: string }) {
 }
 
 /**
- * The brand as a header shows it: the wide logo when the tenant uploaded
- * one (its box reserved from the stored size, so nothing jumps), otherwise
- * the mark beside the name. `className` sizes the wordmark by height.
+ * The brand as a header shows it: the wide logo for the page's language and
+ * scheme when the tenant uploaded one (its box reserved from the stored
+ * size, so nothing jumps), otherwise the mark beside the name. `className`
+ * sizes the wordmark by height.
  */
 export function BrandWordmark({
   className,
@@ -46,11 +48,11 @@ export function BrandWordmark({
   markClassName?: string
   textClassName?: string
 }) {
-  const brand = useBrand()
+  const wordmark = useBrandWordmark()
   const name = useBrandName()
 
-  if (brand?.wordmark) {
-    const { url, width, height } = brand.wordmark
+  if (wordmark) {
+    const { url, width, height } = wordmark
     return (
       <img
         src={url}

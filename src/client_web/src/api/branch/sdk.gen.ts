@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantLogoData, DeleteTenantLogoErrors, DeleteTenantLogoResponses, DeleteTenantWordmarkData, DeleteTenantWordmarkErrors, DeleteTenantWordmarkResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantLogoData, GetTenantLogoErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, GetTenantWordmarkData, GetTenantWordmarkErrors, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantLogoData, UploadTenantLogoErrors, UploadTenantLogoResponses, UploadTenantWordmarkData, UploadTenantWordmarkErrors, UploadTenantWordmarkResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -98,54 +98,26 @@ export const updateTenant = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Remove the logo; the icons fall back to a tile in the brand color
+ * Remove one image; the surfaces fall back (dark to light, Arabic to English, the wordmark to the mark and the name)
  */
-export const deleteTenantLogo = <ThrowOnError extends boolean = false>(options?: Options<DeleteTenantLogoData, ThrowOnError>): RequestResult<DeleteTenantLogoResponses, DeleteTenantLogoErrors, ThrowOnError> => (options?.client ?? client).delete<DeleteTenantLogoResponses, DeleteTenantLogoErrors, ThrowOnError>({
+export const deleteTenantImage = <ThrowOnError extends boolean = false>(options: Options<DeleteTenantImageData, ThrowOnError>): RequestResult<DeleteTenantImageResponses, DeleteTenantImageErrors, ThrowOnError> => (options.client ?? client).delete<DeleteTenantImageResponses, DeleteTenantImageErrors, ThrowOnError>({
     responseType: 'json',
-    url: '/api/tenant/logo',
+    url: '/api/tenant/images/{slot}',
     ...options
 });
 
 /**
- * The logo as PNG, transparent margins trimmed
+ * One image as PNG, transparent margins trimmed
  */
-export const getTenantLogo = <ThrowOnError extends boolean = false>(options?: Options<GetTenantLogoData, ThrowOnError>): RequestResult<unknown, GetTenantLogoErrors, ThrowOnError> => (options?.client ?? client).get<unknown, GetTenantLogoErrors, ThrowOnError>({ url: '/api/tenant/logo', ...options });
+export const getTenantImage = <ThrowOnError extends boolean = false>(options: Options<GetTenantImageData, ThrowOnError>): RequestResult<unknown, GetTenantImageErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantImageErrors, ThrowOnError>({ url: '/api/tenant/images/{slot}', ...options });
 
 /**
- * Replace the logo; the icons are cut from it
+ * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo
  */
-export const uploadTenantLogo = <ThrowOnError extends boolean = false>(options: Options<UploadTenantLogoData, ThrowOnError>): RequestResult<UploadTenantLogoResponses, UploadTenantLogoErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantLogoResponses, UploadTenantLogoErrors, ThrowOnError>({
+export const uploadTenantImage = <ThrowOnError extends boolean = false>(options: Options<UploadTenantImageData, ThrowOnError>): RequestResult<UploadTenantImageResponses, UploadTenantImageErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantImageResponses, UploadTenantImageErrors, ThrowOnError>({
     ...formDataBodySerializer,
     responseType: 'json',
-    url: '/api/tenant/logo',
-    ...options,
-    headers: {
-        'Content-Type': null,
-        ...options.headers
-    }
-});
-
-/**
- * Remove the wide logo; the mark and the name stand in
- */
-export const deleteTenantWordmark = <ThrowOnError extends boolean = false>(options?: Options<DeleteTenantWordmarkData, ThrowOnError>): RequestResult<DeleteTenantWordmarkResponses, DeleteTenantWordmarkErrors, ThrowOnError> => (options?.client ?? client).delete<DeleteTenantWordmarkResponses, DeleteTenantWordmarkErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/tenant/wordmark',
-    ...options
-});
-
-/**
- * The wide logo as PNG, transparent margins trimmed
- */
-export const getTenantWordmark = <ThrowOnError extends boolean = false>(options?: Options<GetTenantWordmarkData, ThrowOnError>): RequestResult<unknown, GetTenantWordmarkErrors, ThrowOnError> => (options?.client ?? client).get<unknown, GetTenantWordmarkErrors, ThrowOnError>({ url: '/api/tenant/wordmark', ...options });
-
-/**
- * Replace the wide logo used in headers and on sign-in
- */
-export const uploadTenantWordmark = <ThrowOnError extends boolean = false>(options: Options<UploadTenantWordmarkData, ThrowOnError>): RequestResult<UploadTenantWordmarkResponses, UploadTenantWordmarkErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantWordmarkResponses, UploadTenantWordmarkErrors, ThrowOnError>({
-    ...formDataBodySerializer,
-    responseType: 'json',
-    url: '/api/tenant/wordmark',
+    url: '/api/tenant/images/{slot}',
     ...options,
     headers: {
         'Content-Type': null,

@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
+using Ninja.Control.API.Model;
 using Npgsql;
 
 namespace Ninja.Control.API.Platform;
@@ -36,9 +37,9 @@ public interface IKeycloakAdmin
 public interface ITenantStack
 {
     /// <summary>Waits until the stack's gateway answers for every service, or gives up.</summary>
-    Task WaitHealthyAsync(string gateway, TimeSpan timeout, CancellationToken ct);
-    /// <summary>Puts the brand through the stack's own API, as the control service account.</summary>
-    Task SeedBrandAsync(string gateway, string realm, string controlSecret, JsonObject brand, string? logoPath, CancellationToken ct);
+    Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct);
+    /// <summary>Puts the brand and the seed images (slot → file) through the stack's own API, as the control service account.</summary>
+    Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct);
 }
 
 public sealed class NpgsqlDatabaseAdmin(IOptions<PlatformOptions> options) : IDatabaseAdmin
@@ -188,11 +189,10 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
 }
 
 /// <summary>Talks to a freshly stamped stack through its gateway on the shared network.</summary>
-public sealed class HttpTenantStack(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options, ILogger<HttpTenantStack> logger) : ITenantStack
+public sealed class HttpTenantStack(IStackProxy proxy, ILogger<HttpTenantStack> logger) : ITenantStack
 {
-    public async Task WaitHealthyAsync(string gateway, TimeSpan timeout, CancellationToken ct)
+    public async Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct)
     {
-        var client = httpClientFactory.CreateClient("stack");
         var deadline = DateTimeOffset.UtcNow + timeout;
         var pending = TenantNaming.Services.ToHashSet();
         while (pending.Count > 0)
@@ -201,7 +201,7 @@ public sealed class HttpTenantStack(IHttpClientFactory httpClientFactory, IOptio
             {
                 try
                 {
-                    var response = await client.GetAsync($"http://{gateway}:5000/health/{service}", ct);
+                    using var response = await proxy.SendAsync(tenant, HttpMethod.Get, $"/health/{service}", null, StackAuth.Anonymous, ct);
                     if (response.IsSuccessStatusCode) pending.Remove(service);
                 }
                 catch (HttpRequestException) { }
@@ -214,66 +214,23 @@ public sealed class HttpTenantStack(IHttpClientFactory httpClientFactory, IOptio
         }
     }
 
-    public async Task SeedBrandAsync(string gateway, string realm, string controlSecret, JsonObject brand, string? logoPath, CancellationToken ct)
+    public async Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct)
     {
-        var client = httpClientFactory.CreateClient("stack");
-        var tokenResponse = await client.PostAsync($"{options.Value.KeycloakInternalUrl.TrimEnd('/')}/realms/{realm}/protocol/openid-connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["grant_type"] = "client_credentials",
-            ["client_id"] = "ninja-control",
-            ["client_secret"] = controlSecret,
-        }), ct);
-        tokenResponse.EnsureSuccessStatusCode();
-        var token = (await tokenResponse.Content.ReadFromJsonAsync<JsonObject>(ct))!["access_token"]!.GetValue<string>();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        var put = await client.PutAsJsonAsync($"http://{gateway}:5000/api/tenant", brand, ct);
+        using var put = await proxy.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(brand), StackAuth.Control, ct);
         if (!put.IsSuccessStatusCode)
             throw new InvalidOperationException($"The stack refused the brand ({(int)put.StatusCode}): {await put.Content.ReadAsStringAsync(ct)}");
 
-        if (logoPath is not null && File.Exists(logoPath))
+        foreach (var (slot, path) in images)
         {
-            var bytes = await File.ReadAllBytesAsync(logoPath, ct);
-            // A wide image is a wordmark (headers, sign-in); the square mark and the icons stay the neutral tile until one is uploaded
-            var slot = ImageShape.IsWide(bytes) ? "wordmark" : "logo";
             using var form = new MultipartFormDataContent();
-            var file = new ByteArrayContent(bytes);
+            var file = new ByteArrayContent(await File.ReadAllBytesAsync(path, ct));
             file.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-            form.Add(file, "file", "logo.png");
-            var upload = await client.PutAsync($"http://{gateway}:5000/api/tenant/{slot}", form, ct);
+            form.Add(file, "file", $"{slot}.png");
+            using var upload = await proxy.SendAsync(tenant, HttpMethod.Put, $"/api/tenant/images/{slot}", form, StackAuth.Control, ct);
             if (!upload.IsSuccessStatusCode)
                 throw new InvalidOperationException($"The stack refused the {slot} ({(int)upload.StatusCode}): {await upload.Content.ReadAsStringAsync(ct)}");
         }
     }
-}
-
-/// <summary>Enough of PNG and JPEG headers to tell a wide wordmark from a square mark; anything unreadable counts as square.</summary>
-public static class ImageShape
-{
-    public static bool IsWide(ReadOnlySpan<byte> bytes) => Dimensions(bytes) is (var w, var h) && h > 0 && w >= h * 1.5;
-
-    public static (int Width, int Height)? Dimensions(ReadOnlySpan<byte> b)
-    {
-        if (b.Length >= 24 && b[0] == 0x89 && b[1] == (byte)'P' && b[2] == (byte)'N' && b[3] == (byte)'G')
-            return (ReadBigEndian(b[16..20]), ReadBigEndian(b[20..24]));
-
-        if (b.Length >= 4 && b[0] == 0xFF && b[1] == 0xD8)
-        {
-            var i = 2;
-            while (i + 9 < b.Length)
-            {
-                if (b[i] != 0xFF) { i++; continue; }
-                var marker = b[i + 1];
-                if (marker is 0xC0 or 0xC1 or 0xC2)
-                    return ((b[i + 7] << 8) | b[i + 8], (b[i + 5] << 8) | b[i + 6]);
-                if (marker is 0xD8 or 0x01 or >= 0xD0 and <= 0xD7) { i += 2; continue; }
-                i += 2 + ((b[i + 2] << 8) | b[i + 3]);
-            }
-        }
-        return null;
-    }
-
-    private static int ReadBigEndian(ReadOnlySpan<byte> b) => (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
 }
 
 // ---------- dry run: records, answers yes ----------
@@ -304,14 +261,13 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     }
 }
 
-public sealed class DryRunTenantStack(ILogger<DryRunTenantStack> logger) : ITenantStack
+public sealed class DryRunTenantStack(DryRunStackProxy proxy, ILogger<DryRunTenantStack> logger) : ITenantStack
 {
-    public List<JsonObject> Brands { get; } = [];
-    public Task WaitHealthyAsync(string gateway, TimeSpan timeout, CancellationToken ct) { logger.LogInformation("(dry run) {Gateway} healthy", gateway); return Task.CompletedTask; }
-    public Task SeedBrandAsync(string gateway, string realm, string controlSecret, JsonObject brand, string? logoPath, CancellationToken ct)
+    public Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct) { logger.LogInformation("(dry run) {Gateway} healthy", TenantNaming.Gateway(tenant.Slug)); return Task.CompletedTask; }
+    public async Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct)
     {
-        Brands.Add(brand);
-        logger.LogInformation("(dry run) brand seeded through {Gateway}: {Brand}", gateway, brand.ToJsonString());
-        return Task.CompletedTask;
+        // Through the same double the control app reads, so what was seeded is what it shows
+        using var response = await proxy.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(brand), StackAuth.Control, ct);
+        logger.LogInformation("(dry run) brand seeded for {Slug} with {Count} image(s): {Brand}", tenant.Slug, images.Count, brand.ToJsonString());
     }
 }

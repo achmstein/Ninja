@@ -13,6 +13,7 @@ public sealed class TemplatesTests
     private static readonly PlatformOptions Platform = new()
     {
         Domain = "ninja.app",
+        ControlUrl = "https://control.ninja.app",
         KeycloakPublicUrl = "https://auth.ninja.app",
         GeminiApiKey = "k",
     };
@@ -140,27 +141,12 @@ public sealed class TemplatesTests
     {
         var own = new Tenant { Slug = "blue", CustomerDomain = "menu.bluebottle.com" };
         var platformHosted = new Tenant { Slug = "red" };
-        var snippet = Templates.CustomDomains([platformHosted, own]);
+        var snippet = Templates.CustomDomains([platformHosted, own], Platform);
 
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
+        StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted café needs no site of its own");
-    }
-
-    [TestMethod]
-    public void A_wide_image_is_a_wordmark_and_a_square_one_a_mark()
-    {
-        static byte[] Png(int w, int h)
-        {
-            var b = new byte[24];
-            new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }.CopyTo(b, 0);
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(b.AsSpan(16), w);
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(b.AsSpan(20), h);
-            return b;
-        }
-        Assert.IsTrue(ImageShape.IsWide(Png(908, 275)));
-        Assert.IsFalse(ImageShape.IsWide(Png(512, 512)));
-        Assert.IsFalse(ImageShape.IsWide([1, 2, 3]));
     }
 
     [TestMethod]

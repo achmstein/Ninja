@@ -4,11 +4,69 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type BrandDto = {
+    name: BrandText;
+    primaryColor: null | string;
+    customerUrl: null | string;
+    logoUrl: null | string;
+    logoDarkUrl: null | string;
+    wordmarks: BrandWordmarks;
+    theme: BrandTheme;
+    icons: BrandIcons;
+    features: BrandFeatures;
+    version: number | string;
+};
+
+export type BrandFeatures = {
+    rooms: boolean;
+    loyalty: boolean;
+    tabs: boolean;
+    inventory: boolean;
+    finance: boolean;
+    payroll: boolean;
+    kds: boolean;
+};
+
+export type BrandIcons = {
+    icon192: string;
+    icon512: string;
+    maskable512: string;
+    appleTouch: string;
+    favicon: string;
+};
+
+export type BrandText = {
+    en: string;
+    ar: null | string;
+};
+
+export type BrandTheme = {
+    accent: null | string;
+    background: null | string;
+    foreground: null | string;
+    radius: null | string;
+    font: null | string;
+};
+
+export type BrandWordmark = {
+    url: string;
+    width: number | string;
+    height: number | string;
+};
+
+export type BrandWordmarks = {
+    en: null | BrandWordmark;
+    enDark: null | BrandWordmark;
+    ar: null | BrandWordmark;
+    arDark: null | BrandWordmark;
+};
+
 export type CreateTenantRequest = {
     nameEn: string;
     nameAr: null | string;
     ownerEmail: string;
     kind?: TenantKind;
+    seed?: null | TenantSeed;
     slug?: null | string;
     primaryColor?: null | string;
     customerDomain?: null | string;
@@ -55,6 +113,7 @@ export type TenantDetail = {
     nameAr: null | string;
     kind: TenantKind;
     status: TenantStatus;
+    seed: TenantSeed;
     primaryColor: null | string;
     hosts: TenantHostsDto;
     ownerEmail: string;
@@ -65,6 +124,7 @@ export type TenantDetail = {
     provisionedAt: null | string;
     lastError: null | string;
     steps: Array<StepDto>;
+    seedImages: Array<string>;
 };
 
 export type TenantHostsDto = {
@@ -77,6 +137,8 @@ export type TenantHostsDto = {
 
 export type TenantKind = 'Demo' | 'Customer';
 
+export type TenantSeed = 'None' | 'Sample';
+
 export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed';
 
 export type TenantSummary = {
@@ -85,11 +147,20 @@ export type TenantSummary = {
     nameAr: null | string;
     kind: TenantKind;
     status: TenantStatus;
+    seed: TenantSeed;
     customerUrl: string;
     createdAt: string;
     expiresAt: null | string;
     imageTag: string;
     lastError: null | string;
+};
+
+export type UpdateBrandRequest = {
+    name: BrandText;
+    primaryColor: null | string;
+    customerUrl: null | string;
+    features: BrandFeatures;
+    theme?: null | BrandTheme;
 };
 
 export type UpgradeRequest = {
@@ -256,47 +327,6 @@ export type GetTenantResponses = {
 };
 
 export type GetTenantResponse = GetTenantResponses[keyof GetTenantResponses];
-
-export type UploadTenantSeedLogoData = {
-    body: {
-        file: IFormFile;
-    };
-    path: {
-        slug: string;
-    };
-    query?: never;
-    url: '/api/control/tenants/{slug}/logo';
-};
-
-export type UploadTenantSeedLogoErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type UploadTenantSeedLogoError = UploadTenantSeedLogoErrors[keyof UploadTenantSeedLogoErrors];
-
-export type UploadTenantSeedLogoResponses = {
-    /**
-     * No Content
-     */
-    204: void;
-};
-
-export type UploadTenantSeedLogoResponse = UploadTenantSeedLogoResponses[keyof UploadTenantSeedLogoResponses];
 
 export type ProvisionTenantData = {
     body?: never;
@@ -484,6 +514,316 @@ export type ExtendDemoResponses = {
 };
 
 export type ExtendDemoResponse = ExtendDemoResponses[keyof ExtendDemoResponses];
+
+export type GetTenantBrandData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/brand';
+};
+
+export type GetTenantBrandErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type GetTenantBrandError = GetTenantBrandErrors[keyof GetTenantBrandErrors];
+
+export type GetTenantBrandResponses = {
+    /**
+     * OK
+     */
+    200: BrandDto;
+};
+
+export type GetTenantBrandResponse = GetTenantBrandResponses[keyof GetTenantBrandResponses];
+
+export type UpdateTenantBrandData = {
+    body: UpdateBrandRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/brand';
+};
+
+export type UpdateTenantBrandErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type UpdateTenantBrandError = UpdateTenantBrandErrors[keyof UpdateTenantBrandErrors];
+
+export type UpdateTenantBrandResponses = {
+    /**
+     * OK
+     */
+    200: BrandDto;
+};
+
+export type UpdateTenantBrandResponse = UpdateTenantBrandResponses[keyof UpdateTenantBrandResponses];
+
+export type DeleteTenantBrandImageData = {
+    body?: never;
+    path: {
+        slug: string;
+        slot: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/brand/images/{slot}';
+};
+
+export type DeleteTenantBrandImageErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type DeleteTenantBrandImageError = DeleteTenantBrandImageErrors[keyof DeleteTenantBrandImageErrors];
+
+export type DeleteTenantBrandImageResponses = {
+    /**
+     * OK
+     */
+    200: BrandDto;
+};
+
+export type DeleteTenantBrandImageResponse = DeleteTenantBrandImageResponses[keyof DeleteTenantBrandImageResponses];
+
+export type UploadTenantBrandImageData = {
+    body: {
+        file: IFormFile;
+    };
+    path: {
+        slug: string;
+        slot: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/brand/images/{slot}';
+};
+
+export type UploadTenantBrandImageErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type UploadTenantBrandImageError = UploadTenantBrandImageErrors[keyof UploadTenantBrandImageErrors];
+
+export type UploadTenantBrandImageResponses = {
+    /**
+     * OK
+     */
+    200: BrandDto;
+};
+
+export type UploadTenantBrandImageResponse = UploadTenantBrandImageResponses[keyof UploadTenantBrandImageResponses];
+
+export type ListTenantSeedImagesData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-images';
+};
+
+export type ListTenantSeedImagesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ListTenantSeedImagesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type ListTenantSeedImagesResponse = ListTenantSeedImagesResponses[keyof ListTenantSeedImagesResponses];
+
+export type DeleteTenantSeedImageData = {
+    body?: never;
+    path: {
+        slug: string;
+        slot: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-images/{slot}';
+};
+
+export type DeleteTenantSeedImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteTenantSeedImageResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteTenantSeedImageResponse = DeleteTenantSeedImageResponses[keyof DeleteTenantSeedImageResponses];
+
+export type GetTenantSeedImageData = {
+    body?: never;
+    path: {
+        slug: string;
+        slot: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-images/{slot}';
+};
+
+export type GetTenantSeedImageErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadTenantSeedImageData = {
+    body: {
+        file: IFormFile;
+    };
+    path: {
+        slug: string;
+        slot: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/seed-images/{slot}';
+};
+
+export type UploadTenantSeedImageErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UploadTenantSeedImageError = UploadTenantSeedImageErrors[keyof UploadTenantSeedImageErrors];
+
+export type UploadTenantSeedImageResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UploadTenantSeedImageResponse = UploadTenantSeedImageResponses[keyof UploadTenantSeedImageResponses];
 
 export type TlsAskData = {
     body?: never;

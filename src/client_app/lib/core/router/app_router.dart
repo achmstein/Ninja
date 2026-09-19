@@ -36,9 +36,9 @@ class SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // The wordmark, or the tile standing in for a logo; white when
-            // the brand has no color
-            BrandWordmark(height: 150, color: brandColor ?? Colors.white),
+            // The dark-page wordmark (the splash is always dark), or the tile
+            // standing in for a logo; white when the brand has no color
+            BrandWordmark(height: 150, color: brandColor ?? Colors.white, brightness: Brightness.dark),
             const SizedBox(height: 32),
             const SizedBox(
               width: 24,

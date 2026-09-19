@@ -30,35 +30,20 @@ public static partial class TenantApi
             .WithSummary("Change the name, the brand color or the feature switches")
             .RequireAuthorization("Owner");
 
-        api.MapPut("/logo", UploadLogo)
-            .WithName("UploadTenantLogo")
-            .WithSummary("Replace the logo; the icons are cut from it")
+        api.MapPut("/images/{slot}", UploadImage)
+            .WithName("UploadTenantImage")
+            .WithSummary("Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo")
             .RequireAuthorization("Owner")
             .DisableAntiforgery();
 
-        api.MapDelete("/logo", DeleteLogo)
-            .WithName("DeleteTenantLogo")
-            .WithSummary("Remove the logo; the icons fall back to a tile in the brand color")
+        api.MapDelete("/images/{slot}", DeleteImage)
+            .WithName("DeleteTenantImage")
+            .WithSummary("Remove one image; the surfaces fall back (dark to light, Arabic to English, the wordmark to the mark and the name)")
             .RequireAuthorization("Owner");
 
-        api.MapGet("/logo", GetLogo)
-            .WithName("GetTenantLogo")
-            .WithSummary("The logo as PNG, transparent margins trimmed");
-
-        api.MapPut("/wordmark", UploadWordmark)
-            .WithName("UploadTenantWordmark")
-            .WithSummary("Replace the wide logo used in headers and on sign-in")
-            .RequireAuthorization("Owner")
-            .DisableAntiforgery();
-
-        api.MapDelete("/wordmark", DeleteWordmark)
-            .WithName("DeleteTenantWordmark")
-            .WithSummary("Remove the wide logo; the mark and the name stand in")
-            .RequireAuthorization("Owner");
-
-        api.MapGet("/wordmark", GetWordmark)
-            .WithName("GetTenantWordmark")
-            .WithSummary("The wide logo as PNG, transparent margins trimmed");
+        api.MapGet("/images/{slot}", GetImage)
+            .WithName("GetTenantImage")
+            .WithSummary("One image as PNG, transparent margins trimmed");
 
         api.MapGet("/icons/{name}", GetIcon)
             .WithName("GetTenantIcon")
@@ -116,94 +101,61 @@ public static partial class TenantApi
         return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
-    public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UploadLogo(
+    public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>, NotFound>> UploadImage(
         BranchContext context,
         IConfiguration configuration,
         TenantBrandStore store,
+        string slot,
         IFormFile file,
         CancellationToken ct)
     {
-        var error = await store.SaveLogoAsync(file, ct);
+        if (!TenantImageSlots.IsKnown(slot))
+            return TypedResults.NotFound();
+
+        var (width, height, error) = await store.SaveAsync(slot, file, ct);
         if (error is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
 
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId, ct);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
-        tenant.LogoVersion = tenant.UpdatedAt.UtcTicks;
+        // A new dictionary, so the change tracker sees the property change
+        tenant.Images = new Dictionary<string, TenantImage>(tenant.Images)
+        {
+            [slot] = new() { Version = tenant.UpdatedAt.UtcTicks, Width = width, Height = height },
+        };
         await context.SaveChangesAsync(ct);
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
-    public static async Task<Ok<TenantResponse>> DeleteLogo(BranchContext context, IConfiguration configuration, TenantBrandStore store)
+    public static async Task<Results<Ok<TenantResponse>, NotFound>> DeleteImage(BranchContext context, IConfiguration configuration, TenantBrandStore store, string slot)
     {
-        store.DeleteLogo();
+        if (!TenantImageSlots.IsKnown(slot))
+            return TypedResults.NotFound();
+
+        store.Delete(slot);
 
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
-        tenant.LogoVersion = 0;
+        var images = new Dictionary<string, TenantImage>(tenant.Images);
+        images.Remove(slot);
+        tenant.Images = images;
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
 
-    public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UploadWordmark(
-        BranchContext context,
-        IConfiguration configuration,
-        TenantBrandStore store,
-        IFormFile file,
-        CancellationToken ct)
-    {
-        var (width, height, error) = await store.SaveWordmarkAsync(file, ct);
-        if (error is not null)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = error });
-
-        var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId, ct);
-        tenant.UpdatedAt = DateTimeOffset.UtcNow;
-        tenant.WordmarkVersion = tenant.UpdatedAt.UtcTicks;
-        tenant.WordmarkWidth = width;
-        tenant.WordmarkHeight = height;
-        await context.SaveChangesAsync(ct);
-
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
-    }
-
-    public static async Task<Ok<TenantResponse>> DeleteWordmark(BranchContext context, IConfiguration configuration, TenantBrandStore store)
-    {
-        store.DeleteWordmark();
-
-        var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
-        tenant.WordmarkVersion = 0;
-        tenant.WordmarkWidth = 0;
-        tenant.WordmarkHeight = 0;
-        tenant.UpdatedAt = DateTimeOffset.UtcNow;
-        await context.SaveChangesAsync();
-
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
-    }
-
-    public static Results<PhysicalFileHttpResult, NotFound> GetWordmark(
+    public static Results<PhysicalFileHttpResult, NotFound> GetImage(
         TenantBrandStore store,
         HttpContext http,
+        string slot,
         [Description("Cache key; any value makes the answer immutable")] string? v)
     {
-        if (!store.Exists(TenantBrandStore.WordmarkFile))
+        if (!TenantImageSlots.IsKnown(slot) || !store.HasImage(slot))
             return TypedResults.NotFound();
 
         SetCache(http, v);
-        return TypedResults.PhysicalFile(store.PathOf(TenantBrandStore.WordmarkFile), "image/png");
-    }
-
-    public static Results<PhysicalFileHttpResult, NotFound> GetLogo(
-        TenantBrandStore store,
-        HttpContext http,
-        [Description("Cache key; any value makes the answer immutable")] string? v)
-    {
-        if (!store.Exists(TenantBrandStore.LogoFile))
-            return TypedResults.NotFound();
-
-        SetCache(http, v);
-        return TypedResults.PhysicalFile(store.PathOf(TenantBrandStore.LogoFile), "image/png");
+        return TypedResults.PhysicalFile(store.PathOfSlot(slot), "image/png");
     }
 
     public static async Task<Results<PhysicalFileHttpResult, FileContentHttpResult, NotFound>> GetIcon(
@@ -346,7 +298,23 @@ public record TenantIcons(string Icon192, string Icon512, string Maskable512, st
 
 /// <param name="Url">Versioned, immutable.</param>
 /// <param name="Width">Pixels after trimming, so a surface can reserve the box before the image loads.</param>
-public record TenantWordmark(string Url, int Width, int Height);
+public record TenantWordmark(string Url, int Width, int Height)
+{
+    public static TenantWordmark? From(Tenant t, string slot)
+        => t.Image(slot) is { } image ? new(ImageUrl(slot, image), image.Width, image.Height) : null;
+
+    public static string ImageUrl(string slot, TenantImage image) => $"/api/tenant/images/{slot}?v={image.Version}";
+}
+
+/// <summary>The wide lockups by language and scheme; a null falls back on the surface: dark to light, Arabic to English, then the mark and the name.</summary>
+public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, TenantWordmark? Ar, TenantWordmark? ArDark)
+{
+    public static TenantWordmarks From(Tenant t) => new(
+        TenantWordmark.From(t, TenantImageSlots.WordmarkEn),
+        TenantWordmark.From(t, TenantImageSlots.WordmarkEnDark),
+        TenantWordmark.From(t, TenantImageSlots.WordmarkAr),
+        TenantWordmark.From(t, TenantImageSlots.WordmarkArDark));
+}
 
 public record TenantThemeDto(string? Accent, string? Background, string? Foreground, string? Radius, string? Font)
 {
@@ -356,13 +324,16 @@ public record TenantThemeDto(string? Accent, string? Background, string? Foregro
 /// <param name="Authority">The OpenID issuer the apps sign in against ("https://auth.example.com/realms/slug"); null when the build's own setting stands.</param>
 public record TenantAuth(string Authority);
 
+/// <param name="LogoUrl">The square mark, light scheme; null when none is uploaded (the icons are then a tile in the brand color).</param>
+/// <param name="LogoDarkUrl">The mark for dark backgrounds; null falls back to <paramref name="LogoUrl"/>.</param>
 public record TenantResponse(
     LocalizedText Name,
     string? PrimaryColor,
     string? CustomerUrl,
     TenantAuth? Auth,
     string? LogoUrl,
-    TenantWordmark? Wordmark,
+    string? LogoDarkUrl,
+    TenantWordmarks Wordmarks,
     TenantThemeDto Theme,
     TenantIcons Icons,
     TenantFeatures Features,
@@ -376,8 +347,9 @@ public record TenantResponse(
             t.PrimaryColor,
             t.CustomerUrl,
             string.IsNullOrWhiteSpace(authUrl) ? null : new TenantAuth(authUrl.TrimEnd('/')),
-            t.HasLogo ? $"/api/tenant/logo?v={t.LogoVersion}" : null,
-            t.HasWordmark ? new($"/api/tenant/wordmark?v={t.WordmarkVersion}", t.WordmarkWidth, t.WordmarkHeight) : null,
+            t.Image(TenantImageSlots.Logo) is { } logo ? TenantWordmark.ImageUrl(TenantImageSlots.Logo, logo) : null,
+            t.Image(TenantImageSlots.LogoDark) is { } logoDark ? TenantWordmark.ImageUrl(TenantImageSlots.LogoDark, logoDark) : null,
+            TenantWordmarks.From(t),
             TenantThemeDto.From(t.Theme),
             new(
                 $"/api/tenant/icons/icon-192.png?v={v}",

@@ -79,10 +79,10 @@ export function ReceiptSheet({
   return createPortal(
     <div className='receipt-sheet'>
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
-        {/* The wordmark, about half the paper wide; the name when there is no logo */}
-        {brand?.logoUrl ? (
+        {/* The English wordmark (paper is white), the mark without one, the name without either */}
+        {(brand?.wordmarks.en?.url ?? brand?.logoUrl) ? (
           <img
-            src={brand.logoUrl}
+            src={brand?.wordmarks.en?.url ?? brand?.logoUrl ?? undefined}
             alt=''
             style={{ width: '36mm', height: 'auto', margin: '0 auto 2mm', display: 'block' }}
           />

@@ -106,11 +106,13 @@ https://api.*.{$PLATFORM_DOMAIN} {
 	reverse_proxy {labels.{$PLATFORM_SLUG_LABEL}}-gateway:5000
 }
 
-# The customer app on the platform host: {slug}.{domain}
+# The customer app on the platform host: {slug}.{domain}. Only the control
+# app may frame it (its live brand preview); nobody else.
 https://*.{$PLATFORM_DOMAIN} {
 	tls {
 		on_demand
 	}
+	header Content-Security-Policy "frame-ancestors 'self' https://control.{$PLATFORM_DOMAIN}"
 	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
 	handle {
 		import spa /srv/client-web

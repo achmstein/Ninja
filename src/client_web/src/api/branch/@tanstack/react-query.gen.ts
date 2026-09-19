@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, deleteTenantLogo, deleteTenantWordmark, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantLogo, getTenantManifest, getTenantWordmark, type Options, updateBranch, updateBranchSettings, updateTenant, uploadTenantLogo, uploadTenantWordmark } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchResponse, DeleteTenantLogoData, DeleteTenantLogoResponse, DeleteTenantWordmarkData, DeleteTenantWordmarkResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantLogoData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, GetTenantWordmarkData, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantLogoData, UploadTenantLogoError, UploadTenantLogoResponse, UploadTenantWordmarkData, UploadTenantWordmarkError, UploadTenantWordmarkResponse } from '../types.gen';
+import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantManifest, type Options, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -163,12 +163,12 @@ export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>
 };
 
 /**
- * Remove the logo; the icons fall back to a tile in the brand color
+ * Remove one image; the surfaces fall back (dark to light, Arabic to English, the wordmark to the mark and the name)
  */
-export const deleteTenantLogoMutation = (options?: Partial<Options<DeleteTenantLogoData>>): UseMutationOptions<DeleteTenantLogoResponse, AxiosError<DefaultError>, Options<DeleteTenantLogoData>> => {
-    const mutationOptions: UseMutationOptions<DeleteTenantLogoResponse, AxiosError<DefaultError>, Options<DeleteTenantLogoData>> = {
+export const deleteTenantImageMutation = (options?: Partial<Options<DeleteTenantImageData>>): UseMutationOptions<DeleteTenantImageResponse, AxiosError<DefaultError>, Options<DeleteTenantImageData>> => {
+    const mutationOptions: UseMutationOptions<DeleteTenantImageResponse, AxiosError<DefaultError>, Options<DeleteTenantImageData>> = {
         mutationFn: async (fnOptions) => {
-            const { data } = await deleteTenantLogo({
+            const { data } = await deleteTenantImage({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -179,14 +179,14 @@ export const deleteTenantLogoMutation = (options?: Partial<Options<DeleteTenantL
     return mutationOptions;
 };
 
-export const getTenantLogoQueryKey = (options?: Options<GetTenantLogoData>) => createQueryKey('getTenantLogo', options);
+export const getTenantImageQueryKey = (options: Options<GetTenantImageData>) => createQueryKey('getTenantImage', options);
 
 /**
- * The logo as PNG, transparent margins trimmed
+ * One image as PNG, transparent margins trimmed
  */
-export const getTenantLogoOptions = (options?: Options<GetTenantLogoData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantLogoQueryKey>>({
+export const getTenantImageOptions = (options: Options<GetTenantImageData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantImageQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getTenantLogo({
+        const { data } = await getTenantImage({
             ...options,
             ...queryKey[0],
             signal,
@@ -194,68 +194,16 @@ export const getTenantLogoOptions = (options?: Options<GetTenantLogoData>) => qu
         });
         return data;
     },
-    queryKey: getTenantLogoQueryKey(options)
+    queryKey: getTenantImageQueryKey(options)
 });
 
 /**
- * Replace the logo; the icons are cut from it
+ * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo
  */
-export const uploadTenantLogoMutation = (options?: Partial<Options<UploadTenantLogoData>>): UseMutationOptions<UploadTenantLogoResponse, AxiosError<UploadTenantLogoError>, Options<UploadTenantLogoData>> => {
-    const mutationOptions: UseMutationOptions<UploadTenantLogoResponse, AxiosError<UploadTenantLogoError>, Options<UploadTenantLogoData>> = {
+export const uploadTenantImageMutation = (options?: Partial<Options<UploadTenantImageData>>): UseMutationOptions<UploadTenantImageResponse, AxiosError<UploadTenantImageError>, Options<UploadTenantImageData>> => {
+    const mutationOptions: UseMutationOptions<UploadTenantImageResponse, AxiosError<UploadTenantImageError>, Options<UploadTenantImageData>> = {
         mutationFn: async (fnOptions) => {
-            const { data } = await uploadTenantLogo({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
- * Remove the wide logo; the mark and the name stand in
- */
-export const deleteTenantWordmarkMutation = (options?: Partial<Options<DeleteTenantWordmarkData>>): UseMutationOptions<DeleteTenantWordmarkResponse, AxiosError<DefaultError>, Options<DeleteTenantWordmarkData>> => {
-    const mutationOptions: UseMutationOptions<DeleteTenantWordmarkResponse, AxiosError<DefaultError>, Options<DeleteTenantWordmarkData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await deleteTenantWordmark({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-export const getTenantWordmarkQueryKey = (options?: Options<GetTenantWordmarkData>) => createQueryKey('getTenantWordmark', options);
-
-/**
- * The wide logo as PNG, transparent margins trimmed
- */
-export const getTenantWordmarkOptions = (options?: Options<GetTenantWordmarkData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantWordmarkQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getTenantWordmark({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getTenantWordmarkQueryKey(options)
-});
-
-/**
- * Replace the wide logo used in headers and on sign-in
- */
-export const uploadTenantWordmarkMutation = (options?: Partial<Options<UploadTenantWordmarkData>>): UseMutationOptions<UploadTenantWordmarkResponse, AxiosError<UploadTenantWordmarkError>, Options<UploadTenantWordmarkData>> => {
-    const mutationOptions: UseMutationOptions<UploadTenantWordmarkResponse, AxiosError<UploadTenantWordmarkError>, Options<UploadTenantWordmarkData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await uploadTenantWordmark({
+            const { data } = await uploadTenantImage({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

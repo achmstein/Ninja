@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using Ninja.Branch.API.Model;
 using SkiaSharp;
 
 namespace Ninja.Branch.API.Services;
@@ -10,15 +11,15 @@ public sealed class TenantStorageOptions
 }
 
 /// <summary>
-/// The tenant's logo on disk, and the PWA icons cut from it. One upload
-/// produces every size the surfaces ask for, so a manifest never points at
-/// an icon that does not exist. Without a logo the icons are a plain tile in
-/// the brand color, drawn on demand.
+/// The tenant's images on disk, one PNG per slot (<see cref="TenantImageSlots"/>),
+/// and the PWA icons cut from the mark. One upload of the mark produces every
+/// icon size the surfaces ask for, so a manifest never points at an icon that
+/// does not exist. Without a mark the icons are a plain tile in the brand
+/// color, drawn on demand.
 /// </summary>
 public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<TenantStorageOptions> options)
 {
     public const string LogoFile = "logo.png";
-    public const string WordmarkFile = "wordmark.png";
 
     /// <summary>File name → (side in px, share of the side the logo fills, opaque background).</summary>
     public static readonly IReadOnlyDictionary<string, IconSpec> Icons = new Dictionary<string, IconSpec>
@@ -45,67 +46,54 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
 
     public bool Exists(string fileName) => File.Exists(PathOf(fileName));
 
-    /// <summary>
-    /// Decodes the upload, trims the transparent margins, keeps it at most
-    /// <see cref="MaxLogoSide"/> on the long side, saves it as PNG and cuts
-    /// every icon in <see cref="Icons"/>. Returns why not when the file is
-    /// not a usable image.
-    /// </summary>
-    public async Task<string?> SaveLogoAsync(IFormFile file, CancellationToken ct)
-    {
-        var (decoded, error) = await DecodeAsync(file, ct);
-        if (decoded is null)
-            return error;
+    public static string FileOf(string slot) => $"{slot}.png";
 
-        using (decoded)
-        {
-            using var trimmed = TrimTransparent(decoded);
-            using var logo = FitWithin(trimmed, MaxLogoSide);
+    public string PathOfSlot(string slot) => PathOf(FileOf(slot));
 
-            Directory.CreateDirectory(Root);
-            await File.WriteAllBytesAsync(PathOf(LogoFile), EncodePng(logo), ct);
-
-            foreach (var (name, spec) in Icons)
-                await File.WriteAllBytesAsync(PathOf(name), RenderIcon(logo, spec, SKColors.White), ct);
-        }
-
-        return null;
-    }
-
-    public void DeleteLogo()
-    {
-        foreach (var name in Icons.Keys.Append(LogoFile))
-        {
-            var path = PathOf(name);
-            if (File.Exists(path)) File.Delete(path);
-        }
-    }
+    public bool HasImage(string slot) => Exists(FileOf(slot));
 
     /// <summary>
-    /// The wordmark: trimmed, kept within <see cref="MaxWordmarkSide"/>, saved
-    /// as PNG. Returns its size, or why the file was refused.
+    /// Decodes the upload, trims the transparent margins, keeps it within the
+    /// slot's size cap on the long side and saves it as PNG; the mark also
+    /// cuts every icon in <see cref="Icons"/>. Returns the saved size, or why
+    /// the file was refused.
     /// </summary>
-    public async Task<(int Width, int Height, string? Error)> SaveWordmarkAsync(IFormFile file, CancellationToken ct)
+    public async Task<(int Width, int Height, string? Error)> SaveAsync(string slot, IFormFile file, CancellationToken ct)
     {
+        if (!TenantImageSlots.IsKnown(slot))
+            return (0, 0, $"Unknown image slot '{slot}'.");
+
         var (decoded, error) = await DecodeAsync(file, ct);
         if (decoded is null)
             return (0, 0, error);
 
         using (decoded)
         {
+            var isMark = TenantImageSlots.IsMark(slot);
             using var trimmed = TrimTransparent(decoded);
-            using var wordmark = FitWithin(trimmed, MaxWordmarkSide);
+            using var image = FitWithin(trimmed, isMark ? MaxLogoSide : MaxWordmarkSide);
 
             Directory.CreateDirectory(Root);
-            await File.WriteAllBytesAsync(PathOf(WordmarkFile), EncodePng(wordmark), ct);
-            return (wordmark.Width, wordmark.Height, null);
+            await File.WriteAllBytesAsync(PathOfSlot(slot), EncodePng(image), ct);
+
+            if (slot == TenantImageSlots.Logo)
+            {
+                foreach (var (name, spec) in Icons)
+                    await File.WriteAllBytesAsync(PathOf(name), RenderIcon(image, spec, SKColors.White), ct);
+            }
+
+            return (image.Width, image.Height, null);
         }
     }
 
-    public void DeleteWordmark()
+    public void Delete(string slot)
     {
-        var path = PathOf(WordmarkFile);
-        if (File.Exists(path)) File.Delete(path);
+        var files = slot == TenantImageSlots.Logo ? Icons.Keys.Append(LogoFile) : [FileOf(slot)];
+        foreach (var name in files)
+        {
+            var path = PathOf(name);
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 
     /// <summary>The upload as a bitmap, or the one-line reason it is not usable.</summary>

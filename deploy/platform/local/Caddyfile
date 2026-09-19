@@ -84,9 +84,11 @@ https:// {
 		reverse_proxy {labels.1}-gateway:5000
 	}
 
-	# The customer app on the platform host is the catch-all
+	# The customer app on the platform host is the catch-all; only the
+	# control app may frame it (its live brand preview)
 	@customer host *.localhost
 	handle @customer {
+		header Content-Security-Policy "frame-ancestors 'self' https://control.localhost"
 		import tenant_api {labels.1}-gateway
 		handle {
 			import spa /srv/client-web

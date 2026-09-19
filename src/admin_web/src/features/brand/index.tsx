@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ImagePlus, X } from 'lucide-react'
+import { ChevronDown, ImagePlus, X } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { type TenantFeatures, type TenantThemeDto } from '@/api/branch'
 import {
-  deleteTenantLogoMutation,
-  deleteTenantWordmarkMutation,
+  deleteTenantImageMutation,
   updateTenantMutation,
-  uploadTenantLogoMutation,
-  uploadTenantWordmarkMutation,
+  uploadTenantImageMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
 import { brandQueryKey, useBrand, type Brand } from '@/lib/brand'
+import { imageOf, isMark, wordmarkFor, type ImageSlot } from '@/lib/brand-slots'
 import { brandTokens, ensureFontLoaded, FONTS, RADII } from '@/lib/brand-theme'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -46,6 +50,19 @@ const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
   { key: 'finance', label: 'featureFinance' },
   { key: 'payroll', label: 'featurePayroll' },
   { key: 'kds', label: 'featureKds' },
+]
+
+/** The two slots every café fills, then the four variants behind a disclosure. */
+const MAIN_SLOTS: { slot: ImageSlot; label: TranslationKey }[] = [
+  { slot: 'logo', label: 'brandLogo' },
+  { slot: 'wordmark-en', label: 'brandWordmarkEn' },
+]
+
+const VARIANT_SLOTS: { slot: ImageSlot; label: TranslationKey }[] = [
+  { slot: 'logo-dark', label: 'brandLogoDark' },
+  { slot: 'wordmark-en-dark', label: 'brandWordmarkEnDark' },
+  { slot: 'wordmark-ar', label: 'brandWordmarkAr' },
+  { slot: 'wordmark-ar-dark', label: 'brandWordmarkArDark' },
 ]
 
 const RADIUS_LABELS: Record<string, TranslationKey> = {
@@ -130,26 +147,32 @@ function BrandForm({ brand }: { brand: Brand }) {
     onSuccess: saved,
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
-  const uploadLogo = useMutation({
-    ...uploadTenantLogoMutation(),
+  const uploadImage = useMutation({
+    ...uploadTenantImageMutation(),
     onSuccess: saved,
     onError: (e) => toast.error(problemDetail(e) || t('logoRejected')),
   })
-  const deleteLogo = useMutation({
-    ...deleteTenantLogoMutation(),
+  const deleteImage = useMutation({
+    ...deleteTenantImageMutation(),
     onSuccess: saved,
     onError: () => toast.error(t('brandSaveFailed')),
   })
-  const uploadWordmark = useMutation({
-    ...uploadTenantWordmarkMutation(),
-    onSuccess: saved,
-    onError: (e) => toast.error(problemDetail(e) || t('logoRejected')),
-  })
-  const deleteWordmark = useMutation({
-    ...deleteTenantWordmarkMutation(),
-    onSuccess: saved,
-    onError: () => toast.error(t('brandSaveFailed')),
-  })
+  // One slot is busy at a time: the one whose request is in flight
+  const busySlot =
+    (uploadImage.isPending && uploadImage.variables?.path.slot) ||
+    (deleteImage.isPending && deleteImage.variables?.path.slot) ||
+    null
+  const imageSlot = ({ slot, label }: { slot: ImageSlot; label: TranslationKey }) => (
+    <ImageSlotField
+      key={slot}
+      label={t(label)}
+      src={imageOf(brand, slot)?.url ?? null}
+      square={isMark(slot)}
+      busy={busySlot === slot}
+      onUpload={(file) => uploadImage.mutate({ path: { slot }, body: { file } })}
+      onRemove={() => deleteImage.mutate({ path: { slot } })}
+    />
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -184,23 +207,19 @@ function BrandForm({ brand }: { brand: Brand }) {
               error={error ?? undefined}
             />
 
-            <div className='grid gap-6 sm:grid-cols-2'>
-              <ImageSlot
-                label={t('brandLogo')}
-                src={brand.logoUrl}
-                square
-                busy={uploadLogo.isPending || deleteLogo.isPending}
-                onUpload={(file) => uploadLogo.mutate({ body: { file } })}
-                onRemove={() => deleteLogo.mutate({})}
-              />
-              <ImageSlot
-                label={t('brandWordmark')}
-                src={brand.wordmark?.url ?? null}
-                busy={uploadWordmark.isPending || deleteWordmark.isPending}
-                onUpload={(file) => uploadWordmark.mutate({ body: { file } })}
-                onRemove={() => deleteWordmark.mutate({})}
-              />
-            </div>
+            <div className='grid gap-6 sm:grid-cols-2'>{MAIN_SLOTS.map(imageSlot)}</div>
+
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button type='button' variant='ghost' size='sm' className='-ms-2 group'>
+                  <ChevronDown className='me-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180' />
+                  {t('brandVariants')}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className='grid gap-6 pt-4 sm:grid-cols-2'>
+                {VARIANT_SLOTS.map(imageSlot)}
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
@@ -333,7 +352,7 @@ function BrandForm({ brand }: { brand: Brand }) {
 }
 
 /** One image slot: the picture (or an empty tile), upload, remove. */
-function ImageSlot({
+function ImageSlotField({
   label,
   src,
   square,
@@ -481,6 +500,7 @@ function Preview({
   const language = useLanguage((s) => s.language)
   const tokens = brandTokens(draft)
   useEffect(() => ensureFontLoaded(tokens.font), [tokens.font])
+  const wordmark = wordmarkFor(brand, language, 'light')
 
   const displayName =
     (language === 'ar' ? name.ar : name.en) || name.en || name.ar || ''
@@ -495,12 +515,12 @@ function Preview({
       className='bg-background text-foreground overflow-hidden rounded-xl border shadow-sm'
     >
       <div className='flex items-center gap-2 border-b px-4 py-3'>
-        {brand.wordmark ? (
+        {wordmark ? (
           <img
-            src={brand.wordmark.url}
+            src={wordmark.url}
             alt=''
             style={{
-              aspectRatio: `${brand.wordmark.width} / ${brand.wordmark.height}`,
+              aspectRatio: `${wordmark.width} / ${wordmark.height}`,
             }}
             className='h-6 w-auto max-w-[60%] object-contain'
           />

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Ninja.Branch.API.Model;
 
 namespace Ninja.Branch.API.Infrastructure;
@@ -33,11 +35,23 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.CustomerUrl).HasMaxLength(200);
             entity.OwnsOne(e => e.Theme, b => b.ToJson());
+            // A dictionary cannot be an owned JSON type; it is one jsonb document
+            entity.Property(e => e.Images)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    images => JsonSerializer.Serialize(images, ImagesJson),
+                    json => JsonSerializer.Deserialize<Dictionary<string, TenantImage>>(json, ImagesJson) ?? new Dictionary<string, TenantImage>(),
+                    new ValueComparer<Dictionary<string, TenantImage>>(
+                        (a, b) => JsonSerializer.Serialize(a, ImagesJson) == JsonSerializer.Serialize(b, ImagesJson),
+                        v => JsonSerializer.Serialize(v, ImagesJson).GetHashCode(),
+                        v => JsonSerializer.Deserialize<Dictionary<string, TenantImage>>(JsonSerializer.Serialize(v, ImagesJson), ImagesJson)!));
             entity.Ignore(e => e.HasLogo);
-            entity.Ignore(e => e.HasWordmark);
             entity.Ignore(e => e.Version);
         });
     }
+
+    /// <summary>camelCase keys in the stored document.</summary>
+    public static readonly JsonSerializerOptions ImagesJson = new(JsonSerializerDefaults.Web);
 }
 
 public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration configuration) : IDbSeeder<BranchContext>

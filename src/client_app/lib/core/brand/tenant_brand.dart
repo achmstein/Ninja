@@ -1,4 +1,4 @@
-import 'dart:ui' show Color, Locale;
+import 'dart:ui' show Brightness, Color, Locale;
 import '../models/localized_text.dart';
 
 /// The switches a tenant can turn off. Every one is on until the brand is
@@ -94,6 +94,58 @@ class TenantWordmark {
   int get hashCode => Object.hash(url, width, height);
 }
 
+/// The wide lockups by language and scheme. A missing one falls back: the
+/// dark to the light, Arabic to English, and to the mark and the name when
+/// the tenant has none at all.
+class TenantWordmarks {
+  final TenantWordmark? en;
+  final TenantWordmark? enDark;
+  final TenantWordmark? ar;
+  final TenantWordmark? arDark;
+
+  const TenantWordmarks({this.en, this.enDark, this.ar, this.arDark});
+
+  static const none = TenantWordmarks();
+
+  static TenantWordmarks parse(Object? json, {String? baseUrl}) {
+    if (json is! Map<String, dynamic>) return none;
+    return TenantWordmarks(
+      en: TenantWordmark.parse(json['en'], baseUrl: baseUrl),
+      enDark: TenantWordmark.parse(json['enDark'], baseUrl: baseUrl),
+      ar: TenantWordmark.parse(json['ar'], baseUrl: baseUrl),
+      arDark: TenantWordmark.parse(json['arDark'], baseUrl: baseUrl),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'en': en?.toJson(),
+        'enDark': enDark?.toJson(),
+        'ar': ar?.toJson(),
+        'arDark': arDark?.toJson(),
+      };
+
+  /// The one to show for [locale] on a page of [brightness]
+  TenantWordmark? resolve(Locale locale, Brightness brightness) {
+    final arabic = locale.languageCode == 'ar';
+    final dark = brightness == Brightness.dark;
+    final order = arabic
+        ? (dark ? [arDark, ar, enDark, en] : [ar, en])
+        : (dark ? [enDark, en] : [en]);
+    for (final candidate in order) {
+      if (candidate != null) return candidate;
+    }
+    return null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantWordmarks && other.en == en && other.enDark == enDark && other.ar == ar && other.arDark == arDark;
+
+  @override
+  int get hashCode => Object.hash(en, enDark, ar, arDark);
+}
+
 /// The tenant's theme tokens on top of the neutral palette. Every field is
 /// optional; null keeps the platform default.
 class TenantTheme {
@@ -167,11 +219,14 @@ class TenantBrand {
   /// `#rrggbb`, or null when the tenant keeps the neutral palette
   final String? primaryColorHex;
 
-  /// Absolute URL of the uploaded logo, or null when there is none
+  /// Absolute URL of the uploaded mark, or null when there is none
   final String? logoUrl;
 
-  /// The wide logo, or null when the mark and the name stand in
-  final TenantWordmark? wordmark;
+  /// The mark for dark pages, or null to use [logoUrl]
+  final String? logoDarkUrl;
+
+  /// The wide logos; the mark and the name stand in for a missing one
+  final TenantWordmarks wordmarks;
   final TenantTheme theme;
   final TenantFeatures features;
   final int version;
@@ -180,7 +235,8 @@ class TenantBrand {
     required this.name,
     this.primaryColorHex,
     this.logoUrl,
-    this.wordmark,
+    this.logoDarkUrl,
+    this.wordmarks = TenantWordmarks.none,
     this.theme = TenantTheme.neutral,
     this.features = TenantFeatures.all,
     this.version = 0,
@@ -193,11 +249,13 @@ class TenantBrand {
   /// The API's shape; relative URLs are relative to [baseUrl]
   factory TenantBrand.fromApi(Map<String, dynamic> json, {required String baseUrl}) {
     final logo = json['logoUrl'] as String?;
+    final logoDark = json['logoDarkUrl'] as String?;
     return TenantBrand(
       name: LocalizedText.parse(json['name']),
       primaryColorHex: _hex(json['primaryColor'] as String?),
       logoUrl: logo == null ? null : _absolute(logo, baseUrl),
-      wordmark: TenantWordmark.parse(json['wordmark'], baseUrl: baseUrl),
+      logoDarkUrl: logoDark == null ? null : _absolute(logoDark, baseUrl),
+      wordmarks: TenantWordmarks.parse(json['wordmarks'], baseUrl: baseUrl),
       theme: TenantTheme.parse(json['theme']),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
@@ -206,13 +264,14 @@ class TenantBrand {
     );
   }
 
-  /// The cached shape (what [toJson] wrote); a cache from before the
-  /// wordmark and the theme simply lacks those keys
+  /// The cached shape (what [toJson] wrote); a cache from an older build
+  /// simply lacks the newer keys
   factory TenantBrand.fromJson(Map<String, dynamic> json) => TenantBrand(
         name: LocalizedText.parse(json['name']),
         primaryColorHex: _hex(json['primaryColor'] as String?),
         logoUrl: json['logoUrl'] as String?,
-        wordmark: TenantWordmark.parse(json['wordmark']),
+        logoDarkUrl: json['logoDarkUrl'] as String?,
+        wordmarks: TenantWordmarks.parse(json['wordmarks']),
         theme: TenantTheme.parse(json['theme']),
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
@@ -224,13 +283,20 @@ class TenantBrand {
         'name': name.toJson(),
         'primaryColor': primaryColorHex,
         'logoUrl': logoUrl,
-        'wordmark': wordmark?.toJson(),
+        'logoDarkUrl': logoDarkUrl,
+        'wordmarks': wordmarks.toJson(),
         'theme': theme.toJson(),
         'features': features.toJson(),
         'version': version,
       };
 
   Color? get primaryColor => _color(primaryColorHex);
+
+  /// The mark for a page of [brightness]; the dark one falls back to the light one
+  String? logoFor(Brightness brightness) => (brightness == Brightness.dark ? logoDarkUrl : null) ?? logoUrl;
+
+  /// The wide logo for [locale] on a page of [brightness], or null
+  TenantWordmark? wordmarkFor(Locale locale, Brightness brightness) => wordmarks.resolve(locale, brightness);
 
   String displayName(Locale locale) => name.getText(locale);
 
@@ -247,13 +313,14 @@ class TenantBrand {
           other.name == name &&
           other.primaryColorHex == primaryColorHex &&
           other.logoUrl == logoUrl &&
-          other.wordmark == wordmark &&
+          other.logoDarkUrl == logoDarkUrl &&
+          other.wordmarks == wordmarks &&
           other.theme == theme &&
           other.features == features &&
           other.version == version;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, wordmark, theme, features, version);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, theme, features, version);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

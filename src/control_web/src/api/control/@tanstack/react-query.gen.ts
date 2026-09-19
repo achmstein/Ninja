@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createTenant, destroyTenant, extendDemo, getPlatform, getTenant, listTenants, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, upgradeTenant, uploadTenantSeedLogo } from '../sdk.gen';
-import type { CreateTenantData, CreateTenantError, CreateTenantResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformData, GetPlatformResponse, GetTenantData, GetTenantResponse, ListTenantsData, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpgradeTenantData, UpgradeTenantError, UploadTenantSeedLogoData, UploadTenantSeedLogoError, UploadTenantSeedLogoResponse } from '../types.gen';
+import { createTenant, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, extendDemo, getPlatform, getTenant, getTenantBrand, getTenantSeedImage, listTenants, listTenantSeedImages, type Options, provisionTenant, startTenant, stopTenant, tlsAsk, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantData, GetTenantResponse, GetTenantSeedImageData, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -129,23 +129,6 @@ export const getTenantOptions = (options: Options<GetTenantData>) => queryOption
 });
 
 /**
- * The logo seeded into the stack on the next provision
- */
-export const uploadTenantSeedLogoMutation = (options?: Partial<Options<UploadTenantSeedLogoData>>): UseMutationOptions<UploadTenantSeedLogoResponse, AxiosError<UploadTenantSeedLogoError>, Options<UploadTenantSeedLogoData>> => {
-    const mutationOptions: UseMutationOptions<UploadTenantSeedLogoResponse, AxiosError<UploadTenantSeedLogoError>, Options<UploadTenantSeedLogoData>> = {
-        mutationFn: async (fnOptions) => {
-            const { data } = await uploadTenantSeedLogo({
-                ...options,
-                ...fnOptions,
-                throwOnError: true
-            });
-            return data;
-        }
-    };
-    return mutationOptions;
-};
-
-/**
  * Run (or retry) provisioning
  */
 export const provisionTenantMutation = (options?: Partial<Options<ProvisionTenantData>>): UseMutationOptions<unknown, AxiosError<ProvisionTenantError>, Options<ProvisionTenantData>> => {
@@ -214,6 +197,142 @@ export const extendDemoMutation = (options?: Partial<Options<ExtendDemoData>>): 
     const mutationOptions: UseMutationOptions<ExtendDemoResponse, AxiosError<ExtendDemoError>, Options<ExtendDemoData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await extendDemo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantBrandQueryKey = (options: Options<GetTenantBrandData>) => createQueryKey('getTenantBrand', options);
+
+/**
+ * The brand as the running stack serves it; image URLs point at the customer host
+ */
+export const getTenantBrandOptions = (options: Options<GetTenantBrandData>) => queryOptions<GetTenantBrandResponse, AxiosError<GetTenantBrandError>, GetTenantBrandResponse, ReturnType<typeof getTenantBrandQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantBrand({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantBrandQueryKey(options)
+});
+
+/**
+ * Change the name, colors, theme, customer URL or feature switches on the running stack
+ */
+export const updateTenantBrandMutation = (options?: Partial<Options<UpdateTenantBrandData>>): UseMutationOptions<UpdateTenantBrandResponse, AxiosError<UpdateTenantBrandError>, Options<UpdateTenantBrandData>> => {
+    const mutationOptions: UseMutationOptions<UpdateTenantBrandResponse, AxiosError<UpdateTenantBrandError>, Options<UpdateTenantBrandData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateTenantBrand({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Remove one image from the running stack
+ */
+export const deleteTenantBrandImageMutation = (options?: Partial<Options<DeleteTenantBrandImageData>>): UseMutationOptions<DeleteTenantBrandImageResponse, AxiosError<DeleteTenantBrandImageError>, Options<DeleteTenantBrandImageData>> => {
+    const mutationOptions: UseMutationOptions<DeleteTenantBrandImageResponse, AxiosError<DeleteTenantBrandImageError>, Options<DeleteTenantBrandImageData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteTenantBrandImage({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark
+ */
+export const uploadTenantBrandImageMutation = (options?: Partial<Options<UploadTenantBrandImageData>>): UseMutationOptions<UploadTenantBrandImageResponse, AxiosError<UploadTenantBrandImageError>, Options<UploadTenantBrandImageData>> => {
+    const mutationOptions: UseMutationOptions<UploadTenantBrandImageResponse, AxiosError<UploadTenantBrandImageError>, Options<UploadTenantBrandImageData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadTenantBrandImage({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listTenantSeedImagesQueryKey = (options: Options<ListTenantSeedImagesData>) => createQueryKey('listTenantSeedImages', options);
+
+/**
+ * The slots with an image waiting for the next provision
+ */
+export const listTenantSeedImagesOptions = (options: Options<ListTenantSeedImagesData>) => queryOptions<ListTenantSeedImagesResponse, AxiosError<DefaultError>, ListTenantSeedImagesResponse, ReturnType<typeof listTenantSeedImagesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listTenantSeedImages({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listTenantSeedImagesQueryKey(options)
+});
+
+export const deleteTenantSeedImageMutation = (options?: Partial<Options<DeleteTenantSeedImageData>>): UseMutationOptions<DeleteTenantSeedImageResponse, AxiosError<DefaultError>, Options<DeleteTenantSeedImageData>> => {
+    const mutationOptions: UseMutationOptions<DeleteTenantSeedImageResponse, AxiosError<DefaultError>, Options<DeleteTenantSeedImageData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteTenantSeedImage({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantSeedImageQueryKey = (options: Options<GetTenantSeedImageData>) => createQueryKey('getTenantSeedImage', options);
+
+/**
+ * One image waiting for the next provision
+ */
+export const getTenantSeedImageOptions = (options: Options<GetTenantSeedImageData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getTenantSeedImageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantSeedImage({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantSeedImageQueryKey(options)
+});
+
+/**
+ * An image the brand step uploads into the stack on the next provision
+ */
+export const uploadTenantSeedImageMutation = (options?: Partial<Options<UploadTenantSeedImageData>>): UseMutationOptions<UploadTenantSeedImageResponse, AxiosError<UploadTenantSeedImageError>, Options<UploadTenantSeedImageData>> => {
+    const mutationOptions: UseMutationOptions<UploadTenantSeedImageResponse, AxiosError<UploadTenantSeedImageError>, Options<UploadTenantSeedImageData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadTenantSeedImage({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

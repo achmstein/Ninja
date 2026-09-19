@@ -18,7 +18,7 @@ import { BillSlip } from '@/components/bills/bill-slip'
 import { RequireAuth } from '@/components/require-auth'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useGuestStore } from '@/stores/guest-store'
-import { useBrand, useBrandName } from '@/lib/brand'
+import { useBrand, useBrandName, wordmarkFor } from '@/lib/brand'
 
 export const Route = createFileRoute('/receipts/$ticketId')({
   component: ReceiptRoute,
@@ -124,17 +124,19 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
   const footer = localized(branch?.receiptFooter)?.trim()
   const brand = useBrand()
   const brandName = useBrandName()
+  // Paper is white, so the light wordmark whatever the screen's scheme
+  const wordmark = wordmarkFor(brand, language, 'light')
 
   return (
     // The paper the till prints, on screen: black on white whatever the
     // theme, the wordmark on top, 72mm wide
     <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
       <div className='flex flex-col items-center text-center'>
-        {brand?.wordmark ? (
+        {wordmark ? (
           <img
-            src={brand.wordmark.url}
+            src={wordmark.url}
             alt=''
-            style={{ aspectRatio: `${brand.wordmark.width} / ${brand.wordmark.height}` }}
+            style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}` }}
             className='mb-2 block h-auto w-40 max-h-16 object-contain'
           />
         ) : brand?.logoUrl ? (

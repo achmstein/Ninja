@@ -100,7 +100,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                         style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
                   ),
                   data: (ticket) => FutureBuilder<ui.Image?>(
-                    future: brandLogo(brand.logoUrl),
+                    future: brandLogo(brand.receiptImageUrl),
                     builder: (context, logo) => FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.topCenter,
