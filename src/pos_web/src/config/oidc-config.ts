@@ -8,10 +8,30 @@ const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
 const realm = import.meta.env.VITE_KEYCLOAK_REALM || 'chillax'
 const posUrl = import.meta.env.VITE_POS_URL || window.location.origin
 
-export const authority = `${keycloakUrl}/realms/${realm}`
+/**
+ * The authority a provisioned stack was given (brand.auth.authority, cached
+ * by brand.ts before the first render); the build's own setting otherwise.
+ * Read lazily, after bootBrand(), so a first visit to a tenant already signs
+ * in against its own realm.
+ */
+function brandAuthority(): string | null {
+  try {
+    const raw = localStorage.getItem('ninja-brand')
+    const auth = raw ? (JSON.parse(raw) as { auth?: { authority?: string } }).auth : null
+    return auth?.authority || null
+  } catch {
+    return null
+  }
+}
+
+export function getAuthority(): string {
+  return brandAuthority() ?? `${keycloakUrl}/realms/${realm}`
+}
 export const clientId = 'pos-web'
 
-export const oidcConfig: AuthProviderProps = {
+export function getOidcConfig(): AuthProviderProps {
+  const authority = getAuthority()
+  return {
   authority,
   // Pin the endpoints instead of fetching the discovery document at
   // runtime: a stale cached discovery response once sent the token
@@ -41,12 +61,13 @@ export const oidcConfig: AuthProviderProps = {
     // Remove the code and state from the URL after successful sign-in
     window.history.replaceState({}, document.title, window.location.pathname)
   },
+  }
 }
 
 // Reads the user that react-oidc-context persisted to local storage.
 // Needed by code living outside the React tree (e.g. the axios interceptor).
 export function getStoredUser(): User | null {
-  const stored = localStorage.getItem(`oidc.user:${authority}:${clientId}`)
+  const stored = localStorage.getItem(`oidc.user:${getAuthority()}:${clientId}`)
   return stored ? User.fromStorageString(stored) : null
 }
 

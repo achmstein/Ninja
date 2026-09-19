@@ -45,6 +45,7 @@ var payrollDb = postgres.AddDatabase("payrolldb");
 var financeDb = postgres.AddDatabase("financedb");
 var loyaltyDb = postgres.AddDatabase("loyaltydb");
 var branchDb = postgres.AddDatabase("branchdb");
+var controlDb = postgres.AddDatabase("controldb");
 var notificationDb = postgres.AddDatabase("notificationdb");
 
 if (!isTestMode)
@@ -65,7 +66,8 @@ var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
 // under test a random one, and no volume so the realm is imported fresh.
 var keycloak = builder.AddKeycloak("keycloak", port: isTestMode ? null : 8080)
     .WithLifetime(containerLifetime)
-    .WithRealmImport("./KeycloakConfiguration/chillax-realm.json")
+    // Every realm in the folder: chillax (tenant one) and ninja (the platform's own)
+    .WithRealmImport("./KeycloakConfiguration/realms")
     .WithBindMount("./KeycloakConfiguration/themes/chillax", "/opt/keycloak/themes/chillax", isReadOnly: true)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
@@ -191,6 +193,17 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithEnvironment("Tenant__Name__En", builder.Configuration["Tenant:Name:En"] ?? "Chillax")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
     .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site");
+
+// The control plane: tenants and demos. In dev it dry-runs (records every
+// step, stamps nothing) against the platform realm imported above.
+var controlApi = builder.AddProject<Projects.Control_API>("control-api")
+    .WithReference(controlDb).WaitFor(controlDb)
+    .WithReference(keycloak)
+    .WithEnvironment("Identity__Url", ReferenceExpression.Create($"{keycloakEndpoint}/realms/ninja"))
+    .WithEnvironment("Keycloak__Realm", "ninja")
+    .WithEnvironment("Platform__DryRun", "true")
+    .WithEnvironment("Platform__TenantsRoot", Path.Combine(Path.GetTempPath(), "ninja-tenants"))
+    .ExcludeFromManifest();
 
 // AI assistant (Catalog localizes menu text, Inventory reads receipts,
 // Finance reads bills). Under test the services run a scripted fake;
@@ -319,6 +332,19 @@ if (!isTestMode)
         .WaitFor(mobileBff)
         // Not part of the Docker Compose publish yet; deployment gets its own
         // static build + Caddy route once the app is ready to ship.
+        .ExcludeFromManifest();
+
+    // The control app (React + Vite): the platform's staff, realm ninja.
+    builder.AddViteApp("control-web", "../control_web")
+        .WithNpm()
+        .WithEndpoint("http", endpoint =>
+        {
+            endpoint.Port = 5177;
+            endpoint.IsProxied = false;
+        })
+        .WithEnvironment("BFF_URL", controlApi.GetEndpoint("http"))
+        .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WaitFor(controlApi)
         .ExcludeFromManifest();
 
     // POS web app (React + Vite), same wiring as admin-web.

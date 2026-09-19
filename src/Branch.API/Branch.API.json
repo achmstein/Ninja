@@ -801,6 +801,17 @@
           }
         }
       },
+      "TenantAuth": {
+        "required": [
+          "authority"
+        ],
+        "type": "object",
+        "properties": {
+          "authority": {
+            "type": "string"
+          }
+        }
+      },
       "TenantFeatures": {
         "required": [
           "rooms",
@@ -868,6 +879,7 @@
           "name",
           "primaryColor",
           "customerUrl",
+          "auth",
           "logoUrl",
           "wordmark",
           "theme",
@@ -890,6 +902,16 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "auth": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantAuth"
+              }
             ]
           },
           "logoUrl": {

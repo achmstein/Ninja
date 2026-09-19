@@ -2,7 +2,7 @@
 
 **Goal:** sell what Chillax runs on. A café or restaurant subscribes, gets a branded self-ordering menu (web, and native apps on the higher plan) and runs the rest — till, kitchen, stock, money, staff — under the Ninja name. Setting a new client up for a demo is one command plus a photo of their menu.
 
-**Status:** decided 2026-09-19 (four decisions below, all agreed). Phase 1 `09949837`, Phase 2 `2fc5ae38`, Phase 2.5 built 2026-09-19; the control plane (Phases 3 + 6 together) in progress.
+**Status:** decided 2026-09-19 (four decisions below, all agreed). Phase 1 `09949837`, Phase 2 `2fc5ae38`, Phase 2.5 `abc9119c`; the control plane (Phases 3 + 6 together) built 2026-09-19, awaiting its first run on the box.
 
 **Repo:** this repository (`NinjaPlatform`) is a copy of `achmstein/Chillax` at `c43fee71`, detached from that remote. It is *not* the older `achmstein/Ninja` repository (a food-delivery experiment); the two share nothing and must not be merged. Chillax keeps running from its own repo until Phase 3 moves it onto a Ninja stamp; after that the Chillax repo is history.
 
@@ -59,12 +59,20 @@ Deliberately **not** renamed here, because they are tenant one's data and move i
 - client_web shows the wordmark in the header, top bar, About and receipt (`BrandWordmark`), the mark and name when there is none. client_app mirrors all of it: `TenantBrand` carries wordmark + theme, `brandedColors()` maps the tokens onto Forui (secondary, background, foreground, `FLerpBorderRadius`), the font goes through `google_fonts` for Latin text, `BrandWordmark` at sign-in, register, splash, About and the receipt mirror. Staff apps ignore the theme.
 - Not done: a Ninja logo asset (the N tile stands in), the splash background for a dark-ink wordmark.
 
-### Phase 3 — Provisioning
-- `deploy/` becomes templates: `docker-compose.tenant.yml` (services only, `-p ninja-<slug>`, env file per tenant), shared `docker-compose.infra.yml` (Postgres, Keycloak, RabbitMQ, Redis, Caddy), `realm.template.json` with `{slug}`, `{hosts}`; Caddy with `*.<platform-domain>` (DNS challenge) routing by host label, on-demand TLS for custom domains.
-- `scripts/ninja`: `new <slug> --name --logo --color [--domain]` (databases, vhost, realm, env, compose up, migrations, tenant record, first admin, first branch; prints the admin URL and credentials), `upgrade [slug|all]`, `destroy <slug>` (demos), `backup` per tenant (from `backup.sh`).
-- Secrets and ports per stack (the item deferred from the 2026-09-18 roadmap).
-- Move chillax.site onto a stamp as tenant `chillax` with its custom domains; retire the Chillax repo's deploy.
-- Done when: `ninja new demo-cafe …` gives a working admin login in under five minutes on the current VM.
+### Phase 3 + 6 — The control plane *(built 2026-09-19, not yet rolled out)*
+Provisioning and the control plane were built together, because "manage instances and demos" is what provisioning is for. `src/Control.API` (the platform's own service, its own `controldb`, auth against the platform realm `ninja`, role `PlatformAdmin`) and `src/control_web` (its SPA on `control.{domain}`).
+
+**D5 — One box, one shared compose project, one compose project per tenant.** `deploy/platform/docker-compose.yml` (`-p ninja-platform`) runs Postgres (Keycloak's store too, no more dev-mode H2), RabbitMQ, Keycloak, Caddy and `control-api`, on the `aspire` network. A tenant is `ninja-{slug}` under `/opt/ninja/tenants/{slug}`: the twelve services and a YARP gateway, every compose service named `{slug}-…` so nothing collides on the shared network, joined to that network. The control plane stamps it with the host's docker (socket mounted).
+
+**D6 — Hosts.** `{slug}.{domain}` is the café's customer app; `admin|pos|kds.{slug}.{domain}` the staff apps; `api.{slug}.{domain}` the native apps' API; `auth.{domain}` Keycloak for every realm; `control.{domain}` the control app. Caddy routes by host label to `{slug}-gateway:5000` and serves the five SPA builds once for everyone; certificates are on demand, one per host, after `GET /api/control/tls/ask` confirms the host belongs to a tenant. A café's own domain (`menu.cafe.com`) becomes a site in `custom-domains.caddy`, which the control plane rewrites and reloads. Wildcard DNS (`*.{domain}` and `*.*.{domain}`) is the only outside step.
+
+**D7 — Sign-in per tenant without a build.** The stack's Branch.API is told `Tenant__AuthUrl` (`https://auth.{domain}/realms/{slug}`) and returns it in the brand as `auth.authority`; the web apps build their OIDC config lazily after `bootBrand()`, so a first visit already signs in against the tenant's realm. The realm comes from `Templates/tenant-realm.json` (the eight clients with the tenant's hosts, no social providers, an Owner service account `ninja-control` the control plane uses to seed the brand).
+
+**A stamp:** `databases` → `broker` (vhost + dead-letter policy) → `realm` → `stack` (compose up) → `edge` (custom domains) → `health` (every service through the gateway) → `brand` (name, color, logo through the stack's own API) → `owner` (first Owner, temporary password shown once). Every step is idempotent and recorded (`ProvisioningStep`), so a failed run is retried from the top. Demos carry an expiry: stopped when it passes, destroyed after the grace days (`DemoExpiryService`). Stop, start, upgrade (re-stamp on a tag + pull) and destroy (down -v, realm, vhost, databases) are the other jobs; one worker runs them in order.
+
+**Dev:** the AppHost runs `control-api` in dry-run mode (every step recorded, nothing stamped) against the `ninja` realm imported from `KeycloakConfiguration/realms/`, and `control-web` on 5177. Tests: `tests/Control.UnitTests` (naming, templates, the stamped gateway's routes checked against the AppHost's route table, custom-domain sites).
+
+**Not yet:** the platform deploy workflow (build the `ninja-control` image, copy `deploy/platform` and the five SPA builds to `/opt/ninja/platform`, render the `ninja` realm), moving chillax.site onto a stamp, per-tenant backups of the uploads volumes, a tenant's own Google/Apple sign-in, the platform's own login theme, and a real run on the box — the whole flow has only been exercised in dry run.
 
 ### Phase 4 — First-run wizard
 In admin, on an empty tenant: logo and color → menu photos into the existing review sheet → tables and printable QR → first staff member → "open the menu". The ten-minute demo.
@@ -72,11 +80,11 @@ In admin, on an empty tenant: logo and color → menu photos into the existing r
 ### Phase 5 — White-label mobile
 Flutter flavors generated from `tenants/<slug>.json` (ids, name, icon, splash, colors, host, realm, App Links domain), a CI matrix over subscribed tenants, and the store playbook (D4).
 
-### Phase 6 — Control plane *(after there are paying tenants)*
-Tenant list, plan, usage, billing, provision from a form instead of the CLI.
+### Phase 6 — Plans and billing *(after there are paying tenants)*
+Plan, usage and billing on the control plane; the tenant list and provisioning from a form landed with Phase 3.
 
 ## 4. Open before Phase 3
-- The platform domain for tenant subdomains.
+- The platform domain for tenant subdomains (everything reads `PLATFORM_DOMAIN`; nothing is hardcoded).
 - Ship the undeployed 2026-09-18 roadmap tiers to Chillax prod *before* the Phase 3 migration, so the migration is not debugging two things.
 - The VM's RAM: sets how many demo tenants fit before a second box.
 - GitHub: this repo needs a name that is not `Ninja` (taken by the older project), e.g. `NinjaPlatform`. Its workflows still carry the Chillax server secrets and hosts until Phase 3.

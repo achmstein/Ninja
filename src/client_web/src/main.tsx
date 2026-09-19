@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { AuthProvider } from 'react-oidc-context'
 import { bootBrand } from './lib/brand'
-import { oidcConfig } from './lib/oidc'
+import { getOidcConfig } from './lib/oidc'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
@@ -40,7 +40,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <AuthProvider {...oidcConfig}>
+      <AuthProvider {...getOidcConfig()}>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
         </QueryClientProvider>

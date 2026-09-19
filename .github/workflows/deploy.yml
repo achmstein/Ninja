@@ -78,8 +78,8 @@ jobs:
 
       - name: Prepare deployment artifacts
         run: |
-          cp src/Ninja.AppHost/KeycloakConfiguration/chillax-realm.json deploy-artifacts/chillax-realm.json
-          sed -i 's|source: ".*chillax-realm.json"|source: "./chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
+          cp src/Ninja.AppHost/KeycloakConfiguration/realms/chillax-realm.json deploy-artifacts/chillax-realm.json
+          sed -i 's|source: ".*KeycloakConfiguration/realms"|source: "./chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
           sed -i 's|target: "/opt/keycloak/data/import"|target: "/opt/keycloak/data/import/chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
 
           # Keycloak login theme travels the same way as the realm file

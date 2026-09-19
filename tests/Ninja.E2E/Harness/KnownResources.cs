@@ -16,12 +16,14 @@ public static class KnownResources
     [
         "catalog-api", "ordering-api", "spaces-api", "sales-api", "inventory-api", "payroll-api",
         "finance-api", "identity-api", "loyalty-api", "notification-api", "accounts-api", "branch-api",
+        // The platform's own control plane rides along in dry-run mode
+        "control-api",
     ];
 
     public static readonly string[] Databases =
     [
         "accountsdb", "catalogdb", "orderingdb", "spacesdb", "salesdb", "inventorydb",
-        "payrolldb", "financedb", "loyaltydb", "branchdb", "notificationdb",
+        "payrolldb", "financedb", "loyaltydb", "branchdb", "notificationdb", "controldb",
     ];
 
     /// <summary>Databases whose context maps the IntegrationEventLog outbox table.</summary>

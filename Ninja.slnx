@@ -9,9 +9,14 @@
     </Project>
     <Project Path="src/Branch.API/Branch.API.csproj" />
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
+    <Project Path="src/Control.API/Control.API.csproj" />
     <Project Path="src/Ninja.AI/Ninja.AI.csproj" />
     <Project Path="src/Ninja.AppHost/Ninja.AppHost.csproj" />
     <Project Path="src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj" />
+    <Project Path="src/control_web/control_web.esproj">
+      <Build />
+      <Deploy />
+    </Project>
     <Project Path="src/client_web/client_web.esproj">
       <Build />
       <Deploy />
@@ -59,6 +64,7 @@
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Accounts.UnitTests/Accounts.UnitTests.csproj" />
     <Project Path="tests/Branch.UnitTests/Branch.UnitTests.csproj" />
+    <Project Path="tests/Control.UnitTests/Control.UnitTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="tests/Inventory.UnitTests/Inventory.UnitTests.csproj" />
     <Project Path="tests/Payroll.UnitTests/Payroll.UnitTests.csproj" />

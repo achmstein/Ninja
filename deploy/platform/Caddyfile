@@ -1,0 +1,118 @@
+# The platform's edge. One Caddy for every tenant: it routes by host label
+# to the tenant's own gateway and issues certificates on demand, asking the
+# control plane first so only hosts we know get one. Wildcard DNS
+# (*.{$PLATFORM_DOMAIN} and *.*.{$PLATFORM_DOMAIN} → this box) is the only
+# thing a new tenant needs outside this compose project.
+#
+# Host scheme, with PLATFORM_DOMAIN=ninja.app:
+#   ninja.app                → the platform's site (control redirect for now)
+#   auth.ninja.app           → Keycloak, every realm
+#   control.ninja.app        → the control app + its API
+#   {slug}.ninja.app         → the café's customer app, served from the shared build
+#   admin|pos|kds.{slug}.ninja.app → the staff apps, shared builds
+#   api.{slug}.ninja.app     → the tenant's gateway, for the native apps
+# A café's own domain (menu.cafe.com) is mapped to its slug in
+# custom-domains.caddy, which the control plane rewrites and reloads.
+#
+# {labels.N} counts from the right: for admin.blue.ninja.app, labels.0=app,
+# labels.1=ninja, labels.2=blue. A platform domain with three labels shifts
+# every index by one; PLATFORM_SLUG_LABEL carries that number (2 for a
+# two-label domain, 3 for co.uk-style).
+
+{
+	email {$ACME_EMAIL}
+	on_demand_tls {
+		ask http://control-api:8080/api/control/tls/ask
+	}
+}
+
+(spa) {
+	# args: root
+	root * {args[0]}
+	try_files {path} /index.html
+	file_server
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+	@nonassets not path /assets/*
+	header @nonassets Cache-Control "no-cache"
+}
+
+(tenant_api) {
+	# args: the tenant's gateway host
+	handle /api/* {
+		reverse_proxy {args[0]}:5000
+	}
+	handle /hub/* {
+		reverse_proxy {args[0]}:5000
+	}
+}
+
+{$PLATFORM_DOMAIN} {
+	redir https://control.{$PLATFORM_DOMAIN}{uri}
+}
+
+auth.{$PLATFORM_DOMAIN} {
+	reverse_proxy keycloak:8080
+}
+
+control.{$PLATFORM_DOMAIN} {
+	handle /api/* {
+		reverse_proxy control-api:8080
+	}
+	handle {
+		import spa /srv/control-web
+	}
+}
+
+# Cafés on their own domains: the map fills {slug} from the host
+import custom-domains.caddy
+
+# Staff apps: admin|pos|kds.{slug}.{domain}
+https://admin.*.{$PLATFORM_DOMAIN} {
+	tls {
+		on_demand
+	}
+	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+	handle {
+		import spa /srv/admin-web
+	}
+}
+
+https://pos.*.{$PLATFORM_DOMAIN} {
+	tls {
+		on_demand
+	}
+	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+	handle {
+		import spa /srv/pos-web
+	}
+}
+
+https://kds.*.{$PLATFORM_DOMAIN} {
+	tls {
+		on_demand
+	}
+	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+	handle {
+		import spa /srv/kds-web
+	}
+}
+
+# The native apps' API host
+https://api.*.{$PLATFORM_DOMAIN} {
+	tls {
+		on_demand
+	}
+	reverse_proxy {labels.{$PLATFORM_SLUG_LABEL}}-gateway:5000
+}
+
+# The customer app on the platform host: {slug}.{domain}
+https://*.{$PLATFORM_DOMAIN} {
+	tls {
+		on_demand
+	}
+	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+	handle {
+		import spa /srv/client-web
+	}
+}
