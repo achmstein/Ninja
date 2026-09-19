@@ -9,7 +9,8 @@ name: Deploy Platform
 # Secrets: PLATFORM_SERVER_HOST, PLATFORM_SERVER_USER, PLATFORM_SERVER_SSH_KEY,
 #   PLATFORM_POSTGRES_PASSWORD, PLATFORM_EVENTBUS_PASSWORD, PLATFORM_KEYCLOAK_PASSWORD,
 #   PLATFORM_ADMIN_PASSWORD (first password of the `platform` user, temporary),
-#   GHCR_TOKEN, GEMINI_API_KEY (optional), FIREBASE_WEB_* (optional, web push).
+#   GEMINI_API_KEY (optional), FIREBASE_WEB_* (optional, web push), GHCR_TOKEN
+#   (optional: the run's own GITHUB_TOKEN pulls this repo's images otherwise).
 # Variables: PLATFORM_DOMAIN (e.g. ninja.app), PLATFORM_SLUG_LABEL (2 for a
 #   two-label domain, 3 for co.uk-style), ACME_EMAIL.
 
@@ -33,6 +34,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: platform
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -138,7 +142,7 @@ jobs:
       - name: Bring the platform up
         uses: appleboy/ssh-action@v1
         env:
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
           DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
           SHIP_WEB: ${{ inputs.web }}
