@@ -154,7 +154,7 @@ public sealed class TemplatesTests
 
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
-        StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app");
+        StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app https://admin.blue.ninja.app");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted café needs no site of its own");
     }
 

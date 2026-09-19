@@ -257,6 +257,7 @@ const dictionary = {
   eyedropper: { en: 'Pick from the screen', ar: 'اختار من الشاشة' },
   preview: { en: 'Preview', ar: 'معاينة' },
   previewLive: { en: 'Live', ar: 'مباشر' },
+  previewDraft: { en: 'Draft', ar: 'مسودة' },
   previewMock: { en: 'Mock', ar: 'نموذج' },
   previewAdd: { en: 'Add', ar: 'أضف' },
   previewPopular: { en: 'Popular', ar: 'الأكثر طلبًا' },

@@ -91,10 +91,10 @@ https:// {
 	}
 
 	# The customer app on the platform host is the catch-all; only the
-	# control app may frame it (its live brand preview)
+	# control app and the café's own admin may frame it (their live brand previews)
 	@customer host *.localhost
 	handle @customer {
-		header Content-Security-Policy "frame-ancestors 'self' https://control.localhost"
+		header Content-Security-Policy "frame-ancestors 'self' https://control.localhost https://admin.{host}"
 		import tenant_api {labels.1}-gateway
 		handle {
 			import spa /srv/client-web

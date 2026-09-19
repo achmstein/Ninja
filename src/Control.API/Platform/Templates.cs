@@ -208,8 +208,8 @@ public static partial class Templates
             sb.AppendLine("\ttls {");
             sb.AppendLine("\t\ton_demand");
             sb.AppendLine("\t}");
-            // Only the control app may frame the customer app (its live brand preview)
-            sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')}\"");
+            // Only the control app and the café's own admin may frame the customer app (their live brand previews)
+            sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')} {TenantHosts.For(tenant, platform).AdminUrl}\"");
             sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
             sb.AppendLine("\thandle {");
             sb.AppendLine("\t\timport spa /srv/client-web");

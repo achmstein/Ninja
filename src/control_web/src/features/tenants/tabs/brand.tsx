@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
 import type { BrandDto, BrandFeatures, TenantDetail } from '@/api/control'
@@ -12,13 +12,14 @@ import {
 import { ColorField } from '@/components/brand/color-field'
 import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
 import { LivePreview } from '@/components/brand/live-preview'
-import { PhonePreview, PreviewToggles, usePreviewState } from '@/components/brand/phone-preview'
+import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import {
   fromLocalizedValue,
   LocalizedInput,
   toLocalizedValue,
 } from '@/components/localized-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -82,6 +83,8 @@ const imagesOf = (brand: BrandDto): BrandImages => ({
 export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   const t = useT()
   const preview = usePreviewState()
+  // What the form holds while it differs from the saved brand; null once they match
+  const [draft, setDraft] = useState<PreviewDraft | null>(null)
   const running = tenantStatus(tenant.status) === 'Running'
 
   const brand = useQuery({
@@ -135,28 +138,36 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   return (
     <div className='grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]'>
       <div className='flex flex-col gap-6'>
-        <BrandForm key={String(data.version)} slug={tenant.slug} brand={data} />
+        <BrandForm key={String(data.version)} slug={tenant.slug} brand={data} onDraft={setDraft} />
         <BrandImagesCard slug={tenant.slug} brand={data} />
       </div>
+      {/* The phone shows the draft while it differs from what is saved, and the real app once it is saved */}
       <div className='flex flex-col items-center gap-3 xl:sticky xl:top-4 xl:self-start'>
-        <PreviewToggles
-          language={preview.language}
-          scheme={preview.scheme}
-          onLanguage={preview.setLanguage}
-          onScheme={preview.setScheme}
-        />
-        <LivePreview
-          customerUrl={withScheme(data.customerUrl ?? tenant.hosts.customer)}
-          version={data.version}
-          language={preview.language}
-          scheme={preview.scheme}
-        />
+        <div className='flex items-center gap-2'>
+          <PreviewToggles
+            language={preview.language}
+            scheme={preview.scheme}
+            onLanguage={preview.setLanguage}
+            onScheme={preview.setScheme}
+          />
+          <Badge variant={draft ? 'secondary' : 'outline'}>{t(draft ? 'previewDraft' : 'previewLive')}</Badge>
+        </div>
+        {draft ? (
+          <PhonePreview draft={draft} language={preview.language} scheme={preview.scheme} />
+        ) : (
+          <LivePreview
+            customerUrl={withScheme(data.customerUrl ?? tenant.hosts.customer)}
+            version={data.version}
+            language={preview.language}
+            scheme={preview.scheme}
+          />
+        )}
       </div>
     </div>
   )
 }
 
-function BrandForm({ slug, brand }: { slug: string; brand: BrandDto }) {
+function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; onDraft: (draft: PreviewDraft | null) => void }) {
   const t = useT()
   const queryClient = useQueryClient()
 
@@ -170,6 +181,8 @@ function BrandForm({ slug, brand }: { slug: string; brand: BrandDto }) {
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
 
+  const orNull = (v: string) => (v.trim() ? v.trim().toLowerCase() : null)
+
   const save = useMutation({
     ...updateTenantBrandMutation(),
     onSuccess: (saved) => {
@@ -179,12 +192,42 @@ function BrandForm({ slug, brand }: { slug: string; brand: BrandDto }) {
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
+  const themeOf = (accent: string, background: string, foreground: string, radius: string, font: string) => ({
+    accent: orNull(accent),
+    background: orNull(background),
+    foreground: orNull(foreground),
+    radius: radius === DEFAULT ? null : radius,
+    font: font === DEFAULT ? null : font,
+  })
+  const draft = useMemo<PreviewDraft>(
+    () => ({
+      name: { en: name.en, ar: name.ar },
+      primaryColor: orNull(primary),
+      theme: themeOf(accent, background, foreground, radius, font),
+      images: imagesOf(brand),
+      currency: brand.locale.currency,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [name, primary, accent, background, foreground, radius, font, brand]
+  )
+  const saved = useMemo(
+    () => ({
+      name: toLocalizedValue(brand.name),
+      primaryColor: orNull(brand.primaryColor ?? ''),
+      theme: themeOf(brand.theme.accent ?? '', brand.theme.background ?? '', brand.theme.foreground ?? '', brand.theme.radius ?? DEFAULT, brand.theme.font ?? DEFAULT),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [brand]
+  )
+  const dirty = JSON.stringify({ name: draft.name, primaryColor: draft.primaryColor, theme: draft.theme }) !== JSON.stringify(saved)
+  useEffect(() => onDraft(dirty ? draft : null), [dirty, draft, onDraft])
+  useEffect(() => () => onDraft(null), [onDraft])
+
   const colorOk = (v: string) => v === '' || isHexColor(v)
   const canSubmit =
     name.en.trim().length > 0 &&
     [primary, accent, background, foreground].every(colorOk) &&
     !save.isPending
-  const orNull = (v: string) => (v.trim() ? v.trim().toLowerCase() : null)
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()

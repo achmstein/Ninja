@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, ImagePlus, X } from 'lucide-react'
 import { AxiosError } from 'axios'
@@ -8,13 +8,13 @@ import {
   updateTenantMutation,
   uploadTenantImageMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
-import { useCurrencyLabel } from '@/lib/currency'
-import { brandQueryKey, useBrand, type Brand } from '@/lib/brand'
-import { imageOf, isMark, wordmarkFor, type ImageSlot } from '@/lib/brand-slots'
-import { brandTokens, ensureFontLoaded, FONTS, RADII } from '@/lib/brand-theme'
-import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
+import { brandQueryKey, useBrand, useCustomerOrigin, type Brand } from '@/lib/brand'
+import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
+import { FONTS, RADII } from '@/lib/brand-theme'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -42,6 +42,8 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
+import { LivePreview } from '@/components/brand/live-preview'
+import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
   { key: 'rooms', label: 'featureRooms' },
@@ -193,7 +195,31 @@ function BrandForm({ brand }: { brand: Brand }) {
     })
   }
 
-  const draft = { primaryColor: color.trim() || null, theme: fromThemeForm(theme) }
+  // The phone shows the draft while it differs from what is saved, and the
+  // real app once it is saved: what you are changing, then what customers get
+  const preview = usePreviewState()
+  const customerOrigin = useCustomerOrigin()
+  const draft = useMemo<PreviewDraft>(
+    () => ({
+      name: { en: name.en, ar: name.ar },
+      primaryColor: color.trim() || null,
+      theme: fromThemeForm(theme),
+      brand,
+      currency: brand.locale.currency,
+    }),
+    [name, color, theme, brand]
+  )
+  const savedDraft = useMemo(
+    () => ({
+      name: toLocalizedValue(brand.name),
+      primaryColor: brand.primaryColor ?? null,
+      theme: fromThemeForm(toThemeForm(brand.theme)),
+    }),
+    [brand]
+  )
+  const dirty =
+    JSON.stringify({ name: draft.name, primaryColor: draft.primaryColor, theme: draft.theme }) !==
+    JSON.stringify(savedDraft)
 
   return (
     <form onSubmit={handleSubmit}>
@@ -343,9 +369,26 @@ function BrandForm({ brand }: { brand: Brand }) {
           </CardContent>
         </Card>
 
-        <div className='lg:sticky lg:top-4 lg:self-start'>
-          <Label className='mb-2 block'>{t('preview')}</Label>
-          <Preview brand={brand} draft={draft} name={name} />
+        <div className='flex flex-col items-center gap-3 lg:sticky lg:top-4 lg:self-start'>
+          <div className='flex items-center gap-2'>
+            <PreviewToggles
+              language={preview.language}
+              scheme={preview.scheme}
+              onLanguage={preview.setLanguage}
+              onScheme={preview.setScheme}
+            />
+            <Badge variant={dirty ? 'secondary' : 'outline'}>{t(dirty ? 'draft' : 'previewLive')}</Badge>
+          </div>
+          {dirty ? (
+            <PhonePreview draft={draft} language={preview.language} scheme={preview.scheme} />
+          ) : (
+            <LivePreview
+              customerUrl={customerOrigin}
+              version={brand.version}
+              language={preview.language}
+              scheme={preview.scheme}
+            />
+          )}
         </div>
       </div>
     </form>
@@ -478,92 +521,6 @@ function ColorField({
             <X className='h-3.5 w-3.5' />
           </Button>
         )}
-      </div>
-    </div>
-  )
-}
-
-/**
- * The customer app's home, in miniature, painted with the draft tokens: the
- * same CSS variables the app reads, set inline on this box, so what is on
- * the right is what customers get once saved.
- */
-function Preview({
-  brand,
-  draft,
-  name,
-}: {
-  brand: Brand
-  draft: { primaryColor: string | null; theme: TenantThemeDto }
-  name: LocalizedValue
-}) {
-  const t = useT()
-  const currency = useCurrencyLabel()
-  const language = useLanguage((s) => s.language)
-  const tokens = brandTokens(draft)
-  useEffect(() => ensureFontLoaded(tokens.font), [tokens.font])
-  const wordmark = wordmarkFor(brand, language, 'light')
-
-  const displayName =
-    (language === 'ar' ? name.ar : name.en) || name.en || name.ar || ''
-  const items = [
-    { name: language === 'ar' ? 'لاتيه' : 'Latte', price: 65 },
-    { name: language === 'ar' ? 'كرواسون' : 'Croissant', price: 45 },
-  ]
-
-  return (
-    <div
-      style={tokens.light as React.CSSProperties}
-      className='bg-background text-foreground overflow-hidden rounded-xl border shadow-sm'
-    >
-      <div className='flex items-center gap-2 border-b px-4 py-3'>
-        {wordmark ? (
-          <img
-            src={wordmark.url}
-            alt=''
-            style={{
-              aspectRatio: `${wordmark.width} / ${wordmark.height}`,
-            }}
-            className='h-6 w-auto max-w-[60%] object-contain'
-          />
-        ) : (
-          <>
-            {brand.logoUrl ? (
-              <img src={brand.logoUrl} alt='' className='size-6 object-contain' />
-            ) : (
-              <span className='bg-primary text-primary-foreground grid size-6 place-items-center rounded-md text-xs font-semibold'>
-                {displayName.trim().charAt(0).toUpperCase()}
-              </span>
-            )}
-            <span className='truncate font-semibold'>{displayName}</span>
-          </>
-        )}
-      </div>
-      <div className='space-y-3 p-4'>
-        <div className='flex gap-2'>
-          <span className='bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-xs font-medium'>
-            {t('previewPopular')}
-          </span>
-          <span className='bg-accent text-accent-foreground rounded-full px-3 py-1 text-xs font-medium'>
-            {t('menuItems')}
-          </span>
-        </div>
-        {items.map((item) => (
-          <div
-            key={item.name}
-            className='bg-card text-card-foreground flex items-center justify-between rounded-lg border p-3'
-          >
-            <div>
-              <div className='text-sm font-medium'>{item.name}</div>
-              <div className='text-muted-foreground text-xs'>
-                {item.price} {currency}
-              </div>
-            </div>
-            <span className='bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-xs font-medium'>
-              {t('previewAdd')}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   )

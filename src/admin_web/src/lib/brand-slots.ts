@@ -20,7 +20,7 @@ export type ImageSlot = (typeof IMAGE_SLOTS)[number]
 
 export const isMark = (slot: ImageSlot) => slot.startsWith('logo')
 
-type Scheme = 'light' | 'dark'
+export type Scheme = 'light' | 'dark'
 
 export function wordmarkFor(
   brand: TenantResponse | undefined,
