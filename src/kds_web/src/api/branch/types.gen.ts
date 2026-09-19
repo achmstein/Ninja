@@ -70,6 +70,13 @@ export type TenantIcons = {
     favicon: string;
 };
 
+export type TenantLocaleDto = {
+    country: string;
+    currency: string;
+    timeZone: string;
+    language: string;
+};
+
 export type TenantResponse = {
     name: LocalizedText;
     primaryColor: null | string;
@@ -81,6 +88,7 @@ export type TenantResponse = {
     theme: TenantThemeDto;
     icons: TenantIcons;
     features: TenantFeatures;
+    locale: TenantLocaleDto;
     version: number | string;
 };
 
@@ -132,6 +140,7 @@ export type UpdateTenantRequest = {
     customerUrl: null | string;
     features: TenantFeatures;
     theme?: null | TenantThemeDto;
+    locale?: null | TenantLocaleDto;
 };
 
 export type GetBranchesData = {

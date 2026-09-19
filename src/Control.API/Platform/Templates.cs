@@ -47,6 +47,9 @@ public static partial class Templates
             ["identitySecret"] = tenant.IdentitySecret,
             ["controlSecret"] = tenant.ControlSecret,
             ["sslRequired"] = SslRequired(platform),
+            // Inside the user profile, which is JSON kept as a string inside the realm JSON: escaped twice
+            ["phonePattern"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Pattern)),
+            ["phonePlaceholder"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Placeholder)),
         });
 
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
@@ -90,6 +93,11 @@ public static partial class Templates
             sb.AppendLine($"      Keycloak__Realm: \"{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      OTEL_SERVICE_NAME: \"{name}\"");
             sb.AppendLine($"      Seed__Profile: \"{tenant.Seed.ToString().ToLowerInvariant()}\"");
+            // Every service formats, rolls its day over and reads its offers in the tenant's locale
+            sb.AppendLine($"      Tenant__Country: \"{tenant.Country}\"");
+            sb.AppendLine($"      Tenant__Currency: \"{tenant.Currency}\"");
+            sb.AppendLine($"      Tenant__TimeZone: \"{tenant.TimeZone}\"");
+            sb.AppendLine($"      Tenant__DefaultLanguage: \"{tenant.DefaultLanguage}\"");
 
             var db = service switch
             {

@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\TenantClock.cs" Link="Services\TenantClock.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MediatR" />
     <PackageReference Include="System.Reflection.TypeExtensions" />
   </ItemGroup>

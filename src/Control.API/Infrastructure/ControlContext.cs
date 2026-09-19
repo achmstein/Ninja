@@ -27,6 +27,10 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Kind).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Seed).HasConversion<string>().HasMaxLength(16);
+            entity.Property(e => e.Country).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
             entity.HasMany(e => e.Steps).WithOne().HasForeignKey(s => s.TenantId).OnDelete(DeleteBehavior.Cascade);
         });
 

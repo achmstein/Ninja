@@ -1,3 +1,4 @@
+using Ninja;
 using Ninja.Catalog.API.Model;
 
 namespace Catalog.UnitTests.Model;
@@ -59,14 +60,14 @@ public class OfferWindowTest
         };
 
         // Monday 15:00 Cairo is 12:00 UTC in September (UTC+3, summer time)
-        LocalClock.UtcNow = () => new DateTime(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
+        TenantClock.UtcNow = () => new DateTime(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
         Assert.IsTrue(item.IsOfferActive);
         Assert.AreEqual(80m, item.EffectivePrice);
 
-        LocalClock.UtcNow = () => new DateTime(2026, 9, 14, 16, 0, 0, DateTimeKind.Utc); // 19:00 Cairo
+        TenantClock.UtcNow = () => new DateTime(2026, 9, 14, 16, 0, 0, DateTimeKind.Utc); // 19:00 Cairo
         Assert.IsFalse(item.IsOfferActive);
         Assert.AreEqual(100m, item.EffectivePrice);
 
-        LocalClock.UtcNow = () => DateTime.UtcNow;
+        TenantClock.UtcNow = () => DateTime.UtcNow;
     }
 }

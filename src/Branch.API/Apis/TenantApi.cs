@@ -83,11 +83,22 @@ public static partial class TenantApi
         if (themeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = themeError });
 
+        var locale = NormalizeLocale(request.Locale, out var localeError);
+        if (localeError is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
+
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
         tenant.Name = request.Name;
         tenant.PrimaryColor = string.IsNullOrEmpty(color) ? null : color;
         tenant.CustomerUrl = string.IsNullOrEmpty(customerUrl) ? null : customerUrl;
         tenant.Theme = theme;
+        if (locale is { } l)
+        {
+            tenant.Country = l.Country;
+            tenant.Currency = l.Currency;
+            tenant.TimeZone = l.TimeZone;
+            tenant.DefaultLanguage = l.Language;
+        }
         tenant.RoomsEnabled = request.Features.Rooms;
         tenant.LoyaltyEnabled = request.Features.Loyalty;
         tenant.TabsEnabled = request.Features.Tabs;
@@ -285,14 +296,45 @@ public static partial class TenantApi
         return theme;
     }
 
+    /// <summary>Upper-cased codes, a zone the runtime knows, ar or en; null leaves the locale as it is.</summary>
+    private static TenantLocaleDto? NormalizeLocale(TenantLocaleDto? dto, out string? error)
+    {
+        error = null;
+        if (dto is null) return null;
+
+        var country = dto.Country?.Trim().ToUpperInvariant() ?? "";
+        var currency = dto.Currency?.Trim().ToUpperInvariant() ?? "";
+        var timeZone = dto.TimeZone?.Trim() ?? "";
+        var language = dto.Language?.Trim().ToLowerInvariant() ?? "";
+
+        if (!CountryCode().IsMatch(country)) error = "The country must be an ISO 3166-1 alpha-2 code.";
+        else if (!CurrencyCode().IsMatch(currency)) error = "The currency must be an ISO 4217 code.";
+        else if (!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _)) error = $"'{timeZone}' is not a known time zone.";
+        else if (language is not ("ar" or "en")) error = "The language must be ar or en.";
+
+        return new(country, currency, timeZone, language);
+    }
+
     private static void SetCache(HttpContext http, string? v)
         => http.Response.Headers.CacheControl = string.IsNullOrEmpty(v) ? "no-cache" : OneYear;
 
     [GeneratedRegex("^#[0-9a-f]{6}$")]
     private static partial Regex HexColor();
+
+    [GeneratedRegex("^[A-Z]{2}$")]
+    private static partial Regex CountryCode();
+
+    [GeneratedRegex("^[A-Z]{3}$")]
+    private static partial Regex CurrencyCode();
 }
 
 public record TenantFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
+
+/// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language ("ar" or "en").</summary>
+public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language)
+{
+    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage);
+}
 
 public record TenantIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
@@ -337,6 +379,7 @@ public record TenantResponse(
     TenantThemeDto Theme,
     TenantIcons Icons,
     TenantFeatures Features,
+    TenantLocaleDto Locale,
     long Version)
 {
     public static TenantResponse From(Tenant t, string? authUrl)
@@ -358,11 +401,12 @@ public record TenantResponse(
                 $"/api/tenant/icons/apple-touch-icon.png?v={v}",
                 $"/api/tenant/icons/favicon.png?v={v}"),
             new(t.RoomsEnabled, t.LoyaltyEnabled, t.TabsEnabled, t.InventoryEnabled, t.FinanceEnabled, t.PayrollEnabled, t.KdsEnabled),
+            TenantLocaleDto.From(t),
             v);
     }
 }
 
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null);
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

@@ -1006,6 +1006,7 @@
           "theme",
           "icons",
           "features",
+          "locale",
           "version"
         ],
         "type": "object",
@@ -1048,6 +1049,9 @@
           },
           "features": {
             "$ref": "#/components/schemas/BrandFeatures"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/BrandLocale"
           },
           "version": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1117,6 +1121,29 @@
             "type": "string"
           },
           "favicon": {
+            "type": "string"
+          }
+        }
+      },
+      "BrandLocale": {
+        "required": [
+          "country",
+          "currency",
+          "timeZone",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "language": {
             "type": "string"
           }
         }
@@ -1292,6 +1319,30 @@
               {
                 "$ref": "#/components/schemas/TenantSeed"
               }
+            ]
+          },
+          "country": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultLanguage": {
+            "type": [
+              "null",
+              "string"
             ]
           },
           "slug": {
@@ -1486,6 +1537,7 @@
           "kind",
           "status",
           "seed",
+          "locale",
           "primaryColor",
           "hosts",
           "ownerEmail",
@@ -1520,6 +1572,9 @@
           },
           "seed": {
             "$ref": "#/components/schemas/TenantSeed"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/TenantLocaleDto"
           },
           "primaryColor": {
             "type": [
@@ -1613,6 +1668,29 @@
           "Customer"
         ]
       },
+      "TenantLocaleDto": {
+        "required": [
+          "country",
+          "currency",
+          "timeZone",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
       "TenantSeed": {
         "enum": [
           "None",
@@ -1638,6 +1716,8 @@
           "kind",
           "status",
           "seed",
+          "country",
+          "currency",
           "customerUrl",
           "createdAt",
           "expiresAt",
@@ -1666,6 +1746,12 @@
           },
           "seed": {
             "$ref": "#/components/schemas/TenantSeed"
+          },
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
           },
           "customerUrl": {
             "type": "string"
@@ -1726,6 +1812,16 @@
               },
               {
                 "$ref": "#/components/schemas/BrandTheme"
+              }
+            ]
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandLocale"
               }
             ]
           }

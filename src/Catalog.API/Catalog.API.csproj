@@ -10,6 +10,7 @@
     <Compile Include="..\Shared\ActivityExtensions.cs" Link="Extensions\ActivityExtensions.cs" />
     <Compile Include="..\Shared\MigrateDbContextExtensions.cs" Link="Extensions\MigrateDbContextExtensions.cs" />
     <Compile Include="..\Shared\SeedProfile.cs" Link="Extensions\SeedProfile.cs" />
+    <Compile Include="..\Shared\TenantClock.cs" Link="Extensions\TenantClock.cs" />
   </ItemGroup>
 
   <PropertyGroup>

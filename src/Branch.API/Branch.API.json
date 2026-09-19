@@ -800,6 +800,29 @@
           }
         }
       },
+      "TenantLocaleDto": {
+        "required": [
+          "country",
+          "currency",
+          "timeZone",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
       "TenantResponse": {
         "required": [
           "name",
@@ -812,6 +835,7 @@
           "theme",
           "icons",
           "features",
+          "locale",
           "version"
         ],
         "type": "object",
@@ -864,6 +888,9 @@
           },
           "features": {
             "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/TenantLocaleDto"
           },
           "version": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -1142,6 +1169,16 @@
               },
               {
                 "$ref": "#/components/schemas/TenantThemeDto"
+              }
+            ]
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantLocaleDto"
               }
             ]
           }

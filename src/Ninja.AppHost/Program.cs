@@ -194,14 +194,19 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
     .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site");
 
-// What an empty database is planted with. This stack is tenant one, so its
-// own menu, branches and floor (the E2E suite rings up Turkish Coffee at
-// Table 1); a stamped stack gets "sample" or "none" from the control plane.
+// What an empty database is planted with, and the tenant's locale. This
+// stack is tenant one: its own menu, branches and floor (the E2E suite rings
+// up Turkish Coffee at Table 1), Egypt, pounds, Cairo time, Arabic first. A
+// stamped stack gets all of it from the control plane.
 var seedProfile = builder.Configuration["Seed:Profile"] ?? "chillax";
 foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
                             financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi })
 {
-    api.WithEnvironment("Seed__Profile", seedProfile);
+    api.WithEnvironment("Seed__Profile", seedProfile)
+       .WithEnvironment("Tenant__Country", builder.Configuration["Tenant:Country"] ?? "EG")
+       .WithEnvironment("Tenant__Currency", builder.Configuration["Tenant:Currency"] ?? "EGP")
+       .WithEnvironment("Tenant__TimeZone", builder.Configuration["Tenant:TimeZone"] ?? "Africa/Cairo")
+       .WithEnvironment("Tenant__DefaultLanguage", builder.Configuration["Tenant:DefaultLanguage"] ?? "ar");
 }
 
 // The control plane: tenants and demos. In dev it dry-runs (records every

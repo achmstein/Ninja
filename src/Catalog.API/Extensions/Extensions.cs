@@ -5,6 +5,7 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
         builder.AddDefaultAuthentication();
 
         // The assistant: on when the AppHost handed out a chat model, scripted

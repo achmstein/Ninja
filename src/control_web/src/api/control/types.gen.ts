@@ -14,6 +14,7 @@ export type BrandDto = {
     theme: BrandTheme;
     icons: BrandIcons;
     features: BrandFeatures;
+    locale: BrandLocale;
     version: number | string;
 };
 
@@ -33,6 +34,13 @@ export type BrandIcons = {
     maskable512: string;
     appleTouch: string;
     favicon: string;
+};
+
+export type BrandLocale = {
+    country: string;
+    currency: string;
+    timeZone: string;
+    language: string;
 };
 
 export type BrandText = {
@@ -67,6 +75,10 @@ export type CreateTenantRequest = {
     ownerEmail: string;
     kind?: TenantKind;
     seed?: null | TenantSeed;
+    country?: null | string;
+    currency?: null | string;
+    timeZone?: null | string;
+    defaultLanguage?: null | string;
     slug?: null | string;
     primaryColor?: null | string;
     customerDomain?: null | string;
@@ -114,6 +126,7 @@ export type TenantDetail = {
     kind: TenantKind;
     status: TenantStatus;
     seed: TenantSeed;
+    locale: TenantLocaleDto;
     primaryColor: null | string;
     hosts: TenantHostsDto;
     ownerEmail: string;
@@ -137,6 +150,13 @@ export type TenantHostsDto = {
 
 export type TenantKind = 'Demo' | 'Customer';
 
+export type TenantLocaleDto = {
+    country: string;
+    currency: string;
+    timeZone: string;
+    language: string;
+};
+
 export type TenantSeed = 'None' | 'Sample';
 
 export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed';
@@ -148,6 +168,8 @@ export type TenantSummary = {
     kind: TenantKind;
     status: TenantStatus;
     seed: TenantSeed;
+    country: string;
+    currency: string;
     customerUrl: string;
     createdAt: string;
     expiresAt: null | string;
@@ -161,6 +183,7 @@ export type UpdateBrandRequest = {
     customerUrl: null | string;
     features: BrandFeatures;
     theme?: null | BrandTheme;
+    locale?: null | BrandLocale;
 };
 
 export type UpgradeRequest = {

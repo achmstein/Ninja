@@ -71,6 +71,9 @@ public static partial class ControlApi
         var color = request.PrimaryColor?.Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(color) && !HexColor().IsMatch(color))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The color must be #rrggbb." });
+        var locale = LocaleFields.Normalize(request.Country, request.Currency, request.TimeZone, request.DefaultLanguage, out var localeError);
+        if (localeError is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
         if (await context.Tenants.AnyAsync(t => t.Slug == slug, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is taken." });
 
@@ -81,6 +84,10 @@ public static partial class ControlApi
             NameAr = string.IsNullOrWhiteSpace(request.NameAr) ? null : request.NameAr.Trim(),
             Kind = request.Kind,
             Seed = request.Seed ?? (request.Kind == TenantKind.Demo ? TenantSeed.Sample : TenantSeed.None),
+            Country = locale.Country,
+            Currency = locale.Currency,
+            TimeZone = locale.TimeZone,
+            DefaultLanguage = locale.Language,
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
             CustomerDomain = string.IsNullOrWhiteSpace(request.CustomerDomain) ? null : request.CustomerDomain.Trim().ToLowerInvariant(),
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
@@ -177,6 +184,10 @@ public record CreateTenantRequest(
     string OwnerEmail,
     TenantKind Kind = TenantKind.Demo,
     TenantSeed? Seed = null,
+    string? Country = null,
+    string? Currency = null,
+    string? TimeZone = null,
+    string? DefaultLanguage = null,
     string? Slug = null,
     string? PrimaryColor = null,
     string? CustomerDomain = null,
@@ -192,10 +203,16 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
     public static TenantHostsDto From(TenantHosts h) => new(h.CustomerUrl, h.AdminUrl, h.PosUrl, h.KdsUrl, h.ApiUrl);
 }
 
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, string Country, string Currency, string CustomerUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Country, t.Currency, TenantHosts.For(t, p).CustomerUrl, t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+}
+
+/// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
+public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language)
+{
+    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage);
 }
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);
@@ -207,6 +224,7 @@ public record TenantDetail(
     TenantKind Kind,
     TenantStatus Status,
     TenantSeed Seed,
+    TenantLocaleDto Locale,
     string? PrimaryColor,
     TenantHostsDto Hosts,
     string OwnerEmail,
@@ -220,7 +238,7 @@ public record TenantDetail(
     IReadOnlyList<string> SeedImages)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
-        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
+        => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, TenantHostsDto.From(TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),
             seedImages);

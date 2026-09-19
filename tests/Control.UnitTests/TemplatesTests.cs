@@ -25,6 +25,10 @@ public sealed class TemplatesTests
         NameAr = "بلو",
         PrimaryColor = "#0055ff",
         Seed = TenantSeed.Sample,
+        Country = "SA",
+        Currency = "SAR",
+        TimeZone = "Asia/Riyadh",
+        DefaultLanguage = "en",
         OwnerEmail = "owner@blue.test",
         IdentitySecret = "identity-secret-1234567890123456",
         ControlSecret = "control-secret-12345678901234567",
@@ -103,6 +107,11 @@ public sealed class TemplatesTests
         // Every service plants its own tables from the same profile; a stamp is never tenant one
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Seed__Profile: \"sample\"").Count);
         Assert.IsFalse(yaml.Contains("chillax", StringComparison.OrdinalIgnoreCase));
+        // The locale reaches every service, not only the one that stores it
+        Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__TimeZone: \"Asia/Riyadh\"").Count);
+        StringAssert.Contains(yaml, "Tenant__Currency: \"SAR\"");
+        StringAssert.Contains(yaml, "Tenant__Country: \"SA\"");
+        StringAssert.Contains(yaml, "Tenant__DefaultLanguage: \"en\"");
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__branch__DESTINATIONS__d1__ADDRESS: \"http://blue-branch-api:8080\"");

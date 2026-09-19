@@ -57,7 +57,7 @@ public class CatalogItem
 
     /// <summary>The offer is switched on, priced, and its window covers now.</summary>
     public bool IsOfferActive
-        => IsOnOffer && OfferPrice.HasValue && OfferWindow.Covers(OfferWeekdays, OfferFrom, OfferTo, LocalClock.Now);
+        => IsOnOffer && OfferPrice.HasValue && OfferWindow.Covers(OfferWeekdays, OfferFrom, OfferTo, TenantClock.Now);
 
     /// <summary>
     /// Returns the effective price: OfferPrice while the offer is active, otherwise regular Price

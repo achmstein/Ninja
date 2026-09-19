@@ -171,6 +171,8 @@ public record BrandIcons(string Icon192, string Icon512, string Maskable512, str
 
 public record BrandFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
 
+public record BrandLocale(string Country, string Currency, string TimeZone, string Language);
+
 /// <summary>The stack's brand (Branch.API's tenant response) as the control app reads it, with every image URL made absolute on the customer host.</summary>
 public record BrandDto(
     BrandText Name,
@@ -182,6 +184,7 @@ public record BrandDto(
     BrandTheme Theme,
     BrandIcons Icons,
     BrandFeatures Features,
+    BrandLocale Locale,
     long Version)
 {
     public BrandDto OnCustomerHost(string origin) => this with
@@ -204,4 +207,5 @@ public record UpdateBrandRequest(
     string? PrimaryColor,
     string? CustomerUrl,
     BrandFeatures Features,
-    BrandTheme? Theme = null);
+    BrandTheme? Theme = null,
+    BrandLocale? Locale = null);

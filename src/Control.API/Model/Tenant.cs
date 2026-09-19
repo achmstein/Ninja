@@ -30,6 +30,17 @@ public enum TenantSeed
     Sample = 1,
 }
 
+/// <summary>The locale defaults a tenant starts with: tenant one's, so Chillax is unchanged.</summary>
+public static class TenantLocale
+{
+    public const string DefaultCountry = "EG";
+    public const string DefaultCurrency = "EGP";
+    public const string DefaultTimeZone = "Africa/Cairo";
+    public const string DefaultLanguage = "ar";
+
+    public static readonly string[] Languages = ["ar", "en"];
+}
+
 /// <summary>
 /// One café on the platform: a full stack of its own under one compose
 /// project, its own databases on the shared Postgres, its own realm, its own
@@ -52,6 +63,18 @@ public class Tenant
 
     /// <summary>Chosen at creation (demos default to the sample café); the stack reads it once, on its first boot.</summary>
     public TenantSeed Seed { get; set; }
+
+    /// <summary>ISO 3166-1 alpha-2; decides the phone pattern of the realm and the defaults below.</summary>
+    public string Country { get; set; } = TenantLocale.DefaultCountry;
+
+    /// <summary>ISO 4217; what every price is shown in.</summary>
+    public string Currency { get; set; } = TenantLocale.DefaultCurrency;
+
+    /// <summary>IANA zone; the café's business day and its offers' hours.</summary>
+    public string TimeZone { get; set; } = TenantLocale.DefaultTimeZone;
+
+    /// <summary>"ar" or "en": what the customer app opens in.</summary>
+    public string DefaultLanguage { get; set; } = TenantLocale.DefaultLanguage;
 
     /// <summary>The brand color seeded into the stack; the owner can change it there.</summary>
     public string? PrimaryColor { get; set; }

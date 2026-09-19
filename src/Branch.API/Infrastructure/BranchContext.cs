@@ -34,6 +34,10 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.OwnsOne(e => e.Name, b => b.ToJson());
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.CustomerUrl).HasMaxLength(200);
+            entity.Property(e => e.Country).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
             entity.OwnsOne(e => e.Theme, b => b.ToJson());
             // A dictionary cannot be an owned JSON type; it is one jsonb document
             entity.Property(e => e.Images)
@@ -59,17 +63,24 @@ public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration
     public async Task SeedAsync(BranchContext context)
     {
         // The stack's tenant, from the environment the stack was provisioned
-        // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor);
-        // Tenant__CustomerUrl); "Ninja" until someone names it.
+        // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor,
+        // Tenant__CustomerUrl, Tenant__Country, Tenant__Currency,
+        // Tenant__TimeZone, Tenant__DefaultLanguage); "Ninja" in Egypt until
+        // someone says otherwise.
         if (!await context.Tenants.AnyAsync())
         {
             var section = configuration.GetSection("Tenant");
-            context.Tenants.Add(new Tenant
+            var tenant = new Tenant
             {
                 Name = new LocalizedText(section["Name:En"] is { Length: > 0 } en ? en : "Ninja", section["Name:Ar"]),
                 PrimaryColor = section["PrimaryColor"] is { Length: > 0 } color ? color.ToLowerInvariant() : null,
                 CustomerUrl = section["CustomerUrl"] is { Length: > 0 } url ? url.TrimEnd('/') : null,
-            });
+            };
+            if (section["Country"] is { Length: > 0 } country) tenant.Country = country.ToUpperInvariant();
+            if (section["Currency"] is { Length: > 0 } currency) tenant.Currency = currency.ToUpperInvariant();
+            if (section["TimeZone"] is { Length: > 0 } timeZone) tenant.TimeZone = timeZone;
+            if (section["DefaultLanguage"] is { Length: > 0 } language) tenant.DefaultLanguage = language.ToLowerInvariant();
+            context.Tenants.Add(tenant);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded the tenant");
         }

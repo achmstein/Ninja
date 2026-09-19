@@ -40,6 +40,18 @@ public class Tenant
     /// <summary>The customer app's look beyond the primary color; every field optional, the platform's default when null.</summary>
     public TenantTheme Theme { get; set; } = new();
 
+    /// <summary>ISO 3166-1 alpha-2, the café's country.</summary>
+    public string Country { get; set; } = "EG";
+
+    /// <summary>ISO 4217, what every price is shown in.</summary>
+    public string Currency { get; set; } = "EGP";
+
+    /// <summary>IANA zone, the café's clock (the services read it from their own configuration; this is what the surfaces see).</summary>
+    public string TimeZone { get; set; } = "Africa/Cairo";
+
+    /// <summary>"ar" or "en": what the customer app opens in.</summary>
+    public string DefaultLanguage { get; set; } = "ar";
+
     /// <summary>Rooms and their time billing (Spaces). Off for a café that only has tables.</summary>
     public bool RoomsEnabled { get; set; } = true;
 

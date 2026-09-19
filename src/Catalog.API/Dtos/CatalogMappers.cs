@@ -53,7 +53,7 @@ public static class CatalogMappers
         var offerPrice = branchOverride.OfferPriceOverride ?? item.OfferPrice;
         var isOnOffer = (branchOverride.IsOnOfferOverride ?? item.IsOnOffer)
             && offerPrice.HasValue
-            && OfferWindow.Covers(item.OfferWeekdays, item.OfferFrom, item.OfferTo, LocalClock.Now);
+            && OfferWindow.Covers(item.OfferWeekdays, item.OfferFrom, item.OfferTo, TenantClock.Now);
         var effectivePrice = isOnOffer ? offerPrice!.Value : price;
 
         return new CatalogItemDto

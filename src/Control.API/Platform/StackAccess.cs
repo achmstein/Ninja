@@ -125,7 +125,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
             {
                 // What the stack would keep of the request; the images and icons are its own
                 var update = await content.ReadFromJsonAsync<JsonObject>(ct);
-                foreach (var key in new[] { "name", "primaryColor", "customerUrl", "features", "theme" })
+                foreach (var key in new[] { "name", "primaryColor", "customerUrl", "features", "theme", "locale" })
                 {
                     if (update?[key] is { } value)
                         brand[key] = value.DeepClone();
@@ -167,6 +167,10 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         {
             ["rooms"] = true, ["loyalty"] = true, ["tabs"] = true, ["inventory"] = true,
             ["finance"] = true, ["payroll"] = true, ["kds"] = true,
+        },
+        ["locale"] = new JsonObject
+        {
+            ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
         },
         ["version"] = 0,
     };

@@ -7,6 +7,7 @@ global using Ninja.Catalog.API.Infrastructure.Exceptions;
 global using Ninja.Catalog.API.IntegrationEvents;
 global using Ninja.Catalog.API.IntegrationEvents.EventHandling;
 global using Ninja.Catalog.API.IntegrationEvents.Events;
+global using Ninja;
 global using Ninja.Catalog.API.Model;
 global using Ninja.EventBus.Abstractions;
 global using Ninja.EventBus.Events;
