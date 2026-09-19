@@ -6,6 +6,7 @@ import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
+import { draftedTheme, onDraftedTheme } from './preview'
 
 /**
  * The tenant this stack runs for: name, color, logo, feature switches.
@@ -84,7 +85,8 @@ export function applyBrand(brand: Brand, language: Language) {
   setLink('icon', brand.icons.favicon, 'image/png')
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
-  applyBrandTheme(brand)
+  // Under a preview, the panel's unsaved seeds paint over the saved ones
+  applyBrandTheme(draftedTheme() ?? brand)
   useCurrency.getState().set(brand.locale.currency)
 }
 
@@ -112,6 +114,7 @@ export function useBrandEffects() {
     applyBrand(brand, language)
     writeCachedBrand(brand)
   }, [brand, language])
+  useEffect(() => onDraftedTheme((input) => applyBrandTheme(input ?? brand)), [brand])
 }
 
 /** The tenant's name in the current language. */

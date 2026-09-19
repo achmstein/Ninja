@@ -44,7 +44,7 @@ import {
 import { PageHeader } from '@/components/page-header'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
-import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
+import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
   { key: 'rooms', label: 'featureRooms' },
@@ -208,8 +208,8 @@ function BrandForm({ brand }: { brand: Brand }) {
     })
   }
 
-  // The phone shows the draft while it differs from what is saved, and the
-  // real app once it is saved: what you are changing, then what customers get
+  // The real app in the phone, painted with the draft while it differs from
+  // what is saved: what you are changing, on what customers actually use
   const preview = usePreviewState()
   const customerOrigin = useCustomerOrigin()
   const draft = useMemo<PreviewDraft>(
@@ -410,16 +410,13 @@ function BrandForm({ brand }: { brand: Brand }) {
             />
             <Badge variant={dirty ? 'secondary' : 'outline'}>{t(dirty ? 'draft' : 'previewLive')}</Badge>
           </div>
-          {dirty ? (
-            <PhonePreview draft={draft} language={preview.language} scheme={preview.scheme} />
-          ) : (
-            <LivePreview
-              customerUrl={customerOrigin}
-              version={brand.version}
-              language={preview.language}
-              scheme={preview.scheme}
-            />
-          )}
+          <LivePreview
+            customerUrl={customerOrigin}
+            version={brand.version}
+            language={preview.language}
+            scheme={preview.scheme}
+            draft={dirty ? { primaryColor: draft.primaryColor, theme: draft.theme } : null}
+          />
         </div>
       </div>
     </form>

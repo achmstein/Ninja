@@ -143,7 +143,7 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
         <BrandForm key={String(data.version)} slug={tenant.slug} brand={data} onDraft={setDraft} />
         <BrandImagesCard slug={tenant.slug} brand={data} />
       </div>
-      {/* The phone shows the draft while it differs from what is saved, and the real app once it is saved */}
+      {/* The real app in the phone, painted with the draft while it differs from what is saved */}
       <div className='flex flex-col items-center gap-3 xl:sticky xl:top-4 xl:self-start'>
         <div className='flex items-center gap-2'>
           <PreviewToggles
@@ -154,16 +154,13 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
           />
           <Badge variant={draft ? 'secondary' : 'outline'}>{t(draft ? 'previewDraft' : 'previewLive')}</Badge>
         </div>
-        {draft ? (
-          <PhonePreview draft={draft} language={preview.language} scheme={preview.scheme} />
-        ) : (
-          <LivePreview
-            customerUrl={withScheme(data.customerUrl ?? tenant.hosts.customer)}
-            version={data.version}
-            language={preview.language}
-            scheme={preview.scheme}
-          />
-        )}
+        <LivePreview
+          customerUrl={withScheme(data.customerUrl ?? tenant.hosts.customer)}
+          version={data.version}
+          language={preview.language}
+          scheme={preview.scheme}
+          draft={draft && { primaryColor: draft.primaryColor, theme: draft.theme }}
+        />
       </div>
     </div>
   )
