@@ -20,6 +20,8 @@ type Message =
 const dictionary = {
   // Brand / chrome
   appName: { en: 'Kitchen', ar: 'المطبخ' },
+  kdsNotInPlan: { en: 'The kitchen display is not in your plan', ar: 'شاشة المطبخ مش في باقتك' },
+  kdsNotInPlanNote: { en: 'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.', ar: 'الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك.' },
   branches: { en: 'Branches', ar: 'الفروع' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },
   settings: { en: 'Settings', ar: 'الإعدادات' },

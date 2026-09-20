@@ -66,8 +66,21 @@ public sealed class ProcessShell(ILogger<ProcessShell> logger) : IShell
         };
         foreach (var a in args) psi.ArgumentList.Add(a);
 
-        logger.LogInformation("$ {File} {Args}", file, string.Join(' ', args));
+        logger.LogInformation("$ {File} {Args}", file, ForLog(args));
         return Process.Start(psi) ?? throw new InvalidOperationException($"Could not start {file}");
+    }
+
+    /// <summary>The command line for the log, with the passwords a broker user or a dump carries masked.</summary>
+    internal static string ForLog(IReadOnlyList<string> args)
+    {
+        var shown = new string[args.Count];
+        for (var i = 0; i < args.Count; i++)
+        {
+            var a = args[i];
+            var afterUser = i >= 2 && args[i - 2] is "add_user" or "change_password";
+            shown[i] = afterUser ? "***" : a.StartsWith("PGPASSWORD=", StringComparison.Ordinal) ? "PGPASSWORD=***" : a;
+        }
+        return string.Join(' ', shown);
     }
 
     private static async Task PumpAsync(StreamReader reader, StringBuilder combined, StringBuilder? own)
@@ -102,9 +115,10 @@ public sealed class RecordingShell(ILogger<RecordingShell> logger) : IShell
 
     private string Record(string file, IReadOnlyList<string> args)
     {
+        // Commands keeps what would have run, for the tests; the log shows it masked
         var line = $"{file} {string.Join(' ', args)}";
         lock (Commands) Commands.Add(line);
-        logger.LogInformation("(dry run) $ {Line}", line);
-        return line;
+        logger.LogInformation("(dry run) $ {File} {Args}", file, ProcessShell.ForLog(args));
+        return $"{file} {ProcessShell.ForLog(args)}";
     }
 }

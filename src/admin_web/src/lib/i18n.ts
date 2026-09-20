@@ -14,6 +14,7 @@ type LocalizedTextLike = {
 const webExtras = {
   // The tenant's brand (Administration → Brand)
   brandNav: { en: 'Brand', ar: 'الهوية' },
+  notInPlan: { en: 'Not in your plan', ar: 'مش في باقتك' },
   brandColor: { en: 'Brand color', ar: 'لون البراند' },
   brandColorDefault: { en: 'Default', ar: 'الافتراضي' },
   brandLogo: { en: 'Logo', ar: 'اللوجو' },

@@ -17,6 +17,23 @@ public enum TenantStatus
     Failed = 4,
     Destroying = 5,
     Destroyed = 6,
+    /// <summary>The stack is being re-stamped and restarted (secure, rotate, upgrade); back to Running or Failed within minutes.</summary>
+    Upgrading = 7,
+    /// <summary>Stopped for non-payment; comes back with a payment or a resume, never a plain start.</summary>
+    Suspended = 8,
+}
+
+/// <summary>Where the café stands with its subscription; the stack's own status is separate (a PastDue café keeps running until its grace is over).</summary>
+public enum SubscriptionStatus
+{
+    /// <summary>A demo.</summary>
+    Trialing = 0,
+    Active = 1,
+    /// <summary>Past its paid period, inside the grace days.</summary>
+    PastDue = 2,
+    /// <summary>Grace over, or suspended by hand: the stack is stopped.</summary>
+    Suspended = 3,
+    Cancelled = 4,
 }
 
 /// <summary>
@@ -101,6 +118,24 @@ public class Tenant
 
     public TenantPlan Plan { get; set; }
 
+    /// <summary>Modules bought on top of the plan (Platform.PlanCatalog says what each plan includes and what may be added).</summary>
+    public Platform.Module[] Addons { get; set; } = [];
+
+    public SubscriptionStatus Subscription { get; set; } = SubscriptionStatus.Active;
+
+    /// <summary>Customers: the day the last recorded payment covers; null means nobody is counting yet.</summary>
+    public DateTimeOffset? PaidThrough { get; set; }
+
+    /// <summary>Days past PaidThrough before the stack is suspended; null takes the platform's default.</summary>
+    public int? GraceDays { get; set; }
+
+    public DateTimeOffset? SuspendedAt { get; set; }
+
+    /// <summary>When the owner was told the subscription is past due; cleared by a payment.</summary>
+    public DateTimeOffset? PastDueNotifiedAt { get; set; }
+
+    public List<Payment> Payments { get; set; } = [];
+
     public string? Notes { get; set; }
 
     /// <summary>The first owner's temporary password; cleared once the owner has signed in and changed it (not tracked yet).</summary>
@@ -111,8 +146,26 @@ public class Tenant
 
     public string ControlSecret { get; set; } = "";
 
+    /// <summary>
+    /// The stack's own database role and broker user passwords ({slug}_app on
+    /// both). Null while the stack still runs on the shared credentials it was
+    /// stamped with before there were any of its own; the credentials step
+    /// fills them on the next provision, secure or upgrade.
+    /// </summary>
+    public string? DbPassword { get; set; }
+
+    public string? BrokerPassword { get; set; }
+
+    public bool HasOwnCredentials => DbPassword is not null && BrokerPassword is not null;
+
     /// <summary>The image tag the stack runs; upgrade moves it.</summary>
     public string ImageTag { get; set; } = "latest";
+
+    /// <summary>The tag the stack ran before the last upgrade: what a rollback goes back to. Null until the first upgrade on this build.</summary>
+    public string? PreviousImageTag { get; set; }
+
+    /// <summary>The backup taken (or reused) right before the last upgrade: what to restore if a rollback has to cross a migration.</summary>
+    public string? UpgradeBackupId { get; set; }
 
     /// <summary>"{slug}/{backupId}" while a stamp is to load another tenant's backup into this one; cleared once it has.</summary>
     public string? RestoreFrom { get; set; }
@@ -123,6 +176,14 @@ public class Tenant
     public DateTimeOffset? ExpiresAt { get; set; }
 
     public DateTimeOffset? ProvisionedAt { get; set; }
+
+    /// <summary>When the owner's welcome mail went out (once per tenant; resent by hand from the control app).</summary>
+    public DateTimeOffset? WelcomeSentAt { get; set; }
+
+    /// <summary>Demos: when the owner was told the demo is about to stop, and when that it is about to be deleted; cleared by an extension.</summary>
+    public DateTimeOffset? ExpiryWarnedAt { get; set; }
+
+    public DateTimeOffset? DestroyWarnedAt { get; set; }
 
     public string? LastError { get; set; }
 

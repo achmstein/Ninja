@@ -70,7 +70,16 @@ export async function bootBrand(queryClient: QueryClient) {
     applyBrand(cached, language)
   }
 
-  const fetching = queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
+  // Mirrored to localStorage the moment it lands, not only from
+  // useBrandEffects after the first render: the OIDC config reads the
+  // tenant's authority from there before anything mounts, so a first visit
+  // must not fall back to the build's realm.
+  const fetching = queryClient
+    .prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
+    .then(() => {
+      const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
+      if (fresh) writeCachedBrand(fresh)
+    })
   if (!cached) {
     await Promise.race([
       fetching,

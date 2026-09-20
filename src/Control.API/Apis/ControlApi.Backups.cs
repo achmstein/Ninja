@@ -7,11 +7,15 @@ using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.API.Apis;
 
-/// <summary>A tenant's backups: taken on demand or nightly, listed, downloaded, and restored into a new slug.</summary>
+/// <summary>A tenant's backups: taken on demand or nightly, listed, downloaded, and restored into a new slug; and the platform's own.</summary>
 public static partial class ControlApi
 {
     private static void MapBackupsApi(RouteGroupBuilder api)
     {
+        api.MapGet("/platform/backups", GetPlatformBackups).WithName("GetPlatformBackups").WithSummary("The platform's own backups (controldb, keycloak), when the last one ran and reached the bucket, and whether a night was missed").RequireAuthorization("Platform");
+        api.MapPost("/platform/backups", CreatePlatformBackup).WithName("CreatePlatformBackup").WithSummary("Dump the platform's databases now, and copy them off the box when there is somewhere to").RequireAuthorization("Platform");
+        api.MapGet("/platform/backups/{id}/download", DownloadPlatformBackup).WithName("DownloadPlatformBackup").WithSummary("The backup as one .tar.gz").RequireAuthorization("Platform");
+
         api.MapGet("/tenants/{slug}/backups", ListBackups).WithName("ListTenantBackups").WithSummary("Every backup kept for the tenant, newest first").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/backups", CreateBackup).WithName("CreateTenantBackup").WithSummary("Dump the databases and the uploads now (queued behind any stamp in progress)").RequireAuthorization("Platform");
         api.MapGet("/tenants/{slug}/backups/{id}/download", DownloadBackup).WithName("DownloadTenantBackup").WithSummary("The backup as one .tar.gz").RequireAuthorization("Platform");
@@ -37,8 +41,30 @@ public static partial class ControlApi
     public static async Task<Results<NoContent, NotFound>> DeleteBackup(ControlContext context, BackupService backups, IAuditWriter audit, string slug, string id, CancellationToken ct)
     {
         if (!await context.Tenants.AnyAsync(t => t.Slug == slug, ct) || !backups.Delete(slug, id)) return TypedResults.NotFound();
+        await backups.DeleteOffsiteAsync(slug, id, ct);
         await audit.WriteAsync("backup.deleted", slug, new { id }, ct);
         return TypedResults.NoContent();
+    }
+
+    public static Ok<PlatformBackupsResponse> GetPlatformBackups(PlatformBackupService platform)
+        => TypedResults.Ok(platform.Status());
+
+    public static async Task<Results<Ok<BackupInfo>, ProblemHttpResult>> CreatePlatformBackup(PlatformBackupService platform, CancellationToken ct)
+    {
+        try
+        {
+            return TypedResults.Ok(await platform.RunAsync(ct));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return TypedResults.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    public static Results<PushStreamHttpResult, NotFound> DownloadPlatformBackup(BackupService backups, string id, CancellationToken ct)
+    {
+        if (backups.Find(BackupService.PlatformSlug, id) is null) return TypedResults.NotFound();
+        return TypedResults.Stream(output => backups.WriteArchiveAsync(BackupService.PlatformSlug, id, output, ct), "application/gzip", $"platform-{id}.tar.gz");
     }
 
     public static async Task<Results<Created<TenantDetail>, NotFound, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> RestoreBackup(

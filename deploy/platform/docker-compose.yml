@@ -68,6 +68,8 @@ services:
     volumes:
       # The platform realm (ninja) on first boot; tenant realms are created by the control plane
       - ./realms:/opt/keycloak/data/import:ro
+      # The login theme every realm uses (the deploy workflow copies it from the AppHost's folder)
+      - ./themes/ninja:/opt/keycloak/themes/ninja:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -93,6 +95,23 @@ services:
       Platform__KeycloakPublicUrl: https://auth.${PLATFORM_DOMAIN}
       Platform__KeycloakAdminPassword: ${KEYCLOAK_PASSWORD}
       Platform__GeminiApiKey: ${GEMINI_API_KEY}
+      # A copy of every backup off the box, into any S3-compatible bucket; off until a bucket and keys are set
+      Platform__Offsite__Endpoint: ${OFFSITE_ENDPOINT:-}
+      Platform__Offsite__Bucket: ${OFFSITE_BUCKET:-}
+      Platform__Offsite__AccessKey: ${OFFSITE_ACCESS_KEY:-}
+      Platform__Offsite__SecretKey: ${OFFSITE_SECRET_KEY:-}
+      Platform__Offsite__Region: ${OFFSITE_REGION:-auto}
+      Platform__Offsite__Prefix: ${OFFSITE_PREFIX:-}
+      # The weekly restore drill needs a stack's worth of memory for ten minutes
+      Platform__RestoreDrill__Enabled: ${RESTORE_DRILL_ENABLED:-false}
+      # Mail to owners and to whoever runs the platform, through any SMTP; off (and audited as skipped) until a host is set
+      Platform__Mail__Host: ${MAIL_HOST:-}
+      Platform__Mail__Port: ${MAIL_PORT:-587}
+      Platform__Mail__User: ${MAIL_USER:-}
+      Platform__Mail__Password: ${MAIL_PASSWORD:-}
+      Platform__Mail__From: ${MAIL_FROM:-no-reply@${PLATFORM_DOMAIN}}
+      Platform__Mail__FromName: Ninja
+      Platform__Mail__OpsTo: ${MAIL_OPS_TO:-}
     volumes:
       # Stamps stacks with the host's docker; the tenants folder must be the
       # same path inside and out because compose reads the files from the host

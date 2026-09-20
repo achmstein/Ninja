@@ -4,6 +4,17 @@ A new Flutter project.
 
 ## Getting Started
 
+Against the local AppHost, forward the BFF and sign in against the AppHost's
+tenant one; the code has no realm of its own:
+
+```
+adb reverse tcp:8080 tcp:5000
+flutter run --dart-define=REALM=chillax
+```
+
+A release build is told everything by a record instead
+(`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
+
 This project is a starting point for a Flutter application.
 
 A few resources to get you started if this is your first Flutter project:

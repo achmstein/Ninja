@@ -34,10 +34,17 @@ on:
         description: 'Build number (version code). Leave empty to auto-increment.'
         required: false
         type: string
+      tenant:
+        description: 'Which stack the apps are built for: tenants/<slug>.json'
+        required: false
+        default: chillax
+        type: string
 
 env:
   FLUTTER_VERSION: '3.41.2'
   JAVA_VERSION: '17'
+  # The record every flutter build below is given (see tenants/README.md)
+  TENANT: ${{ github.event.inputs.tenant || 'chillax' }}
 
 jobs:
   # ==========================================
@@ -113,7 +120,7 @@ jobs:
       # place from the Fastlane step, so it carries the same upload signature.
       - name: Build APK for direct download
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
           mkdir -p build/apk-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
@@ -202,7 +209,7 @@ jobs:
       # place from the Fastlane step, so it carries the same upload signature.
       - name: Build APK for direct download
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
           mkdir -p build/apk-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-pos.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
@@ -291,7 +298,7 @@ jobs:
       # place from the Fastlane step, so it carries the same upload signature.
       - name: Build APK for direct download
         run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
           mkdir -p build/apk-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-kds.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
@@ -336,7 +343,7 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build Flutter (no codesign)
-        run: flutter build ios --release --no-codesign --build-number=${{ github.event.inputs.build_number || github.run_number }}
+        run: flutter build ios --release --no-codesign --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

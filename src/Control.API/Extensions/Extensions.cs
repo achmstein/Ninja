@@ -13,7 +13,11 @@ public static class Extensions
         });
         builder.Services.AddMigration<ControlContext>();
 
-        builder.Services.Configure<PlatformOptions>(builder.Configuration.GetSection(PlatformOptions.Section));
+        builder.Services.AddOptions<PlatformOptions>()
+            .Bind(builder.Configuration.GetSection(PlatformOptions.Section))
+            .Validate(o => o.ServiceMemoryMb >= 128 && o.GatewayMemoryMb >= 64, "A service needs at least 128 MB and the gateway 64 MB")
+            .Validate(o => o.StackFootprintMb <= o.StackLimitMb, "StackFootprintMb is more than the per-container caps add up to")
+            .ValidateOnStart();
 
         // Kinds and statuses travel as their names, not their numbers
         builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -27,21 +31,37 @@ public static class Extensions
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();
         builder.Services.AddSingleton<ProvisioningQueue>();
         builder.Services.AddScoped<Provisioner>();
+        builder.Services.AddScoped<SubscriptionService>();
         builder.Services.AddSingleton<CapacityCache>();
         builder.Services.AddSingleton<TenantOps>();
         builder.Services.AddSingleton<TenantMetricsCollector>();
         builder.Services.AddSingleton<BackupService>();
+        builder.Services.AddSingleton<PlatformBackupService>();
+
+        // Mail goes out only once a host is set; until then every mail is audited as skipped
+        builder.Services.AddSingleton<MailQueue>();
+        builder.Services.AddSingleton<MailStatus>();
+        var mail = builder.Configuration.GetSection($"{PlatformOptions.Section}:Mail").Get<MailOptions>() ?? new();
+        if (mail.Configured) builder.Services.AddSingleton<IMailer, SmtpMailer>();
+        else builder.Services.AddSingleton<IMailer, NullMailer>();
+
+        var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
 
         // The build boots the app once to write its OpenAPI document; there is no box, no database and no queue to serve then
         if (!builder.Environment.IsBuild())
         {
             builder.Services.AddHostedService<ProvisioningWorker>();
+            builder.Services.AddHostedService<MailSender>();
             builder.Services.AddHostedService<DemoExpiryService>();
+            builder.Services.AddHostedService<SubscriptionSweepService>();
             builder.Services.AddHostedService<CapacityMonitor>();
             builder.Services.AddHostedService<NightlyBackupService>();
+            if (builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:RestoreDrill:Enabled"))
+                builder.Services.AddHostedService<RestoreDrillService>();
+            // The platform's own databases stop accepting PUBLIC; a dry run has none
+            if (!dryRun) builder.Services.AddHostedService<PlatformLockdownService>();
         }
 
-        var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
         if (dryRun)
         {
             // Dev and tests: every step runs and is recorded, nothing on the box is touched
@@ -56,6 +76,7 @@ public static class Extensions
             builder.Services.AddSingleton<IStackProxy>(sp => sp.GetRequiredService<DryRunStackProxy>());
             builder.Services.AddSingleton<ITenantStack, DryRunTenantStack>();
             builder.Services.AddSingleton<IHostCapacity, DryRunHostCapacity>();
+            builder.Services.AddSingleton<IOffsiteStore, RecordingOffsiteStore>();
         }
         else
         {
@@ -67,6 +88,10 @@ public static class Extensions
             builder.Services.AddSingleton<IStackProxy, HttpStackProxy>();
             builder.Services.AddSingleton<ITenantStack, HttpTenantStack>();
             builder.Services.AddSingleton<IHostCapacity, ProcHostCapacity>();
+            // Off the box only once a bucket and keys are set; until then the UI says the backups stay here
+            var offsite = builder.Configuration.GetSection($"{PlatformOptions.Section}:Offsite").Get<OffsiteOptions>() ?? new();
+            if (offsite.Enabled) builder.Services.AddSingleton<IOffsiteStore, S3OffsiteStore>();
+            else builder.Services.AddSingleton<IOffsiteStore, NoOffsiteStore>();
         }
 
         // The people who run the platform hold PlatformAdmin in the ninja realm
@@ -75,9 +100,13 @@ public static class Extensions
     }
 }
 
-/// <summary>Dry run: the vhost exists as soon as it is asked for.</summary>
+/// <summary>Dry run: the user and the vhost exist as soon as they are asked for.</summary>
 public sealed class DryRunBrokerAdmin(ILogger<DryRunBrokerAdmin> logger) : IBrokerAdmin
 {
+    public List<string> Users { get; } = [];
+    public Task EnsureUserAsync(string user, string password, CancellationToken ct) { if (!Users.Contains(user)) Users.Add(user); logger.LogInformation("(dry run) broker user {User}", user); return Task.CompletedTask; }
     public Task EnsureVHostAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) vhost {VHost} for {User}", vhost, user); return Task.CompletedTask; }
+    public Task ClearPermissionsAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) {User} off vhost {VHost}", user, vhost); return Task.CompletedTask; }
     public Task DeleteVHostAsync(string vhost, CancellationToken ct) { logger.LogInformation("(dry run) delete vhost {VHost}", vhost); return Task.CompletedTask; }
+    public Task DeleteUserAsync(string user, CancellationToken ct) { Users.Remove(user); logger.LogInformation("(dry run) delete broker user {User}", user); return Task.CompletedTask; }
 }

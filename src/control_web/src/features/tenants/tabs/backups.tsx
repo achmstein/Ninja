@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Archive, Download, History, Trash2 } from 'lucide-react'
+import { Archive, Download, History, ShieldCheck, Trash2 } from 'lucide-react'
 import type { BackupInfo, TenantDetail } from '@/api/control'
 import {
   createTenantBackupMutation,
@@ -42,6 +42,7 @@ import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { canBackup, isValidSlug, tenantStatus } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
+import { OffsiteCell } from '@/features/platform/platform-backups'
 
 /**
  * The nightly archives and any taken by hand: download one, restore one
@@ -146,6 +147,8 @@ export function BackupsTab({ tenant }: { tenant: TenantDetail }) {
                 <TableHead className='text-end'>{t('size')}</TableHead>
                 <TableHead className='text-end'>{t('uploads')}</TableHead>
                 <TableHead>{t('imageTag')}</TableHead>
+                <TableHead>{t('offsite')}</TableHead>
+                <TableHead>{t('verified')}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -167,6 +170,19 @@ export function BackupsTab({ tenant }: { tenant: TenantDetail }) {
                   <TableCell className='text-end'>{b.hasUploads ? t('yes') : t('no')}</TableCell>
                   <TableCell className='font-mono text-xs' dir='ltr'>
                     {b.imageTag}
+                  </TableCell>
+                  <TableCell>
+                    <OffsiteCell at={b.offsiteAt} />
+                  </TableCell>
+                  <TableCell>
+                    {b.verifiedAt ? (
+                      <span className='flex items-center gap-1 text-sm'>
+                        <ShieldCheck className='size-3.5 text-emerald-600' />
+                        {format.dateTime(b.verifiedAt)}
+                      </span>
+                    ) : (
+                      <span className='text-muted-foreground'>—</span>
+                    )}
                   </TableCell>
                   <TableCell className='text-end'>
                     <div className='flex justify-end gap-1'>

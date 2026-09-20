@@ -4,7 +4,10 @@ import type { AuthProviderProps } from 'react-oidc-context'
 // OIDC configuration for Keycloak
 // In development, VITE_KEYCLOAK_URL is injected by the Aspire AppHost
 const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
-const realm = import.meta.env.VITE_KEYCLOAK_REALM || 'chillax'
+// A stamped tenant is told its realm by its API (brand.auth.authority); the
+// Chillax stack names its own in VITE_KEYCLOAK_REALM. The platform realm
+// is the last resort, never a tenant's.
+const realm = import.meta.env.VITE_KEYCLOAK_REALM || 'ninja'
 const adminUrl = import.meta.env.VITE_ADMIN_URL || window.location.origin
 
 /**

@@ -1,7 +1,10 @@
 <#import "footer.ftl" as loginFooter>
 <#--
-  The page frame every login-flow template renders into: the script wordmark
-  above a shadcn-style card, in the app's own slate palette. Light or dark
+  The page frame every login-flow template renders into: the café's mark and
+  name above a shadcn-style card, in the platform's slate palette. One theme
+  serves every realm: the realm's display name is the café's name and its
+  HTML display name is the café's mark (the control plane points it at the
+  tenant's icon). Light or dark
   follows the app the user came from (the `theme` query parameter on the
   redirect, remembered in a cookie for the later pages of the flow), then
   the system preference. Language follows `ui_locales`.
@@ -14,8 +17,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <meta name="robots" content="noindex, nofollow">
-    <title>${msg("loginTitle",(realm.displayName!''))}</title>
-    <link rel="icon" href="${url.resourcesPath}/img/cup.png">
+    <title>${msg("loginTitle",(realm.displayName!'')?trim)}</title>
+    <#-- The platform's N tile; the café's own icon is what the header shows -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Inter,system-ui,sans-serif' font-size='36' font-weight='700' fill='%23fff'%3EN%3C/text%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,9 +37,9 @@
             var asked = new URLSearchParams(location.search).get('theme');
             var theme = asked === 'light' || asked === 'dark' ? asked : null;
             if (theme) {
-                document.cookie = 'chx_theme=' + theme + '; path=/; max-age=3600; SameSite=Lax';
+                document.cookie = 'nj_theme=' + theme + '; path=/; max-age=3600; SameSite=Lax';
             } else {
-                var saved = document.cookie.match(/(?:^|; )chx_theme=(light|dark)/);
+                var saved = document.cookie.match(/(?:^|; )nj_theme=(light|dark)/);
                 theme = saved ? saved[1] : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             }
             document.documentElement.dataset.theme = theme;
@@ -87,25 +91,34 @@
 </head>
 
 <body class="${properties.kcBodyClass!} ${bodyClass}" data-page-id="login-${pageId}">
-<main class="chx-page">
-    <header class="chx-brand">
-        <img class="chx-wordmark" src="${url.resourcesPath}/img/logo.png" alt="${realm.displayName!'Chillax'}">
+<main class="nj-page">
+    <header class="nj-brand">
+        <#-- Keycloak hands back the display name when no HTML one is set, so a
+             realm the control plane did not stamp gets a tile with its initial.
+             The HTML is the platform's own (an <img> at the tenant's icon), so
+             it is trusted as written. -->
+        <#if (realm.displayNameHtml)?has_content && realm.displayNameHtml != realm.displayName>
+            <div class="nj-mark">${realm.displayNameHtml?no_esc}</div>
+        <#elseif realm.displayName?trim?has_content>
+            <div class="nj-mark nj-mark-tile" aria-hidden="true">${realm.displayName?trim[0..0]?upper_case}</div>
+        </#if>
+        <span class="nj-brand-name">${(realm.displayName!'')?trim}</span>
     </header>
 
-    <section class="chx-card">
-        <div class="chx-card-header">
-            <h1 class="chx-title" id="kc-page-title"><#nested "header"></h1>
+    <section class="nj-card">
+        <div class="nj-card-header">
+            <h1 class="nj-title" id="kc-page-title"><#nested "header"></h1>
         </div>
 
-        <div class="chx-card-body">
+        <div class="nj-card-body">
             <#-- A flow past its first step shows who is signing in, with a way to start over -->
             <#if auth?has_content && auth.showUsername() && !auth.showResetCredentials()>
-                <div class="chx-field">
-                    <label class="chx-label" for="kc-attempted-username"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
-                    <div class="chx-input-group">
-                        <input id="kc-attempted-username" class="chx-input chx-input-readonly" value="${auth.attemptedUsername}" readonly>
-                        <a id="reset-login" class="chx-toggle" href="${url.loginRestartFlowUrl}" aria-label="${msg('restartLoginTooltip')}" title="${msg('restartLoginTooltip')}">
-                            <i class="chx-icon chx-restart" aria-hidden="true"></i>
+                <div class="nj-field">
+                    <label class="nj-label" for="kc-attempted-username"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
+                    <div class="nj-input-group">
+                        <input id="kc-attempted-username" class="nj-input nj-input-readonly" value="${auth.attemptedUsername}" readonly>
+                        <a id="reset-login" class="nj-toggle" href="${url.loginRestartFlowUrl}" aria-label="${msg('restartLoginTooltip')}" title="${msg('restartLoginTooltip')}">
+                            <i class="nj-icon nj-restart" aria-hidden="true"></i>
                         </a>
                     </div>
                 </div>
@@ -113,13 +126,13 @@
             </#if>
 
             <#if displayRequiredFields>
-                <p class="chx-note"><span class="chx-required">*</span> ${msg("requiredFields")}</p>
+                <p class="nj-note"><span class="nj-required">*</span> ${msg("requiredFields")}</p>
             </#if>
 
             <#-- App-initiated actions should not see warnings about the need to complete the action -->
             <#if displayMessage && message?has_content && (message.type != 'warning' || !isAppInitiatedAction??)>
-                <div class="${properties.kcAlertClass!} chx-alert-${message.type}" role="alert">
-                    <span class="chx-alert-icon" aria-hidden="true"></span>
+                <div class="${properties.kcAlertClass!} nj-alert-${message.type}" role="alert">
+                    <span class="nj-alert-icon" aria-hidden="true"></span>
                     <span class="${properties.kcAlertTitleClass!} kc-feedback-text">${kcSanitize(message.summary)?no_esc}</span>
                 </div>
             </#if>
@@ -130,7 +143,7 @@
                 <form id="kc-select-try-another-way-form" action="${url.loginAction}" method="post" novalidate="novalidate">
                     <input type="hidden" name="tryAnotherWay" value="on"/>
                     <a id="try-another-way" href="javascript:document.forms['kc-select-try-another-way-form'].requestSubmit()"
-                       class="chx-button chx-button-outline chx-button-block chx-mt">
+                       class="nj-button nj-button-outline nj-button-block nj-mt">
                         ${kcSanitize(msg("doTryAnotherWay"))?no_esc}
                     </a>
                 </form>
@@ -139,7 +152,7 @@
             <#nested "socialProviders">
 
             <#if displayInfo>
-                <div id="kc-info" class="chx-info">
+                <div id="kc-info" class="nj-info">
                     <div id="kc-info-wrapper">
                         <#nested "info">
                     </div>
@@ -148,14 +161,14 @@
         </div>
     </section>
 
-    <footer class="chx-footer">
+    <footer class="nj-footer">
         <#if realm.internationalizationEnabled && locale.supported?size gt 1>
-            <nav class="chx-lang" aria-label="${msg("languages")}">
+            <nav class="nj-lang" aria-label="${msg("languages")}">
                 <#list locale.supported as l>
                     <#if l.languageTag == locale.currentLanguageTag>
-                        <span class="chx-lang-current" aria-current="true">${l.label}</span>
+                        <span class="nj-lang-current" aria-current="true">${l.label}</span>
                     <#else>
-                        <a class="chx-lang-link" href="${l.url}" hreflang="${l.languageTag}">${l.label}</a>
+                        <a class="nj-lang-link" href="${l.url}" hreflang="${l.languageTag}">${l.label}</a>
                     </#if>
                 </#list>
             </nav>

@@ -45,6 +45,15 @@
 	handle /hub/* {
 		reverse_proxy {args[0]}:5000
 	}
+	# A stack that is off (suspended for non-payment, or stopped) answers nothing: say so,
+	# as JSON the apps recognise, instead of a bare 502
+	handle_errors 502 503 {
+		@apipath path /api/* /hub/*
+		handle @apipath {
+			header Content-Type application/json
+			respond `{"code":"paused"}` 503
+		}
+	}
 }
 
 {$PLATFORM_DOMAIN} {
@@ -111,6 +120,11 @@ https://api.*.{$PLATFORM_DOMAIN} {
 		on_demand
 	}
 	reverse_proxy {labels.{$PLATFORM_SLUG_LABEL}}-gateway:5000
+	# The native apps hear the same word as the web ones
+	handle_errors 502 503 {
+		header Content-Type application/json
+		respond `{"code":"paused"}` 503
+	}
 }
 
 # The customer app on the platform host: {slug}.{domain}. Only the control

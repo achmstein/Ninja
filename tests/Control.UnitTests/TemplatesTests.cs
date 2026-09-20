@@ -32,6 +32,8 @@ public sealed class TemplatesTests
         OwnerEmail = "owner@blue.test",
         IdentitySecret = "identity-secret-1234567890123456",
         ControlSecret = "control-secret-12345678901234567",
+        DbPassword = "db-password-123456789012345678",
+        BrokerPassword = "broker-password-1234567890123456",
     };
 
     [TestMethod]
@@ -43,6 +45,9 @@ public sealed class TemplatesTests
         var realm = JsonNode.Parse(json)!.AsObject();
         Assert.AreEqual("blue", realm["realm"]!.GetValue<string>());
         Assert.AreEqual("Blue \"Bottle\"", realm["displayName"]!.GetValue<string>());
+        // The login page: the platform's theme, the café's mark from its own API
+        Assert.AreEqual("ninja", realm["loginTheme"]!.GetValue<string>());
+        Assert.AreEqual("<img src=\"https://api.blue.ninja.app/api/tenant/icons/icon-192.png\" alt=\"\">", realm["displayNameHtml"]!.GetValue<string>());
         Assert.IsFalse(json.Contains("{{"), "an unfilled slot survived");
         Assert.IsFalse(json.Contains("chillax", StringComparison.OrdinalIgnoreCase), "the template still names the first tenant");
         Assert.AreEqual("external", realm["sslRequired"]!.GetValue<string>());
@@ -72,6 +77,8 @@ public sealed class TemplatesTests
         var json = Templates.PlatformRealm(new PlatformOptions { Domain = "ninja.app", ControlUrl = "https://control.ninja.app" }, "Pa$$w0rd\"quoted");
         var realm = JsonNode.Parse(json)!.AsObject();
         Assert.AreEqual("ninja", realm["realm"]!.GetValue<string>());
+        // The same login theme as the tenants; with no HTML display name it shows the N tile and "Ninja"
+        Assert.AreEqual("ninja", realm["loginTheme"]!.GetValue<string>());
         Assert.AreEqual("https://control.ninja.app/*", realm["clients"]![0]!["redirectUris"]![0]!.GetValue<string>());
         Assert.AreEqual("Pa$$w0rd\"quoted", realm["users"]![0]!["credentials"]![0]!["value"]!.GetValue<string>());
         Assert.IsFalse(json.Contains("{{"));
@@ -94,8 +101,12 @@ public sealed class TemplatesTests
         Assert.IsFalse(Regex.IsMatch(yaml, @"^  (catalog|ordering|branch)-api:", RegexOptions.Multiline));
         Assert.IsFalse(Regex.IsMatch(yaml, @"^  mobile-bff:", RegexOptions.Multiline));
 
-        StringAssert.Contains(yaml, "Database=blue_catalogdb");
-        StringAssert.Contains(yaml, "amqp://guest:${RABBIT_PASSWORD}@eventbus:5672/blue");
+        // Its own role and broker user, never the platform's superuser or guest
+        StringAssert.Contains(yaml, "Username=blue_app;Password=${DB_PASSWORD};Database=blue_catalogdb");
+        StringAssert.Contains(yaml, "amqp://blue_app:${BROKER_PASSWORD}@eventbus:5672/blue");
+        Assert.IsFalse(yaml.Contains("Username=postgres"));
+        Assert.IsFalse(yaml.Contains("amqp://guest"));
+        Assert.IsFalse(yaml.Contains("POSTGRES_PASSWORD"));
         StringAssert.Contains(yaml, "Identity__Url: \"http://keycloak:8080/realms/blue\"");
         StringAssert.Contains(yaml, "Keycloak__Realm: \"blue\"");
         StringAssert.Contains(yaml, "Tenant__Name__En: \"Blue \\\"Bottle\\\"\"");
@@ -159,12 +170,45 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void Env_carries_the_shared_and_the_tenant_secrets()
+    public void Env_carries_the_tenants_own_secrets_and_none_of_the_platforms()
     {
         var env = Templates.Env(Blue(), Platform);
-        StringAssert.Contains(env, "POSTGRES_PASSWORD=postgres");
+        StringAssert.Contains(env, "DB_PASSWORD=db-password-123456789012345678");
+        StringAssert.Contains(env, "BROKER_PASSWORD=broker-password-1234567890123456");
         StringAssert.Contains(env, "IDENTITY_SECRET=identity-secret-1234567890123456");
         StringAssert.Contains(env, "GEMINI_API_KEY=k");
+        Assert.IsFalse(env.Contains("POSTGRES_PASSWORD"), "the superuser password must not reach a tenant folder");
+        Assert.IsFalse(env.Contains("RABBIT_PASSWORD"));
+    }
+
+    [TestMethod]
+    public void Env_refuses_a_tenant_without_credentials_of_its_own()
+    {
+        var stampedBefore = Blue();
+        stampedBefore.DbPassword = null;
+        Assert.ThrowsExactly<InvalidOperationException>(() => Templates.Env(stampedBefore, Platform));
+    }
+
+    [TestMethod]
+    public void Compose_caps_memory_cpu_pids_and_logs_on_every_container()
+    {
+        var tenant = Blue();
+        var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
+
+        // Twelve services and the gateway: the assistant's three get more, the gateway less
+        Assert.HasCount(9, Regex.Matches(yaml, "memory: \"256M\""));
+        Assert.HasCount(3, Regex.Matches(yaml, "memory: \"384M\""));
+        Assert.HasCount(1, Regex.Matches(yaml, "memory: \"128M\""));
+        Assert.HasCount(12, Regex.Matches(yaml, "cpus: \"1.0\""));
+        Assert.HasCount(1, Regex.Matches(yaml, "cpus: \"0.5\""));
+        Assert.HasCount(13, Regex.Matches(yaml, "pids: 256"));
+        Assert.HasCount(13, Regex.Matches(yaml, "max-size: \"10m\""));
+        Assert.HasCount(13, Regex.Matches(yaml, "max-file: \"3\""));
+
+        var heavier = new PlatformOptions { Domain = "ninja.app", ServiceMemoryOverridesMb = { ["catalog"] = 512 } };
+        var tuned = Templates.Compose(tenant, TenantHosts.For(tenant, heavier), heavier);
+        Assert.HasCount(1, Regex.Matches(tuned, "memory: \"512M\""));
+        Assert.HasCount(2, Regex.Matches(tuned, "memory: \"384M\""));
     }
 
     private static string FindUp(string relative)

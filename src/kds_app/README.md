@@ -42,8 +42,12 @@ matches, then sign in with a Cashier, Admin or Owner account:
 ```
 adb reverse tcp:5000 tcp:5000
 adb reverse tcp:8080 tcp:8080
-flutter run
+flutter run --dart-define=REALM=chillax
 ```
+
+The realm is the AppHost's tenant one; the code has none of its own. A
+release build is told everything by a record instead
+(`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
 
 If the local Keycloak volume already holds the realm, the new `kds-app`
 client is not re-imported: add it in the admin console (clone `pos-app`) or

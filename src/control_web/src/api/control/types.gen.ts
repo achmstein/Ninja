@@ -22,6 +22,8 @@ export type BackupInfo = {
     databases: Array<string>;
     hasUploads: boolean;
     imageTag: string;
+    offsiteAt?: null | string;
+    verifiedAt?: null | string;
 };
 
 export type BrandDto = {
@@ -36,6 +38,7 @@ export type BrandDto = {
     features: BrandFeatures;
     locale: BrandLocale;
     version: number | string;
+    entitlements?: null | BrandFeatures;
 };
 
 export type BrandFeatures = {
@@ -107,6 +110,7 @@ export type CapacityResponse = {
     dockerUsedMb: number | string;
     dockerReclaimableMb: number | string;
     stackFootprintMb: number | string;
+    stackLimitMb: number | string;
     reserveMb: number | string;
     roomFor: number | string;
     tenants: Array<TenantUsage>;
@@ -124,6 +128,8 @@ export type ContainerInfo = {
 
 export type ConvertRequest = {
     plan: null | TenantPlan;
+    addons?: null | Array<Module>;
+    paidThrough?: null | string;
 };
 
 export type CreateTenantRequest = {
@@ -147,10 +153,21 @@ export type CreateTenantRequest = {
     notes?: null | string;
     provision?: null | boolean;
     force?: null | boolean;
+    addons?: null | Array<Module>;
 };
 
 export type ExtendRequest = {
     days: number | string;
+};
+
+export type FleetUpgradeRequest = {
+    imageTag: string;
+    canary?: null | string;
+};
+
+export type FleetUpgradeResponse = {
+    queued: number | string;
+    canary: null | string;
 };
 
 export type IFormFile = Blob | File;
@@ -158,6 +175,18 @@ export type IFormFile = Blob | File;
 export type ImpersonationLink = {
     url: string;
     expiresAt: string;
+};
+
+export type MailStatusResponse = {
+    configured: boolean;
+    host: null | string;
+    from: string;
+    opsTo: null | string;
+    lastSentAt: null | string;
+    lastError: null | string;
+    sent: number | string;
+    failed: number | string;
+    skipped: number | string;
 };
 
 export type MetricsDay = {
@@ -170,6 +199,39 @@ export type MetricsTopItem = {
     name: string;
     units: number | string;
     revenue: number | string;
+};
+
+export type Module = 'Rooms' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
+
+export type PaymentDto = {
+    id: number | string;
+    at: string;
+    amount: number | string;
+    currency: string;
+    periodStart: string;
+    periodEnd: string;
+    reference: null | string;
+    note: null | string;
+    recordedBy: string;
+};
+
+export type PlanCatalogResponse = {
+    modules: Array<Module>;
+    plans: Array<PlanDto>;
+};
+
+export type PlanDto = {
+    plan: TenantPlan;
+    included: Array<Module>;
+    addons: Array<Module>;
+};
+
+export type PlatformBackupsResponse = {
+    backups: Array<BackupInfo>;
+    lastAt: null | string;
+    lastOffsiteAt: null | string;
+    stale: boolean;
+    offsiteEnabled: boolean;
 };
 
 export type PlatformResponse = {
@@ -188,6 +250,15 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type RecordPaymentRequest = {
+    amount: number | string;
+    currency: string;
+    periodEnd: string;
+    periodStart?: null | string;
+    reference?: null | string;
+    note?: null | string;
 };
 
 export type RestoreRequest = {
@@ -214,6 +285,22 @@ export type StepDto = {
 
 export type StepStatus = 'Pending' | 'Running' | 'Done' | 'Failed' | 'Skipped';
 
+export type SubscriptionDetail = {
+    plan: TenantPlan;
+    addons: Array<Module>;
+    included: Array<Module>;
+    addonsAvailable: Array<Module>;
+    entitlements: Array<Module>;
+    status: SubscriptionStatus;
+    paidThrough: null | string;
+    graceDays: number | string;
+    suspendedAt: null | string;
+    pastDueNotifiedAt: null | string;
+    payments: Array<PaymentDto>;
+};
+
+export type SubscriptionStatus = 'Trialing' | 'Active' | 'PastDue' | 'Suspended' | 'Cancelled';
+
 export type TenantDetail = {
     slug: string;
     nameEn: string;
@@ -236,6 +323,11 @@ export type TenantDetail = {
     lastError: null | string;
     steps: Array<StepDto>;
     seedImages: Array<string>;
+    hasOwnCredentials: boolean;
+    welcomeSentAt: null | string;
+    subscription: TenantSubscriptionDto;
+    previousImageTag: null | string;
+    upgradeBackupId: null | string;
 };
 
 export type TenantHostsDto = {
@@ -281,7 +373,16 @@ export type TenantRecordDto = {
 
 export type TenantSeed = 'None' | 'Sample';
 
-export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed';
+export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed' | 'Upgrading' | 'Suspended';
+
+export type TenantSubscriptionDto = {
+    status: SubscriptionStatus;
+    paidThrough: null | string;
+    graceDays: number | string;
+    suspendedAt: null | string;
+    addons: Array<Module>;
+    entitlements: Array<Module>;
+};
 
 export type TenantSummary = {
     slug: string;
@@ -299,6 +400,9 @@ export type TenantSummary = {
     expiresAt: null | string;
     imageTag: string;
     lastError: null | string;
+    hasOwnCredentials: boolean;
+    subscription: SubscriptionStatus;
+    paidThrough: null | string;
 };
 
 export type TenantUsage = {
@@ -319,6 +423,15 @@ export type UpdateBrandRequest = {
     locale?: null | BrandLocale;
 };
 
+export type UpdateSubscriptionRequest = {
+    plan: TenantPlan;
+    addons?: null | Array<Module>;
+    /**
+     * 0–90; null keeps the platform's default
+     */
+    graceDays?: null | number | string;
+};
+
 export type UpdateTenantRequest = {
     nameEn: string;
     nameAr: null | string;
@@ -327,7 +440,7 @@ export type UpdateTenantRequest = {
     contactName: null | string;
     phone: null | string;
     address: null | string;
-    plan: TenantPlan;
+    plan: null | TenantPlan;
     notes: null | string;
     country: null | string;
     currency: null | string;
@@ -698,6 +811,10 @@ export type UpgradeTenantData = {
 
 export type UpgradeTenantErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * Unauthorized
      */
     401: unknown;
@@ -718,6 +835,118 @@ export type UpgradeTenantErrors = {
 export type UpgradeTenantError = UpgradeTenantErrors[keyof UpgradeTenantErrors];
 
 export type UpgradeTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type RollbackTenantData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/rollback';
+};
+
+export type RollbackTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RollbackTenantError = RollbackTenantErrors[keyof RollbackTenantErrors];
+
+export type RollbackTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type FleetUpgradeData = {
+    body: FleetUpgradeRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/upgrade';
+};
+
+export type FleetUpgradeErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type FleetUpgradeError = FleetUpgradeErrors[keyof FleetUpgradeErrors];
+
+export type FleetUpgradeResponses = {
+    /**
+     * Accepted
+     */
+    202: FleetUpgradeResponse;
+};
+
+export type FleetUpgradeResponse2 = FleetUpgradeResponses[keyof FleetUpgradeResponses];
+
+export type SecureTenantData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query: {
+        /**
+         * New passwords for a stack that already has its own
+         */
+        rotate: boolean;
+    };
+    url: '/api/control/tenants/{slug}/secure';
+};
+
+export type SecureTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type SecureTenantError = SecureTenantErrors[keyof SecureTenantErrors];
+
+export type SecureTenantResponses = {
     /**
      * Accepted
      */
@@ -1370,6 +1599,84 @@ export type RedeemImpersonationErrors = {
 
 export type RedeemImpersonationError = RedeemImpersonationErrors[keyof RedeemImpersonationErrors];
 
+export type GetPlatformBackupsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/backups';
+};
+
+export type GetPlatformBackupsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlatformBackupsResponses = {
+    /**
+     * OK
+     */
+    200: PlatformBackupsResponse;
+};
+
+export type GetPlatformBackupsResponse = GetPlatformBackupsResponses[keyof GetPlatformBackupsResponses];
+
+export type CreatePlatformBackupData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/backups';
+};
+
+export type CreatePlatformBackupErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreatePlatformBackupResponses = {
+    /**
+     * OK
+     */
+    200: BackupInfo;
+};
+
+export type CreatePlatformBackupResponse = CreatePlatformBackupResponses[keyof CreatePlatformBackupResponses];
+
+export type DownloadPlatformBackupData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/platform/backups/{id}/download';
+};
+
+export type DownloadPlatformBackupErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
 export type ListTenantBackupsData = {
     body?: never;
     path: {
@@ -1542,6 +1849,319 @@ export type RestoreTenantBackupResponses = {
 };
 
 export type RestoreTenantBackupResponse = RestoreTenantBackupResponses[keyof RestoreTenantBackupResponses];
+
+export type GetPlatformMailData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/mail';
+};
+
+export type GetPlatformMailErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlatformMailResponses = {
+    /**
+     * OK
+     */
+    200: MailStatusResponse;
+};
+
+export type GetPlatformMailResponse = GetPlatformMailResponses[keyof GetPlatformMailResponses];
+
+export type ApplyMailToRealmsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/mail/realms';
+};
+
+export type ApplyMailToRealmsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ApplyMailToRealmsError = ApplyMailToRealmsErrors[keyof ApplyMailToRealmsErrors];
+
+export type ApplyMailToRealmsResponses = {
+    /**
+     * OK
+     */
+    200: number | string;
+};
+
+export type ApplyMailToRealmsResponse = ApplyMailToRealmsResponses[keyof ApplyMailToRealmsResponses];
+
+export type ResendWelcomeEmailData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/mail/welcome';
+};
+
+export type ResendWelcomeEmailErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ResendWelcomeEmailError = ResendWelcomeEmailErrors[keyof ResendWelcomeEmailErrors];
+
+export type ResendWelcomeEmailResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type GetPlansData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/plans';
+};
+
+export type GetPlansErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlansResponses = {
+    /**
+     * OK
+     */
+    200: PlanCatalogResponse;
+};
+
+export type GetPlansResponse = GetPlansResponses[keyof GetPlansResponses];
+
+export type GetTenantSubscriptionData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/subscription';
+};
+
+export type GetTenantSubscriptionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTenantSubscriptionResponses = {
+    /**
+     * OK
+     */
+    200: SubscriptionDetail;
+};
+
+export type GetTenantSubscriptionResponse = GetTenantSubscriptionResponses[keyof GetTenantSubscriptionResponses];
+
+export type UpdateTenantSubscriptionData = {
+    body: UpdateSubscriptionRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/subscription';
+};
+
+export type UpdateTenantSubscriptionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateTenantSubscriptionError = UpdateTenantSubscriptionErrors[keyof UpdateTenantSubscriptionErrors];
+
+export type UpdateTenantSubscriptionResponses = {
+    /**
+     * OK
+     */
+    200: SubscriptionDetail;
+};
+
+export type UpdateTenantSubscriptionResponse = UpdateTenantSubscriptionResponses[keyof UpdateTenantSubscriptionResponses];
+
+export type RecordTenantPaymentData = {
+    body: RecordPaymentRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/subscription/payments';
+};
+
+export type RecordTenantPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RecordTenantPaymentError = RecordTenantPaymentErrors[keyof RecordTenantPaymentErrors];
+
+export type RecordTenantPaymentResponses = {
+    /**
+     * Created
+     */
+    201: SubscriptionDetail;
+};
+
+export type RecordTenantPaymentResponse = RecordTenantPaymentResponses[keyof RecordTenantPaymentResponses];
+
+export type SuspendTenantData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/subscription/suspend';
+};
+
+export type SuspendTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type SuspendTenantError = SuspendTenantErrors[keyof SuspendTenantErrors];
+
+export type SuspendTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type ResumeTenantData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/subscription/resume';
+};
+
+export type ResumeTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ResumeTenantError = ResumeTenantErrors[keyof ResumeTenantErrors];
+
+export type ResumeTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
 
 export type TlsAskData = {
     body?: never;

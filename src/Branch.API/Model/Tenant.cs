@@ -70,6 +70,56 @@ public class Tenant
     /// <summary>The kitchen display and the "sent to kitchen" step on the till.</summary>
     public bool KdsEnabled { get; set; } = true;
 
+    /// <summary>
+    /// What the café's plan allows, set by the control plane: an owner may
+    /// switch an entitled module off, never an unentitled one on. All on by
+    /// default, so a stack nobody has told otherwise (the dev host, a stack
+    /// stamped before plans) keeps every switch usable.
+    /// </summary>
+    public bool RoomsEntitled { get; set; } = true;
+
+    public bool LoyaltyEntitled { get; set; } = true;
+
+    public bool TabsEntitled { get; set; } = true;
+
+    public bool InventoryEntitled { get; set; } = true;
+
+    public bool FinanceEntitled { get; set; } = true;
+
+    public bool PayrollEntitled { get; set; } = true;
+
+    public bool KdsEntitled { get; set; } = true;
+
+    public TenantFeatures Features => new(RoomsEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
+
+    public TenantFeatures Entitlements => new(RoomsEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
+
+    /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
+    public void ApplyFeatures(TenantFeatures requested)
+    {
+        var f = requested.Clamp(Entitlements);
+        RoomsEnabled = f.Rooms;
+        LoyaltyEnabled = f.Loyalty;
+        TabsEnabled = f.Tabs;
+        InventoryEnabled = f.Inventory;
+        FinanceEnabled = f.Finance;
+        PayrollEnabled = f.Payroll;
+        KdsEnabled = f.Kds;
+    }
+
+    /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
+    public void ApplyEntitlements(TenantFeatures entitled)
+    {
+        RoomsEntitled = entitled.Rooms;
+        LoyaltyEntitled = entitled.Loyalty;
+        TabsEntitled = entitled.Tabs;
+        InventoryEntitled = entitled.Inventory;
+        FinanceEntitled = entitled.Finance;
+        PayrollEntitled = entitled.Payroll;
+        KdsEntitled = entitled.Kds;
+        ApplyFeatures(Features);
+    }
+
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     /// <summary>Changes whenever anything a surface renders changes; the surfaces put it on every brand URL.</summary>
@@ -127,6 +177,15 @@ public class TenantThemeDark
 
     /// <summary>The dark page, kept dark.</summary>
     public string? Surface { get; set; }
+}
+
+/// <summary>The seven switches, as the surfaces read them and as the plan allows them.</summary>
+public record TenantFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+{
+    /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
+    public TenantFeatures Clamp(TenantFeatures entitled) => new(
+        Rooms && entitled.Rooms, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs, Inventory && entitled.Inventory,
+        Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

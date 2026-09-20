@@ -43,6 +43,7 @@ jobs:
           # api.chillax.site/auth is a compatibility path for installed mobile
           # apps, not where a freshly built SPA should be sent.
           VITE_KEYCLOAK_URL: https://auth.chillax.site
+          VITE_KEYCLOAK_REALM: chillax
           # Here the customer app is app.chillax.site, not admin.chillax.site
           # minus its label as on the platform, so the brand page is told.
           VITE_CUSTOMER_URL: https://app.chillax.site
@@ -65,6 +66,7 @@ jobs:
         if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'client' }}
         env:
           VITE_KEYCLOAK_URL: https://auth.chillax.site
+          VITE_KEYCLOAK_REALM: chillax
           # Firebase web push for admin_web (the owner's digest) and client_web
           # (notify-me). Empty secrets leave push off; nothing else changes.
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
@@ -84,6 +86,7 @@ jobs:
         if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'pos' }}
         env:
           VITE_KEYCLOAK_URL: https://auth.chillax.site
+          VITE_KEYCLOAK_REALM: chillax
         run: |
           cd src/pos_web
           npm ci
@@ -95,6 +98,7 @@ jobs:
         if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'kds' }}
         env:
           VITE_KEYCLOAK_URL: https://auth.chillax.site
+          VITE_KEYCLOAK_REALM: chillax
         run: |
           cd src/kds_web
           npm ci

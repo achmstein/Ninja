@@ -21,6 +21,11 @@ public static class Extensions
         builder.Services.Configure<TenantStorageOptions>(builder.Configuration.GetSection("Storage"));
         builder.Services.AddSingleton<TenantBrandStore>();
 
+        // The control plane's own token: client credentials of ninja-control, whose secret only the
+        // control plane holds. azp names the client; a realm role would need every stamped realm changed.
+        builder.Services.AddAuthorizationBuilder()
+            .AddPolicy("Control", policy => policy.RequireAuthenticatedUser().RequireClaim("azp", "ninja-control"));
+
         // The shift drives the flags: opening the drawer turns ordering and
         // reservations on, closing it turns both off
         builder.AddRabbitMqEventBus("eventbus")

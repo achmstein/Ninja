@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DownloadTenantBackupData, DownloadTenantBackupErrors, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RedeemImpersonationData, RedeemImpersonationErrors, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -95,7 +95,7 @@ export const stopTenant = <ThrowOnError extends boolean = false>(options: Option
 export const startTenant = <ThrowOnError extends boolean = false>(options: Options<StartTenantData, ThrowOnError>): RequestResult<StartTenantResponses, StartTenantErrors, ThrowOnError> => (options.client ?? client).post<StartTenantResponses, StartTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/start', ...options });
 
 /**
- * Re-stamp on a tag and pull
+ * Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes
  */
 export const upgradeTenant = <ThrowOnError extends boolean = false>(options: Options<UpgradeTenantData, ThrowOnError>): RequestResult<UpgradeTenantResponses, UpgradeTenantErrors, ThrowOnError> => (options.client ?? client).post<UpgradeTenantResponses, UpgradeTenantErrors, ThrowOnError>({
     url: '/api/control/tenants/{slug}/upgrade',
@@ -105,6 +105,29 @@ export const upgradeTenant = <ThrowOnError extends boolean = false>(options: Opt
         ...options.headers
     }
 });
+
+/**
+ * Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead
+ */
+export const rollbackTenant = <ThrowOnError extends boolean = false>(options: Options<RollbackTenantData, ThrowOnError>): RequestResult<RollbackTenantResponses, RollbackTenantErrors, ThrowOnError> => (options.client ?? client).post<RollbackTenantResponses, RollbackTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/rollback', ...options });
+
+/**
+ * Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it
+ */
+export const fleetUpgrade = <ThrowOnError extends boolean = false>(options: Options<FleetUpgradeData, ThrowOnError>): RequestResult<FleetUpgradeResponses, FleetUpgradeErrors, ThrowOnError> => (options.client ?? client).post<FleetUpgradeResponses, FleetUpgradeErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/upgrade',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it
+ */
+export const secureTenant = <ThrowOnError extends boolean = false>(options: Options<SecureTenantData, ThrowOnError>): RequestResult<SecureTenantResponses, SecureTenantErrors, ThrowOnError> => (options.client ?? client).post<SecureTenantResponses, SecureTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/secure', ...options });
 
 /**
  * Push a demo's expiry out
@@ -262,6 +285,29 @@ export const impersonateOwner = <ThrowOnError extends boolean = false>(options: 
 export const redeemImpersonation = <ThrowOnError extends boolean = false>(options: Options<RedeemImpersonationData, ThrowOnError>): RequestResult<unknown, RedeemImpersonationErrors, ThrowOnError> => (options.client ?? client).get<unknown, RedeemImpersonationErrors, ThrowOnError>({ url: '/api/control/impersonate/{ticket}', ...options });
 
 /**
+ * The platform's own backups (controldb, keycloak), when the last one ran and reached the bucket, and whether a night was missed
+ */
+export const getPlatformBackups = <ThrowOnError extends boolean = false>(options?: Options<GetPlatformBackupsData, ThrowOnError>): RequestResult<GetPlatformBackupsResponses, GetPlatformBackupsErrors, ThrowOnError> => (options?.client ?? client).get<GetPlatformBackupsResponses, GetPlatformBackupsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/backups',
+    ...options
+});
+
+/**
+ * Dump the platform's databases now, and copy them off the box when there is somewhere to
+ */
+export const createPlatformBackup = <ThrowOnError extends boolean = false>(options?: Options<CreatePlatformBackupData, ThrowOnError>): RequestResult<CreatePlatformBackupResponses, CreatePlatformBackupErrors, ThrowOnError> => (options?.client ?? client).post<CreatePlatformBackupResponses, CreatePlatformBackupErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/backups',
+    ...options
+});
+
+/**
+ * The backup as one .tar.gz
+ */
+export const downloadPlatformBackup = <ThrowOnError extends boolean = false>(options: Options<DownloadPlatformBackupData, ThrowOnError>): RequestResult<unknown, DownloadPlatformBackupErrors, ThrowOnError> => (options.client ?? client).get<unknown, DownloadPlatformBackupErrors, ThrowOnError>({ url: '/api/control/platform/backups/{id}/download', ...options });
+
+/**
  * Every backup kept for the tenant, newest first
  */
 export const listTenantBackups = <ThrowOnError extends boolean = false>(options: Options<ListTenantBackupsData, ThrowOnError>): RequestResult<ListTenantBackupsResponses, ListTenantBackupsErrors, ThrowOnError> => (options.client ?? client).get<ListTenantBackupsResponses, ListTenantBackupsErrors, ThrowOnError>({
@@ -294,6 +340,83 @@ export const restoreTenantBackup = <ThrowOnError extends boolean = false>(option
         ...options.headers
     }
 });
+
+/**
+ * Whether mail is configured, when it last went out, what last went wrong
+ */
+export const getPlatformMail = <ThrowOnError extends boolean = false>(options?: Options<GetPlatformMailData, ThrowOnError>): RequestResult<GetPlatformMailResponses, GetPlatformMailErrors, ThrowOnError> => (options?.client ?? client).get<GetPlatformMailResponses, GetPlatformMailErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/mail',
+    ...options
+});
+
+/**
+ * Give every realm the platform's SMTP settings, so password resets work in realms stamped before mail was set up
+ */
+export const applyMailToRealms = <ThrowOnError extends boolean = false>(options?: Options<ApplyMailToRealmsData, ThrowOnError>): RequestResult<ApplyMailToRealmsResponses, ApplyMailToRealmsErrors, ThrowOnError> => (options?.client ?? client).post<ApplyMailToRealmsResponses, ApplyMailToRealmsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/mail/realms',
+    ...options
+});
+
+/**
+ * The owner's welcome mail again: the admin app's address, their email and the temporary password if it still stands
+ */
+export const resendWelcomeEmail = <ThrowOnError extends boolean = false>(options: Options<ResendWelcomeEmailData, ThrowOnError>): RequestResult<ResendWelcomeEmailResponses, ResendWelcomeEmailErrors, ThrowOnError> => (options.client ?? client).post<ResendWelcomeEmailResponses, ResendWelcomeEmailErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/mail/welcome', ...options });
+
+/**
+ * The plans, what each includes and what can be added on top
+ */
+export const getPlans = <ThrowOnError extends boolean = false>(options?: Options<GetPlansData, ThrowOnError>): RequestResult<GetPlansResponses, GetPlansErrors, ThrowOnError> => (options?.client ?? client).get<GetPlansResponses, GetPlansErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/platform/plans',
+    ...options
+});
+
+/**
+ * Plan, add-ons, what they entitle, where the subscription stands, and the payments recorded
+ */
+export const getTenantSubscription = <ThrowOnError extends boolean = false>(options: Options<GetTenantSubscriptionData, ThrowOnError>): RequestResult<GetTenantSubscriptionResponses, GetTenantSubscriptionErrors, ThrowOnError> => (options.client ?? client).get<GetTenantSubscriptionResponses, GetTenantSubscriptionErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/subscription',
+    ...options
+});
+
+/**
+ * A new plan or add-ons; the stack's gateway and switches follow
+ */
+export const updateTenantSubscription = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantSubscriptionData, ThrowOnError>): RequestResult<UpdateTenantSubscriptionResponses, UpdateTenantSubscriptionErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantSubscriptionResponses, UpdateTenantSubscriptionErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/subscription',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * A payment received: extends what is paid through, and brings a suspended stack back
+ */
+export const recordTenantPayment = <ThrowOnError extends boolean = false>(options: Options<RecordTenantPaymentData, ThrowOnError>): RequestResult<RecordTenantPaymentResponses, RecordTenantPaymentErrors, ThrowOnError> => (options.client ?? client).post<RecordTenantPaymentResponses, RecordTenantPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/subscription/payments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Stop the stack for non-payment; the owner is told
+ */
+export const suspendTenant = <ThrowOnError extends boolean = false>(options: Options<SuspendTenantData, ThrowOnError>): RequestResult<SuspendTenantResponses, SuspendTenantErrors, ThrowOnError> => (options.client ?? client).post<SuspendTenantResponses, SuspendTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/subscription/suspend', ...options });
+
+/**
+ * Bring a suspended stack back without a payment (the sweep may suspend it again while it stays unpaid)
+ */
+export const resumeTenant = <ThrowOnError extends boolean = false>(options: Options<ResumeTenantData, ThrowOnError>): RequestResult<ResumeTenantResponses, ResumeTenantErrors, ThrowOnError> => (options.client ?? client).post<ResumeTenantResponses, ResumeTenantErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/subscription/resume', ...options });
 
 /**
  * 200 when the host belongs to a tenant, 404 otherwise

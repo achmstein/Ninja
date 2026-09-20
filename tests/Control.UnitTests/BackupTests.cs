@@ -9,14 +9,17 @@ namespace Ninja.Control.UnitTests;
 public sealed class BackupTests
 {
     private string _root = null!;
+    private RecordingShell _shell = null!;
+    private RecordingOffsiteStore _store = null!;
     private BackupService _backups = null!;
 
     [TestInitialize]
     public void Setup()
     {
         _root = Path.Combine(Path.GetTempPath(), "ninja-backup-tests", Guid.NewGuid().ToString("N"));
-        var shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
-        _backups = new BackupService(shell, Options.Create(new PlatformOptions { TenantsRoot = _root }), NullLogger<BackupService>.Instance);
+        _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
+        _store = new RecordingOffsiteStore();
+        _backups = new BackupService(_shell, _store, Options.Create(new PlatformOptions { TenantsRoot = _root, Offsite = { Prefix = "ninja/" } }), NullLogger<BackupService>.Instance);
     }
 
     [TestCleanup]
@@ -74,6 +77,115 @@ public sealed class BackupTests
         Assert.IsNull(BackupService.ParseRestoreFrom("blue"));
         Assert.IsNull(BackupService.ParseRestoreFrom("Blue Bottle/20260919-120000"));
         Assert.IsNull(BackupService.ParseRestoreFrom("blue/../x"));
+    }
+
+    [TestMethod]
+    public async Task A_restore_loads_the_dumps_as_the_new_tenants_own_role()
+    {
+        var source = new Tenant { Slug = "blue" };
+        var backup = await _backups.CreateAsync(source, CancellationToken.None);
+        _shell.Commands.Clear();
+
+        await _backups.RestoreDatabasesAsync("blue", backup.Id, new Tenant { Slug = "red" }, CancellationToken.None);
+
+        Assert.AreEqual(TenantNaming.Databases.Length, _shell.Commands.Count);
+        // --no-owner alone would leave the superuser owning every restored table; the role could neither migrate nor write them
+        StringAssert.Contains(_shell.Commands[0], "pg_restore -U postgres --no-owner --role red_app --clean --if-exists -d red_accountsdb");
+    }
+
+    [TestMethod]
+    public async Task The_platform_backup_dumps_controldb_and_keycloak_under_its_own_name()
+    {
+        var info = await _backups.CreatePlatformAsync(CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { "controldb", "keycloak" }, info.Databases.ToArray());
+        Assert.IsFalse(info.HasUploads);
+        Assert.IsTrue(_shell.Commands.Any(c => c.EndsWith("pg_dump -U postgres -Fc controldb")));
+        Assert.IsTrue(_shell.Commands.Any(c => c.EndsWith("pg_dump -U postgres -Fc keycloak")));
+        Assert.IsTrue(Directory.Exists(Path.Combine(_root, "_platform", "backups", info.Id)));
+        Assert.AreEqual(info.Id, _backups.List(BackupService.PlatformSlug).Single().Id);
+        // No tenant can be restored from it, and no slug can collide with it
+        Assert.IsNull(BackupService.ParseRestoreFrom($"_platform/{info.Id}"));
+        Assert.IsFalse(TenantNaming.IsValidSlug("_platform"));
+    }
+
+    [TestMethod]
+    public async Task Offsite_sends_one_archive_per_backup_and_marks_the_manifest()
+    {
+        var created = await _backups.CreateAsync(new Tenant { Slug = "blue" }, CancellationToken.None);
+        Assert.IsNull(created.OffsiteAt);
+
+        var sent = await _backups.OffsiteAsync("blue", created.Id, CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { $"ninja/blue/{created.Id}.tar.gz" }, _store.Keys);
+        Assert.IsNotNull(sent.OffsiteAt);
+        Assert.IsNotNull(_backups.Find("blue", created.Id)!.OffsiteAt, "the manifest on disk remembers");
+        Assert.IsFalse(Directory.EnumerateFiles(_backups.Root("blue"), "*.tmp").Any(), "the archive was only ever a stepping stone");
+
+        await _backups.DeleteOffsiteAsync("blue", created.Id, CancellationToken.None);
+        Assert.IsEmpty(_store.Keys);
+    }
+
+    [TestMethod]
+    public async Task Archiving_moves_the_newest_backup_out_of_the_tenant_folder_and_pruning_ages_it_out()
+    {
+        var tenant = new Tenant { Slug = "blue" };
+        var older = await _backups.CreateAsync(tenant, CancellationToken.None);
+        await Task.Delay(1100);
+        var newest = await _backups.CreateAsync(tenant, CancellationToken.None);
+
+        Assert.AreEqual(newest.Id, _backups.ArchiveLatest("blue"));
+        Assert.IsTrue(Directory.Exists(Path.Combine(_root, "_archive", "blue", newest.Id)));
+        Assert.AreEqual(older.Id, _backups.List("blue").Single().Id, "the older one stays where destroy will delete it");
+
+        // Nothing is old enough yet; an archive dated ninety-one days back is
+        Assert.AreEqual(0, _backups.PruneArchive(90));
+        var stale = Path.Combine(_root, "_archive", "red", DateTimeOffset.UtcNow.AddDays(-91).ToString("yyyyMMdd-HHmmss"));
+        Directory.CreateDirectory(stale);
+        Assert.AreEqual(1, _backups.PruneArchive(90));
+        Assert.IsFalse(Directory.Exists(Path.Combine(_root, "_archive", "red")), "an emptied tenant folder goes too");
+        Assert.IsNull(_backups.ArchiveLatest("nobody"));
+    }
+
+    [TestMethod]
+    public async Task A_backup_is_fresh_for_the_window_and_stale_after_a_missed_night()
+    {
+        Assert.IsFalse(_backups.IsFresh("blue", 60, out var none));
+        Assert.IsNull(none);
+        var created = await _backups.CreateAsync(new Tenant { Slug = "blue" }, CancellationToken.None);
+        Assert.IsTrue(_backups.IsFresh("blue", 60, out var newest));
+        Assert.AreEqual(created.Id, newest!.Id);
+        Assert.IsFalse(_backups.IsFresh("blue", 0, out _));
+
+        var now = new DateTimeOffset(2026, 9, 20, 12, 0, 0, TimeSpan.Zero);
+        Assert.IsTrue(PlatformBackupService.IsStale(null, now));
+        Assert.IsTrue(PlatformBackupService.IsStale(now.AddHours(-27), now));
+        Assert.IsFalse(PlatformBackupService.IsStale(now.AddHours(-25), now));
+    }
+
+    [TestMethod]
+    public void The_weekly_run_lands_on_the_weekday_at_the_hour()
+    {
+        // Wednesday 2026-07-01 22:00 UTC (Thursday 01:00 Cairo): Sunday 04:00 Cairo is 3 days and 3 hours away
+        var wait = NightlyBackupService.UntilNextRun(new DateTimeOffset(2026, 7, 1, 22, 0, 0, TimeSpan.Zero), "Africa/Cairo", 4, DayOfWeek.Sunday);
+        Assert.AreEqual(TimeSpan.FromDays(3) + TimeSpan.FromHours(3), wait);
+    }
+
+    [TestMethod]
+    public void The_drill_picks_the_tenant_verified_longest_ago()
+    {
+        var now = DateTimeOffset.UtcNow;
+        BackupInfo Backup(DateTimeOffset? verified) => new("20260901-030000", now, 1, [], false, "v1", null, verified);
+        var candidates = new List<(Tenant, BackupInfo)>
+        {
+            (new Tenant { Slug = "recent" }, Backup(now.AddDays(-1))),
+            (new Tenant { Slug = "never" }, Backup(null)),
+            (new Tenant { Slug = "old" }, Backup(now.AddDays(-30))),
+        };
+        Assert.AreEqual("never", RestoreDrillService.Pick(candidates)!.Value.Tenant.Slug);
+        candidates.RemoveAt(1);
+        Assert.AreEqual("old", RestoreDrillService.Pick(candidates)!.Value.Tenant.Slug);
+        Assert.IsNull(RestoreDrillService.Pick([]));
     }
 
     [TestMethod]

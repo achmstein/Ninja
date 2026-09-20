@@ -465,7 +465,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "Re-stamp on a tag and pull",
+        "summary": "Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes",
         "operationId": "UpgradeTenant",
         "parameters": [
           {
@@ -493,6 +493,167 @@
             }
           }
         },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/rollback": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead",
+        "operationId": "RollbackTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/upgrade": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it",
+        "operationId": "FleetUpgrade",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetUpgradeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetUpgradeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/secure": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it",
+        "operationId": "SecureTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rotate",
+            "in": "query",
+            "description": "New passwords for a stack that already has its own",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "202": {
             "description": "Accepted"
@@ -1539,6 +1700,97 @@
         }
       }
     },
+    "/api/control/platform/backups": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The platform's own backups (controldb, keycloak), when the last one ran and reached the bucket, and whether a night was missed",
+        "operationId": "GetPlatformBackups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformBackupsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Dump the platform's databases now, and copy them off the box when there is somewhere to",
+        "operationId": "CreatePlatformBackup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/backups/{id}/download": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The backup as one .tar.gz",
+        "operationId": "DownloadPlatformBackup",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tenants/{slug}/backups": {
       "get": {
         "tags": [
@@ -1794,6 +2046,426 @@
         ]
       }
     },
+    "/api/control/platform/mail": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Whether mail is configured, when it last went out, what last went wrong",
+        "operationId": "GetPlatformMail",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/mail/realms": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Give every realm the platform's SMTP settings, so password resets work in realms stamped before mail was set up",
+        "operationId": "ApplyMailToRealms",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)$",
+                  "type": [
+                    "integer",
+                    "string"
+                  ],
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/mail/welcome": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The owner's welcome mail again: the admin app's address, their email and the temporary password if it still stands",
+        "operationId": "ResendWelcomeEmail",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/plans": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The plans, what each includes and what can be added on top",
+        "operationId": "GetPlans",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanCatalogResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/subscription": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Plan, add-ons, what they entitle, where the subscription stands, and the payments recorded",
+        "operationId": "GetTenantSubscription",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "A new plan or add-ons; the stack's gateway and switches follow",
+        "operationId": "UpdateTenantSubscription",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/subscription/payments": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "A payment received: extends what is paid through, and brings a suspended stack back",
+        "operationId": "RecordTenantPayment",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/subscription/suspend": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Stop the stack for non-payment; the owner is told",
+        "operationId": "SuspendTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/subscription/resume": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Bring a suspended stack back without a payment (the sweep may suspend it again while it stays unpaid)",
+        "operationId": "ResumeTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -1916,6 +2588,20 @@
           },
           "imageTag": {
             "type": "string"
+          },
+          "offsiteAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "verifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -1984,6 +2670,16 @@
               "string"
             ],
             "format": "int64"
+          },
+          "entitlements": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandFeatures"
+              }
+            ]
           }
         }
       },
@@ -2263,6 +2959,7 @@
           "dockerUsedMb",
           "dockerReclaimableMb",
           "stackFootprintMb",
+          "stackLimitMb",
           "reserveMb",
           "roomFor",
           "tenants"
@@ -2341,6 +3038,14 @@
             "format": "int64"
           },
           "stackFootprintMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stackLimitMb": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -2434,6 +3139,22 @@
                 "$ref": "#/components/schemas/TenantPlan"
               }
             ]
+          },
+          "addons": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "paidThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -2560,6 +3281,15 @@
               "null",
               "boolean"
             ]
+          },
+          "addons": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
           }
         }
       },
@@ -2576,6 +3306,46 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "FleetUpgradeRequest": {
+        "required": [
+          "imageTag"
+        ],
+        "type": "object",
+        "properties": {
+          "imageTag": {
+            "type": "string"
+          },
+          "canary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "FleetUpgradeResponse": {
+        "required": [
+          "queued",
+          "canary"
+        ],
+        "type": "object",
+        "properties": {
+          "queued": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "canary": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2596,6 +3366,77 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "MailStatusResponse": {
+        "required": [
+          "configured",
+          "host",
+          "from",
+          "opsTo",
+          "lastSentAt",
+          "lastError",
+          "sent",
+          "failed",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "host": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "from": {
+            "type": "string"
+          },
+          "opsTo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastSentAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sent": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "failed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "skipped": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2655,6 +3496,163 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "Module": {
+        "enum": [
+          "Rooms",
+          "Loyalty",
+          "Tabs",
+          "Inventory",
+          "Finance",
+          "Payroll",
+          "Kds"
+        ]
+      },
+      "PaymentDto": {
+        "required": [
+          "id",
+          "at",
+          "amount",
+          "currency",
+          "periodStart",
+          "periodEnd",
+          "reference",
+          "note",
+          "recordedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recordedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "PlanCatalogResponse": {
+        "required": [
+          "modules",
+          "plans"
+        ],
+        "type": "object",
+        "properties": {
+          "modules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanDto"
+            }
+          }
+        }
+      },
+      "PlanDto": {
+        "required": [
+          "plan",
+          "included",
+          "addons"
+        ],
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/TenantPlan"
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "addons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          }
+        }
+      },
+      "PlatformBackupsResponse": {
+        "required": [
+          "backups",
+          "lastAt",
+          "lastOffsiteAt",
+          "stale",
+          "offsiteEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "backups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackupInfo"
+            }
+          },
+          "lastAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastOffsiteAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "offsiteEnabled": {
+            "type": "boolean"
           }
         }
       },
@@ -2744,6 +3742,50 @@
             ]
           },
           "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RecordPaymentRequest": {
+        "required": [
+          "amount",
+          "currency",
+          "periodEnd"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodStart": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
             "type": [
               "null",
               "string"
@@ -2850,6 +3892,98 @@
           "Skipped"
         ]
       },
+      "SubscriptionDetail": {
+        "required": [
+          "plan",
+          "addons",
+          "included",
+          "addonsAvailable",
+          "entitlements",
+          "status",
+          "paidThrough",
+          "graceDays",
+          "suspendedAt",
+          "pastDueNotifiedAt",
+          "payments"
+        ],
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/TenantPlan"
+          },
+          "addons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "addonsAvailable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "entitlements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/SubscriptionStatus"
+          },
+          "paidThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "graceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "suspendedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "pastDueNotifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
+            }
+          }
+        }
+      },
+      "SubscriptionStatus": {
+        "enum": [
+          "Trialing",
+          "Active",
+          "PastDue",
+          "Suspended",
+          "Cancelled"
+        ]
+      },
       "TenantDetail": {
         "required": [
           "slug",
@@ -2872,7 +4006,12 @@
           "provisionedAt",
           "lastError",
           "steps",
-          "seedImages"
+          "seedImages",
+          "hasOwnCredentials",
+          "welcomeSentAt",
+          "subscription",
+          "previousImageTag",
+          "upgradeBackupId"
         ],
         "type": "object",
         "properties": {
@@ -2971,6 +4110,31 @@
             "items": {
               "type": "string"
             }
+          },
+          "hasOwnCredentials": {
+            "type": "boolean"
+          },
+          "welcomeSentAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "subscription": {
+            "$ref": "#/components/schemas/TenantSubscriptionDto"
+          },
+          "previousImageTag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "upgradeBackupId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3191,8 +4355,60 @@
           "Stopped",
           "Failed",
           "Destroying",
-          "Destroyed"
+          "Destroyed",
+          "Upgrading",
+          "Suspended"
         ]
+      },
+      "TenantSubscriptionDto": {
+        "required": [
+          "status",
+          "paidThrough",
+          "graceDays",
+          "suspendedAt",
+          "addons",
+          "entitlements"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/SubscriptionStatus"
+          },
+          "paidThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "graceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "suspendedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "addons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "entitlements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          }
+        }
       },
       "TenantSummary": {
         "required": [
@@ -3210,7 +4426,10 @@
           "createdAt",
           "expiresAt",
           "imageTag",
-          "lastError"
+          "lastError",
+          "hasOwnCredentials",
+          "subscription",
+          "paidThrough"
         ],
         "type": "object",
         "properties": {
@@ -3272,6 +4491,19 @@
               "null",
               "string"
             ]
+          },
+          "hasOwnCredentials": {
+            "type": "boolean"
+          },
+          "subscription": {
+            "$ref": "#/components/schemas/SubscriptionStatus"
+          },
+          "paidThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3378,6 +4610,36 @@
           }
         }
       },
+      "UpdateSubscriptionRequest": {
+        "required": [
+          "plan"
+        ],
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/TenantPlan"
+          },
+          "addons": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            }
+          },
+          "graceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "0–90; null keeps the platform's default",
+            "format": "int32"
+          }
+        }
+      },
       "UpdateTenantRequest": {
         "required": [
           "nameEn",
@@ -3436,7 +4698,14 @@
             ]
           },
           "plan": {
-            "$ref": "#/components/schemas/TenantPlan"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantPlan"
+              }
+            ]
           },
           "notes": {
             "type": [

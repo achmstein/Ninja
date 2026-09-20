@@ -74,5 +74,5 @@ public static partial class ControlApi
     }
 
     /// <summary>A stack exists on the box for these; the rest have nothing to list.</summary>
-    private static bool Stamped(Tenant tenant) => tenant.Status is TenantStatus.Running or TenantStatus.Stopped or TenantStatus.Failed or TenantStatus.Provisioning;
+    private static bool Stamped(Tenant tenant) => tenant.Status is TenantStatus.Running or TenantStatus.Stopped or TenantStatus.Failed or TenantStatus.Provisioning or TenantStatus.Upgrading;
 }

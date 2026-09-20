@@ -45,11 +45,20 @@ public static partial class TenantNaming
 
     public static string Project(string slug) => $"ninja-{slug}";
 
+    /// <summary>The scratch tenant a restore drill stamps for a slug, within the 24 characters a slug may have.</summary>
+    public static string DrillSlug(string slug) => $"drill-{slug}"[..Math.Min(24, slug.Length + 6)].TrimEnd('-');
+
     public static string Realm(string slug) => slug;
 
     public static string VHost(string slug) => slug;
 
     public static string Database(string slug, string db) => $"{slug}_{db}";
+
+    /// <summary>The Postgres role that owns the tenant's databases and nothing else; _ is not a slug character, so it collides with no other tenant's name.</summary>
+    public static string DbRole(string slug) => $"{slug}_app";
+
+    /// <summary>The RabbitMQ user with permissions on the tenant's vhost alone.</summary>
+    public static string BrokerUser(string slug) => $"{slug}_app";
 
     /// <summary>A compose service name, unique on the shared network: {slug}-{service}-api.</summary>
     public static string Service(string slug, string service) => $"{slug}-{service}-api";

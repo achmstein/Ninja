@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ImagePlus, X } from 'lucide-react'
+import { ChevronDown, ImagePlus, Lock, X } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { type TenantFeatures, type TenantThemeDto } from '@/api/branch'
 import {
@@ -371,23 +371,34 @@ function BrandForm({ brand }: { brand: Brand }) {
             <div className='space-y-2'>
               <Label>{t('features')}</Label>
               <div className='divide-y rounded-lg border'>
-                {FEATURE_ROWS.map((row) => (
-                  <div
-                    key={row.key}
-                    className='flex items-center justify-between p-3'
-                  >
-                    <Label htmlFor={`feature-${row.key}`} className='text-sm'>
-                      {t(row.label)}
-                    </Label>
-                    <Switch
-                      id={`feature-${row.key}`}
-                      checked={features[row.key]}
-                      onCheckedChange={(v) =>
-                        setFeatures({ ...features, [row.key]: v })
-                      }
-                    />
-                  </div>
-                ))}
+                {FEATURE_ROWS.map((row) => {
+                  // What the plan allows: a module outside it stays off, and says why
+                  const entitled = brand.entitlements?.[row.key] ?? true
+                  return (
+                    <div
+                      key={row.key}
+                      className='flex items-center justify-between p-3'
+                    >
+                      <Label htmlFor={`feature-${row.key}`} className='flex items-center gap-2 text-sm'>
+                        {t(row.label)}
+                        {!entitled && (
+                          <span className='text-muted-foreground flex items-center gap-1 text-xs'>
+                            <Lock className='size-3.5' />
+                            {t('notInPlan')}
+                          </span>
+                        )}
+                      </Label>
+                      <Switch
+                        id={`feature-${row.key}`}
+                        checked={entitled && features[row.key]}
+                        disabled={!entitled}
+                        onCheckedChange={(v) =>
+                          setFeatures({ ...features, [row.key]: v })
+                        }
+                      />
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

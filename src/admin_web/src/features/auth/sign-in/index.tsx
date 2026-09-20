@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { AuthLayout } from '../auth-layout'
-import { PLATFORM_NAME } from '@/lib/brand'
+import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
 import { PlatformMark } from '@/components/platform-mark'
 
 /**
@@ -26,6 +26,7 @@ import { PlatformMark } from '@/components/platform-mark'
  */
 export function SignIn() {
   const t = useT()
+  const cafe = useBrandName()
   const auth = useAuth()
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
@@ -98,9 +99,12 @@ export function SignIn() {
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
         <PlatformMark className='size-14 text-2xl' />
-        <span className='text-2xl font-semibold tracking-tight'>
-          {PLATFORM_NAME}
-        </span>
+        <div className='flex flex-col items-center gap-1'>
+          <span className='text-2xl font-semibold tracking-tight'>
+            {PLATFORM_NAME}
+          </span>
+          {cafe && <span className='text-muted-foreground'>{cafe}</span>}
+        </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Spinner />

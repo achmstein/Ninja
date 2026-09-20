@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/ninja_mark.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -95,6 +96,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
+    // Which café this till belongs to, under the platform's name
+    final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
 
     return Scaffold(
       backgroundColor: theme.colors.background,
@@ -121,6 +124,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
+                  if (cafe.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Center(
+                      child: AppText(
+                        cafe,
+                        style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
 
                   // Error message

@@ -2,6 +2,9 @@
   "realm": "{{slug}}",
   "enabled": true,
   "displayName": "{{displayName}}",
+  "displayNameHtml": "{{displayNameHtml}}",
+  "loginTheme": "ninja",
+  "smtpServer": {{smtpServer}},
   "internationalizationEnabled": true,
   "supportedLocales": [
     "en",

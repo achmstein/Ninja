@@ -2,6 +2,8 @@
   "realm": "ninja",
   "enabled": true,
   "displayName": "Ninja",
+  "loginTheme": "ninja",
+  "smtpServer": {{smtpServer}},
   "internationalizationEnabled": true,
   "supportedLocales": [
     "en",

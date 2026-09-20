@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, TriangleAlert } from 'lucide-react'
 import {
   createTenantMutation,
+  getPlansOptions,
   getPlatformCapacityOptions,
   getPlatformOptions,
   listTenantsQueryKey,
@@ -51,13 +52,17 @@ import { useT, type Language } from '@/lib/i18n'
 import { COUNTRIES, countryOf, type Country } from '@/lib/locale'
 import { problemDetail } from '@/lib/problem'
 import {
+  MODULES,
   SEED_DEFAULT,
   TENANT_KINDS,
   TENANT_PLANS,
   isHexColor,
   isValidSlug,
   kindLabelKey,
+  moduleLabelKey,
+  moduleName,
   planLabelKey,
+  type ModuleName,
   seedLabelKey,
   slugFrom,
   type TenantKindName,
@@ -142,6 +147,10 @@ export function NewTenantPage() {
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [plan, setPlan] = useState<TenantPlanName>('Free')
+  const [addons, setAddons] = useState<ModuleName[]>([])
+  const plans = useQuery(getPlansOptions())
+  const planRow = plans.data?.plans.find((p) => p.plan === plan)
+  const included = new Set((planRow?.included ?? []).map(moduleName))
   const [notes, setNotes] = useState('')
 
   // Locale
@@ -236,6 +245,7 @@ export function NewTenantPage() {
       phone: phone.trim() || null,
       address: address.trim() || null,
       plan,
+      addons: addons.filter((m) => !included.has(m)),
       notes: notes.trim() || null,
       provision: true,
       force,
@@ -411,6 +421,26 @@ export function NewTenantPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className='grid gap-2 sm:col-span-2'>
+                    <Label>{t('modules')}</Label>
+                    {kind === 'Demo' && <p className='text-muted-foreground text-xs'>{t('demoHasEverything')}</p>}
+                    <div className='grid gap-2 sm:grid-cols-2'>
+                      {MODULES.map((m) => {
+                        const isIncluded = included.has(m)
+                        return (
+                          <label key={m} className='flex items-center gap-2 text-sm'>
+                            <Checkbox
+                              checked={isIncluded || addons.includes(m)}
+                              disabled={isIncluded || kind === 'Demo'}
+                              onCheckedChange={(v) => setAddons((a) => (v === true ? [...a, m] : a.filter((x) => x !== m)))}
+                            />
+                            {t(moduleLabelKey[m])}
+                            {isIncluded && <span className='text-muted-foreground text-xs'>· {t('includedInPlan')}</span>}
+                          </label>
+                        )
+                      })}
+                    </div>
                   </div>
                   <div className='grid gap-2 sm:col-span-2'>
                     <Label htmlFor='notes'>{t('notes')}</Label>

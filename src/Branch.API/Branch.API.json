@@ -236,7 +236,7 @@
         "tags": [
           "Tenant"
         ],
-        "summary": "Change the name, the brand color or the feature switches",
+        "summary": "Change the name, the brand color or the feature switches (within what the plan allows)",
         "operationId": "UpdateTenant",
         "requestBody": {
           "content": {
@@ -265,6 +265,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tenant/entitlements": {
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The modules the café's plan allows; a switch outside them goes off. The control plane only",
+        "operationId": "SetTenantEntitlements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantFeatures"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
                 }
               }
             }
@@ -835,6 +875,7 @@
           "theme",
           "icons",
           "features",
+          "entitlements",
           "locale",
           "version"
         ],
@@ -887,6 +928,9 @@
             "$ref": "#/components/schemas/TenantIcons"
           },
           "features": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "entitlements": {
             "$ref": "#/components/schemas/TenantFeatures"
           },
           "locale": {

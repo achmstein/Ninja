@@ -95,6 +95,9 @@ namespace Ninja.Branch.API.Migrations
                     b.Property<bool>("FinanceEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("FinanceEntitled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Images")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -102,13 +105,25 @@ namespace Ninja.Branch.API.Migrations
                     b.Property<bool>("InventoryEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("InventoryEntitled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("KdsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("KdsEntitled")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("LoyaltyEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("LoyaltyEntitled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("PayrollEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PayrollEntitled")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PrimaryColor")
@@ -118,7 +133,13 @@ namespace Ninja.Branch.API.Migrations
                     b.Property<bool>("RoomsEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("RoomsEntitled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("TabsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("TabsEntitled")
                         .HasColumnType("boolean");
 
                     b.Property<string>("TimeZone")

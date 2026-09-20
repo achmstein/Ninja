@@ -24,6 +24,8 @@ $realms = Join-Path $here 'realms'
 New-Item -ItemType Directory -Force $realms | Out-Null
 $template = Get-Content (Join-Path $root 'src\Control.API\Templates\platform-realm.json') -Raw -Encoding UTF8
 $realm = $template.Replace('{{controlUrl}}', 'https://control.localhost').Replace('{{platformDomain}}', 'localhost').Replace('{{platformPassword}}', 'Local123$').Replace('{{sslRequired}}', 'external').Replace('"temporary": true', '"temporary": false')
+# The platform realm sends its password resets through Mailpit, like the control plane
+$realm = $realm.Replace('{{smtpServer}}', '{"host":"mailpit","port":"1025","from":"no-reply@localhost","fromDisplayName":"Ninja","auth":"false","starttls":"false","ssl":"false"}')
 [System.IO.File]::WriteAllText((Join-Path $realms 'ninja-realm.json'), $realm, (New-Object System.Text.UTF8Encoding $false))
 Write-Host 'realm  ninja-realm.json (platform / Local123$)'
 

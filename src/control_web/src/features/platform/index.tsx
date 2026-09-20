@@ -1,12 +1,21 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { AlertTriangle, ArrowUpCircle, Mail, MailX, Plus } from 'lucide-react'
 import type { TenantSummary, TenantUsage } from '@/api/control'
 import {
+  fleetUpgradeMutation,
+  getPlatformBackupsOptions,
   getPlatformCapacityOptions,
+  getPlatformMailOptions,
   getPlatformOptions,
   listTenantsOptions,
+  listTenantsQueryKey,
 } from '@/api/control/@tanstack/react-query.gen'
+import { FleetUpgradeDialog } from '@/features/tenants/dialogs'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,17 +31,18 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/page-header'
-import { KindBadge, StatusBadge } from '@/components/tenant-badges'
+import { KindBadge, StatusBadge, SubscriptionBadge } from '@/components/tenant-badges'
 import { megabytes, useFormat } from '@/lib/format'
 import { useLanguage, useT } from '@/lib/i18n'
-import { isBusy, planLabelKey, tenantKind, tenantStatus } from '@/lib/tenant'
+import { isBusy, planLabelKey, subscriptionStatus, tenantKind, tenantStatus } from '@/lib/tenant'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
+import { PlatformBackups } from './platform-backups'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'capacity' | 'audit'
+type Tab = 'tenants' | 'capacity' | 'backups' | 'audit'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -40,8 +50,20 @@ type Tab = 'tenants' | 'capacity' | 'audit'
  */
 export function PlatformPage() {
   const t = useT()
+  const format = useFormat()
   const { tab } = route.useSearch()
   const navigate = route.useNavigate()
+  const queryClient = useQueryClient()
+  const [fleet, setFleet] = useState(false)
+  const fleetUpgrade = useMutation({
+    ...fleetUpgradeMutation(),
+    onSuccess: (r) => {
+      toast.success(t('fleetUpgradeQueued', { count: r.queued }))
+      setFleet(false)
+      queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
+    },
+    onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
+  })
 
   const platform = useQuery({
     ...getPlatformOptions(),
@@ -51,6 +73,9 @@ export function PlatformPage() {
     ...getPlatformCapacityOptions({ query: { refresh: false } }),
     refetchInterval: 30_000,
   })
+  // Only the stale flag is read here; the tab shows the rest
+  const platformBackups = useQuery({ ...getPlatformBackupsOptions(), refetchInterval: 60_000 })
+  const mail = useQuery({ ...getPlatformMailOptions(), refetchInterval: 60_000 })
   // The list keeps itself fresh while any stack is mid-change; otherwise
   // it is as static as the platform is.
   const tenants = useQuery({
@@ -76,16 +101,54 @@ export function PlatformPage() {
           )
         }
         actions={
+          <>
+          <Button variant='outline' onClick={() => setFleet(true)} disabled={!tenants.data?.some((x) => tenantStatus(x.status) === 'Running')}>
+            <ArrowUpCircle className='size-4' />
+            {t('upgradeAll')}
+          </Button>
           <Button asChild>
             <Link to='/new'>
               <Plus className='size-4' />
               {t('newTenant')}
             </Link>
           </Button>
+          </>
         }
       />
 
+      <FleetUpgradeDialog
+        open={fleet}
+        onOpenChange={setFleet}
+        isPending={fleetUpgrade.isPending}
+        runningSlugs={(tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running').map((x) => x.slug)}
+        onConfirm={(imageTag, canary) => fleetUpgrade.mutate({ body: { imageTag, canary } })}
+      />
+
       <CapacityStrip capacity={capacity.data} loading={capacity.isLoading} />
+
+      {mail.data && (
+        <div className='text-muted-foreground flex flex-wrap items-center gap-x-2 text-sm'>
+          {mail.data.configured ? <Mail className='size-3.5' /> : <MailX className='size-3.5' />}
+          {mail.data.configured ? (
+            <>
+              <span>{t('mailConfigured', { host: mail.data.host ?? '' })}</span>
+              <span>·</span>
+              <span>{mail.data.lastSentAt ? t('lastSent', { time: format.dateTime(mail.data.lastSentAt) }) : t('nothingSentYet')}</span>
+              {mail.data.lastError && <span className='text-destructive'>· {mail.data.lastError}</span>}
+            </>
+          ) : (
+            <span>{t('mailNotConfigured')}</span>
+          )}
+        </div>
+      )}
+
+      {platformBackups.data?.stale && !platform.data?.dryRun && (
+        <Alert variant='destructive'>
+          <AlertTriangle />
+          <AlertTitle>{t('platformBackupStale')}</AlertTitle>
+          <AlertDescription>{t('platformBackupStaleNote')}</AlertDescription>
+        </Alert>
+      )}
 
       <Tabs
         value={tab}
@@ -96,6 +159,7 @@ export function PlatformPage() {
         <TabsList>
           <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
           <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
+          <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
           <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
         </TabsList>
         <TabsContent value='tenants'>
@@ -110,6 +174,9 @@ export function PlatformPage() {
             capacity={capacity.data}
             loading={capacity.isLoading}
           />
+        </TabsContent>
+        <TabsContent value='backups'>
+          <PlatformBackups />
         </TabsContent>
         <TabsContent value='audit'>
           <AuditTable />
@@ -160,7 +227,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
             <TableHead>{t('status')}</TableHead>
             <TableHead>{t('memory')}</TableHead>
             <TableHead>{t('customerUrl')}</TableHead>
-            <TableHead>{t('expires')}</TableHead>
+            <TableHead>{t('expiresOrPaidThrough')}</TableHead>
             <TableHead>{t('lastError')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -206,7 +273,11 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                   {t(planLabelKey[tenant.plan])}
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={tenant.status} />
+                  <div className='flex flex-wrap gap-1'>
+                    <StatusBadge status={tenant.status} />
+                    {/* Quiet while the money is fine; a word when it is not */}
+                    {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription)) && <SubscriptionBadge status={tenant.subscription} />}
+                  </div>
                 </TableCell>
                 <TableCell className='text-muted-foreground text-xs tabular-nums'>
                   {memory !== undefined ? megabytes(memory) : ''}
@@ -224,7 +295,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                 <TableCell className='text-muted-foreground text-xs'>
                   {tenantKind(tenant.kind) === 'Demo'
                     ? format.date(tenant.expiresAt)
-                    : ''}
+                    : format.date(tenant.paidThrough)}
                 </TableCell>
                 <TableCell
                   className='text-destructive max-w-64 truncate text-xs'

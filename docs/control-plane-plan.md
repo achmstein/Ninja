@@ -1,5 +1,14 @@
 # Control plane — what landed, what is next
 
+**Status 2026-09-20:** the production-readiness batch (Batch 4 below) is
+built and verified on the laptop platform: `mcdonald-s` secured onto its
+own credentials and capped, platform and tenant backups in the MinIO
+bucket, welcome and payment mails in Mailpit, `cove` converted to Starter
+(402 on inventory, locked switches), paid, suspended behind the paused
+page, resumed by a payment and destroyed with an archived backup,
+`mcdonald-s` upgraded to `v2` and an upgrade to a missing tag rolled back
+by itself. Not yet committed as one slice.
+
 **Status 2026-09-19:** the advanced panel is built. Blocks 0–9 of the
 September plan are on `main`, one commit each (`9b9eff36` seeds …
 `17f5488e` control app, then the Flutter money commit), verified on the
@@ -14,13 +23,13 @@ phase history.
 | Piece | Path | State |
 |---|---|---|
 | Control API | `src/Control.API` | `Apis/ControlApi*.cs`: tenants, brand, record, ops, impersonation, backups, audit, capacity; `Platform/*`: provisioner, templates, stack proxy, capacity, backups, audit; dry-run doubles for the AppHost |
-| Control app | `src/control_web` | `/` Tenants · Capacity · Audit; `/new` with a phone preview; `/t/{slug}` Overview · Brand · Health · Metrics · Backups · Audit; EN/AR, RTL; shadcn only |
+| Control app | `src/control_web` | `/` Tenants · Capacity · Audit · Backups; `/new` with a phone preview; `/t/{slug}` Overview · Brand · Subscription · Health · Metrics · Backups · Audit; EN/AR, RTL; shadcn only |
 | Templates | `src/Control.API/Templates/*.json`, `Platform/Templates.cs` | Realms, compose (with `Seed__Profile` and `Tenant__*` env), custom-domain Caddy sites with `frame-ancestors` |
 | Shared box | `deploy/platform/` | Compose project `ninja`; Caddyfile: on-demand TLS, CSP on customer sites, `/api/control/impersonate/*` on the auth host |
 | Laptop | `deploy/platform/local/` | Same on `*.localhost` over https; `Platform__PostgresContainer: ninja-local-postgres-1` |
 | Seeds | `src/Shared/SeedProfile.cs`, `*ContextSeed*.cs` | `Seed:Profile` = `none` / `sample` / `chillax`; the AppHost and E2E pass `chillax` |
 | Locale | `src/Shared/TenantClock.cs`, `Platform/Locale.cs` | `Tenant__Country/Currency/TimeZone/DefaultLanguage`; phone rules per country in the realm |
-| Tests | `tests/Control.UnitTests` (52), `tests/Branch.UnitTests` (9), `money_test.dart` in client_app and pos_app | Templates, naming, locale, audit, capacity maths, ops parsers, impersonation tickets, backups |
+| Tests | `tests/Control.UnitTests` (88), `tests/Branch.UnitTests` (13), `money_test.dart` in client_app and pos_app | Templates, naming, locale, audit, capacity maths, ops parsers, impersonation tickets, backups |
 
 Local run: `https://control.localhost` (`platform` / `Local123$`). From
 git-bash or PowerShell, `*.localhost` does not resolve and Caddy's CA is not
@@ -28,10 +37,12 @@ trusted: `curl --resolve control.localhost:443:127.0.0.1 -k …`.
 
 ## What a tenant is now
 
-- **Record:** kind (Demo / Customer), seed (`none` / `sample`), plan
-  (Free / Starter / Pro), contact name, phone, address, notes, custom
-  customer domain; `PUT /tenants/{slug}`; a Demo converts with
-  `POST /tenants/{slug}/convert`. A changed custom domain re-writes the edge.
+- **Record:** kind (Demo / Customer), seed (`none` / `sample`), contact
+  name, phone, address, notes, custom customer domain; `PUT
+  /tenants/{slug}`; a Demo converts with `POST /tenants/{slug}/convert`
+  (plan, add-ons, paid through). A changed custom domain re-writes the
+  edge. The plan (Free / Starter / Pro), add-ons, subscription status and
+  payments live on the Subscription tab (Batch 4).
 - **Locale:** country, currency, time zone, first language. The country
   alone implies the other three (`LocaleFields.Normalize`, table in
   `Platform/Locale.cs`); tenant one's EG / EGP / Africa/Cairo / ar are the
@@ -87,13 +98,66 @@ size `Platform__StackFootprintMb` / `ReserveMb` to what a stack really
 takes there (the Capacity tab shows per-stack memory after the first
 tenant).
 
+## Batch 4 — Production readiness and paid modules *(built 2026-09-20)*
+
+Decided with the owner: manual, invoice-based billing for now; any SMTP
+account; any S3-compatible bucket. `deploy/platform/README.md` has the
+operator's view; this is the map.
+
+- **Isolation** (`Platform/Infra.cs`): a Postgres role and a RabbitMQ
+  user `{slug}_app` per tenant, created before the databases, the
+  databases handed over (tables first, then free-standing sequences,
+  functions, types, schemas; the role must be `INHERIT` for
+  `pg_database_owner`), `PUBLIC` revoked, the shared `guest` cleared off
+  the vhost last. `controldb`, `keycloak` and `postgres` are closed to
+  `PUBLIC` at startup (`PlatformLockdownService`). `secure` / `rotate`
+  jobs migrate a stack stamped before this; the `.env` carries only the
+  tenant's own secrets and `ProcessShell.ForLog` masks them.
+- **Limits** (`Templates.AppendLimits`): memory, cpus and pids under
+  `deploy.resources.limits` plus json-file log rotation on every
+  container; `StackLimitMb` is their sum and the footprint must fit under
+  it (`ValidateOnStart`).
+- **Backups** (`Platform/Backups.cs`, `Offsite.cs`): `_platform`
+  (controldb, keycloak) before the tenants each night; each backup
+  uploaded as `{slug}/{id}.tar.gz` when `Offsite` is configured;
+  `_archive/{slug}/{id}` kept on destroy for `ArchiveKeepDays`; a weekly
+  `RestoreDrillService` restores the least-recently-verified customer
+  into `drill-{slug}` and marks the manifest.
+- **Mail** (`Platform/Mail.cs`, `MailTemplates.cs`): MailKit over
+  `Platform:Mail`, a channel and a sender with three attempts, every mail
+  audited; templates en/ar for the owner (welcome, demo expiry, past due,
+  suspended, payment received) and ops (stamp failed, backup failed,
+  backups stale). The realms get the same `smtpServer`.
+- **Subscription** (`Platform/Plans.cs`, `Subscriptions.cs`,
+  `Apis/ControlApi.Subscription.cs`): `Module` × `TenantPlan` in
+  `PlanCatalog` (Free = Kds; Starter + Rooms, Loyalty, Tabs; Pro = all),
+  `Addons` on the tenant, a demo entitled to everything.
+  Entitlements are pushed to the stack's Branch.API (`PUT
+  /api/tenant/entitlements`, policy `Control` = `azp == ninja-control`),
+  which clamps the owner's switches, and stamped into the gateway, where
+  an unentitled module's routes become `402 module-off`. `Payment` rows,
+  `RecordPaymentAsync` as the one entry point, a daily sweep
+  (`SubscriptionSweep.Decide`) for past due → suspended; `Suspended = 8`
+  stops the stack and the edge answers `503 {"code":"paused"}`, which the
+  customer app turns into a paused page.
+- **Upgrades** (`Provisioner.UpgradeAsync`): backup → stack → health with
+  an automatic rollback to `PreviousImageTag`, `POST /rollback` by hand,
+  `POST /platform/upgrade` for the fleet with an optional canary;
+  `Upgrading = 7` while it runs. Tags on the job, not the record, so a
+  queued fleet upgrade that never runs changes nothing.
+- **Tests:** `tests/Control.UnitTests` (88) covers the templates, infra
+  command shapes, backups, mail, plans and sweeps, and the upgrade/rollback
+  paths over an in-memory `ControlContext`; `tests/Branch.UnitTests` (13)
+  the clamp; `tests/Ninja.Contracts.Tests` unchanged.
+
 ## After a customer is live
 
-- Isolation: per-tenant Postgres roles and RabbitMQ users instead of the
-  shared superuser and `guest` (before two paying cafés share a box).
-- SMTP for the realms (password reset, staff invites); Keycloak admin
-  console restricted by IP at Caddy.
-- Fleet upgrades: a canary tenant, then all; the E2E suite against the canary.
+- Keycloak admin console restricted by IP at Caddy.
+- The E2E suite against the canary before the rest of a fleet upgrade.
+- A payment provider's webhook onto `SubscriptionService.RecordPaymentAsync`;
+  prices stay out of code until then.
+- Client-side encryption of the offsite archives (they leave the box as
+  plain `.tar.gz`; a private bucket with server-side encryption until then).
 - Social sign-in per tenant (a café's own Google and Apple apps).
 - Moving the Chillax stack onto a stamp (last step of Phase 3 in
   `docs/ninja-plan.md`); its seed profile is `chillax`.

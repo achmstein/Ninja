@@ -16,6 +16,23 @@ public sealed class TenantNamingTests
         => Assert.AreEqual(expected, TenantNaming.SlugFrom(name));
 
     [TestMethod]
+    public void A_drill_slug_fits_the_24_characters_a_slug_may_have()
+    {
+        Assert.AreEqual("drill-blue", TenantNaming.DrillSlug("blue"));
+        var drill = TenantNaming.DrillSlug("a-very-long-cafe-name-th");
+        Assert.HasCount(24, drill);
+        Assert.IsTrue(TenantNaming.IsValidSlug(drill), drill);
+    }
+
+    [TestMethod]
+    public void The_role_and_the_broker_user_are_the_slug_with_a_suffix_no_slug_can_carry()
+    {
+        Assert.AreEqual("blue-bottle_app", TenantNaming.DbRole("blue-bottle"));
+        Assert.AreEqual("blue-bottle_app", TenantNaming.BrokerUser("blue-bottle"));
+        Assert.IsFalse(TenantNaming.IsValidSlug("blue_app"), "no tenant can be named after another's role");
+    }
+
+    [TestMethod]
     [DataRow("blue-bottle", true)]
     [DataRow("cafe123", true)]
     [DataRow("Blue", false)]

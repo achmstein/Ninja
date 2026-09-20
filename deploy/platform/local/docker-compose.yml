@@ -63,6 +63,8 @@ services:
       KC_DB_PASSWORD: local
     volumes:
       - ./realms:/opt/keycloak/data/import:ro
+      # The login theme every realm uses, straight from the repo
+      - ../../../src/Ninja.AppHost/KeycloakConfiguration/themes/ninja:/opt/keycloak/themes/ninja:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -97,6 +99,18 @@ services:
       Platform__KeycloakPublicUrl: https://auth.localhost
       Platform__KeycloakAdminPassword: local
       Platform__DemoDays: "14"
+      # Backups go off the box into MinIO below, the laptop's stand-in for a bucket
+      Platform__Offsite__Endpoint: http://minio:9000
+      Platform__Offsite__Bucket: ninja-backups
+      Platform__Offsite__AccessKey: minioadmin
+      Platform__Offsite__SecretKey: minioadmin
+      Platform__Offsite__Region: auto
+      # Every mail lands in Mailpit at http://localhost:8025
+      Platform__Mail__Host: mailpit
+      Platform__Mail__Port: "1025"
+      Platform__Mail__UseStartTls: "false"
+      Platform__Mail__From: no-reply@localhost
+      Platform__Mail__OpsTo: ops@localhost
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - tenants:/opt/ninja/tenants
@@ -127,6 +141,33 @@ services:
       - control-api
     networks: [ninja-local]
 
+  # Every mail the platform (and the realms) send, caught at http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+    networks: [ninja-local]
+
+  # An S3-compatible bucket on the laptop, so the offsite copy of every backup can be watched at http://localhost:9001
+  minio:
+    image: minio/minio
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks: [ninja-local]
+
+  # The bucket exists before the control plane's first upload
+  minio-bucket:
+    image: minio/mc
+    entrypoint: ["/bin/sh", "-c", "until mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1; do sleep 1; done; mc mb -p local/ninja-backups"]
+    depends_on: [minio]
+    networks: [ninja-local]
+
 networks:
   ninja-local:
     name: ninja-local
@@ -137,3 +178,4 @@ volumes:
   rabbitmq-data:
   tenants:
   caddy-data:
+  minio-data:

@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
+import '../brand/brand_provider.dart';
 import '../brand/ninja_mark.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
 
-/// Header branch switcher, same contract as pos_web's: the brand mark with
-/// the branch under it, and a menu of branches. Picking a branch scopes
-/// every branch-aware API call via the X-Branch-Id header, so everything
-/// on screen refetches. Only the branches the token allows are listed;
-/// with a single one there is nothing to switch and the block is plain.
+/// Header branch switcher, same contract as pos_web's: the platform's mark
+/// and name with the café and the branch under them, and a menu of
+/// branches. Picking a branch scopes every branch-aware API call via the
+/// X-Branch-Id header, so everything on screen refetches. Only the branches
+/// the token allows are listed; with a single one there is nothing to switch
+/// and the block is plain.
 class BranchSwitcher extends ConsumerWidget {
   const BranchSwitcher({super.key});
 
@@ -22,6 +24,13 @@ class BranchSwitcher extends ConsumerWidget {
 
     final active = branchState.selectedBranch;
     final branchLabel = active?.name.localized(context) ?? l10n.branches;
+    final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
+    // The café, then the branch; one word when they share a name
+    final subtitle = cafe.isEmpty
+        ? branchLabel
+        : cafe == branchLabel
+            ? cafe
+            : '$cafe · $branchLabel';
     final switchable = branchState.branches.length > 1;
 
     Widget brand({required bool withChevron}) => Row(
@@ -45,7 +54,7 @@ class BranchSwitcher extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  branchLabel,
+                  subtitle,
                   style: theme.typography.xs.copyWith(
                     color: theme.colors.mutedForeground,
                     height: 1.0,

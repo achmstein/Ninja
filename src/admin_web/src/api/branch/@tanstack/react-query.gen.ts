@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantManifest, type Options, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import { createBranch, deleteTenantImage, getAllBranches, getBranches, getTenant, getTenantIcon, getTenantImage, getTenantManifest, type Options, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { CreateBranchData, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -146,12 +146,29 @@ export const getTenantOptions = (options?: Options<GetTenantData>) => queryOptio
 });
 
 /**
- * Change the name, the brand color or the feature switches
+ * Change the name, the brand color or the feature switches (within what the plan allows)
  */
 export const updateTenantMutation = (options?: Partial<Options<UpdateTenantData>>): UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> => {
     const mutationOptions: UseMutationOptions<UpdateTenantResponse, AxiosError<UpdateTenantError>, Options<UpdateTenantData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The modules the café's plan allows; a switch outside them goes off. The control plane only
+ */
+export const setTenantEntitlementsMutation = (options?: Partial<Options<SetTenantEntitlementsData>>): UseMutationOptions<SetTenantEntitlementsResponse, AxiosError<DefaultError>, Options<SetTenantEntitlementsData>> => {
+    const mutationOptions: UseMutationOptions<SetTenantEntitlementsResponse, AxiosError<DefaultError>, Options<SetTenantEntitlementsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setTenantEntitlements({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

@@ -1,9 +1,10 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { createRouter } from '@tanstack/react-router'
 import { AuthProvider } from 'react-oidc-context'
 import { bootBrand } from './lib/brand'
+import { App } from './app'
 import { getOidcConfig } from './lib/oidc'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
@@ -42,7 +43,7 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <AuthProvider {...getOidcConfig()}>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
+          <App router={router} />
         </QueryClientProvider>
       </AuthProvider>
     </StrictMode>

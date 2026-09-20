@@ -77,10 +77,38 @@ public sealed class PlatformOptions
     /// <summary>The shared Postgres container (for pg_dump and pg_restore through docker exec).</summary>
     public string PostgresContainer { get; set; } = "ninja-postgres-1";
 
-    /// <summary>What one stack takes on the box, and what to keep free for the shared services; a stamp is refused when they do not fit.</summary>
+    /// <summary>What one stack typically takes on the box, and what to keep free for the shared services; a stamp is refused when they do not fit.</summary>
     public int StackFootprintMb { get; set; } = 2048;
 
     public int ReserveMb { get; set; } = 1024;
+
+    /// <summary>
+    /// What each container of a stack may take at most, stamped into its
+    /// compose file: memory per service (the ones that run the assistant get
+    /// more), the gateway's, CPUs, processes, and how much log docker keeps
+    /// per container. One café's runaway service ends at its own cap, not at
+    /// the box.
+    /// </summary>
+    public int ServiceMemoryMb { get; set; } = 256;
+
+    public Dictionary<string, int> ServiceMemoryOverridesMb { get; set; } = new() { ["catalog"] = 384, ["inventory"] = 384, ["finance"] = 384 };
+
+    public int GatewayMemoryMb { get; set; } = 128;
+
+    public double ServiceCpus { get; set; } = 1.0;
+
+    public double GatewayCpus { get; set; } = 0.5;
+
+    public int PidsLimit { get; set; } = 256;
+
+    public string LogMaxSize { get; set; } = "10m";
+
+    public int LogMaxFile { get; set; } = 3;
+
+    public int MemoryFor(string service) => ServiceMemoryOverridesMb.TryGetValue(service, out var mb) ? mb : ServiceMemoryMb;
+
+    /// <summary>The most a whole stack may take: what its caps add up to (3584 MB by default). The footprint above is what it typically takes and must fit under this.</summary>
+    public int StackLimitMb => TenantNaming.Services.Sum(MemoryFor) + GatewayMemoryMb;
 
     /// <summary>How often the box is read for the capacity view.</summary>
     public int CapacityRefreshSeconds { get; set; } = 30;
@@ -93,6 +121,92 @@ public sealed class PlatformOptions
 
     public int BackupsKeep { get; set; } = 7;
 
+    /// <summary>The platform's own databases (controldb, keycloak) are backed up before the tenants, under {TenantsRoot}/_platform; how many to keep.</summary>
+    public int PlatformBackupsKeep { get; set; } = 14;
+
+    /// <summary>A destroyed tenant's last backup is kept under {TenantsRoot}/_archive for this long.</summary>
+    public int ArchiveKeepDays { get; set; } = 90;
+
+    /// <summary>A backup this young is reused rather than taken again (destroy now, upgrade later).</summary>
+    public int BackupFreshMinutes { get; set; } = 60;
+
+    /// <summary>Where a copy of every backup goes, off the box: any S3-compatible bucket. Off until a bucket and keys are set.</summary>
+    public OffsiteOptions Offsite { get; set; } = new();
+
+    /// <summary>The weekly proof that a backup restores: one tenant's latest backup into a scratch stack, then destroyed.</summary>
+    public RestoreDrillOptions RestoreDrill { get; set; } = new();
+
+    /// <summary>How the platform writes to owners and to whoever runs it; off (and audited as skipped) until a host is set.</summary>
+    public MailOptions Mail { get; set; } = new();
+
+    /// <summary>A demo's owner hears this many days before it stops, and this many before a stopped one is destroyed.</summary>
+    public int DemoWarnDays { get; set; } = 3;
+
+    public int DemoDestroyWarnDays { get; set; } = 2;
+
+    /// <summary>Customers: days past the paid period before the stack is suspended, when the daily sweep looks (platform time), and what a conversion or a payment without a period covers.</summary>
+    public int SubscriptionGraceDays { get; set; } = 7;
+
+    public int SubscriptionSweepHour { get; set; } = 6;
+
+    public int SubscriptionPeriodDays { get; set; } = 30;
+
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
+}
+
+public sealed class OffsiteOptions
+{
+    /// <summary>The service URL ("https://s3.eu-central-003.backblazeb2.com", "https://{account}.r2.cloudflarestorage.com"); empty for AWS itself.</summary>
+    public string? Endpoint { get; set; }
+
+    public string? Bucket { get; set; }
+
+    public string? AccessKey { get; set; }
+
+    public string? SecretKey { get; set; }
+
+    /// <summary>What the provider wants signed; "auto" suits R2 and B2, a region name suits AWS.</summary>
+    public string Region { get; set; } = "auto";
+
+    /// <summary>In front of every key, for a bucket shared with something else ("ninja/").</summary>
+    public string Prefix { get; set; } = "";
+
+    public bool Enabled => !string.IsNullOrWhiteSpace(Bucket) && !string.IsNullOrWhiteSpace(AccessKey) && !string.IsNullOrWhiteSpace(SecretKey);
+}
+
+public sealed class MailOptions
+{
+    /// <summary>The SMTP host; empty leaves mail off.</summary>
+    public string? Host { get; set; }
+
+    public int Port { get; set; } = 587;
+
+    public bool UseStartTls { get; set; } = true;
+
+    public string? User { get; set; }
+
+    public string? Password { get; set; }
+
+    public string From { get; set; } = "no-reply@ninja.local";
+
+    public string FromName { get; set; } = "Ninja";
+
+    /// <summary>Where the mails for whoever runs the platform go (a failed stamp, a failed backup); empty skips them.</summary>
+    public string? OpsTo { get; set; }
+
+    public bool Configured => !string.IsNullOrWhiteSpace(Host);
+}
+
+public sealed class RestoreDrillOptions
+{
+    public bool Enabled { get; set; }
+
+    public DayOfWeek Weekday { get; set; } = DayOfWeek.Sunday;
+
+    /// <summary>In the platform's zone, after the nightly backups have run.</summary>
+    public int Hour { get; set; } = 4;
+
+    /// <summary>How long the scratch stack gets to come up healthy before the drill counts as failed.</summary>
+    public int TimeoutMinutes { get; set; } = 15;
 }

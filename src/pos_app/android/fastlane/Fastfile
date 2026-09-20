@@ -4,6 +4,7 @@ platform :android do
   lane :beta do |options|
     build_number = options[:build_number] || ENV['GITHUB_RUN_NUMBER'] || '1'
     track = options[:track] || 'internal'
+    tenant = options[:tenant] || ENV['TENANT'] || 'chillax'
     app_root = File.expand_path('../..', Dir.pwd)
 
     # Decode keystore from base64 in CI
@@ -17,7 +18,7 @@ platform :android do
       PROPS
     end
 
-    sh("cd \"#{app_root}\" && flutter build appbundle --release --build-number=#{build_number}")
+    sh("cd \"#{app_root}\" && flutter build appbundle --release --build-number=#{build_number} --dart-define-from-file=../../tenants/#{tenant}.json")
 
     supply(
       track: track,

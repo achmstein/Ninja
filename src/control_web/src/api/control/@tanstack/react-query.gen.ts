@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { convertTenant, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, downloadTenantBackup, extendDemo, getPlatform, getPlatformCapacity, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, redeemImpersonation, restoreTenantBackup, startTenant, stopTenant, tlsAsk, updateTenant, updateTenantBrand, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RedeemImpersonationData, RedeemImpersonationError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, downloadPlatformBackup, downloadTenantBackup, extendDemo, fleetUpgrade, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformMail, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DownloadPlatformBackupData, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -209,12 +209,63 @@ export const startTenantMutation = (options?: Partial<Options<StartTenantData>>)
 };
 
 /**
- * Re-stamp on a tag and pull
+ * Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes
  */
 export const upgradeTenantMutation = (options?: Partial<Options<UpgradeTenantData>>): UseMutationOptions<unknown, AxiosError<UpgradeTenantError>, Options<UpgradeTenantData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<UpgradeTenantError>, Options<UpgradeTenantData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await upgradeTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead
+ */
+export const rollbackTenantMutation = (options?: Partial<Options<RollbackTenantData>>): UseMutationOptions<unknown, AxiosError<RollbackTenantError>, Options<RollbackTenantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<RollbackTenantError>, Options<RollbackTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rollbackTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it
+ */
+export const fleetUpgradeMutation = (options?: Partial<Options<FleetUpgradeData>>): UseMutationOptions<FleetUpgradeResponse2, AxiosError<FleetUpgradeError>, Options<FleetUpgradeData>> => {
+    const mutationOptions: UseMutationOptions<FleetUpgradeResponse2, AxiosError<FleetUpgradeError>, Options<FleetUpgradeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await fleetUpgrade({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it
+ */
+export const secureTenantMutation = (options?: Partial<Options<SecureTenantData>>): UseMutationOptions<unknown, AxiosError<SecureTenantError>, Options<SecureTenantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<SecureTenantError>, Options<SecureTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await secureTenant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -520,6 +571,59 @@ export const redeemImpersonationOptions = (options: Options<RedeemImpersonationD
     queryKey: redeemImpersonationQueryKey(options)
 });
 
+export const getPlatformBackupsQueryKey = (options?: Options<GetPlatformBackupsData>) => createQueryKey('getPlatformBackups', options);
+
+/**
+ * The platform's own backups (controldb, keycloak), when the last one ran and reached the bucket, and whether a night was missed
+ */
+export const getPlatformBackupsOptions = (options?: Options<GetPlatformBackupsData>) => queryOptions<GetPlatformBackupsResponse, AxiosError<DefaultError>, GetPlatformBackupsResponse, ReturnType<typeof getPlatformBackupsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlatformBackups({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlatformBackupsQueryKey(options)
+});
+
+/**
+ * Dump the platform's databases now, and copy them off the box when there is somewhere to
+ */
+export const createPlatformBackupMutation = (options?: Partial<Options<CreatePlatformBackupData>>): UseMutationOptions<CreatePlatformBackupResponse, AxiosError<DefaultError>, Options<CreatePlatformBackupData>> => {
+    const mutationOptions: UseMutationOptions<CreatePlatformBackupResponse, AxiosError<DefaultError>, Options<CreatePlatformBackupData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createPlatformBackup({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const downloadPlatformBackupQueryKey = (options: Options<DownloadPlatformBackupData>) => createQueryKey('downloadPlatformBackup', options);
+
+/**
+ * The backup as one .tar.gz
+ */
+export const downloadPlatformBackupOptions = (options: Options<DownloadPlatformBackupData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof downloadPlatformBackupQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await downloadPlatformBackup({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: downloadPlatformBackupQueryKey(options)
+});
+
 export const listTenantBackupsQueryKey = (options: Options<ListTenantBackupsData>) => createQueryKey('listTenantBackups', options);
 
 /**
@@ -594,6 +698,162 @@ export const restoreTenantBackupMutation = (options?: Partial<Options<RestoreTen
     const mutationOptions: UseMutationOptions<RestoreTenantBackupResponse, AxiosError<RestoreTenantBackupError>, Options<RestoreTenantBackupData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await restoreTenantBackup({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPlatformMailQueryKey = (options?: Options<GetPlatformMailData>) => createQueryKey('getPlatformMail', options);
+
+/**
+ * Whether mail is configured, when it last went out, what last went wrong
+ */
+export const getPlatformMailOptions = (options?: Options<GetPlatformMailData>) => queryOptions<GetPlatformMailResponse, AxiosError<DefaultError>, GetPlatformMailResponse, ReturnType<typeof getPlatformMailQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlatformMail({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlatformMailQueryKey(options)
+});
+
+/**
+ * Give every realm the platform's SMTP settings, so password resets work in realms stamped before mail was set up
+ */
+export const applyMailToRealmsMutation = (options?: Partial<Options<ApplyMailToRealmsData>>): UseMutationOptions<ApplyMailToRealmsResponse, AxiosError<ApplyMailToRealmsError>, Options<ApplyMailToRealmsData>> => {
+    const mutationOptions: UseMutationOptions<ApplyMailToRealmsResponse, AxiosError<ApplyMailToRealmsError>, Options<ApplyMailToRealmsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await applyMailToRealms({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The owner's welcome mail again: the admin app's address, their email and the temporary password if it still stands
+ */
+export const resendWelcomeEmailMutation = (options?: Partial<Options<ResendWelcomeEmailData>>): UseMutationOptions<unknown, AxiosError<ResendWelcomeEmailError>, Options<ResendWelcomeEmailData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ResendWelcomeEmailError>, Options<ResendWelcomeEmailData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resendWelcomeEmail({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPlansQueryKey = (options?: Options<GetPlansData>) => createQueryKey('getPlans', options);
+
+/**
+ * The plans, what each includes and what can be added on top
+ */
+export const getPlansOptions = (options?: Options<GetPlansData>) => queryOptions<GetPlansResponse, AxiosError<DefaultError>, GetPlansResponse, ReturnType<typeof getPlansQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPlans({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPlansQueryKey(options)
+});
+
+export const getTenantSubscriptionQueryKey = (options: Options<GetTenantSubscriptionData>) => createQueryKey('getTenantSubscription', options);
+
+/**
+ * Plan, add-ons, what they entitle, where the subscription stands, and the payments recorded
+ */
+export const getTenantSubscriptionOptions = (options: Options<GetTenantSubscriptionData>) => queryOptions<GetTenantSubscriptionResponse, AxiosError<DefaultError>, GetTenantSubscriptionResponse, ReturnType<typeof getTenantSubscriptionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantSubscription({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantSubscriptionQueryKey(options)
+});
+
+/**
+ * A new plan or add-ons; the stack's gateway and switches follow
+ */
+export const updateTenantSubscriptionMutation = (options?: Partial<Options<UpdateTenantSubscriptionData>>): UseMutationOptions<UpdateTenantSubscriptionResponse, AxiosError<UpdateTenantSubscriptionError>, Options<UpdateTenantSubscriptionData>> => {
+    const mutationOptions: UseMutationOptions<UpdateTenantSubscriptionResponse, AxiosError<UpdateTenantSubscriptionError>, Options<UpdateTenantSubscriptionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateTenantSubscription({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * A payment received: extends what is paid through, and brings a suspended stack back
+ */
+export const recordTenantPaymentMutation = (options?: Partial<Options<RecordTenantPaymentData>>): UseMutationOptions<RecordTenantPaymentResponse, AxiosError<RecordTenantPaymentError>, Options<RecordTenantPaymentData>> => {
+    const mutationOptions: UseMutationOptions<RecordTenantPaymentResponse, AxiosError<RecordTenantPaymentError>, Options<RecordTenantPaymentData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await recordTenantPayment({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Stop the stack for non-payment; the owner is told
+ */
+export const suspendTenantMutation = (options?: Partial<Options<SuspendTenantData>>): UseMutationOptions<unknown, AxiosError<SuspendTenantError>, Options<SuspendTenantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<SuspendTenantError>, Options<SuspendTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await suspendTenant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Bring a suspended stack back without a payment (the sweep may suspend it again while it stays unpaid)
+ */
+export const resumeTenantMutation = (options?: Partial<Options<ResumeTenantData>>): UseMutationOptions<unknown, AxiosError<ResumeTenantError>, Options<ResumeTenantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ResumeTenantError>, Options<ResumeTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resumeTenant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

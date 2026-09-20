@@ -130,8 +130,19 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
                     if (update?[key] is { } value)
                         brand[key] = value.DeepClone();
                 }
+                Clamp(brand);
                 brand["version"] = DateTimeOffset.UtcNow.UtcTicks;
             }
+            return Json(brand);
+        }
+
+        // What Branch.API does with the plan: the entitlements are kept and the switches clamped to them
+        if (path == "/api/tenant/entitlements" && method == HttpMethod.Put && content is not null)
+        {
+            var brand = BrandOf(tenant);
+            if (await content.ReadFromJsonAsync<JsonObject>(ct) is { } entitled) brand["entitlements"] = entitled.DeepClone();
+            Clamp(brand);
+            brand["version"] = DateTimeOffset.UtcNow.UtcTicks;
             return Json(brand);
         }
 
@@ -177,6 +188,14 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
     private static HttpResponseMessage Json(JsonNode body)
         => new(HttpStatusCode.OK) { Content = new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json") };
 
+    /// <summary>A switch stays on only where the plan allows it.</summary>
+    private static void Clamp(JsonObject brand)
+    {
+        if (brand["features"] is not JsonObject features || brand["entitlements"] is not JsonObject entitled) return;
+        foreach (var key in features.Select(f => f.Key).ToList())
+            features[key] = (features[key]?.GetValue<bool>() ?? false) && (entitled[key]?.GetValue<bool>() ?? true);
+    }
+
     /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on.</summary>
     public static JsonObject NeutralBrand(Tenant tenant, TenantHosts hosts) => new()
     {
@@ -195,6 +214,10 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
             ["maskable512"] = "/api/tenant/icons/maskable-512.png?v=0",
             ["appleTouch"] = "/api/tenant/icons/apple-touch-icon.png?v=0",
             ["favicon"] = "/api/tenant/icons/favicon.png?v=0",
+        },
+        ["entitlements"] = new JsonObject
+        {
+            ["rooms"] = true, ["loyalty"] = true, ["tabs"] = true, ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
         },
         ["features"] = new JsonObject
         {

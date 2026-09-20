@@ -6,12 +6,15 @@ import {
   AlertCircle,
   ArrowUpCircle,
   CalendarPlus,
+  KeyRound,
   LogIn,
+  Mail,
   MoreHorizontal,
   Play,
   RotateCw,
   Square,
   Trash2,
+  Undo2,
   UserCheck,
 } from 'lucide-react'
 import {
@@ -23,12 +26,16 @@ import {
   impersonateOwnerMutation,
   listTenantsQueryKey,
   provisionTenantMutation,
+  resendWelcomeEmailMutation,
+  resumeTenantMutation,
+  rollbackTenantMutation,
+  secureTenantMutation,
   startTenantMutation,
   stopTenantMutation,
   upgradeTenantMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { PageHeader } from '@/components/page-header'
-import { KindBadge, StatusBadge } from '@/components/tenant-badges'
+import { KindBadge, StatusBadge, SubscriptionBadge } from '@/components/tenant-badges'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -48,17 +55,22 @@ import {
   canDestroy,
   canImpersonate,
   canProvision,
+  canResume,
+  canSecure,
   canStart,
   canStop,
   canUpgrade,
   isBusy,
+  isStamped,
   planLabelKey,
+  subscriptionStatus,
   tenantKind,
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { ConvertDialog, DestroyDialog, ExtendDialog, UpgradeDialog } from './dialogs'
+import { ConvertDialog, DestroyDialog, ExtendDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
 import { AuditTab } from './tabs/audit'
+import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
 import { HealthTab } from './tabs/health'
 import { OverviewTab } from './tabs/overview'
@@ -67,19 +79,20 @@ import { OverviewTab } from './tabs/overview'
 const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
 const MetricsTab = lazy(() => import('./tabs/metrics').then((m) => ({ default: m.MetricsTab })))
 
-export const TENANT_TABS = ['overview', 'brand', 'health', 'metrics', 'backups', 'audit'] as const
+export const TENANT_TABS = ['overview', 'brand', 'subscription', 'health', 'metrics', 'backups', 'audit'] as const
 export type TenantTab = (typeof TENANT_TABS)[number]
 
 const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   overview: 'tabOverview',
   brand: 'tabBrand',
+  subscription: 'tabSubscription',
   health: 'tabHealth',
   metrics: 'tabMetrics',
   backups: 'tabBackups',
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'convert' | null
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'convert' | 'rotate' | 'rollback' | null
 
 function Loading() {
   return (
@@ -124,6 +137,17 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const stop = useMutation({ ...stopTenantMutation(), onSuccess: queued, onError: failed })
   const start = useMutation({ ...startTenantMutation(), onSuccess: queued, onError: failed })
   const upgrade = useMutation({ ...upgradeTenantMutation(), onSuccess: queued, onError: failed })
+  const secure = useMutation({ ...secureTenantMutation(), onSuccess: queued, onError: failed })
+  const resume = useMutation({ ...resumeTenantMutation(), onSuccess: queued, onError: failed })
+  const rollback = useMutation({ ...rollbackTenantMutation(), onSuccess: queued, onError: failed })
+  const resendWelcome = useMutation({
+    ...resendWelcomeEmailMutation(),
+    onSuccess: () => {
+      toast.success(t('welcomeQueued'))
+      refresh()
+    },
+    onError: failed,
+  })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
   const extend = useMutation({
     ...extendDemoMutation(),
@@ -188,10 +212,11 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     stop.isPending ||
     start.isPending ||
     upgrade.isPending ||
+    secure.isPending ||
     destroy.isPending
   const path = { path: { slug } }
   const alive = status !== 'Destroying' && status !== 'Destroyed'
-  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status)
+  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canSecure(status) || canImpersonate(status)
 
   return (
     <div className='flex flex-col gap-6'>
@@ -203,6 +228,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             <StatusBadge status={tenant.status} />
             <KindBadge kind={tenant.kind} />
             <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
+            {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && <SubscriptionBadge status={tenant.subscription.status} />}
             <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
               {tenant.slug}
             </span>
@@ -226,6 +252,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
               <Button size='sm' disabled={busy} onClick={() => start.mutate(path)}>
                 <Play />
                 {t('start')}
+              </Button>
+            )}
+            {canResume(status) && (
+              <Button size='sm' disabled={busy || resume.isPending} onClick={() => resume.mutate(path)}>
+                <Play />
+                {t('resume')}
               </Button>
             )}
             {canImpersonate(status) && (
@@ -259,6 +291,24 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                       {t('upgrade')}
                     </DropdownMenuItem>
                   )}
+                  {tenant.previousImageTag && (status === 'Running' || status === 'Failed') && (
+                    <DropdownMenuItem disabled={busy} onSelect={() => setDialog('rollback')}>
+                      <Undo2 />
+                      {t('rollbackTo', { tag: tenant.previousImageTag })}
+                    </DropdownMenuItem>
+                  )}
+                  {canImpersonate(status) && (
+                    <DropdownMenuItem disabled={resendWelcome.isPending} onSelect={() => resendWelcome.mutate(path)}>
+                      <Mail />
+                      {t('resendWelcome')}
+                    </DropdownMenuItem>
+                  )}
+                  {canSecure(status) && tenant.hasOwnCredentials && (
+                    <DropdownMenuItem disabled={busy} onSelect={() => setDialog('rotate')}>
+                      <KeyRound />
+                      {t('rotateCredentials')}
+                    </DropdownMenuItem>
+                  )}
                   {canConvert(kind, status) && (
                     <DropdownMenuItem onSelect={() => setDialog('convert')}>
                       <UserCheck />
@@ -284,6 +334,31 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
           </>
         }
       />
+
+      {/* Stamped before tenants had a role and a broker user of their own: on the shared superuser until secured */}
+      {!tenant.hasOwnCredentials && isStamped(status) && !isBusy(status) && (
+        <Alert className='border-amber-500/40 bg-amber-500/10 [&>svg]:text-amber-600'>
+          <KeyRound />
+          <AlertTitle>{t('sharedCredentials')}</AlertTitle>
+          <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
+            <span>{t('sharedCredentialsNote')}</span>
+            <Button size='sm' variant='outline' disabled={busy} onClick={() => secure.mutate({ ...path, query: { rotate: false } })}>
+              {t('secureNow')}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Running, with a story: an upgrade that did not take and was rolled back */}
+      {tenant.lastError && status === 'Running' && (
+        <Alert className='border-amber-500/40 bg-amber-500/10 [&>svg]:text-amber-600'>
+          <Undo2 />
+          <AlertTitle>{t('rolledBack')}</AlertTitle>
+          <AlertDescription className='font-mono text-xs break-all' dir='ltr'>
+            {tenant.lastError}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {tenant.lastError && status === 'Failed' && (
         <Alert variant='destructive'>
@@ -325,6 +400,9 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             <BrandTab tenant={tenant} />
           </Suspense>
         </TabsContent>
+        <TabsContent value='subscription' className='pt-2'>
+          <SubscriptionTab tenant={tenant} />
+        </TabsContent>
         <TabsContent value='health' className='pt-2'>
           <HealthTab tenant={tenant} />
         </TabsContent>
@@ -362,7 +440,22 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         isPending={convert.isPending}
         name={name}
         currentPlan={tenant.record.plan}
-        onConfirm={(plan) => convert.mutate({ ...path, body: { plan } })}
+        onConfirm={(plan, paidThrough) => convert.mutate({ ...path, body: { plan, paidThrough: new Date(paidThrough).toISOString() } })}
+      />
+      <RollbackDialog
+        open={dialog === 'rollback'}
+        onOpenChange={(v) => setDialog(v ? 'rollback' : null)}
+        isPending={rollback.isPending}
+        previousTag={tenant.previousImageTag ?? ''}
+        backupId={tenant.upgradeBackupId}
+        onConfirm={() => rollback.mutate(path)}
+      />
+      <RotateDialog
+        open={dialog === 'rotate'}
+        onOpenChange={(v) => setDialog(v ? 'rotate' : null)}
+        isPending={secure.isPending}
+        name={name}
+        onConfirm={() => secure.mutate({ ...path, query: { rotate: true } })}
       />
       <DestroyDialog
         open={dialog === 'destroy'}

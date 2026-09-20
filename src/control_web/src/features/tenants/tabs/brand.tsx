@@ -330,18 +330,24 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
           <div className='grid gap-2'>
             <Label className='text-xs'>{t('features')}</Label>
             <div className='divide-y rounded-lg border'>
-              {FEATURES.map(({ key, label }) => (
-                <div key={key} className='flex items-center justify-between gap-4 px-3 py-2'>
-                  <Label htmlFor={`feature-${key}`} className='font-normal'>
-                    {t(label)}
-                  </Label>
-                  <Switch
-                    id={`feature-${key}`}
-                    checked={features[key]}
-                    onCheckedChange={(v) => setFeatures((f) => ({ ...f, [key]: v }))}
-                  />
-                </div>
-              ))}
+              {FEATURES.map(({ key, label }) => {
+                // A stack older than plans answers without entitlements: everything is allowed there
+                const entitled = brand.entitlements?.[key] ?? true
+                return (
+                  <div key={key} className='flex items-center justify-between gap-4 px-3 py-2'>
+                    <Label htmlFor={`feature-${key}`} className='flex items-center gap-2 font-normal'>
+                      {t(label)}
+                      {!entitled && <Badge variant='outline'>{t('notInPlan')}</Badge>}
+                    </Label>
+                    <Switch
+                      id={`feature-${key}`}
+                      checked={entitled && features[key]}
+                      disabled={!entitled}
+                      onCheckedChange={(v) => setFeatures((f) => ({ ...f, [key]: v }))}
+                    />
+                  </div>
+                )
+              })}
             </div>
           </div>
           <div className='flex justify-end'>

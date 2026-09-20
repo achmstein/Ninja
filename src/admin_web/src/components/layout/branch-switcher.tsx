@@ -18,13 +18,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { PLATFORM_NAME } from '@/lib/brand'
+import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
 import { PlatformMark } from '@/components/platform-mark'
 
 /**
- * The sidebar header, in the shadcn-admin team-switcher shape: the cup mark
- * in the tile, the brand as the title, and the active branch as the
- * subtitle. Picking a branch scopes every branch-aware API call via the
+ * The sidebar header, in the shadcn-admin team-switcher shape: the platform's
+ * mark in the tile, its name as the title, and the café with the active
+ * branch as the subtitle. Picking a branch scopes every branch-aware API call via the
  * X-Branch-Id header. Only the branches the token allows are offered; with
  * a single one there is nothing to switch and the tile is plain.
  */
@@ -38,6 +38,9 @@ export function BranchSwitcher() {
 
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
+  const cafe = useBrandName()
+  // The café, then the branch; one word when they share a name
+  const subtitle = cafe && cafe !== label ? `${cafe} · ${label}` : cafe || label
   const switchable = branches.length > 1
 
   const handleSelect = (id: number) => {
@@ -69,7 +72,7 @@ export function BranchSwitcher() {
       <PlatformMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
         <span className='truncate font-semibold'>{PLATFORM_NAME}</span>
-        <span className='truncate text-xs'>{label}</span>
+        <span className='truncate text-xs'>{subtitle}</span>
       </div>
     </>
   )

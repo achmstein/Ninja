@@ -98,6 +98,12 @@ export function OverviewTab({
           )}
           <dt className={dtClass}>{t('imageTag')}</dt>
           <dd className='font-mono' dir='ltr'>{tenant.imageTag}</dd>
+          {tenant.previousImageTag && (
+            <>
+              <dt className={dtClass}>{t('previousVersion')}</dt>
+              <dd className='font-mono' dir='ltr'>{tenant.previousImageTag}</dd>
+            </>
+          )}
           <dt className={dtClass}>{t('created')}</dt>
           <dd>{format.dateTime(tenant.createdAt)}</dd>
           {tenant.provisionedAt && (
@@ -106,6 +112,8 @@ export function OverviewTab({
               <dd>{format.dateTime(tenant.provisionedAt)}</dd>
             </>
           )}
+          <dt className={dtClass}>{t('welcomeSent')}</dt>
+          <dd>{tenant.welcomeSentAt ? format.dateTime(tenant.welcomeSentAt) : t('never')}</dd>
         </dl>
 
         <dl className={dlClass}>

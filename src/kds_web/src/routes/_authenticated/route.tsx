@@ -6,7 +6,7 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
@@ -14,6 +14,8 @@ import { KitchenHeader } from '@/components/layout/kitchen-header'
 import { useKitchenNotifications } from '@/hooks/use-kitchen-notifications'
 import { useWakeLock } from '@/hooks/use-wake-lock'
 import { useT } from '@/lib/i18n'
+import { useFeatures } from '@/lib/brand'
+import { PlatformMark } from '@/components/platform-mark'
 
 // Everything the kitchen calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. A kitchen screen signs
@@ -25,9 +27,24 @@ export const Route = createFileRoute('/_authenticated')({
 })
 
 function AuthenticatedLayout() {
+  const t = useT()
+  const features = useFeatures()
   // One SignalR connection per signed-in session, and a screen that stays on
   useKitchenNotifications()
   useWakeLock()
+  // The kitchen display is a module of the plan: without it there is nothing to show but that
+  if (!features.kds) {
+    return (
+      <div className='flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center'>
+        <PlatformMark className='size-14 text-2xl' />
+        <div className='flex items-center gap-2 text-lg font-semibold'>
+          <Lock className='size-5' />
+          {t('kdsNotInPlan')}
+        </div>
+        <p className='text-muted-foreground max-w-md text-sm'>{t('kdsNotInPlanNote')}</p>
+      </div>
+    )
+  }
   return (
     <div className='flex min-h-svh flex-col'>
       <KitchenHeader />

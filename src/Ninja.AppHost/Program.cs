@@ -68,7 +68,8 @@ var keycloak = builder.AddKeycloak("keycloak", port: isTestMode ? null : 8080)
     .WithLifetime(containerLifetime)
     // Every realm in the folder: chillax (tenant one) and ninja (the platform's own)
     .WithRealmImport("./KeycloakConfiguration/realms")
-    .WithBindMount("./KeycloakConfiguration/themes/chillax", "/opt/keycloak/themes/chillax", isReadOnly: true)
+    // The one login theme every realm uses; the realm says which café it is
+    .WithBindMount("./KeycloakConfiguration/themes/ninja", "/opt/keycloak/themes/ninja", isReadOnly: true)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
@@ -344,6 +345,7 @@ if (!isTestMode)
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
         .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WithEnvironment("VITE_KEYCLOAK_REALM", "chillax")
         .WaitFor(mobileBff)
         // Not part of the Docker Compose publish yet; deployment gets its own
         // static build + Caddy route once the app is ready to ship.
@@ -363,6 +365,7 @@ if (!isTestMode)
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
         .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WithEnvironment("VITE_KEYCLOAK_REALM", "chillax")
         .WithEnvironment("VITE_CUSTOMER_URL", clientWeb.GetEndpoint("http"))
         .WaitFor(mobileBff)
         .ExcludeFromManifest();
@@ -392,6 +395,7 @@ if (!isTestMode)
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
         .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WithEnvironment("VITE_KEYCLOAK_REALM", "chillax")
         .WaitFor(mobileBff)
         .ExcludeFromManifest();
 
@@ -407,6 +411,7 @@ if (!isTestMode)
         })
         .WithEnvironment("BFF_URL", mobileBff.GetEndpoint("http"))
         .WithEnvironment("VITE_KEYCLOAK_URL", keycloakEndpoint)
+        .WithEnvironment("VITE_KEYCLOAK_REALM", "chillax")
         .WaitFor(mobileBff)
         .ExcludeFromManifest();
 }

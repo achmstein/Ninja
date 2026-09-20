@@ -52,8 +52,12 @@ issuer matches what the APIs validate:
 ```
 adb reverse tcp:5000 tcp:5000
 adb reverse tcp:8080 tcp:8080
-flutter run
+flutter run --dart-define=REALM=chillax
 ```
+
+The realm is the AppHost's tenant one; the code has none of its own. A
+release build is told everything by a record instead
+(`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
 
 Sign in with a staff account that holds the `Cashier`, `Admin` or `Owner`
 role (the backend's `Pos` policy). The Keycloak client is `pos-app`

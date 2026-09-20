@@ -196,7 +196,9 @@ public record BrandDto(
     BrandIcons Icons,
     BrandFeatures Features,
     BrandLocale Locale,
-    long Version)
+    long Version,
+    // Null from a stack older than plans: everything is entitled there
+    BrandFeatures? Entitlements = null)
 {
     public BrandDto OnCustomerHost(string origin) => this with
     {

@@ -25,6 +25,8 @@ open:
 | Till | `https://pos.cove.localhost` |
 | Kitchen | `https://kds.cove.localhost` |
 | Keycloak | `https://auth.localhost` (admin / local) |
+| Mail | `http://localhost:8025` (Mailpit: every mail the platform and the realms send) |
+| Bucket | `http://localhost:9001` (MinIO console, minioadmin / minioadmin: the offsite copies) |
 
 The control app's Capacity tab reads Docker Desktop's VM, not the laptop:
 with two stacks up it will say there is room for none, and a third stamp

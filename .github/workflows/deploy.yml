@@ -43,6 +43,7 @@ jobs:
         env:
           # Keycloak's dedicated production host
           VITE_KEYCLOAK_URL: https://auth.chillax.site
+          VITE_KEYCLOAK_REALM: chillax
           # Firebase web push for admin_web (the owner's digest) and client_web
           # (notify-me). Empty secrets leave push off; nothing else changes.
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
@@ -84,7 +85,7 @@ jobs:
 
           # Keycloak login theme travels the same way as the realm file
           cp -r src/Ninja.AppHost/KeycloakConfiguration/themes deploy-artifacts/keycloak-themes
-          sed -i 's|source: ".*KeycloakConfiguration/themes/chillax"|source: "./keycloak-themes/chillax"|g' deploy-artifacts/docker-compose.yaml
+          sed -i 's|source: ".*KeycloakConfiguration/themes/ninja"|source: "./keycloak-themes/ninja"|g' deploy-artifacts/docker-compose.yaml
 
           # Aspire publish emits no restart policy on infrastructure services (postgres,
           # keycloak, eventbus, mobile-bff, pgadmin), which defaults to "no" — they stay
@@ -302,10 +303,13 @@ jobs:
             echo ""
             echo "=== Apply realm settings ==="
             # The realm import only runs on first boot, so enforce these on
-            # the existing realm every deploy (idempotent). Long SSO sessions
-            # (30d idle / 90d max) keep web users signed in.
+            # the existing realm every deploy (idempotent). The theme is the
+            # platform's one for every realm; the HTML display name is the
+            # café's mark on its login page. Long SSO sessions (30d idle /
+            # 90d max) keep web users signed in.
             docker exec "$CONTAINER" $KC update "realms/$REALM" \
-              -s loginTheme=chillax \
+              -s loginTheme=ninja \
+              -s 'displayNameHtml=<img src="https://api.chillax.site/api/tenant/icons/icon-192.png" alt="">' \
               -s internationalizationEnabled=true \
               -s 'supportedLocales=["en","ar"]' \
               -s defaultLocale=en \

@@ -84,6 +84,20 @@ jobs:
           KEYCLOAK_PASSWORD: ${{ secrets.PLATFORM_KEYCLOAK_PASSWORD }}
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Optional: a copy of every backup off the box (any S3-compatible bucket) and the weekly restore drill
+          OFFSITE_ENDPOINT: ${{ secrets.PLATFORM_OFFSITE_ENDPOINT }}
+          OFFSITE_BUCKET: ${{ secrets.PLATFORM_OFFSITE_BUCKET }}
+          OFFSITE_ACCESS_KEY: ${{ secrets.PLATFORM_OFFSITE_ACCESS_KEY }}
+          OFFSITE_SECRET_KEY: ${{ secrets.PLATFORM_OFFSITE_SECRET_KEY }}
+          OFFSITE_REGION: ${{ vars.PLATFORM_OFFSITE_REGION }}
+          RESTORE_DRILL_ENABLED: ${{ vars.PLATFORM_RESTORE_DRILL_ENABLED }}
+          # Optional: how the platform sends mail (any SMTP); the realms get the same settings for password resets
+          MAIL_HOST: ${{ secrets.PLATFORM_MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.PLATFORM_MAIL_PORT }}
+          MAIL_USER: ${{ secrets.PLATFORM_MAIL_USER }}
+          MAIL_PASSWORD: ${{ secrets.PLATFORM_MAIL_PASSWORD }}
+          MAIL_FROM: ${{ secrets.PLATFORM_MAIL_FROM }}
+          MAIL_OPS_TO: ${{ secrets.PLATFORM_MAIL_OPS_TO }}
           ACME_EMAIL: ${{ vars.ACME_EMAIL }}
           PLATFORM_SLUG_LABEL: ${{ vars.PLATFORM_SLUG_LABEL }}
           IMAGE_TAG: ${{ inputs.image_tag }}
@@ -93,13 +107,15 @@ jobs:
             if [ -z "${!v}" ]; then echo "::error::$v is empty"; exit 1; fi
           done
 
-          mkdir -p platform-artifacts/realms
+          mkdir -p platform-artifacts/realms platform-artifacts/themes
           cp deploy/platform/docker-compose.yml platform-artifacts/
           cp deploy/platform/Caddyfile platform-artifacts/
           cp deploy/platform/init-multiple-databases.sh platform-artifacts/
           cp deploy/platform/README.md platform-artifacts/
           # The control plane rewrites this file; only seed it when the server has none
           cp deploy/platform/custom-domains.caddy platform-artifacts/custom-domains.caddy.seed
+          # The login theme every realm uses, from where the AppHost mounts it
+          cp -r src/Ninja.AppHost/KeycloakConfiguration/themes/ninja platform-artifacts/themes/ninja
 
           cat > platform-artifacts/.env <<EOF
           PLATFORM_DOMAIN=$PLATFORM_DOMAIN
@@ -109,6 +125,18 @@ jobs:
           EVENTBUS_PASSWORD=$EVENTBUS_PASSWORD
           KEYCLOAK_PASSWORD=$KEYCLOAK_PASSWORD
           GEMINI_API_KEY=$GEMINI_API_KEY
+          OFFSITE_ENDPOINT=$OFFSITE_ENDPOINT
+          OFFSITE_BUCKET=$OFFSITE_BUCKET
+          OFFSITE_ACCESS_KEY=$OFFSITE_ACCESS_KEY
+          OFFSITE_SECRET_KEY=$OFFSITE_SECRET_KEY
+          OFFSITE_REGION=${OFFSITE_REGION:-auto}
+          RESTORE_DRILL_ENABLED=${RESTORE_DRILL_ENABLED:-false}
+          MAIL_HOST=$MAIL_HOST
+          MAIL_PORT=${MAIL_PORT:-587}
+          MAIL_USER=$MAIL_USER
+          MAIL_PASSWORD=$MAIL_PASSWORD
+          MAIL_FROM=$MAIL_FROM
+          MAIL_OPS_TO=$MAIL_OPS_TO
           IMAGE_REGISTRY=ghcr.io/${{ github.repository_owner }}/ninja
           IMAGE_TAG=${IMAGE_TAG:-latest}
           EOF
@@ -121,6 +149,14 @@ jobs:
           t = t.replace('{{platformDomain}}', os.environ['PLATFORM_DOMAIN'])
           t = t.replace('{{sslRequired}}', 'external')
           t = t.replace('{{platformPassword}}', json.dumps(os.environ['PLATFORM_ADMIN_PASSWORD'])[1:-1])
+          # The realm's own SMTP (password resets), the same settings the control plane mails with; {} while mail is off
+          smtp = {}
+          if os.environ.get('MAIL_HOST'):
+              smtp = {'host': os.environ['MAIL_HOST'], 'port': os.environ.get('MAIL_PORT') or '587', 'from': os.environ.get('MAIL_FROM') or f"no-reply@{os.environ['PLATFORM_DOMAIN']}",
+                      'fromDisplayName': 'Ninja', 'auth': 'true' if os.environ.get('MAIL_USER') else 'false', 'starttls': 'true', 'ssl': 'false'}
+              if os.environ.get('MAIL_USER'):
+                  smtp.update(user=os.environ['MAIL_USER'], password=os.environ.get('MAIL_PASSWORD', ''))
+          t = t.replace('{{smtpServer}}', json.dumps(smtp))
           json.loads(t)
           open('platform-artifacts/realms/ninja-realm.json', 'w', encoding='utf-8').write(t)
           PY
@@ -195,6 +231,19 @@ jobs:
 
             docker image prune -f >/dev/null
             docker compose ps
+
+            # The realm import only runs on first boot, so the platform realm's
+            # login theme is enforced on every deploy (idempotent), the way
+            # deploy.yml does for Chillax. Tenant realms get theirs when stamped.
+            KC=/opt/keycloak/bin/kcadm.sh
+            KC_PASSWORD=$(grep -oP '^KEYCLOAK_PASSWORD=\K.*' .env)
+            for i in $(seq 1 30); do
+              if docker compose exec -T keycloak $KC config credentials --server http://localhost:8080 --realm master --user admin --password "$KC_PASSWORD" >/dev/null 2>&1; then break; fi
+              if [ "$i" -eq 30 ]; then echo "::error::Keycloak never answered; realm settings not applied"; exit 1; fi
+              sleep 5
+            done
+            docker compose exec -T keycloak $KC update realms/ninja -s loginTheme=ninja
+            echo "Platform realm: login theme applied"
 
       # Through the edge, so DNS, certificates, Caddy, Keycloak and the control
       # plane are all on the path

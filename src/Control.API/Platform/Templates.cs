@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -40,6 +41,8 @@ public static partial class Templates
         {
             ["slug"] = tenant.Slug,
             ["displayName"] = JsonEscape(tenant.NameEn),
+            // The login page's mark: the tenant's icon, cut from its logo (a placeholder until one is uploaded), never cached past a revalidation
+            ["displayNameHtml"] = JsonEscape($"<img src=\"{hosts.ApiUrl}/api/tenant/icons/icon-192.png\" alt=\"\">"),
             ["customerUrl"] = hosts.CustomerUrl,
             ["adminUrl"] = hosts.AdminUrl,
             ["posUrl"] = hosts.PosUrl,
@@ -50,6 +53,7 @@ public static partial class Templates
             // Inside the user profile, which is JSON kept as a string inside the realm JSON: escaped twice
             ["phonePattern"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Pattern)),
             ["phonePlaceholder"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Placeholder)),
+            ["smtpServer"] = SmtpServerJson(platform.Mail),
         });
 
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
@@ -60,7 +64,31 @@ public static partial class Templates
             ["platformDomain"] = platform.Domain,
             ["platformPassword"] = JsonEscape(initialPassword),
             ["sslRequired"] = SslRequired(platform),
+            ["smtpServer"] = SmtpServerJson(platform.Mail),
         });
+
+    /// <summary>Keycloak's smtpServer map (every value a string) from the platform's mail settings, so a realm can send its own password resets; {} while mail is off.</summary>
+    public static string SmtpServerJson(MailOptions mail)
+    {
+        if (!mail.Configured) return "{}";
+        var auth = !string.IsNullOrEmpty(mail.User);
+        var map = new Dictionary<string, string>
+        {
+            ["host"] = mail.Host!,
+            ["port"] = mail.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["from"] = mail.From,
+            ["fromDisplayName"] = mail.FromName,
+            ["auth"] = auth ? "true" : "false",
+            ["starttls"] = mail.UseStartTls ? "true" : "false",
+            ["ssl"] = "false",
+        };
+        if (auth)
+        {
+            map["user"] = mail.User!;
+            map["password"] = mail.Password ?? "";
+        }
+        return System.Text.Json.JsonSerializer.Serialize(map);
+    }
 
     private static string JsonEscape(string s) => System.Text.Json.JsonEncodedText.Encode(s).ToString();
 
@@ -84,11 +112,13 @@ public static partial class Templates
             sb.AppendLine($"  {name}:");
             sb.AppendLine($"    image: \"{platform.ImageRegistry}-{service}:{tenant.ImageTag}\"");
             sb.AppendLine("    restart: \"unless-stopped\"");
+            AppendLimits(sb, platform.MemoryFor(service), platform.ServiceCpus, platform);
             sb.AppendLine("    environment:");
             sb.AppendLine("      ASPNETCORE_ENVIRONMENT: \"Production\"");
             sb.AppendLine("      ASPNETCORE_FORWARDEDHEADERS_ENABLED: \"true\"");
             sb.AppendLine("      HTTP_PORTS: \"8080\"");
-            sb.AppendLine($"      ConnectionStrings__eventbus: \"amqp://{platform.RabbitUser}:${{RABBIT_PASSWORD}}@{platform.RabbitHost}:5672/{TenantNaming.VHost(slug)}\"");
+            // Its own broker user and database role, allowed nothing beyond this vhost and these databases
+            sb.AppendLine($"      ConnectionStrings__eventbus: \"amqp://{TenantNaming.BrokerUser(slug)}:${{BROKER_PASSWORD}}@{platform.RabbitHost}:5672/{TenantNaming.VHost(slug)}\"");
             sb.AppendLine($"      Identity__Url: \"{platform.KeycloakInternalUrl}/realms/{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      Keycloak__Realm: \"{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      OTEL_SERVICE_NAME: \"{name}\"");
@@ -107,7 +137,7 @@ public static partial class Templates
             };
             if (db is not null)
             {
-                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={platform.PostgresHost};Port=5432;Username={platform.PostgresUser};Password=${{POSTGRES_PASSWORD}};Database={TenantNaming.Database(slug, db)}\"");
+                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={platform.PostgresHost};Port=5432;Username={TenantNaming.DbRole(slug)};Password=${{DB_PASSWORD}};Database={TenantNaming.Database(slug, db)}\"");
             }
 
             switch (service)
@@ -145,6 +175,7 @@ public static partial class Templates
         sb.AppendLine($"  {gateway}:");
         sb.AppendLine($"    image: \"{platform.GatewayImage}\"");
         sb.AppendLine("    restart: \"unless-stopped\"");
+        AppendLimits(sb, platform.GatewayMemoryMb, platform.GatewayCpus, platform);
         sb.AppendLine("    entrypoint: [\"dotnet\"]");
         sb.AppendLine("    command: [\"/app/yarp.dll\"]");
         sb.AppendLine("    environment:");
@@ -152,11 +183,15 @@ public static partial class Templates
         sb.AppendLine("      Kestrel__EndpointDefaults__Protocols: \"Http1AndHttp2\"");
         sb.AppendLine("      HTTP_PORTS: \"5000\"");
         var i = 0;
-        foreach (var (path, cluster, versions, transforms) in GatewayRoutes())
+        var entitled = PlanCatalog.Entitlements(tenant);
+        foreach (var (path, cluster, versions, transforms) in GatewayRoutes(entitled))
         {
             var r = $"REVERSEPROXY__ROUTES__route{i++}";
             sb.AppendLine($"      {r}__MATCH__PATH: \"{path}\"");
             sb.AppendLine($"      {r}__CLUSTERID: \"{cluster}\"");
+            // A blocked route answers before anything a catch-all could say about the same path
+            if (cluster == "branch" && transforms.Any(t => t.Any(kv => kv.Item1 == "PathSet" && kv.Item2 == ModuleOffPath)))
+                sb.AppendLine($"      {r}__ORDER: \"-1\"");
             if (versions is not null)
             {
                 sb.AppendLine($"      {r}__MATCH__QUERYPARAMETERS__0__NAME: \"api-version\"");
@@ -181,16 +216,20 @@ public static partial class Templates
         return sb.ToString();
     }
 
-    /// <summary>The stack's .env: the shared secrets and its own.</summary>
+    /// <summary>The stack's .env: its own secrets and nothing of the platform's (the superuser and the shared broker user stay on the control plane).</summary>
     public static string Env(Tenant tenant, PlatformOptions platform)
-        => string.Join('\n',
+    {
+        if (!tenant.HasOwnCredentials)
+            throw new InvalidOperationException($"{tenant.Slug} has no credentials of its own yet; the credentials step runs first");
+        return string.Join('\n',
         [
-            $"POSTGRES_PASSWORD={platform.PostgresPassword}",
-            $"RABBIT_PASSWORD={platform.RabbitPassword}",
+            $"DB_PASSWORD={tenant.DbPassword}",
+            $"BROKER_PASSWORD={tenant.BrokerPassword}",
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
             $"GEMINI_API_KEY={platform.GeminiApiKey ?? ""}",
             "",
         ]);
+    }
 
     /// <summary>
     /// One Caddy site per café on its own domain, proxied to that café's
@@ -217,6 +256,22 @@ public static partial class Templates
             sb.AppendLine("}");
         }
         return sb.ToString();
+    }
+
+    /// <summary>What the container may take: compose applies deploy.resources.limits without swarm (pids belongs in there too, or compose sees two values); the log cap sits beside it.</summary>
+    private static void AppendLimits(StringBuilder sb, int memoryMb, double cpus, PlatformOptions platform)
+    {
+        sb.AppendLine("    deploy:");
+        sb.AppendLine("      resources:");
+        sb.AppendLine("        limits:");
+        sb.AppendLine($"          memory: \"{memoryMb}M\"");
+        sb.AppendLine($"          cpus: \"{cpus.ToString("0.0#", CultureInfo.InvariantCulture)}\"");
+        sb.AppendLine($"          pids: {platform.PidsLimit}");
+        sb.AppendLine("    logging:");
+        sb.AppendLine("      driver: \"json-file\"");
+        sb.AppendLine("      options:");
+        sb.AppendLine($"        max-size: \"{platform.LogMaxSize}\"");
+        sb.AppendLine($"        max-file: \"{platform.LogMaxFile}\"");
     }
 
     private static void AppendChatModel(StringBuilder sb, PlatformOptions platform)
@@ -255,6 +310,34 @@ public static partial class Templates
         foreach (var service in TenantNaming.Services)
             yield return ($"/health/{service}", service, null, [[("PathSet", "/health")]]);
     }
+
+    /// <summary>Where the gateway sends a request for a module the plan does not include: Branch.API answers 402.</summary>
+    internal const string ModuleOffPath = "/api/tenant/module-off";
+
+    /// <summary>
+    /// The same table with a module that is not entitled taken out: its
+    /// routes keep their paths (never a duplicate template) but point at
+    /// Branch.API's 402 page, and Rooms additionally blocks the room-only
+    /// place routes, since /api/places itself serves tables and stations.
+    /// Every container keeps running; only the gateway changes.
+    /// </summary>
+    internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[][] Transforms)> GatewayRoutes(IReadOnlySet<Module> entitled)
+    {
+        var blocked = PlanCatalog.Routes.Where(r => !entitled.Contains(r.Module)).ToDictionary(r => r.Path, r => r.Module);
+        foreach (var route in GatewayRoutes())
+        {
+            if (blocked.Remove(route.Path, out var module))
+                yield return Block(route.Path, module);
+            else
+                yield return route;
+        }
+        // The room-only place routes are not in the table: they are only ever added, to block
+        foreach (var (path, module) in blocked)
+            yield return Block(path, module);
+    }
+
+    private static (string, string, string[]?, (string, string)[][]) Block(string path, Module module)
+        => (path, "branch", null, [[("PathSet", ModuleOffPath)], [("QueryValueParameter", "module"), ("Set", PlanCatalog.Key(module))]]);
 
     private static string Yaml(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
 }

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useTheme } from '@/context/theme-provider'
-import { PLATFORM_NAME } from '@/lib/brand'
+import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
 import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
@@ -37,6 +37,7 @@ export const Route = createFileRoute('/(auth)/sign-in')({
  */
 function SignIn() {
   const t = useT()
+  const cafe = useBrandName()
   const auth = useAuth()
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
@@ -109,9 +110,12 @@ function SignIn() {
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
         <PlatformMark className='size-14 text-2xl' />
-        <span className='text-2xl font-semibold tracking-tight'>
-          {PLATFORM_NAME} {t('posName')}
-        </span>
+        <div className='flex flex-col items-center gap-1'>
+          <span className='text-2xl font-semibold tracking-tight'>
+            {PLATFORM_NAME} {t('posName')}
+          </span>
+          {cafe && <span className='text-muted-foreground'>{cafe}</span>}
+        </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Loader2 className='h-4 w-4 animate-spin' />

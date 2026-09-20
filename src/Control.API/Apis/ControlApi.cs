@@ -25,7 +25,10 @@ public static partial class ControlApi
         api.MapPost("/tenants/{slug}/provision", Provision).WithName("ProvisionTenant").WithSummary("Run (or retry) provisioning").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/stop", Stop).WithName("StopTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/start", Start).WithName("StartTenant").RequireAuthorization("Platform");
-        api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Re-stamp on a tag and pull").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/rollback", Rollback).WithName("RollbackTenant").WithSummary("Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead").RequireAuthorization("Platform");
+        api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
 
@@ -34,6 +37,8 @@ public static partial class ControlApi
         MapOpsApi(api);
         MapImpersonationApi(api);
         MapBackupsApi(api);
+        MapMailApi(api);
+        MapSubscriptionApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();
@@ -69,7 +74,7 @@ public static partial class ControlApi
         return TypedResults.Ok(new CapacityResponse(
             snapshot.At, snapshot.MemTotalMb, snapshot.MemAvailableMb, snapshot.Load, snapshot.Cpus,
             snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, snapshot.DockerUsedMb, snapshot.DockerReclaimableMb,
-            options.Value.StackFootprintMb, options.Value.ReserveMb, capacity.RoomFor(snapshot), tenants));
+            options.Value.StackFootprintMb, options.Value.StackLimitMb, options.Value.ReserveMb, capacity.RoomFor(snapshot), tenants));
     }
 
     public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, IOptions<PlatformOptions> options)
@@ -123,6 +128,8 @@ public static partial class ControlApi
             Phone = Clean(request.Phone),
             Address = Clean(request.Address),
             Plan = request.Plan,
+            Addons = PlanCatalog.NormalizeAddons(request.Plan, request.Addons ?? []),
+            Subscription = request.Kind == TenantKind.Demo ? SubscriptionStatus.Trialing : SubscriptionStatus.Active,
             Notes = Clean(request.Notes),
             IdentitySecret = TenantNaming.NewSecret(),
             ControlSecret = TenantNaming.NewSecret(),
@@ -168,20 +175,65 @@ public static partial class ControlApi
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
         => Enqueue(context, queue, audit, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);
 
-    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Start(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
-        => Enqueue(context, queue, audit, slug, "start", [TenantStatus.Stopped, TenantStatus.Failed], ct);
-
-    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Upgrade(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, UpgradeRequest? request, CancellationToken ct)
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Start(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
     {
-        if (!string.IsNullOrWhiteSpace(request?.ImageTag))
-        {
-            var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
-            if (tenant is null) return TypedResults.NotFound();
-            tenant.ImageTag = request.ImageTag.Trim();
-            await context.SaveChangesAsync(ct);
-        }
-        return await Enqueue(context, queue, audit, slug, "upgrade", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed], ct, new { imageTag = request?.ImageTag });
+        // A suspended stack is unpaid: it comes back with a payment or a resume, never a plain start
+        if (await context.Tenants.AsNoTracking().AnyAsync(t => t.Slug == slug && t.Status == TenantStatus.Suspended, ct))
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is suspended for non-payment; record a payment or resume it." });
+        return await Enqueue(context, queue, audit, slug, "start", [TenantStatus.Stopped, TenantStatus.Failed], ct);
     }
+
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>, BadRequest<ProblemDetails>>> Upgrade(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, UpgradeRequest? request, CancellationToken ct)
+    {
+        // The tag travels on the job: the record changes only once the upgrade runs
+        var tag = request?.ImageTag?.Trim();
+        if (!string.IsNullOrEmpty(tag) && !ImageTag().IsMatch(tag))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "An image tag is letters, digits, dots, dashes and underscores, up to 64." });
+        var result = await Enqueue(context, queue, audit, slug, "upgrade", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed], ct, new { imageTag = tag }, job => job with { ImageTag = tag });
+        return result.Result switch
+        {
+            Accepted a => a,
+            NotFound n => n,
+            Conflict<ProblemDetails> c => c,
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Rollback(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.PreviousImageTag is null)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} has no previous tag to go back to." });
+        return await Enqueue(context, queue, audit, slug, "rollback", [TenantStatus.Running, TenantStatus.Failed], ct, new { to = tenant.PreviousImageTag });
+    }
+
+    public static async Task<Results<Accepted<FleetUpgradeResponse>, BadRequest<ProblemDetails>>> FleetUpgrade(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, FleetUpgradeRequest request, CancellationToken ct)
+    {
+        var tag = request.ImageTag?.Trim() ?? "";
+        if (!ImageTag().IsMatch(tag))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "An image tag is letters, digits, dots, dashes and underscores, up to 64." });
+        var running = await context.Tenants.AsNoTracking().Where(t => t.Status == TenantStatus.Running).OrderBy(t => t.Slug).ToListAsync(ct);
+        Tenant? canary = null;
+        if (!string.IsNullOrWhiteSpace(request.Canary))
+        {
+            canary = running.FirstOrDefault(t => t.Slug == request.Canary.Trim());
+            if (canary is null)
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{request.Canary} is not a running tenant." });
+        }
+        await audit.WriteAsync("platform.upgrade", null, new { imageTag = tag, canary = canary?.Slug, count = running.Count }, ct);
+        // The canary first; the rest carry its id and step aside if it did not make it
+        if (canary is not null) await queue.EnqueueAsync(new ProvisioningJob(canary.Id, "upgrade", tag), ct);
+        foreach (var tenant in running.Where(t => t.Id != canary?.Id))
+            await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "upgrade", tag, canary?.Id), ct);
+        return TypedResults.Accepted("/api/control/tenants", new FleetUpgradeResponse(running.Count, canary?.Slug));
+    }
+
+    public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Secure(
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug,
+        [Description("New passwords for a stack that already has its own")] bool rotate,
+        CancellationToken ct)
+        => Enqueue(context, queue, audit, slug, rotate ? "rotate" : "secure", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed], ct);
 
     public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> Extend(ControlContext context, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, ExtendRequest request, CancellationToken ct)
     {
@@ -191,23 +243,27 @@ public static partial class ControlApi
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Only demos expire." });
         var from = tenant.ExpiresAt is { } e && e > DateTimeOffset.UtcNow ? e : DateTimeOffset.UtcNow;
         tenant.ExpiresAt = from.AddDays(Math.Clamp(request.Days, 1, 365));
+        // The owner is warned afresh as the new date comes near
+        tenant.ExpiryWarnedAt = null;
+        tenant.DestroyWarnedAt = null;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("demo.extended", slug, new { request.Days, tenant.ExpiresAt }, ct);
         return TypedResults.Ok(TenantDetail.From(tenant, [], [], options.Value));
     }
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Destroy(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
-        => Enqueue(context, queue, audit, slug, "destroy", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed, TenantStatus.Requested], ct);
+        => Enqueue(context, queue, audit, slug, "destroy", [TenantStatus.Running, TenantStatus.Stopped, TenantStatus.Failed, TenantStatus.Requested, TenantStatus.Suspended], ct);
 
     private static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Enqueue(
-        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, string action, TenantStatus[] allowedFrom, CancellationToken ct, object? details = null)
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, string action, TenantStatus[] allowedFrom, CancellationToken ct, object? details = null, Func<ProvisioningJob, ProvisioningJob>? shape = null)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
         if (!allowedFrom.Contains(tenant.Status))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Cannot {action} a tenant that is {tenant.Status}." });
         await audit.WriteAsync($"tenant.{action}", slug, details, ct);
-        await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, action), ct);
+        var job = new ProvisioningJob(tenant.Id, action);
+        await queue.EnqueueAsync(shape?.Invoke(job) ?? job, ct);
         return TypedResults.Accepted($"/api/control/tenants/{slug}");
     }
 
@@ -224,6 +280,9 @@ public static partial class ControlApi
 
     [GeneratedRegex("^#[0-9a-f]{6}$")]
     private static partial Regex HexColor();
+
+    [GeneratedRegex("^[A-Za-z0-9._-]{1,64}$")]
+    private static partial Regex ImageTag();
 }
 
 /// <param name="RoomFor">How many more stacks the box takes before the guard refuses a stamp.</param>
@@ -243,6 +302,7 @@ public record CapacityResponse(
     long DockerUsedMb,
     long DockerReclaimableMb,
     int StackFootprintMb,
+    int StackLimitMb,
     int ReserveMb,
     int RoomFor,
     IReadOnlyList<TenantUsage> Tenants);
@@ -267,9 +327,15 @@ public record CreateTenantRequest(
     TenantPlan Plan = TenantPlan.Free,
     string? Notes = null,
     bool? Provision = true,
-    bool? Force = null);
+    bool? Force = null,
+    Module[]? Addons = null);
 
 public record UpgradeRequest(string? ImageTag);
+
+/// <param name="Canary">A running tenant's slug to upgrade first; the rest follow only while it stays running on the tag.</param>
+public record FleetUpgradeRequest(string ImageTag, string? Canary = null);
+
+public record FleetUpgradeResponse(int Queued, string? Canary);
 
 public record ExtendRequest(int Days);
 
@@ -279,12 +345,13 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
 }
 
 /// <param name="LogoUrl">The café's mark as its running stack serves it, or null while there is no stack to serve one.</param>
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError)
+/// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p)
     {
         var hosts = TenantHosts.For(t, p);
-        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError);
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough);
     }
 
     /// <summary>The stack's public mark; the light one, which the customer app's icons are cut from.</summary>
@@ -323,12 +390,25 @@ public record TenantDetail(
     DateTimeOffset? ProvisionedAt,
     string? LastError,
     IReadOnlyList<StepDto> Steps,
-    IReadOnlyList<string> SeedImages)
+    IReadOnlyList<string> SeedImages,
+    bool HasOwnCredentials,
+    DateTimeOffset? WelcomeSentAt,
+    TenantSubscriptionDto Subscription,
+    string? PreviousImageTag,
+    string? UpgradeBackupId)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
             steps.Select(s => new StepDto(s.Name, s.Status, s.StartedAt, s.FinishedAt, s.Output)).ToList(),
-            seedImages);
+            seedImages,
+            t.HasOwnCredentials,
+            t.WelcomeSentAt,
+            new(t.Subscription, t.PaidThrough, t.GraceDays ?? p.SubscriptionGraceDays, t.SuspendedAt, t.Addons, PlanCatalog.Entitlements(t).OrderBy(m => m).ToArray()),
+            t.PreviousImageTag,
+            t.UpgradeBackupId);
 }
+
+/// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>
+public record TenantSubscriptionDto(SubscriptionStatus Status, DateTimeOffset? PaidThrough, int GraceDays, DateTimeOffset? SuspendedAt, Module[] Addons, Module[] Entitlements);

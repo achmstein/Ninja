@@ -19,7 +19,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> UpdateTenant(
-        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, Provisioner provisioner, IOptions<PlatformOptions> options,
+        ControlContext context, ProvisioningQueue queue, IAuditWriter audit, Provisioner provisioner, SubscriptionService subscriptions, IOptions<PlatformOptions> options,
         string slug, UpdateTenantRequest request, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
@@ -44,7 +44,6 @@ public static partial class ControlApi
         tenant.ContactName = Clean(request.ContactName);
         tenant.Phone = Clean(request.Phone);
         tenant.Address = Clean(request.Address);
-        tenant.Plan = request.Plan;
         tenant.Notes = Clean(request.Notes);
         tenant.Country = locale.Country;
         tenant.Currency = locale.Currency;
@@ -52,6 +51,10 @@ public static partial class ControlApi
         tenant.DefaultLanguage = locale.Language;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.updated", slug, request, ct);
+
+        // The plan lives on the subscription now; given here, it goes the same way, so the stack follows
+        if (request.Plan is { } plan && plan != tenant.Plan)
+            await subscriptions.ApplyAsync(tenant, plan, tenant.Addons, tenant.GraceDays, ct);
 
         // A café's own domain reaches the edge straight away; the rest is read by the next stamp
         if (domainChanged && tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
@@ -61,18 +64,24 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Ok<TenantDetail>, NotFound, BadRequest<ProblemDetails>>> Convert(
-        ControlContext context, IAuditWriter audit, Provisioner provisioner, IOptions<PlatformOptions> options, string slug, ConvertRequest? request, CancellationToken ct)
+        ControlContext context, IAuditWriter audit, Provisioner provisioner, SubscriptionService subscriptions, IOptions<PlatformOptions> options, string slug, ConvertRequest? request, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
         if (tenant.Kind != TenantKind.Demo)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{slug} is already a customer." });
 
+        // A customer from today: the first period starts now, and the stack narrows from everything to its plan
         tenant.Kind = TenantKind.Customer;
         tenant.ExpiresAt = null;
-        tenant.Plan = request?.Plan ?? (tenant.Plan == TenantPlan.Free ? TenantPlan.Starter : tenant.Plan);
+        tenant.ExpiryWarnedAt = null;
+        tenant.DestroyWarnedAt = null;
+        tenant.Subscription = SubscriptionStatus.Active;
+        tenant.PaidThrough = request?.PaidThrough ?? DateTimeOffset.UtcNow.AddDays(options.Value.SubscriptionPeriodDays);
+        tenant.GraceDays = null;
         await context.SaveChangesAsync(ct);
-        await audit.WriteAsync("tenant.converted", slug, new { plan = tenant.Plan }, ct);
+        await audit.WriteAsync("tenant.converted", slug, new { plan = request?.Plan, tenant.PaidThrough }, ct);
+        await subscriptions.ApplyAsync(tenant, request?.Plan ?? (tenant.Plan == TenantPlan.Free ? TenantPlan.Starter : tenant.Plan), request?.Addons ?? tenant.Addons, null, ct);
 
         return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
     }
@@ -99,14 +108,15 @@ public record UpdateTenantRequest(
     string? ContactName,
     string? Phone,
     string? Address,
-    TenantPlan Plan,
+    TenantPlan? Plan,
     string? Notes,
     string? Country,
     string? Currency,
     string? TimeZone,
     string? DefaultLanguage);
 
-public record ConvertRequest(TenantPlan? Plan);
+/// <param name="PaidThrough">When the first period ends; the platform's period from today when left out.</param>
+public record ConvertRequest(TenantPlan? Plan, Module[]? Addons = null, DateTimeOffset? PaidThrough = null);
 
 /// <param name="Details">JSON: the request's fields, the outcome or the error.</param>
 public record AuditEntry(long Id, DateTimeOffset At, string Actor, string? ActorEmail, string Source, string Action, string? Slug, string? Details);

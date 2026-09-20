@@ -27,8 +27,18 @@ public static partial class TenantApi
 
         api.MapPut("/", UpdateTenant)
             .WithName("UpdateTenant")
-            .WithSummary("Change the name, the brand color or the feature switches")
+            .WithSummary("Change the name, the brand color or the feature switches (within what the plan allows)")
             .RequireAuthorization("Owner");
+
+        api.MapPut("/entitlements", SetEntitlements)
+            .WithName("SetTenantEntitlements")
+            .WithSummary("The modules the café's plan allows; a switch outside them goes off. The control plane only")
+            .RequireAuthorization("Control");
+
+        // Where the gateway sends a request for a module that is not in the plan
+        api.MapMethods("/module-off", ["GET", "POST", "PUT", "DELETE", "PATCH"], ModuleOff)
+            .WithName("ModuleOff")
+            .ExcludeFromDescription();
 
         api.MapPut("/images/{slot}", UploadImage)
             .WithName("UploadTenantImage")
@@ -99,18 +109,30 @@ public static partial class TenantApi
             tenant.TimeZone = l.TimeZone;
             tenant.DefaultLanguage = l.Language;
         }
-        tenant.RoomsEnabled = request.Features.Rooms;
-        tenant.LoyaltyEnabled = request.Features.Loyalty;
-        tenant.TabsEnabled = request.Features.Tabs;
-        tenant.InventoryEnabled = request.Features.Inventory;
-        tenant.FinanceEnabled = request.Features.Finance;
-        tenant.PayrollEnabled = request.Features.Payroll;
-        tenant.KdsEnabled = request.Features.Kds;
+        // An owner may switch an entitled module off, never an unentitled one on
+        tenant.ApplyFeatures(request.Features);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
     }
+
+    public static async Task<Ok<TenantResponse>> SetEntitlements(BranchContext context, IConfiguration configuration, TenantFeatures request)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
+        tenant.ApplyEntitlements(request);
+        tenant.UpdatedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync();
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+    }
+
+    public static ProblemHttpResult ModuleOff(HttpContext http)
+        => TypedResults.Problem(
+            title: "Module not in plan",
+            detail: "This module is not part of the café's subscription.",
+            type: "module-off",
+            statusCode: StatusCodes.Status402PaymentRequired,
+            extensions: new Dictionary<string, object?> { ["module"] = http.Request.Query["module"].ToString() });
 
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>, NotFound>> UploadImage(
         BranchContext context,
@@ -335,8 +357,6 @@ public static partial class TenantApi
     private static partial Regex CurrencyCode();
 }
 
-public record TenantFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
-
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language ("ar" or "en").</summary>
 public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language)
 {
@@ -391,6 +411,7 @@ public record TenantResponse(
     TenantThemeDto Theme,
     TenantIcons Icons,
     TenantFeatures Features,
+    TenantFeatures Entitlements,
     TenantLocaleDto Locale,
     long Version)
 {
@@ -412,7 +433,8 @@ public record TenantResponse(
                 $"/api/tenant/icons/maskable-512.png?v={v}",
                 $"/api/tenant/icons/apple-touch-icon.png?v={v}",
                 $"/api/tenant/icons/favicon.png?v={v}"),
-            new(t.RoomsEnabled, t.LoyaltyEnabled, t.TabsEnabled, t.InventoryEnabled, t.FinanceEnabled, t.PayrollEnabled, t.KdsEnabled),
+            t.Features,
+            t.Entitlements,
             TenantLocaleDto.From(t),
             v);
     }

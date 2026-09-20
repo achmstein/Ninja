@@ -15,6 +15,9 @@ export const TENANT_STATUSES = [
   'Failed',
   'Destroying',
   'Destroyed',
+  // Appended in the order the API's enum grows: the index is the wire value
+  'Upgrading',
+  'Suspended',
 ] as const
 export type TenantStatusName = (typeof TENANT_STATUSES)[number]
 
@@ -66,7 +69,40 @@ export const statusLabelKey: Record<TenantStatusName, TranslationKey> = {
   Failed: 'statusFailed',
   Destroying: 'statusDestroying',
   Destroyed: 'statusDestroyed',
+  Upgrading: 'statusUpgrading',
+  Suspended: 'statusSuspended',
 }
+
+export const SUBSCRIPTION_STATUSES = ['Trialing', 'Active', 'PastDue', 'Suspended', 'Cancelled'] as const
+export type SubscriptionStatusName = (typeof SUBSCRIPTION_STATUSES)[number]
+
+export const subscriptionStatus = (value: number | string | null | undefined) =>
+  nameOf(SUBSCRIPTION_STATUSES, value, 'Active')
+
+export const subscriptionLabelKey: Record<SubscriptionStatusName, TranslationKey> = {
+  Trialing: 'subTrialing',
+  Active: 'subActive',
+  PastDue: 'subPastDue',
+  Suspended: 'subSuspended',
+  Cancelled: 'subCancelled',
+}
+
+/** The seven switches as modules a plan includes or sells; the order the API's enum has. */
+export const MODULES = ['Rooms', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds'] as const
+export type ModuleName = (typeof MODULES)[number]
+
+export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
+  Rooms: 'featureRooms',
+  Loyalty: 'featureLoyalty',
+  Tabs: 'featureTabs',
+  Inventory: 'featureInventory',
+  Finance: 'featureFinance',
+  Payroll: 'featurePayroll',
+  Kds: 'featureKds',
+}
+
+/** The API sends modules as names; a number would be the enum index. */
+export const moduleName = (value: number | string) => nameOf(MODULES, value, 'Rooms')
 
 export const stepLabelKey: Record<StepStatusName, TranslationKey> = {
   Pending: 'stepPending',
@@ -78,7 +114,7 @@ export const stepLabelKey: Record<StepStatusName, TranslationKey> = {
 
 /** A tenant whose stack is mid-change: the screens poll while any is. */
 export const isBusy = (status: TenantStatusName) =>
-  status === 'Provisioning' || status === 'Destroying'
+  status === 'Provisioning' || status === 'Destroying' || status === 'Upgrading'
 
 export const canProvision = (status: TenantStatusName) =>
   status === 'Requested' || status === 'Failed'
@@ -88,15 +124,22 @@ export const canUpgrade = (status: TenantStatusName) =>
   status === 'Running' || status === 'Stopped'
 export const canDestroy = (status: TenantStatusName) =>
   status !== 'Destroying' && status !== 'Destroyed'
+/** Stopped for non-payment; back with a payment or a resume. */
+export const canSuspend = (status: TenantStatusName) =>
+  status === 'Running' || status === 'Stopped'
+export const canResume = (status: TenantStatusName) => status === 'Suspended'
 /** A demo becomes a customer; a customer already is one. */
 export const canConvert = (kind: TenantKindName, status: TenantStatusName) =>
   kind === 'Demo' && status !== 'Destroying' && status !== 'Destroyed'
 export const canImpersonate = (status: TenantStatusName) => status === 'Running'
 export const canBackup = (status: TenantStatusName) =>
-  status === 'Running' || status === 'Stopped'
+  status === 'Running' || status === 'Stopped' || status === 'Suspended'
+/** Its own database role and broker user, or new passwords for them: the stack restarts. */
+export const canSecure = (status: TenantStatusName) =>
+  status === 'Running' || status === 'Stopped' || status === 'Failed'
 /** A stack exists on the box: containers and logs can be read. */
 export const isStamped = (status: TenantStatusName) =>
-  status === 'Running' || status === 'Stopped' || status === 'Failed' || status === 'Provisioning'
+  status === 'Running' || status === 'Stopped' || status === 'Failed' || status === 'Provisioning' || status === 'Upgrading' || status === 'Suspended'
 
 export const TENANT_SEEDS = ['None', 'Sample'] as const
 export type TenantSeedName = (typeof TENANT_SEEDS)[number]

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { create } from 'zustand'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse, type TenantWordmark } from '@/api/branch'
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
@@ -63,6 +64,21 @@ function writeCachedBrand(brand: Brand) {
  * onto the page, and the network copy replaces it when it arrives. With no
  * cache we wait for the network, briefly, so the first paint is not unbranded.
  */
+/**
+ * Whether the edge said the café is paused: its stack is off and every API
+ * call answers 503 { code: "paused" }. Set from the boot fetch, whenever it
+ * lands; the app then shows a notice instead of a menu that cannot load.
+ */
+export const usePaused = create<{ paused: boolean; set: (paused: boolean) => void }>((set) => ({
+  paused: false,
+  set: (paused) => set({ paused }),
+}))
+
+function pausedBy(error: unknown): boolean {
+  const response = (error as { response?: { status?: number; data?: { code?: string } } } | null)?.response
+  return response?.status === 503 && response.data?.code === 'paused'
+}
+
 export async function bootBrand(queryClient: QueryClient) {
   const cached = readCachedBrand()
   const language = useLanguage.getState().language
@@ -71,7 +87,22 @@ export async function bootBrand(queryClient: QueryClient) {
     applyBrand(cached, language)
   }
 
-  const fetching = queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
+  // Mirrored to localStorage the moment it lands, not only from
+  // useBrandEffects after the first render: the OIDC config reads the
+  // tenant's authority from there before anything mounts, so a first visit
+  // must not fall back to the build's realm.
+  const fetching = queryClient
+    .prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
+    .then(() => {
+      // prefetchQuery never throws: a failure sits on the query's state
+      const error = queryClient.getQueryState(brandQueryKey())?.error
+      if (error) {
+        if (pausedBy(error)) usePaused.getState().set(true)
+        return
+      }
+      const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
+      if (fresh) writeCachedBrand(fresh)
+    })
   if (!cached) {
     await Promise.race([
       fetching,

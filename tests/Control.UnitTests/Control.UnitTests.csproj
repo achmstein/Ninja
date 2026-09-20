@@ -18,4 +18,9 @@
     <ProjectReference Include="..\..\src\Control.API\Control.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The provisioner tests run the real steps against an in-memory ControlContext and the dry-run doubles -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
 </Project>
