@@ -96,6 +96,6 @@ export function useVisitTab(): {
   return {
     label: t('rooms'),
     icon: Gamepad2,
-    visible: hasTimedPlaces && features.rooms,
+    visible: hasTimedPlaces && features.spaces,
   }
 }

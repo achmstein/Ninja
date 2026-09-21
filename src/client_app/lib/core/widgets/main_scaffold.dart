@@ -76,7 +76,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     // The rooms tab exists only for a tenant with rooms
-    final rooms = ref.watch(featuresProvider).rooms;
+    final rooms = ref.watch(featuresProvider).spaces;
     final tabs = <_Tab>[
       (route: '/menu', icon: FIcons.utensils, label: l10n.menu),
       if (rooms)

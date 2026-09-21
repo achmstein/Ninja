@@ -60,7 +60,7 @@ const RADIUS_LABELS: Record<string, TranslationKey> = {
 }
 
 const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
-  { key: 'rooms', label: 'featureRooms' },
+  { key: 'spaces', label: 'featureSpaces' },
   { key: 'loyalty', label: 'featureLoyalty' },
   { key: 'tabs', label: 'featureTabs' },
   { key: 'inventory', label: 'featureInventory' },

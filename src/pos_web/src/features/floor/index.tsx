@@ -408,7 +408,7 @@ export function Floor() {
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
-        {features.rooms && reserved.length > 0 && (
+        {features.spaces && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
@@ -481,7 +481,7 @@ export function Floor() {
           <div className='flex flex-col gap-3'>
             <div className='flex flex-wrap items-center gap-2'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
-                if (key === 'Room' && !features.rooms) return null
+                if (key === 'Room' && !features.spaces) return null
                 if (key !== 'all' && counts[key] === 0) return null
                 const label =
                   key === 'all'

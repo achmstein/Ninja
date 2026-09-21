@@ -8,15 +8,15 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
-public class RoomBecameAvailableIntegrationEventHandler(
+public class PlaceBecameAvailableIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
     IHubContext<NotificationHub> hubContext,
-    ILogger<RoomBecameAvailableIntegrationEventHandler> logger) : IIntegrationEventHandler<RoomBecameAvailableIntegrationEvent>
+    ILogger<PlaceBecameAvailableIntegrationEventHandler> logger) : IIntegrationEventHandler<PlaceBecameAvailableIntegrationEvent>
 {
-    public async Task Handle(RoomBecameAvailableIntegrationEvent @event)
+    public async Task Handle(PlaceBecameAvailableIntegrationEvent @event)
     {
-        logger.LogInformation("Handling RoomBecameAvailableIntegrationEvent for place {PlaceId}: {PlaceName}",
+        logger.LogInformation("Handling PlaceBecameAvailableIntegrationEvent for place {PlaceId}: {PlaceName}",
             @event.PlaceId, @event.PlaceName.En);
 
         // Get room availability subscriptions for this branch

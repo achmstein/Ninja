@@ -180,7 +180,7 @@ public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
-public record BrandFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
+public record BrandFeatures(bool Spaces, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
 
 public record BrandLocale(string Country, string Currency, string TimeZone, string Language);
 

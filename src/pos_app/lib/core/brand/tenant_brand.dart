@@ -4,7 +4,7 @@ import '../models/localized_text.dart';
 /// The switches a tenant can turn off. Every one is on until the brand is
 /// known, so nothing flashes off and back at startup.
 class TenantFeatures {
-  final bool rooms;
+  final bool spaces;
   final bool loyalty;
   final bool tabs;
   final bool inventory;
@@ -13,7 +13,7 @@ class TenantFeatures {
   final bool kds;
 
   const TenantFeatures({
-    this.rooms = true,
+    this.spaces = true,
     this.loyalty = true,
     this.tabs = true,
     this.inventory = true,
@@ -25,7 +25,7 @@ class TenantFeatures {
   static const all = TenantFeatures();
 
   factory TenantFeatures.fromJson(Map<String, dynamic> json) => TenantFeatures(
-        rooms: json['rooms'] as bool? ?? true,
+        spaces: json['spaces'] as bool? ?? true,
         loyalty: json['loyalty'] as bool? ?? true,
         tabs: json['tabs'] as bool? ?? true,
         inventory: json['inventory'] as bool? ?? true,
@@ -35,7 +35,7 @@ class TenantFeatures {
       );
 
   Map<String, dynamic> toJson() => {
-        'rooms': rooms,
+        'spaces': spaces,
         'loyalty': loyalty,
         'tabs': tabs,
         'inventory': inventory,

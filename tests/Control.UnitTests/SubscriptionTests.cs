@@ -28,7 +28,7 @@ public sealed class SubscriptionTests
     public void Free_includes_only_kds_starter_the_floor_and_pro_everything()
     {
         CollectionAssert.AreEquivalent(new[] { Module.Kds }, PlanCatalog.Included(TenantPlan.Free).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Rooms, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
         Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All));
         Assert.IsEmpty(PlanCatalog.AddonsAvailable(TenantPlan.Pro));
         CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
@@ -38,14 +38,14 @@ public sealed class SubscriptionTests
     public void Entitlements_are_the_plan_plus_the_addons_and_everything_for_a_demo()
     {
         var starterWithInventory = PlanCatalog.Entitlements(TenantPlan.Starter, [Module.Inventory], TenantKind.Customer);
-        CollectionAssert.AreEquivalent(new[] { Module.Rooms, Module.Loyalty, Module.Tabs, Module.Kds, Module.Inventory }, starterWithInventory.ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds, Module.Inventory }, starterWithInventory.ToArray());
         Assert.IsTrue(PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo).SetEquals(PlanCatalog.All), "a prospect sees the whole product");
     }
 
     [TestMethod]
     public void Normalizing_drops_addons_the_plan_includes_and_duplicates()
     {
-        CollectionAssert.AreEqual(new[] { Module.Inventory, Module.Finance }, PlanCatalog.NormalizeAddons(TenantPlan.Starter, [Module.Finance, Module.Rooms, Module.Inventory, Module.Finance]));
+        CollectionAssert.AreEqual(new[] { Module.Inventory, Module.Finance }, PlanCatalog.NormalizeAddons(TenantPlan.Starter, [Module.Finance, Module.Spaces, Module.Inventory, Module.Finance]));
         Assert.IsEmpty(PlanCatalog.NormalizeAddons(TenantPlan.Pro, [Module.Inventory]));
     }
 
@@ -53,9 +53,9 @@ public sealed class SubscriptionTests
     public void The_features_object_spells_the_switches_the_way_branch_api_does()
     {
         var features = PlanCatalog.ToFeatures(PlanCatalog.Entitlements(TenantPlan.Starter, [], TenantKind.Customer));
-        Assert.IsTrue(features["rooms"]!.GetValue<bool>());
+        Assert.IsTrue(features["spaces"]!.GetValue<bool>());
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
-        CollectionAssert.AreEquivalent(new[] { "rooms", "loyalty", "tabs", "inventory", "finance", "payroll", "kds" }, features.Select(f => f.Key).ToArray());
+        CollectionAssert.AreEquivalent(new[] { "spaces", "loyalty", "tabs", "inventory", "finance", "payroll", "kds" }, features.Select(f => f.Key).ToArray());
     }
 
     [TestMethod]
@@ -84,7 +84,7 @@ public sealed class SubscriptionTests
     }
 
     [TestMethod]
-    public void Free_blocks_stays_and_the_room_only_place_routes_but_not_places_itself()
+    public void Free_blocks_stays_and_the_timed_place_routes_but_not_places_itself()
     {
         var tenant = Customer(TenantPlan.Free);
         var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
@@ -92,7 +92,7 @@ public sealed class SubscriptionTests
         Assert.Contains("__MATCH__PATH: \"/api/places/available\"", yaml);
         var stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{stays}__CLUSTERID: \"branch\"", yaml);
-        Assert.Contains($"{stays}__TRANSFORMS__1__Set: \"rooms\"", yaml);
+        Assert.Contains($"{stays}__TRANSFORMS__1__Set: \"spaces\"", yaml);
         var places = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/places/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{places}__CLUSTERID: \"spaces\"", yaml, "tables and stations live under /api/places");
     }

@@ -266,7 +266,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
     final sessions = placesState.openStays;
     // A tenant without rooms has no holds to show and no room bills to filter
-    final rooms = ref.watch(featuresProvider).rooms;
+    final rooms = ref.watch(featuresProvider).spaces;
     // Reservations are the one thing not yet a bill that the cashier must
     // not miss: somebody is on their way
     final reserved = rooms ? sessions.where((s) => s.isHeld).toList() : const <Stay>[];

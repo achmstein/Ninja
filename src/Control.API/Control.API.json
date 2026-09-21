@@ -2726,7 +2726,7 @@
       },
       "BrandFeatures": {
         "required": [
-          "rooms",
+          "spaces",
           "loyalty",
           "tabs",
           "inventory",
@@ -2736,7 +2736,7 @@
         ],
         "type": "object",
         "properties": {
-          "rooms": {
+          "spaces": {
             "type": "boolean"
           },
           "loyalty": {
@@ -3551,7 +3551,7 @@
       },
       "Module": {
         "enum": [
-          "Rooms",
+          "Spaces",
           "Loyalty",
           "Tabs",
           "Inventory",

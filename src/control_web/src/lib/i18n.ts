@@ -334,7 +334,7 @@ const dictionary = {
   radiusXl: { en: 'Round', ar: 'دائرية' },
   defaultOption: { en: 'Default', ar: 'الافتراضي' },
   features: { en: 'Features', ar: 'المميزات' },
-  featureRooms: { en: 'Rooms', ar: 'الأوض' },
+  featureSpaces: { en: 'Spaces', ar: 'الأماكن' },
   featureLoyalty: { en: 'Loyalty points', ar: 'نقط الولاء' },
   featureTabs: { en: 'Customer tabs', ar: 'حسابات العملاء' },
   featureInventory: { en: 'Inventory', ar: 'المخزن' },

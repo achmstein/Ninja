@@ -53,7 +53,7 @@ export type TenantAuth = {
 };
 
 export type TenantFeatures = {
-    rooms: boolean;
+    spaces: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;

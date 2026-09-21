@@ -70,8 +70,8 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
-[JsonSerializable(typeof(RoomReservedIntegrationEvent))]
-[JsonSerializable(typeof(RoomBecameAvailableIntegrationEvent))]
+[JsonSerializable(typeof(PlaceReservedIntegrationEvent))]
+[JsonSerializable(typeof(PlaceBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(ReservationCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]

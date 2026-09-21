@@ -65,7 +65,7 @@ public interface ITenantStack
     Task SeedBrandAsync(Tenant tenant, JsonObject brand, IReadOnlyDictionary<string, string> images, CancellationToken ct);
     /// <summary>The brand as the stack serves it now (a restore keeps what the dump brought).</summary>
     Task<JsonObject?> ReadBrandAsync(Tenant tenant, CancellationToken ct);
-    /// <summary>What the plan allows ({ rooms, loyalty, … }), as the control service account; the stack clamps its switches to it.</summary>
+    /// <summary>What the plan allows ({ spaces, loyalty, … }), as the control service account; the stack clamps its switches to it.</summary>
     Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct);
 }
 

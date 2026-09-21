@@ -47,7 +47,7 @@ import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
-  { key: 'rooms', label: 'featureRooms' },
+  { key: 'spaces', label: 'featureSpaces' },
   { key: 'loyalty', label: 'featureLoyalty' },
   { key: 'tabs', label: 'featureTabs' },
   { key: 'inventory', label: 'featureInventory' },

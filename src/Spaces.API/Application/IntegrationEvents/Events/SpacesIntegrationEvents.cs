@@ -18,7 +18,7 @@ public record PlaceUpdatedIntegrationEvent(
     bool Deleted = false) : IntegrationEvent;
 
 /// <summary>A customer holds a place; staff see it and the hold's expiry.</summary>
-public record RoomReservedIntegrationEvent(
+public record PlaceReservedIntegrationEvent(
     int ReservationId,
     int PlaceId,
     string PlaceKind,
@@ -49,7 +49,7 @@ public record SessionEndedIntegrationEvent(
     List<string> MemberUserIds) : IntegrationEvent;
 
 /// <summary>A place is free again: whoever asked to be told, is told.</summary>
-public record RoomBecameAvailableIntegrationEvent(
+public record PlaceBecameAvailableIntegrationEvent(
     int PlaceId,
     string PlaceKind,
     LocalizedText PlaceName,

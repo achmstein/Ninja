@@ -144,13 +144,13 @@ tenant's welcome can be sent again from its page.
 
 A customer pays for a plan and add-ons. The plan (Free / Starter / Pro)
 includes a set of modules (`Platform/Plans.cs` is the one table: Free has
-Kds; Starter adds Rooms, Loyalty and Tabs; Pro has all seven), and any
+Kds; Starter adds Spaces, Loyalty and Tabs; Pro has all seven), and any
 module a plan leaves out can be bought as an add-on; a demo is entitled to
 everything while it is a demo, and converting it narrows it to its plan.
 The tenant's Subscription tab sets both. What a café is entitled to is
 enforced twice: its gateway answers `402 {"type":"module-off"}` on a
 module's routes (`/api/inventory/*`, `/api/finance/*`, `/api/payroll/*`,
-`/api/loyalty/*`, `/api/accounts/*`, and for Rooms `/api/stays/*` with the
+`/api/loyalty/*`, `/api/accounts/*`, and for Spaces `/api/stays/*` with the
 room-only place routes), and its Branch.API clamps the owner's feature
 switches so an unentitled module can never be switched on; the admin app
 shows those switches locked with "not in your plan". Changing the

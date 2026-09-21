@@ -40,7 +40,7 @@ public class StayHeldDomainEventHandler(ISpacesIntegrationEventService outbox, I
         var stay = notification.Stay;
         logger.LogInformation("Stay held: {StayId} at place {PlaceId} for {Customer}", stay.Id, stay.PlaceId, stay.CustomerName ?? "Unknown");
 
-        await outbox.AddAndSaveEventAsync(new RoomReservedIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new PlaceReservedIntegrationEvent(
             stay.Id,
             stay.PlaceId,
             stay.PlaceKind(),
@@ -86,7 +86,7 @@ public class StayEndedDomainEventHandler(ISpacesIntegrationEventService outbox, 
             stay.Id, stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.PartyIds()));
 
         // Whoever asked to be told the place is free
-        await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
+        await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
 
         // The bill. Every real stay gets one — a walk-in nobody claimed is
@@ -134,7 +134,7 @@ public class StayCancelledDomainEventHandler(ISpacesIntegrationEventService outb
         // A hold and a running stay both kept the place; either way it is free now
         if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
         {
-            await outbox.AddAndSaveEventAsync(new RoomBecameAvailableIntegrationEvent(
+            await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
                 stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
         }
     }

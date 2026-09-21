@@ -143,7 +143,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       suffix: const Icon(FIcons.chevronRight),
                       onPress: () => context.go('/bills'),
                     ),
-                    if (features.rooms)
+                    if (features.spaces)
                       FTile(
                         prefix: const Icon(FIcons.gamepad2),
                         title: AppText(l10n.sessions),

@@ -53,7 +53,7 @@ export type TenantAuth = {
 };
 
 export type TenantFeatures = {
-    rooms: boolean;
+    spaces: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;
@@ -88,6 +88,7 @@ export type TenantResponse = {
     theme: TenantThemeDto;
     icons: TenantIcons;
     features: TenantFeatures;
+    entitlements: TenantFeatures;
     locale: TenantLocaleDto;
     version: number | string;
 };
@@ -340,6 +341,33 @@ export type UpdateTenantResponses = {
 };
 
 export type UpdateTenantResponse = UpdateTenantResponses[keyof UpdateTenantResponses];
+
+export type SetTenantEntitlementsData = {
+    body: TenantFeatures;
+    path?: never;
+    query?: never;
+    url: '/api/tenant/entitlements';
+};
+
+export type SetTenantEntitlementsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetTenantEntitlementsResponses = {
+    /**
+     * OK
+     */
+    200: TenantResponse;
+};
+
+export type SetTenantEntitlementsResponse = SetTenantEntitlementsResponses[keyof SetTenantEntitlementsResponses];
 
 export type DeleteTenantImageData = {
     body?: never;

@@ -780,7 +780,7 @@
       },
       "TenantFeatures": {
         "required": [
-          "rooms",
+          "spaces",
           "loyalty",
           "tabs",
           "inventory",
@@ -790,7 +790,7 @@
         ],
         "type": "object",
         "properties": {
-          "rooms": {
+          "spaces": {
             "type": "boolean"
           },
           "loyalty": {

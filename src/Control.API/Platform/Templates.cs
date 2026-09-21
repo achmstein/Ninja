@@ -317,7 +317,7 @@ public static partial class Templates
     /// <summary>
     /// The same table with a module that is not entitled taken out: its
     /// routes keep their paths (never a duplicate template) but point at
-    /// Branch.API's 402 page, and Rooms additionally blocks the room-only
+    /// Branch.API's 402 page, and Spaces additionally blocks the timed-place
     /// place routes, since /api/places itself serves tables and stations.
     /// Every container keeps running; only the gateway changes.
     /// </summary>

@@ -30,10 +30,10 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(NotificationIntegrationEventContext.Default))
-            .AddSubscription<RoomBecameAvailableIntegrationEvent, RoomBecameAvailableIntegrationEventHandler>()
+            .AddSubscription<PlaceBecameAvailableIntegrationEvent, PlaceBecameAvailableIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToSubmittedIntegrationEvent, OrderSubmittedIntegrationEventHandler>()
             .AddSubscription<ServiceRequestCreatedIntegrationEvent, ServiceRequestCreatedIntegrationEventHandler>()
-            .AddSubscription<RoomReservedIntegrationEvent, RoomReservedIntegrationEventHandler>()
+            .AddSubscription<PlaceReservedIntegrationEvent, PlaceReservedIntegrationEventHandler>()
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToCancelledIntegrationEvent, OrderCancelledIntegrationEventHandler>()
             .AddSubscription<SessionStartedIntegrationEvent, SessionStartedIntegrationEventHandler>()
@@ -62,10 +62,10 @@ public static class Extensions
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderReadyChangedIntegrationEvent))]
-[JsonSerializable(typeof(RoomBecameAvailableIntegrationEvent))]
+[JsonSerializable(typeof(PlaceBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToSubmittedIntegrationEvent))]
 [JsonSerializable(typeof(ServiceRequestCreatedIntegrationEvent))]
-[JsonSerializable(typeof(RoomReservedIntegrationEvent))]
+[JsonSerializable(typeof(PlaceReservedIntegrationEvent))]
 [JsonSerializable(typeof(ReservationCancelledIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]

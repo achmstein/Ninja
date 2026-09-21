@@ -130,7 +130,7 @@ operator's view; this is the map.
   backups stale). The realms get the same `smtpServer`.
 - **Subscription** (`Platform/Plans.cs`, `Subscriptions.cs`,
   `Apis/ControlApi.Subscription.cs`): `Module` × `TenantPlan` in
-  `PlanCatalog` (Free = Kds; Starter + Rooms, Loyalty, Tabs; Pro = all),
+  `PlanCatalog` (Free = Kds; Starter + Spaces, Loyalty, Tabs; Pro = all),
   `Addons` on the tenant, a demo entitled to everything.
   Entitlements are pushed to the stack's Branch.API (`PUT
   /api/tenant/entitlements`, policy `Control` = `azp == ninja-control`),

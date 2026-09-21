@@ -42,7 +42,7 @@ export type BrandDto = {
 };
 
 export type BrandFeatures = {
-    rooms: boolean;
+    spaces: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;
@@ -202,7 +202,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Rooms' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
+export type Module = 'Spaces' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
 
 export type PaymentDto = {
     id: number | string;

@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
+import type { CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -85,11 +85,24 @@ export const getTenant = <ThrowOnError extends boolean = false>(options?: Option
 });
 
 /**
- * Change the name, the brand color or the feature switches
+ * Change the name, the brand color or the feature switches (within what the plan allows)
  */
 export const updateTenant = <ThrowOnError extends boolean = false>(options: Options<UpdateTenantData, ThrowOnError>): RequestResult<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError> => (options.client ?? client).put<UpdateTenantResponses, UpdateTenantErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tenant',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The modules the café's plan allows; a switch outside them goes off. The control plane only
+ */
+export const setTenantEntitlements = <ThrowOnError extends boolean = false>(options: Options<SetTenantEntitlementsData, ThrowOnError>): RequestResult<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError> => (options.client ?? client).put<SetTenantEntitlementsResponses, SetTenantEntitlementsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tenant/entitlements',
     ...options,
     headers: {
         'Content-Type': 'application/json',

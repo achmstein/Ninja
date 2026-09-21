@@ -6,7 +6,7 @@ namespace Ninja.Notification.API.IntegrationEvents.Events;
 /// <summary>
 /// Integration event published when a customer reserves a room
 /// </summary>
-public record RoomReservedIntegrationEvent(
+public record PlaceReservedIntegrationEvent(
     int ReservationId,
     int PlaceId,
     string PlaceKind,

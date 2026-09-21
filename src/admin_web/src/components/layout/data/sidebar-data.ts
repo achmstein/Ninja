@@ -36,8 +36,8 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        { title: 'placesNav', url: '/places', icon: Gamepad2, feature: 'rooms' },
-        { title: 'requests', url: '/requests', icon: ConciergeBell, feature: 'rooms' },
+        { title: 'placesNav', url: '/places', icon: Gamepad2, feature: 'spaces' },
+        { title: 'requests', url: '/requests', icon: ConciergeBell, feature: 'spaces' },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },

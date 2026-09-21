@@ -81,7 +81,7 @@ public sealed class RoomSessionScenario(NinjaApp app, DaySetup day) : ScenarioBa
         await Cashier.EndStayAsync(sessionId, Ct);
         var endedEvent = await ExpectEventAsync(end, "SessionEnded", e => e.Int("ReservationId") == sessionId);
         Assert.Contains(endedEvent.Array("MemberUserIds"), m => m.GetString() == Customer.UserId);
-        await ExpectEventAsync(end, "RoomBecameAvailable", e => e.Int("PlaceId") == room1.Id);
+        await ExpectEventAsync(end, "PlaceBecameAvailable", e => e.Int("PlaceId") == room1.Id);
         var completed = await ExpectEventAsync(end, "SessionCompleted", e => e.Int("ReservationId") == sessionId);
         Assert.Equal(0m, CostOf(completed, Codes.RateOption.Single).Hours);
         Assert.Equal(0m, completed.Dec("TotalCost"));
@@ -114,7 +114,7 @@ public sealed class RoomSessionScenario(NinjaApp app, DaySetup day) : ScenarioBa
             (await Cashier.OpenTicketsAsync(Ct)).FirstOrDefault(t => t.SessionId == wrongSession));
         await Cashier.CancelStayAsync(wrongSession, Ct);
         await ExpectEventAsync(cancel, "ReservationCancelled", e => e.Int("ReservationId") == wrongSession);
-        await ExpectEventAsync(cancel, "RoomBecameAvailable", e => e.Int("PlaceId") == room2.Id);
+        await ExpectEventAsync(cancel, "PlaceBecameAvailable", e => e.Int("PlaceId") == room2.Id);
         await ExpectAsync("the empty Room 2 bill was discarded", async () =>
         {
             Assert.Null(await Cashier.TicketAsync(wrongTicket.Id, Ct));

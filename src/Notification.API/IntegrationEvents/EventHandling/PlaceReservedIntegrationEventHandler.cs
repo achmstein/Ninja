@@ -8,15 +8,15 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 
-public class RoomReservedIntegrationEventHandler(
+public class PlaceReservedIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
     IHubContext<NotificationHub> hubContext,
-    ILogger<RoomReservedIntegrationEventHandler> logger) : IIntegrationEventHandler<RoomReservedIntegrationEvent>
+    ILogger<PlaceReservedIntegrationEventHandler> logger) : IIntegrationEventHandler<PlaceReservedIntegrationEvent>
 {
-    public async Task Handle(RoomReservedIntegrationEvent @event)
+    public async Task Handle(PlaceReservedIntegrationEvent @event)
     {
-        logger.LogInformation("Handling RoomReservedIntegrationEvent: ReservationId={ReservationId}, Place={PlaceName}, Customer={CustomerName}",
+        logger.LogInformation("Handling PlaceReservedIntegrationEvent: ReservationId={ReservationId}, Place={PlaceName}, Customer={CustomerName}",
             @event.ReservationId, @event.PlaceName.En, @event.CustomerName);
 
         // Broadcast via SignalR first — live dashboards must not depend on

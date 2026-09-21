@@ -52,8 +52,8 @@ public class Tenant
     /// <summary>"ar" or "en": what the customer app opens in.</summary>
     public string DefaultLanguage { get; set; } = "ar";
 
-    /// <summary>Rooms and their time billing (Spaces). Off for a café that only has tables.</summary>
-    public bool RoomsEnabled { get; set; } = true;
+    /// <summary>Spaces: reservable, timed places (rooms, stations, tables with a tariff). Off for a café that only seats people.</summary>
+    public bool SpacesEnabled { get; set; } = true;
 
     /// <summary>Points on purchases (Loyalty).</summary>
     public bool LoyaltyEnabled { get; set; } = true;
@@ -76,7 +76,7 @@ public class Tenant
     /// default, so a stack nobody has told otherwise (the dev host, a stack
     /// stamped before plans) keeps every switch usable.
     /// </summary>
-    public bool RoomsEntitled { get; set; } = true;
+    public bool SpacesEntitled { get; set; } = true;
 
     public bool LoyaltyEntitled { get; set; } = true;
 
@@ -90,15 +90,15 @@ public class Tenant
 
     public bool KdsEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(RoomsEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
+    public TenantFeatures Features => new(SpacesEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
 
-    public TenantFeatures Entitlements => new(RoomsEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
+    public TenantFeatures Entitlements => new(SpacesEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
     {
         var f = requested.Clamp(Entitlements);
-        RoomsEnabled = f.Rooms;
+        SpacesEnabled = f.Spaces;
         LoyaltyEnabled = f.Loyalty;
         TabsEnabled = f.Tabs;
         InventoryEnabled = f.Inventory;
@@ -110,7 +110,7 @@ public class Tenant
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
     public void ApplyEntitlements(TenantFeatures entitled)
     {
-        RoomsEntitled = entitled.Rooms;
+        SpacesEntitled = entitled.Spaces;
         LoyaltyEntitled = entitled.Loyalty;
         TabsEntitled = entitled.Tabs;
         InventoryEntitled = entitled.Inventory;
@@ -180,11 +180,11 @@ public class TenantThemeDark
 }
 
 /// <summary>The seven switches, as the surfaces read them and as the plan allows them.</summary>
-public record TenantFeatures(bool Rooms, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+public record TenantFeatures(bool Spaces, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
-        Rooms && entitled.Rooms, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs, Inventory && entitled.Inventory,
+        Spaces && entitled.Spaces, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs, Inventory && entitled.Inventory,
         Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds);
 }
 

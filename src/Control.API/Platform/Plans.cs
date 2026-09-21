@@ -6,7 +6,8 @@ namespace Ninja.Control.API.Platform;
 /// <summary>What a café can be sold: the seven switches Branch.API keeps, as modules.</summary>
 public enum Module
 {
-    Rooms,
+    /// <summary>Reservable, timed places: rooms, stations and the tables that carry a tariff.</summary>
+    Spaces,
     Loyalty,
     Tabs,
     Inventory,
@@ -28,11 +29,11 @@ public static class PlanCatalog
     private static readonly Dictionary<TenantPlan, IReadOnlySet<Module>> IncludedByPlan = new()
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
-        [TenantPlan.Starter] = new HashSet<Module> { Module.Rooms, Module.Loyalty, Module.Tabs, Module.Kds },
+        [TenantPlan.Starter] = new HashSet<Module> { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds },
         [TenantPlan.Pro] = All,
     };
 
-    /// <summary>The paths a module owns on the gateway; blocked (402) when the module is not in the plan. Rooms keeps /api/places itself: tables and stations live there too.</summary>
+    /// <summary>The paths a module owns on the gateway; blocked (402) when the module is not in the plan. Spaces keeps /api/places itself: plain tables live there too and every café has those.</summary>
     public static readonly IReadOnlyList<(Module Module, string Path)> Routes =
     [
         (Module.Inventory, "/api/inventory/{*any}"),
@@ -40,13 +41,13 @@ public static class PlanCatalog
         (Module.Payroll, "/api/payroll/{*any}"),
         (Module.Loyalty, "/api/loyalty/{*any}"),
         (Module.Tabs, "/api/accounts/{*any}"),
-        (Module.Rooms, "/api/stays/{*any}"),
-        (Module.Rooms, "/api/places/available"),
-        (Module.Rooms, "/api/places/{id}/tariff"),
-        (Module.Rooms, "/api/places/{id}/hold"),
-        (Module.Rooms, "/api/places/{id}/walk-in"),
-        (Module.Rooms, "/api/places/{id}/join"),
-        (Module.Rooms, "/api/places/{id}/stays"),
+        (Module.Spaces, "/api/stays/{*any}"),
+        (Module.Spaces, "/api/places/available"),
+        (Module.Spaces, "/api/places/{id}/tariff"),
+        (Module.Spaces, "/api/places/{id}/hold"),
+        (Module.Spaces, "/api/places/{id}/walk-in"),
+        (Module.Spaces, "/api/places/{id}/join"),
+        (Module.Spaces, "/api/places/{id}/stays"),
     ];
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
@@ -64,7 +65,7 @@ public static class PlanCatalog
     public static Module[] NormalizeAddons(TenantPlan plan, IEnumerable<Module> addons)
         => addons.Where(a => !Included(plan).Contains(a)).Distinct().OrderBy(a => a).ToArray();
 
-    /// <summary>{ rooms, loyalty, … } as Branch.API's TenantFeatures spells them.</summary>
+    /// <summary>{ spaces, loyalty, … } as Branch.API's TenantFeatures spells them.</summary>
     public static JsonObject ToFeatures(IReadOnlySet<Module> entitled)
     {
         var o = new JsonObject();

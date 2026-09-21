@@ -31,9 +31,9 @@ public sealed class TenantEntitlementsTests
     public void An_owner_can_switch_an_entitled_module_off()
     {
         var tenant = new Tenant();
-        tenant.ApplyFeatures(AllOn with { Rooms = false });
-        Assert.IsFalse(tenant.RoomsEnabled);
-        Assert.IsTrue(tenant.RoomsEntitled);
+        tenant.ApplyFeatures(AllOn with { Spaces = false });
+        Assert.IsFalse(tenant.SpacesEnabled);
+        Assert.IsTrue(tenant.SpacesEntitled);
     }
 
     [TestMethod]

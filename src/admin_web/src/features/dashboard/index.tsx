@@ -136,7 +136,7 @@ export function Dashboard() {
       detailClass: urgencyTextClass(oldestUrgency),
     })
   }
-  if (features.rooms && requestCount > 0) {
+  if (features.spaces && requestCount > 0) {
     attention.push({
       key: 'requests',
       to: '/requests',
@@ -204,7 +204,7 @@ export function Dashboard() {
           loading={pendingQuery.isPending}
           to='/orders'
         />
-        {features.rooms && (
+        {features.spaces && (
           <Stat
             label={t('placesInUse')}
             value={t('ofTotal', {
@@ -215,7 +215,7 @@ export function Dashboard() {
             to='/places'
           />
         )}
-        {features.rooms && (
+        {features.spaces && (
           <Stat
             label={t('tablesInUse')}
             value={t('ofTotal', { count: busyTables, total: activeTables })}
@@ -226,7 +226,7 @@ export function Dashboard() {
       </StatStrip>
 
       <div className='grid gap-6 lg:grid-cols-2'>
-        {features.rooms && (
+        {features.spaces && (
           <LiveFloor
             stays={running}
             places={places}

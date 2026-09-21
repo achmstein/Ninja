@@ -3,7 +3,7 @@ using Ninja.Notification.API.Model;
 
 namespace Ninja.Notification.API.IntegrationEvents.Events;
 
-public record RoomBecameAvailableIntegrationEvent(
+public record PlaceBecameAvailableIntegrationEvent(
     int PlaceId,
     string PlaceKind,
     LocalizedText PlaceName,
