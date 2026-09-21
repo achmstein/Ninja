@@ -75,6 +75,7 @@ const webExtras = {
   secondaryColorHint: { en: 'Chips, badges and secondary buttons. Very light or very dark values are pulled back to stay a fill.', ar: 'الشرايح والعلامات والزراير الثانوية. الألوان الفاتحة أو الغامقة جداً بتتعدل عشان تفضل خلفية.' },
   surfaceColorHint: { en: 'The page behind everything; its hue tints every grey.', ar: 'الصفحة ورا كل حاجة، ودرجتها بتلوّن كل الرمادي.' },
   cornerRadius: { en: 'Corners', ar: 'الزوايا' },
+  cornerRadiusHint: { en: 'Cards, inputs, chips and buttons: square to round', ar: 'الكروت والحقول والأزرار: من مربع لمدوّر' },
   headerSize: { en: 'Header height', ar: 'ارتفاع الهيدر' },
   headerSizeHint: { en: 'Room for the wordmark: small for a thin one, large for a chunky one', ar: 'مساحة اللوجو العريض: صغير للرفيع، كبير للتخين' },
   headerSm: { en: 'Small', ar: 'صغير' },

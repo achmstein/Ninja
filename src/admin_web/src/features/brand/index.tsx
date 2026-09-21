@@ -267,7 +267,7 @@ function BrandForm({ brand }: { brand: Brand }) {
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
-              <div className='grid gap-3 sm:grid-cols-2'>
+              <div className='grid items-start gap-3 sm:grid-cols-2'>
                 <ColorField
                   id='brand-color'
                   label={t('brandColor')}
@@ -312,6 +312,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-header' className='text-xs'>

@@ -287,8 +287,8 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper hint={t('secondaryColorHint')} />
             <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper hint={t('surfaceColorHint')} />
           </div>
-          <div className='grid gap-4 sm:grid-cols-3'>
-            <div className='grid gap-2'>
+          <div className='grid gap-4 sm:grid-cols-2'>
+            <div className='grid content-start gap-2'>
               <Label htmlFor='brand-radius' className='text-xs'>{t('cornerRadius')}</Label>
               <Select value={radius} onValueChange={setRadius}>
                 <SelectTrigger id='brand-radius' className='w-full'>
@@ -303,8 +303,9 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
                   ))}
                 </SelectContent>
               </Select>
+              <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
             </div>
-            <div className='grid gap-2'>
+            <div className='grid content-start gap-2'>
               <Label htmlFor='brand-header' className='text-xs'>{t('headerSize')}</Label>
               <Select value={headerSize} onValueChange={setHeaderSize}>
                 <SelectTrigger id='brand-header' className='w-full'>
@@ -319,6 +320,8 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
               </Select>
               <p className='text-muted-foreground text-xs'>{t('headerSizeHint')}</p>
             </div>
+          </div>
+          <div className='grid gap-4 sm:grid-cols-2'>
             <FontSelect id='brand-font-latin' label={t('fontLatin')} value={fontLatin} onChange={setFontLatin} fonts={LATIN_FONTS} />
             <FontSelect id='brand-font-arabic' label={t('fontArabic')} value={fontArabic} onChange={setFontArabic} fonts={ARABIC_FONTS} />
           </div>
