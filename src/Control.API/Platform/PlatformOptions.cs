@@ -123,10 +123,19 @@ public sealed class PlatformOptions
     /// <summary>A job running longer than this is reported to ops (nothing is killed: a big restore is slow).</summary>
     public int JobTimeoutMinutes { get; set; } = 45;
 
-    /// <summary>What the shared Postgres allows (its max_connections) and what each service's pool may open, so the capacity guard counts connections as well as memory: eleven services a stack, one pool each, plus the platform's own.</summary>
+    /// <summary>
+    /// What the shared Postgres allows (its max_connections), the most one
+    /// service's pool may open (stamped into its connection string, the
+    /// ceiling a runaway hits), and what one service typically holds (what
+    /// the capacity guard counts: eleven services a stack, plus the
+    /// platform's own forty). A pool is lazy and mostly idle, so the guard
+    /// counts the typical number, not the ceiling.
+    /// </summary>
     public int PostgresMaxConnections { get; set; } = 400;
 
     public int ServicePoolSize { get; set; } = 20;
+
+    public int ServiceConnectionsEstimate { get; set; } = 4;
 
     /// <summary>Keycloak's readiness, on its management port; what /health asks.</summary>
     public string KeycloakHealthUrl { get; set; } = "http://keycloak:9000/health/ready";

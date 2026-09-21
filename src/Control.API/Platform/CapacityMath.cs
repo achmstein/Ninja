@@ -109,15 +109,15 @@ public static partial class CapacityMath
     /// <summary>The platform's own connections (Keycloak's pool, the control plane) that every estimate starts from.</summary>
     public const int PlatformConnections = 40;
 
-    /// <summary>What the shared Postgres may be asked for: every running stack's eleven pools full, plus the platform's own.</summary>
-    public static int ConnectionsEstimate(int runningStacks, int poolSize)
-        => PlatformConnections + runningStacks * TenantNaming.Databases.Length * poolSize;
+    /// <summary>What the shared Postgres is typically holding: every running stack's eleven services at their usual few connections each, plus the platform's own.</summary>
+    public static int ConnectionsEstimate(int runningStacks, int perService)
+        => PlatformConnections + runningStacks * TenantNaming.Databases.Length * perService;
 
     /// <summary>How many more stacks fit in the connection budget, never negative.</summary>
-    public static int ConnectionRoomFor(int runningStacks, int poolSize, int maxConnections)
+    public static int ConnectionRoomFor(int runningStacks, int perService, int maxConnections)
     {
-        var perStack = TenantNaming.Databases.Length * poolSize;
-        return perStack <= 0 ? 0 : Math.Max(0, (maxConnections - ConnectionsEstimate(runningStacks, poolSize)) / perStack);
+        var perStack = TenantNaming.Databases.Length * perService;
+        return perStack <= 0 ? 0 : Math.Max(0, (maxConnections - ConnectionsEstimate(runningStacks, perService)) / perStack);
     }
 
     /// <summary>Whether the tenants drive can take one more stack's worth of backups and uploads: the floor plus a quarter of a footprint above it. A drive that was never read (total 0) passes.</summary>

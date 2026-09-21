@@ -129,7 +129,7 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
     {
         var o = options.Value;
         var memory = CapacityMath.RoomFor(snapshot.MemAvailableMb, o.ReserveMb, o.StackFootprintMb);
-        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize, o.PostgresMaxConnections);
+        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate, o.PostgresMaxConnections);
         var disk = CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb) ? int.MaxValue : 0;
         return Math.Min(memory, Math.Min(connections, disk));
     }
@@ -140,8 +140,8 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
         var o = options.Value;
         if (!CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb))
             return $"{snapshot.TenantsDiskFreeMb} MB free on the tenants drive; the floor is {o.MinFreeDiskMb} MB and a stack needs room above it for its backups.";
-        if (CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize, o.PostgresMaxConnections) == 0)
-            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks may already ask for {CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize)}.";
+        if (CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate, o.PostgresMaxConnections) == 0)
+            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks typically hold {CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate)}.";
         return $"{snapshot.MemAvailableMb} MB free, {o.ReserveMb} MB kept for the shared services, {o.StackFootprintMb} MB per stack.";
     }
 

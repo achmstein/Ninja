@@ -65,11 +65,11 @@ public sealed class CapacityMathTests
     [TestMethod]
     public void Connections_are_counted_per_running_stack_and_the_drive_has_a_floor()
     {
-        Assert.AreEqual(40, CapacityMath.ConnectionsEstimate(runningStacks: 0, poolSize: 20));
-        Assert.AreEqual(40 + 3 * 11 * 20, CapacityMath.ConnectionsEstimate(runningStacks: 3, poolSize: 20));
-        Assert.AreEqual(1, CapacityMath.ConnectionRoomFor(runningStacks: 0, poolSize: 20, maxConnections: 400), "400 takes one stack's 220 beyond the platform's 40, not two");
-        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 2, poolSize: 20, maxConnections: 400));
-        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 0, poolSize: 0, maxConnections: 400), "a zero pool means no guard");
+        Assert.AreEqual(40, CapacityMath.ConnectionsEstimate(runningStacks: 0, perService: 4));
+        Assert.AreEqual(40 + 3 * 11 * 4, CapacityMath.ConnectionsEstimate(runningStacks: 3, perService: 4));
+        Assert.AreEqual(8, CapacityMath.ConnectionRoomFor(runningStacks: 0, perService: 4, maxConnections: 400), "400 takes eight stacks of 44 beyond the platform's 40");
+        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 8, perService: 4, maxConnections: 400));
+        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 0, perService: 0, maxConnections: 400), "a zero estimate means no guard");
 
         Assert.IsTrue(CapacityMath.DiskRoom(freeMb: 6000, totalMb: 100_000, floorMb: 5120, footprintMb: 2048));
         Assert.IsFalse(CapacityMath.DiskRoom(freeMb: 5200, totalMb: 100_000, floorMb: 5120, footprintMb: 2048), "just above the floor is not room for a stack's backups");

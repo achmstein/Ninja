@@ -255,9 +255,10 @@ explains (`platform.orphan-stack`, audit only).
 
 The capacity guard counts three things before a stamp: memory (the
 footprint beyond the reserve), Postgres connections (every running stack
-is eleven pools of `SERVICE_POOL_SIZE`, stamped into its connection
-strings, plus the platform's own forty, against `POSTGRES_MAX_CONNECTIONS`,
-which the `postgres` service is started with), and the drive (the floor
+is eleven services holding `SERVICE_CONNECTIONS_ESTIMATE` each, plus the
+platform's own forty, against `POSTGRES_MAX_CONNECTIONS`, which the
+`postgres` service is started with; `SERVICE_POOL_SIZE` is the ceiling
+stamped into each service's connection string, not what is counted), and the drive (the floor
 plus a quarter of a footprint). The Capacity tab shows all three; the
 refusal says which one. The shared services carry memory limits of their
 own (`POSTGRES_MEMORY`, `KEYCLOAK_MEMORY`, `EVENTBUS_MEMORY`,
@@ -326,7 +327,9 @@ two tenants. It is its own PR job and, locally, `dotnet test
 tests/Control.IntegrationTests`. `src/control_web` has vitest for its pure
 modules (`npm test`), and `e2e/ControlPlane.spec.ts` drives the control app
 against the dry-run AppHost: sign in, stamp a demo, every step Done,
-destroy.
+destroy. With the AppHost already running (`dotnet run --project
+src/Ninja.AppHost`), `npx playwright test -c playwright.control.config.ts`
+runs it on its own.
 
 ## Not yet
 

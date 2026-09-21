@@ -128,6 +128,7 @@ services:
       # What the capacity guard counts against (the same number as the postgres command above) and the pool each service is stamped with
       Platform__PostgresMaxConnections: ${POSTGRES_MAX_CONNECTIONS:-400}
       Platform__ServicePoolSize: ${SERVICE_POOL_SIZE:-20}
+      Platform__ServiceConnectionsEstimate: ${SERVICE_CONNECTIONS_ESTIMATE:-4}
       # The floor on the tenants drive: below it no backup, no stamp, and a mail to ops
       Platform__MinFreeDiskMb: ${MIN_FREE_DISK_MB:-5120}
       # Which plans' stacks get the assistant key (a demo always does); a comma list of Free, Starter, Pro

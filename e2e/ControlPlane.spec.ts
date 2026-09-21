@@ -16,11 +16,11 @@ const PLATFORM_PASSWORD = process.env.PLATFORM_PASSWORD ?? 'Platform123$';
 
 async function signIn(page: Page) {
   await page.goto(CONTROL_URL + '/');
-  // The app sends an anonymous visitor straight to Keycloak
-  await expect(page.getByPlaceholder('Username')).toBeVisible({ timeout: 60_000 });
-  await page.getByPlaceholder('Username').fill(PLATFORM_USER);
-  await page.getByPlaceholder('Password').fill(PLATFORM_PASSWORD);
-  await page.getByRole('button', { name: 'Login' }).click();
+  // The app sends an anonymous visitor straight to Keycloak (the ninja theme: #username, #password, "Sign In")
+  await expect(page.locator('#username')).toBeVisible({ timeout: 60_000 });
+  await page.locator('#username').fill(PLATFORM_USER);
+  await page.locator('#password').fill(PLATFORM_PASSWORD);
+  await page.locator('#kc-login').click();
 
   // A fresh realm asks for a new password once; the same one will do in dev
   const newPassword = page.locator('#password-new');
