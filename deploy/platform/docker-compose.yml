@@ -14,6 +14,13 @@ services:
   postgres:
     image: docker.io/ankane/pgvector:latest
     restart: unless-stopped
+    # Every stack opens eleven pools (Maximum Pool Size=20 each, stamped into its compose) and Keycloak its own:
+    # the default 100 connections are gone by the fifth café. The control plane counts against this number.
+    command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-400}", "-c", "shared_buffers=${POSTGRES_SHARED_BUFFERS:-1GB}"]
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY:-3G}
     environment:
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
@@ -37,6 +44,10 @@ services:
   eventbus:
     image: docker.io/library/rabbitmq:4.2
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${EVENTBUS_MEMORY:-1G}
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: ${EVENTBUS_PASSWORD}
@@ -53,10 +64,16 @@ services:
     image: quay.io/keycloak/keycloak:26.4
     restart: unless-stopped
     command: ["start", "--import-realm"]
+    deploy:
+      resources:
+        limits:
+          memory: ${KEYCLOAK_MEMORY:-1536M}
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
+      # /health/ready on the management port (9000), which the control plane's own /health asks
       KC_HEALTH_ENABLED: "true"
+      KC_DB_POOL_MAX_SIZE: "20"
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: xforwarded
@@ -81,6 +98,10 @@ services:
   control-api:
     image: ${IMAGE_REGISTRY:-ghcr.io/achmstein/ninja}-control:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${CONTROL_MEMORY:-768M}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
@@ -104,6 +125,11 @@ services:
       # What the tenants' secrets are encrypted under in controldb: openssl rand -base64 32; lose it and every stack's passwords go with it
       Platform__EncryptionKey: ${PLATFORM_ENCRYPTION_KEY}
       Platform__GeminiApiKey: ${GEMINI_API_KEY}
+      # What the capacity guard counts against (the same number as the postgres command above) and the pool each service is stamped with
+      Platform__PostgresMaxConnections: ${POSTGRES_MAX_CONNECTIONS:-400}
+      Platform__ServicePoolSize: ${SERVICE_POOL_SIZE:-20}
+      # The floor on the tenants drive: below it no backup, no stamp, and a mail to ops
+      Platform__MinFreeDiskMb: ${MIN_FREE_DISK_MB:-5120}
       # Which plans' stacks get the assistant key (a demo always does); a comma list of Free, Starter, Pro
       Platform__AssistantPlans__0: ${ASSISTANT_PLAN_0:-Pro}
       # A copy of every backup off the box, into any S3-compatible bucket; off until a bucket and keys are set
@@ -140,6 +166,10 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${CADDY_MEMORY:-256M}
     ports:
       - "80:80"
       - "443:443"
@@ -161,7 +191,8 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      - control-api
+      control-api:
+        condition: service_healthy
     networks: [aspire]
 
 networks:

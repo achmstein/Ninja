@@ -15,7 +15,8 @@ namespace Ninja.Control.API.Platform;
 /// restored it into a scratch stack that came up healthy. Older manifests
 /// carry neither.
 /// </summary>
-public sealed record BackupInfo(string Id, DateTimeOffset At, long SizeBytes, IReadOnlyList<string> Databases, bool HasUploads, string ImageTag, DateTimeOffset? OffsiteAt = null, DateTimeOffset? VerifiedAt = null);
+/// <param name="Sha256">Each file's checksum, hex, by file name; checked before a copy leaves the box and before a dump is restored. Older manifests carry none.</param>
+public sealed record BackupInfo(string Id, DateTimeOffset At, long SizeBytes, IReadOnlyList<string> Databases, bool HasUploads, string ImageTag, DateTimeOffset? OffsiteAt = null, DateTimeOffset? VerifiedAt = null, IReadOnlyDictionary<string, string>? Sha256 = null);
 
 /// <summary>
 /// Dumps and restores through the shared Postgres container and a throwaway
@@ -50,6 +51,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
 
     public async Task<BackupInfo> CreateAsync(Tenant tenant, CancellationToken ct)
     {
+        EnsureRoomOnDisk();
         var id = NewId();
         var dir = Dir(tenant.Slug, id);
         Directory.CreateDirectory(dir);
@@ -73,7 +75,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
             }
             if (!hasUploads) File.Delete(Path.Combine(dir, Uploads));
 
-            var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), TenantNaming.Databases, hasUploads, tenant.ImageTag);
+            var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), TenantNaming.Databases, hasUploads, tenant.ImageTag, Sha256: await ChecksumsAsync(dir, ct));
             await File.WriteAllTextAsync(Path.Combine(dir, Manifest), JsonSerializer.Serialize(info, Json), ct);
             return info;
         }
@@ -87,6 +89,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     /// <summary>The platform's own databases, the same way, under _platform; nothing to archive besides.</summary>
     public async Task<BackupInfo> CreatePlatformAsync(CancellationToken ct)
     {
+        EnsureRoomOnDisk();
         var id = NewId();
         var dir = Dir(PlatformSlug, id);
         Directory.CreateDirectory(dir);
@@ -94,7 +97,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         {
             foreach (var db in PlatformDatabases)
                 await DumpAsync(db, Path.Combine(dir, $"{db}.dump"), ct);
-            var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), PlatformDatabases, HasUploads: false, ImageTag: "");
+            var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), PlatformDatabases, HasUploads: false, ImageTag: "", Sha256: await ChecksumsAsync(dir, ct));
             await File.WriteAllTextAsync(Path.Combine(dir, Manifest), JsonSerializer.Serialize(info, Json), ct);
             return info;
         }
@@ -113,6 +116,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     public async Task<BackupInfo> OffsiteAsync(string slug, string id, CancellationToken ct)
     {
         var info = Find(slug, id) ?? throw new FileNotFoundException($"No backup {id} for {slug}");
+        await VerifyAsync(slug, info, ct);
         var tmp = Path.Combine(Root(slug), $"{id}.tar.gz.tmp");
         try
         {
@@ -244,6 +248,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     public async Task RestoreDatabasesAsync(string fromSlug, string id, Tenant into, CancellationToken ct)
     {
         var dir = Dir(fromSlug, id);
+        if (Find(fromSlug, id) is { } info) await VerifyAsync(fromSlug, info, ct);
         foreach (var db in TenantNaming.Databases)
         {
             var dump = Path.Combine(dir, $"{db}.dump");
@@ -268,6 +273,43 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
             null, file, Stream.Null, ct);
         if (!result.Ok) throw new InvalidOperationException($"uploads: {result.Output}");
         return true;
+    }
+
+    /// <summary>Every file's SHA-256, hex, by name: what the manifest carries and what a copy or a restore is checked against.</summary>
+    internal static async Task<IReadOnlyDictionary<string, string>> ChecksumsAsync(string dir, CancellationToken ct)
+    {
+        var sums = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        foreach (var file in Directory.EnumerateFiles(dir).Where(f => Path.GetFileName(f) != Manifest).Order(StringComparer.Ordinal))
+        {
+            await using var stream = File.OpenRead(file);
+            sums[Path.GetFileName(file)] = Convert.ToHexStringLower(await System.Security.Cryptography.SHA256.HashDataAsync(stream, ct));
+        }
+        return sums;
+    }
+
+    /// <summary>The files against the manifest's checksums; a backup without any (older than checksums) passes. A mismatch throws: a corrupt dump must not be copied as a good one or restored over an empty database.</summary>
+    public async Task VerifyAsync(string slug, BackupInfo info, CancellationToken ct)
+    {
+        if (info.Sha256 is null) return;
+        var actual = await ChecksumsAsync(Dir(slug, info.Id), ct);
+        var bad = info.Sha256.Where(kv => !actual.TryGetValue(kv.Key, out var sum) || sum != kv.Value).Select(kv => kv.Key).ToList();
+        if (bad.Count > 0) throw new InvalidOperationException($"Backup {slug}/{info.Id} is corrupt: {string.Join(", ", bad)} does not match the manifest");
+    }
+
+    /// <summary>The floor on the tenants drive: a dump that fills the disk takes the shared Postgres down for every café.</summary>
+    private void EnsureRoomOnDisk()
+    {
+        try
+        {
+            if (!Directory.Exists(Platform.TenantsRoot)) return;
+            var free = new DriveInfo(Platform.TenantsRoot).AvailableFreeSpace / (1024 * 1024);
+            if (free < Platform.MinFreeDiskMb)
+                throw new InvalidOperationException($"{free} MB free on the tenants drive, below the {Platform.MinFreeDiskMb} MB floor: no backup until space is freed");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            logger.LogWarning(ex, "Could not read the tenants drive; backing up anyway");
+        }
     }
 
     /// <summary>"{slug}/{id}", as a tenant remembers what it is being restored from.</summary>

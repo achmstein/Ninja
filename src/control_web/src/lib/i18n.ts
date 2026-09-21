@@ -462,6 +462,12 @@ const dictionary = {
   offsiteNotYet: { en: 'Nothing copied off the box yet', ar: 'لسه مفيش نسخة اتبعتت برّه' },
   lastOffsite: { en: 'Last copy off the box {time}', ar: 'آخر نسخة برّه {time}' },
   verified: { en: 'Verified', ar: 'اتأكدت' },
+  platformWarnings: {
+    plural: 'count',
+    en: { one: 'Something needs a look', other: '{count} things need a look' },
+    ar: { one: 'في حاجة محتاجة نظرة', two: 'في حاجتين محتاجين نظرة', few: '{count} حاجات محتاجة نظرة', many: '{count} حاجة محتاجة نظرة', other: '{count} حاجة محتاجة نظرة' },
+  },
+  connections: { en: 'Postgres connections', ar: 'اتصالات Postgres' },
   platformBackupStale: { en: 'The last platform backup is older than 26 hours', ar: 'آخر نسخة للمنصة أقدم من 26 ساعة' },
   resendWelcome: { en: 'Resend welcome email', ar: 'ابعت إيميل الترحيب تاني' },
   welcomeQueued: { en: 'Welcome email queued', ar: 'إيميل الترحيب في الطابور' },

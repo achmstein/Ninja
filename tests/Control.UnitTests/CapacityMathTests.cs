@@ -61,4 +61,44 @@ public sealed class CapacityMathTests
         Assert.AreEqual(0, CapacityMath.RoomFor(availableMb: 500, reserveMb: 1024, footprintMb: 2048), "never negative");
         Assert.AreEqual(0, CapacityMath.RoomFor(availableMb: 8000, reserveMb: 0, footprintMb: 0), "a zero footprint means no guard, not infinity");
     }
+
+    [TestMethod]
+    public void Connections_are_counted_per_running_stack_and_the_drive_has_a_floor()
+    {
+        Assert.AreEqual(40, CapacityMath.ConnectionsEstimate(runningStacks: 0, poolSize: 20));
+        Assert.AreEqual(40 + 3 * 11 * 20, CapacityMath.ConnectionsEstimate(runningStacks: 3, poolSize: 20));
+        Assert.AreEqual(1, CapacityMath.ConnectionRoomFor(runningStacks: 0, poolSize: 20, maxConnections: 400), "400 takes one stack's 220 beyond the platform's 40, not two");
+        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 2, poolSize: 20, maxConnections: 400));
+        Assert.AreEqual(0, CapacityMath.ConnectionRoomFor(runningStacks: 0, poolSize: 0, maxConnections: 400), "a zero pool means no guard");
+
+        Assert.IsTrue(CapacityMath.DiskRoom(freeMb: 6000, totalMb: 100_000, floorMb: 5120, footprintMb: 2048));
+        Assert.IsFalse(CapacityMath.DiskRoom(freeMb: 5200, totalMb: 100_000, floorMb: 5120, footprintMb: 2048), "just above the floor is not room for a stack's backups");
+        Assert.IsTrue(CapacityMath.DiskRoom(freeMb: 0, totalMb: 0, floorMb: 5120, footprintMb: 2048), "a drive never read does not block");
+
+        var projects = new List<ProjectUsage> { new("ninja-blue", 13, 13, 1800, 4), new("ninja-red", 13, 0, 0, 0), new("ninja", 5, 5, 3000, 6) };
+        Assert.AreEqual(1, CapacityMath.RunningStacks(projects), "a stopped stack and the platform's own project do not count");
+    }
+
+    [TestMethod]
+    public void The_reconciler_names_a_running_record_without_containers_and_a_project_without_a_record()
+    {
+        var records = new List<(string, Ninja.Control.API.Model.TenantStatus)>
+        {
+            ("blue", Ninja.Control.API.Model.TenantStatus.Running),
+            ("red", Ninja.Control.API.Model.TenantStatus.Running),
+            ("green", Ninja.Control.API.Model.TenantStatus.Stopped),
+            ("old", Ninja.Control.API.Model.TenantStatus.Destroyed),
+        };
+        var projects = new List<ProjectUsage> { new("ninja-blue", 13, 13, 1800, 4), new("ninja-green", 13, 0, 0, 0), new("ninja-old", 13, 13, 1800, 4), new("ninja-stray", 2, 2, 100, 1), new("ninja", 5, 5, 3000, 6) };
+
+        var (down, orphans) = Reconciler.Compare(records, projects);
+
+        CollectionAssert.AreEqual(new[] { "red" }, down.ToList(), "red is Running on the record with no project; green is Stopped, so its idle project is fine");
+        CollectionAssert.AreEqual(new[] { "ninja-old", "ninja-stray" }, orphans.ToList(), "a destroyed record does not explain a project; the platform's own is not a stack");
+
+        var now = DateTimeOffset.UtcNow;
+        Assert.IsTrue(WorkerHealthCheck.IsAlive(now.AddSeconds(-30), now));
+        Assert.IsFalse(WorkerHealthCheck.IsAlive(now.AddMinutes(-3), now));
+        Assert.IsFalse(WorkerHealthCheck.IsAlive(null, now));
+    }
 }

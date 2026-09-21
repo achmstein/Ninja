@@ -2737,6 +2737,15 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "sha256": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3097,7 +3106,10 @@
           "stackLimitMb",
           "reserveMb",
           "roomFor",
-          "tenants"
+          "tenants",
+          "diskFloorMb",
+          "connectionsEstimate",
+          "connectionsMax"
         ],
         "type": "object",
         "properties": {
@@ -3209,6 +3221,30 @@
             "items": {
               "$ref": "#/components/schemas/TenantUsage"
             }
+          },
+          "diskFloorMb": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "connectionsEstimate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "connectionsMax": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3954,7 +3990,8 @@
           "dryRun",
           "running",
           "total",
-          "roomFor"
+          "roomFor",
+          "warnings"
         ],
         "type": "object",
         "properties": {
@@ -3998,6 +4035,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

@@ -48,7 +48,7 @@ public static partial class ControlApi
         return app;
     }
 
-    public static async Task<Ok<PlatformResponse>> GetPlatform(ControlContext context, CapacityCache capacity, IOptions<PlatformOptions> options, CancellationToken ct)
+    public static async Task<Ok<PlatformResponse>> GetPlatform(ControlContext context, CapacityCache capacity, PlatformWarnings warnings, IOptions<PlatformOptions> options, CancellationToken ct)
     {
         var counts = await context.Tenants.GroupBy(t => t.Status).Select(g => new { g.Key, Count = g.Count() }).ToListAsync(ct);
         var snapshot = await capacity.GetAsync(refresh: false, ct);
@@ -59,7 +59,8 @@ public static partial class ControlApi
             options.Value.DryRun,
             counts.Where(c => c.Key == TenantStatus.Running).Sum(c => c.Count),
             counts.Where(c => c.Key != TenantStatus.Destroyed).Sum(c => c.Count),
-            capacity.RoomFor(snapshot)));
+            capacity.RoomFor(snapshot),
+            warnings.All));
     }
 
     public static async Task<Ok<CapacityResponse>> GetCapacity(
@@ -73,10 +74,12 @@ public static partial class ControlApi
         var tenants = snapshot.Projects
             .Select(p => new TenantUsage(p.Project, slugs.FirstOrDefault(s => TenantNaming.Project(s) == p.Project), p.Containers, p.Running, p.MemoryMb, p.CpuPercent))
             .ToList();
+        var o = options.Value;
         return TypedResults.Ok(new CapacityResponse(
             snapshot.At, snapshot.MemTotalMb, snapshot.MemAvailableMb, snapshot.Load, snapshot.Cpus,
             snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, snapshot.DockerUsedMb, snapshot.DockerReclaimableMb,
-            options.Value.StackFootprintMb, options.Value.StackLimitMb, options.Value.ReserveMb, capacity.RoomFor(snapshot), tenants));
+            o.StackFootprintMb, o.StackLimitMb, o.ReserveMb, capacity.RoomFor(snapshot), tenants,
+            o.MinFreeDiskMb, CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize), o.PostgresMaxConnections));
     }
 
     public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, UpdateCache updates, IOptions<PlatformOptions> options)
@@ -196,7 +199,7 @@ public static partial class ControlApi
     }
 
     private static string NoRoom(CapacityCache capacity, PlatformOptions options)
-        => $"No room for another stack: {capacity.Latest?.MemAvailableMb ?? 0} MB free, {options.ReserveMb} MB kept for the shared services, {options.StackFootprintMb} MB per stack. Pass force=true to stamp anyway.";
+        => $"No room for another stack: {(capacity.Latest is { } s ? capacity.WhyNoRoom(s) : "the box has not been read yet.")} Pass force=true to stamp anyway.";
 
     public static Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Stop(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
         => Enqueue(context, queue, audit, slug, "stop", [TenantStatus.Running, TenantStatus.Failed], ct);
@@ -329,7 +332,8 @@ public static partial class ControlApi
 }
 
 /// <param name="RoomFor">How many more stacks the box takes before the guard refuses a stamp.</param>
-public record PlatformResponse(string Domain, string DefaultImageTag, int DemoDays, bool DryRun, int Running, int Total, int RoomFor);
+/// <param name="Warnings">What the watchdog found and has not seen clear: a dead lane, a full drive, a stack down, a job past its time, a stack nobody's record explains.</param>
+public record PlatformResponse(string Domain, string DefaultImageTag, int DemoDays, bool DryRun, int Running, int Total, int RoomFor, IReadOnlyList<string> Warnings);
 
 /// <param name="Slug">The tenant a compose project belongs to; null for the platform's own project.</param>
 public record TenantUsage(string Project, string? Slug, int Containers, int Running, long MemoryMb, double CpuPercent);
@@ -348,7 +352,10 @@ public record CapacityResponse(
     int StackLimitMb,
     int ReserveMb,
     int RoomFor,
-    IReadOnlyList<TenantUsage> Tenants);
+    IReadOnlyList<TenantUsage> Tenants,
+    int DiskFloorMb,
+    int ConnectionsEstimate,
+    int ConnectionsMax);
 
 public record CreateTenantRequest(
     string NameEn,

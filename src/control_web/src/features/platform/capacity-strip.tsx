@@ -84,6 +84,8 @@ export function CapacityStrip({ capacity, loading }: CapacityStripProps) {
               {t('stackFootprint')}:{' '}
               {megabytes(Number(capacity?.stackFootprintMb ?? 0))} {t('stackTypical')} ·{' '}
               {megabytes(Number(capacity?.stackLimitMb ?? 0))} {t('stackCap')}
+              <br />
+              {t('connections')}: {Number(capacity?.connectionsEstimate ?? 0)} / {Number(capacity?.connectionsMax ?? 0)}
             </>
           )
         }

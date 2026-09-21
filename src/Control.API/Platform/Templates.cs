@@ -137,7 +137,8 @@ public static partial class Templates
             };
             if (db is not null)
             {
-                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={platform.PostgresHost};Port=5432;Username={TenantNaming.DbRole(slug)};Password=${{DB_PASSWORD}};Database={TenantNaming.Database(slug, db)}\"");
+                // A bounded pool per service, so the shared Postgres has a budget the capacity guard can count
+                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={platform.PostgresHost};Port=5432;Username={TenantNaming.DbRole(slug)};Password=${{DB_PASSWORD}};Database={TenantNaming.Database(slug, db)};Maximum Pool Size={platform.ServicePoolSize};Minimum Pool Size=0\"");
             }
 
             switch (service)

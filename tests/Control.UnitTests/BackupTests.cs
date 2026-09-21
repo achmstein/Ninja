@@ -229,4 +229,24 @@ public sealed class BackupTests
         RestoreDrillService.Shape(drill, source, newest, new PlatformOptions { Domain = "ninja.app" });
         Assert.AreEqual("drill@ninja.app", drill.OwnerEmail);
     }
+
+    [TestMethod]
+    public async Task A_backup_carries_a_checksum_per_file_and_a_corrupt_one_is_refused()
+    {
+        var created = await _backups.CreateAsync(new Tenant { Slug = "blue" }, CancellationToken.None);
+        Assert.IsNotNull(created.Sha256);
+        Assert.IsTrue(created.Sha256!.ContainsKey("catalogdb.dump"));
+        Assert.IsFalse(created.Sha256.ContainsKey("manifest.json"), "the manifest cannot carry its own checksum");
+        await _backups.VerifyAsync("blue", _backups.Find("blue", created.Id)!, CancellationToken.None);
+
+        await File.WriteAllTextAsync(Path.Combine(_backups.Dir("blue", created.Id), "catalogdb.dump"), "garbage");
+        var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => _backups.OffsiteAsync("blue", created.Id, CancellationToken.None));
+        StringAssert.Contains(ex.Message, "catalogdb.dump");
+        Assert.IsEmpty(_store.Keys, "nothing corrupt leaves the box");
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => _backups.RestoreDatabasesAsync("blue", created.Id, new Tenant { Slug = "red" }, CancellationToken.None));
+
+        // A manifest from before checksums passes as it always did
+        var legacy = created with { Sha256 = null };
+        await _backups.VerifyAsync("blue", legacy, CancellationToken.None);
+    }
 }

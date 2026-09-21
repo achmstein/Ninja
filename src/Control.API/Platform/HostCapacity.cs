@@ -124,8 +124,26 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
     public async Task<CapacitySnapshot> GetAsync(bool refresh, CancellationToken ct)
         => Latest is { } latest && !refresh ? latest : await RefreshAsync(ct);
 
+    /// <summary>How many more stacks fit: the memory, the connection budget and the drive, whichever says least.</summary>
     public int RoomFor(CapacitySnapshot snapshot)
-        => CapacityMath.RoomFor(snapshot.MemAvailableMb, options.Value.ReserveMb, options.Value.StackFootprintMb);
+    {
+        var o = options.Value;
+        var memory = CapacityMath.RoomFor(snapshot.MemAvailableMb, o.ReserveMb, o.StackFootprintMb);
+        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize, o.PostgresMaxConnections);
+        var disk = CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb) ? int.MaxValue : 0;
+        return Math.Min(memory, Math.Min(connections, disk));
+    }
+
+    /// <summary>Why a stamp is refused, in words: memory, connections or the drive.</summary>
+    public string WhyNoRoom(CapacitySnapshot snapshot)
+    {
+        var o = options.Value;
+        if (!CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb))
+            return $"{snapshot.TenantsDiskFreeMb} MB free on the tenants drive; the floor is {o.MinFreeDiskMb} MB and a stack needs room above it for its backups.";
+        if (CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize, o.PostgresMaxConnections) == 0)
+            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks may already ask for {CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServicePoolSize)}.";
+        return $"{snapshot.MemAvailableMb} MB free, {o.ReserveMb} MB kept for the shared services, {o.StackFootprintMb} MB per stack.";
+    }
 
     /// <summary>Whether another stack fits, on the last snapshot; true when the box has never been read (better a stamp than a guess).</summary>
     public bool HasRoom => Latest is null || RoomFor(Latest) > 0;

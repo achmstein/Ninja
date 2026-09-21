@@ -228,6 +228,49 @@ restore `controldb` and `keycloak` from the newest `_platform` backup
 backup under `tenants/{slug}/backups/`, and restore every tenant into its
 own slug from the control app.
 
+## What watches the platform
+
+`control-api`'s `/health` (inside the network; the container's own
+healthcheck reads `/alive`) says more than "up": each lane's worker has
+gone round in the last two minutes, the tenants drive is above
+`MIN_FREE_DISK_MB` (unhealthy below it, degraded within twice it), the
+platform's own backup is not older than 26 hours (degraded), and Keycloak
+answers on its management port. Caddy comes up only once the control plane
+is healthy, and docker restarts a container that stops answering.
+
+A watchdog looks once a minute and once an hour compares the record with
+what docker runs. What it finds is a red line at the top of the platform
+page until it clears, an audit row the first time, and, with `MAIL_OPS_TO`
+set, one mail: the drive below its floor (`ops-disk-low`: no backup is taken
+and no stack is stamped until space is freed), a lane that has stopped
+(`ops-worker-dead`: restart the control plane, every job survives it), a
+job running past `JobTimeoutMinutes` (`ops-job-stuck`, 45; nothing is
+killed), a tenant Running on the record with none of its containers up
+(`ops-stack-down`; nothing is changed), and a compose project no record
+explains (`platform.orphan-stack`, audit only).
+
+The capacity guard counts three things before a stamp: memory (the
+footprint beyond the reserve), Postgres connections (every running stack
+is eleven pools of `SERVICE_POOL_SIZE`, stamped into its connection
+strings, plus the platform's own forty, against `POSTGRES_MAX_CONNECTIONS`,
+which the `postgres` service is started with), and the drive (the floor
+plus a quarter of a footprint). The Capacity tab shows all three; the
+refusal says which one. The shared services carry memory limits of their
+own (`POSTGRES_MEMORY`, `KEYCLOAK_MEMORY`, `EVENTBUS_MEMORY`,
+`CONTROL_MEMORY`, `CADDY_MEMORY`), so a runaway there ends at its cap too.
+
+Every backup's manifest carries a SHA-256 per file; a copy that does not
+match never leaves the box and a dump that does not match is never
+restored. What the platform can lose is a day: the backups are nightly
+logical dumps, and there is no WAL archiving. A café that cannot afford a
+day should get a backup on demand before anything risky, and the weekly
+restore drill (`RESTORE_DRILL_ENABLED`, on by default in `.env.example`)
+is the proof the dumps restore. `.github/workflows/platform-uptime.yml`
+probes the auth host, the control app and the control plane through the
+edge every fifteen minutes from outside, plus the tenant API hosts in the
+`PLATFORM_PROBE_HOSTS` repository variable, and checks the admin console
+is not reachable from there.
+
 ## Keys, roles and who may sign in
 
 The tenants' secrets on the record (each stack's database and broker

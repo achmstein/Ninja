@@ -50,6 +50,7 @@ public static class Extensions
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();
         builder.Services.AddSingleton<ProvisioningQueue>();
         builder.Services.AddSingleton<WorkerHeartbeat>();
+        builder.Services.AddSingleton<PlatformWarnings>();
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddScoped<SubscriptionService>();
         builder.Services.AddSingleton<CapacityCache>();
@@ -82,6 +83,7 @@ public static class Extensions
             builder.Services.AddHostedService<CapacityMonitor>();
             builder.Services.AddHostedService<UpdateMonitor>();
             builder.Services.AddHostedService<NightlyBackupService>();
+            builder.Services.AddHostedService<PlatformWatchdog>();
             if (builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:RestoreDrill:Enabled"))
                 builder.Services.AddHostedService<RestoreDrillService>();
             // The platform's own databases stop accepting PUBLIC; a dry run has none
@@ -122,6 +124,13 @@ public static class Extensions
             if (offsite.Enabled) builder.Services.AddSingleton<IOffsiteStore, S3OffsiteStore>();
             else builder.Services.AddSingleton<IOffsiteStore, NoOffsiteStore>();
         }
+
+        // /health says more than "the process is up": the lanes, the drive, the last platform backup and, on a real box, Keycloak
+        var health = builder.Services.AddHealthChecks()
+            .AddCheck<WorkerHealthCheck>("worker")
+            .AddCheck<DiskHealthCheck>("disk")
+            .AddCheck<PlatformBackupHealthCheck>("platform-backup");
+        if (!dryRun) health.AddCheck<KeycloakHealthCheck>("keycloak");
 
         // The people who run the platform hold PlatformAdmin in the ninja realm
         builder.Services.AddAuthorizationBuilder()

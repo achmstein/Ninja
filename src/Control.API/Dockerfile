@@ -27,5 +27,10 @@ COPY --from=dockercli /usr/local/libexec/docker/cli-plugins/docker-compose /usr/
 WORKDIR /app
 EXPOSE 8080
 
+# Liveness for docker and compose (the aspnet image has neither curl nor wget; bash can open a socket):
+# compose brings Caddy up only once this answers, and restarts the container when it stops answering
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /alive HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && head -1 <&3 | grep -q " 200 "'
+
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Control.API.dll"]

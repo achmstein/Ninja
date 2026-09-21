@@ -39,6 +39,10 @@ public sealed class MailTests
         yield return MailTemplates.OpsProvisionFailed(t, Guid.NewGuid(), "boom", Platform);
         yield return MailTemplates.OpsBackupFailed(t, "disk full", Platform);
         yield return MailTemplates.OpsBackupStale([("blue", null), ("red", DateTimeOffset.UtcNow.AddDays(-3))], Platform);
+        yield return MailTemplates.OpsDiskLow(1200, 5120, Platform);
+        yield return MailTemplates.OpsJobStuck("blue", "upgrade", 52, Platform);
+        yield return MailTemplates.OpsStackDown("blue", Platform);
+        yield return MailTemplates.OpsWorkerDead("Stamp", Platform);
     }
 
     [TestMethod]

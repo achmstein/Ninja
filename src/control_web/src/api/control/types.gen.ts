@@ -24,6 +24,9 @@ export type BackupInfo = {
     imageTag: string;
     offsiteAt?: null | string;
     verifiedAt?: null | string;
+    sha256?: null | {
+        [key: string]: string;
+    };
 };
 
 export type BrandDto = {
@@ -114,6 +117,9 @@ export type CapacityResponse = {
     reserveMb: number | string;
     roomFor: number | string;
     tenants: Array<TenantUsage>;
+    diskFloorMb: number | string;
+    connectionsEstimate: number | string;
+    connectionsMax: number | string;
 };
 
 export type ContainerInfo = {
@@ -270,6 +276,7 @@ export type PlatformResponse = {
     running: number | string;
     total: number | string;
     roomFor: number | string;
+    warnings: Array<string>;
 };
 
 export type ProblemDetails = {

@@ -163,6 +163,21 @@ export function PlatformPage() {
         </div>
       )}
 
+      {/* What the watchdog found and has not seen clear: one line each, red, until it clears */}
+      {platform.data && platform.data.warnings.length > 0 && (
+        <Alert variant='destructive'>
+          <AlertTriangle />
+          <AlertTitle>{t('platformWarnings', { count: platform.data.warnings.length })}</AlertTitle>
+          <AlertDescription>
+            <ul className='list-disc ps-4'>
+              {platform.data.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {platformBackups.data?.stale && !platform.data?.dryRun && (
         <Alert variant='destructive'>
           <AlertTriangle />

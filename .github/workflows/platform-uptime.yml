@@ -1,0 +1,59 @@
+name: Platform uptime
+
+# Is the platform up, every 15 minutes, from outside the box: the auth host's
+# realm, the control app, and the control plane behind the edge (its
+# anonymous certificate question), plus any tenant API hosts listed in the
+# PLATFORM_PROBE_HOSTS repository variable (comma-separated, e.g.
+# api.blue.ninja.app,api.red.ninja.app). A failed run is the alert: GitHub
+# mails the repository owner on the first failure and again on recovery.
+# The platform's own /health (the lanes, the drive, the last backup,
+# Keycloak) is not public; the uptime is the outside view.
+#
+# GitHub pauses scheduled workflows after 60 days without a commit; a push
+# resumes them.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: platform-uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PLATFORM_DOMAIN: ${{ vars.PLATFORM_DOMAIN }}
+      PROBE_HOSTS: ${{ vars.PLATFORM_PROBE_HOSTS }}
+    steps:
+      - name: Probe
+        run: |
+          set -e
+          if [ -z "$PLATFORM_DOMAIN" ]; then echo "PLATFORM_DOMAIN is not set; nothing to probe"; exit 0; fi
+          failed=0
+          probe() {
+            local url="$1" want="${2:-200}"
+            # Two tries a few seconds apart, so a single dropped packet is not an alarm
+            for i in 1 2; do
+              code=$(curl -sS -o /dev/null --max-time 15 -w '%{http_code}' "$url" 2>/dev/null || echo none)
+              [ "$code" = "$want" ] && { echo "ok   $url"; return 0; }
+              sleep 5
+            done
+            echo "::error::DOWN $url -> HTTP $code (wanted $want)"
+            failed=1
+          }
+          probe "https://auth.$PLATFORM_DOMAIN/realms/ninja"
+          probe "https://control.$PLATFORM_DOMAIN/"
+          # Anonymous, and proves the control plane answers behind Caddy
+          probe "https://control.$PLATFORM_DOMAIN/api/control/tls/ask?domain=auth.$PLATFORM_DOMAIN"
+          # The admin console must not be reachable from a runner
+          probe "https://auth.$PLATFORM_DOMAIN/admin/master/console/" 403
+          for host in $(echo "$PROBE_HOSTS" | tr ',' ' '); do
+            for svc in catalog ordering branch; do
+              probe "https://$host/health/$svc"
+            done
+          done
+          [ "$failed" = 0 ] || exit 1

@@ -23,11 +23,15 @@ public static class MailTemplates
     public const string OpsProvisionFailedName = "ops-provision-failed";
     public const string OpsBackupFailedName = "ops-backup-failed";
     public const string OpsBackupStaleName = "ops-platform-backup-stale";
+    public const string OpsDiskLowName = "ops-disk-low";
+    public const string OpsJobStuckName = "ops-job-stuck";
+    public const string OpsStackDownName = "ops-stack-down";
+    public const string OpsWorkerDeadName = "ops-worker-dead";
 
     public static readonly string[] All =
     [
         OwnerWelcomeName, DemoExpiringName, DemoStoppedName, DemoDestroyedSoonName, SubscriptionPastDueName, SubscriptionSuspendedName, PaymentReceivedName,
-        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName,
+        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName, OpsDiskLowName, OpsJobStuckName, OpsStackDownName, OpsWorkerDeadName,
     ];
 
     public static MailMessage Welcome(Tenant t, TenantHosts hosts, MailOptions mail)
@@ -142,6 +146,29 @@ public static class MailTemplates
                 .. stale.Select(s => $"{s.Slug}: {(s.LastAt is { } at ? $"last {at:yyyy-MM-dd HH:mm} UTC" : "never")}"),
             ],
             ("Open the platform", platform.ControlUrl));
+
+    public static MailMessage OpsDiskLow(long freeMb, int floorMb, PlatformOptions platform)
+        => Ops(OpsDiskLowName, null, platform, "The tenants drive is nearly full",
+            [$"{freeMb} MB are free on the tenants drive, below the {floorMb} MB floor. No backup is taken and no stack is stamped until space is freed.",
+             "Old backups and archives under /opt/ninja/tenants are the usual weight; docker system prune reclaims images nobody runs."],
+            ("Open the capacity view", $"{platform.ControlUrl.TrimEnd('/')}/?tab=capacity"));
+
+    public static MailMessage OpsJobStuck(string slug, string action, int minutes, PlatformOptions platform)
+        => Ops(OpsJobStuckName, null, platform, $"{action} on {slug} has run for {minutes} minutes",
+            [$"The {action} job for {slug} started {minutes} minutes ago and has not finished. Nothing has been stopped: a large restore is slow, a hung docker command is not.",
+             "The tenant's page shows the step it is on; the control plane log has the command."],
+            ("Open the tenant", $"{platform.ControlUrl.TrimEnd('/')}/t/{slug}"));
+
+    public static MailMessage OpsStackDown(string slug, PlatformOptions platform)
+        => Ops(OpsStackDownName, null, platform, $"{slug} is down",
+            [$"{slug} is Running on the record, but none of its containers are running on the box. Nothing has been changed.",
+             "Start it from its page, or look at its containers and logs first."],
+            ("Open the tenant", $"{platform.ControlUrl.TrimEnd('/')}/t/{slug}?tab=health"));
+
+    public static MailMessage OpsWorkerDead(string lane, PlatformOptions platform)
+        => Ops(OpsWorkerDeadName, null, platform, $"The {lane} lane has stopped",
+            [$"The {lane} worker has not gone round for minutes; jobs in that lane are not running. Restart the control plane: every job on the line survives a restart."],
+            ("Open the queue", $"{platform.ControlUrl.TrimEnd('/')}/?tab=queue"));
 
     // ---------- the frame ----------
 

@@ -115,6 +115,20 @@ public sealed class PlatformOptions
     /// <summary>How often the box is read for the capacity view.</summary>
     public int CapacityRefreshSeconds { get; set; } = 30;
 
+    /// <summary>The floor on the tenants drive: below it no backup is taken and no stack is stamped, and ops hears. Backups grow it; a full disk takes the shared Postgres down for every café.</summary>
+    public int MinFreeDiskMb { get; set; } = 5120;
+
+    /// <summary>A job running longer than this is reported to ops (nothing is killed: a big restore is slow).</summary>
+    public int JobTimeoutMinutes { get; set; } = 45;
+
+    /// <summary>What the shared Postgres allows (its max_connections) and what each service's pool may open, so the capacity guard counts connections as well as memory: eleven services a stack, one pool each, plus the platform's own.</summary>
+    public int PostgresMaxConnections { get; set; } = 400;
+
+    public int ServicePoolSize { get; set; } = 20;
+
+    /// <summary>Keycloak's readiness, on its management port; what /health asks.</summary>
+    public string KeycloakHealthUrl { get; set; } = "http://keycloak:9000/health/ready";
+
     /// <summary>How often the stacks are checked against what their tags point to now (the registry, when the platform pulls).</summary>
     public int UpdateRefreshSeconds { get; set; } = 600;
 
