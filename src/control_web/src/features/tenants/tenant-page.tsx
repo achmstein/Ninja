@@ -20,6 +20,7 @@ import {
 import {
   convertTenantMutation,
   destroyTenantMutation,
+  dismissTenantErrorMutation,
   extendDemoMutation,
   getTenantOptions,
   getTenantQueryKey,
@@ -140,6 +141,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const secure = useMutation({ ...secureTenantMutation(), onSuccess: queued, onError: failed })
   const resume = useMutation({ ...resumeTenantMutation(), onSuccess: queued, onError: failed })
   const rollback = useMutation({ ...rollbackTenantMutation(), onSuccess: queued, onError: failed })
+  const dismiss = useMutation({ ...dismissTenantErrorMutation(), onSuccess: refresh, onError: failed })
   const resendWelcome = useMutation({
     ...resendWelcomeEmailMutation(),
     onSuccess: () => {
@@ -357,13 +359,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         </Alert>
       )}
 
-      {/* Running, with a story: an upgrade that did not take and was rolled back */}
+      {/* Running, with a story: an upgrade that did not take and was rolled back. It stays until read. */}
       {tenant.lastError && status === 'Running' && (
         <Alert className='border-amber-500/40 bg-amber-500/10 [&>svg]:text-amber-600'>
           <Undo2 />
           <AlertTitle>{t('rolledBack')}</AlertTitle>
-          <AlertDescription className='font-mono text-xs break-all' dir='ltr'>
-            {tenant.lastError}
+          <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
+            <span className='font-mono text-xs break-all' dir='ltr'>{tenant.lastError}</span>
+            <Button size='sm' variant='outline' disabled={busy || dismiss.isPending} onClick={() => dismiss.mutate(path)}>
+              {t('dismiss')}
+            </Button>
           </AlertDescription>
         </Alert>
       )}

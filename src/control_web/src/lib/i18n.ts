@@ -110,6 +110,7 @@ const dictionary = {
   rollbackNote: { en: 'The stack goes back to {tag}. Database migrations are forward-only: if {tag} predates one, restore the pre-upgrade backup into a new tenant instead.', ar: 'العميل بيرجع لـ {tag}. تحديثات قاعدة البيانات للأمام بس: لو {tag} أقدم من واحد منها، استرجع النسخة اللي قبل التحديث في عميل جديد بدل كده.' },
   rollbackNoteWithBackup: { en: 'The stack goes back to {tag}. Database migrations are forward-only: if {tag} predates one, restore backup {backupId} (taken before the upgrade) into a new tenant instead.', ar: 'العميل بيرجع لـ {tag}. تحديثات قاعدة البيانات للأمام بس: لو {tag} أقدم من واحد منها، استرجع النسخة {backupId} (اللي اتاخدت قبل التحديث) في عميل جديد بدل كده.' },
   rolledBack: { en: 'Rolled back', ar: 'اترجع' },
+  dismiss: { en: 'Dismiss', ar: 'اخفيه' },
   previousVersion: { en: 'Previous version', ar: 'الإصدار السابق' },
   upgradeAll: { en: 'Upgrade all', ar: 'حدّث الكل' },
   upgradeAllNote: { en: '{count} running tenants, one after another; each is backed up first and rolls back on its own if it does not come up.', ar: '{count} عميل شغّال، واحد ورا التاني؛ كل واحد بتتاخد له نسخة الأول وبيرجع لوحده لو ماشتغلش.' },

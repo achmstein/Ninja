@@ -858,6 +858,45 @@ export type UpgradeTenantResponses = {
     202: unknown;
 };
 
+export type DismissTenantErrorData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/error';
+};
+
+export type DismissTenantErrorErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type DismissTenantErrorError = DismissTenantErrorErrors[keyof DismissTenantErrorErrors];
+
+export type DismissTenantErrorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DismissTenantErrorResponse = DismissTenantErrorResponses[keyof DismissTenantErrorResponses];
+
 export type RollbackTenantData = {
     body?: never;
     path: {
