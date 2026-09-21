@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import { type QueryClient } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
@@ -55,6 +56,10 @@ function GeneralError() {
 
 function RootComponent() {
   useBrandEffects()
+  // index.html painted the loading screen; from here the app paints its own
+  useLayoutEffect(() => {
+    document.getElementById('splash')?.remove()
+  }, [])
   return (
     <>
       <Outlet />

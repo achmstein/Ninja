@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -27,6 +28,10 @@ function AppToaster() {
 
 function RootComponent() {
   useBrandEffects()
+  // index.html painted the loading screen; from here the app paints its own
+  useLayoutEffect(() => {
+    document.getElementById('splash')?.remove()
+  }, [])
   return (
     <>
       <NavigationProgress />

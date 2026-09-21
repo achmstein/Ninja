@@ -90,6 +90,10 @@ flutter:
           weight: 600
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
+    # The platform's display face, for its wordmark on the loading screen only (OFL; licence beside it)
+    - family: OriginalSurfer
+      fonts:
+        - asset: assets/fonts/OriginalSurfer-Regular.ttf
 
 # App icon configuration (same cup art as the other apps)
 flutter_launcher_icons:

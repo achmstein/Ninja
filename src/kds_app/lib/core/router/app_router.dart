@@ -23,7 +23,7 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const BrandMark(size: 150, color: Colors.white, logo: false),
+            const PlatformWordmark(size: 64, color: Colors.white),
             const SizedBox(height: 32),
             const SizedBox(
               width: 24,

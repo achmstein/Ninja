@@ -3,7 +3,7 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
+import { BootSplash } from '@/components/boot-splash'
 import { ErrorState } from '@/components/error-state'
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
 
@@ -19,11 +19,7 @@ function AuthenticatedRoute() {
   const location = useLocation()
 
   if (auth.isLoading) {
-    return (
-      <div className='flex h-svh items-center justify-center'>
-        <Spinner className='size-8' />
-      </div>
-    )
+    return <BootSplash />
   }
 
   if (!auth.isAuthenticated) {

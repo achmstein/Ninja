@@ -59,6 +59,23 @@ class BrandMark extends ConsumerWidget {
   }
 }
 
+/// The platform's wordmark in its display face, for the loading screen: the
+/// one place the platform, not the café, is what there is to show, since
+/// the café is not known until the app has read it.
+class PlatformWordmark extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const PlatformWordmark({super.key, required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) => Text(
+        platformName,
+        textDirection: TextDirection.ltr,
+        style: TextStyle(fontFamily: 'OriginalSurfer', fontSize: size, color: color, height: 1),
+      );
+}
+
 /// "Powered by ninja": quiet, at the foot of a staff page.
 class PoweredBy extends StatelessWidget {
   const PoweredBy({super.key});

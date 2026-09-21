@@ -6,7 +6,7 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
+import { BootSplash } from '@/components/boot-splash'
 import { Button } from '@/components/ui/button'
 import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
@@ -65,11 +65,7 @@ function AuthenticatedRoute() {
   }, [needsSignIn, navigate, router])
 
   if (auth.isLoading || needsSignIn) {
-    return (
-      <div className='flex h-svh items-center justify-center'>
-        <Loader2 className='h-8 w-8 animate-spin' />
-      </div>
-    )
+    return <BootSplash />
   }
 
   const roles = getRealmRoles(auth.user)
