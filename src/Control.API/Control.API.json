@@ -583,7 +583,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it",
+        "summary": "Running tenants (all, or the slugs given) onto a tag, one at a time; with a canary, the rest follow only while it stays running on it",
         "operationId": "FleetUpgrade",
         "requestBody": {
           "content": {
@@ -612,6 +612,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/updates": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now",
+        "operationId": "GetPlatformUpdates",
+        "parameters": [
+          {
+            "name": "refresh",
+            "in": "query",
+            "description": "Check the stacks and the registry now instead of answering from the last check",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatesResponse"
                 }
               }
             }
@@ -3323,6 +3364,15 @@
               "null",
               "string"
             ]
+          },
+          "slugs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4011,7 +4061,8 @@
           "welcomeSentAt",
           "subscription",
           "previousImageTag",
-          "upgradeBackupId"
+          "upgradeBackupId",
+          "update"
         ],
         "type": "object",
         "properties": {
@@ -4134,6 +4185,16 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "update": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantUpdate"
+              }
             ]
           }
         }
@@ -4429,7 +4490,8 @@
           "lastError",
           "hasOwnCredentials",
           "subscription",
-          "paidThrough"
+          "paidThrough",
+          "update"
         ],
         "type": "object",
         "properties": {
@@ -4504,6 +4566,41 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "update": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantUpdate"
+              }
+            ]
+          }
+        }
+      },
+      "TenantUpdate": {
+        "required": [
+          "behind",
+          "services",
+          "newerTag"
+        ],
+        "type": "object",
+        "properties": {
+          "behind": {
+            "type": "boolean"
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "newerTag": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4607,6 +4704,46 @@
                 "$ref": "#/components/schemas/BrandLocale"
               }
             ]
+          }
+        }
+      },
+      "UpdatesResponse": {
+        "required": [
+          "checkedAt",
+          "releases",
+          "newestRelease",
+          "knownTags",
+          "behind"
+        ],
+        "type": "object",
+        "properties": {
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "releases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "newestRelease": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "knownTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "behind": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

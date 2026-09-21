@@ -113,6 +113,12 @@ public sealed class PlatformOptions
     /// <summary>How often the box is read for the capacity view.</summary>
     public int CapacityRefreshSeconds { get; set; } = 30;
 
+    /// <summary>How often the stacks are checked against what their tags point to now (the registry, when the platform pulls).</summary>
+    public int UpdateRefreshSeconds { get; set; } = 600;
+
+    /// <summary>A login for the registry, needed only while the service packages are private.</summary>
+    public RegistryOptions Registry { get; set; } = new();
+
     /// <summary>The platform's own clock (the nightly jobs), IANA.</summary>
     public string TimeZone { get; set; } = "Africa/Cairo";
 
@@ -153,6 +159,14 @@ public sealed class PlatformOptions
 
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
+}
+
+public sealed class RegistryOptions
+{
+    /// <summary>The user and a token with read access to the packages (on GHCR, a PAT with read:packages).</summary>
+    public string? User { get; set; }
+
+    public string? Token { get; set; }
 }
 
 public sealed class OffsiteOptions

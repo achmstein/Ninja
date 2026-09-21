@@ -33,6 +33,8 @@ public static class Extensions
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddScoped<SubscriptionService>();
         builder.Services.AddSingleton<CapacityCache>();
+        builder.Services.AddSingleton<UpdateCache>();
+        builder.Services.AddHttpClient("registry", client => client.Timeout = TimeSpan.FromSeconds(20));
         builder.Services.AddSingleton<TenantOps>();
         builder.Services.AddSingleton<TenantMetricsCollector>();
         builder.Services.AddSingleton<BackupService>();
@@ -55,6 +57,7 @@ public static class Extensions
             builder.Services.AddHostedService<DemoExpiryService>();
             builder.Services.AddHostedService<SubscriptionSweepService>();
             builder.Services.AddHostedService<CapacityMonitor>();
+            builder.Services.AddHostedService<UpdateMonitor>();
             builder.Services.AddHostedService<NightlyBackupService>();
             if (builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:RestoreDrill:Enabled"))
                 builder.Services.AddHostedService<RestoreDrillService>();
@@ -77,6 +80,8 @@ public static class Extensions
             builder.Services.AddSingleton<ITenantStack, DryRunTenantStack>();
             builder.Services.AddSingleton<IHostCapacity, DryRunHostCapacity>();
             builder.Services.AddSingleton<IOffsiteStore, RecordingOffsiteStore>();
+            builder.Services.AddSingleton<DryRunImageRegistry>();
+            builder.Services.AddSingleton<IImageRegistry>(sp => sp.GetRequiredService<DryRunImageRegistry>());
         }
         else
         {
@@ -88,6 +93,7 @@ public static class Extensions
             builder.Services.AddSingleton<IStackProxy, HttpStackProxy>();
             builder.Services.AddSingleton<ITenantStack, HttpTenantStack>();
             builder.Services.AddSingleton<IHostCapacity, ProcHostCapacity>();
+            builder.Services.AddSingleton<IImageRegistry, OciImageRegistry>();
             // Off the box only once a bucket and keys are set; until then the UI says the backups stay here
             var offsite = builder.Configuration.GetSection($"{PlatformOptions.Section}:Offsite").Get<OffsiteOptions>() ?? new();
             if (offsite.Enabled) builder.Services.AddSingleton<IOffsiteStore, S3OffsiteStore>();

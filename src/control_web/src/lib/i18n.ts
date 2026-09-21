@@ -118,6 +118,29 @@ const dictionary = {
   canaryNote: { en: 'The rest follow only while the canary stays running on the new tag.', ar: 'الباقي بيكمّلوا بس طول ما المجرّب الأول شغّال على الإصدار الجديد.' },
   fleetUpgradeQueued: { en: '{count} upgrades queued', ar: 'اتحطّ {count} تحديث في الطابور' },
 
+  // Updates: where a stack stands against what its tag points to now
+  updateAvailable: { en: 'Update available', ar: 'في تحديث' },
+  upToDate: { en: 'Up to date', ar: 'محدّث' },
+  behindOn: { en: 'Running an older build of {tag}: {services}.', ar: 'شغّال على نسخة أقدم من {tag}: {services}.' },
+  newerRelease: { en: '{newer} is out; this tenant is on {tag}.', ar: '{newer} نزل، والعميل ده على {tag}.' },
+  upToDateOn: { en: 'Up to date on {tag}.', ar: 'محدّث على {tag}.' },
+  notCheckedYet: { en: 'Not checked yet.', ar: 'لسه ماتفحصش.' },
+  checkedAt: { en: 'Checked {when}', ar: 'اتفحص {when}' },
+  checkNow: { en: 'Check now', ar: 'افحص دلوقتي' },
+  version: { en: 'Version', ar: 'الإصدار' },
+  tagNewestHint: { en: 'The newest build', ar: 'أحدث نسخة' },
+  tagReleaseHint: { en: 'Release', ar: 'إصدار' },
+  tagCurrentHint: { en: 'Current', ar: 'الحالي' },
+  otherTag: { en: 'Other tag…', ar: 'إصدار تاني…' },
+  whichTenants: { en: 'Which tenants', ar: 'أنهي عملاء' },
+  onlyBehind: { en: 'Only those behind', ar: 'اللي عليهم تحديث بس' },
+  everyone: { en: 'Everyone', ar: 'الكل' },
+  behindCount: {
+    plural: 'count',
+    en: { one: '1 behind', other: '{count} behind' },
+    ar: { one: 'عميل واحد عليه تحديث', two: 'عميلين عليهم تحديث', few: '{count} عملاء عليهم تحديث', many: '{count} عميل عليهم تحديث', other: '{count} عميل عليهم تحديث' },
+  },
+
   // Step statuses
   stepPending: { en: 'Pending', ar: 'مستني' },
   stepRunning: { en: 'Running', ar: 'شغال' },

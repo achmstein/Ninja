@@ -717,7 +717,7 @@ public sealed class ProvisioningQueue
     public IAsyncEnumerable<ProvisioningJob> ReadAllAsync(CancellationToken ct) => _channel.Reader.ReadAllAsync(ct);
 }
 
-public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, ILogger<ProvisioningWorker> logger) : BackgroundService
+public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, ILogger<ProvisioningWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -739,6 +739,8 @@ public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFac
                 case "rollback": await provisioner.RollbackAsync(job.TenantId, stoppingToken); break;
                 default: await provisioner.ComposeAsync(job.TenantId, job.Action, stoppingToken); break;
             }
+            // Whatever the job did to the stack, the "behind" view is read again on the monitor's next tick
+            updates.Invalidate();
         }
     }
 }

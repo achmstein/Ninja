@@ -35,7 +35,7 @@ import {
   upgradeTenantMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { PageHeader } from '@/components/page-header'
-import { KindBadge, StatusBadge, SubscriptionBadge } from '@/components/tenant-badges'
+import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -229,6 +229,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             <KindBadge kind={tenant.kind} />
             <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
             {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && <SubscriptionBadge status={tenant.subscription.status} />}
+            {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
             <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
               {tenant.slug}
             </span>
@@ -258,6 +259,13 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
               <Button size='sm' disabled={busy || resume.isPending} onClick={() => resume.mutate(path)}>
                 <Play />
                 {t('resume')}
+              </Button>
+            )}
+            {/* Behind: the upgrade is a button, not a menu item */}
+            {tenant.update?.behind && canUpgrade(status) && (
+              <Button size='sm' disabled={busy} onClick={() => setDialog('upgrade')}>
+                <ArrowUpCircle />
+                {t('upgrade')}
               </Button>
             )}
             {canImpersonate(status) && (
@@ -430,6 +438,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         onOpenChange={(v) => setDialog(v ? 'upgrade' : null)}
         isPending={upgrade.isPending}
         currentTag={tenant.imageTag}
+        update={tenant.update}
         onConfirm={(imageTag) =>
           upgrade.mutate({ ...path, body: imageTag ? { imageTag } : null })
         }

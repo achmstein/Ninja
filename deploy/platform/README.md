@@ -165,12 +165,34 @@ answers every API call with `503 {"code":"paused"}` and the customer app
 shows a paused page. **Start** refuses a suspended tenant; a recorded
 payment (or **Resume**) brings it back.
 
+A release is a git tag `vYYYY.MM.DD` (or any `v…`) pushed to the repo:
+`docker-build.yml` builds all twelve service images and the control image
+with that tag and moves `latest` to it. A manual run of the workflow
+builds work in progress under the commit's sha and `latest` instead; a sha
+is on the services that changed, not necessarily all twelve, so it is not
+something to upgrade a fleet to. Every ten minutes
+(`UpdateRefreshSeconds`), and after every stamp, the control plane reads
+what each stack's containers run, what each tag resolves to (on the box,
+and in the registry when it pulls), and which release tags all twelve
+images carry. A tenant whose service runs an older build than its tag
+points to now, or that stands on a release older than the newest, shows
+**Update available** in the table and on its page, with an **Upgrade**
+button up front; the platform page counts them by its title
+(`GET /platform/updates` has the lists). While the packages are private,
+`REGISTRY_USER` and `REGISTRY_TOKEN` (a PAT with `read:packages`) let the
+control plane read the registry; without them, and when the images are
+built on the box, only the box's own copies are compared.
+
 An upgrade (`POST /tenants/{slug}/upgrade` with an image tag, or **Upgrade
 all** on the platform page) takes a backup first (or reuses one fresher
 than `BackupFreshMinutes`), re-stamps the compose on the new tag, and
 waits five minutes for every service to answer; if they do not, the stack
 goes back to the previous tag by itself and the tenant ends Running with
-an amber "rolled back" note (audit `tenant.upgrade.rolledback`). **Roll
+an amber "rolled back" note (audit `tenant.upgrade.rolledback`). The tag
+is picked, not typed: the dialog offers the releases, the default and every
+tag a tenant stands or stood on, with the newer release (or the tenant's
+own tag, to re-pull it) chosen already. **Upgrade all** ticks the tenants
+behind and lets the rest be ticked too (`Slugs` on the request). **Roll
 back** in the menu does the same by hand, while the previous tag is known.
 A rollback restores the images, never the data: migrations are
 forward-only, so a version that predates one is restored from the

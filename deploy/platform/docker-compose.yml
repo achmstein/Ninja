@@ -90,6 +90,8 @@ services:
       Platform__TenantsRoot: /opt/ninja/tenants
       Platform__ImageRegistry: ${IMAGE_REGISTRY:-ghcr.io/achmstein/ninja}
       Platform__DefaultImageTag: ${IMAGE_TAG:-latest}
+      Platform__Registry__User: ${REGISTRY_USER:-}
+      Platform__Registry__Token: ${REGISTRY_TOKEN:-}
       Platform__PostgresPassword: ${POSTGRES_PASSWORD}
       Platform__RabbitPassword: ${EVENTBUS_PASSWORD}
       Platform__KeycloakPublicUrl: https://auth.${PLATFORM_DOMAIN}

@@ -7,6 +7,7 @@ import { useFormat } from '@/lib/format'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { countryOf } from '@/lib/locale'
 import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tenant'
+import { UpdateStanding } from '../dialogs'
 import { EditRecordSheet } from '../edit-record-sheet'
 import { Steps } from '../steps'
 
@@ -97,7 +98,12 @@ export function OverviewTab({
             </>
           )}
           <dt className={dtClass}>{t('imageTag')}</dt>
-          <dd className='font-mono' dir='ltr'>{tenant.imageTag}</dd>
+          <dd>
+            <span className='font-mono' dir='ltr'>{tenant.imageTag}</span>
+            <span className='text-muted-foreground block text-xs'>
+              <UpdateStanding tag={tenant.imageTag} update={tenant.update} />
+            </span>
+          </dd>
           {tenant.previousImageTag && (
             <>
               <dt className={dtClass}>{t('previousVersion')}</dt>

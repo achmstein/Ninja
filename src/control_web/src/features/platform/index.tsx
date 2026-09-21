@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/page-header'
-import { KindBadge, StatusBadge, SubscriptionBadge } from '@/components/tenant-badges'
+import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { megabytes, useFormat } from '@/lib/format'
 import { useLanguage, useT } from '@/lib/i18n'
 import { isBusy, planLabelKey, subscriptionStatus, tenantKind, tenantStatus } from '@/lib/tenant'
@@ -86,19 +86,30 @@ export function PlatformPage() {
         : false,
   })
 
+  const language = useLanguage((s) => s.language)
+  const running = (tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running')
+  const behindCount = (tenants.data ?? []).filter((x) => x.update?.behind).length
+
   return (
     <div className='flex flex-col gap-4'>
       <PageHeader
         title={t('tenants')}
         badge={
-          platform.data?.dryRun && (
-            <Badge
-              variant='outline'
-              className='border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400'
-            >
-              {t('dryRun')}
-            </Badge>
-          )
+          <>
+            {platform.data?.dryRun && (
+              <Badge
+                variant='outline'
+                className='border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400'
+              >
+                {t('dryRun')}
+              </Badge>
+            )}
+            {behindCount > 0 && (
+              <Badge variant='outline' className='border-transparent bg-sky-500/15 text-sky-700 dark:text-sky-400'>
+                {t('behindCount', { count: behindCount })}
+              </Badge>
+            )}
+          </>
         }
         actions={
           <>
@@ -120,8 +131,12 @@ export function PlatformPage() {
         open={fleet}
         onOpenChange={setFleet}
         isPending={fleetUpgrade.isPending}
-        runningSlugs={(tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running').map((x) => x.slug)}
-        onConfirm={(imageTag, canary) => fleetUpgrade.mutate({ body: { imageTag, canary } })}
+        tenants={running.map((x) => ({
+          slug: x.slug,
+          name: (language === 'ar' ? x.nameAr : x.nameEn) || x.nameEn,
+          behind: x.update?.behind ?? false,
+        }))}
+        onConfirm={(imageTag, canary, slugs) => fleetUpgrade.mutate({ body: { imageTag, canary, slugs } })}
       />
 
       <CapacityStrip capacity={capacity.data} loading={capacity.isLoading} />
@@ -277,6 +292,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                     <StatusBadge status={tenant.status} />
                     {/* Quiet while the money is fine; a word when it is not */}
                     {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription)) && <SubscriptionBadge status={tenant.subscription} />}
+                    {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
                   </div>
                 </TableCell>
                 <TableCell className='text-muted-foreground text-xs tabular-nums'>

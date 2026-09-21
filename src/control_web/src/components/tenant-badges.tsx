@@ -66,6 +66,21 @@ export function SubscriptionBadge({ status, className }: { status: number | stri
   )
 }
 
+/** The check found the stack behind what its tag points to now (or a newer release out); blue, since nothing is wrong yet */
+export function UpdateBadge({ services, newerTag, className }: { services?: string[]; newerTag?: string | null; className?: string }) {
+  const t = useT()
+  const detail = newerTag ?? (services && services.length > 0 ? services.join(', ') : undefined)
+  return (
+    <Badge
+      variant='outline'
+      className={cn('border-transparent bg-sky-500/15 text-sky-700 dark:text-sky-400', className)}
+      title={detail}
+    >
+      {t('updateAvailable')}
+    </Badge>
+  )
+}
+
 export function KindBadge({ kind }: { kind: number | string }) {
   const t = useT()
   const name = tenantKind(kind)

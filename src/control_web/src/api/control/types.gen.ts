@@ -163,6 +163,7 @@ export type ExtendRequest = {
 export type FleetUpgradeRequest = {
     imageTag: string;
     canary?: null | string;
+    slugs?: null | Array<string>;
 };
 
 export type FleetUpgradeResponse = {
@@ -328,6 +329,7 @@ export type TenantDetail = {
     subscription: TenantSubscriptionDto;
     previousImageTag: null | string;
     upgradeBackupId: null | string;
+    update: null | TenantUpdate;
 };
 
 export type TenantHostsDto = {
@@ -403,6 +405,13 @@ export type TenantSummary = {
     hasOwnCredentials: boolean;
     subscription: SubscriptionStatus;
     paidThrough: null | string;
+    update: null | TenantUpdate;
+};
+
+export type TenantUpdate = {
+    behind: boolean;
+    services: Array<string>;
+    newerTag: null | string;
 };
 
 export type TenantUsage = {
@@ -421,6 +430,14 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
+};
+
+export type UpdatesResponse = {
+    checkedAt: string;
+    releases: Array<string>;
+    newestRelease: null | string;
+    knownTags: Array<string>;
+    behind: Array<string>;
 };
 
 export type UpdateSubscriptionRequest = {
@@ -910,6 +927,38 @@ export type FleetUpgradeResponses = {
 };
 
 export type FleetUpgradeResponse2 = FleetUpgradeResponses[keyof FleetUpgradeResponses];
+
+export type GetPlatformUpdatesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Check the stacks and the registry now instead of answering from the last check
+         */
+        refresh?: boolean;
+    };
+    url: '/api/control/platform/updates';
+};
+
+export type GetPlatformUpdatesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlatformUpdatesResponses = {
+    /**
+     * OK
+     */
+    200: UpdatesResponse;
+};
+
+export type GetPlatformUpdatesResponse = GetPlatformUpdatesResponses[keyof GetPlatformUpdatesResponses];
 
 export type SecureTenantData = {
     body?: never;

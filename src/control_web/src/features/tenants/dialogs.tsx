@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { getPlatformUpdatesOptions } from '@/api/control/@tanstack/react-query.gen'
+import type { TenantUpdate } from '@/api/control'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +34,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { useT } from '@/lib/i18n'
 import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
+import { isValidTag, TagPicker } from './tag-picker'
 
 type DialogProps = {
   open: boolean
@@ -82,49 +87,66 @@ export function ExtendDialog({
   )
 }
 
-/** Upgrade: optionally onto another image tag; empty keeps the current one. */
+/** One line on where the stack stands, from the last check. */
+export function UpdateStanding({ tag, update }: { tag: string; update: TenantUpdate | null | undefined }) {
+  const t = useT()
+  if (!update) return <>{t('notCheckedYet')}</>
+  if (update.services.length > 0) return <>{t('behindOn', { tag, services: update.services.join(', ') })}</>
+  if (update.newerTag) return <>{t('newerRelease', { newer: update.newerTag, tag })}</>
+  return <>{t('upToDateOn', { tag })}</>
+}
+
+/**
+ * Upgrade: the tag is picked from what exists (the default, the releases,
+ * the tags in use), with the one that fixes what the check found chosen
+ * already: the newer release when there is one, else the tenant's own tag
+ * again, which re-pulls it. Confirming the current tag sends nothing, as
+ * before, so the record's tag stays and the stack pulls.
+ */
 export function UpgradeDialog({
   open,
   onOpenChange,
   isPending,
   currentTag,
+  update,
   onConfirm,
 }: DialogProps & {
   currentTag: string
+  update: TenantUpdate | null | undefined
   onConfirm: (imageTag: string | null) => void
 }) {
   const t = useT()
-  const [tag, setTag] = useState('')
+  const updates = useQuery({ ...getPlatformUpdatesOptions(), enabled: open })
+  const suggested = update?.newerTag ?? currentTag
+  const [tag, setTag] = useState(suggested)
+  useEffect(() => {
+    if (open) setTag(suggested)
+  }, [open, suggested])
+
+  // The current tag is always on offer, even before the platform has answered
+  const known = updates.data?.knownTags ?? []
+  const tags = known.includes(currentTag) ? known : [currentTag, ...known]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-sm'>
         <DialogHeader>
           <DialogTitle>{t('upgrade')}</DialogTitle>
-          <DialogDescription>{t('upgradeNote', { tag: currentTag })}</DialogDescription>
+          <DialogDescription>
+            <UpdateStanding tag={currentTag} update={update} /> {t('upgradeNote', { tag: currentTag })}
+          </DialogDescription>
         </DialogHeader>
         <div className='grid gap-2'>
-          <Label htmlFor='upgrade-tag'>
-            {t('imageTag')}
-            <span className='text-muted-foreground font-normal'>{t('optional')}</span>
-          </Label>
-          <Input
-            id='upgrade-tag'
-            placeholder={currentTag}
-            value={tag}
-            onChange={(e) => setTag(e.target.value)}
-            className='font-mono'
-            dir='ltr'
-            autoFocus
-          />
+          <Label>{t('version')}</Label>
+          <TagPicker tags={tags} releases={updates.data?.releases ?? []} current={currentTag} value={tag} onChange={setTag} />
         </div>
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button
-            disabled={isPending}
-            onClick={() => onConfirm(tag.trim() || null)}
+            disabled={isPending || !isValidTag(tag)}
+            onClick={() => onConfirm(tag === currentTag ? null : tag)}
           >
             {isPending && <Spinner />}
             {t('upgrade')}
@@ -172,30 +194,77 @@ export function RollbackDialog({
   )
 }
 
-/** Every running tenant onto a tag, one after another; a canary goes first and the rest wait on it. */
+export type FleetTenant = { slug: string; name: string; behind: boolean }
+
+/**
+ * Running tenants onto a tag, one after another; a canary goes first and
+ * the rest wait on it. The ones the check found behind come ticked; the
+ * rest can be ticked too.
+ */
 export function FleetUpgradeDialog({
   open,
   onOpenChange,
   isPending,
-  runningSlugs,
+  tenants,
   onConfirm,
-}: DialogProps & { runningSlugs: string[]; onConfirm: (imageTag: string, canary: string | null) => void }) {
+}: DialogProps & { tenants: FleetTenant[]; onConfirm: (imageTag: string, canary: string | null, slugs: string[]) => void }) {
   const t = useT()
+  const updates = useQuery({ ...getPlatformUpdatesOptions(), enabled: open })
+  const behind = tenants.filter((x) => x.behind).map((x) => x.slug)
   const [tag, setTag] = useState('')
+  const [chosen, setChosen] = useState<string[]>([])
   const [canary, setCanary] = useState<string>('none')
-  const valid = /^[A-Za-z0-9._-]{1,64}$/.test(tag.trim())
+
+  // Opened: the newest release if there is one, else the platform's default; the tenants behind, else everyone
+  const defaultTag = updates.data?.newestRelease ?? updates.data?.knownTags[0] ?? ''
+  useEffect(() => {
+    if (!open) return
+    setTag(defaultTag)
+    setChosen(behind.length > 0 ? behind : tenants.map((x) => x.slug))
+    setCanary('none')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultTag])
+
+  const toggle = (slug: string, on: boolean) =>
+    setChosen((list) => (on ? [...list, slug] : list.filter((x) => x !== slug)))
+  const valid = isValidTag(tag) && chosen.length > 0 && (canary === 'none' || chosen.includes(canary))
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-sm'>
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('upgradeAll')}</DialogTitle>
-          <DialogDescription>{t('upgradeAllNote', { count: runningSlugs.length })}</DialogDescription>
+          <DialogDescription>{t('upgradeAllNote', { count: chosen.length })}</DialogDescription>
         </DialogHeader>
-        <div className='grid gap-3'>
+        <div className='grid gap-4'>
           <div className='grid gap-2'>
-            <Label htmlFor='fleet-tag'>{t('imageTag')}</Label>
-            <Input id='fleet-tag' value={tag} onChange={(e) => setTag(e.target.value)} className='font-mono' dir='ltr' autoFocus />
+            <Label>{t('version')}</Label>
+            <TagPicker tags={updates.data?.knownTags ?? []} releases={updates.data?.releases ?? []} value={tag} onChange={setTag} />
+          </div>
+          <div className='grid gap-2'>
+            <div className='flex items-center justify-between'>
+              <Label>{t('whichTenants')}</Label>
+              <div className='flex gap-1'>
+                {behind.length > 0 && (
+                  <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-xs' onClick={() => setChosen(behind)}>
+                    {t('onlyBehind')}
+                  </Button>
+                )}
+                <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-xs' onClick={() => setChosen(tenants.map((x) => x.slug))}>
+                  {t('everyone')}
+                </Button>
+              </div>
+            </div>
+            <div className='grid max-h-48 gap-1 overflow-y-auto rounded-md border p-2'>
+              {tenants.map((x) => (
+                <label key={x.slug} className='flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted/50'>
+                  <Checkbox checked={chosen.includes(x.slug)} onCheckedChange={(v) => toggle(x.slug, v === true)} />
+                  <span className='truncate'>{x.name}</span>
+                  <span className='text-muted-foreground font-mono text-xs' dir='ltr'>{x.slug}</span>
+                  {x.behind && <span className='ms-auto text-xs text-sky-700 dark:text-sky-400'>{t('updateAvailable')}</span>}
+                </label>
+              ))}
+            </div>
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='fleet-canary'>{t('canary')}</Label>
@@ -205,9 +274,9 @@ export function FleetUpgradeDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='none'>{t('noCanary')}</SelectItem>
-                {runningSlugs.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
+                {tenants.filter((x) => chosen.includes(x.slug)).map((x) => (
+                  <SelectItem key={x.slug} value={x.slug}>
+                    {x.slug}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -219,7 +288,7 @@ export function FleetUpgradeDialog({
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button disabled={!valid || isPending} onClick={() => onConfirm(tag.trim(), canary === 'none' ? null : canary)}>
+          <Button disabled={!valid || isPending} onClick={() => onConfirm(tag.trim(), canary === 'none' ? null : canary, chosen)}>
             {isPending && <Spinner />}
             {t('upgradeAll')}
           </Button>

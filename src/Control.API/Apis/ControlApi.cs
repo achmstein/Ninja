@@ -27,7 +27,8 @@ public static partial class ControlApi
         api.MapPost("/tenants/{slug}/start", Start).WithName("StartTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/rollback", Rollback).WithName("RollbackTenant").WithSummary("Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead").RequireAuthorization("Platform");
-        api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Every running tenant onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
+        api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Running tenants (all, or the slugs given) onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
+        api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
@@ -77,10 +78,29 @@ public static partial class ControlApi
             options.Value.StackFootprintMb, options.Value.StackLimitMb, options.Value.ReserveMb, capacity.RoomFor(snapshot), tenants));
     }
 
-    public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, IOptions<PlatformOptions> options)
+    public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, UpdateCache updates, IOptions<PlatformOptions> options)
     {
         var tenants = await context.Tenants.AsNoTracking().OrderByDescending(t => t.CreatedAt).ToListAsync();
-        return TypedResults.Ok(tenants.Select(t => TenantSummary.From(t, options.Value)).ToList());
+        return TypedResults.Ok(tenants.Select(t => TenantSummary.From(t, options.Value, updates.For(t.Slug))).ToList());
+    }
+
+    public static async Task<Ok<UpdatesResponse>> GetUpdates(
+        ControlContext context, UpdateCache updates, IOptions<PlatformOptions> options,
+        [Description("Check the stacks and the registry now instead of answering from the last check")] bool refresh = false,
+        CancellationToken ct = default)
+    {
+        var snapshot = await updates.GetAsync(refresh, ct);
+        // Every tag a tenant stands on or stood on, and the default: what the upgrade dialog offers besides the releases
+        var tenants = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed).Select(t => new { t.ImageTag, t.PreviousImageTag }).ToListAsync(ct);
+        var known = new List<string> { options.Value.DefaultImageTag };
+        known.AddRange(snapshot.Releases);
+        known.AddRange(tenants.SelectMany(t => new[] { t.ImageTag, t.PreviousImageTag }).OfType<string>().Order(StringComparer.Ordinal));
+        return TypedResults.Ok(new UpdatesResponse(
+            snapshot.At,
+            snapshot.Releases,
+            snapshot.NewestRelease,
+            known.Distinct(StringComparer.Ordinal).ToList(),
+            snapshot.Tenants.Where(t => t.Value.Behind).Select(t => t.Key).Order(StringComparer.Ordinal).ToList()));
     }
 
     public static async Task<Results<Created<TenantDetail>, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> CreateTenant(
@@ -146,13 +166,13 @@ public static partial class ControlApi
         return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], [], options.Value));
     }
 
-    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, IOptions<PlatformOptions> options, string slug)
+    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, UpdateCache updates, IOptions<PlatformOptions> options, string slug)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug);
         if (tenant is null) return TypedResults.NotFound();
         var lastRun = await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id).OrderByDescending(s => s.Id).Select(s => s.RunId).FirstOrDefaultAsync();
         var steps = lastRun == Guid.Empty ? [] : await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id && s.RunId == lastRun).OrderBy(s => s.Id).ToListAsync();
-        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value));
+        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value, updates.For(slug)));
     }
 
     public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(
@@ -214,12 +234,20 @@ public static partial class ControlApi
         if (!ImageTag().IsMatch(tag))
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "An image tag is letters, digits, dots, dashes and underscores, up to 64." });
         var running = await context.Tenants.AsNoTracking().Where(t => t.Status == TenantStatus.Running).OrderBy(t => t.Slug).ToListAsync(ct);
+        if (request.Slugs is { Length: > 0 } slugs)
+        {
+            var chosen = slugs.Select(s => s.Trim()).ToHashSet(StringComparer.Ordinal);
+            var unknown = chosen.Except(running.Select(t => t.Slug), StringComparer.Ordinal).ToList();
+            if (unknown.Count > 0)
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Not running: {string.Join(", ", unknown)}." });
+            running = running.Where(t => chosen.Contains(t.Slug)).ToList();
+        }
         Tenant? canary = null;
         if (!string.IsNullOrWhiteSpace(request.Canary))
         {
             canary = running.FirstOrDefault(t => t.Slug == request.Canary.Trim());
             if (canary is null)
-                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{request.Canary} is not a running tenant." });
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{request.Canary} is not a running tenant in the selection." });
         }
         await audit.WriteAsync("platform.upgrade", null, new { imageTag = tag, canary = canary?.Slug, count = running.Count }, ct);
         // The canary first; the rest carry its id and step aside if it did not make it
@@ -333,7 +361,14 @@ public record CreateTenantRequest(
 public record UpgradeRequest(string? ImageTag);
 
 /// <param name="Canary">A running tenant's slug to upgrade first; the rest follow only while it stays running on the tag.</param>
-public record FleetUpgradeRequest(string ImageTag, string? Canary = null);
+/// <param name="Slugs">Only these running tenants; empty or null means every running tenant.</param>
+public record FleetUpgradeRequest(string ImageTag, string? Canary = null, string[]? Slugs = null);
+
+/// <param name="CheckedAt">When the stacks and the registry were last read.</param>
+/// <param name="Releases">Release tags (v…) every one of the twelve service images carries, newest first; empty when the platform builds its own images.</param>
+/// <param name="KnownTags">What the upgrade dialog offers: the default tag, the releases, then every tag a tenant stands or stood on.</param>
+/// <param name="Behind">The tenants running something older than their tag points to now, or on a release older than the newest.</param>
+public record UpdatesResponse(DateTimeOffset CheckedAt, IReadOnlyList<string> Releases, string? NewestRelease, IReadOnlyList<string> KnownTags, IReadOnlyList<string> Behind);
 
 public record FleetUpgradeResponse(int Queued, string? Canary);
 
@@ -346,12 +381,13 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
 
 /// <param name="LogoUrl">The café's mark as its running stack serves it, or null while there is no stack to serve one.</param>
 /// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough)
+/// <param name="Update">Where the stack stands against what its tag points to now; null until the first check.</param>
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update)
 {
-    public static TenantSummary From(Tenant t, PlatformOptions p)
+    public static TenantSummary From(Tenant t, PlatformOptions p, TenantUpdate? update = null)
     {
         var hosts = TenantHosts.For(t, p);
-        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough);
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough, update);
     }
 
     /// <summary>The stack's public mark; the light one, which the customer app's icons are cut from.</summary>
@@ -395,9 +431,10 @@ public record TenantDetail(
     DateTimeOffset? WelcomeSentAt,
     TenantSubscriptionDto Subscription,
     string? PreviousImageTag,
-    string? UpgradeBackupId)
+    string? UpgradeBackupId,
+    TenantUpdate? Update)
 {
-    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p)
+    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
@@ -407,7 +444,8 @@ public record TenantDetail(
             t.WelcomeSentAt,
             new(t.Subscription, t.PaidThrough, t.GraceDays ?? p.SubscriptionGraceDays, t.SuspendedAt, t.Addons, PlanCatalog.Entitlements(t).OrderBy(m => m).ToArray()),
             t.PreviousImageTag,
-            t.UpgradeBackupId);
+            t.UpgradeBackupId,
+            update);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>
