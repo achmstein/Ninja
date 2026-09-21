@@ -25,10 +25,14 @@ the control plane writes it, brings it up and takes it down.
 `.github/workflows/deploy-platform.yml` does all of it: builds the five web
 apps against `https://auth.{domain}`, renders the platform realm, writes
 `.env` from the secrets, ships this folder to `/opt/ninja/platform` on the
-platform box, installs docker on a fresh box, brings the `ninja` project up,
-and smokes `auth.`, `control.` and the control plane's `tls/ask` through the
-edge. Inputs: the image tag (control plane and new tenants), whether to
-rebuild the web apps. It needs the `platform` environment with secrets
+platform box, installs docker on a fresh box, dumps `controldb` and
+`keycloak` on the box before anything changes (under
+`tenants/_platform/pre-deploy/`, the last ten kept), brings the `ninja`
+project up, and smokes `auth.`, `control.` and the control plane's `tls/ask`
+through the edge. Inputs: the image tag (a release, `vYYYY.MM.DD`; anything
+else needs `allow_unreleased`, which is for a staging box), the GitHub
+environment (`platform`, or `platform-staging` for a second box with its
+own secrets and domain), whether to rebuild the web apps. It needs the `platform` environment with secrets
 `PLATFORM_SERVER_HOST/USER/SSH_KEY`, `PLATFORM_POSTGRES_PASSWORD`,
 `PLATFORM_EVENTBUS_PASSWORD`, `PLATFORM_KEYCLOAK_PASSWORD`,
 `PLATFORM_ADMIN_PASSWORD`, `GHCR_TOKEN` (+ optional `GEMINI_API_KEY`,
@@ -197,8 +201,8 @@ back** in the menu does the same by hand, while the previous tag is known.
 A rollback restores the images, never the data: migrations are
 forward-only, so a version that predates one is restored from the
 pre-upgrade backup into a new slug instead (the dialog names it). Use
-immutable tags in production; `latest` to `latest` has nothing to go back
-to. **Upgrade all** takes an optional canary: it goes first, and the rest
+release tags: the deploy workflow refuses anything else without
+`allow_unreleased`, and `latest` to `latest` has nothing to go back to. **Upgrade all** takes an optional canary: it goes first, and the rest
 run only while it stays Running on the new tag (`tenant.upgrade.skipped`
 otherwise). Stamps run one at a time, so a fleet of *n* stacks takes *n* × a
 minute or so.
@@ -309,9 +313,31 @@ The assistant key reaches only the stacks whose plan is listed in
 gets it), so one café's compromised service does not hand the platform's
 key to everyone; the rest run with the assistant off.
 
+## Tests
+
+`tests/Control.UnitTests` covers the pure parts (templates, naming, the
+queue over an in-memory record, the sweeps' decisions, the mail, the
+secrets) and runs in the PR's .NET job. `tests/Control.IntegrationTests`
+runs the real adapters against Postgres, RabbitMQ and Keycloak in
+containers (Testcontainers; docker on the box): the role and hand-over SQL,
+`rabbitmqctl`, the admin API with a realm from the template, an owner, a
+control token and an impersonation, and `pg_dump` into `pg_restore` across
+two tenants. It is its own PR job and, locally, `dotnet test
+tests/Control.IntegrationTests`. `src/control_web` has vitest for its pure
+modules (`npm test`), and `e2e/ControlPlane.spec.ts` drives the control app
+against the dry-run AppHost: sign in, stamp a demo, every step Done,
+destroy.
+
 ## Not yet
 
 - The Chillax stack still deploys on its own (`.github/workflows/deploy.yml`);
   moving it here is the last step of Phase 3 in `docs/ninja-plan.md`.
-- The Keycloak admin console is reachable from anywhere.
 - Social sign-in per tenant (a café's own Google and Apple apps).
+- One assistant key for every entitled stack: no per-tenant keys or quotas.
+- WAL archiving (point-in-time recovery): the backups are nightly dumps, so
+  a day is what can be lost.
+- The offsite tarballs are not encrypted by the platform; the bucket's own
+  server-side encryption is the control.
+- The control container runs as root with the host's docker socket, which
+  the design needs (compose, exec, run); no socket proxy in front of it.
+- The control app keeps its tokens in localStorage.

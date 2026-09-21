@@ -81,6 +81,7 @@ public sealed partial class NpgsqlDatabaseAdmin(IOptions<PlatformOptions> option
         var conn = new NpgsqlConnection(new NpgsqlConnectionStringBuilder
         {
             Host = options.Value.PostgresHost,
+            Port = options.Value.PostgresPort,
             Username = Superuser,
             Password = options.Value.PostgresPassword,
             Database = database,
@@ -298,7 +299,9 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<PlatformOptions>
     {
         var result = await shell.RunAsync("docker", ["exec", Container, "rabbitmqctl", .. args], null, ct);
         if (result.Ok) return result.Output;
-        if (tolerate && (result.Output.Contains("not_found", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("no_such", StringComparison.OrdinalIgnoreCase)))
+        // "already gone" as the CLI has phrased it over the years: {:not_found, …}, no_such_user, and RabbitMQ 4's "Virtual host 'x' does not exist"
+        if (tolerate && (result.Output.Contains("not_found", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("no_such", StringComparison.OrdinalIgnoreCase)
+                         || result.Output.Contains("does not exist", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("not found", StringComparison.OrdinalIgnoreCase)))
             return result.Output;
         throw new InvalidOperationException($"rabbitmqctl {args[0]} failed: {result.Output}");
     }
@@ -440,9 +443,28 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
 
     public async Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
     {
-        var client = await AdminClientAsync(ct);
+        // Keycloak (KC_PROXY_HEADERS=xforwarded) mints the cookies for the host and scheme the browser will use, not for the
+        // internal name. It also checks the admin token's issuer against that same host, so the token for this one call is
+        // minted through the same forwarded headers (the cached one was issued for the internal name and would be refused).
+        var client = httpClientFactory.CreateClient("keycloak");
+        using var grant = new HttpRequestMessage(HttpMethod.Post, $"{Base}/realms/master/protocol/openid-connect/token")
+        {
+            Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["client_id"] = "admin-cli",
+                ["username"] = options.Value.KeycloakAdminUser,
+                ["password"] = options.Value.KeycloakAdminPassword,
+            }),
+        };
+        grant.Headers.Add("X-Forwarded-Proto", "https");
+        grant.Headers.Add("X-Forwarded-Host", publicAuthHost);
+        using var granted = await client.SendAsync(grant, ct);
+        granted.EnsureSuccessStatusCode();
+        var token = (await granted.Content.ReadFromJsonAsync<JsonObject>(ct))!["access_token"]!.GetValue<string>();
+
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{Base}/admin/realms/{realm}/users/{userId}/impersonation");
-        // Keycloak (KC_PROXY_HEADERS=xforwarded) mints the cookies for the host and scheme the browser will use, not for the internal name
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("X-Forwarded-Proto", "https");
         request.Headers.Add("X-Forwarded-Host", publicAuthHost);
         using var response = await client.SendAsync(request, ct);

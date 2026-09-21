@@ -41,6 +41,8 @@ public sealed class PlatformOptions
     /// <summary>The shared Postgres as the tenant stacks reach it: host name on the network, and the superuser that creates databases.</summary>
     public string PostgresHost { get; set; } = "postgres";
 
+    public int PostgresPort { get; set; } = 5432;
+
     public string PostgresUser { get; set; } = "postgres";
 
     public string PostgresPassword { get; set; } = "postgres";

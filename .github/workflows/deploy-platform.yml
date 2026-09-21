@@ -22,9 +22,18 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Image tag for the control plane and for new tenants"
-        default: latest
+        description: "Image tag for the control plane and for new tenants: a release (vYYYY.MM.DD)"
+        required: true
         type: string
+      allow_unreleased:
+        description: "Deploy a tag that is not a release (a sha, latest); only for a staging box"
+        default: false
+        type: boolean
+      environment:
+        description: "The GitHub environment holding the box's secrets"
+        default: platform
+        type: choice
+        options: [platform, platform-staging]
       web:
         description: "Rebuild and ship the five web apps"
         default: true
@@ -37,7 +46,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: platform
+    environment: ${{ inputs.environment }}
     permissions:
       contents: read
       packages: read
@@ -51,6 +60,18 @@ jobs:
             exit 1
           fi
           echo "Platform domain: $PLATFORM_DOMAIN"
+
+      # A release is what docker-build.yml stamps on all twelve services and the control image at once;
+      # anything else is work in progress and has nothing to roll a fleet back to
+      - name: Check the image tag is a release
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          ALLOW_UNRELEASED: ${{ inputs.allow_unreleased }}
+        run: |
+          if [[ "$IMAGE_TAG" =~ ^v[0-9] ]]; then echo "Release $IMAGE_TAG"; exit 0; fi
+          if [ "$ALLOW_UNRELEASED" = "true" ]; then echo "::warning::$IMAGE_TAG is not a release; deploying it because allow_unreleased is set"; exit 0; fi
+          echo "::error::$IMAGE_TAG is not a release tag (vYYYY.MM.DD). Push a tag, or set allow_unreleased for a staging box."
+          exit 1
 
       - name: Setup Node
         if: ${{ inputs.web }}
@@ -242,6 +263,21 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             docker compose pull
+
+            # Before anything changes: the platform's own databases, dumped on the box, so a migration that goes wrong has
+            # something to go back to (the control plane's nightly one may be a day old). Kept beside the nightly ones.
+            if docker compose ps --status running postgres 2>/dev/null | grep -q postgres; then
+              PG_PASSWORD=$(grep -oP '^POSTGRES_PASSWORD=\K.*' .env)
+              stamp=$(date -u +%Y%m%d-%H%M%S)
+              mkdir -p /opt/ninja/tenants/_platform/pre-deploy
+              for db in controldb keycloak; do
+                docker compose exec -T -e PGPASSWORD="$PG_PASSWORD" postgres pg_dump -U postgres -Fc "$db" > "/opt/ninja/tenants/_platform/pre-deploy/$stamp-$db.dump"
+                [ -s "/opt/ninja/tenants/_platform/pre-deploy/$stamp-$db.dump" ] || { echo "::error::the pre-deploy dump of $db is empty"; exit 1; }
+              done
+              ls -t /opt/ninja/tenants/_platform/pre-deploy/*.dump | tail -n +11 | xargs -r rm --
+              echo "Pre-deploy dumps: $stamp"
+            fi
+
             # The shared services first: the control role must exist before the control plane connects as it
             docker compose up -d postgres
             for i in $(seq 1 30); do

@@ -27,12 +27,28 @@ jobs:
       - name: Test
         run: dotnet test --solution Ninja.Web.slnf --no-build --no-progress --output detailed
 
+  # The control plane's adapters against real Postgres, RabbitMQ and Keycloak
+  # in containers (Testcontainers), as they run in production: the hand-over
+  # SQL, rabbitmqctl, the admin API, pg_dump and pg_restore. Its own job so the
+  # unit tests above stay fast; docker is on the runner already.
+  control-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET (global.json)
+        uses: actions/setup-dotnet@v3
+      - name: Build
+        run: dotnet build tests/Control.IntegrationTests/Control.IntegrationTests.csproj
+      - name: Test
+        run: dotnet test tests/Control.IntegrationTests/Control.IntegrationTests.csproj --no-build --no-progress --output detailed
+
   web:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        app: [admin_web, pos_web, kds_web, client_web]
+        app: [admin_web, pos_web, kds_web, client_web, control_web]
     defaults:
       run:
         working-directory: src/${{ matrix.app }}

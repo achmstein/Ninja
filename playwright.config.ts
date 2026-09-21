@@ -46,6 +46,11 @@ export default defineConfig({
     {
       name: 'e2e tests without logged in',
       testMatch: ['**/BrowseItemTest.spec.ts'],
+    },
+    {
+      // The control app against the dry-run AppHost; it signs in on its own
+      name: 'control plane',
+      testMatch: ['**/ControlPlane.spec.ts'],
     }
     // {
     //   name: 'chromium',
