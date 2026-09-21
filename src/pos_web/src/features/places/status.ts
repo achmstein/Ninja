@@ -38,6 +38,7 @@ export const RESERVATION_CONFIRMED = 2
 export const RESERVATION_SEATED = 3
 export const RESERVATION_CANCELLED = 4
 export const RESERVATION_EXPIRED = 5
+export const RESERVATION_COMPLETED = 6
 
 /** The one place colour means something on the floor: the place's state. */
 export const placeStatusDot: Record<number, string> = {

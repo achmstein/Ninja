@@ -8,8 +8,9 @@ namespace Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 /// A promise that a party will occupy a place: who, where, for when, and
 /// whether they turned up. It knows nothing about money — a reservation on
 /// a timed place hands over to a <see cref="StayAggregate.Stay"/> the moment
-/// the party is seated; one on a plain table simply closes, and the ticket
-/// on the table does the rest. <see cref="For"/> null means "now": the
+/// the party is seated, and closes when that stay ends; one on a plain table
+/// is the party at the table until the staff clear it, and the ticket on
+/// the table does the rest. <see cref="For"/> null means "now": the
 /// customer is on their way and has <see cref="HoldMinutes"/> to arrive.
 /// </summary>
 public class Reservation : Entity, IAggregateRoot
@@ -57,7 +58,7 @@ public class Reservation : Entity, IAggregateRoot
 
     public DateTime? SeatedAt { get; private set; }
 
-    /// <summary>When it was cancelled or lapsed.</summary>
+    /// <summary>When it was cancelled, lapsed, or the party left.</summary>
     public DateTime? ClosedAt { get; private set; }
 
     protected Reservation() { }
@@ -116,6 +117,9 @@ public class Reservation : Entity, IAggregateRoot
 
     public bool IsOpen => Status is ReservationStatus.Requested or ReservationStatus.Confirmed;
 
+    /// <summary>The party is here now. At a plain table this is what keeps the table; at a timed place the stay does.</summary>
+    public bool IsSeated => Status == ReservationStatus.Seated;
+
     /// <summary>When the party is expected: <see cref="For"/>, or when it was made for a reservation for now.</summary>
     public DateTime EffectiveFor => For ?? CreatedAt;
 
@@ -151,6 +155,16 @@ public class Reservation : Entity, IAggregateRoot
         SeatedAt = DateTime.UtcNow;
         StayId = stayId;
         AddDomainEvent(new ReservationSeatedDomainEvent(this));
+    }
+
+    /// <summary>The party left: the staff cleared the table, or the stay that took over ended.</summary>
+    public void Complete()
+    {
+        if (!IsSeated)
+            throw new SpacesDomainException($"Cannot complete from status {Status}");
+        Status = ReservationStatus.Completed;
+        ClosedAt = DateTime.UtcNow;
+        AddDomainEvent(new ReservationCompletedDomainEvent(this));
     }
 
     /// <summary>Give a reservation the till made for an unnamed party its customer.</summary>

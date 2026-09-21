@@ -44,18 +44,55 @@ public class ReservationRequestedDomainEventHandler(ISpacesIntegrationEventServi
 
 /// <summary>
 /// The party sat down. At a timed place the stay that took over announces
-/// its own start, which is what the screens and Sales act on; at a plain
-/// table nobody else needs telling — the till that seated them refetches,
-/// and the ticket on the table is Sales' own doing.
+/// its own start, which is what the screens and Sales act on. At a plain
+/// table the reservation is the party at the table, so it says so itself:
+/// the floor shows the table taken, and the customer's phone shows them
+/// where they sit. The ticket on the table is Sales' own doing.
 /// </summary>
-public class ReservationSeatedDomainEventHandler(ILogger<ReservationSeatedDomainEventHandler> logger)
+public class ReservationSeatedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<ReservationSeatedDomainEventHandler> logger)
     : INotificationHandler<ReservationSeatedDomainEvent>
 {
-    public Task Handle(ReservationSeatedDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(ReservationSeatedDomainEvent notification, CancellationToken cancellationToken)
     {
         var r = notification.Reservation;
         logger.LogInformation("Reservation seated: {ReservationId} at place {PlaceId}, stay {StayId}", r.Id, r.PlaceId, r.StayId);
-        return Task.CompletedTask;
+        if (r.StayId is not null) return;
+
+        await outbox.AddAndSaveEventAsync(new ReservationSeatedIntegrationEvent(
+            r.Id,
+            r.PlaceId,
+            r.PlaceKind(),
+            r.PlaceName(),
+            r.CustomerId,
+            r.CustomerName,
+            r.BranchId));
+    }
+}
+
+/// <summary>
+/// The party left. A plain table is free again and whoever asked to be told
+/// is told; the customer's phone drops the table. A timed place's stay
+/// already said all this when it ended, so its reservation closes quietly.
+/// </summary>
+public class ReservationCompletedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<ReservationCompletedDomainEventHandler> logger)
+    : INotificationHandler<ReservationCompletedDomainEvent>
+{
+    public async Task Handle(ReservationCompletedDomainEvent notification, CancellationToken cancellationToken)
+    {
+        var r = notification.Reservation;
+        logger.LogInformation("Reservation completed: {ReservationId} at place {PlaceId}, stay {StayId}", r.Id, r.PlaceId, r.StayId);
+        if (r.StayId is not null) return;
+
+        await outbox.AddAndSaveEventAsync(new ReservationCompletedIntegrationEvent(
+            r.Id,
+            r.PlaceId,
+            r.PlaceKind(),
+            r.PlaceName(),
+            r.CustomerId,
+            r.CustomerName,
+            r.BranchId));
+        await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
+            r.PlaceId, r.PlaceKind(), r.PlaceName(), r.BranchId));
     }
 }
 

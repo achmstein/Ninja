@@ -349,6 +349,13 @@
   "holdConfirmed": "Reservation confirmed",
   "seatParty": "Seat them",
   "partySeated": "Seated",
+  "partyOf": "Party of {count}",
+  "@partyOf": { "placeholders": { "count": { "type": "int" } } },
+  "seatedSince": "Since {time}",
+  "@seatedSince": { "placeholders": { "time": { "type": "String" } } },
+  "partyLeft": "Party left",
+  "tableCleared": "Table cleared",
+  "failedToClearTable": "Failed to clear the table",
   "startsOnConfirm": "Timer starts on confirm",
   "requestChangeOption": "Switch to {option}",
   "@requestChangeOption": {

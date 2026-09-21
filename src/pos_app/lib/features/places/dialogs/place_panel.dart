@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
+import '../../../core/models/dates.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/theme/app_theme.dart';
@@ -23,11 +24,12 @@ import 'start_stay_dialog.dart';
 /// admin room panel's "now" section, sized for a thumb. Hours here; the
 /// money is the ticket's, one tap away while a session runs. The panel
 /// reads the room and its session live, so what another till does shows
-/// while it is open. Resolves to true when a session was started from it:
-/// the panel closes on that, and the floor takes the till to the bill,
-/// where the running session's card lives.
-Future<bool> showPlacePanel(BuildContext context, int placeId) async {
-  final started = await showFDialog<bool>(
+/// while it is open. Says what the floor does next: after a session was
+/// started from it, the floor takes the till to the bill where the running
+/// session's card lives; a seated party's "open ticket" opens the table's
+/// bill.
+Future<PlacePanelOutcome> showPlacePanel(BuildContext context, int placeId) async {
+  final outcome = await showFDialog<PlacePanelOutcome>(
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
@@ -37,8 +39,10 @@ Future<bool> showPlacePanel(BuildContext context, int placeId) async {
       builder: (context, _) => _PlacePanel(placeId: placeId),
     ),
   );
-  return started ?? false;
+  return outcome ?? PlacePanelOutcome.closed;
 }
+
+enum PlacePanelOutcome { closed, started, bill }
 
 class _PlacePanel extends ConsumerStatefulWidget {
   final int placeId;
@@ -62,20 +66,26 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
 
   Future<void> _start(Place room, {Reservation? reservation}) async {
     final outcome = await showStartStayDialog(context, room, reservation: reservation);
-    if (outcome == StartOutcome.started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+    if (outcome == StartOutcome.started && mounted) Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.started);
   }
 
   /// The customer asked for the clock to start the moment the counter
   /// confirms they arrived: one tap does both
   Future<void> _confirmHold(Reservation reservation) async {
     final ok = await _guarded((a) => a.confirm(reservation.id, startsClock: reservation.startOnConfirm));
-    if (ok && reservation.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+    if (ok && reservation.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.started);
   }
 
   /// A plain table: the party sat down, and the floor opens their bill
   Future<void> _seatAtTable(Reservation reservation) async {
     final ok = await _guarded((a) => a.seat(reservation.id, null, timed: false));
-    if (ok && mounted) Navigator.of(context, rootNavigator: true).pop(false);
+    // Seated: their bill opens, as it does when the till taps a table
+    if (ok && mounted) Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.bill);
+  }
+
+  Future<void> _partyLeft(SeatedParty seated) async {
+    final ok = await _guarded((a) => a.completeReservation(seated.reservationId));
+    if (ok && mounted) Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.closed);
   }
 
   Future<bool> _guarded(Future<bool> Function(StayActions actions) call) async {
@@ -157,7 +167,9 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
 
     final now = DateTime.now();
     final active = session != null && session.isRunning;
-    final reserved = !active && reservation != null;
+    // A party seated on their reservation at a plain table: theirs until the till clears it
+    final seated = active ? null : room.seatedReservation;
+    final reserved = !active && seated == null && reservation != null;
     final maintenance = room.status == PlaceStatus.outOfService;
     final amber = AppColors.amber(theme.colors.brightness);
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
@@ -326,6 +338,48 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               prefix: Icon(FIcons.x, size: 16, color: theme.colors.mutedForeground),
               child: Text(l10n.cancelSessionButton, style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground)),
             ),
+          ),
+        ],
+      );
+    } else if (seated != null) {
+      final who = (seated.customerName ?? '').isNotEmpty ? seated.customerName! : l10n.table;
+      final party = seated.partySize != null ? ' · ${l10n.partyOf(seated.partySize!)}' : '';
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(child: circle(FIcons.users, AppColors.sky500, AppColors.sky500.withValues(alpha: 0.1))),
+          const SizedBox(height: 12),
+          Text(l10n.partySeated, textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+              const SizedBox(width: 4),
+              Text('$who$party', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+            ],
+          ),
+          if (seated.seatedAt != null) ...[
+            const SizedBox(height: 4),
+            Text(l10n.seatedSince(formatTime(context, seated.seatedAt!)),
+                textAlign: TextAlign.center, style: muted.copyWith(fontFeatures: tabular)),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: bigButton(l10n.openTicketAction,
+                    variant: FButtonVariant.outline,
+                    icon: const Icon(FIcons.receipt, size: 20),
+                    onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.bill)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: bigButton(l10n.partyLeft,
+                    icon: Transform.flip(flipX: rtl, child: const Icon(FIcons.logOut, size: 20)),
+                    onPress: _busy ? null : () => _partyLeft(seated)),
+              ),
+            ],
           ),
         ],
       );

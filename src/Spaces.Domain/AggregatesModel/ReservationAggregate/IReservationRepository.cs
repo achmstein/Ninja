@@ -21,4 +21,7 @@ public interface IReservationRepository : IRepository<Reservation>
 
     /// <summary>Open reservations whose time to arrive has run out.</summary>
     Task<List<Reservation>> GetLapsedAsync(DateTime now);
+
+    /// <summary>The party seated at a plain table right now: seated, with no stay to keep the place for it.</summary>
+    Task<Reservation?> GetSeatedAtAsync(int placeId);
 }

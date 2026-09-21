@@ -41,7 +41,7 @@ class StayActions {
       );
 
   /// The party arrived and sat down: at a timed place the clock starts, at
-  /// a plain table the reservation simply closes
+  /// a plain table the table is theirs until the till clears it
   Future<bool> seat(int reservationId, String? optionCode, {required bool timed}) => _run(
         () => _places.seatReservation(reservationId, optionCode: optionCode),
         success: timed ? _l10n.sessionStarted : _l10n.partySeated,
@@ -72,6 +72,13 @@ class StayActions {
         () => _places.cancelReservation(reservationId),
         success: _l10n.reservationCancelled,
         failure: _l10n.failedToCancelSession,
+      );
+
+  /// The party left a plain table: it is free again
+  Future<bool> completeReservation(int reservationId) => _run(
+        () => _places.completeReservation(reservationId),
+        success: _l10n.tableCleared,
+        failure: _l10n.failedToClearTable,
       );
 
   Future<bool> assignReservationCustomer(int reservationId, String customerId, String customerName) => _run(

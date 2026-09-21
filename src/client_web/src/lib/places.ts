@@ -31,6 +31,7 @@ export const RESERVATION_CONFIRMED = 2
 export const RESERVATION_SEATED = 3
 export const RESERVATION_CANCELLED = 4
 export const RESERVATION_EXPIRED = 5
+export const RESERVATION_COMPLETED = 6
 
 /** The kind as the services spell it in events and requests. */
 export function placeKindName(

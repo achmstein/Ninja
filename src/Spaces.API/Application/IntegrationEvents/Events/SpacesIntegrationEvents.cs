@@ -125,6 +125,33 @@ public record ReservationCancelledIntegrationEvent(
     bool WasRunning = false) : IntegrationEvent;
 
 /// <summary>
+/// A party sat down at a plain table on their reservation: the table is
+/// theirs until the staff complete it. At a timed place the stay that took
+/// over announces its own start instead, so this is never sent there.
+/// </summary>
+public record ReservationSeatedIntegrationEvent(
+    int ReservationId,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
+    string? CustomerId,
+    string? CustomerName,
+    int BranchId = 1) : IntegrationEvent;
+
+/// <summary>
+/// The party left a plain table: the reservation is over and the table is
+/// free. A stay's end says the same for a timed place.
+/// </summary>
+public record ReservationCompletedIntegrationEvent(
+    int ReservationId,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
+    string? CustomerId,
+    string? CustomerName,
+    int BranchId = 1) : IntegrationEvent;
+
+/// <summary>
 /// The bill a stay's time was on was paid. Carries the party, so
 /// Notification can nudge each one's screens to refetch their stays. No
 /// money travels; the stay itself says what changed.

@@ -17,6 +17,9 @@ abstract class PlaceRepository {
   /// The till acknowledges a reservation; one that asked for it also seats and starts the clock
   Future<void> confirmReservation(int reservationId);
   Future<void> cancelReservation(int reservationId);
+
+  /// The party left a plain table: it is free again
+  Future<void> completeReservation(int reservationId);
   Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName);
   Future<void> endStay(int stayId);
   Future<void> cancelStay(int stayId);
@@ -74,6 +77,11 @@ class ApiPlaceRepository implements PlaceRepository {
   @override
   Future<void> cancelReservation(int reservationId) async {
     await _reservations.post('$reservationId/cancel');
+  }
+
+  @override
+  Future<void> completeReservation(int reservationId) async {
+    await _reservations.post('$reservationId/complete');
   }
 
   @override

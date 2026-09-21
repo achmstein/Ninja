@@ -10,8 +10,9 @@ namespace Ninja.Spaces.UnitTests.Application;
 
 /// <summary>
 /// What the till does with a reservation: confirm it, seat the party (a
-/// stay at a timed place, nothing more at a plain table), or give it up —
-/// and what a walk-in may not do to a reserved place.
+/// stay at a timed place; the table itself at a plain one, until the staff
+/// complete it), or give it up — and what a walk-in may not do to a
+/// reserved place.
 /// </summary>
 [TestClass]
 public sealed class ReservationCommandTests
@@ -59,7 +60,7 @@ public sealed class ReservationCommandTests
     }
 
     [TestMethod]
-    public async Task Seating_at_a_plain_table_closes_the_reservation_and_starts_nothing()
+    public async Task Seating_at_a_plain_table_keeps_the_table_for_the_party_and_starts_no_clock()
     {
         var db = new InMemorySpaces();
         var table = Place.Table("Table 4", 1);
@@ -74,8 +75,50 @@ public sealed class ReservationCommandTests
         Assert.AreEqual(ReservationStatus.Seated, reservation.Status);
         Assert.IsNull(reservation.StayId);
         Assert.IsEmpty(db.Stays);
-        Assert.AreEqual(PlaceStatus.Available, table.PhysicalStatus, "the ticket on the table says who is there, not Spaces");
+        Assert.AreEqual(PlaceStatus.Occupied, table.PhysicalStatus, "the table is theirs: nobody else books it while they sit");
         Assert.IsFalse(await db.ReservationRepository.HasOpenAsync(table.Id));
+        Assert.AreSame(reservation, await db.ReservationRepository.GetSeatedAtAsync(table.Id));
+
+        // Another party cannot be seated on top of them
+        var next = Reserve(db, table, customerId: "c2", @for: DateTime.UtcNow.AddHours(5));
+        await Assert.ThrowsExactlyAsync<SpacesDomainException>(() => Handler(db).Handle(new SeatReservationCommand(next.Id), default));
+    }
+
+    [TestMethod]
+    public async Task The_party_leaving_a_plain_table_frees_it()
+    {
+        var db = new InMemorySpaces();
+        var table = Place.Table("Table 4", 1);
+        table.SetReservable(true);
+        db.AddPlace(table);
+        var reservation = Reserve(db, table);
+        await Handler(db).Handle(new SeatReservationCommand(reservation.Id), default);
+
+        Assert.IsTrue(await Handler(db).Handle(new CompleteReservationCommand(reservation.Id), default));
+
+        Assert.AreEqual(ReservationStatus.Completed, reservation.Status);
+        Assert.AreEqual(PlaceStatus.Available, table.PhysicalStatus);
+        Assert.IsNull(await db.ReservationRepository.GetSeatedAtAsync(table.Id));
+        await Assert.ThrowsExactlyAsync<SpacesDomainException>(() => Handler(db).Handle(new CompleteReservationCommand(reservation.Id), default));
+    }
+
+    [TestMethod]
+    public async Task A_party_at_a_timed_place_leaves_through_its_stay_which_closes_the_reservation()
+    {
+        var db = new InMemorySpaces();
+        var room = db.AddPlace(Place.Room("Room 1", 60m, 90m, 1));
+        var reservation = Reserve(db, room);
+        var seated = await Handler(db).Handle(new SeatReservationCommand(reservation.Id), default);
+
+        // Not from the reservation's side: the clock is what is running
+        await Assert.ThrowsExactlyAsync<SpacesDomainException>(() => Handler(db).Handle(new CompleteReservationCommand(reservation.Id), default));
+        Assert.AreEqual(ReservationStatus.Seated, reservation.Status);
+
+        var stays = new EndStayCommandHandler(db.StayRepository, db.PlaceRepository, db.ReservationRepository, NullLogger<EndStayCommandHandler>.Instance);
+        await stays.Handle(new EndStayCommand(seated.StayId!.Value), default);
+
+        Assert.AreEqual(ReservationStatus.Completed, reservation.Status, "the stay's end is the party leaving");
+        Assert.AreEqual(PlaceStatus.Available, room.PhysicalStatus);
     }
 
     [TestMethod]

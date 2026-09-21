@@ -40,6 +40,8 @@ public static class KnownEvents
         new("ProductPriceChanged", "Catalog", []),                      // dead publisher
         new("PurchaseReceived", "Inventory", ["Finance"]),
         new("ReservationCancelled", "Spaces", ["Sales", "Notification"]),
+        new("ReservationCompleted", "Spaces", ["Notification"]),
+        new("ReservationSeated", "Spaces", ["Notification"]),
         new("ServiceRequestCreated", "Notification", ["Notification"]),
         new("SessionCompleted", "Spaces", ["Sales"]),
         new("SessionCustomerAssigned", "Spaces", ["Notification"]),

@@ -4,12 +4,14 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   CheckCircle2,
   Clock,
+  LogOut,
   Play,
   Receipt,
   Square,
   TimerReset,
   User,
   UserPlus,
+  Users,
   Wrench,
   X,
 } from 'lucide-react'
@@ -36,7 +38,7 @@ import {
 } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { RateOptionToggle } from './rate-option-toggle'
@@ -74,7 +76,7 @@ type PlacePanelProps = {
    * till to the bill, where the running stay's card lives.
    */
   onStarted?: (placeId: number) => void
-  /** A reservation at a plain table was seated: the floor opens its bill. */
+  /** A reservation at a plain table was seated, or its party's bill is asked for: the floor opens it. */
   onSeated?: (place: PlaceViewModel) => void
 }
 
@@ -94,6 +96,7 @@ export function PlacePanel({
 }: PlacePanelProps) {
   const t = useT()
   const localized = useLocalized()
+  const locale = useLocale()
   const money = useMoney()
   const navigate = useNavigate()
   const actions = useStayActions()
@@ -110,6 +113,8 @@ export function PlacePanel({
 
   const running = isRunning(stay)
   const held = !running && reservation != null && isHolding(reservation)
+  // A party seated on their reservation at a plain table: theirs until the till clears it
+  const seated = !running ? (place?.seatedReservation ?? null) : null
   const timed = isTimed(place)
   const outOfService = Number(place?.status) === PLACE_OUT_OF_SERVICE
   const stayId = toNumber(stay?.id)
@@ -137,6 +142,11 @@ export function PlacePanel({
     localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) ||
     code ||
     ''
+  const timeOf = (iso: string) =>
+    new Date(iso).toLocaleTimeString(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+    })
 
   const close = () => onOpenChange(false)
 
@@ -253,6 +263,54 @@ export function PlacePanel({
                 >
                   <X className='size-4' />
                   {t('cancelSessionButton')}
+                </Button>
+              </div>
+            </div>
+          ) : seated ? (
+            <div className='flex flex-col items-center gap-3 py-2'>
+              <div className='flex size-16 items-center justify-center rounded-full bg-sky-500/10'>
+                <Users className='size-7 text-sky-500' />
+              </div>
+              <p className='text-lg font-medium'>{t('partySeated')}</p>
+              <p className='text-muted-foreground flex items-center gap-1'>
+                <User className='size-4' />
+                {seated.customerName || t('table')}
+                {seated.partySize
+                  ? ` · ${t('partyOf', { count: seated.partySize })}`
+                  : ''}
+              </p>
+              {seated.seatedAt && (
+                <p className='text-muted-foreground text-sm tabular-nums'>
+                  {t('seatedSince', { time: timeOf(seated.seatedAt) })}
+                </p>
+              )}
+              <div className='mt-2 grid w-full grid-cols-2 gap-2'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-12'
+                  disabled={actions.isBusy}
+                  onClick={() => {
+                    if (!place) return
+                    close()
+                    onSeated?.(place)
+                  }}
+                >
+                  <Receipt className='size-5' />
+                  {t('openTicketAction')}
+                </Button>
+                <Button
+                  size='lg'
+                  className='h-12'
+                  disabled={actions.isBusy}
+                  onClick={() =>
+                    actions.completeReservation(toNumber(seated.reservationId), {
+                      onSuccess: close,
+                    })
+                  }
+                >
+                  <LogOut className='size-5 rtl:rotate-180' />
+                  {t('partyLeft')}
                 </Button>
               </div>
             </div>

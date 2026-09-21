@@ -7,6 +7,7 @@ import {
 import {
   RESERVATION_CONFIRMED,
   RESERVATION_REQUESTED,
+  RESERVATION_SEATED,
   STAY_RUNNING,
 } from '@/lib/places'
 
@@ -34,6 +35,16 @@ export function useMyReservations() {
 export function useActiveStay() {
   const { data: stays = [] } = useMyStays()
   return stays.find((s) => Number(s.status) === STAY_RUNNING)
+}
+
+/** The customer's party at a plain table right now: seated on their
+ *  reservation, with no clock (a timed place hands over to a stay), and
+ *  not yet cleared by the staff */
+export function useSeatedReservation() {
+  const { data: reservations = [] } = useMyReservations()
+  return reservations.find(
+    (r) => Number(r.status) === RESERVATION_SEATED && r.stayId == null,
+  )
 }
 
 /** The customer's pending reservation, if any: requested or confirmed, not yet seated */

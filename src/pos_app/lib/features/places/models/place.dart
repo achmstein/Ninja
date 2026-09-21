@@ -68,7 +68,8 @@ enum ReservationStatus {
   confirmed(2, 'Confirmed'),
   seated(3, 'Seated'),
   cancelled(4, 'Cancelled'),
-  expired(5, 'Expired');
+  expired(5, 'Expired'),
+  completed(6, 'Completed');
 
   final int value;
   final String label;
@@ -163,6 +164,27 @@ class Reservation {
   }
 }
 
+/// The party seated at a plain table on their reservation: theirs until
+/// the till clears it (a timed place has a stay instead).
+class SeatedParty {
+  final int reservationId;
+  final String? customerName;
+  final int? partySize;
+  final DateTime? seatedAt;
+
+  const SeatedParty({required this.reservationId, this.customerName, this.partySize, this.seatedAt});
+
+  static SeatedParty? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    return SeatedParty(
+      reservationId: json['reservationId'] as int,
+      customerName: json['customerName'] as String?,
+      partySize: (json['partySize'] as num?)?.toInt(),
+      seatedAt: json['seatedAt'] != null ? DateTime.parse(json['seatedAt'] as String) : null,
+    );
+  }
+}
+
 /// One way time at a place is charged: a room has "single" and "multi", a
 /// timed table usually one.
 class RateOption {
@@ -203,6 +225,9 @@ class Place {
   final int roundingMinutes;
   final bool canReserve;
 
+  /// The party seated here on their reservation, at a plain table
+  final SeatedParty? seatedReservation;
+
   Place({
     required this.id,
     this.kind = PlaceKind.room,
@@ -213,6 +238,7 @@ class Place {
     this.options = const [],
     this.roundingMinutes = 15,
     this.canReserve = true,
+    this.seatedReservation,
   });
 
   /// A place with a clock
@@ -238,6 +264,7 @@ class Place {
       options: _parseOptions(json['tariff']),
       roundingMinutes: _parseRounding(json['tariff']),
       canReserve: json['canReserve'] as bool? ?? true,
+      seatedReservation: SeatedParty.parse(json['seatedReservation']),
     );
   }
 }

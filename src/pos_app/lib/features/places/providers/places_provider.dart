@@ -145,6 +145,18 @@ class PlacesNotifier extends Notifier<PlacesState> {
     }
   }
 
+  /// The party left a plain table: it is free again
+  Future<bool> completeReservation(int reservationId) async {
+    try {
+      await _repository.completeReservation(reservationId);
+      await loadPlaces();
+      return true;
+    } catch (e) {
+      debugPrint('Failed to complete the reservation: $e');
+      return false;
+    }
+  }
+
   Future<bool> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
     try {
       await _repository.assignReservationCustomer(reservationId, customerId, customerName);

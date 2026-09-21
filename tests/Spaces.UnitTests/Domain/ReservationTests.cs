@@ -106,7 +106,7 @@ public sealed class ReservationTests
     }
 
     [TestMethod]
-    public void Seating_closes_it_and_remembers_the_stay_that_took_over()
+    public void Seating_is_the_party_being_here_and_remembers_the_stay_that_took_over()
     {
         var timed = new Reservation(Room(), "c1", "Ahmed");
         timed.Seat(stayId: 42);
@@ -114,6 +114,7 @@ public sealed class ReservationTests
         Assert.AreEqual(42, timed.StayId);
         Assert.IsNotNull(timed.SeatedAt);
         Assert.IsFalse(timed.IsOpen);
+        Assert.IsTrue(timed.IsSeated);
         Assert.IsFalse(timed.IsHolding(DateTime.UtcNow));
         Assert.IsTrue(timed.DomainEvents!.OfType<ReservationSeatedDomainEvent>().Any());
 
@@ -126,6 +127,27 @@ public sealed class ReservationTests
         Assert.ThrowsExactly<SpacesDomainException>(() => table.Seat());
         Assert.ThrowsExactly<SpacesDomainException>(table.Confirm);
         Assert.ThrowsExactly<SpacesDomainException>(table.Cancel);
+    }
+
+    [TestMethod]
+    public void Completing_is_the_party_leaving_and_only_a_seated_party_leaves()
+    {
+        var table = new Reservation(BookableTable(), "c1", "Ahmed");
+        Assert.ThrowsExactly<SpacesDomainException>(table.Complete);
+        table.Seat();
+        table.ClearDomainEvents();
+
+        table.Complete();
+        Assert.AreEqual(ReservationStatus.Completed, table.Status);
+        Assert.IsFalse(table.IsSeated);
+        Assert.IsNotNull(table.ClosedAt);
+        Assert.IsNotNull(table.SeatedAt, "when they came stays on the record");
+        Assert.IsTrue(table.DomainEvents!.OfType<ReservationCompletedDomainEvent>().Any());
+        Assert.ThrowsExactly<SpacesDomainException>(table.Complete);
+
+        var cancelled = new Reservation(Room(), "c1", "Ahmed");
+        cancelled.Cancel();
+        Assert.ThrowsExactly<SpacesDomainException>(cancelled.Complete);
     }
 
     [TestMethod]

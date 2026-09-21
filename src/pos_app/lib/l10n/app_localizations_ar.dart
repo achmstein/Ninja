@@ -601,6 +601,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partySeated => 'اتقعدوا';
 
   @override
+  String partyOf(int count) {
+    return '$count أفراد';
+  }
+
+  @override
+  String seatedSince(String time) {
+    return 'من الساعة $time';
+  }
+
+  @override
+  String get partyLeft => 'الناس مشيوا';
+
+  @override
+  String get tableCleared => 'الترابيزة اتفضّت';
+
+  @override
+  String get failedToClearTable => 'معرفناش نفضّي الترابيزة';
+
+  @override
   String get startsOnConfirm => 'الوقت يبدأ لما تأكد';
 
   @override

@@ -168,6 +168,11 @@ const dictionary = {
   holdConfirmed: { en: 'Reservation confirmed', ar: 'الحجز اتأكد' },
   seatParty: { en: 'Seat them', ar: 'قعّدهم' },
   partySeated: { en: 'Seated', ar: 'اتقعدوا' },
+  // A party seated on their reservation at a plain table: the table is theirs until the till clears it
+  seatedSince: { en: 'Since {time}', ar: 'من الساعة {time}' },
+  partyLeft: { en: 'Party left', ar: 'الناس مشيوا' },
+  tableCleared: { en: 'Table cleared', ar: 'الترابيزة اتفضّت' },
+  failedToClearTable: { en: 'Failed to clear the table', ar: 'معرفناش نفضّي الترابيزة' },
   reservedAt: { en: 'Reserved for {time}', ar: 'محجوزة الساعة {time}' },
   partyOf: { en: 'Party of {count}', ar: '{count} أفراد' },
   startsOnConfirm: { en: 'Timer starts on confirm', ar: 'الوقت يبدأ لما تأكد' },

@@ -76,7 +76,8 @@ enum ReservationStatus {
   confirmed(2, 'Confirmed'),
   seated(3, 'Seated'),
   cancelled(4, 'Cancelled'),
-  expired(5, 'Expired');
+  expired(5, 'Expired'),
+  completed(6, 'Completed');
 
   final int value;
   final String label;
@@ -85,6 +86,9 @@ enum ReservationStatus {
 
   /// Requested or confirmed: the customer is on their way, or due later
   bool get isOpen => this == requested || this == confirmed;
+
+  /// The party is here: at a plain table this is what keeps the table
+  bool get isSeated => this == seated;
 
   static ReservationStatus fromValue(int value) {
     return ReservationStatus.values.firstWhere(
@@ -124,6 +128,8 @@ class Reservation {
   /// Open, and keeping the place right now
   final bool isHolding;
   final int? stayId;
+  final int branchId;
+  final DateTime? seatedAt;
 
   Reservation({
     required this.id,
@@ -142,6 +148,8 @@ class Reservation {
     required this.status,
     this.isHolding = false,
     this.stayId,
+    this.branchId = 1,
+    this.seatedAt,
   });
 
   /// When the party is expected: the time it is for, or when it was made
@@ -166,6 +174,8 @@ class Reservation {
       status: ReservationStatus.fromValue(json['status'] as int),
       isHolding: json['isHolding'] as bool? ?? false,
       stayId: (json['stayId'] as num?)?.toInt(),
+      branchId: (json['branchId'] as num?)?.toInt() ?? 1,
+      seatedAt: json['seatedAt'] != null ? DateTime.parse(json['seatedAt'] as String) : null,
     );
   }
 }

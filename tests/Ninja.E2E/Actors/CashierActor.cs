@@ -246,6 +246,10 @@ public sealed class CashierActor(ApiClient api)
     public async Task<int> ReserveAsync(int placeId, CancellationToken ct, string? customerName = null, DateTime? @for = null, int? partySize = null)
         => await Api.PostAsync<int>("/api/reservations", new { placeId, customerName, @for, partySize, startOnConfirm = false }, ct);
 
+    /// <summary>A reservation for now that may be refused: the raw response.</summary>
+    public Task<HttpResponseMessage> TryReserveAsync(int placeId, CancellationToken ct)
+        => Api.PostAsync("/api/reservations", new { placeId, customerName = "Somebody", startOnConfirm = false }, ct, ensureSuccess: false);
+
     /// <summary>The party arrived: at a timed place the clock starts and the stay id comes back; at a plain table there is no stay.</summary>
     public async Task<int?> SeatReservationAsync(int reservationId, CancellationToken ct, string? optionCode = Codes.RateOption.Single)
         => (await Api.PostAsync<SeatResult>($"/api/reservations/{reservationId}/seat", new { optionCode }, ct)).StayId;
@@ -257,6 +261,13 @@ public sealed class CashierActor(ApiClient api)
     public async Task CancelReservationAsync(int reservationId, CancellationToken ct)
     {
         using var r = await Api.PostAsync($"/api/reservations/{reservationId}/cancel", null, ct);
+    }
+
+    /// <summary>The party left a plain table: it is free again.</summary>
+    public async Task CompleteReservationAsync(int reservationId, CancellationToken ct)
+    {
+        using var r = await Api.PostAsync($"/api/reservations/{reservationId}/complete", null, ct);
+        r.EnsureSuccessStatusCode();
     }
 
     public Task<List<ReservationView>> OpenReservationsAsync(CancellationToken ct)

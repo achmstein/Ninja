@@ -197,7 +197,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   Future<void> _pickPlace(int placeId) async {
     final room = ref.read(placesProvider).places.where((r) => r.id == placeId).firstOrNull;
     final reservedNow = ref.read(placesProvider.notifier).reservationHolding(placeId) != null;
-    if (room != null && !room.isTimed && !reservedNow) {
+    // A party seated on their reservation: the panel, where the till clears the table or opens its bill
+    final seatedNow = room?.seatedReservation != null;
+    if (room != null && !room.isTimed && !reservedNow && !seatedNow) {
       await _pickTable(room);
       return;
     }
@@ -210,7 +212,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       }
       started = outcome == StartOutcome.started;
     } else {
-      started = await showPlacePanel(context, placeId);
+      final outcome = await showPlacePanel(context, placeId);
+      if (outcome == PlacePanelOutcome.bill && room != null) {
+        if (mounted) await _pickTable(room);
+        return;
+      }
+      started = outcome == PlacePanelOutcome.started;
     }
     if (started && mounted) await _openStartedPlaceTicket(placeId);
   }

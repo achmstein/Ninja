@@ -15,9 +15,10 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         .Include(s => s.Members)
         .Where(s => s.Status == StayStatus.Running);
 
-    private IQueryable<Reservation> OpenReservations => context.Reservations
+    /// <summary>The reservations that bear on a place right now: open ones (keeping it, or due), and a party seated at a plain table, which is theirs until the staff complete it.</summary>
+    private IQueryable<Reservation> LiveReservations => context.Reservations
         .AsNoTracking()
-        .Where(r => OpenReservationStatuses.Contains(r.Status));
+        .Where(r => OpenReservationStatuses.Contains(r.Status) || (r.Status == ReservationStatus.Seated && r.StayId == null));
 
     private IQueryable<Stay> FullStays => context.Stays
         .AsNoTracking()
@@ -36,7 +37,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
 
         var ids = places.Select(p => p.Id).ToList();
         var running = await RunningStays.Where(s => ids.Contains(s.PlaceId)).ToListAsync();
-        var reserved = await OpenReservations.Where(r => ids.Contains(r.PlaceId)).ToListAsync();
+        var reserved = await LiveReservations.Where(r => ids.Contains(r.PlaceId)).ToListAsync();
 
         var now = DateTime.UtcNow;
         return places
@@ -58,7 +59,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.Id == placeId);
         if (place is null) return null;
         var running = await RunningStays.FirstOrDefaultAsync(s => s.PlaceId == placeId);
-        var reserved = await OpenReservations.Where(r => r.PlaceId == placeId).ToListAsync();
+        var reserved = await LiveReservations.Where(r => r.PlaceId == placeId).ToListAsync();
         return place.ToViewModel(running, reserved, DateTime.UtcNow);
     }
 
@@ -109,7 +110,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
 
         var now = DateTime.UtcNow;
         var running = await RunningStays.FirstOrDefaultAsync(s => s.PlaceId == placeId);
-        var reserved = await OpenReservations.Where(r => r.PlaceId == placeId).ToListAsync();
+        var reserved = await LiveReservations.Where(r => r.PlaceId == placeId).ToListAsync();
         var holding = reserved.Where(r => r.IsHolding(now)).Next(now);
 
         return new PlaceScanViewModel
@@ -118,7 +119,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
             PlaceId = place.Id,
             Kind = place.Kind,
             PlaceName = place.Name,
-            Status = ViewModelMapping.DisplayStatus(place, running, reserved.Next(now), now),
+            Status = ViewModelMapping.DisplayStatus(place, running, reserved.Next(now), now, reserved.Seated()),
             IsActive = place.IsActive,
             Tariff = place.Tariff?.ToViewModel(),
             IsTimed = place.IsTimed,
@@ -243,10 +244,10 @@ public class ReservationQueries(SpacesContext context) : IReservationQueries
         return r?.ToViewModel(DateTime.UtcNow);
     }
 
-    // History is what is no longer open, newest first by the day it was
-    // for: a booking made a week ahead sits with the day it was honoured
-    // (or missed), not the day it was made.
-    private IQueryable<Reservation> Closed => All.Where(r => !OpenStatuses.Contains(r.Status));
+    // History is what is over, newest first by the day it was for: a
+    // booking made a week ahead sits with the day it was honoured (or
+    // missed), not the day it was made. A party still seated is not history.
+    private IQueryable<Reservation> Closed => All.Where(r => !OpenStatuses.Contains(r.Status) && r.Status != ReservationStatus.Seated);
 
     public async Task<IEnumerable<ReservationViewModel>> GetPlaceHistoryAsync(int placeId, int limit = 20)
     {

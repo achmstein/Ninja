@@ -1,4 +1,5 @@
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Ninja.Spaces.Domain.Exceptions;
 using MediatR;
@@ -14,6 +15,7 @@ public record CancelStayCommand(int StayId) : IRequest<bool>;
 public class EndStayCommandHandler(
     IStayRepository stays,
     IPlaceRepository places,
+    IReservationRepository reservations,
     ILogger<EndStayCommandHandler> logger) : IRequestHandler<EndStayCommand, bool>, IRequestHandler<CancelStayCommand, bool>
 {
     public async Task<bool> Handle(EndStayCommand request, CancellationToken cancellationToken)
@@ -51,6 +53,13 @@ public class EndStayCommandHandler(
     {
         stays.Update(stay);
         places.Update(place);
+        // The reservation the party came on is over with the stay; it stays Seated only while they are here
+        if (stay.ReservationId is { } reservationId
+            && await reservations.GetAsync(reservationId) is { IsSeated: true } reservation)
+        {
+            reservation.Complete();
+            reservations.Update(reservation);
+        }
         return await stays.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }
 }

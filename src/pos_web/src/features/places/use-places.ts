@@ -5,6 +5,7 @@ import {
   assignReservationCustomerMutation,
   assignStayCustomerMutation,
   cancelReservationMutation,
+  completeReservationMutation,
   cancelStayMutation,
   changeStayOptionMutation,
   confirmReservationMutation,
@@ -203,6 +204,11 @@ export function useStayActions() {
     ...cancelReservationMutation(),
     ...feedback('reservationCancelled', 'failedToCancelSession'),
   })
+  // The party left a plain table: it is free again
+  const completeReservation = useMutation({
+    ...completeReservationMutation(),
+    ...feedback('tableCleared', 'failedToClearTable'),
+  })
   const changeOption = useMutation({
     ...changeStayOptionMutation(),
     ...feedback('rateChanged', 'failedToChangeRate'),
@@ -235,6 +241,7 @@ export function useStayActions() {
     endStay.isPending ||
     cancelStay.isPending ||
     cancelReservation.isPending ||
+    completeReservation.isPending ||
     changeOption.isPending ||
     assignCustomer.isPending ||
     assignReservationCustomer.isPending ||
@@ -282,6 +289,8 @@ export function useStayActions() {
       cancelStay.mutate({ path: { id: stayId } }, done),
     cancelReservation: (reservationId: number, done?: Done) =>
       cancelReservation.mutate({ path: { id: reservationId } }, done),
+    completeReservation: (reservationId: number, done?: Done) =>
+      completeReservation.mutate({ path: { id: reservationId } }, done),
     changeOption: (stayId: number, optionCode: string) =>
       changeOption.mutate({ path: { id: stayId }, body: { optionCode } }),
     assignCustomer: (

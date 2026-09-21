@@ -46,7 +46,11 @@ public static class ReservationsApi
             .RequireAuthorization("Pos");
         reservations.MapPost("/{id:int}/seat", Seat).WithName("SeatReservation")
             .WithSummary("The party arrived and sat down (staff)")
-            .WithDescription("On a timed place the clock starts and the stay is returned; on a plain table the reservation simply closes")
+            .WithDescription("On a timed place the clock starts and the stay is returned; on a plain table the party keeps the table until the staff complete the reservation")
+            .RequireAuthorization("Pos");
+        reservations.MapPost("/{id:int}/complete", Complete).WithName("CompleteReservation")
+            .WithSummary("The party left a plain table; it is free again (staff)")
+            .WithDescription("A party at a timed place is ended through its stay, which closes the reservation on its own")
             .RequireAuthorization("Pos");
         reservations.MapPost("/{id:int}/assign-customer", AssignCustomer).WithName("AssignReservationCustomer")
             .WithSummary("Name the customer on a reservation the till made for an unnamed party (staff)")
@@ -172,6 +176,11 @@ public static class ReservationsApi
         [FromServices] IMediator mediator,
         [Description("The reservation ID")] int id)
         => PlacesApi.Run(mediator, new CancelReservationCommand(id));
+
+    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> Complete(
+        [FromServices] IMediator mediator,
+        [Description("The reservation ID")] int id)
+        => PlacesApi.Run(mediator, new CompleteReservationCommand(id));
 
     public static async Task<Results<Ok, NotFound, ForbidHttpResult, BadRequest<ProblemDetails>>> CancelMine(
         [FromServices] IMediator mediator,

@@ -817,6 +817,14 @@ class _DemoPlaceRepository implements PlaceRepository {
   }
 
   @override
+  Future<void> completeReservation(int reservationId) async {
+    // The demo seats nobody at a plain table; a completed party simply frees its place
+    final r = _reservation(reservationId);
+    _reservations.removeWhere((x) => x.id == reservationId);
+    _setStatus(r.placeId, PlaceStatus.available);
+  }
+
+  @override
   Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
     final r = _reservation(reservationId);
     _reservations[_reservations.indexWhere((x) => x.id == reservationId)] = Reservation(

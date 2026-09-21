@@ -12,14 +12,15 @@ namespace Ninja.E2E.Scenarios;
 /// reservation given up tells the floor and leaves no bill behind, a
 /// customer's own reservation follows the one-at-a-time rule and lapses
 /// on the till's confirm into a running clock, and a plain table the owner
-/// opened to bookings is reserved for later, seated without any clock, and
-/// closed again. Every closed reservation lands in the owner's history.
+/// opened to bookings is reserved for later, seated without any clock — the
+/// table is the party's until the till clears it — and closed again. Every
+/// reservation that is over lands in the owner's history.
 /// </summary>
 public sealed class ReservationScenario(NinjaApp app, DaySetup day) : ScenarioBase(app, day)
 {
     private Task<PlaceView> PlaceAsync(string nameEn) => Cashier.PlaceAsync(nameEn, Ct);
 
-    private const int PlaceHeld = 3;
+    private const int PlaceOccupied = 2, PlaceHeld = 3;
 
     [Fact]
     public async Task Reserve_seat_cancel_and_the_owner_s_history()
@@ -68,15 +69,17 @@ public sealed class ReservationScenario(NinjaApp app, DaySetup day) : ScenarioBa
         Assert.Contains(await Cashier.OpenStaysAsync(Ct), s => s.Id == stayId);
         await ExpectRoomStatusAsync(seat, "session_started", room1.Id);
 
-        // 4. The clock ends as any walk-in's would; the reservation is history, seated.
+        // 4. The clock ends as any walk-in's would; the party left with it, and the reservation is history.
+        Assert.DoesNotContain(await Owner.PlaceReservationsAsync(room1.Id, Ct), r => r.Id == reservationId); // still here
         var end = Step("End the seated party's clock");
         await Cashier.EndStayAsync(stayId.Value, Ct);
         await ExpectEventAsync(end, "SessionCompleted", e => e.Int("ReservationId") == stayId);
         await ExpectEventAsync(end, "PlaceBecameAvailable", e => e.Int("PlaceId") == room1.Id);
         var seated = Assert.Single(await Owner.PlaceReservationsAsync(room1.Id, Ct), r => r.Id == reservationId);
-        Assert.Equal(ReservationStatuses.Seated, seated.Status);
+        Assert.Equal(ReservationStatuses.Completed, seated.Status);
         Assert.Equal(stayId, seated.StayId);
         Assert.NotNull(seated.SeatedAt);
+        Assert.NotNull(seated.ClosedAt);
 
         // 5. Given up before anyone sat down: the floor is told the room is free, Sales has nothing to drop.
         var room2 = await PlaceAsync("Room 2");
@@ -125,9 +128,11 @@ public sealed class ReservationScenario(NinjaApp app, DaySetup day) : ScenarioBa
         }
         await Cashier.EndStayAsync(confirmed.StayId.Value, Ct);
         await ExpectEventAsync(confirm, "SessionCompleted", e => e.Int("ReservationId") == confirmed.StayId);
+        Assert.Equal(ReservationStatuses.Completed, Assert.Single(await Customer.MyReservationsAsync(Ct), r => r.Id == customerReservation).Status);
 
         // 7. A plain table: the owner opens it to bookings, the till books it for tonight,
-        //    seating it starts no clock, and the owner can close it again once it is quiet.
+        //    seating it starts no clock but keeps the table for the party until the till
+        //    clears it, and the owner can close it to bookings again once it is quiet.
         var table1 = await PlaceAsync("Table 1");
         Assert.False(table1.IsTimed);
         Assert.False(table1.Reservable);
@@ -145,10 +150,24 @@ public sealed class ReservationScenario(NinjaApp app, DaySetup day) : ScenarioBa
 
         Assert.Null(await Cashier.SeatReservationAsync(tableReservation, Ct, optionCode: null));
         await ExpectNoEventAsync(table, "SessionStarted");
+        await ExpectEventAsync(table, "ReservationSeated", e => e.Int("ReservationId") == tableReservation);
         Assert.DoesNotContain(await Cashier.OpenReservationsAsync(Ct), r => r.Id == tableReservation);
+        Assert.Equal(PlaceOccupied, (await PlaceAsync("Table 1")).Status); // theirs while they sit
+        Assert.DoesNotContain(await Owner.PlaceReservationsAsync(table1.Id, Ct), r => r.Id == tableReservation); // not history yet
+        using (var taken = await Cashier.TryReserveAsync(table1.Id, Ct))
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, taken.StatusCode); // nobody books a table with a party at it
+        }
+
+        var left = Step("The party leaves: the till clears the table");
+        await Cashier.CompleteReservationAsync(tableReservation, Ct);
+        await ExpectEventAsync(left, "ReservationCompleted", e => e.Int("ReservationId") == tableReservation);
+        await ExpectEventAsync(left, "PlaceBecameAvailable", e => e.Int("PlaceId") == table1.Id);
+        Assert.NotEqual(PlaceOccupied, (await PlaceAsync("Table 1")).Status);
         var seatedTable = Assert.Single(await Owner.PlaceReservationsAsync(table1.Id, Ct), r => r.Id == tableReservation);
-        Assert.Equal(ReservationStatuses.Seated, seatedTable.Status);
+        Assert.Equal(ReservationStatuses.Completed, seatedTable.Status);
         Assert.Null(seatedTable.StayId);
+        Assert.NotNull(seatedTable.SeatedAt);
         await Owner.SetReservableAsync(table1.Id, false, Ct);
         Assert.False((await PlaceAsync("Table 1")).CanReserve);
 

@@ -113,12 +113,24 @@ final currentPlaceProvider =
   CurrentPlaceNotifier.new,
 );
 
-/// The remembered table, but only while it is fresh and belongs to the branch
-/// the customer is actually browsing.
+/// The table the customer is at: the party the staff seated on their
+/// reservation at a plain table (theirs until the staff clear it, as surely
+/// as if they had scanned it), else the remembered table, while it is fresh
+/// and belongs to the branch the customer is actually browsing.
 final activePlaceProvider = Provider<CurrentPlace?>((ref) {
+  final branchId = ref.watch(selectedBranchIdProvider);
+  final seated = ref.watch(seatedReservationProvider);
+  if (seated != null && seated.branchId == branchId) {
+    return CurrentPlace(
+      id: seated.placeId,
+      kind: seated.placeKind,
+      name: seated.placeName,
+      branchId: seated.branchId,
+      scannedAt: seated.seatedAt ?? DateTime.now(),
+    );
+  }
   final table = ref.watch(currentPlaceProvider);
   if (table == null || !table.isFresh) return null;
-  final branchId = ref.watch(selectedBranchIdProvider);
   return table.branchId == branchId ? table : null;
 });
 

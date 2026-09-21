@@ -5,6 +5,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock,
+  LogOut,
   Play,
   QrCode,
   Square,
@@ -12,6 +13,7 @@ import {
   TimerReset,
   User,
   UserPlus,
+  Users,
   Wrench,
   X,
 } from 'lucide-react'
@@ -149,6 +151,8 @@ export function PlaceDetailPanel({
 
   const running = isRunning(stay)
   const held = !running && reservation != null && isHolding(reservation)
+  // A party seated on their reservation at a plain table: theirs until the staff clear it
+  const seated = !running ? (place.seatedReservation ?? null) : null
   const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
   const placeStatus = placeStatusConfig[Number(place.status ?? 0)]
 
@@ -231,8 +235,8 @@ export function PlaceDetailPanel({
 
       <ScrollArea className='min-h-0 flex-1'>
         {/* Now: the clock and its controls; a plain table only has a
-            "now" while somebody has reserved it */}
-        {(timed || held) && (
+            "now" while somebody has reserved it or sits on their reservation */}
+        {(timed || held || seated) && (
           <div className='border-b'>
             {stay && running ? (
               <div className='flex flex-col items-center gap-4 px-4 py-6'>
@@ -369,6 +373,40 @@ export function PlaceDetailPanel({
                     {t('end')}
                   </Button>
                 </div>
+              </div>
+            ) : seated ? (
+              <div className='flex flex-col items-center gap-3 px-4 py-8'>
+                <div className='flex size-16 items-center justify-center rounded-full bg-sky-500/10'>
+                  <Users className='size-7 text-sky-500' />
+                </div>
+                <p className='font-medium'>{t('seated')}</p>
+                <p className='text-muted-foreground flex items-center gap-1 text-sm'>
+                  <User className='size-4' />
+                  {seated.customerName || t('guest')}
+                  {seated.partySize
+                    ? ` · ${t('partyOf', { count: seated.partySize })}`
+                    : ''}
+                </p>
+                {seated.seatedAt && (
+                  <p className='text-muted-foreground text-sm tabular-nums'>
+                    {t('seatedSince', {
+                      time: new Date(seated.seatedAt).toLocaleTimeString(locale, {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      }),
+                    })}
+                  </p>
+                )}
+                <Button
+                  className='mt-2'
+                  disabled={actions.isBusy}
+                  onClick={() =>
+                    actions.completeReservation(Number(seated.reservationId))
+                  }
+                >
+                  <LogOut className='me-1 h-4 w-4 rtl:rotate-180' />
+                  {t('partyLeft')}
+                </Button>
               </div>
             ) : held ? (
               <div className='flex flex-col items-center gap-3 px-4 py-8'>

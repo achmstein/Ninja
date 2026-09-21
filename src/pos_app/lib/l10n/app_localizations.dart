@@ -1130,6 +1130,36 @@ abstract class AppLocalizations {
   /// **'Seated'**
   String get partySeated;
 
+  /// No description provided for @partyOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Party of {count}'**
+  String partyOf(int count);
+
+  /// No description provided for @seatedSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Since {time}'**
+  String seatedSince(String time);
+
+  /// No description provided for @partyLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Party left'**
+  String get partyLeft;
+
+  /// No description provided for @tableCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Table cleared'**
+  String get tableCleared;
+
+  /// No description provided for @failedToClearTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to clear the table'**
+  String get failedToClearTable;
+
   /// No description provided for @startsOnConfirm.
   ///
   /// In en, this message translates to:

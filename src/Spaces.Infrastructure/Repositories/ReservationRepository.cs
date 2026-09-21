@@ -56,4 +56,11 @@ public class ReservationRepository : IReservationRepository
         => await OpenOnes
             .Where(r => r.ExpiresAt != null && r.ExpiresAt <= now)
             .ToListAsync();
+
+    public async Task<Reservation?> GetSeatedAtAsync(int placeId)
+        => await _context.Reservations
+            .Include(r => r.Place)
+            .Where(r => r.PlaceId == placeId && r.Status == ReservationStatus.Seated && r.StayId == null)
+            .OrderByDescending(r => r.SeatedAt)
+            .FirstOrDefaultAsync();
 }

@@ -595,6 +595,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partySeated => 'Seated';
 
   @override
+  String partyOf(int count) {
+    return 'Party of $count';
+  }
+
+  @override
+  String seatedSince(String time) {
+    return 'Since $time';
+  }
+
+  @override
+  String get partyLeft => 'Party left';
+
+  @override
+  String get tableCleared => 'Table cleared';
+
+  @override
+  String get failedToClearTable => 'Failed to clear the table';
+
+  @override
   String get startsOnConfirm => 'Timer starts on confirm';
 
   @override

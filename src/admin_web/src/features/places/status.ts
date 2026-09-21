@@ -69,6 +69,7 @@ export const RESERVATION_CONFIRMED = 2
 export const RESERVATION_SEATED = 3
 export const RESERVATION_CANCELLED = 4
 export const RESERVATION_EXPIRED = 5
+export const RESERVATION_COMPLETED = 6
 
 export function isRunning(stay: StayViewModel | null | undefined): boolean {
   return stay != null && Number(stay.status) === STAY_RUNNING

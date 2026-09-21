@@ -25,6 +25,13 @@ public record SeatReservationCommand(int ReservationId, string? OptionCode = nul
 /// <summary>Given up before anyone sat down: by the staff, or by the customer who made it.</summary>
 public record CancelReservationCommand(int ReservationId, string? OnlyIfCustomerId = null) : IRequest<bool>;
 
+/// <summary>
+/// The party left a plain table: the staff clear it and it is free again.
+/// A party at a timed place is ended through its stay, which closes the
+/// reservation on its own.
+/// </summary>
+public record CompleteReservationCommand(int ReservationId) : IRequest<bool>;
+
 /// <summary>Whether the party was seated by this call, and the stay that took over if the place is timed.</summary>
 public record SeatResult(bool Seated, int? StayId);
 
@@ -35,7 +42,8 @@ public class ReservationCommandHandler(
     ILogger<ReservationCommandHandler> logger)
     : IRequestHandler<ConfirmReservationCommand, SeatResult>,
       IRequestHandler<SeatReservationCommand, SeatResult>,
-      IRequestHandler<CancelReservationCommand, bool>
+      IRequestHandler<CancelReservationCommand, bool>,
+      IRequestHandler<CompleteReservationCommand, bool>
 {
     public async Task<SeatResult> Handle(ConfirmReservationCommand request, CancellationToken cancellationToken)
     {
@@ -70,6 +78,21 @@ public class ReservationCommandHandler(
         return await reservations.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }
 
+    public async Task<bool> Handle(CompleteReservationCommand request, CancellationToken cancellationToken)
+    {
+        var (reservation, place) = await Load(request.ReservationId);
+        if (reservation.StayId is not null)
+            throw new SpacesDomainException("This party has a running clock; end the stay instead");
+
+        reservation.Complete();
+        reservations.Update(reservation);
+        // The table was theirs since they sat down (SeatAsync); it is free again
+        place.SetAvailable();
+        places.Update(place);
+        logger.LogInformation("Party left: reservation {ReservationId} completed, place {PlaceId} free", reservation.Id, place.Id);
+        return await reservations.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+    }
+
     private async Task<SeatResult> SeatAsync(Reservation reservation, Place place, string? optionCode, CancellationToken cancellationToken)
     {
         if (!place.IsActive)
@@ -77,9 +100,14 @@ public class ReservationCommandHandler(
 
         if (!place.IsTimed)
         {
-            // A plain table: the party sits down; the ticket on the table is Sales' business
+            // A plain table: the party sits down and the table is theirs until the
+            // staff clear it (CompleteReservationCommand); the ticket on it is Sales' business
+            if (!place.IsPhysicallyAvailable())
+                throw new SpacesDomainException("This place is not available");
             reservation.Seat();
             reservations.Update(reservation);
+            place.SetOccupied();
+            places.Update(place);
             await reservations.UnitOfWork.SaveEntitiesAsync(cancellationToken);
             logger.LogInformation("Seated reservation {ReservationId} at place {PlaceId}", reservation.Id, place.Id);
             return new SeatResult(true, null);

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addStayMember, assignReservationCustomer, assignStayCustomer, cancelMyReservation, cancelReservation, cancelStay, changeStayOption, confirmReservation, createPlace, deletePlace, endStay, getAvailablePlaces, getMyReservations, getMyStays, getOpenReservations, getOpenStays, getPlace, getPlaceReservationHistory, getPlaceStayHistory, getReservation, getReservationHistory, getStay, getStayHistory, getStayStats, joinStay, leaveStay, listPlaces, type Options, removeStayMember, reservePlace, scanPlace, seatReservation, setPlaceActive, setPlaceReservable, setPlaceStatus, setPlaceTariff, startWalkIn, updatePlace } from '../sdk.gen';
-import type { AddStayMemberData, AddStayMemberError, AssignReservationCustomerData, AssignReservationCustomerError, AssignStayCustomerData, AssignStayCustomerError, CancelMyReservationData, CancelMyReservationError, CancelReservationData, CancelReservationError, CancelStayData, CancelStayError, ChangeStayOptionData, ChangeStayOptionError, ConfirmReservationData, ConfirmReservationError, ConfirmReservationResponse, CreatePlaceData, CreatePlaceError, CreatePlaceResponse, DeletePlaceData, DeletePlaceError, EndStayData, EndStayError, GetAvailablePlacesData, GetAvailablePlacesResponse, GetMyReservationsData, GetMyReservationsResponse, GetMyStaysData, GetMyStaysResponse, GetOpenReservationsData, GetOpenReservationsResponse, GetOpenStaysData, GetOpenStaysResponse, GetPlaceData, GetPlaceReservationHistoryData, GetPlaceReservationHistoryResponse, GetPlaceResponse, GetPlaceStayHistoryData, GetPlaceStayHistoryResponse, GetReservationData, GetReservationHistoryData, GetReservationHistoryResponse, GetReservationResponse, GetStayData, GetStayHistoryData, GetStayHistoryResponse, GetStayResponse, GetStayStatsData, GetStayStatsResponse, JoinStayData, JoinStayError, JoinStayResponse, LeaveStayData, LeaveStayError, ListPlacesData, ListPlacesResponse, RemoveStayMemberData, RemoveStayMemberError, ReservePlaceData, ReservePlaceError, ReservePlaceResponse, ScanPlaceData, ScanPlaceResponse, SeatReservationData, SeatReservationError, SeatReservationResponse, SetPlaceActiveData, SetPlaceReservableData, SetPlaceReservableError, SetPlaceStatusData, SetPlaceStatusError, SetPlaceTariffData, SetPlaceTariffError, StartWalkInData, StartWalkInError, StartWalkInResponse, UpdatePlaceData, UpdatePlaceError } from '../types.gen';
+import { addStayMember, assignReservationCustomer, assignStayCustomer, cancelMyReservation, cancelReservation, cancelStay, changeStayOption, completeReservation, confirmReservation, createPlace, deletePlace, endStay, getAvailablePlaces, getMyReservations, getMyStays, getOpenReservations, getOpenStays, getPlace, getPlaceReservationHistory, getPlaceStayHistory, getReservation, getReservationHistory, getStay, getStayHistory, getStayStats, joinStay, leaveStay, listPlaces, type Options, removeStayMember, reservePlace, scanPlace, seatReservation, setPlaceActive, setPlaceReservable, setPlaceStatus, setPlaceTariff, startWalkIn, updatePlace } from '../sdk.gen';
+import type { AddStayMemberData, AddStayMemberError, AssignReservationCustomerData, AssignReservationCustomerError, AssignStayCustomerData, AssignStayCustomerError, CancelMyReservationData, CancelMyReservationError, CancelReservationData, CancelReservationError, CancelStayData, CancelStayError, ChangeStayOptionData, ChangeStayOptionError, CompleteReservationData, CompleteReservationError, ConfirmReservationData, ConfirmReservationError, ConfirmReservationResponse, CreatePlaceData, CreatePlaceError, CreatePlaceResponse, DeletePlaceData, DeletePlaceError, EndStayData, EndStayError, GetAvailablePlacesData, GetAvailablePlacesResponse, GetMyReservationsData, GetMyReservationsResponse, GetMyStaysData, GetMyStaysResponse, GetOpenReservationsData, GetOpenReservationsResponse, GetOpenStaysData, GetOpenStaysResponse, GetPlaceData, GetPlaceReservationHistoryData, GetPlaceReservationHistoryResponse, GetPlaceResponse, GetPlaceStayHistoryData, GetPlaceStayHistoryResponse, GetReservationData, GetReservationHistoryData, GetReservationHistoryResponse, GetReservationResponse, GetStayData, GetStayHistoryData, GetStayHistoryResponse, GetStayResponse, GetStayStatsData, GetStayStatsResponse, JoinStayData, JoinStayError, JoinStayResponse, LeaveStayData, LeaveStayError, ListPlacesData, ListPlacesResponse, RemoveStayMemberData, RemoveStayMemberError, ReservePlaceData, ReservePlaceError, ReservePlaceResponse, ScanPlaceData, ScanPlaceResponse, SeatReservationData, SeatReservationError, SeatReservationResponse, SetPlaceActiveData, SetPlaceReservableData, SetPlaceReservableError, SetPlaceStatusData, SetPlaceStatusError, SetPlaceTariffData, SetPlaceTariffError, StartWalkInData, StartWalkInError, StartWalkInResponse, UpdatePlaceData, UpdatePlaceError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -426,12 +426,31 @@ export const confirmReservationMutation = (options?: Partial<Options<ConfirmRese
 /**
  * The party arrived and sat down (staff)
  *
- * On a timed place the clock starts and the stay is returned; on a plain table the reservation simply closes
+ * On a timed place the clock starts and the stay is returned; on a plain table the party keeps the table until the staff complete the reservation
  */
 export const seatReservationMutation = (options?: Partial<Options<SeatReservationData>>): UseMutationOptions<SeatReservationResponse, AxiosError<SeatReservationError>, Options<SeatReservationData>> => {
     const mutationOptions: UseMutationOptions<SeatReservationResponse, AxiosError<SeatReservationError>, Options<SeatReservationData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await seatReservation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The party left a plain table; it is free again (staff)
+ *
+ * A party at a timed place is ended through its stay, which closes the reservation on its own
+ */
+export const completeReservationMutation = (options?: Partial<Options<CompleteReservationData>>): UseMutationOptions<unknown, AxiosError<CompleteReservationError>, Options<CompleteReservationData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<CompleteReservationError>, Options<CompleteReservationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await completeReservation({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

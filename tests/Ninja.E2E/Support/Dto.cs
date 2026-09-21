@@ -119,7 +119,7 @@ public sealed record ReservationView(int Id, int PlaceId, LocalizedText PlaceNam
 /// <summary>ReservationStatus as Spaces serialises it.</summary>
 public static class ReservationStatuses
 {
-    public const int Requested = 1, Confirmed = 2, Seated = 3, Cancelled = 4, Expired = 5;
+    public const int Requested = 1, Confirmed = 2, Seated = 3, Cancelled = 4, Expired = 5, Completed = 6;
 }
 
 public sealed record RateOptionView(string Code, LocalizedText Name, decimal HourlyRate);

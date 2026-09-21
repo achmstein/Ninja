@@ -83,6 +83,8 @@ export type TenantResponse = {
     primaryColor: null | string;
     customerUrl: null | string;
     auth: null | TenantAuth;
+    apiUrl: null | string;
+    appsUrl: null | string;
     logoUrl: null | string;
     logoDarkUrl: null | string;
     wordmarks: TenantWordmarks;

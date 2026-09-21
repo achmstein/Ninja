@@ -195,6 +195,15 @@ class MyReservationsNotifier extends Notifier<AsyncValue<List<Reservation>>> {
 Reservation? openReservationOf(List<Reservation> reservations) =>
     reservations.where((r) => r.status.isOpen).firstOrNull;
 
+/// The customer's party at a plain table right now: seated on their
+/// reservation, with no clock (a timed place hands over to a stay), and not
+/// yet cleared by the staff
+final seatedReservationProvider = Provider<Reservation?>((ref) {
+  return ref.watch(myReservationsProvider).whenOrNull(
+        data: (reservations) => reservations.where((r) => r.status.isSeated && r.stayId == null).firstOrNull,
+      );
+});
+
 /// Reservation state
 class HoldState {
   final bool isLoading;

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { type LocalizedText } from '@/api/spaces'
-import { PLACE_ROOM } from '@/lib/places'
-import { useActiveStay } from '@/lib/stays'
+import { PLACE_ROOM, PLACE_TABLE } from '@/lib/places'
+import { useActiveStay, useMyReservations, useSeatedReservation } from '@/lib/stays'
+import { useBranchStore } from '@/stores/branch-store'
 import { useActivePlace, usePlaceStore } from '@/stores/place-store'
 
 /**
@@ -35,6 +36,7 @@ export function useOrderDestination(): OrderDestination {
   const activeStay = useActiveStay()
   const activePlace = useActivePlace()
   const clearPlace = usePlaceStore((s) => s.clearPlace)
+  useSeatedReservationSync()
 
   const inStay = activeStay != null
 
@@ -61,4 +63,48 @@ export function useOrderDestination(): OrderDestination {
     }
   }
   return null
+}
+
+/**
+ * A party the staff seated on their reservation at a plain table is at that
+ * table as surely as if they had scanned it: it becomes the destination,
+ * vouched for by this session, and is dropped when the staff clear it (the
+ * reservation completes) — the same way a paid bill clears a scanned table.
+ * Driven by the reservation, so it also covers a party seated from the till
+ * while the customer never touched the app.
+ */
+function useSeatedReservationSync() {
+  const seated = useSeatedReservation()
+  const { data: reservations } = useMyReservations()
+  const place = usePlaceStore((s) => s.place)
+  const setPlace = usePlaceStore((s) => s.setPlace)
+  const clearPlace = usePlaceStore((s) => s.clearPlace)
+  const branchId = useBranchStore((s) => s.branchId)
+
+  const seatedPlaceId = seated ? Number(seated.placeId) : null
+  // The last table a reservation sat the customer at, so a table set by that
+  // reservation is cleared once, when it completes, and a table they scanned
+  // later on their own is left alone
+  const lastSeatedId = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (seated && seatedPlaceId != null) {
+      lastSeatedId.current = seatedPlaceId
+      if (place?.id !== seatedPlaceId) {
+        setPlace({
+          id: seatedPlaceId,
+          kind: Number(seated.placeKind ?? PLACE_TABLE),
+          name: seated.placeName ?? {},
+          branchId: Number(seated.branchId ?? branchId),
+        })
+      }
+      return
+    }
+    // The reservations have answered and none seats them any more: the
+    // table that reservation gave them is over
+    if (reservations && lastSeatedId.current != null) {
+      if (place?.id === lastSeatedId.current) clearPlace()
+      lastSeatedId.current = null
+    }
+  }, [seated, seatedPlaceId, reservations, place, setPlace, clearPlace, branchId])
 }

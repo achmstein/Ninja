@@ -90,6 +90,8 @@ internal sealed class InMemorySpaces : IUnitOfWork
                 && Math.Abs((r.EffectiveFor - at).TotalMinutes) < Reservation.SlotMinutes));
         public Task<bool> HasOpenAsync(int placeId) => Task.FromResult(Open.Any(r => r.PlaceId == placeId));
         public Task<List<Reservation>> GetLapsedAsync(DateTime now) => Task.FromResult(Open.Where(r => r.IsExpired(now)).ToList());
+        public Task<Reservation?> GetSeatedAtAsync(int placeId)
+            => Task.FromResult(db.Reservations.Where(r => r.PlaceId == placeId && r.IsSeated && r.StayId is null).OrderByDescending(r => r.SeatedAt).FirstOrDefault());
     }
 
     private sealed class StayRepo(InMemorySpaces db) : IStayRepository

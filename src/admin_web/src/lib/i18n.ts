@@ -162,6 +162,12 @@ const webExtras = {
   outcomeAt: { en: 'At', ar: 'الساعة' },
   outcome: { en: 'Outcome', ar: 'النتيجة' },
   seated: { en: 'Seated', ar: 'اتقعدوا' },
+  // The party came and went: the table was theirs from Seated until the staff cleared it
+  completed: { en: 'Completed', ar: 'اتمّ' },
+  seatedSince: { en: 'Since {time}', ar: 'من الساعة {time}' },
+  partyLeft: { en: 'Party left', ar: 'الناس مشيوا' },
+  tableCleared: { en: 'Table cleared', ar: 'الترابيزة اتفضّت' },
+  failedToClearTable: { en: 'Failed to clear the table', ar: 'معرفناش نفضّي الترابيزة' },
   noShow: { en: 'No-show', ar: 'مجاش' },
   partyOf: { en: 'Party of {count}', ar: '{count} أفراد' },
   roundTimeTo: { en: 'Round time to', ar: 'تقريب الوقت' },

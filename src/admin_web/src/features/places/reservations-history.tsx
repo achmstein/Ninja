@@ -34,6 +34,7 @@ import { PageHeader } from '@/components/page-header'
 import {
   comparePlaces,
   RESERVATION_CANCELLED,
+  RESERVATION_COMPLETED,
   RESERVATION_EXPIRED,
   RESERVATION_SEATED,
 } from './status'
@@ -67,6 +68,8 @@ export function ReservationOutcome({
   switch (Number(reservation.status)) {
     case RESERVATION_SEATED:
       return <Badge variant='secondary'>{t('seated')}</Badge>
+    case RESERVATION_COMPLETED:
+      return <Badge variant='secondary'>{t('completed')}</Badge>
     case RESERVATION_CANCELLED:
       return <Badge variant='destructive'>{t('cancelled')}</Badge>
     case RESERVATION_EXPIRED:

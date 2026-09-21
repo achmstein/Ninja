@@ -17,7 +17,7 @@ public sealed class PlaceViewModelTests
         var now = DateTime.UtcNow;
         var room = Room();
 
-        var free = room.ToViewModel(running: null, openReservations: [], now);
+        var free = room.ToViewModel(running: null, liveReservations: [], now);
         Assert.AreEqual(PlaceDisplayStatus.Available, free.Status);
         Assert.IsNull(free.CurrentReservation);
         Assert.IsNull(free.CurrentStay);
@@ -36,6 +36,29 @@ public sealed class PlaceViewModelTests
         Assert.AreEqual(soon.Id, held.CurrentReservation!.ReservationId, "the one keeping the place now comes first");
         Assert.IsTrue(held.CurrentReservation.IsHolding);
         Assert.IsNotNull(held.CurrentReservation.ExpiresAt);
+    }
+
+    [TestMethod]
+    public void A_party_seated_at_a_plain_table_keeps_it_until_they_leave()
+    {
+        var now = DateTime.UtcNow;
+        var table = InMemorySpaces.WithId(Place.Table("Table 4", 1), 9);
+        table.SetReservable(true);
+        var party = new Reservation(table, "c1", "Ahmed", partySize: 3);
+        party.Seat();
+
+        var taken = table.ToViewModel(null, [party], now);
+        Assert.AreEqual(PlaceDisplayStatus.Occupied, taken.Status);
+        Assert.IsNull(taken.CurrentReservation, "seated is not waiting");
+        Assert.IsNotNull(taken.SeatedReservation);
+        Assert.AreEqual(party.Id, taken.SeatedReservation!.ReservationId);
+        Assert.AreEqual(3, taken.SeatedReservation.PartySize);
+        Assert.IsNotNull(taken.SeatedReservation.SeatedAt);
+
+        party.Complete();
+        var free = table.ToViewModel(null, [party], now);
+        Assert.AreEqual(PlaceDisplayStatus.Available, free.Status);
+        Assert.IsNull(free.SeatedReservation);
     }
 
     [TestMethod]

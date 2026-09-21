@@ -48,6 +48,8 @@ public record PlaceViewModel
     public StayPreviewViewModel? CurrentStay { get; init; }
     /// <summary>The next open reservation on it, if any: keeping the place now, or due later.</summary>
     public ReservationPreviewViewModel? CurrentReservation { get; init; }
+    /// <summary>The party seated at this plain table right now, if any: it is theirs until the staff complete the reservation. A timed place has a stay instead.</summary>
+    public ReservationPreviewViewModel? SeatedReservation { get; init; }
 }
 
 public record StayCostViewModel
@@ -160,6 +162,7 @@ public record ReservationPreviewViewModel
     public DateTime? ExpiresAt { get; init; }
     public bool IsHolding { get; init; }
     public bool StartOnConfirm { get; init; }
+    public DateTime? SeatedAt { get; init; }
 }
 
 /// <summary>What a scanned QR resolves to: the place, what it can do, and what is on it.</summary>
@@ -233,11 +236,15 @@ public static class ViewModelMapping
     public static Reservation? Next(this IEnumerable<Reservation> open, DateTime now)
         => open.Where(r => r.IsOpen).OrderBy(r => r.EffectiveFor).FirstOrDefault();
 
-    public static PlaceDisplayStatus DisplayStatus(Place place, Stay? running, Reservation? next, DateTime now)
+    /// <summary>The party seated at a plain table: seated, with no stay keeping the place for it.</summary>
+    public static Reservation? Seated(this IEnumerable<Reservation> live)
+        => live.Where(r => r.IsSeated && r.StayId is null).OrderByDescending(r => r.SeatedAt).FirstOrDefault();
+
+    public static PlaceDisplayStatus DisplayStatus(Place place, Stay? running, Reservation? next, DateTime now, Reservation? seated = null)
     {
         if (place.PhysicalStatus == PlaceStatus.OutOfService)
             return PlaceDisplayStatus.OutOfService;
-        if (place.PhysicalStatus == PlaceStatus.Occupied || running is not null)
+        if (place.PhysicalStatus == PlaceStatus.Occupied || running is not null || seated is not null)
             return PlaceDisplayStatus.Occupied;
         if (next is not null && next.IsHolding(now))
             return PlaceDisplayStatus.Held;
@@ -266,11 +273,15 @@ public static class ViewModelMapping
         ExpiresAt = r.IsOpen ? r.ExpiresAt : null,
         IsHolding = r.IsHolding(now),
         StartOnConfirm = r.StartOnConfirm,
+        SeatedAt = r.SeatedAt,
     };
 
-    public static PlaceViewModel ToViewModel(this Place place, Stay? running, IEnumerable<Reservation> openReservations, DateTime now)
+    /// <param name="liveReservations">The reservations that bear on the place now: open ones, and a party seated at a plain table.</param>
+    public static PlaceViewModel ToViewModel(this Place place, Stay? running, IEnumerable<Reservation> liveReservations, DateTime now)
     {
-        var next = openReservations.Next(now);
+        var live = liveReservations.ToList();
+        var next = live.Next(now);
+        var seated = live.Seated();
         return new PlaceViewModel
         {
             Id = place.Id,
@@ -278,7 +289,7 @@ public static class ViewModelMapping
             Name = place.Name,
             Description = place.Description,
             BranchId = place.BranchId,
-            Status = DisplayStatus(place, running, next, now),
+            Status = DisplayStatus(place, running, next, now, seated),
             IsActive = place.IsActive,
             Tariff = place.Tariff?.ToViewModel(),
             IsTimed = place.IsTimed,
@@ -288,6 +299,7 @@ public static class ViewModelMapping
             TakesControllerRequests = place.TakesControllerRequests,
             CurrentStay = running?.ToPreview(place),
             CurrentReservation = next?.ToPreview(place, now),
+            SeatedReservation = seated?.ToPreview(place, now),
         };
     }
 
