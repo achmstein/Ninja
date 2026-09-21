@@ -14,8 +14,39 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<Payment> Payments => Set<Payment>();
 
+    public DbSet<Job> Jobs => Set<Job>();
+
+    public DbSet<OutboxMail> Outbox => Set<OutboxMail>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Job>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ImageTag).HasMaxLength(64);
+            entity.Property(e => e.Lane).HasConversion<string>().HasMaxLength(8);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(10);
+            entity.Property(e => e.Error).HasMaxLength(4000);
+            entity.Property(e => e.RequestedBy).HasMaxLength(64).IsRequired();
+            // What a worker asks for: the next queued job in its lane
+            entity.HasIndex(e => new { e.Status, e.Lane, e.Priority, e.Id });
+            entity.HasIndex(e => new { e.TenantId, e.Status });
+        });
+
+        modelBuilder.Entity<OutboxMail>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.To).HasMaxLength(254).IsRequired();
+            entity.Property(e => e.Subject).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Template).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Slug).HasMaxLength(24);
+            entity.Property(e => e.ReplyTo).HasMaxLength(254);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(10);
+            entity.Property(e => e.LastError).HasMaxLength(2000);
+            entity.HasIndex(e => new { e.Status, e.Id });
+        });
+
         modelBuilder.Entity<Tenant>(entity =>
         {
             entity.HasKey(e => e.Id);

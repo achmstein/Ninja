@@ -62,7 +62,7 @@ public sealed class ProvisionerTests
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
             new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
-            _stack, _audit, backups, new MailQueue(), NullLogger<Provisioner>.Instance);
+            _stack, _audit, backups, NullLogger<Provisioner>.Instance);
 
         _tenant = new Tenant
         {
@@ -204,7 +204,7 @@ public sealed class ProvisionerTests
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
             new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
-            _stack, _audit, backups, new MailQueue(), NullLogger<Provisioner>.Instance);
+            _stack, _audit, backups, NullLogger<Provisioner>.Instance);
 
         await provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
 

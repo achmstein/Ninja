@@ -2507,6 +2507,100 @@
         ]
       }
     },
+    "/api/control/platform/jobs": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Each lane's running job and queue depth, and the latest jobs",
+        "operationId": "GetPlatformJobs",
+        "parameters": [
+          {
+            "name": "take",
+            "in": "query",
+            "description": "How many of the latest jobs, 200 at most",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/jobs/{id}": {
+      "delete": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Take a queued job off the line; a running one cannot be stopped",
+        "operationId": "CancelPlatformJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -3419,6 +3513,143 @@
           }
         }
       },
+      "JobDto": {
+        "required": [
+          "id",
+          "slug",
+          "action",
+          "imageTag",
+          "lane",
+          "status",
+          "attempts",
+          "enqueuedAt",
+          "startedAt",
+          "finishedAt",
+          "error",
+          "requestedBy",
+          "position"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "slug": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "action": {
+            "type": "string"
+          },
+          "imageTag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lane": {
+            "$ref": "#/components/schemas/JobLane"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "attempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enqueuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "JobLane": {
+        "enum": [
+          "Stamp",
+          "Backup"
+        ]
+      },
+      "JobStatus": {
+        "enum": [
+          "Queued",
+          "Running",
+          "Done",
+          "Failed",
+          "Cancelled"
+        ]
+      },
+      "LaneStatus": {
+        "required": [
+          "lane",
+          "running",
+          "queued"
+        ],
+        "type": "object",
+        "properties": {
+          "lane": {
+            "$ref": "#/components/schemas/JobLane"
+          },
+          "running": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JobDto"
+              }
+            ]
+          },
+          "queued": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobDto"
+            }
+          }
+        }
+      },
       "MailStatusResponse": {
         "required": [
           "configured",
@@ -3429,7 +3660,8 @@
           "lastError",
           "sent",
           "failed",
-          "skipped"
+          "skipped",
+          "queued"
         ],
         "type": "object",
         "properties": {
@@ -3481,6 +3713,14 @@
             "format": "int32"
           },
           "skipped": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "queued": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -3799,6 +4039,27 @@
           }
         }
       },
+      "QueueResponse": {
+        "required": [
+          "lanes",
+          "recent"
+        ],
+        "type": "object",
+        "properties": {
+          "lanes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LaneStatus"
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobDto"
+            }
+          }
+        }
+      },
       "RecordPaymentRequest": {
         "required": [
           "amount",
@@ -4063,7 +4324,8 @@
           "previousImageTag",
           "upgradeBackupId",
           "update",
-          "isDrill"
+          "isDrill",
+          "jobs"
         ],
         "type": "object",
         "properties": {
@@ -4200,6 +4462,12 @@
           },
           "isDrill": {
             "type": "boolean"
+          },
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobDto"
+            }
           }
         }
       },

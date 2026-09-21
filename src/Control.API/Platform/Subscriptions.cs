@@ -11,7 +11,7 @@ namespace Ninja.Control.API.Platform;
 /// for now: a platform admin records each payment. A payment provider's
 /// webhook would call <see cref="RecordPaymentAsync"/> and nothing else.
 /// </summary>
-public sealed class SubscriptionService(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, MailQueue mail, IOptions<PlatformOptions> options)
+public sealed class SubscriptionService(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, IOptions<PlatformOptions> options)
 {
     private PlatformOptions Platform => options.Value;
 
@@ -49,9 +49,9 @@ public sealed class SubscriptionService(ControlContext context, ProvisioningQueu
         tenant.PaidThrough = tenant.PaidThrough is { } paid && paid > periodEnd ? paid : periodEnd;
         tenant.Subscription = SubscriptionStatus.Active;
         tenant.PastDueNotifiedAt = null;
+        context.Outbox.Add(OutboxMail.From(MailTemplates.PaymentReceived(tenant, amount, currency, periodEnd, reference, Platform.Mail)));
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("payment.recorded", tenant.Slug, new { amount, currency, periodEnd, reference }, ct);
-        mail.Enqueue(MailTemplates.PaymentReceived(tenant, amount, currency, periodEnd, reference, Platform.Mail));
         if (tenant.Status == TenantStatus.Suspended)
         {
             await audit.WriteAsync("tenant.resume", tenant.Slug, new { reason = "payment" }, ct);
@@ -65,9 +65,9 @@ public sealed class SubscriptionService(ControlContext context, ProvisioningQueu
     {
         tenant.Subscription = SubscriptionStatus.Suspended;
         tenant.SuspendedAt ??= DateTimeOffset.UtcNow;
+        context.Outbox.Add(OutboxMail.From(MailTemplates.SubscriptionSuspended(tenant, TenantHosts.For(tenant, Platform), Platform.Mail)));
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("subscription.suspended", tenant.Slug, new { reason }, ct);
-        mail.Enqueue(MailTemplates.SubscriptionSuspended(tenant, TenantHosts.For(tenant, Platform), Platform.Mail));
         if (tenant.Status is TenantStatus.Running or TenantStatus.Stopped)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "suspend"), ct);
     }
@@ -128,7 +128,6 @@ public sealed class SubscriptionSweepService(IServiceScopeFactory scopes, IOptio
         var context = scope.ServiceProvider.GetRequiredService<ControlContext>();
         var subscriptions = scope.ServiceProvider.GetRequiredService<SubscriptionService>();
         var audit = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
-        var mail = scope.ServiceProvider.GetRequiredService<MailQueue>();
         var platform = options.Value;
 
         // "Paid through the 30th" holds through the 30th where the platform is
@@ -149,10 +148,10 @@ public sealed class SubscriptionSweepService(IServiceScopeFactory scopes, IOptio
                 case SweepDecision.PastDue:
                     tenant.Subscription = SubscriptionStatus.PastDue;
                     tenant.PastDueNotifiedAt = DateTimeOffset.UtcNow;
+                    var graceEnds = tenant.PaidThrough!.Value.AddDays(tenant.GraceDays ?? platform.SubscriptionGraceDays);
+                    context.Outbox.Add(OutboxMail.From(MailTemplates.SubscriptionPastDue(tenant, TenantHosts.For(tenant, platform), graceEnds, platform.Mail)));
                     await context.SaveChangesAsync(ct);
                     await audit.WriteAsync("subscription.past-due", tenant.Slug, new { tenant.PaidThrough }, ct, "sweep");
-                    var graceEnds = tenant.PaidThrough!.Value.AddDays(tenant.GraceDays ?? platform.SubscriptionGraceDays);
-                    mail.Enqueue(MailTemplates.SubscriptionPastDue(tenant, TenantHosts.For(tenant, platform), graceEnds, platform.Mail));
                     break;
                 case SweepDecision.Suspend:
                     logger.LogInformation("{Slug} past its grace; suspending", tenant.Slug);

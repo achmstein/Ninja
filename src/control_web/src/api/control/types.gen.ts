@@ -178,6 +178,32 @@ export type ImpersonationLink = {
     expiresAt: string;
 };
 
+export type JobDto = {
+    id: number | string;
+    slug: null | string;
+    action: string;
+    imageTag: null | string;
+    lane: JobLane;
+    status: JobStatus;
+    attempts: number | string;
+    enqueuedAt: string;
+    startedAt: null | string;
+    finishedAt: null | string;
+    error: null | string;
+    requestedBy: string;
+    position: null | number | string;
+};
+
+export type JobLane = 'Stamp' | 'Backup';
+
+export type JobStatus = 'Queued' | 'Running' | 'Done' | 'Failed' | 'Cancelled';
+
+export type LaneStatus = {
+    lane: JobLane;
+    running: null | JobDto;
+    queued: Array<JobDto>;
+};
+
 export type MailStatusResponse = {
     configured: boolean;
     host: null | string;
@@ -188,6 +214,7 @@ export type MailStatusResponse = {
     sent: number | string;
     failed: number | string;
     skipped: number | string;
+    queued: number | string;
 };
 
 export type MetricsDay = {
@@ -251,6 +278,11 @@ export type ProblemDetails = {
     status?: null | number | string;
     detail?: null | string;
     instance?: null | string;
+};
+
+export type QueueResponse = {
+    lanes: Array<LaneStatus>;
+    recent: Array<JobDto>;
 };
 
 export type RecordPaymentRequest = {
@@ -331,6 +363,7 @@ export type TenantDetail = {
     upgradeBackupId: null | string;
     update: null | TenantUpdate;
     isDrill: boolean;
+    jobs: Array<JobDto>;
 };
 
 export type TenantHostsDto = {
@@ -2213,6 +2246,77 @@ export type ResumeTenantResponses = {
      */
     202: unknown;
 };
+
+export type GetPlatformJobsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * How many of the latest jobs, 200 at most
+         */
+        take?: number | string;
+    };
+    url: '/api/control/platform/jobs';
+};
+
+export type GetPlatformJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlatformJobsResponses = {
+    /**
+     * OK
+     */
+    200: QueueResponse;
+};
+
+export type GetPlatformJobsResponse = GetPlatformJobsResponses[keyof GetPlatformJobsResponses];
+
+export type CancelPlatformJobData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/jobs/{id}';
+};
+
+export type CancelPlatformJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type CancelPlatformJobError = CancelPlatformJobErrors[keyof CancelPlatformJobErrors];
+
+export type CancelPlatformJobResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type CancelPlatformJobResponse = CancelPlatformJobResponses[keyof CancelPlatformJobResponses];
 
 export type TlsAskData = {
     body?: never;

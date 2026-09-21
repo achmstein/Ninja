@@ -1,7 +1,8 @@
-using System.Threading.Channels;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
+using Ninja.Control.API.Infrastructure;
+using Ninja.Control.API.Model;
 using MimeKit;
 
 namespace Ninja.Control.API.Platform;
@@ -51,17 +52,7 @@ public sealed class NullMailer(ILogger<NullMailer> logger) : IMailer
     }
 }
 
-/// <summary>What the callers hand their mails to; nobody waits on a server.</summary>
-public sealed class MailQueue
-{
-    private readonly Channel<MailMessage> _channel = Channel.CreateUnbounded<MailMessage>();
-
-    public void Enqueue(MailMessage message) => _channel.Writer.TryWrite(message);
-
-    public IAsyncEnumerable<MailMessage> ReadAllAsync(CancellationToken ct) => _channel.Reader.ReadAllAsync(ct);
-}
-
-/// <summary>What the platform page shows about mail: is it on, when it last worked, what last went wrong.</summary>
+/// <summary>Counters for this process; the outbox table is the record the platform page reads.</summary>
 public sealed class MailStatus
 {
     private int _sent, _failed, _skipped;
@@ -83,30 +74,53 @@ public sealed class MailStatus
     public void MarkSkipped() => Interlocked.Increment(ref _skipped);
 }
 
-/// <summary>Sends what is queued, one at a time, three attempts each; every outcome is audited.</summary>
-public sealed class MailSender(MailQueue queue, IMailer mailer, MailStatus status, IServiceScopeFactory scopes, ILogger<MailSender> logger) : BackgroundService
+/// <summary>
+/// Sends what the outbox holds, oldest first, three attempts each; every
+/// outcome is written back to the row and audited. Polls every few seconds:
+/// the rows are written by whoever had the record open, in the same save as
+/// what they announce, so there is nothing to signal.
+/// </summary>
+public sealed class MailSender(IMailer mailer, MailStatus status, IServiceScopeFactory scopes, ILogger<MailSender> logger) : BackgroundService
 {
     internal static readonly TimeSpan[] Backoff = [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30)];
 
+    private static readonly TimeSpan Poll = TimeSpan.FromSeconds(5);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (var message in queue.ReadAllAsync(stoppingToken))
+        using var timer = new PeriodicTimer(Poll);
+        do
         {
-            using var scope = scopes.CreateScope();
-            var audit = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
             try
             {
-                await DeliverAsync(message, mailer, audit, status, Task.Delay, stoppingToken);
+                while (await SendOneAsync(stoppingToken)) { }
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
-                logger.LogError(ex, "Delivering {Template} to {To} threw past the retries", message.Template, message.To);
+                logger.LogError(ex, "The mail sender could not read the outbox");
             }
-        }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
-    /// <summary>The attempts and the audit, with the wait injectable so the test does not sleep.</summary>
-    internal static async Task DeliverAsync(MailMessage message, IMailer mailer, IAuditWriter audit, MailStatus status, Func<TimeSpan, CancellationToken, Task> delay, CancellationToken ct)
+    /// <summary>The oldest queued mail, delivered and closed; false when the outbox is empty.</summary>
+    internal async Task<bool> SendOneAsync(CancellationToken ct)
+    {
+        using var scope = scopes.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ControlContext>();
+        var audit = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
+        var row = await context.Outbox.Where(m => m.Status == MailOutcome.Queued).OrderBy(m => m.Id).FirstOrDefaultAsync(ct);
+        if (row is null) return false;
+        var (outcome, attempts, error) = await DeliverAsync(row.ToMessage(), mailer, audit, status, Task.Delay, ct);
+        row.Status = outcome;
+        row.Attempts = attempts;
+        row.LastError = error;
+        row.SentAt = outcome == MailOutcome.Sent ? DateTimeOffset.UtcNow : null;
+        await context.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <summary>The attempts and the audit, with the wait injectable so the test does not sleep. Never throws past the retries: the outcome says what happened.</summary>
+    internal static async Task<(MailOutcome Outcome, int Attempts, string? Error)> DeliverAsync(MailMessage message, IMailer mailer, IAuditWriter audit, MailStatus status, Func<TimeSpan, CancellationToken, Task> delay, CancellationToken ct)
     {
         var details = new { template = message.Template, to = message.To };
         if (!mailer.Configured)
@@ -114,19 +128,21 @@ public sealed class MailSender(MailQueue queue, IMailer mailer, MailStatus statu
             await mailer.SendAsync(message, ct);
             status.MarkSkipped();
             await audit.WriteAsync("mail.skipped", message.Slug, details, ct, "mail");
-            return;
+            return (MailOutcome.Skipped, 0, null);
         }
 
         Exception? last = null;
+        var attempts = 0;
         for (var attempt = 0; attempt <= Backoff.Length; attempt++)
         {
             if (attempt > 0) await delay(Backoff[attempt - 1], ct);
+            attempts++;
             try
             {
                 await mailer.SendAsync(message, ct);
                 status.MarkSent();
                 await audit.WriteAsync("mail.sent", message.Slug, details, ct, "mail");
-                return;
+                return (MailOutcome.Sent, attempts, null);
             }
             catch (Exception ex) when (!ct.IsCancellationRequested)
             {
@@ -135,5 +151,6 @@ public sealed class MailSender(MailQueue queue, IMailer mailer, MailStatus statu
         }
         status.MarkFailed(last!.Message);
         await audit.WriteAsync("mail.failed", message.Slug, new { details.template, details.to, error = last.Message }, ct, "mail");
+        return (MailOutcome.Failed, attempts, last.Message);
     }
 }

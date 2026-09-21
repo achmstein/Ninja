@@ -353,7 +353,7 @@ public sealed class PlatformBackupService(BackupService backups, IServiceScopeFa
 /// (inline, they are small), the archive pruned, then every running tenant
 /// queued for a backup; the oldest go once there are more than kept.
 /// </summary>
-public sealed class NightlyBackupService(IServiceScopeFactory scopes, ProvisioningQueue queue, BackupService backups, PlatformBackupService platformBackups, MailQueue mail, IOptions<PlatformOptions> options, ILogger<NightlyBackupService> logger) : BackgroundService
+public sealed class NightlyBackupService(IServiceScopeFactory scopes, ProvisioningQueue queue, BackupService backups, PlatformBackupService platformBackups, IOptions<PlatformOptions> options, ILogger<NightlyBackupService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -397,7 +397,10 @@ public sealed class NightlyBackupService(IServiceScopeFactory scopes, Provisioni
             .Where(x => x.LastAt is null || DateTimeOffset.UtcNow - x.LastAt > TimeSpan.FromDays(2))
             .ToList();
         if (stale.Count > 0 && !string.IsNullOrWhiteSpace(options.Value.Mail.OpsTo))
-            mail.Enqueue(MailTemplates.OpsBackupStale(stale, options.Value));
+        {
+            context.Outbox.Add(OutboxMail.From(MailTemplates.OpsBackupStale(stale, options.Value)));
+            await context.SaveChangesAsync(ct);
+        }
 
         foreach (var tenant in running)
         {

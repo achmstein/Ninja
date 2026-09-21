@@ -123,11 +123,12 @@ public sealed class MailTests
         var mailer = new CountingMailer(failFirst: 0);
         var audit = new CollectingAudit();
         var status = new MailStatus();
-        await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
+        var (outcome, attempts, error) = await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
         Assert.AreEqual(1, mailer.Calls);
         CollectionAssert.AreEqual(new[] { "mail.sent" }, audit.Actions);
         Assert.AreEqual(1, status.Sent);
         Assert.IsNotNull(status.LastSentAt);
+        Assert.AreEqual((MailOutcome.Sent, 1, (string?)null), (outcome, attempts, error));
     }
 
     [TestMethod]
@@ -136,11 +137,14 @@ public sealed class MailTests
         var mailer = new CountingMailer(failFirst: 5);
         var audit = new CollectingAudit();
         var status = new MailStatus();
-        await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
+        var (outcome, attempts, error) = await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
         Assert.AreEqual(3, mailer.Calls);
         CollectionAssert.AreEqual(new[] { "mail.failed" }, audit.Actions);
         Assert.AreEqual(1, status.Failed);
         Assert.Contains("attempt 3", status.LastError!);
+        Assert.AreEqual(MailOutcome.Failed, outcome);
+        Assert.AreEqual(3, attempts);
+        Assert.Contains("attempt 3", error!);
     }
 
     [TestMethod]
@@ -149,10 +153,11 @@ public sealed class MailTests
         var mailer = new CountingMailer(failFirst: 0, configured: false);
         var audit = new CollectingAudit();
         var status = new MailStatus();
-        await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
+        var (outcome, _, _) = await MailSender.DeliverAsync(Message, mailer, audit, status, NoWait, CancellationToken.None);
         Assert.AreEqual(1, mailer.Calls);
         CollectionAssert.AreEqual(new[] { "mail.skipped" }, audit.Actions);
         Assert.AreEqual(1, status.Skipped);
+        Assert.AreEqual(MailOutcome.Skipped, outcome);
     }
 
     [TestMethod]

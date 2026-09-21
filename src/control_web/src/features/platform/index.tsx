@@ -7,6 +7,7 @@ import {
   fleetUpgradeMutation,
   getPlatformBackupsOptions,
   getPlatformCapacityOptions,
+  getPlatformJobsOptions,
   getPlatformMailOptions,
   getPlatformOptions,
   listTenantsOptions,
@@ -39,10 +40,11 @@ import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
 import { PlatformBackups } from './platform-backups'
+import { QueueSummary, QueueTable } from './queue-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'capacity' | 'backups' | 'audit'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -76,6 +78,8 @@ export function PlatformPage() {
   // Only the stale flag is read here; the tab shows the rest
   const platformBackups = useQuery({ ...getPlatformBackupsOptions(), refetchInterval: 60_000 })
   const mail = useQuery({ ...getPlatformMailOptions(), refetchInterval: 60_000 })
+  // What the lanes are on, always in view: a stamp in flight explains a tenant that reads "Upgrading"
+  const jobs = useQuery({ ...getPlatformJobsOptions({ query: { take: 1 } }), refetchInterval: 10_000 })
   // The list keeps itself fresh while any stack is mid-change; otherwise
   // it is as static as the platform is.
   const tenants = useQuery({
@@ -141,6 +145,8 @@ export function PlatformPage() {
 
       <CapacityStrip capacity={capacity.data} loading={capacity.isLoading} />
 
+      <QueueSummary lanes={jobs.data?.lanes} />
+
       {mail.data && (
         <div className='text-muted-foreground flex flex-wrap items-center gap-x-2 text-sm'>
           {mail.data.configured ? <Mail className='size-3.5' /> : <MailX className='size-3.5' />}
@@ -173,6 +179,7 @@ export function PlatformPage() {
       >
         <TabsList>
           <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
+          <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
           <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
           <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
           <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
@@ -183,6 +190,9 @@ export function PlatformPage() {
             usage={capacity.data?.tenants ?? []}
             loading={tenants.isLoading}
           />
+        </TabsContent>
+        <TabsContent value='queue'>
+          <QueueTable />
         </TabsContent>
         <TabsContent value='capacity'>
           <CapacityTable

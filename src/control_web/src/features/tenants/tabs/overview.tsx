@@ -10,6 +10,7 @@ import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tena
 import { UpdateStanding } from '../dialogs'
 import { EditRecordSheet } from '../edit-record-sheet'
 import { Steps } from '../steps'
+import { JobLabel } from '@/features/platform/queue-table'
 
 const HOSTS: { key: keyof TenantDetail['hosts']; label: TranslationKey }[] = [
   { key: 'customer', label: 'hostCustomer' },
@@ -120,6 +121,22 @@ export function OverviewTab({
           )}
           <dt className={dtClass}>{t('welcomeSent')}</dt>
           <dd>{tenant.welcomeSentAt ? format.dateTime(tenant.welcomeSentAt) : t('never')}</dd>
+          {tenant.jobs.length > 0 && (
+            <>
+              <dt className={dtClass}>{t('tabQueue')}</dt>
+              <dd className='flex flex-col gap-0.5'>
+                {tenant.jobs.map((job) => (
+                  <span key={job.id}>
+                    <JobLabel job={job} />
+                    <span className='text-muted-foreground'>
+                      {' · '}
+                      {job.status === 'Running' ? t('laneRunning') : t('positionInLine', { position: job.position ?? 0 })}
+                    </span>
+                  </span>
+                ))}
+              </dd>
+            </>
+          )}
         </dl>
 
         <dl className={dlClass}>

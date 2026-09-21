@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using System.Threading.Channels;
+
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
@@ -21,7 +21,6 @@ public sealed class Provisioner(
     ITenantStack stack,
     IAuditWriter audit,
     BackupService backups,
-    MailQueue mail,
     ILogger<Provisioner> logger)
 {
     private const string Source = "provisioner";
@@ -124,7 +123,8 @@ public sealed class Provisioner(
             // The owner hears once, with the temporary password; a retry of a failed stamp is the first time it can
             if (tenant.WelcomeSentAt is null)
             {
-                mail.Enqueue(MailTemplates.Welcome(tenant, hosts, Platform.Mail));
+                // In the same save as the record: a restart between the two cannot lose the owner's first password
+                context.Outbox.Add(OutboxMail.From(MailTemplates.Welcome(tenant, hosts, Platform.Mail)));
                 tenant.WelcomeSentAt = DateTimeOffset.UtcNow;
             }
             await context.SaveChangesAsync(ct);
@@ -135,9 +135,9 @@ public sealed class Provisioner(
             logger.LogError(ex, "Provisioning {Slug} failed", tenant.Slug);
             tenant.Status = TenantStatus.Failed;
             tenant.LastError = ex.Message;
+            if (!string.IsNullOrWhiteSpace(Platform.Mail.OpsTo)) context.Outbox.Add(OutboxMail.From(MailTemplates.OpsProvisionFailed(tenant, runId, ex.Message, Platform)));
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.provision.failed", tenant.Slug, new { runId, error = ex.Message }, ct, Source);
-            if (!string.IsNullOrWhiteSpace(Platform.Mail.OpsTo)) mail.Enqueue(MailTemplates.OpsProvisionFailed(tenant, runId, ex.Message, Platform));
         }
     }
 
@@ -620,8 +620,12 @@ public sealed class Provisioner(
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Backup of {Slug} failed", tenant.Slug);
+            if (!string.IsNullOrWhiteSpace(Platform.Mail.OpsTo))
+            {
+                context.Outbox.Add(OutboxMail.From(MailTemplates.OpsBackupFailed(tenant, ex.Message, Platform)));
+                await context.SaveChangesAsync(ct);
+            }
             await audit.WriteAsync("backup.failed", tenant.Slug, new { error = ex.Message }, ct, "backup");
-            if (!string.IsNullOrWhiteSpace(Platform.Mail.OpsTo)) mail.Enqueue(MailTemplates.OpsBackupFailed(tenant, ex.Message, Platform));
             return;
         }
         if (created is not null) await OffsiteStepAsync(tenant, runId, created.Id, ct);
@@ -726,83 +730,6 @@ public sealed class Provisioner(
     private static string Truncate(string s) => s.Length <= 4000 ? s : s[..4000];
 }
 
-/// <summary>One job at a time, in order: docker compose on one box does not like parallel stamps.</summary>
-/// <param name="ImageTag">For an upgrade: the tag to move to (null keeps the record's). On the job, not the record, so a queued fleet upgrade that never runs changes nothing.</param>
-/// <param name="CanaryId">For a fleet upgrade: the tenant that went first; the rest run only while it stands Running on the tag.</param>
-public sealed record ProvisioningJob(Guid TenantId, string Action, string? ImageTag = null, Guid? CanaryId = null);
-
-public sealed class ProvisioningQueue
-{
-    private readonly Channel<ProvisioningJob> _channel = Channel.CreateUnbounded<ProvisioningJob>();
-
-    public ValueTask EnqueueAsync(ProvisioningJob job, CancellationToken ct) => _channel.Writer.WriteAsync(job, ct);
-
-    public IAsyncEnumerable<ProvisioningJob> ReadAllAsync(CancellationToken ct) => _channel.Reader.ReadAllAsync(ct);
-}
-
-public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, ILogger<ProvisioningWorker> logger) : BackgroundService
-{
-    /// <summary>The statuses a job leaves a tenant in while it works; a job that dies mid-way must not leave one there.</summary>
-    internal static readonly TenantStatus[] Transitional = [TenantStatus.Provisioning, TenantStatus.Upgrading, TenantStatus.Destroying];
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await foreach (var job in queue.ReadAllAsync(stoppingToken))
-        {
-            using var scope = scopes.CreateScope();
-            logger.LogInformation("{Action} {TenantId}", job.Action, job.TenantId);
-            try
-            {
-                await RunAsync(scope.ServiceProvider.GetRequiredService<Provisioner>(), job, stoppingToken);
-            }
-            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
-            {
-                // Every job catches its own failures; what reaches here is a tenant row that is gone, a bug, or a
-                // cancellation that was not ours. The queue must outlive it, and the tenant must not stay "in progress".
-                logger.LogError(ex, "{Action} {TenantId} crashed", job.Action, job.TenantId);
-                await MarkCrashedAsync(scope.ServiceProvider, job, ex, stoppingToken);
-            }
-            // Whatever the job did to the stack, the "behind" view is read again on the monitor's next tick
-            updates.Invalidate();
-        }
-    }
-
-    private static Task RunAsync(Provisioner provisioner, ProvisioningJob job, CancellationToken ct) => job.Action switch
-    {
-        "provision" => provisioner.ProvisionAsync(job.TenantId, ct),
-        "destroy" => provisioner.DestroyAsync(job.TenantId, ct),
-        "edge" => provisioner.EdgeAsync(job.TenantId, ct),
-        "backup" => provisioner.BackupAsync(job.TenantId, ct),
-        "secure" => provisioner.SecureAsync(job.TenantId, rotate: false, ct),
-        "rotate" => provisioner.SecureAsync(job.TenantId, rotate: true, ct),
-        "entitlements" => provisioner.EntitlementsAsync(job.TenantId, ct),
-        "upgrade" => provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, ct),
-        "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
-        _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
-    };
-
-    private static async Task MarkCrashedAsync(IServiceProvider services, ProvisioningJob job, Exception ex, CancellationToken ct)
-    {
-        try
-        {
-            var context = services.GetRequiredService<ControlContext>();
-            var audit = services.GetRequiredService<IAuditWriter>();
-            var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Id == job.TenantId, ct);
-            if (tenant is not null && Transitional.Contains(tenant.Status))
-            {
-                tenant.Status = TenantStatus.Failed;
-                tenant.LastError = $"{job.Action} crashed: {ex.Message}";
-                await context.SaveChangesAsync(ct);
-            }
-            await audit.WriteAsync("job.crashed", tenant?.Slug, new { job.Action, error = ex.Message }, ct, "provisioner");
-        }
-        catch (Exception inner) when (!ct.IsCancellationRequested)
-        {
-            services.GetRequiredService<ILogger<ProvisioningWorker>>().LogError(inner, "Could not record the crash of {Action} {TenantId}", job.Action, job.TenantId);
-        }
-    }
-}
-
 /// <summary>What the expiry sweep does with one demo.</summary>
 public enum DemoAction
 {
@@ -816,7 +743,7 @@ public enum DemoAction
 }
 
 /// <summary>Demos expire: the owner is warned, the stack is stopped when its time is up, warned again, and destroyed after the grace days. Once an hour.</summary>
-public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQueue queue, MailQueue mail, IOptions<PlatformOptions> options, ILogger<DemoExpiryService> logger) : BackgroundService
+public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQueue queue, IOptions<PlatformOptions> options, ILogger<DemoExpiryService> logger) : BackgroundService
 {
     /// <summary>Pure, for the test: what one demo needs now. A warning goes once (the record remembers) and an extension clears it.</summary>
     public static DemoAction Decide(Tenant t, DateTimeOffset now, int graceDays, int warnDays, int destroyWarnDays)
@@ -875,18 +802,18 @@ public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQ
             switch (Decide(tenant, now, platform.DemoGraceDays, platform.DemoWarnDays, platform.DemoDestroyWarnDays))
             {
                 case DemoAction.Warn:
-                    mail.Enqueue(MailTemplates.DemoExpiring(tenant, hosts, DaysLeft(tenant.ExpiresAt!.Value, now), platform.Mail));
+                    context.Outbox.Add(OutboxMail.From(MailTemplates.DemoExpiring(tenant, hosts, DaysLeft(tenant.ExpiresAt!.Value, now), platform.Mail)));
                     tenant.ExpiryWarnedAt = now;
                     await audit.WriteAsync("demo.expiring", tenant.Slug, new { expiresAt = tenant.ExpiresAt }, ct, "expiry");
                     break;
                 case DemoAction.Stop:
                     logger.LogInformation("Demo {Slug} expired; stopping", tenant.Slug);
-                    mail.Enqueue(MailTemplates.DemoStopped(tenant, hosts, platform.DemoGraceDays, platform.Mail));
+                    context.Outbox.Add(OutboxMail.From(MailTemplates.DemoStopped(tenant, hosts, platform.DemoGraceDays, platform.Mail)));
                     await audit.WriteAsync("demo.expired", tenant.Slug, new { expiresAt = tenant.ExpiresAt }, ct, "expiry");
                     await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "stop"), ct);
                     break;
                 case DemoAction.WarnDestroy:
-                    mail.Enqueue(MailTemplates.DemoDestroyedSoon(tenant, hosts, DaysLeft(tenant.ExpiresAt!.Value.AddDays(platform.DemoGraceDays), now), platform.Mail));
+                    context.Outbox.Add(OutboxMail.From(MailTemplates.DemoDestroyedSoon(tenant, hosts, DaysLeft(tenant.ExpiresAt!.Value.AddDays(platform.DemoGraceDays), now), platform.Mail)));
                     tenant.DestroyWarnedAt = now;
                     await audit.WriteAsync("demo.destroying-soon", tenant.Slug, new { expiresAt = tenant.ExpiresAt }, ct, "expiry");
                     break;

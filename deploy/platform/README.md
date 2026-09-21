@@ -200,8 +200,26 @@ pre-upgrade backup into a new slug instead (the dialog names it). Use
 immutable tags in production; `latest` to `latest` has nothing to go back
 to. **Upgrade all** takes an optional canary: it goes first, and the rest
 run only while it stays Running on the new tag (`tenant.upgrade.skipped`
-otherwise). The queue is serial, so a fleet of *n* stacks takes *n* × a
+otherwise). Stamps run one at a time, so a fleet of *n* stacks takes *n* × a
 minute or so.
+
+Every job (a stamp, a stop, an upgrade, a backup) is a row in `controldb`,
+not something held in memory: a restart of the control plane loses nothing,
+and a job that was running when the process died is queued again once
+(every step is idempotent) and abandoned the second time. A tenant left
+Provisioning, Upgrading or Destroying with nothing queued for it is marked
+Failed with the reason, so the control app offers a retry instead of a
+stamp that never ends. Two lanes: **stamps** (compose up and down,
+upgrades, stops) go one at a time; **backups** run beside them, so a
+nightly run never holds a suspension, and a backup waits while its own
+tenant is mid-stamp. What an admin or a sweep needs now (stop, suspend,
+destroy, start, resume) goes before a stamp already waiting. The same job
+queued twice is one row. The **Queue** tab on the platform page shows each
+lane's running job, what waits behind it (with a way to take a queued job
+off the line), and what ran lately; a tenant's page names its own. Mail
+goes through an outbox table the same way, written in the same save as
+whatever it announces, so the owner's first password cannot be lost
+between a stamp finishing and the SMTP call.
 
 To bring the platform itself back on a new box: install this folder,
 restore `controldb` and `keycloak` from the newest `_platform` backup

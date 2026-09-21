@@ -34,6 +34,7 @@ public static class Extensions
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();
         builder.Services.AddSingleton<ProvisioningQueue>();
+        builder.Services.AddSingleton<WorkerHeartbeat>();
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddScoped<SubscriptionService>();
         builder.Services.AddSingleton<CapacityCache>();
@@ -45,7 +46,6 @@ public static class Extensions
         builder.Services.AddSingleton<PlatformBackupService>();
 
         // Mail goes out only once a host is set; until then every mail is audited as skipped
-        builder.Services.AddSingleton<MailQueue>();
         builder.Services.AddSingleton<MailStatus>();
         var mail = builder.Configuration.GetSection($"{PlatformOptions.Section}:Mail").Get<MailOptions>() ?? new();
         if (mail.Configured) builder.Services.AddSingleton<IMailer, SmtpMailer>();
@@ -56,7 +56,10 @@ public static class Extensions
         // The build boots the app once to write its OpenAPI document; there is no box, no database and no queue to serve then
         if (!builder.Environment.IsBuild())
         {
-            builder.Services.AddHostedService<ProvisioningWorker>();
+            // Recovery first (its StartAsync is awaited before the next service starts), then one worker per lane
+            builder.Services.AddHostedService<JobRecoveryService>();
+            builder.Services.AddHostedService<StampWorker>();
+            builder.Services.AddHostedService<BackupWorker>();
             builder.Services.AddHostedService<MailSender>();
             builder.Services.AddHostedService<DemoExpiryService>();
             builder.Services.AddHostedService<SubscriptionSweepService>();

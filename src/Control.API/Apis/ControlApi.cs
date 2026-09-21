@@ -40,6 +40,7 @@ public static partial class ControlApi
         MapBackupsApi(api);
         MapMailApi(api);
         MapSubscriptionApi(api);
+        MapJobsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();
@@ -171,13 +172,13 @@ public static partial class ControlApi
         return TypedResults.Created($"/api/control/tenants/{tenant.Slug}", TenantDetail.From(tenant, [], [], options.Value));
     }
 
-    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, UpdateCache updates, IOptions<PlatformOptions> options, string slug)
+    public static async Task<Results<Ok<TenantDetail>, NotFound>> GetTenant(ControlContext context, Provisioner provisioner, UpdateCache updates, IOptions<PlatformOptions> options, string slug, CancellationToken ct)
     {
-        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug);
+        var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
-        var lastRun = await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id).OrderByDescending(s => s.Id).Select(s => s.RunId).FirstOrDefaultAsync();
-        var steps = lastRun == Guid.Empty ? [] : await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id && s.RunId == lastRun).OrderBy(s => s.Id).ToListAsync();
-        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value, updates.For(slug)));
+        var lastRun = await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id).OrderByDescending(s => s.Id).Select(s => s.RunId).FirstOrDefaultAsync(ct);
+        var steps = lastRun == Guid.Empty ? [] : await context.Steps.AsNoTracking().Where(s => s.TenantId == tenant.Id && s.RunId == lastRun).OrderBy(s => s.Id).ToListAsync(ct);
+        return TypedResults.Ok(TenantDetail.From(tenant, steps, provisioner.SeedImages(tenant).Keys.ToList(), options.Value, updates.For(slug), await OpenJobsAsync(context, tenant, ct)));
     }
 
     public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Provision(
@@ -420,6 +421,7 @@ public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, 
 /// <summary>The café's record on the platform: who to call, where it is, what it pays, what was agreed.</summary>
 public record TenantRecordDto(string? ContactName, string? Phone, string? Address, TenantPlan Plan, string? Notes);
 
+/// <param name="Jobs">What is running or waiting for this tenant, with each queued job's place in line.</param>
 public record TenantDetail(
     string Slug,
     string NameEn,
@@ -448,9 +450,10 @@ public record TenantDetail(
     string? PreviousImageTag,
     string? UpgradeBackupId,
     TenantUpdate? Update,
-    bool IsDrill)
+    bool IsDrill,
+    IReadOnlyList<JobDto> Jobs)
 {
-    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null)
+    public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
             new(t.ContactName, t.Phone, t.Address, t.Plan, t.Notes),
             t.ImageTag, t.CreatedAt, t.ExpiresAt, t.ProvisionedAt, t.LastError,
@@ -462,7 +465,8 @@ public record TenantDetail(
             t.PreviousImageTag,
             t.UpgradeBackupId,
             update,
-            t.IsDrill);
+            t.IsDrill,
+            jobs ?? []);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>
