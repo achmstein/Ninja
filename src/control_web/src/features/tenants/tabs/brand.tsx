@@ -277,10 +277,11 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
             onChange={setPrimary}
             swatchesFrom={brand.logoUrl}
             eyedropper
+            hint={t('brandColorHint')}
           />
           <div className='grid gap-4 sm:grid-cols-2'>
-            <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper />
-            <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper />
+            <ColorField id='brand-accent' label={t('accentColor')} value={accent} onChange={setAccent} eyedropper hint={t('secondaryColorHint')} />
+            <ColorField id='brand-surface' label={t('surfaceColor')} value={surface} onChange={setSurface} fallback='#ffffff' eyedropper hint={t('surfaceColorHint')} />
           </div>
           <div className='grid gap-4 sm:grid-cols-3'>
             <div className='grid gap-2'>

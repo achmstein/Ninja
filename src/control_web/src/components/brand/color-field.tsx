@@ -22,6 +22,8 @@ type ColorFieldProps = {
   swatchesFrom?: File | string | null
   /** The eyedropper, where the browser has one */
   eyedropper?: boolean
+  /** A line under the field on what the colour reaches */
+  hint?: string
   className?: string
 }
 
@@ -39,6 +41,7 @@ export function ColorField({
   placeholder,
   swatchesFrom,
   eyedropper,
+  hint,
   className,
 }: ColorFieldProps) {
   const t = useT()
@@ -139,6 +142,7 @@ export function ColorField({
           ))}
         </div>
       )}
+      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
   )
 }

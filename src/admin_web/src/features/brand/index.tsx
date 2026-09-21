@@ -269,12 +269,14 @@ function BrandForm({ brand }: { brand: Brand }) {
                   label={t('brandColor')}
                   value={color}
                   onChange={setColor}
+                  hint={t('brandColorHint')}
                 />
                 <ColorField
                   id='brand-accent'
                   label={t('accentColor')}
                   value={theme.accent}
                   onChange={(accent) => setTheme({ ...theme, accent })}
+                  hint={t('secondaryColorHint')}
                 />
                 <ColorField
                   id='brand-surface'
@@ -282,6 +284,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                   value={theme.surface}
                   onChange={(surface) => setTheme({ ...theme, surface })}
                   fallback='#ffffff'
+                  hint={t('surfaceColorHint')}
                 />
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-radius' className='text-xs'>
@@ -557,6 +560,7 @@ function ColorField({
   onChange,
   fallback = DEFAULT_COLOR,
   placeholder,
+  hint,
 }: {
   id: string
   label: string
@@ -565,6 +569,8 @@ function ColorField({
   fallback?: string
   /** What the empty field says; the default is the platform's own colour */
   placeholder?: string
+  /** A line under the field on what the colour reaches */
+  hint?: string
 }) {
   const t = useT()
   return (
@@ -600,6 +606,7 @@ function ColorField({
           </Button>
         )}
       </div>
+      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
   )
 }
