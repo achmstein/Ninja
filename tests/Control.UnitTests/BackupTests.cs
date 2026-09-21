@@ -203,4 +203,30 @@ public sealed class BackupTests
         wait = NightlyBackupService.UntilNextRun(new DateTimeOffset(2026, 7, 1, 2, 0, 0, TimeSpan.Zero), "Mars/Olympus", 3);
         Assert.AreEqual(TimeSpan.FromHours(1), wait);
     }
+
+    [TestMethod]
+    public void The_drill_tenant_is_never_the_customers_and_hears_nothing()
+    {
+        var source = new Tenant { Slug = "blue", NameEn = "Blue", Kind = TenantKind.Customer, OwnerEmail = "owner@blue.test", Country = "EG", Currency = "EGP", TimeZone = "Africa/Cairo", DefaultLanguage = "ar", ImageTag = "v3" };
+        var newest = new BackupInfo("20260901-030000", DateTimeOffset.UtcNow, 1, [], false, "v2");
+        var platform = new PlatformOptions { Domain = "ninja.app", Mail = new MailOptions { OpsTo = "Ops@Ninja.app" } };
+
+        var drill = new Tenant { Slug = "drill-blue" };
+        RestoreDrillService.Shape(drill, source, newest, platform);
+
+        Assert.IsTrue(drill.IsDrill);
+        Assert.AreEqual("ops@ninja.app", drill.OwnerEmail, "the realm's owner is ours, not the café's");
+        Assert.IsNotNull(drill.WelcomeSentAt, "no welcome, no temporary password in anyone's inbox");
+        Assert.AreEqual("v2", drill.ImageTag, "the build the backup was taken on");
+        Assert.AreEqual("blue/20260901-030000", drill.RestoreFrom);
+        Assert.AreEqual(TenantKind.Demo, drill.Kind);
+        Assert.IsTrue(drill.ExpiresAt <= DateTimeOffset.UtcNow);
+        // The demo sweep leaves it alone: the drill destroys it itself
+        drill.Status = TenantStatus.Running;
+        Assert.AreEqual(DemoAction.None, DemoExpiryService.Decide(drill, DateTimeOffset.UtcNow.AddHours(1), 7, 3, 2));
+
+        // Without an ops address the owner is a platform address, still never the customer's
+        RestoreDrillService.Shape(drill, source, newest, new PlatformOptions { Domain = "ninja.app" });
+        Assert.AreEqual("drill@ninja.app", drill.OwnerEmail);
+    }
 }

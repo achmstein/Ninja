@@ -330,6 +330,7 @@ export type TenantDetail = {
     previousImageTag: null | string;
     upgradeBackupId: null | string;
     update: null | TenantUpdate;
+    isDrill: boolean;
 };
 
 export type TenantHostsDto = {
@@ -406,6 +407,7 @@ export type TenantSummary = {
     subscription: SubscriptionStatus;
     paidThrough: null | string;
     update: null | TenantUpdate;
+    isDrill: boolean;
 };
 
 export type TenantUpdate = {

@@ -142,7 +142,9 @@ public static partial class ControlApi
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The image must be between 1 byte and 5 MB." });
 
         var path = provisioner.SeedImagePath(tenant, slot);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var dir = Path.GetDirectoryName(path)!;
+        Directory.CreateDirectory(dir);
+        Provisioner.OwnerOnly(dir);
         await using (var target = File.Create(path))
         {
             await file.CopyToAsync(target, ct);

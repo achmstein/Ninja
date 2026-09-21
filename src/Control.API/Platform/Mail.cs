@@ -98,7 +98,7 @@ public sealed class MailSender(MailQueue queue, IMailer mailer, MailStatus statu
             {
                 await DeliverAsync(message, mailer, audit, status, Task.Delay, stoppingToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogError(ex, "Delivering {Template} to {To} threw past the retries", message.Template, message.To);
             }
@@ -128,7 +128,7 @@ public sealed class MailSender(MailQueue queue, IMailer mailer, MailStatus statu
                 await audit.WriteAsync("mail.sent", message.Slug, details, ct, "mail");
                 return;
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!ct.IsCancellationRequested)
             {
                 last = ex;
             }

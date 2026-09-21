@@ -22,10 +22,14 @@ public static class Extensions
         // Kinds and statuses travel as their names, not their numbers
         builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-        // No cookie jar: the impersonation call's Set-Cookie headers are read off the response and handed to a browser
-        builder.Services.AddHttpClient("keycloak").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
+        // No cookie jar: the impersonation call's Set-Cookie headers are read off the response and handed to a browser.
+        // No standard resilience on these two: it retries PUTs that are not idempotent (a realm, a brand image) and its
+        // circuit breaker trips while a stack is still coming up; the provisioner does its own waiting.
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is marked experimental; the alternative is to hand-roll the pipeline
+        builder.Services.AddHttpClient("keycloak").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false }).RemoveAllResilienceHandlers();
         builder.Services.AddSingleton<ImpersonationTickets>();
-        builder.Services.AddHttpClient("stack", client => client.Timeout = TimeSpan.FromSeconds(30));
+        builder.Services.AddHttpClient("stack", client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IAuditWriter, AuditWriter>();

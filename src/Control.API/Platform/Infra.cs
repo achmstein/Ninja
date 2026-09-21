@@ -249,7 +249,7 @@ public sealed class PlatformLockdownService(IDatabaseAdmin databases, ILogger<Pl
             {
                 await databases.LockDownAsync(db, stoppingToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogWarning(ex, "Could not close {Db} to PUBLIC", db);
             }
@@ -433,7 +433,8 @@ public sealed class HttpTenantStack(IStackProxy proxy, ILogger<HttpTenantStack> 
                     using var response = await proxy.SendAsync(tenant, HttpMethod.Get, $"/health/{service}", null, StackAuth.Anonymous, ct);
                     if (response.IsSuccessStatusCode) pending.Remove(service);
                 }
-                catch (HttpRequestException) { }
+                // Not up yet: refused, dropped, or hanging past the client's timeout (which surfaces as a cancellation that is not ours)
+                catch (Exception ex) when (ex is HttpRequestException || (ex is OperationCanceledException or TimeoutException && !ct.IsCancellationRequested)) { }
             }
             if (pending.Count == 0) break;
             if (DateTimeOffset.UtcNow > deadline)

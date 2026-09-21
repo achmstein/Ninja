@@ -138,6 +138,9 @@ public class Tenant
 
     public string? Notes { get; set; }
 
+    /// <summary>A scratch tenant the restore drill stamps and destroys: nobody is mailed about it and the demo sweep leaves it alone.</summary>
+    public bool IsDrill { get; set; }
+
     /// <summary>The first owner's temporary password; cleared once the owner has signed in and changed it (not tracked yet).</summary>
     public string? OwnerInitialPassword { get; set; }
 

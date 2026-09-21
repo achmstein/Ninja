@@ -130,7 +130,7 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag, restoredFrom = restore?.Slug }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Provisioning {Slug} failed", tenant.Slug);
             tenant.Status = TenantStatus.Failed;
@@ -174,7 +174,7 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.secure.done", tenant.Slug, new { runId, rotated = rotate }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Securing {Slug} failed", tenant.Slug);
             tenant.Status = TenantStatus.Failed;
@@ -266,7 +266,7 @@ public sealed class Provisioner(
             if (tenant.Status == TenantStatus.Running) await EntitlementsStepAsync(tenant, runId, ct);
             await audit.WriteAsync("tenant.entitlements.done", tenant.Slug, new { runId, entitled = PlanCatalog.Entitlements(tenant).Select(PlanCatalog.Key) }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Entitlements for {Slug} failed", tenant.Slug);
             tenant.LastError = ex.Message;
@@ -280,7 +280,19 @@ public sealed class Provisioner(
         var dir = Dir(tenant);
         Directory.CreateDirectory(dir);
         await File.WriteAllTextAsync(Path.Combine(dir, "docker-compose.yaml"), Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform), ct);
-        await File.WriteAllTextAsync(Path.Combine(dir, ".env"), Templates.Env(tenant, Platform), ct);
+        var env = Path.Combine(dir, ".env");
+        await File.WriteAllTextAsync(env, Templates.Env(tenant, Platform), ct);
+        // The stack's secrets: the control plane (root) and docker read it, nobody else on the box
+        OwnerOnly(env);
+    }
+
+    /// <summary>0600 for a file, 0700 for a folder; nothing on Windows, where the dry run lives.</summary>
+    internal static void OwnerOnly(string path)
+    {
+        if (OperatingSystem.IsWindows()) return;
+        File.SetUnixFileMode(path, Directory.Exists(path)
+            ? UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+            : UnixFileMode.UserRead | UnixFileMode.UserWrite);
     }
 
     /// <summary>The shared broker user off the vhost: what a stack stamped before it had a user of its own still connected as. Nothing to do for a fresh one.</summary>
@@ -314,7 +326,7 @@ public sealed class Provisioner(
                     if (backups.OffsiteEnabled)
                     {
                         try { await backups.OffsiteAsync(tenant.Slug, created.Id, ct); }
-                        catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogWarning(ex, "{Slug}: last backup stays on the box only", tenant.Slug); }
+                        catch (Exception ex) when (!ct.IsCancellationRequested) { logger.LogWarning(ex, "{Slug}: last backup stays on the box only", tenant.Slug); }
                     }
                     dumped = $"{created.Id} taken; ";
                 }
@@ -370,7 +382,7 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.destroy.done", tenant.Slug, new { runId }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Destroying {Slug} failed", tenant.Slug);
             tenant.Status = TenantStatus.Failed;
@@ -422,7 +434,7 @@ public sealed class Provisioner(
             await BrokerStepAsync(tenant, runId, ct);
             await BackupStepAsync(tenant, runId, ct);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             // Nothing has changed on the box yet: the record goes back to what it was
             logger.LogError(ex, "Upgrade of {Slug} failed before the stack was touched", tenant.Slug);
@@ -445,7 +457,7 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.upgrade.done", tenant.Slug, new { runId, from, to = target, backupId = tenant.UpgradeBackupId }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Upgrade of {Slug} to {Tag} failed", tenant.Slug, target);
             if (tenant.PreviousImageTag is { } previous && previous != tenant.ImageTag)
@@ -496,7 +508,7 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync(reason is null ? "tenant.rollback.done" : "tenant.upgrade.rolledback", tenant.Slug, new { runId, from = failed, to = previous, backupId = tenant.UpgradeBackupId, reason }, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Rollback of {Slug} to {Tag} failed", tenant.Slug, previous);
             tenant.Status = TenantStatus.Failed;
@@ -523,7 +535,7 @@ public sealed class Provisioner(
             if (backups.OffsiteEnabled)
             {
                 try { await backups.OffsiteAsync(tenant.Slug, created.Id, ct); }
-                catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogWarning(ex, "{Slug}: the pre-upgrade backup stays on the box only", tenant.Slug); }
+                catch (Exception ex) when (!ct.IsCancellationRequested) { logger.LogWarning(ex, "{Slug}: the pre-upgrade backup stays on the box only", tenant.Slug); }
             }
             return $"{created.Id}: {created.SizeBytes / (1024 * 1024)} MB";
         }, ct);
@@ -571,7 +583,7 @@ public sealed class Provisioner(
             if (action is "start" or "resume")
             {
                 try { await EntitlementsStepAsync(tenant, runId, ct); }
-                catch (Exception ex) when (ex is not OperationCanceledException)
+                catch (Exception ex) when (!ct.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "{Slug}: entitlements not pushed after {Action}", tenant.Slug, action);
                     tenant.LastError = ex.Message;
@@ -579,7 +591,7 @@ public sealed class Provisioner(
                 }
             }
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "{Action} on {Slug} failed", action, tenant.Slug);
             tenant.Status = TenantStatus.Failed;
@@ -605,7 +617,7 @@ public sealed class Provisioner(
             }, ct);
             await audit.WriteAsync("backup.done", tenant.Slug, new { output = info }, ct, "backup");
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Backup of {Slug} failed", tenant.Slug);
             await audit.WriteAsync("backup.failed", tenant.Slug, new { error = ex.Message }, ct, "backup");
@@ -628,7 +640,7 @@ public sealed class Provisioner(
             }, ct);
             await audit.WriteAsync("backup.offsite.done", tenant.Slug, new { id }, ct, "backup");
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Offsite copy of {Slug}/{Id} failed", tenant.Slug, id);
             await audit.WriteAsync("backup.offsite.failed", tenant.Slug, new { id, error = ex.Message }, ct, "backup");
@@ -644,7 +656,7 @@ public sealed class Provisioner(
             await Step(tenant, Guid.NewGuid(), "edge", () => WriteEdgeAsync(ct), ct);
             await audit.WriteAsync("tenant.edge.done", tenant.Slug, null, ct, Source);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Edge rewrite for {Slug} failed", tenant.Slug);
             tenant.LastError = ex.Message;
@@ -664,11 +676,22 @@ public sealed class Provisioner(
         var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying && t.CustomerDomain != null).ToListAsync(ct);
         var snippet = Templates.CustomDomains(live, Platform);
         var path = Platform.EdgeSnippetPath;
-        if (File.Exists(path) && await File.ReadAllTextAsync(path, ct) == snippet)
+        var previous = File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : null;
+        if (previous == snippet)
             return "unchanged";
         if (Platform.DryRun && !Directory.Exists(Path.GetDirectoryName(path)!))
             return $"(dry run) {live.Count} custom domain(s)";
+
+        // The file is what Caddy reads on its next start too, so a snippet it cannot parse must never stay on disk:
+        // written, checked by Caddy itself, and put back the way it was when the check fails
         await File.WriteAllTextAsync(path, snippet, ct);
+        var validate = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"], null, CancellationToken.None);
+        if (!validate.Ok)
+        {
+            if (previous is null) File.Delete(path);
+            else await File.WriteAllTextAsync(path, previous, CancellationToken.None);
+            throw new InvalidOperationException($"Caddy refused the custom domains; the previous file is back: {validate.Output}");
+        }
         var reload = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "reload", "--config", "/etc/caddy/Caddyfile"], null, ct);
         if (!reload.Ok) throw new InvalidOperationException(reload.Output);
         return $"{live.Count} custom domain(s)";
@@ -719,28 +742,63 @@ public sealed class ProvisioningQueue
 
 public sealed class ProvisioningWorker(ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, ILogger<ProvisioningWorker> logger) : BackgroundService
 {
+    /// <summary>The statuses a job leaves a tenant in while it works; a job that dies mid-way must not leave one there.</summary>
+    internal static readonly TenantStatus[] Transitional = [TenantStatus.Provisioning, TenantStatus.Upgrading, TenantStatus.Destroying];
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await foreach (var job in queue.ReadAllAsync(stoppingToken))
         {
             using var scope = scopes.CreateScope();
-            var provisioner = scope.ServiceProvider.GetRequiredService<Provisioner>();
             logger.LogInformation("{Action} {TenantId}", job.Action, job.TenantId);
-            switch (job.Action)
+            try
             {
-                case "provision": await provisioner.ProvisionAsync(job.TenantId, stoppingToken); break;
-                case "destroy": await provisioner.DestroyAsync(job.TenantId, stoppingToken); break;
-                case "edge": await provisioner.EdgeAsync(job.TenantId, stoppingToken); break;
-                case "backup": await provisioner.BackupAsync(job.TenantId, stoppingToken); break;
-                case "secure": await provisioner.SecureAsync(job.TenantId, rotate: false, stoppingToken); break;
-                case "rotate": await provisioner.SecureAsync(job.TenantId, rotate: true, stoppingToken); break;
-                case "entitlements": await provisioner.EntitlementsAsync(job.TenantId, stoppingToken); break;
-                case "upgrade": await provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, stoppingToken); break;
-                case "rollback": await provisioner.RollbackAsync(job.TenantId, stoppingToken); break;
-                default: await provisioner.ComposeAsync(job.TenantId, job.Action, stoppingToken); break;
+                await RunAsync(scope.ServiceProvider.GetRequiredService<Provisioner>(), job, stoppingToken);
+            }
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+            {
+                // Every job catches its own failures; what reaches here is a tenant row that is gone, a bug, or a
+                // cancellation that was not ours. The queue must outlive it, and the tenant must not stay "in progress".
+                logger.LogError(ex, "{Action} {TenantId} crashed", job.Action, job.TenantId);
+                await MarkCrashedAsync(scope.ServiceProvider, job, ex, stoppingToken);
             }
             // Whatever the job did to the stack, the "behind" view is read again on the monitor's next tick
             updates.Invalidate();
+        }
+    }
+
+    private static Task RunAsync(Provisioner provisioner, ProvisioningJob job, CancellationToken ct) => job.Action switch
+    {
+        "provision" => provisioner.ProvisionAsync(job.TenantId, ct),
+        "destroy" => provisioner.DestroyAsync(job.TenantId, ct),
+        "edge" => provisioner.EdgeAsync(job.TenantId, ct),
+        "backup" => provisioner.BackupAsync(job.TenantId, ct),
+        "secure" => provisioner.SecureAsync(job.TenantId, rotate: false, ct),
+        "rotate" => provisioner.SecureAsync(job.TenantId, rotate: true, ct),
+        "entitlements" => provisioner.EntitlementsAsync(job.TenantId, ct),
+        "upgrade" => provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, ct),
+        "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
+        _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
+    };
+
+    private static async Task MarkCrashedAsync(IServiceProvider services, ProvisioningJob job, Exception ex, CancellationToken ct)
+    {
+        try
+        {
+            var context = services.GetRequiredService<ControlContext>();
+            var audit = services.GetRequiredService<IAuditWriter>();
+            var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Id == job.TenantId, ct);
+            if (tenant is not null && Transitional.Contains(tenant.Status))
+            {
+                tenant.Status = TenantStatus.Failed;
+                tenant.LastError = $"{job.Action} crashed: {ex.Message}";
+                await context.SaveChangesAsync(ct);
+            }
+            await audit.WriteAsync("job.crashed", tenant?.Slug, new { job.Action, error = ex.Message }, ct, "provisioner");
+        }
+        catch (Exception inner) when (!ct.IsCancellationRequested)
+        {
+            services.GetRequiredService<ILogger<ProvisioningWorker>>().LogError(inner, "Could not record the crash of {Action} {TenantId}", job.Action, job.TenantId);
         }
     }
 }
@@ -763,7 +821,8 @@ public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQ
     /// <summary>Pure, for the test: what one demo needs now. A warning goes once (the record remembers) and an extension clears it.</summary>
     public static DemoAction Decide(Tenant t, DateTimeOffset now, int graceDays, int warnDays, int destroyWarnDays)
     {
-        if (t.Kind != TenantKind.Demo || t.ExpiresAt is not { } expires) return DemoAction.None;
+        // A drill is destroyed by the drill itself, and nobody is written to about it
+        if (t.Kind != TenantKind.Demo || t.IsDrill || t.ExpiresAt is not { } expires) return DemoAction.None;
         switch (t.Status)
         {
             case TenantStatus.Running:
@@ -789,7 +848,7 @@ public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQ
             {
                 await SweepAsync(stoppingToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogError(ex, "Demo sweep failed");
             }
@@ -806,7 +865,7 @@ public sealed class DemoExpiryService(IServiceScopeFactory scopes, ProvisioningQ
 
         // Every live demo with an expiry: the ones about to expire get a warning, the rest is as before
         var demos = await context.Tenants
-            .Where(t => t.Kind == TenantKind.Demo && t.ExpiresAt != null)
+            .Where(t => t.Kind == TenantKind.Demo && !t.IsDrill && t.ExpiresAt != null)
             .Where(t => t.Status == TenantStatus.Running || t.Status == TenantStatus.Stopped)
             .ToListAsync(ct);
 

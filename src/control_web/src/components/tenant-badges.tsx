@@ -81,9 +81,11 @@ export function UpdateBadge({ services, newerTag, className }: { services?: stri
   )
 }
 
-export function KindBadge({ kind }: { kind: number | string }) {
+export function KindBadge({ kind, isDrill }: { kind: number | string; isDrill?: boolean }) {
   const t = useT()
   const name = tenantKind(kind)
+  // A restore drill's scratch stack: a demo on the record, but nobody's; it destroys itself
+  if (isDrill) return <Badge variant='outline'>{t('kindDrill')}</Badge>
   return (
     <Badge variant={name === 'Customer' ? 'default' : 'secondary'}>
       {t(kindLabelKey[name])}

@@ -181,4 +181,42 @@ public sealed class ProvisionerTests
         Assert.AreEqual("v2", _tenant.ImageTag);
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
     }
+
+    /// <summary>A shell that records like the dry run's but fails one command.</summary>
+    private sealed class FailingShell(RecordingShell inner, string failing) : IShell
+    {
+        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct)
+            => args.Contains(failing) ? Task.FromResult(new ShellResult(1, $"{failing}: refused")) : inner.RunAsync(file, args, workingDirectory, ct);
+        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
+            => inner.RunAsync(file, args, workingDirectory, stdin, stdout, ct);
+    }
+
+    [TestMethod]
+    public async Task The_edge_file_is_checked_by_caddy_and_put_back_when_it_is_refused()
+    {
+        _platform.EdgeSnippetPath = Path.Combine(_root, "custom-domains.caddy");
+        await File.WriteAllTextAsync(_platform.EdgeSnippetPath, "# before\n");
+        _tenant.CustomerDomain = "menu.blue.test";
+        await _context.SaveChangesAsync();
+        var options = Options.Create(_platform);
+        var backups = new BackupService(_shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        var provisioner = new Provisioner(_context, options, new FailingShell(_shell, "validate"),
+            new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
+            new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
+            new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
+            _stack, _audit, backups, new MailQueue(), NullLogger<Provisioner>.Instance);
+
+        await provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
+
+        Assert.AreEqual("# before\n", await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "the file Caddy could not parse is gone");
+        StringAssert.Contains(_tenant.LastError, "Caddy refused");
+        Assert.IsTrue(_audit.Entries.Any(e => e.Action == "tenant.edge.failed"));
+        Assert.IsFalse(_shell.Commands.Any(c => c.Contains("caddy reload")), "nothing was reloaded");
+
+        // With Caddy happy, the file is written and reloaded
+        await _provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
+        StringAssert.Contains(await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "https://menu.blue.test {");
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("caddy validate")));
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("caddy reload")));
+    }
 }

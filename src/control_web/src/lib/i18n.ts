@@ -55,6 +55,7 @@ const dictionary = {
   // Kinds
   kindDemo: { en: 'Demo', ar: 'تجريبي' },
   kindCustomer: { en: 'Customer', ar: 'عميل' },
+  kindDrill: { en: 'Drill', ar: 'تجربة استرجاع' },
 
   // Statuses
   statusRequested: { en: 'Requested', ar: 'مطلوب' },

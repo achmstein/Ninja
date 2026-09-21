@@ -4062,7 +4062,8 @@
           "subscription",
           "previousImageTag",
           "upgradeBackupId",
-          "update"
+          "update",
+          "isDrill"
         ],
         "type": "object",
         "properties": {
@@ -4196,6 +4197,9 @@
                 "$ref": "#/components/schemas/TenantUpdate"
               }
             ]
+          },
+          "isDrill": {
+            "type": "boolean"
           }
         }
       },
@@ -4491,7 +4495,8 @@
           "hasOwnCredentials",
           "subscription",
           "paidThrough",
-          "update"
+          "update",
+          "isDrill"
         ],
         "type": "object",
         "properties": {
@@ -4576,6 +4581,9 @@
                 "$ref": "#/components/schemas/TenantUpdate"
               }
             ]
+          },
+          "isDrill": {
+            "type": "boolean"
           }
         }
       },

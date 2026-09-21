@@ -234,7 +234,7 @@ public sealed class UpdateMonitor(UpdateCache cache, IOptions<PlatformOptions> o
             {
                 await cache.RefreshAsync(stoppingToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogWarning(ex, "Could not check the tenants for updates");
             }

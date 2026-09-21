@@ -226,7 +226,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         badge={
           <>
             <StatusBadge status={tenant.status} />
-            <KindBadge kind={tenant.kind} />
+            <KindBadge kind={tenant.kind} isDrill={tenant.isDrill} />
             <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
             {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && <SubscriptionBadge status={tenant.subscription.status} />}
             {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}

@@ -142,7 +142,7 @@ public sealed class CapacityMonitor(CapacityCache cache, IOptions<PlatformOption
             {
                 await cache.RefreshAsync(stoppingToken);
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 logger.LogWarning(ex, "Could not read the box's capacity");
             }

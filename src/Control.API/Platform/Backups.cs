@@ -135,7 +135,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         {
             await store.DeleteAsync(OffsiteKey(slug, id), ct);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogWarning(ex, "{Slug}/{Id}: the offsite copy stays", slug, id);
         }
@@ -324,7 +324,7 @@ public sealed class PlatformBackupService(BackupService backups, IServiceScopeFa
                 await audit.WriteAsync("platform.backup.done", null, new { info.Id, sizeMb = info.SizeBytes / (1024 * 1024), offsite }, ct, "backup");
                 return info;
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (!ct.IsCancellationRequested)
             {
                 logger.LogError(ex, "Platform backup failed");
                 await audit.WriteAsync("platform.backup.failed", null, new { error = ex.Message }, ct, "backup");
@@ -381,7 +381,7 @@ public sealed class NightlyBackupService(IServiceScopeFactory scopes, Provisioni
     {
         // The platform's own first: a failure there is logged and audited, and the tenants still get theirs
         try { await platformBackups.RunAsync(ct); }
-        catch (Exception ex) when (ex is not OperationCanceledException) { logger.LogError(ex, "The platform backup failed; the tenants' go ahead"); }
+        catch (Exception ex) when (!ct.IsCancellationRequested) { logger.LogError(ex, "The platform backup failed; the tenants' go ahead"); }
 
         var pruned = backups.PruneArchive(options.Value.ArchiveKeepDays);
         if (pruned > 0) logger.LogInformation("{Count} archived backup(s) past {Days} days removed", pruned, options.Value.ArchiveKeepDays);
@@ -487,23 +487,7 @@ public sealed class RestoreDrillService(IServiceScopeFactory scopes, Provisionin
         // A Destroyed record under the same slug is reused; otherwise the drill is a demo that has already expired
         var existing = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == drillSlug, ct);
         var drill = existing ?? new Tenant { Slug = drillSlug };
-        drill.NameEn = $"Drill: {source.Tenant.NameEn}";
-        drill.NameAr = null;
-        drill.Kind = TenantKind.Demo;
-        drill.Status = TenantStatus.Requested;
-        drill.Seed = TenantSeed.None;
-        drill.Country = source.Tenant.Country;
-        drill.Currency = source.Tenant.Currency;
-        drill.TimeZone = source.Tenant.TimeZone;
-        drill.DefaultLanguage = source.Tenant.DefaultLanguage;
-        drill.OwnerEmail = source.Tenant.OwnerEmail;
-        drill.IdentitySecret = TenantNaming.NewSecret();
-        drill.ControlSecret = TenantNaming.NewSecret();
-        drill.ImageTag = string.IsNullOrEmpty(source.Newest.ImageTag) ? source.Tenant.ImageTag : source.Newest.ImageTag;
-        drill.RestoreFrom = $"{source.Tenant.Slug}/{source.Newest.Id}";
-        drill.ExpiresAt = DateTimeOffset.UtcNow;
-        drill.Notes = "restore drill";
-        drill.LastError = null;
+        Shape(drill, source.Tenant, source.Newest, options.Value);
         if (existing is null) context.Tenants.Add(drill);
         await context.SaveChangesAsync(ct);
         await queue.EnqueueAsync(new ProvisioningJob(drill.Id, "provision"), ct);
@@ -529,6 +513,37 @@ public sealed class RestoreDrillService(IServiceScopeFactory scopes, Provisionin
         }
         // Whatever happened, the scratch stack goes; the worker is serial, so this runs after a provision still in flight
         await queue.EnqueueAsync(new ProvisioningJob(drill.Id, "destroy"), ct);
+    }
+
+    /// <summary>
+    /// What the scratch tenant is: the source's shape and locale, restored
+    /// from its newest backup, but never the source's owner. The welcome is
+    /// marked sent before the stamp and the record is flagged, so the owner
+    /// hears nothing and the demo sweep does not mail or stop it. Pure, for
+    /// the test.
+    /// </summary>
+    public static void Shape(Tenant drill, Tenant source, BackupInfo newest, PlatformOptions platform)
+    {
+        drill.NameEn = $"Drill: {source.NameEn}";
+        drill.NameAr = null;
+        drill.Kind = TenantKind.Demo;
+        drill.IsDrill = true;
+        drill.Status = TenantStatus.Requested;
+        drill.Seed = TenantSeed.None;
+        drill.Country = source.Country;
+        drill.Currency = source.Currency;
+        drill.TimeZone = source.TimeZone;
+        drill.DefaultLanguage = source.DefaultLanguage;
+        // The realm gets an owner that is ours; the customer's address must not receive a password for a stack that is destroyed within the hour
+        drill.OwnerEmail = string.IsNullOrWhiteSpace(platform.Mail.OpsTo) ? $"drill@{platform.Domain}" : platform.Mail.OpsTo.Trim().ToLowerInvariant();
+        drill.WelcomeSentAt = DateTimeOffset.UtcNow;
+        drill.IdentitySecret = TenantNaming.NewSecret();
+        drill.ControlSecret = TenantNaming.NewSecret();
+        drill.ImageTag = string.IsNullOrEmpty(newest.ImageTag) ? source.ImageTag : newest.ImageTag;
+        drill.RestoreFrom = $"{source.Slug}/{newest.Id}";
+        drill.ExpiresAt = DateTimeOffset.UtcNow;
+        drill.Notes = "restore drill";
+        drill.LastError = null;
     }
 
     /// <summary>The tenant whose newest backup has gone unverified longest; pure, for the test.</summary>

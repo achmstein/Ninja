@@ -34,8 +34,12 @@ public static partial class ControlApi
         if (localeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
 
-        var domain = string.IsNullOrWhiteSpace(request.CustomerDomain) ? null : request.CustomerDomain.Trim().ToLowerInvariant();
+        var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
+        if (domainError is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
         var domainChanged = domain != tenant.CustomerDomain;
+        if (domainChanged && domain is not null && await context.Tenants.AnyAsync(t => t.Id != tenant.Id && t.CustomerDomain == domain && t.Status != TenantStatus.Destroyed, ct))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{domain} already belongs to another tenant." });
 
         tenant.NameEn = request.NameEn.Trim();
         tenant.NameAr = string.IsNullOrWhiteSpace(request.NameAr) ? null : request.NameAr.Trim();

@@ -282,7 +282,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                   {tenant.slug}
                 </TableCell>
                 <TableCell>
-                  <KindBadge kind={tenant.kind} />
+                  <KindBadge kind={tenant.kind} isDrill={tenant.isDrill} />
                 </TableCell>
                 <TableCell className='text-xs'>
                   {t(planLabelKey[tenant.plan])}

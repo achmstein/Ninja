@@ -125,8 +125,13 @@ public static partial class ControlApi
         var locale = LocaleFields.Normalize(request.Country, request.Currency, request.TimeZone, request.DefaultLanguage, out var localeError);
         if (localeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
+        var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
+        if (domainError is not null)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
         if (await context.Tenants.AnyAsync(t => t.Slug == slug, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is taken." });
+        if (domain is not null && await context.Tenants.AnyAsync(t => t.CustomerDomain == domain && t.Status != TenantStatus.Destroyed, ct))
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{domain} already belongs to another tenant." });
         if ((request.Provision ?? true) && !(request.Force ?? false) && !capacity.HasRoom)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
 
@@ -142,7 +147,7 @@ public static partial class ControlApi
             TimeZone = locale.TimeZone,
             DefaultLanguage = locale.Language,
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
-            CustomerDomain = string.IsNullOrWhiteSpace(request.CustomerDomain) ? null : request.CustomerDomain.Trim().ToLowerInvariant(),
+            CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
             Phone = Clean(request.Phone),
@@ -295,15 +300,24 @@ public static partial class ControlApi
         return TypedResults.Accepted($"/api/control/tenants/{slug}");
     }
 
-    public static async Task<Results<Ok, NotFound>> TlsAsk(ControlContext context, IOptions<PlatformOptions> options, [Description("The host Caddy is about to issue a certificate for")] string domain)
+    public static async Task<Results<Ok, NotFound>> TlsAsk(ControlContext context, IOptions<PlatformOptions> options, [Description("The host Caddy is about to issue a certificate for")] string domain, CancellationToken ct)
     {
         var host = domain.Trim().ToLowerInvariant();
         var platform = options.Value;
         if (host == $"auth.{platform.Domain}" || host == $"control.{platform.Domain}" || host == platform.Domain)
             return TypedResults.Ok();
 
-        var tenants = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed).ToListAsync();
-        return tenants.Any(t => TenantHosts.For(t, platform).All.Contains(host)) ? TypedResults.Ok() : TypedResults.NotFound();
+        // One row, by the slug the host names or the café's own domain; never the whole table per certificate
+        var slug = TenantHosts.SlugFromHost(host, platform);
+        var known = await context.Tenants.AsNoTracking()
+            .Where(t => t.Status != TenantStatus.Destroyed)
+            .Where(t => (slug != null && t.Slug == slug) || t.CustomerDomain == host)
+            .Select(t => new { t.Slug, t.CustomerDomain })
+            .ToListAsync(ct);
+        // The platform host of a tenant with its own domain is still its admin/pos/kds/api host; only the bare customer host moves
+        return known.Any(t => t.CustomerDomain == host || (t.Slug == slug && (t.CustomerDomain is null || host != $"{slug}.{platform.Domain}")))
+            ? TypedResults.Ok()
+            : TypedResults.NotFound();
     }
 
     [GeneratedRegex("^#[0-9a-f]{6}$")]
@@ -382,12 +396,13 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
 /// <param name="LogoUrl">The café's mark as its running stack serves it, or null while there is no stack to serve one.</param>
 /// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
 /// <param name="Update">Where the stack stands against what its tag points to now; null until the first check.</param>
-public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update)
+/// <param name="IsDrill">A scratch tenant the restore drill stamped; destroyed by the drill, never mailed about.</param>
+public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update, bool IsDrill)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p, TenantUpdate? update = null)
     {
         var hosts = TenantHosts.For(t, p);
-        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough, update);
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough, update, t.IsDrill);
     }
 
     /// <summary>The stack's public mark; the light one, which the customer app's icons are cut from.</summary>
@@ -432,7 +447,8 @@ public record TenantDetail(
     TenantSubscriptionDto Subscription,
     string? PreviousImageTag,
     string? UpgradeBackupId,
-    TenantUpdate? Update)
+    TenantUpdate? Update,
+    bool IsDrill)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -445,7 +461,8 @@ public record TenantDetail(
             new(t.Subscription, t.PaidThrough, t.GraceDays ?? p.SubscriptionGraceDays, t.SuspendedAt, t.Addons, PlanCatalog.Entitlements(t).OrderBy(m => m).ToArray()),
             t.PreviousImageTag,
             t.UpgradeBackupId,
-            update);
+            update,
+            t.IsDrill);
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

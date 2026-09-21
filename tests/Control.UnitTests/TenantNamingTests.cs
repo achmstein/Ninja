@@ -89,4 +89,45 @@ public sealed class TenantNamingTests
         Assert.AreEqual(12, password.Length);
         Assert.IsFalse(password.Any(c => "0O1lI".Contains(c)));
     }
+
+    [TestMethod]
+    [DataRow("menu.cafe.com", true)]
+    [DataRow("cafe.com", true)]
+    [DataRow("a-b.example.co.uk", true)]
+    [DataRow("cafe", false)]
+    [DataRow("Menu.Cafe.com", false)]
+    [DataRow("menu cafe.com", false)]
+    [DataRow("menu.cafe.com {", false)]
+    [DataRow("-menu.cafe.com", false)]
+    [DataRow("menu..cafe.com", false)]
+    [DataRow("menu.cafe.123", false)]
+    public void A_customer_domain_is_a_host_name_and_nothing_that_could_reach_the_edge_config(string host, bool ok)
+        => Assert.AreEqual(ok, TenantNaming.IsValidHostname(host), host);
+
+    [TestMethod]
+    public void The_slug_is_read_off_any_platform_host()
+    {
+        var platform = new PlatformOptions { Domain = "ninja.app" };
+        Assert.AreEqual("blue", TenantHosts.SlugFromHost("blue.ninja.app", platform));
+        Assert.AreEqual("blue", TenantHosts.SlugFromHost("admin.blue.ninja.app", platform));
+        Assert.AreEqual("blue", TenantHosts.SlugFromHost("api.blue.ninja.app", platform));
+        Assert.IsNull(TenantHosts.SlugFromHost("ninja.app", platform));
+        Assert.IsNull(TenantHosts.SlugFromHost("menu.cafe.com", platform));
+        Assert.IsNull(TenantHosts.SlugFromHost("evil.blue.ninja.app", platform), "an unknown prefix is not a slug");
+        Assert.IsNull(TenantHosts.SlugFromHost("blue.ninja.app.evil.com", platform));
+    }
+
+    [TestMethod]
+    public void A_customer_domain_is_normalised_and_the_platforms_own_hosts_are_refused()
+    {
+        var platform = new PlatformOptions { Domain = "ninja.app" };
+        Assert.AreEqual("menu.cafe.com", TenantHosts.NormalizeCustomerDomain("  Menu.Cafe.COM ", platform, out var error));
+        Assert.IsNull(error);
+        Assert.IsNull(TenantHosts.NormalizeCustomerDomain("   ", platform, out error));
+        Assert.IsNull(error);
+        Assert.IsNull(TenantHosts.NormalizeCustomerDomain("blue.ninja.app", platform, out error));
+        Assert.IsNotNull(error);
+        Assert.IsNull(TenantHosts.NormalizeCustomerDomain("menu cafe.com", platform, out error));
+        Assert.IsNotNull(error);
+    }
 }

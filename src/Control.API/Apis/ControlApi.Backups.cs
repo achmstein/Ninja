@@ -55,7 +55,7 @@ public static partial class ControlApi
         {
             return TypedResults.Ok(await platform.RunAsync(ct));
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             return TypedResults.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
