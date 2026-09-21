@@ -69,7 +69,7 @@ class TenantBrand {
 
   /// What shows until anything is known: a neutral name, no color, no logo,
   /// every feature on
-  static const neutral = TenantBrand(name: LocalizedText(en: 'Ninja'));
+  static const neutral = TenantBrand(name: LocalizedText(en: ''));
 
   /// The API's shape; relative URLs are relative to [baseUrl]
   factory TenantBrand.fromApi(Map<String, dynamic> json, {required String baseUrl}) {

@@ -15,7 +15,7 @@ import { useKitchenNotifications } from '@/hooks/use-kitchen-notifications'
 import { useWakeLock } from '@/hooks/use-wake-lock'
 import { useT } from '@/lib/i18n'
 import { useFeatures } from '@/lib/brand'
-import { PlatformMark } from '@/components/platform-mark'
+import { BrandMark } from '@/components/brand-mark'
 
 // Everything the kitchen calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. A kitchen screen signs
@@ -36,7 +36,7 @@ function AuthenticatedLayout() {
   if (!features.kds) {
     return (
       <div className='flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center'>
-        <PlatformMark className='size-14 text-2xl' />
+        <BrandMark className='size-14 text-2xl' />
         <div className='flex items-center gap-2 text-lg font-semibold'>
           <Lock className='size-5' />
           {t('kdsNotInPlan')}

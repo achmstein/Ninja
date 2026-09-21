@@ -6,7 +6,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'core/brand/brand_provider.dart';
-import 'core/brand/ninja_mark.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
@@ -209,7 +208,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         );
 
     return MaterialApp.router(
-      title: '$ninjaName POS',
+      title: ref.watch(brandProvider).name.en.isEmpty ? 'POS' : '${ref.watch(brandProvider).name.en} POS',
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

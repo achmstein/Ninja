@@ -20,6 +20,7 @@ type Message =
 const dictionary = {
   // Brand / chrome
   posName: { en: 'POS', ar: 'الكاشير' },
+  poweredBy: { en: 'Powered by', ar: 'بدعم من' },
   branches: { en: 'Branches', ar: 'الفروع' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },
   settings: { en: 'Settings', ar: 'الإعدادات' },

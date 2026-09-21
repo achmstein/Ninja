@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useTheme } from '@/context/theme-provider'
-import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
+import { useBrandName } from '@/lib/brand'
+import { PoweredBy } from '@/components/ninja-wordmark'
 import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
@@ -16,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PlatformMark } from '@/components/platform-mark'
+import { BrandMark } from '@/components/brand-mark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -109,18 +110,19 @@ function SignIn() {
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
-        <PlatformMark className='size-14 text-2xl' />
+        <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
           <span className='text-2xl font-semibold tracking-tight'>
-            {PLATFORM_NAME} {t('posName')}
+            {cafe || t('posName')}
           </span>
-          {cafe && <span className='text-muted-foreground'>{cafe}</span>}
+          {cafe && <span className='text-muted-foreground'>{t('posName')}</span>}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Loader2 className='h-4 w-4 animate-spin' />
         {t('redirectingToSignIn')}
       </div>
+      <PoweredBy className='fixed bottom-6' />
     </div>
   )
 }

@@ -15,8 +15,9 @@ import {
 } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { AuthLayout } from '../auth-layout'
-import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
-import { PlatformMark } from '@/components/platform-mark'
+import { useBrandName } from '@/lib/brand'
+import { BrandMark } from '@/components/brand-mark'
+import { PoweredBy } from '@/components/ninja-wordmark'
 
 /**
  * Keycloak is the only identity provider, so there is nothing to choose on a
@@ -98,18 +99,19 @@ export function SignIn() {
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
       <div className='flex flex-col items-center gap-3'>
-        <PlatformMark className='size-14 text-2xl' />
+        <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
           <span className='text-2xl font-semibold tracking-tight'>
-            {PLATFORM_NAME}
+            {cafe || t('adminName')}
           </span>
-          {cafe && <span className='text-muted-foreground'>{cafe}</span>}
+          {cafe && <span className='text-muted-foreground'>{t('adminName')}</span>}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Spinner />
         {t('redirectingToSignIn')}
       </div>
+      <PoweredBy className='fixed bottom-6' />
     </div>
   )
 }

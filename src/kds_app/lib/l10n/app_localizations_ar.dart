@@ -12,6 +12,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appName => 'المطبخ';
 
   @override
+  String get poweredBy => 'بدعم من';
+
+  @override
   String get branches => 'الفروع';
 
   @override

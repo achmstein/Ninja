@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
   "appName": "Kitchen",
+  "poweredBy": "Powered by",
   "branches": "Branches",
   "signOut": "Sign out",
   "settings": "Settings",

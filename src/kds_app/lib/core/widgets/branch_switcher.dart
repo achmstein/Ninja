@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
-import '../brand/ninja_mark.dart';
+import '../brand/brand_mark.dart';
 import '../models/localized_text.dart';
 import '../providers/branch_provider.dart';
 
-/// Header branch switcher, same contract as pos_web's: the platform's mark
-/// and name with the café and the branch under them, and a menu of
-/// branches. Picking a branch scopes every branch-aware API call via the
+/// Header branch switcher, same contract as pos_web's: the café's mark and
+/// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the
 /// X-Branch-Id header, so everything on screen refetches. Only the branches
 /// the token allows are listed; with a single one there is nothing to switch
 /// and the block is plain.
@@ -25,18 +24,12 @@ class BranchSwitcher extends ConsumerWidget {
     final active = branchState.selectedBranch;
     final branchLabel = active?.name.localized(context) ?? l10n.branches;
     final cafe = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
-    // The café, then the branch; one word when they share a name
-    final subtitle = cafe.isEmpty
-        ? branchLabel
-        : cafe == branchLabel
-            ? cafe
-            : '$cafe · $branchLabel';
     final switchable = branchState.branches.length > 1;
 
     Widget brand({required bool withChevron}) => Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const NinjaMark(size: 32),
+            const BrandMark(size: 32),
             const SizedBox(width: 8),
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -46,20 +39,21 @@ class BranchSwitcher extends ConsumerWidget {
                 // beside the button's own vertical padding (pos_web's
                 // `leading-tight`)
                 Text(
-                  ninjaName,
+                  cafe.isEmpty ? branchLabel : cafe,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     height: 1.0,
                     color: theme.colors.foreground,
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: theme.typography.xs.copyWith(
-                    color: theme.colors.mutedForeground,
-                    height: 1.0,
+                if (cafe.isNotEmpty)
+                  Text(
+                    branchLabel,
+                    style: theme.typography.xs.copyWith(
+                      color: theme.colors.mutedForeground,
+                      height: 1.0,
+                    ),
                   ),
-                ),
               ],
             ),
             if (withChevron) ...[

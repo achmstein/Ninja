@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get posName => 'POS';
 
   @override
+  String get poweredBy => 'Powered by';
+
+  @override
   String get branches => 'Branches';
 
   @override

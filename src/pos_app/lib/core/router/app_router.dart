@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app.dart' show rootNavigatorKey;
 import '../auth/auth_service.dart';
-import '../brand/ninja_mark.dart';
+import '../brand/brand_mark.dart';
 import '../widgets/pos_shell.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/availability/screens/availability_screen.dart';
@@ -30,7 +30,7 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const NinjaMark(size: 150, color: Colors.white),
+            const BrandMark(size: 150, color: Colors.white, logo: false),
             const SizedBox(height: 32),
             const SizedBox(
               width: 24,

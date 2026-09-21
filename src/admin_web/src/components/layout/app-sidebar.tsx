@@ -17,6 +17,7 @@ import { BranchSwitcher } from './branch-switcher'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
+import { PoweredBy } from '@/components/ninja-wordmark'
 import { type NavItem } from './types'
 
 export function AppSidebar() {
@@ -77,6 +78,8 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
+        {/* The vendor line; it has no place in the icon-only rail */}
+        <PoweredBy className='justify-center pb-1 group-data-[collapsible=icon]:hidden' />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

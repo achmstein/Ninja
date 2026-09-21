@@ -16,9 +16,9 @@ export type Brand = TenantResponse
 export type FeatureKey = keyof TenantFeatures
 
 const CACHE_KEY = 'ninja-brand'
-/** Staff surfaces wear the platform's name, mark and neutral theme; only the customer app wears the tenant's (ninja-plan.md). The tenant's brand is still read here for its switches, its customer URL and what gets printed. */
+/** A staff surface carries the café's name, mark and icons and keeps the neutral theme; the café's colours are for what customers see (ninja-plan.md). The platform is the vendor line. */
 const STAFF = true
-export const PLATFORM_NAME = 'Ninja'
+export const PLATFORM_NAME = 'ninja'
 const APP = 'admin'
 const BOOT_TIMEOUT_MS = 2500
 
@@ -88,13 +88,13 @@ export async function bootBrand(queryClient: QueryClient) {
   }
 }
 
-/** Head tags and theme tokens: the platform's on a staff surface, the tenant's on the customer's. */
+/** Head tags and theme tokens: the café's icons everywhere; its theme only on the customer's surface. */
 export function applyBrand(brand: Brand, language: Language) {
   // Prices are the café's whatever the surface wears
   useCurrency.getState().set(brand.locale.currency)
   if (STAFF) {
-    setLink('icon', '/api/tenant/icons/favicon.png?platform=1', 'image/png')
-    setLink('apple-touch-icon', '/api/tenant/icons/apple-touch-icon.png?platform=1')
+    setLink('icon', brand.icons.favicon, 'image/png')
+    setLink('apple-touch-icon', brand.icons.appleTouch)
     setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
     applyBrandTheme(null)
     return

@@ -104,6 +104,12 @@ abstract class AppLocalizations {
   /// **'POS'**
   String get posName;
 
+  /// No description provided for @poweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by'**
+  String get poweredBy;
+
   /// No description provided for @branches.
   ///
   /// In en, this message translates to:

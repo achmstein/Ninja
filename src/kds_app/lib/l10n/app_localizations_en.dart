@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Kitchen';
 
   @override
+  String get poweredBy => 'Powered by';
+
+  @override
   String get branches => 'Branches';
 
   @override

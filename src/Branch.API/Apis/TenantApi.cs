@@ -229,34 +229,32 @@ public static partial class TenantApi
 
         var arabic = string.Equals(lang, "ar", StringComparison.OrdinalIgnoreCase);
 
-        // Only the customer app wears the tenant's brand; the staff apps are
-        // the platform's, whatever café they are signed into (ninja-plan.md)
-        if (app != "client")
-        {
-            var staffName = app switch
-            {
-                "admin" => arabic ? "Ninja · الإدارة" : "Ninja Admin",
-                "pos" => arabic ? "Ninja · الكاشير" : "Ninja Till",
-                _ => arabic ? "Ninja · المطبخ" : "Ninja Kitchen",
-            };
-            http.Response.Headers.CacheControl = "no-cache";
-            return TypedResults.Json(Manifest(staffName, "Ninja", arabic, "#18181b",
-            [
-                new("/api/tenant/icons/icon-192.png?platform=1", "192x192", "image/png", "any"),
-                new("/api/tenant/icons/icon-512.png?platform=1", "512x512", "image/png", "any"),
-                new("/api/tenant/icons/maskable-512.png?platform=1", "512x512", "image/png", "maskable"),
-            ]), contentType: "application/manifest+json");
-        }
-
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Tenant.SingletonId);
         var brand = tenant.Name.GetText(arabic ? "ar" : "en");
         var v = tenant.Version;
-        var manifest = Manifest(brand, brand.Length <= 12 ? brand : brand[..12].TrimEnd(), arabic, tenant.PrimaryColor ?? "#18181b",
+        WebManifestIcon[] icons =
         [
             new($"/api/tenant/icons/icon-192.png?v={v}", "192x192", "image/png", "any"),
             new($"/api/tenant/icons/icon-512.png?v={v}", "512x512", "image/png", "any"),
             new($"/api/tenant/icons/maskable-512.png?v={v}", "512x512", "image/png", "maskable"),
-        ]);
+        ];
+
+        // Every app is the café's on the home screen: its name and icon, with
+        // the staff apps named for their job and kept on the neutral theme
+        // (only what customers see wears the café's colour; ninja-plan.md)
+        if (app != "client")
+        {
+            var job = app switch
+            {
+                "admin" => arabic ? "الإدارة" : "Admin",
+                "pos" => arabic ? "الكاشير" : "Till",
+                _ => arabic ? "المطبخ" : "Kitchen",
+            };
+            http.Response.Headers.CacheControl = "no-cache";
+            return TypedResults.Json(Manifest($"{brand} · {job}", brand.Length <= 12 ? brand : brand[..12].TrimEnd(), arabic, "#18181b", icons), contentType: "application/manifest+json");
+        }
+
+        var manifest = Manifest(brand, brand.Length <= 12 ? brand : brand[..12].TrimEnd(), arabic, tenant.PrimaryColor ?? "#18181b", icons);
 
         http.Response.Headers.CacheControl = "no-cache";
         return TypedResults.Json(manifest, contentType: "application/manifest+json");

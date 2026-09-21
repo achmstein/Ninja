@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
   "posName": "POS",
+  "poweredBy": "Powered by",
   "branches": "Branches",
   "signOut": "Sign out",
   "settings": "Settings",

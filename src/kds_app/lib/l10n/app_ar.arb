@@ -1,6 +1,7 @@
 {
   "@@locale": "ar",
   "appName": "المطبخ",
+  "poweredBy": "بدعم من",
   "branches": "الفروع",
   "signOut": "تسجيل الخروج",
   "settings": "الإعدادات",

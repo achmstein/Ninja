@@ -10,8 +10,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { PlatformMark } from '@/components/platform-mark'
-import { PLATFORM_NAME, useBrandName } from '@/lib/brand'
+import { BrandMark } from '@/components/brand-mark'
+import { useBrandName } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 
 /**
@@ -31,8 +31,6 @@ export function BranchSwitcher() {
   const activeBranch = branches.find((b) => Number(b.id) === branchId)
   const label = localized(activeBranch?.name) || t('branches')
   const cafe = useBrandName()
-  // The café, then the branch; one word when they share a name
-  const subtitle = cafe && cafe !== label ? `${cafe} · ${label}` : cafe || label
 
   const handleSelect = (id: number) => {
     if (id === branchId) return
@@ -47,10 +45,10 @@ export function BranchSwitcher() {
 
   const brand = (
     <>
-      <PlatformMark className='size-8 text-base' />
+      <BrandMark className='size-8 text-base' />
       <div className='grid flex-1 text-start text-sm leading-tight'>
-        <span className='truncate font-semibold'>{PLATFORM_NAME}</span>
-        <span className='text-muted-foreground truncate text-xs'>{subtitle}</span>
+        <span className='truncate font-semibold'>{cafe || label}</span>
+        {cafe && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
       </div>
     </>
   )

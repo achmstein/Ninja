@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/brand/ninja_mark.dart';
+import '../../../core/brand/brand_mark.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -111,12 +111,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Brand: the mark, then "Ninja Kitchen"
-                  const Center(child: NinjaMark(size: 96)),
+                  // Brand: the café's mark and name, then what this app is
+                  const Center(child: BrandMark(size: 96)),
                   const SizedBox(height: 16),
                   Center(
                     child: AppText(
-                      '$ninjaName ${l10n.appName}',
+                      cafe.isEmpty ? l10n.appName : cafe,
                       style: theme.typography.xl2.copyWith(
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.5,
@@ -128,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 4),
                     Center(
                       child: AppText(
-                        cafe,
+                        l10n.appName,
                         style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
                       ),
                     ),
@@ -183,6 +183,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : AppText(l10n.signIn),
                     ),
                   ),
+                  const SizedBox(height: 32),
+                  const PoweredBy(),
                 ],
               ),
             ),

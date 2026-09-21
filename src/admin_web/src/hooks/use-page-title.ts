@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useRouterState } from '@tanstack/react-router'
-import { PLATFORM_NAME } from '@/lib/brand'
+import { useBrandName } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { sidebarData } from '@/components/layout/data/sidebar-data'
 
@@ -13,10 +13,11 @@ const extraTitles: Record<string, TranslationKey> = {
 
 /**
  * Keeps the browser-tab title in sync with the current page, derived from
- * the sidebar: "Orders · Ninja".
+ * the sidebar: "Orders · Chillax".
  */
 export function usePageTitle() {
   const t = useT()
+  const cafe = useBrandName()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   useEffect(() => {
@@ -45,8 +46,7 @@ export function usePageTitle() {
       )
       .sort((a, b) => b.url.length - a.url.length)[0]
 
-    document.title = match
-      ? `${t(match.title)} · ${PLATFORM_NAME}`
-      : PLATFORM_NAME
-  }, [pathname, t])
+    const name = cafe || t('adminName')
+    document.title = match ? `${t(match.title)} · ${name}` : name
+  }, [pathname, t, cafe])
 }

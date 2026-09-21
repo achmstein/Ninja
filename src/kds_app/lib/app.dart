@@ -6,7 +6,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'core/brand/brand_provider.dart';
-import 'core/brand/ninja_mark.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
@@ -166,7 +165,7 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
         );
 
     return MaterialApp.router(
-      title: '$ninjaName Kitchen',
+      title: ref.watch(brandProvider).name.en.isEmpty ? 'Kitchen' : '${ref.watch(brandProvider).name.en} Kitchen',
       debugShowCheckedModeBanner: false,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
