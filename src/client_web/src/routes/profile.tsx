@@ -5,11 +5,11 @@ import { useAuth } from 'react-oidc-context'
 import {
   Award,
   ChevronRight,
-  Gamepad2,
   Info,
   LogOut,
   Phone,
   ReceiptText,
+  Timer,
   Settings,
   User,
   Wallet,
@@ -99,7 +99,7 @@ function ProfilePage() {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('profile')}</h1>
+      <h1 className='pt-2 text-2xl font-bold tracking-tight'>{t('youTab')}</h1>
 
       {/* Identity — plain and centered like the app, no card */}
       {auth.isAuthenticated ? (
@@ -191,8 +191,8 @@ function ProfilePage() {
       {auth.isAuthenticated && (
         <Card className='gap-0 divide-y p-0'>
           <TileLink to='/bills' icon={ReceiptText} label={t('bills')} />
-          {features.spaces && (
-            <TileLink to='/stays' icon={Gamepad2} label={t('sessions')} />
+          {features.timeBilling && (
+            <TileLink to='/stays' icon={Timer} label={t('sessions')} />
           )}
           {features.tabs && (
             <TileLink to='/account' icon={Wallet} label={t('transactions')} />
@@ -246,7 +246,7 @@ function SignOutButton() {
       <AlertDialogTrigger asChild>
         <Button
           variant='destructive'
-          className='mt-2 w-full rounded-full'
+          className='mt-2 w-full rounded-pill'
           disabled={signOut.isPending}
         >
           <LogOut className='h-4 w-4' />

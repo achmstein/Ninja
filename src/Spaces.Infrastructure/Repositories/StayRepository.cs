@@ -25,24 +25,15 @@ public class StayRepository : IStayRepository
         => await _context.Stays
             .Include(s => s.Place)
             .Where(s => s.CustomerId == customerId)
-            .Where(s => s.Status == StayStatus.Running || s.Status == StayStatus.Held)
+            .Where(s => s.Status == StayStatus.Running)
             .FirstOrDefaultAsync();
 
     public async Task<List<Stay>> GetOpenStaysAsync()
         => await _context.Stays
             .Include(s => s.Place)
-            .Where(s => s.Status == StayStatus.Running || s.Status == StayStatus.Held)
-            .OrderBy(s => s.StartedAt ?? s.CreatedAt)
+            .Where(s => s.Status == StayStatus.Running)
+            .OrderBy(s => s.StartedAt)
             .ToListAsync();
-
-    public async Task<List<Stay>> GetExpiredHoldsAsync()
-    {
-        var now = DateTime.UtcNow;
-        return await _context.Stays
-            .Include(s => s.Place)
-            .Where(s => s.Status == StayStatus.Held && s.ExpiresAt != null && s.ExpiresAt < now)
-            .ToListAsync();
-    }
 
     public async Task<List<Stay>> GetCustomerStaysAsync(string customerId, int? limit = null)
     {
@@ -59,7 +50,7 @@ public class StayRepository : IStayRepository
     public async Task<bool> HasOpenStayAsync(int placeId)
         => await _context.Stays
             .Where(s => s.PlaceId == placeId)
-            .Where(s => s.Status == StayStatus.Running || s.Status == StayStatus.Held)
+            .Where(s => s.Status == StayStatus.Running)
             .AnyAsync();
 
     public async Task<Stay?> GetWithMembersAsync(int stayId)

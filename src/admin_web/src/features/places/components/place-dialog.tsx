@@ -4,6 +4,7 @@ import { Loader2, Plus, X } from 'lucide-react'
 import { type PlaceViewModel, type TariffRequest } from '@/api/spaces'
 import {
   createPlaceMutation,
+  setPlaceReservableMutation,
   setPlaceTariffMutation,
   updatePlaceMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
@@ -169,6 +170,12 @@ export function PlaceDialog({
   const [timed, setTimed] = useState(() =>
     place ? Boolean(place.isTimed) : kind === PLACE_ROOM
   )
+  // Whether customers can book it: on by default with a clock, the
+  // owner's call without one (a restaurant books tables, a café does not)
+  const [reservable, setReservable] = useState(() =>
+    place ? Boolean(place.reservable) : kind === PLACE_ROOM
+  )
+  const [reservableTouched, setReservableTouched] = useState(false)
   const [options, setOptions] = useState<OptionDraft[]>(() =>
     place?.tariff
       ? tariffOptions(place.tariff).map((o) =>
@@ -183,7 +190,12 @@ export function PlaceDialog({
   const create = useMutation(createPlaceMutation())
   const update = useMutation(updatePlaceMutation())
   const setTariff = useMutation(setPlaceTariffMutation())
-  const isSaving = create.isPending || update.isPending || setTariff.isPending
+  const setReservableFlag = useMutation(setPlaceReservableMutation())
+  const isSaving =
+    create.isPending ||
+    update.isPending ||
+    setTariff.isPending ||
+    setReservableFlag.isPending
 
   const tariff = timed ? toTariff(options, rounding) : null
   const canSave = name.en.trim().length > 0 && (!timed || tariff !== null)
@@ -203,6 +215,7 @@ export function PlaceDialog({
       : null
   )
   const tariffChanged = tariffKey(tariff) !== originalTariff
+  const reservableChanged = Boolean(place?.reservable) !== reservable
 
   const changeKind = (next: number) => {
     setKind(next)
@@ -210,7 +223,13 @@ export function PlaceDialog({
     if (options.every((o) => o.rate === '')) {
       setOptions(defaultOptions(next, places))
     }
-    if (!timed && next === PLACE_ROOM) setTimed(true)
+    if (!timed && next === PLACE_ROOM) changeTimed(true)
+  }
+
+  // A clock brings bookings with it unless the owner already decided
+  const changeTimed = (next: boolean) => {
+    setTimed(next)
+    if (next && !reservableTouched) setReservable(true)
   }
 
   const updateOption = (key: number, patch: Partial<OptionDraft>) =>
@@ -236,12 +255,21 @@ export function PlaceDialog({
         const id = Number(place.id)
         await update.mutateAsync({ path: { id }, body: details })
         // Only the tariff route knows about a running stay, so it is sent
-        // apart and only when something about the rates changed
+        // apart and only when something about the rates changed; likewise
+        // the reservable switch, which refuses while a reservation is open
         if (tariffChanged) {
           await setTariff.mutateAsync({ path: { id }, body: { tariff } })
         }
+        if (reservableChanged) {
+          await setReservableFlag.mutateAsync({
+            path: { id },
+            body: { reservable },
+          })
+        }
       } else {
-        await create.mutateAsync({ body: { kind, ...details, tariff } })
+        await create.mutateAsync({
+          body: { kind, ...details, tariff, reservable },
+        })
       }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
       toast.success(t('placeSaved'))
@@ -328,7 +356,7 @@ export function PlaceDialog({
                 <Switch
                   id='place-timed'
                   checked={timed}
-                  onCheckedChange={setTimed}
+                  onCheckedChange={changeTimed}
                 />
               </div>
 
@@ -435,6 +463,26 @@ export function PlaceDialog({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Bookings: with a clock or without one */}
+            <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
+              <div className='min-w-0'>
+                <Label htmlFor='place-reservable' className='cursor-pointer'>
+                  {t('takesReservations')}
+                </Label>
+                <p className='text-muted-foreground text-xs'>
+                  {t('takesReservationsHint')}
+                </p>
+              </div>
+              <Switch
+                id='place-reservable'
+                checked={reservable}
+                onCheckedChange={(next) => {
+                  setReservableTouched(true)
+                  setReservable(next)
+                }}
+              />
             </div>
           </div>
         </LocalizedFields>

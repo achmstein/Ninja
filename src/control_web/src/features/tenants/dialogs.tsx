@@ -299,6 +299,40 @@ export function FleetUpgradeDialog({
 }
 
 /** Destroy: the slug typed back, so the wrong tenant is never taken down. */
+/** A destroyed tenant off the list: one confirm, no slug to retype — the stack is long gone. */
+export function ForgetDialog({
+  open,
+  onOpenChange,
+  isPending,
+  name,
+  onConfirm,
+}: DialogProps & { name: string; onConfirm: () => void }) {
+  const t = useT()
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent size='sm'>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('forgetTitle', { name })}</AlertDialogTitle>
+          <AlertDialogDescription>{t('forgetDesc')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>{t('cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            variant='destructive'
+            disabled={isPending}
+            onClick={(e) => {
+              e.preventDefault()
+              onConfirm()
+            }}
+          >
+            {t('forget')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
 export function DestroyDialog({
   open,
   onOpenChange,

@@ -6,6 +6,7 @@ global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.Extensions.Logging;
 global using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+global using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 global using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 global using Ninja.Spaces.Domain.Exceptions;
 global using Ninja.Spaces.Domain.SeedWork;

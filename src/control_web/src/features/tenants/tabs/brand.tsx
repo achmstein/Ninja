@@ -60,7 +60,8 @@ const RADIUS_LABELS: Record<string, TranslationKey> = {
 }
 
 const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
-  { key: 'spaces', label: 'featureSpaces' },
+  { key: 'reservations', label: 'featureReservations' },
+  { key: 'timeBilling', label: 'featureTimeBilling' },
   { key: 'loyalty', label: 'featureLoyalty' },
   { key: 'tabs', label: 'featureTabs' },
   { key: 'inventory', label: 'featureInventory' },
@@ -175,6 +176,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
   const [accent, setAccent] = useState(brand.theme.accent ?? '')
   const [surface, setSurface] = useState(brand.theme.surface ?? '')
   const [radius, setRadius] = useState(brand.theme.radius ?? DEFAULT)
+  const [headerSize, setHeaderSize] = useState(brand.theme.headerSize ?? DEFAULT)
   const [fontLatin, setFontLatin] = useState(brand.theme.fontLatin ?? DEFAULT)
   const [fontArabic, setFontArabic] = useState(brand.theme.fontArabic ?? DEFAULT)
   const [darkPrimary, setDarkPrimary] = useState(brand.theme.dark?.primary ?? '')
@@ -194,21 +196,22 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
     onError: (e) => toast.error(problemDetail(e) || t('brandSaveFailed')),
   })
 
-  const themeOf = (f: { accent: string; surface: string; radius: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
+  const themeOf = (f: { accent: string; surface: string; radius: string; headerSize: string; fontLatin: string; fontArabic: string; darkPrimary: string; darkAccent: string; darkSurface: string }) => {
     const dark = { primary: orNull(f.darkPrimary), accent: orNull(f.darkAccent), surface: orNull(f.darkSurface) }
     return {
       accent: orNull(f.accent),
       surface: orNull(f.surface),
       radius: f.radius === DEFAULT ? null : f.radius,
+      headerSize: f.headerSize === DEFAULT ? null : f.headerSize,
       fontLatin: f.fontLatin === DEFAULT ? null : f.fontLatin,
       fontArabic: f.fontArabic === DEFAULT ? null : f.fontArabic,
       dark: dark.primary || dark.accent || dark.surface ? dark : null,
     }
   }
   const theme = useMemo(
-    () => themeOf({ accent, surface, radius, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
+    () => themeOf({ accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accent, surface, radius, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
+    [accent, surface, radius, headerSize, fontLatin, fontArabic, darkPrimary, darkAccent, darkSurface]
   )
   const draft = useMemo<PreviewDraft>(
     () => ({
@@ -229,6 +232,7 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
         accent: brand.theme.accent ?? '',
         surface: brand.theme.surface ?? '',
         radius: brand.theme.radius ?? DEFAULT,
+        headerSize: brand.theme.headerSize ?? DEFAULT,
         fontLatin: brand.theme.fontLatin ?? DEFAULT,
         fontArabic: brand.theme.fontArabic ?? DEFAULT,
         darkPrimary: brand.theme.dark?.primary ?? '',
@@ -299,6 +303,21 @@ function BrandForm({ slug, brand, onDraft }: { slug: string; brand: BrandDto; on
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='brand-header' className='text-xs'>{t('headerSize')}</Label>
+              <Select value={headerSize} onValueChange={setHeaderSize}>
+                <SelectTrigger id='brand-header' className='w-full'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT}>{t('defaultOption')}</SelectItem>
+                  <SelectItem value='sm'>{t('headerSm')}</SelectItem>
+                  <SelectItem value='md'>{t('headerMd')}</SelectItem>
+                  <SelectItem value='lg'>{t('headerLg')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className='text-muted-foreground text-xs'>{t('headerSizeHint')}</p>
             </div>
             <FontSelect id='brand-font-latin' label={t('fontLatin')} value={fontLatin} onChange={setFontLatin} fonts={LATIN_FONTS} />
             <FontSelect id='brand-font-arabic' label={t('fontArabic')} value={fontArabic} onChange={setFontArabic} fonts={ARABIC_FONTS} />

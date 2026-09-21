@@ -13,7 +13,7 @@ public sealed class PlaceTests
     {
         var table = Place.Table("Table 4", 1);
         Assert.IsFalse(table.IsTimed);
-        Assert.IsFalse(table.CanReserve);
+        Assert.IsFalse(table.CanReserve, "a plain table is not booked until the owner says so");
         Assert.IsFalse(table.HasOptions);
         Assert.IsFalse(table.TakesControllerRequests);
 
@@ -31,6 +31,37 @@ public sealed class PlaceTests
         var station = new Place(PlaceKind.Station, "Pool 1", 1, Tariff.Flat(80m));
         Assert.IsTrue(station.CanReserve);
         Assert.IsFalse(station.TakesControllerRequests);
+    }
+
+    [TestMethod]
+    public void Reservable_is_the_owner_s_switch_and_a_tariff_turns_it_on()
+    {
+        // A plain table can be booked without a clock
+        var table = Place.Table("Table 4", 1);
+        table.SetReservable(true);
+        Assert.IsTrue(table.CanReserve);
+        Assert.IsFalse(table.IsTimed);
+
+        // A timed place can stop taking bookings and keep its clock
+        var room = Place.Room("Room 1", 50m, 80m, 1);
+        room.SetReservable(false);
+        Assert.IsFalse(room.CanReserve);
+        Assert.IsTrue(room.IsTimed);
+
+        // Giving a place a tariff opts it in; changing the tariff later does not flip it back
+        var station = new Place(PlaceKind.Station, "Pool 1", 1);
+        Assert.IsFalse(station.Reservable);
+        station.SetTariff(Tariff.Flat(80m));
+        Assert.IsTrue(station.Reservable);
+        station.SetReservable(false);
+        station.SetTariff(Tariff.Flat(90m));
+        Assert.IsFalse(station.Reservable);
+
+        // Explicit at creation wins over the default
+        var booth = new Place(PlaceKind.Table, "Booth", 1, reservable: true);
+        Assert.IsTrue(booth.CanReserve);
+        var vip = Place.Room("VIP", 150m, 200m, 1);
+        Assert.IsTrue(vip.Reservable);
     }
 
     [TestMethod]
@@ -101,8 +132,10 @@ public sealed class PlaceTests
         place.SetTariff(Tariff.Flat(40m));
         place.SetActive(true); // unchanged: no event
         place.SetActive(false);
+        place.SetReservable(true); // already on since the tariff: no event
+        place.SetReservable(false);
         place.SetOccupied();   // physical status is not projected
 
-        Assert.AreEqual(3, place.DomainEvents!.OfType<PlaceChangedDomainEvent>().Count());
+        Assert.AreEqual(4, place.DomainEvents!.OfType<PlaceChangedDomainEvent>().Count());
     }
 }

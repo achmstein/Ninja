@@ -12,6 +12,7 @@ class PlacesState {
   final String? error;
   final List<Place> places;
   final List<Stay> openStays;
+  final List<Reservation> openReservations;
   final List<Stay>? stayHistory;
   final bool isLoadingHistory;
   final bool hasMoreHistory;
@@ -22,6 +23,7 @@ class PlacesState {
     this.error,
     this.places = const [],
     this.openStays = const [],
+    this.openReservations = const [],
     this.stayHistory,
     this.isLoadingHistory = false,
     this.hasMoreHistory = false,
@@ -33,6 +35,7 @@ class PlacesState {
     String? error,
     List<Place>? places,
     List<Stay>? openStays,
+    List<Reservation>? openReservations,
     List<Stay>? stayHistory,
     bool? isLoadingHistory,
     bool? hasMoreHistory,
@@ -43,6 +46,7 @@ class PlacesState {
       error: error,
       places: places ?? this.places,
       openStays: openStays ?? this.openStays,
+      openReservations: openReservations ?? this.openReservations,
       stayHistory: stayHistory ?? this.stayHistory,
       isLoadingHistory: isLoadingHistory ?? this.isLoadingHistory,
       hasMoreHistory: hasMoreHistory ?? this.hasMoreHistory,
@@ -75,9 +79,14 @@ class PlacesNotifier extends Notifier<PlacesState> {
     try {
       final result = await _repository.loadPlaces();
       if (!ref.mounted) return;
-      state = state.copyWith(isLoading: false, places: result.places, openStays: result.openStays);
+      state = state.copyWith(
+        isLoading: false,
+        places: result.places,
+        openStays: result.openStays,
+        openReservations: result.openReservations,
+      );
     } catch (e) {
-      debugPrint('Failed to  places: $e');
+      debugPrint('Failed to load places: $e');
     }
   }
 
@@ -91,9 +100,10 @@ class PlacesNotifier extends Notifier<PlacesState> {
         isLoading: false,
         places: result.places,
         openStays: result.openStays,
+        openReservations: result.openReservations,
       );
     } catch (e) {
-      debugPrint('Failed to  places: $e');
+      debugPrint('Failed to load places: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -109,13 +119,39 @@ class PlacesNotifier extends Notifier<PlacesState> {
     }
   }
 
-  Future<bool> startStay(int sessionId, {String? optionCode}) async {
+  /// The reservation keeping a place right now, if any
+  Reservation? reservationHolding(int placeId) =>
+      state.openReservations.where((r) => r.placeId == placeId && r.isOpen && r.isHolding).firstOrNull;
+
+  Future<bool> seatReservation(int reservationId, {String? optionCode}) async {
     try {
-      await _repository.startStay(sessionId, optionCode: optionCode);
+      await _repository.seatReservation(reservationId, optionCode: optionCode);
       await loadPlaces();
       return true;
     } catch (e) {
-      debugPrint('Failed to start session: $e');
+      debugPrint('Failed to seat the reservation: $e');
+      return false;
+    }
+  }
+
+  Future<bool> cancelReservation(int reservationId) async {
+    try {
+      await _repository.cancelReservation(reservationId);
+      await loadPlaces();
+      return true;
+    } catch (e) {
+      debugPrint('Failed to cancel the reservation: $e');
+      return false;
+    }
+  }
+
+  Future<bool> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
+    try {
+      await _repository.assignReservationCustomer(reservationId, customerId, customerName);
+      await loadPlaces();
+      return true;
+    } catch (e) {
+      debugPrint('Failed to assign customer to reservation: $e');
       return false;
     }
   }
@@ -193,10 +229,10 @@ class PlacesNotifier extends Notifier<PlacesState> {
     }
   }
 
-  /// The customer arrived: starts the clock when the hold asked for it
-  Future<bool> confirmStay(int sessionId) async {
+  /// The till acknowledges a reservation; one that asked for it also seats and starts the clock
+  Future<bool> confirmReservation(int reservationId) async {
     try {
-      await _repository.confirmStay(sessionId);
+      await _repository.confirmReservation(reservationId);
       await loadPlaces();
       return true;
     } catch (e) {

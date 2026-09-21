@@ -24,7 +24,7 @@ enum StartOutcome {
 /// Starts the clock: a walk-in on a free place, or the hold of a customer
 /// who just arrived. Where the tariff has options the cashier picks one;
 /// where it has one rate there is nothing to pick.
-Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Stay? session}) async {
+Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Reservation? reservation}) async {
   final outcome = await showFDialog<StartOutcome>(
     context: context,
     useRootNavigator: true,
@@ -32,7 +32,7 @@ Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Stay
       style: style,
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _StartStayDialog(room: room, session: session),
+      builder: (context, _) => _StartStayDialog(room: room, reservation: reservation),
     ),
   );
   return outcome ?? StartOutcome.none;
@@ -40,8 +40,8 @@ Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Stay
 
 class _StartStayDialog extends ConsumerStatefulWidget {
   final Place room;
-  final Stay? session;
-  const _StartStayDialog({required this.room, this.session});
+  final Reservation? reservation;
+  const _StartStayDialog({required this.room, this.reservation});
 
   @override
   ConsumerState<_StartStayDialog> createState() => _StartStayDialogState();
@@ -66,10 +66,10 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
   Future<void> _start() async {
     setState(() => _busy = true);
     final actions = StayActions(ref, context);
-    final session = widget.session;
+    final reservation = widget.reservation;
     final code = _chosen?.code;
-    final ok = session != null
-        ? await actions.startHeld(session.id, code)
+    final ok = reservation != null
+        ? await actions.seat(reservation.id, code, timed: true)
         : await actions.startWalkIn(widget.room.id, code);
     if (!mounted) return;
     setState(() => _busy = false);
@@ -82,7 +82,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
     final l10n = AppLocalizations.of(context)!;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final room = widget.room;
-    final session = widget.session;
+    final session = widget.reservation;
     final name = room.name.localized(context);
     final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: 20));
 
@@ -105,7 +105,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           if (session != null) ...[
             const SizedBox(height: 4),
             Text(
-              [name, if ((session.userName ?? '').isNotEmpty) session.userName!].join(' · '),
+              [name, if ((session.customerName ?? '').isNotEmpty) session.customerName!].join(' · '),
               style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
             ),
           ],

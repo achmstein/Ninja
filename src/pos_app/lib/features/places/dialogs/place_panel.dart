@@ -60,16 +60,22 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
 
   void _close() => Navigator.of(context, rootNavigator: true).pop();
 
-  Future<void> _start(Place room, {Stay? session}) async {
-    final outcome = await showStartStayDialog(context, room, session: session);
+  Future<void> _start(Place room, {Reservation? reservation}) async {
+    final outcome = await showStartStayDialog(context, room, reservation: reservation);
     if (outcome == StartOutcome.started && mounted) Navigator.of(context, rootNavigator: true).pop(true);
   }
 
   /// The customer asked for the clock to start the moment the counter
   /// confirms they arrived: one tap does both
-  Future<void> _confirmHold(Stay session) async {
-    final ok = await _guarded((a) => a.confirm(session.id, startsClock: session.startOnConfirm));
-    if (ok && session.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+  Future<void> _confirmHold(Reservation reservation) async {
+    final ok = await _guarded((a) => a.confirm(reservation.id, startsClock: reservation.startOnConfirm));
+    if (ok && reservation.startOnConfirm && mounted) Navigator.of(context, rootNavigator: true).pop(true);
+  }
+
+  /// A plain table: the party sat down, and the floor opens their bill
+  Future<void> _seatAtTable(Reservation reservation) async {
+    final ok = await _guarded((a) => a.seat(reservation.id, null, timed: false));
+    if (ok && mounted) Navigator.of(context, rootNavigator: true).pop(false);
   }
 
   Future<bool> _guarded(Future<bool> Function(StayActions actions) call) async {
@@ -93,9 +99,9 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     if (ok && mounted) await _guarded((a) => a.endStay(session.id));
   }
 
-  Future<void> _confirmCancel(Stay session) async {
+  Future<void> _confirmCancel({Stay? session, Reservation? reservation}) async {
     final l10n = AppLocalizations.of(context)!;
-    final active = session.isRunning;
+    final active = session != null;
     final ok = await showConfirmDialog(
       context,
       title: active ? l10n.cancelThisSession : l10n.cancelThisReservation,
@@ -107,7 +113,8 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     if (ok && mounted) {
       // Close the panel once cancelled — otherwise it reverts to the
       // available state, re-showing Start/Reserve as if prompting to start.
-      final cancelled = await _guarded((a) => a.cancelStay(session.id, wasActive: active));
+      final cancelled = await _guarded(
+          (a) => session != null ? a.cancelStay(session.id) : a.cancelReservation(reservation!.id));
       if (cancelled && mounted) _close();
     }
   }
@@ -126,11 +133,15 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
   }
 
   // Customer picker: adds a member (running) or assigns the owner (reserved)
-  Future<void> _pickCustomer(Stay session, {required bool assign}) async {
+  Future<void> _pickCustomer({Stay? session, Reservation? reservation, required bool assign}) async {
     final picked = await showCustomerDialog(context, accountsOnly: true);
     final id = picked?.id;
     if (picked == null || id == null || id.isEmpty || !mounted) return;
-    await _guarded((a) => assign ? a.assignCustomer(session.id, id, picked.name) : a.addMember(session.id, id, picked.name));
+    await _guarded((a) => reservation != null
+        ? a.assignReservationCustomer(reservation.id, id, picked.name)
+        : assign
+            ? a.assignCustomer(session!.id, id, picked.name)
+            : a.addMember(session!.id, id, picked.name));
   }
 
   @override
@@ -140,12 +151,13 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final placesState = ref.watch(placesProvider);
     final room = placesState.places.where((r) => r.id == widget.placeId).firstOrNull;
-    final session = placesState.openStays.where((s) => s.placeId == widget.placeId && (s.isRunning || s.isHeld)).firstOrNull;
+    final session = placesState.openStays.where((s) => s.placeId == widget.placeId && s.isRunning).firstOrNull;
+    final reservation = ref.read(placesProvider.notifier).reservationHolding(widget.placeId);
     if (room == null) return const SizedBox(height: 120);
 
     final now = DateTime.now();
     final active = session != null && session.isRunning;
-    final reserved = session != null && session.isHeld;
+    final reserved = !active && reservation != null;
     final maintenance = room.status == PlaceStatus.outOfService;
     final amber = AppColors.amber(theme.colors.brightness);
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
@@ -257,7 +269,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
-                  onPress: _busy ? null : () => _pickCustomer(session, assign: false),
+                  onPress: _busy ? null : () => _pickCustomer(session: session, assign: false),
                   prefix: Icon(FIcons.userPlus, size: 16, color: theme.colors.mutedForeground),
                   child: Text(l10n.addCustomer, style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
                 ),
@@ -310,7 +322,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             height: 44,
             child: FButton(
               variant: FButtonVariant.ghost,
-              onPress: _busy ? null : () => _confirmCancel(session),
+              onPress: _busy ? null : () => _confirmCancel(session: session),
               prefix: Icon(FIcons.x, size: 16, color: theme.colors.mutedForeground),
               child: Text(l10n.cancelSessionButton, style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground)),
             ),
@@ -318,21 +330,22 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         ],
       );
     } else if (reserved) {
-      final expiresIn = session.secondsUntilExpiry(now);
+      final expiresIn = reservation.secondsUntilExpiry(now);
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(child: circle(FIcons.clock, AppColors.amber500, AppColors.amber500.withValues(alpha: 0.1))),
           const SizedBox(height: 12),
-          Text(l10n.readyToStart, textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+          Text(room.isTimed ? l10n.readyToStart : l10n.statusReserved,
+              textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-          if ((session.userName ?? '').isNotEmpty)
+          if ((reservation.customerName ?? '').isNotEmpty)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
                 const SizedBox(width: 4),
-                Text(session.userName!, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                Text(reservation.customerName!, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
               ],
             )
           else
@@ -342,7 +355,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
-                  onPress: _busy ? null : () => _pickCustomer(session, assign: true),
+                  onPress: _busy ? null : () => _pickCustomer(reservation: reservation, assign: true),
                   prefix: const Icon(FIcons.userPlus, size: 16),
                   child: Text(l10n.assignCustomer, style: theme.typography.base.forButton),
                 ),
@@ -354,8 +367,8 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 textAlign: TextAlign.center, style: theme.typography.sm.copyWith(color: amber, fontFeatures: tabular)),
           ],
           // The customer asked for the clock to start the moment the counter
-          // confirms the hold, at the rate they picked: one tap does both
-          if (session.startOnConfirm) ...[
+          // confirms the reservation, at the rate they picked: one tap does both
+          if (reservation.startOnConfirm) ...[
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -363,11 +376,11 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 Icon(FIcons.timerReset, size: 16, color: theme.colors.mutedForeground),
                 const SizedBox(width: 6),
                 Text(l10n.startsOnConfirm, style: muted),
-                if (session.requestedOptionName != null) ...[
+                if (reservation.requestedOptionName != null) ...[
                   const SizedBox(width: 6),
                   FBadge(
                     variant: FBadgeVariant.secondary,
-                    child: Text(session.requestedOptionName!.localized(context)),
+                    child: Text(reservation.requestedOptionName!.localized(context)),
                   ),
                 ],
               ],
@@ -378,13 +391,19 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             children: [
               Expanded(
                 child: bigButton(l10n.cancel,
-                    variant: FButtonVariant.outline, icon: const Icon(FIcons.x, size: 20), onPress: _busy ? null : () => _confirmCancel(session)),
+                    variant: FButtonVariant.outline,
+                    icon: const Icon(FIcons.x, size: 20),
+                    onPress: _busy ? null : () => _confirmCancel(reservation: reservation)),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: session.startOnConfirm
-                    ? bigButton(l10n.confirmHold, icon: playIcon, onPress: _busy ? null : () => _confirmHold(session))
-                    : bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room, session: session)),
+                child: !room.isTimed
+                    ? bigButton(l10n.seatParty,
+                        icon: const Icon(FIcons.circleCheck, size: 20), onPress: _busy ? null : () => _seatAtTable(reservation))
+                    : reservation.startOnConfirm
+                        ? bigButton(l10n.confirmHold, icon: playIcon, onPress: _busy ? null : () => _confirmHold(reservation))
+                        : bigButton(l10n.startSession,
+                            icon: playIcon, onPress: _busy ? null : () => _start(room, reservation: reservation)),
               ),
             ],
           ),

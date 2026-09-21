@@ -40,6 +40,7 @@ import { Route as AuthenticatedTillRefundsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authenticated/till/payments'
 import { Route as AuthenticatedTillBreakdownRouteImport } from './routes/_authenticated/till/breakdown'
 import { Route as AuthenticatedPlacesPrintRouteImport } from './routes/_authenticated/places/print'
+import { Route as AuthenticatedPlacesReservationsRouteImport } from './routes/_authenticated/places/reservations'
 import { Route as AuthenticatedPlacesHistoryRouteImport } from './routes/_authenticated/places/history'
 import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll/payslips'
 import { Route as AuthenticatedPayrollEmployeesRouteImport } from './routes/_authenticated/payroll/employees'
@@ -227,6 +228,12 @@ const AuthenticatedPlacesPrintRoute =
     path: '/places/print',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPlacesReservationsRoute =
+  AuthenticatedPlacesReservationsRouteImport.update({
+    id: '/places/reservations',
+    path: '/places/reservations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlacesHistoryRoute =
   AuthenticatedPlacesHistoryRouteImport.update({
     id: '/places/history',
@@ -353,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/till/shifts': typeof AuthenticatedTillShiftsRoute
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
+  '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -402,6 +410,7 @@ export interface FileRoutesByTo {
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
+  '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
   '/inventory': typeof AuthenticatedInventoryIndexRoute
@@ -453,6 +462,7 @@ export interface FileRoutesById {
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/brand/': typeof AuthenticatedBrandIndexRoute
+  '/_authenticated/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
   '/_authenticated/inventory/': typeof AuthenticatedInventoryIndexRoute
   '/_authenticated/loyalty/': typeof AuthenticatedLoyaltyIndexRoute
@@ -504,6 +514,7 @@ export interface FileRouteTypes {
     | '/branches'
     | '/brand'
     | '/customers'
+    | '/places/reservations'
     | '/inventory'
     | '/loyalty'
     | '/menu'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/brand'
     | '/customers'
     | '/inventory'
+    | '/places/reservations'
     | '/loyalty'
     | '/menu'
     | '/notifications'
@@ -603,6 +615,7 @@ export interface FileRouteTypes {
     | '/_authenticated/customers/'
     | '/_authenticated/inventory/'
     | '/_authenticated/loyalty/'
+    | '/_authenticated/places/reservations'
     | '/_authenticated/menu/'
     | '/_authenticated/notifications/'
     | '/_authenticated/orders/'
@@ -861,6 +874,13 @@ declare module '@tanstack/react-router' {
       path: '/payroll/payslips'
       fullPath: '/payroll/payslips'
       preLoaderRoute: typeof AuthenticatedPayrollPayslipsRouteImport
+    '/_authenticated/places/reservations': {
+      id: '/_authenticated/places/reservations'
+      path: '/places/reservations'
+      fullPath: '/places/reservations'
+      preLoaderRoute: typeof AuthenticatedPlacesReservationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/payroll/employees': {
@@ -998,6 +1018,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRequestsIndexRoute: typeof AuthenticatedRequestsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
+  AuthenticatedPlacesReservationsRoute: typeof AuthenticatedPlacesReservationsRoute
   AuthenticatedTillIndexRoute: typeof AuthenticatedTillIndexRoute
   AuthenticatedInventoryHistoryCountsRoute: typeof AuthenticatedInventoryHistoryCountsRoute
   AuthenticatedInventoryHistoryPurchasesRoute: typeof AuthenticatedInventoryHistoryPurchasesRoute
@@ -1040,6 +1061,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,
   AuthenticatedTillIndexRoute: AuthenticatedTillIndexRoute,
+  AuthenticatedPlacesReservationsRoute: AuthenticatedPlacesReservationsRoute,
   AuthenticatedInventoryHistoryCountsRoute:
     AuthenticatedInventoryHistoryCountsRoute,
   AuthenticatedInventoryHistoryPurchasesRoute:

@@ -196,12 +196,13 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   // place with no clock opens a bill.
   Future<void> _pickPlace(int placeId) async {
     final room = ref.read(placesProvider).places.where((r) => r.id == placeId).firstOrNull;
-    if (room != null && !room.isTimed) {
+    final reservedNow = ref.read(placesProvider.notifier).reservationHolding(placeId) != null;
+    if (room != null && !room.isTimed && !reservedNow) {
       await _pickTable(room);
       return;
     }
     final bool started;
-    if (room != null && room.status == PlaceStatus.available) {
+    if (room != null && room.status == PlaceStatus.available && !reservedNow) {
       final outcome = await showStartStayDialog(context, room);
       if (outcome == StartOutcome.billOnly) {
         if (mounted) await _pickTable(room);
@@ -265,11 +266,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final placesLoading = placesState.isLoading && placesState.places.isEmpty;
     final pending = ref.watch(pendingOrdersProvider).value ?? const [];
     final sessions = placesState.openStays;
-    // A tenant without rooms has no holds to show and no room bills to filter
-    final rooms = ref.watch(featuresProvider).spaces;
+    final features = ref.watch(featuresProvider);
+    // A tenant without the clock has no room bills to filter
+    final rooms = features.timeBilling;
     // Reservations are the one thing not yet a bill that the cashier must
-    // not miss: somebody is on their way
-    final reserved = rooms ? sessions.where((s) => s.isHeld).toList() : const <Stay>[];
+    // not miss: somebody is on their way, or due later today
+    final reserved = features.reservations ? placesState.openReservations.where((r) => r.isOpen).toList() : const <Reservation>[];
     final now = DateTime.now();
     Stay? stayForTicket(TicketSummary t) =>
         t.sessionId == null ? null : sessions.where((s) => s.id == t.sessionId && s.isRunning).firstOrNull;
@@ -286,7 +288,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           reserved: reserved,
           places: placesState.places,
           now: now,
-          onPick: (session) => _pickPlace(session.placeId),
+          onPick: (reservation) => _pickPlace(reservation.placeId),
         ),
     ];
 
@@ -312,6 +314,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                           : PlaceList(
                               places: sortedRooms,
                               sessions: placesState.openStays,
+                              reservations: placesState.openReservations,
                               tickets: tickets.value ?? const [],
                               busy: _openingTable,
                               onNewTab: _newTab,
@@ -616,13 +619,14 @@ class _BillsState extends State<_Bills> {
   }
 }
 
-/// Reservations about to arrive: the room, who for, and the minutes left
-/// before the hold lapses. A tap opens the room to start or cancel it.
+/// Reservations about to arrive: the place, who for, and the minutes left
+/// before the reservation lapses (or, for one due later, when). A tap
+/// opens the place to seat or cancel it.
 class _HoldsRow extends StatelessWidget {
-  final List<Stay> reserved;
+  final List<Reservation> reserved;
   final List<Place> places;
   final DateTime now;
-  final ValueChanged<Stay> onPick;
+  final ValueChanged<Reservation> onPick;
 
   const _HoldsRow({required this.reserved, required this.places, required this.now, required this.onPick});
 
@@ -673,7 +677,7 @@ class _HoldsRow extends StatelessWidget {
                                 style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                (session.userName ?? '').isNotEmpty ? session.userName! : l10n.statusReserved,
+                                (session.customerName ?? '').isNotEmpty ? session.customerName! : l10n.statusReserved,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
@@ -681,10 +685,15 @@ class _HoldsRow extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (session.secondsUntilExpiry(now) case final left?) ...[
+                        if (session.isHolding ? session.secondsUntilExpiry(now) : null case final left?) ...[
                           const SizedBox(width: 8),
                           Text(formatCountdown(left),
                               style: theme.typography.sm.copyWith(color: amber, fontFeatures: const [FontFeature.tabularFigures()])),
+                        ] else if (!session.isHolding && session.forTime != null) ...[
+                          const SizedBox(width: 8),
+                          Text(TimeOfDay.fromDateTime(session.forTime!.toLocal()).format(context),
+                              style: theme.typography.sm
+                                  .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()])),
                         ],
                       ],
                     ),

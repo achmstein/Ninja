@@ -43,7 +43,7 @@ export function StayClock({
       <div className='flex w-full items-center justify-between'>
         <span className='text-xl font-bold'>{localized(stay.placeName)}</span>
         {hasOptions(stay.tariff) && stay.currentOptionName && (
-          <span className='rounded-full border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold'>
+          <span className='rounded-pill border border-white/30 bg-white/15 px-3 py-1 text-xs font-semibold'>
             {localized(stay.currentOptionName)}
           </span>
         )}
@@ -65,7 +65,7 @@ export function StayClock({
               <span
                 key={member.customerId ?? name}
                 className={cn(
-                  'rounded-full px-3 py-1 text-xs font-semibold',
+                  'rounded-pill px-3 py-1 text-xs font-semibold',
                   // The same chip as the rate pill above; yours filled in
                   isSelf
                     ? 'bg-white text-primary'

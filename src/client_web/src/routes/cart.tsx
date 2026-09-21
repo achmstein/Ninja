@@ -355,7 +355,7 @@ function CartPage() {
         </div>
         <Button
           size='lg'
-          className='w-full rounded-full'
+          className='w-full rounded-pill'
           onClick={() => setSignInOpen(true)}
         >
           <LogIn className='h-4 w-4' />
@@ -366,7 +366,7 @@ function CartPage() {
       <div className='flex flex-col gap-2'>
         <Button
           size='lg'
-          className='w-full rounded-full'
+          className='w-full rounded-pill'
           disabled={placeOrder.isPending || tableUnconfirmed}
           onClick={handleCheckout}
         >
@@ -379,7 +379,7 @@ function CartPage() {
           <Button
             variant='ghost'
             size='sm'
-            className='w-full rounded-full'
+            className='w-full rounded-pill'
             onClick={() => setSignInOpen(true)}
           >
             <LogIn className='h-4 w-4' />

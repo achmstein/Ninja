@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Clock, Loader2, Play, ReceiptText } from 'lucide-react'
-import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import type {
+  PlaceViewModel,
+  ReservationViewModel,
+} from '@/api/spaces/types.gen'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -20,8 +23,8 @@ import { useStayActions } from './use-places'
 type StartStayDialogProps = {
   /** The place to start the clock on; null keeps the dialog closed. */
   place: PlaceViewModel | null
-  /** A hold to start the clock on; without one, a walk-in starts. */
-  stay?: StayViewModel | null
+  /** A reservation whose party arrived; without one, a walk-in starts. */
+  reservation?: ReservationViewModel | null
   onOpenChange: (open: boolean) => void
   /** The clock started; the caller decides where the till goes next. */
   onStarted?: () => void
@@ -30,13 +33,13 @@ type StartStayDialogProps = {
 }
 
 /**
- * Starts the clock: a walk-in on a free place, or the hold of a customer
- * who just arrived. Where the tariff has options the cashier picks one;
- * where it has one rate there is nothing to pick.
+ * Starts the clock: a walk-in on a free place, or the reservation of a
+ * customer who just arrived. Where the tariff has options the cashier
+ * picks one; where it has one rate there is nothing to pick.
  */
 export function StartStayDialog({
   place,
-  stay,
+  reservation,
   onOpenChange,
   onStarted,
   onBillOnly,
@@ -73,7 +76,7 @@ export function StartStayDialog({
       },
     }
     const code = chosen?.code ?? null
-    if (stay) actions.startHeld(toNumber(stay.id), code, done)
+    if (reservation) actions.seat(toNumber(reservation.id), code, true, done)
     else actions.startWalkIn(toNumber(place.id), code, done)
   }
 
@@ -83,11 +86,11 @@ export function StartStayDialog({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2 text-xl'>
             <Play className='size-5 rtl:rotate-180' />
-            {stay ? t('startSession') : t('startWalkInSession')}
+            {reservation ? t('startSession') : t('startWalkInSession')}
           </DialogTitle>
-          {stay && (
+          {reservation && (
             <DialogDescription className='text-base'>
-              {[localized(place?.name), stay.customerName]
+              {[localized(place?.name), reservation.customerName]
                 .filter(Boolean)
                 .join(' · ')}
             </DialogDescription>
@@ -121,7 +124,7 @@ export function StartStayDialog({
         )}
 
         <DialogFooter className='gap-2'>
-          {!stay && (
+          {!reservation && (
             <div className='flex gap-2 sm:me-auto'>
               <Button
                 variant='outline'

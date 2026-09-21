@@ -297,6 +297,7 @@ public static partial class Templates
         yield return ("/api/stays/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
+        yield return ("/api/reservations/{*any}", "spaces", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);
         yield return ("/api/payroll/{*any}", "payroll", v1, none);
         yield return ("/api/finance/{*any}", "finance", v1, none);
@@ -317,8 +318,9 @@ public static partial class Templates
     /// <summary>
     /// The same table with a module that is not entitled taken out: its
     /// routes keep their paths (never a duplicate template) but point at
-    /// Branch.API's 402 page, and Spaces additionally blocks the timed-place
-    /// place routes, since /api/places itself serves tables and stations.
+    /// Branch.API's 402 page, and Reservations and Time billing additionally
+    /// block their place routes one by one, since /api/places itself serves
+    /// tables and stations.
     /// Every container keeps running; only the gateway changes.
     /// </summary>
     internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[][] Transforms)> GatewayRoutes(IReadOnlySet<Module> entitled)
@@ -331,7 +333,7 @@ public static partial class Templates
             else
                 yield return route;
         }
-        // The room-only place routes are not in the table: they are only ever added, to block
+        // The reserving and timed routes under /api/places are not in the table: they are only ever added, to block
         foreach (var (path, module) in blocked)
             yield return Block(path, module);
     }

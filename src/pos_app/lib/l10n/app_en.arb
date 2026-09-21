@@ -333,7 +333,9 @@
   "time": "Time",
   "billOnly": "Bill only",
   "confirmHold": "Confirm",
-  "holdConfirmed": "Hold confirmed",
+  "holdConfirmed": "Reservation confirmed",
+  "seatParty": "Seat them",
+  "partySeated": "Seated",
   "startsOnConfirm": "Timer starts on confirm",
   "requestChangeOption": "Switch to {option}",
   "@requestChangeOption": {

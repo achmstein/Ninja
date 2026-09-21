@@ -1,4 +1,5 @@
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Microsoft.EntityFrameworkCore;
 using SpacesContext = Ninja.Spaces.Infrastructure.SpacesContext;
@@ -7,12 +8,16 @@ namespace Ninja.Spaces.API.Application.Queries;
 
 public class PlaceQueries(SpacesContext context) : IPlaceQueries
 {
-    private static readonly StayStatus[] OpenStatuses = [StayStatus.Held, StayStatus.Running];
+    private static readonly ReservationStatus[] OpenReservationStatuses = [ReservationStatus.Requested, ReservationStatus.Confirmed];
 
-    private IQueryable<Stay> OpenStays => context.Stays
+    private IQueryable<Stay> RunningStays => context.Stays
         .AsNoTracking()
         .Include(s => s.Members)
-        .Where(s => OpenStatuses.Contains(s.Status));
+        .Where(s => s.Status == StayStatus.Running);
+
+    private IQueryable<Reservation> OpenReservations => context.Reservations
+        .AsNoTracking()
+        .Where(r => OpenReservationStatuses.Contains(r.Status));
 
     private IQueryable<Stay> FullStays => context.Stays
         .AsNoTracking()
@@ -30,14 +35,21 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
             places = places.Where(p => p.IsTimed == t).ToList();
 
         var ids = places.Select(p => p.Id).ToList();
-        var open = await OpenStays.Where(s => ids.Contains(s.PlaceId)).ToListAsync();
+        var running = await RunningStays.Where(s => ids.Contains(s.PlaceId)).ToListAsync();
+        var reserved = await OpenReservations.Where(r => ids.Contains(r.PlaceId)).ToListAsync();
 
-        return places.Select(p => p.ToViewModel(open.Where(s => s.PlaceId == p.Id).ToList())).ToList();
+        var now = DateTime.UtcNow;
+        return places
+            .Select(p => p.ToViewModel(
+                running.FirstOrDefault(s => s.PlaceId == p.Id),
+                reserved.Where(r => r.PlaceId == p.Id),
+                now))
+            .ToList();
     }
 
     public async Task<IEnumerable<PlaceViewModel>> GetAvailablePlacesAsync(int branchId)
     {
-        var places = await GetPlacesAsync(branchId, timed: true);
+        var places = await GetPlacesAsync(branchId);
         return places.Where(p => p.CanReserve && p.Status == PlaceDisplayStatus.Available);
     }
 
@@ -45,8 +57,9 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
     {
         var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.Id == placeId);
         if (place is null) return null;
-        var open = await OpenStays.Where(s => s.PlaceId == placeId).ToListAsync();
-        return place.ToViewModel(open);
+        var running = await RunningStays.FirstOrDefaultAsync(s => s.PlaceId == placeId);
+        var reserved = await OpenReservations.Where(r => r.PlaceId == placeId).ToListAsync();
+        return place.ToViewModel(running, reserved, DateTime.UtcNow);
     }
 
     public async Task<IEnumerable<StayViewModel>> GetCustomerStaysAsync(string customerId, int pageIndex = 0, int pageSize = 20)
@@ -65,9 +78,9 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
     public async Task<IEnumerable<StayViewModel>> GetOpenStaysAsync(int branchId)
     {
         var stays = await FullStays
-            .Where(s => OpenStatuses.Contains(s.Status))
+            .Where(s => s.Status == StayStatus.Running)
             .Where(s => s.Place!.BranchId == branchId)
-            .OrderBy(s => s.CreatedAt)
+            .OrderBy(s => s.StartedAt)
             .ToListAsync();
         return stays.Select(s => s.ToViewModel()).ToList();
     }
@@ -94,9 +107,10 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.Id == placeId);
         if (place is null) return null;
 
-        var open = await OpenStays.Where(s => s.PlaceId == placeId).ToListAsync();
-        var running = open.FirstOrDefault(s => s.Status == StayStatus.Running);
-        var current = running ?? open.FirstOrDefault(s => s.Status == StayStatus.Held);
+        var now = DateTime.UtcNow;
+        var running = await RunningStays.FirstOrDefaultAsync(s => s.PlaceId == placeId);
+        var reserved = await OpenReservations.Where(r => r.PlaceId == placeId).ToListAsync();
+        var holding = reserved.Where(r => r.IsHolding(now)).Next(now);
 
         return new PlaceScanViewModel
         {
@@ -104,7 +118,7 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
             PlaceId = place.Id,
             Kind = place.Kind,
             PlaceName = place.Name,
-            Status = ViewModelMapping.DisplayStatus(place, open),
+            Status = ViewModelMapping.DisplayStatus(place, running, reserved.Next(now), now),
             IsActive = place.IsActive,
             Tariff = place.Tariff?.ToViewModel(),
             IsTimed = place.IsTimed,
@@ -112,7 +126,8 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
             CanReserve = place.CanReserve,
             TakesControllerRequests = place.TakesControllerRequests,
             HasRunningStay = running is not null,
-            Stay = current?.ToPreview(place),
+            Stay = running?.ToPreview(place),
+            Reservation = holding?.ToPreview(place, now),
             IsAlreadyMember = running is not null && running.HasMember(customerId),
         };
     }
@@ -189,5 +204,86 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
             .ToList();
 
         return new StayStats { Days = days, Places = places };
+    }
+}
+
+/// <summary>Reservations as the floor and the customer's phone read them.</summary>
+public class ReservationQueries(SpacesContext context) : IReservationQueries
+{
+    private static readonly ReservationStatus[] OpenStatuses = [ReservationStatus.Requested, ReservationStatus.Confirmed];
+
+    private IQueryable<Reservation> All => context.Reservations.AsNoTracking().Include(r => r.Place);
+
+    public async Task<IEnumerable<ReservationViewModel>> GetOpenAsync(int branchId)
+    {
+        var now = DateTime.UtcNow;
+        var open = await All
+            .Where(r => r.BranchId == branchId)
+            .Where(r => OpenStatuses.Contains(r.Status))
+            .OrderBy(r => r.For ?? r.CreatedAt)
+            .ToListAsync();
+        return open.Select(r => r.ToViewModel(now)).ToList();
+    }
+
+    public async Task<IEnumerable<ReservationViewModel>> GetCustomerReservationsAsync(string customerId, int pageIndex = 0, int pageSize = 20)
+    {
+        var now = DateTime.UtcNow;
+        var mine = await All
+            .Where(r => r.CustomerId == customerId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return mine.Select(r => r.ToViewModel(now)).ToList();
+    }
+
+    public async Task<ReservationViewModel?> GetByIdAsync(int reservationId)
+    {
+        var r = await All.FirstOrDefaultAsync(x => x.Id == reservationId);
+        return r?.ToViewModel(DateTime.UtcNow);
+    }
+
+    // History is what is no longer open, newest first by the day it was
+    // for: a booking made a week ahead sits with the day it was honoured
+    // (or missed), not the day it was made.
+    private IQueryable<Reservation> Closed => All.Where(r => !OpenStatuses.Contains(r.Status));
+
+    public async Task<IEnumerable<ReservationViewModel>> GetPlaceHistoryAsync(int placeId, int limit = 20)
+    {
+        var now = DateTime.UtcNow;
+        var past = await Closed
+            .Where(r => r.PlaceId == placeId)
+            .OrderByDescending(r => r.For ?? r.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+        return past.Select(r => r.ToViewModel(now)).ToList();
+    }
+
+    public async Task<PaginatedResult<ReservationViewModel>> GetHistoryAsync(
+        int branchId, int pageIndex, int pageSize, int? placeId = null, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var query = Closed.Where(r => r.BranchId == branchId);
+        if (placeId.HasValue)
+            query = query.Where(r => r.PlaceId == placeId.Value);
+        if (fromDate.HasValue)
+            query = query.Where(r => (r.For ?? r.CreatedAt) >= fromDate.Value);
+        if (toDate.HasValue)
+            query = query.Where(r => (r.For ?? r.CreatedAt) <= toDate.Value);
+
+        var now = DateTime.UtcNow;
+        var totalCount = await query.CountAsync();
+        var page = await query
+            .OrderByDescending(r => r.For ?? r.CreatedAt)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<ReservationViewModel>
+        {
+            Items = page.Select(r => r.ToViewModel(now)).ToList(),
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
     }
 }

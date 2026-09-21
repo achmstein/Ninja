@@ -109,11 +109,24 @@ public sealed record KitchenOrderItem(LocalizedText ProductName, int Units);
 
 public sealed record StartWalkInStayResult(int StayId);
 
+/// <summary>What seating a reservation answers: whether the party was seated, and the stay that took over at a timed place.</summary>
+public sealed record SeatResult(bool Seated, int? StayId);
+
+public sealed record ReservationView(int Id, int PlaceId, LocalizedText PlaceName, bool PlaceIsTimed, string? CustomerId, string? CustomerName,
+    int? PartySize, DateTime? For, DateTime CreatedAt, DateTime? ExpiresAt, bool StartOnConfirm, string? RequestedOptionCode,
+    int Status, bool IsHolding, int? StayId, DateTime? SeatedAt, DateTime? ClosedAt);
+
+/// <summary>ReservationStatus as Spaces serialises it.</summary>
+public static class ReservationStatuses
+{
+    public const int Requested = 1, Confirmed = 2, Seated = 3, Cancelled = 4, Expired = 5;
+}
+
 public sealed record RateOptionView(string Code, LocalizedText Name, decimal HourlyRate);
 
 public sealed record TariffView(List<RateOptionView> Options, int RoundingMinutes);
 
-public sealed record PlaceView(int Id, LocalizedText Name, int BranchId, int Status, bool IsActive, bool IsTimed, TariffView? Tariff)
+public sealed record PlaceView(int Id, LocalizedText Name, int BranchId, int Status, bool IsActive, bool IsTimed, TariffView? Tariff, bool Reservable = false, bool CanReserve = false)
 {
     /// <summary>The hourly rate of one option of the tariff ("single", "multi").</summary>
     public decimal Rate(string optionCode)
@@ -122,7 +135,8 @@ public sealed record PlaceView(int Id, LocalizedText Name, int BranchId, int Sta
 }
 
 public sealed record StayView(int Id, int PlaceId, LocalizedText PlaceName, string? CustomerId, string? CustomerName,
-    DateTime? StartedAt, DateTime? EndedAt, decimal? TotalCost, string? CurrentOptionCode, int Status, List<StayMemberView> Members);
+    DateTime? StartedAt, DateTime? EndedAt, decimal? TotalCost, string? CurrentOptionCode, int Status, List<StayMemberView> Members,
+    int? ReservationId = null);
 
 public sealed record StayMemberView(string CustomerId, string? CustomerName, string Role);
 

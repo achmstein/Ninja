@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CheckCircle2, Loader2, Play } from 'lucide-react'
-import { type StayViewModel } from '@/api/spaces'
+import { type ReservationViewModel, type TariffViewModel } from '@/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,23 +17,26 @@ import { useStayActions } from '../use-places'
 import { RateOptionToggle } from './rate-option-toggle'
 
 interface StartHeldDialogProps {
-  stay: StayViewModel | null
+  reservation: ReservationViewModel | null
+  /** The place's tariff: the rates to pick from. */
+  tariff: TariffViewModel | null | undefined
   /**
-   * `start` starts the clock on the hold; `confirm` confirms an arrival
-   * whose hold asked for the clock to start on confirm — the same choice
-   * of rate, a different call.
+   * `start` seats the party and starts the clock; `confirm` confirms an
+   * arrival whose reservation asked for the clock to start on confirm —
+   * the same choice of rate, a different call.
    */
   mode: 'start' | 'confirm'
   onOpenChange: (open: boolean) => void
 }
 
 /**
- * Starts the clock on a held stay, asking which rate where the tariff has
- * a choice. Only opened when there is something to pick; a one-rate hold
- * starts straight from the panel.
+ * Starts the clock on a reservation whose party arrived, asking which
+ * rate where the tariff has a choice. Only opened when there is something
+ * to pick; a one-rate place seats straight from the panel.
  */
 export function StartHeldDialog({
-  stay,
+  reservation,
+  tariff,
   mode,
   onOpenChange,
 }: StartHeldDialogProps) {
@@ -42,11 +45,11 @@ export function StartHeldDialog({
   const actions = useStayActions()
   const [optionCode, setOptionCode] = useState<string | null>(null)
 
-  if (!stay) return null
+  if (!reservation) return null
 
-  const options = tariffOptions(stay.tariff)
+  const options = tariffOptions(tariff)
   const chosen = optionCode ?? options[0]?.code ?? null
-  const stayId = Number(stay.id)
+  const reservationId = Number(reservation.id)
   const done = {
     onSuccess: () => {
       setOptionCode(null)
@@ -55,12 +58,12 @@ export function StartHeldDialog({
   }
 
   const go = () => {
-    if (mode === 'confirm') actions.confirm(stayId, chosen, true, done)
-    else actions.startHeld(stayId, chosen, done)
+    if (mode === 'confirm') actions.confirm(reservationId, chosen, true, done)
+    else actions.seat(reservationId, chosen, true, done)
   }
 
   return (
-    <Dialog open={!!stay} onOpenChange={onOpenChange}>
+    <Dialog open={!!reservation} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
@@ -72,8 +75,8 @@ export function StartHeldDialog({
             {t(mode === 'confirm' ? 'confirm' : 'start')}
           </DialogTitle>
           <DialogDescription>
-            {localized(stay.placeName)}
-            {stay.customerName ? ` — ${stay.customerName}` : ''}
+            {localized(reservation.placeName)}
+            {reservation.customerName ? ` — ${reservation.customerName}` : ''}
           </DialogDescription>
         </DialogHeader>
 

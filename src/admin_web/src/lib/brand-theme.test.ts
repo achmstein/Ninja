@@ -64,6 +64,19 @@ describe('brand tokens', () => {
     expect(brandThemeCss(cafe)).toContain('.dark{')
   })
 
+  it('corners reach the chips too, and the header grows with its seed', () => {
+    // A full pill from md up; square and small corners keep the chip's corners with them
+    expect(brandTokens(cafe).light['--radius-pill']).toBe('9999px')
+    expect(brandTokens({ theme: { radius: 'none' } }).light['--radius-pill']).toBe('0rem')
+    expect(brandTokens({ theme: { radius: 'sm' } }).light['--radius-pill']).toBe('0.375rem')
+    // No radius seed, no pill token: the neutral theme's stays
+    expect(brandTokens({ theme: { accent: '#f59e0b' } }).light['--radius-pill']).toBeUndefined()
+    const large = brandTokens({ theme: { headerSize: 'lg' } }).light
+    expect(large['--header-h']).toBe('5.5rem')
+    expect(large['--wordmark-h']).toBe('3.75rem')
+    expect(brandTokens({ theme: { headerSize: 'huge' } }).light['--header-h']).toBeUndefined()
+  })
+
   it('the chrome colour is the page of each scheme', () => {
     expect(brandThemeColor(cafe, 'light')).toBe('#fffbf5')
     expect(brandThemeColor(cafe, 'dark')).toMatch(/^#[0-9a-f]{6}$/)

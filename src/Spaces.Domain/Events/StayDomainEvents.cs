@@ -2,17 +2,14 @@ using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 namespace Ninja.Spaces.Domain.Events;
 
-/// <summary>A customer asked for a place; the hold clock is ticking.</summary>
-public record class StayHeldDomainEvent(Stay Stay) : INotification;
-
-/// <summary>The clock started, from a hold or as a walk-in.</summary>
+/// <summary>The clock started, as a walk-in or from a seated reservation.</summary>
 public record class StayStartedDomainEvent(Stay Stay) : INotification;
 
 /// <summary>The clock stopped; the cost is known.</summary>
 public record class StayEndedDomainEvent(Stay Stay) : INotification;
 
-/// <summary>Given up or cut short. PreviousStatus says whether a clock was running.</summary>
-public record class StayCancelledDomainEvent(Stay Stay, StayStatus PreviousStatus) : INotification;
+/// <summary>A running stay was cut short; nothing is billed.</summary>
+public record class StayCancelledDomainEvent(Stay Stay) : INotification;
 
 /// <summary>Someone joined the party (scan, or named by the till).</summary>
 public record class StayMemberJoinedDomainEvent(Stay Stay, string MemberUserId) : INotification;

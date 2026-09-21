@@ -85,7 +85,7 @@ export function TableView({
           />
         </div>
 
-        <Button asChild size='lg' className='w-full rounded-full'>
+        <Button asChild size='lg' className='w-full rounded-pill'>
           <Link to='/' onClick={onClose}>
             {t('orderFromMenu')}
           </Link>

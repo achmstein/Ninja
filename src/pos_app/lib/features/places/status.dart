@@ -12,9 +12,14 @@ String formatClock(double totalSeconds) {
 /// `mm:ss` — a countdown short enough to drop the hours
 String formatCountdown(double totalSeconds) => formatClock(totalSeconds).substring(3);
 
+extension ReservationState on Reservation {
+  /// Seconds until the reservation lapses, null when it never does
+  double? secondsUntilExpiry(DateTime now) =>
+      expiresAt == null ? null : (expiresAt!.difference(now).inMilliseconds / 1000).clamp(0, double.infinity);
+}
+
 extension StayState on Stay {
   bool get isRunning => status == StayStatus.running;
-  bool get isHeld => status == StayStatus.held;
 
   /// Seconds since the timer started
   double elapsedSeconds(DateTime now) =>
@@ -56,10 +61,6 @@ extension StayState on Stay {
       lines: [for (final l in lines) (option: l.option, hours: l.hours, amount: l.hours * l.option.hourlyRate)],
     );
   }
-
-  /// Seconds until a hold lapses, null when it never does
-  double? secondsUntilExpiry(DateTime now) =>
-      expiresAt == null ? null : (expiresAt!.difference(now).inMilliseconds / 1000).clamp(0, double.infinity);
 
   /// The people there as the customer picker offers them: everyone on the
   /// roster who has an account. A member with no name still shows; the

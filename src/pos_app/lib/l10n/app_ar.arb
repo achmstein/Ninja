@@ -340,6 +340,8 @@
         "type": "int"
       }
     }
+  "seatParty": "قعّدهم",
+  "partySeated": "اتقعدوا",
   },
   "newTab": "حساب جديد",
   "onCustomerTabHint": "على حساب {name}",

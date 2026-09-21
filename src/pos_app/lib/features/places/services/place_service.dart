@@ -2,15 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../models/place.dart';
 
-/// The branch's places and the stays on them — /api/places and /api/stays
+/// The branch's places, the reservations on them and the stays running
+/// there — /api/places, /api/reservations and /api/stays
 abstract class PlaceRepository {
-  /// Every place of the branch, and every held or running stay
-  Future<({List<Place> places, List<Stay> openStays})> loadPlaces();
-  Future<void> holdPlace(int placeId);
-  Future<void> startStay(int stayId, {String? optionCode});
+  /// Every place of the branch, every running stay and every open reservation
+  Future<({List<Place> places, List<Stay> openStays, List<Reservation> openReservations})> loadPlaces();
 
-  /// The customer arrived: starts the clock when the hold asked for it
-  Future<void> confirmStay(int stayId);
+  /// Reserve a place for a party at the counter
+  Future<void> holdPlace(int placeId);
+
+  /// The party arrived and sat down: on a timed place the clock starts
+  Future<void> seatReservation(int reservationId, {String? optionCode});
+
+  /// The till acknowledges a reservation; one that asked for it also seats and starts the clock
+  Future<void> confirmReservation(int reservationId);
+  Future<void> cancelReservation(int reservationId);
+  Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName);
   Future<void> endStay(int stayId);
   Future<void> cancelStay(int stayId);
   Future<void> assignStayCustomer(int stayId, String customerId, String? customerName);
@@ -22,42 +29,59 @@ abstract class PlaceRepository {
   Future<Stay?> getStay(int stayId);
 }
 
-/// Concrete implementation over the Places and Stays APIs
+/// Concrete implementation over the Places, Reservations and Stays APIs
 class ApiPlaceRepository implements PlaceRepository {
   final ApiClient _places;
+  final ApiClient _reservations;
   final ApiClient _stays;
 
-  ApiPlaceRepository(this._places, this._stays);
+  ApiPlaceRepository(this._places, this._reservations, this._stays);
 
   @override
-  Future<({List<Place> places, List<Stay> openStays})> loadPlaces() async {
+  Future<({List<Place> places, List<Stay> openStays, List<Reservation> openReservations})> loadPlaces() async {
     final results = await Future.wait([
       _places.get(''),
       _stays.get('open'),
+      _reservations.get('open'),
     ]);
 
     final placesData = results[0].data as List<dynamic>;
     final staysData = results[1].data as List<dynamic>;
+    final reservationsData = results[2].data as List<dynamic>;
 
     final places = placesData.map((e) => Place.fromJson(e as Map<String, dynamic>)).toList();
     final openStays = staysData.map((e) => Stay.fromJson(e as Map<String, dynamic>)).toList();
+    final openReservations = reservationsData.map((e) => Reservation.fromJson(e as Map<String, dynamic>)).toList();
 
-    return (places: places, openStays: openStays);
+    return (places: places, openStays: openStays, openReservations: openReservations);
   }
 
   @override
   Future<void> holdPlace(int placeId) async {
-    await _places.post('$placeId/hold', data: {'startOnConfirm': false});
+    await _reservations.post('', data: {'placeId': placeId, 'startOnConfirm': false});
   }
 
   @override
-  Future<void> startStay(int stayId, {String? optionCode}) async {
-    await _stays.post('$stayId/start', data: {'optionCode': optionCode});
+  Future<void> seatReservation(int reservationId, {String? optionCode}) async {
+    await _reservations.post('$reservationId/seat', data: {'optionCode': optionCode});
   }
 
   @override
-  Future<void> confirmStay(int stayId) async {
-    await _stays.post('$stayId/confirm', data: {});
+  Future<void> confirmReservation(int reservationId) async {
+    await _reservations.post('$reservationId/confirm', data: {});
+  }
+
+  @override
+  Future<void> cancelReservation(int reservationId) async {
+    await _reservations.post('$reservationId/cancel');
+  }
+
+  @override
+  Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
+    await _reservations.post('$reservationId/assign-customer', data: {
+      'customerId': customerId,
+      'customerName': customerName,
+    });
   }
 
   @override
@@ -117,5 +141,5 @@ class ApiPlaceRepository implements PlaceRepository {
 
 /// Provider for the room repository
 final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
-  return ApiPlaceRepository(ref.read(placesApiProvider), ref.read(staysApiProvider));
+  return ApiPlaceRepository(ref.read(placesApiProvider), ref.read(reservationsApiProvider), ref.read(staysApiProvider));
 });

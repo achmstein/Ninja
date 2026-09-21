@@ -33,6 +33,7 @@ public static partial class ControlApi
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
+        api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
 
         MapBrandApi(api);
         MapRecordApi(api);
@@ -221,6 +222,24 @@ public static partial class ControlApi
     }
 
     /// <summary>A rolled-back upgrade leaves its reason on a running tenant until someone has read it. A failed tenant keeps its reason: the action that gets it going again clears it.</summary>
+    /// <summary>
+    /// A destroyed tenant is a row nobody needs on the list any more. Only
+    /// from Destroyed: destroy first is what takes the stack down, and the
+    /// one step keeps a mis-click from wiping a café. The audit rows are
+    /// keyed by slug, not by id, so the history reads on after the record.
+    /// </summary>
+    public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> Forget(ControlContext context, IAuditWriter audit, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.Include(t => t.Steps).Include(t => t.Payments).SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.Status != TenantStatus.Destroyed)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Only a destroyed tenant can be forgotten; {slug} is {tenant.Status}. Destroy it first." });
+        await audit.WriteAsync("tenant.forgotten", slug, new { tenant.NameEn, tenant.Kind, tenant.Plan, steps = tenant.Steps.Count, payments = tenant.Payments.Count }, ct);
+        context.Tenants.Remove(tenant);
+        await context.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
     public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> DismissError(ControlContext context, IAuditWriter audit, string slug, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);

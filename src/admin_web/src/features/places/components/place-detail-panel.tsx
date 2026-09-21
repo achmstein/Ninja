@@ -16,8 +16,15 @@ import {
   X,
 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
-import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
-import { getPlaceStayHistoryOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import {
+  type PlaceViewModel,
+  type ReservationViewModel,
+  type StayViewModel,
+} from '@/api/spaces'
+import {
+  getPlaceReservationHistoryOptions,
+  getPlaceStayHistoryOptions,
+} from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useCustomerOrigin } from '@/lib/brand'
 import { placeQrUrl } from '@/lib/qr'
@@ -32,6 +39,7 @@ import type { KeycloakUser } from '@/features/accounts/types'
 import { PendingOrderCard } from '@/features/orders/components/pending-order-card'
 import { formatEgp } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
+import { ReservationOutcome } from '../reservations-history'
 import {
   elapsedSeconds,
   estimateStayCost,
@@ -40,7 +48,7 @@ import {
   formatClock,
   formatDuration,
   hasOptions,
-  isHeld,
+  isHolding,
   isRunning,
   PLACE_OUT_OF_SERVICE,
   placeStatusConfig,
@@ -61,15 +69,20 @@ function displayName(user: KeycloakUser): string {
 
 interface PlaceDetailPanelProps {
   place: PlaceViewModel
-  /** The held or running stay on the place, if any */
+  /** The running stay on the place, if any */
   stay: StayViewModel | undefined
+  /** The next reservation on the place, if any; only one keeping it now shows */
+  reservation: ReservationViewModel | undefined
   /** Submitted orders waiting on this place, oldest first */
   orders: OrderSummary[]
   onBack: () => void
   onHold: () => void
   onWalkIn: () => void
-  /** A held stay needs a rate picked before its clock starts */
-  onStartHeld: (stay: StayViewModel, mode: 'start' | 'confirm') => void
+  /** A reservation at a timed place needs a rate picked before its clock starts */
+  onStartHeld: (
+    reservation: ReservationViewModel,
+    mode: 'start' | 'confirm'
+  ) => void
 }
 
 /**
@@ -80,6 +93,7 @@ interface PlaceDetailPanelProps {
 export function PlaceDetailPanel({
   place,
   stay,
+  reservation,
   orders,
   onBack,
   onHold,
@@ -114,6 +128,17 @@ export function PlaceDetailPanel({
   })
   const history = historyQuery.data ?? []
 
+  // Past reservations: shown for a place that takes them, or that ever did
+  const [reservationLimit, setReservationLimit] = useState(HISTORY_PAGE)
+  const reservationsQuery = useQuery({
+    ...getPlaceReservationHistoryOptions({
+      path: { id: placeId },
+      query: { limit: reservationLimit },
+    }),
+    placeholderData: keepPreviousData,
+  })
+  const pastReservations = reservationsQuery.data ?? []
+
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [pendingOption, setPendingOption] = useState<string | null>(null)
@@ -123,17 +148,18 @@ export function PlaceDetailPanel({
   const [pickerFor, setPickerFor] = useState<'member' | 'assign' | null>(null)
 
   const running = isRunning(stay)
-  const held = isHeld(stay)
+  const held = !running && reservation != null && isHolding(reservation)
   const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
   const placeStatus = placeStatusConfig[Number(place.status ?? 0)]
 
   const stayId = Number(stay?.id)
+  const reservationId = Number(reservation?.id)
   const options = tariffOptions(stay?.tariff)
   const currentOption = stay?.currentOptionCode ?? null
   const estimate = stay && running ? estimateStayCost(stay, now) : null
   const expiresInSeconds =
-    stay && held && stay.expiresAt
-      ? Math.max(0, (new Date(stay.expiresAt).getTime() - now) / 1000)
+    held && reservation.expiresAt
+      ? Math.max(0, (new Date(reservation.expiresAt).getTime() - now) / 1000)
       : null
 
   const copyQrLink = () => {
@@ -142,25 +168,27 @@ export function PlaceDetailPanel({
   }
 
   const confirmHold = () => {
-    if (!stay) return
+    if (!reservation) return
     // The customer asked for the clock to start the moment the counter
-    // confirms the hold. With a rate to pick that they did not pick, ask
-    // first; otherwise the server starts at the rate they asked for
+    // confirms the reservation. With a rate to pick that they did not
+    // pick, ask first; otherwise the server starts at the rate they asked for
     if (
-      stay.startOnConfirm &&
-      hasOptions(stay.tariff) &&
-      !stay.requestedOptionCode
+      reservation.startOnConfirm &&
+      hasOptions(place.tariff) &&
+      !reservation.requestedOptionCode
     ) {
-      onStartHeld(stay, 'confirm')
+      onStartHeld(reservation, 'confirm')
     } else {
-      actions.confirm(stayId, null, Boolean(stay.startOnConfirm))
+      actions.confirm(reservationId, null, Boolean(reservation.startOnConfirm))
     }
   }
 
+  // Seat the party: at a timed place with a choice of rates, ask which;
+  // at a plain table there is no clock to start
   const startHeld = () => {
-    if (!stay) return
-    if (hasOptions(stay.tariff)) onStartHeld(stay, 'start')
-    else actions.startHeld(stayId, null)
+    if (!reservation) return
+    if (timed && hasOptions(place.tariff)) onStartHeld(reservation, 'start')
+    else actions.seat(reservationId, null, timed)
   }
 
   const members = stay?.members ?? []
@@ -202,8 +230,9 @@ export function PlaceDetailPanel({
       </div>
 
       <ScrollArea className='min-h-0 flex-1'>
-        {/* Now: the clock and its controls */}
-        {timed && (
+        {/* Now: the clock and its controls; a plain table only has a
+            "now" while somebody has reserved it */}
+        {(timed || held) && (
           <div className='border-b'>
             {stay && running ? (
               <div className='flex flex-col items-center gap-4 px-4 py-6'>
@@ -341,17 +370,17 @@ export function PlaceDetailPanel({
                   </Button>
                 </div>
               </div>
-            ) : stay && held ? (
+            ) : held ? (
               <div className='flex flex-col items-center gap-3 px-4 py-8'>
                 <div className='flex size-16 items-center justify-center rounded-full bg-amber-500/10'>
                   <Clock className='size-7 text-amber-500' />
                 </div>
                 <p className='font-medium'>
-                  {stay.customerName
-                    ? t('heldFor', { name: stay.customerName })
+                  {reservation.customerName
+                    ? t('heldFor', { name: reservation.customerName })
                     : t('held')}
                 </p>
-                {!stay.customerId && (
+                {!reservation.customerId && (
                   <Button
                     variant='outline'
                     size='sm'
@@ -369,14 +398,14 @@ export function PlaceDetailPanel({
                     })}
                   </p>
                 )}
-                {stay.startOnConfirm && (
+                {reservation.startOnConfirm && (
                   <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
                     <TimerReset className='size-4' />
                     {t('startsOnConfirm')}
                     {/* The rate the customer asked to start at */}
-                    {stay.requestedOptionName && (
+                    {reservation.requestedOptionName && (
                       <Badge variant='secondary'>
-                        {localized(stay.requestedOptionName)}
+                        {localized(reservation.requestedOptionName)}
                       </Badge>
                     )}
                   </p>
@@ -390,18 +419,26 @@ export function PlaceDetailPanel({
                     <X className='me-1 h-4 w-4' />
                     {t('cancel')}
                   </Button>
-                  <Button
-                    variant={stay.startOnConfirm ? 'default' : 'outline'}
-                    disabled={actions.isBusy}
-                    onClick={confirmHold}
-                  >
-                    <CheckCircle2 className='me-1 h-4 w-4' />
-                    {t('confirm')}
-                  </Button>
-                  {!stay.startOnConfirm && (
+                  {timed && (
+                    <Button
+                      variant={
+                        reservation.startOnConfirm ? 'default' : 'outline'
+                      }
+                      disabled={actions.isBusy}
+                      onClick={confirmHold}
+                    >
+                      <CheckCircle2 className='me-1 h-4 w-4' />
+                      {t('confirm')}
+                    </Button>
+                  )}
+                  {!reservation.startOnConfirm && (
                     <Button disabled={actions.isBusy} onClick={startHeld}>
-                      <Play className='me-1 h-4 w-4 rtl:rotate-180' />
-                      {t('start')}
+                      {timed ? (
+                        <Play className='me-1 h-4 w-4 rtl:rotate-180' />
+                      ) : (
+                        <CheckCircle2 className='me-1 h-4 w-4' />
+                      )}
+                      {t(timed ? 'start' : 'seatParty')}
                     </Button>
                   )}
                 </div>
@@ -569,6 +606,78 @@ export function PlaceDetailPanel({
             )}
           </div>
         )}
+        {/* Past reservations */}
+        {(place.reservable || pastReservations.length > 0) && (
+          <div className='border-t p-4'>
+            <h3 className='pb-1 text-sm font-medium'>
+              {t('reservationHistory')}
+            </h3>
+            {reservationsQuery.isLoading ? (
+              <p className='text-muted-foreground py-4 text-sm'>
+                {t('loading')}
+              </p>
+            ) : pastReservations.length === 0 ? (
+              <p className='text-muted-foreground py-4 text-sm'>
+                {t('noReservationsYet')}
+              </p>
+            ) : (
+              <>
+                {pastReservations.map((item) => {
+                  const when = item.for ?? item.createdAt
+                  return (
+                    <div
+                      key={String(item.id)}
+                      className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
+                    >
+                      <div className='w-20 shrink-0'>
+                        <div className='font-medium'>
+                          {when
+                            ? new Date(when).toLocaleDateString(locale, {
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : '—'}
+                        </div>
+                        <div className='text-muted-foreground text-xs'>
+                          {when &&
+                            new Date(when).toLocaleTimeString(locale, {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                        </div>
+                      </div>
+                      <span
+                        className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
+                      >
+                        {item.customerName || t('walkIn')}
+                        {item.partySize ? (
+                          <span className='text-muted-foreground'>
+                            {' '}
+                            · {t('partyOf', { count: item.partySize })}
+                          </span>
+                        ) : null}
+                      </span>
+                      <ReservationOutcome reservation={item} />
+                    </div>
+                  )
+                })}
+                {pastReservations.length >= reservationLimit && (
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='mt-2 w-full'
+                    disabled={reservationsQuery.isFetching}
+                    onClick={() =>
+                      setReservationLimit((limit) => limit + HISTORY_PAGE)
+                    }
+                  >
+                    {t('loadMore')}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </ScrollArea>
 
       <CustomerSearchDialog
@@ -579,7 +688,7 @@ export function PlaceDetailPanel({
         onSelectCustomer={(picked) => {
           const name = displayName(picked)
           if (pickerFor === 'assign') {
-            actions.assignCustomer(stayId, picked.id, name)
+            actions.assignReservationCustomer(reservationId, picked.id, name)
           } else {
             actions.addMember(stayId, picked.id, name)
           }
@@ -614,9 +723,13 @@ export function PlaceDetailPanel({
         destructive
         isLoading={actions.isBusy}
         handleConfirm={() =>
-          actions.cancelStay(stayId, held, {
-            onSuccess: () => setConfirmCancel(false),
-          })
+          held
+            ? actions.cancelReservation(reservationId, {
+                onSuccess: () => setConfirmCancel(false),
+              })
+            : actions.cancelStay(stayId, {
+                onSuccess: () => setConfirmCancel(false),
+              })
         }
       />
 

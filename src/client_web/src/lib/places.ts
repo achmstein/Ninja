@@ -20,11 +20,17 @@ export const PLACE_OCCUPIED = 2
 export const PLACE_HELD = 3
 export const PLACE_OUT_OF_SERVICE = 4
 
-// StayStatus
-export const STAY_HELD = 1
+// StayStatus (1 was Held, before the reservation became its own thing)
 export const STAY_RUNNING = 2
 export const STAY_ENDED = 3
 export const STAY_CANCELLED = 4
+
+// ReservationStatus
+export const RESERVATION_REQUESTED = 1
+export const RESERVATION_CONFIRMED = 2
+export const RESERVATION_SEATED = 3
+export const RESERVATION_CANCELLED = 4
+export const RESERVATION_EXPIRED = 5
 
 /** The kind as the services spell it in events and requests. */
 export function placeKindName(
@@ -88,7 +94,7 @@ export function hasOptions(
   return tariffOptions(tariff).length > 1
 }
 
-/** A place a customer can hold: timed, taking customers, free right now. */
+/** A place a customer can reserve for now: bookable, taking customers, free right now. */
 export function canHold(place: PlaceViewModel | PlaceScanViewModel): boolean {
   return Boolean(place.canReserve) && Number(place.status) === PLACE_AVAILABLE
 }

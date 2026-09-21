@@ -27,8 +27,8 @@ void main() {
       ],
       openStays: [
         _stay(10, StayStatus.running, ['c']),
-        // Held, not in the room yet: free to open a tab meanwhile
-        _stay(11, StayStatus.held, ['d']),
+        // Ended, bill still open: no longer in the room, free to open a tab
+        _stay(11, StayStatus.ended, ['d']),
       ],
       pending: {
         3: const SaleCustomer(id: 'e', name: 'E'),

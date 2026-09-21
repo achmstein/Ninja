@@ -594,6 +594,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ticketNumber(int id) {
+  @override
+  String get seatParty => 'قعّدهم';
+
+  @override
+  String get partySeated => 'اتقعدوا';
+
     return 'حساب #$id';
   }
 

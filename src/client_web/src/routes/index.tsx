@@ -251,10 +251,10 @@ function MenuPage() {
               key={section.id}
               id={section.id}
               // Rest exactly under the sticky rail: its own offset (the
-              // safe-area inset on mobile, the h-14 header on desktop) plus
+              // safe-area inset on mobile, the brand's header on desktop) plus
               // the rail's 3.25rem. The flat 128px this replaces overshot, and
               // the surplus showed the previous category's last row
-              className='flex scroll-mt-[calc(env(safe-area-inset-top)_+_3.25rem)] flex-col md:scroll-mt-[6.75rem]'
+              className='flex scroll-mt-[calc(env(safe-area-inset-top)_+_3.25rem)] flex-col md:scroll-mt-[calc(var(--header-h)_+_3.25rem)]'
             >
               <h2 className='pt-2 pb-1 text-base font-bold'>{section.label}</h2>
               <div className='md:grid md:grid-cols-2 md:gap-x-10'>

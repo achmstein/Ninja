@@ -63,6 +63,8 @@ const webExtras = {
   },
   // The clock card's members, and a shared bill's lines
   you: { en: 'You', ar: 'انت' },
+  // The profile tab and page: "You", the way Reddit names it
+  youTab: { en: 'You', ar: 'أنت' },
   // The house account says "balance" and "on your tab", never "account",
   // so it never reads like the bills tab (الحساب)
   yourBalance: { en: 'Your balance', ar: 'رصيدك' },

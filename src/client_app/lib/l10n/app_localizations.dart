@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profile;
 
+  /// No description provided for @youTab.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youTab;
+
   /// No description provided for @cart.
   ///
   /// In en, this message translates to:

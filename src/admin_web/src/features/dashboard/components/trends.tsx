@@ -252,7 +252,7 @@ export function Trends() {
             <RankedList items={topItems} />
           )}
         </div>
-        {features.spaces && (
+        {features.timeBilling && (
         <div>
           <h3 className='mb-1 text-sm font-medium'>{t('timeByPlace')}</h3>
           {stayStats.isError ? (

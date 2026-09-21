@@ -780,7 +780,8 @@
       },
       "TenantFeatures": {
         "required": [
-          "spaces",
+          "reservations",
+          "timeBilling",
           "loyalty",
           "tabs",
           "inventory",
@@ -790,7 +791,10 @@
         ],
         "type": "object",
         "properties": {
-          "spaces": {
+          "reservations": {
+            "type": "boolean"
+          },
+          "timeBilling": {
             "type": "boolean"
           },
           "loyalty": {
@@ -1038,6 +1042,12 @@
           "url": {
             "type": "string"
           },
+          },
+          "headerSize": {
+            "type": [
+              "null",
+              "string"
+            ]
           "width": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [

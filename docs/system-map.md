@@ -12,7 +12,7 @@
 |---|---|---|
 | Catalog | The menu, prices, customizations, availability | events; the assistant's menu features |
 | Ordering | Orders, baskets, validation | events |
-| Spaces | Rooms, tables, sessions and their time billing | events |
+| Spaces | Places (rooms, tables, stations), the reservations on them, the stays that run a clock and their time billing | events |
 | Sales | Tickets, tenders, shifts, the drawer | events (tickets are built from Ordering/Spaces events) |
 | Inventory | Stock items, recipes, the ledger, receipts, counts, transfers, costs | events; the assistant's receipt scan |
 | Finance | Expenses, suppliers' and partners' accounts, the P&L projection | events; the assistant's bill scan |

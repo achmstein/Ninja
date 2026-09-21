@@ -79,7 +79,7 @@ export function SignInOptions() {
       <Button
         size="lg"
         variant="outline"
-        className="w-full rounded-full"
+        className="w-full rounded-pill"
         onClick={() => signIn("google")}
       >
         <GoogleIcon />
@@ -87,7 +87,7 @@ export function SignInOptions() {
       </Button>
       <Button
         size="lg"
-        className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-full"
+        className="bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill"
         onClick={() => signIn("apple")}
       >
         <AppleIcon />
@@ -101,7 +101,7 @@ export function SignInOptions() {
       <Button
         size="lg"
         variant="secondary"
-        className="w-full rounded-full"
+        className="w-full rounded-pill"
         onClick={() => signIn()}
       >
         <Mail className="h-4 w-4" />

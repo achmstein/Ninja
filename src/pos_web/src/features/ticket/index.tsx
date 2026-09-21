@@ -43,7 +43,7 @@ import {
 } from '@/features/receipt/receipt-sheet'
 import { StayBar } from '@/features/places/stay-bar'
 import { StayMembers } from '@/features/places/stay-members'
-import { isRunning, isHeld, stayRoster } from '@/features/places/status'
+import { isRunning, stayRoster } from '@/features/places/status'
 import { TimeSoFar } from '@/features/places/time-so-far'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import type { SaleCustomer } from '@/features/sale/cart'
@@ -431,7 +431,7 @@ export function TicketScreen({
   // Ended, bill still open: the time has landed and the roster stays
   // editable so every share can find its tab
   const endedStay =
-    liveStay && !isRunning(liveStay) && !isHeld(liveStay) ? liveStay : undefined
+    liveStay && !isRunning(liveStay) ? liveStay : undefined
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
   // order keeps the first person named at the top instead of reshuffling the

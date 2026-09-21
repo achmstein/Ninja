@@ -8,7 +8,7 @@ import {
   Coffee,
   ConciergeBell,
   Contact,
-  Gamepad2,
+  Armchair,
   Handshake,
   History,
   LayoutDashboard,
@@ -36,8 +36,10 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        { title: 'placesNav', url: '/places', icon: Gamepad2, feature: 'spaces' },
-        { title: 'requests', url: '/requests', icon: ConciergeBell, feature: 'spaces' },
+        // Rooms & Tables is every café's: the tables and their QR codes live there whatever the plan
+        { title: 'placesNav', url: '/places', icon: Armchair },
+        // A waiter call or a bill request comes from any table's scan page, whatever the plan
+        { title: 'requests', url: '/requests', icon: ConciergeBell },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },

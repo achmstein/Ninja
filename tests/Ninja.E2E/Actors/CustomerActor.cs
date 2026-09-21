@@ -129,6 +129,23 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
     public Task<AccountView?> MyTabAsync(CancellationToken ct)
         => Api.GetOrDefaultAsync<AccountView>("/api/accounts/my", ct);
 
+    // --- Reservations -------------------------------------------------------------
+
+    /// <summary>hold-sheet.tsx: the customer reserves a place for now, with ten minutes to arrive.</summary>
+    public Task<int> ReserveAsync(int placeId, CancellationToken ct, bool startOnConfirm = false, string? optionCode = null)
+        => Api.PostAsync<int>("/api/reservations", new { placeId, startOnConfirm, optionCode }, ct);
+
+    public Task<HttpResponseMessage> TryReserveAsync(int placeId, CancellationToken ct)
+        => Api.PostAsync("/api/reservations", new { placeId }, ct, ensureSuccess: false);
+
+    /// <summary>The customer's reservations, newest first: the one they are on their way to, and history.</summary>
+    public Task<List<ReservationView>> MyReservationsAsync(CancellationToken ct)
+        => Api.GetAsync<List<ReservationView>>("/api/reservations/my", ct);
+
+    /// <summary>held-banner.tsx: give up one's own reservation; refused once seated.</summary>
+    public Task<HttpResponseMessage> TryCancelMyReservationAsync(int reservationId, CancellationToken ct)
+        => Api.PostAsync($"/api/reservations/my/{reservationId}/cancel", null, ct, ensureSuccess: false);
+
     /// <summary>In-room "call the waiter" (lib/services/notifications.ts).</summary>
     public Task<ServiceRequestResponse> RequestServiceAsync(int stayId, int placeId, string placeNameEn, int requestType, CancellationToken ct)
         => Api.PostAsync<ServiceRequestResponse>("/api/notifications/service-requests", new

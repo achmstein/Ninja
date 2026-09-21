@@ -154,9 +154,11 @@ internal static class Extensions
             yarp.AddRoute("/api/orders/{*any}", orderingCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // Spaces routes: places and stays
+            // Spaces routes: places, reservations and stays
             var spacesCluster = yarp.AddCluster(spacesApi);
             yarp.AddRoute("/api/places/{*any}", spacesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+            yarp.AddRoute("/api/reservations/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
             yarp.AddRoute("/api/stays/{*any}", spacesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);

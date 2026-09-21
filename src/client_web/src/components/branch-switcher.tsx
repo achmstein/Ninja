@@ -75,7 +75,7 @@ export function BranchSwitcher() {
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' size='sm' className='gap-1.5 rounded-full'>
+          <Button variant='ghost' size='sm' className='gap-1.5 rounded-pill'>
             <MapPin className='h-4 w-4' />
             <span className='max-w-28 truncate'>
               {localized(activeBranch?.name)}

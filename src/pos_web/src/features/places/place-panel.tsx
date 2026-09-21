@@ -14,7 +14,11 @@ import {
   X,
 } from 'lucide-react'
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
-import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import type {
+  PlaceViewModel,
+  ReservationViewModel,
+  StayViewModel,
+} from '@/api/spaces/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,12 +44,14 @@ import { StayMembers } from './stay-members'
 import { StartStayDialog } from './start-stay-dialog'
 import {
   elapsedSeconds,
+  expiresInSeconds,
   findOption,
   formatBillingHours,
   formatClock,
   hasOptions,
+  isHolding,
   isRunning,
-  isHeld,
+  isTimed,
   optionSeconds,
   PLACE_OUT_OF_SERVICE,
   placeStatusDot,
@@ -58,25 +64,33 @@ import { useSecondsClock, useStayActions } from './use-places'
 type PlacePanelProps = {
   /** The place to show; null keeps the panel closed. */
   place: PlaceViewModel | null
+  /** The running stay on it, if any. */
   stay: StayViewModel | undefined
+  /** The next reservation on it, if any; only one keeping the place now shows. */
+  reservation?: ReservationViewModel | undefined
   onOpenChange: (open: boolean) => void
   /**
    * A clock started from here. The panel closes; the floor takes the
    * till to the bill, where the running stay's card lives.
    */
   onStarted?: (placeId: number) => void
+  /** A reservation at a plain table was seated: the floor opens its bill. */
+  onSeated?: (place: PlaceViewModel) => void
 }
 
 /**
- * One timed place's live state and every control the till has for it —
- * the admin panel's "now" section, sized for a thumb. Hours here; the
- * money is the ticket's, one tap away while the clock runs.
+ * One place's live state and every control the till has for it — the
+ * admin panel's "now" section, sized for a thumb. A timed place shows its
+ * clock; any place shows who reserved it. Hours here; the money is the
+ * ticket's, one tap away while the clock runs.
  */
 export function PlacePanel({
   place,
   stay,
+  reservation,
   onOpenChange,
   onStarted,
+  onSeated,
 }: PlacePanelProps) {
   const t = useT()
   const localized = useLocalized()
@@ -90,14 +104,16 @@ export function PlacePanel({
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [pendingOption, setPendingOption] = useState<string | null>(null)
-  // Customer picker: adds a member (running) or assigns the owner (held)
+  // Customer picker: adds a member (running) or names the party (reserved)
   const [pickerFor, setPickerFor] = useState<'member' | 'assign' | null>(null)
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
   const running = isRunning(stay)
-  const held = isHeld(stay)
+  const held = !running && reservation != null && isHolding(reservation)
+  const timed = isTimed(place)
   const outOfService = Number(place?.status) === PLACE_OUT_OF_SERVICE
   const stayId = toNumber(stay?.id)
+  const reservationId = toNumber(reservation?.id)
   const options = tariffOptions(place?.tariff)
 
   // The running stay's bill, for the jump to it
@@ -116,10 +132,7 @@ export function PlacePanel({
     : []
   const billed = stay ? stayBilledHours(stay) : 0
   const billedLabel = formatBillingHours(billed, t)
-  const expiresInSeconds =
-    held && stay.expiresAt
-      ? Math.max(0, (new Date(stay.expiresAt).getTime() - now) / 1000)
-      : null
+  const expiresIn = held ? expiresInSeconds(reservation, now) : null
   const optionName = (code: string | null) =>
     localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) ||
     code ||
@@ -142,7 +155,9 @@ export function PlacePanel({
               {localized(place?.name)}
             </DialogTitle>
             <DialogDescription className='text-base tabular-nums'>
-              {tariffLine(place?.tariff, money, localized)} {t('perHour')}
+              {timed
+                ? `${tariffLine(place?.tariff, money, localized)} ${t('perHour')}`
+                : localized(place?.description) || t('table')}
             </DialogDescription>
           </DialogHeader>
 
@@ -246,11 +261,16 @@ export function PlacePanel({
               <div className='flex size-16 items-center justify-center rounded-full bg-amber-500/10'>
                 <Clock className='size-7 text-amber-500' />
               </div>
-              <p className='text-lg font-medium'>{t('readyToStart')}</p>
-              {stay.customerName ? (
+              <p className='text-lg font-medium'>
+                {timed ? t('readyToStart') : t('statusReserved')}
+              </p>
+              {reservation.customerName ? (
                 <p className='text-muted-foreground flex items-center gap-1'>
                   <User className='size-4' />
-                  {stay.customerName}
+                  {reservation.customerName}
+                  {reservation.partySize
+                    ? ` · ${t('partyOf', { count: reservation.partySize })}`
+                    : ''}
                 </p>
               ) : (
                 <Button
@@ -263,23 +283,23 @@ export function PlacePanel({
                   {t('assignCustomer')}
                 </Button>
               )}
-              {expiresInSeconds != null && (
+              {expiresIn != null && (
                 <p className='font-mono text-sm text-amber-600 tabular-nums dark:text-amber-500'>
                   {t('expiresIn', {
-                    countdown: formatClock(expiresInSeconds).slice(3),
+                    countdown: formatClock(expiresIn).slice(3),
                   })}
                 </p>
               )}
               {/* The customer asked for the clock to start the moment the
-                  counter confirms the hold, at the rate they picked: one
-                  tap does both */}
-              {stay.startOnConfirm && (
+                  counter confirms the reservation, at the rate they picked:
+                  one tap does both */}
+              {reservation.startOnConfirm && (
                 <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
                   <TimerReset className='size-4' />
                   {t('startsOnConfirm')}
-                  {stay.requestedOptionName && (
+                  {reservation.requestedOptionName && (
                     <Badge variant='secondary'>
-                      {localized(stay.requestedOptionName)}
+                      {localized(reservation.requestedOptionName)}
                     </Badge>
                   )}
                 </p>
@@ -295,13 +315,31 @@ export function PlacePanel({
                   <X className='size-5' />
                   {t('cancel')}
                 </Button>
-                {stay.startOnConfirm ? (
+                {!timed ? (
                   <Button
                     size='lg'
                     className='h-12'
                     disabled={actions.isBusy}
                     onClick={() =>
-                      actions.confirm(stayId, true, {
+                      actions.seat(reservationId, null, false, {
+                        onSuccess: () => {
+                          if (!place) return
+                          close()
+                          onSeated?.(place)
+                        },
+                      })
+                    }
+                  >
+                    <CheckCircle2 className='size-5' />
+                    {t('seatParty')}
+                  </Button>
+                ) : reservation.startOnConfirm ? (
+                  <Button
+                    size='lg'
+                    className='h-12'
+                    disabled={actions.isBusy}
+                    onClick={() =>
+                      actions.confirm(reservationId, true, {
                         onSuccess: () => {
                           if (!place) return
                           close()
@@ -374,7 +412,7 @@ export function PlacePanel({
 
       <StartStayDialog
         place={startOpen ? place : null}
-        stay={held ? stay : null}
+        reservation={held ? reservation : null}
         onOpenChange={(isOpen) => {
           if (!isOpen) setStartOpen(false)
         }}
@@ -398,7 +436,11 @@ export function PlacePanel({
         onSelect={(picked) => {
           if (picked.id) {
             if (pickerFor === 'assign')
-              actions.assignCustomer(stayId, picked.id, picked.name)
+              actions.assignReservationCustomer(
+                reservationId,
+                picked.id,
+                picked.name,
+              )
             else actions.addMember(stayId, picked.id, picked.name)
           }
           setPickerFor(null)
@@ -430,7 +472,9 @@ export function PlacePanel({
         // "available" state, re-showing the Start/Reserve options as if
         // prompting to start again.
         onAction={() =>
-          actions.cancelStay(stayId, running, { onSuccess: close })
+          running
+            ? actions.cancelStay(stayId, { onSuccess: close })
+            : actions.cancelReservation(reservationId, { onSuccess: close })
         }
       />
 

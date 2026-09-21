@@ -359,6 +359,22 @@ public sealed class OwnerActor(ApiClient api)
 
     // --- Customers -------------------------------------------------------------
 
+    // --- Places -----------------------------------------------------------------
+
+    /// <summary>The owner opens a place to reservations, or closes it (place-dialog.tsx's switch).</summary>
+    public async Task SetReservableAsync(int placeId, bool reservable, CancellationToken ct)
+    {
+        using var r = await Api.PutAsync($"/api/places/{placeId}/reservable", new { reservable }, ct);
+    }
+
+    /// <summary>Seated, cancelled and lapsed reservations of the branch, newest first (the Reservations page).</summary>
+    public Task<PagedResult<ReservationView>> ReservationHistoryAsync(CancellationToken ct, int? placeId = null)
+        => Api.GetAsync<PagedResult<ReservationView>>($"/api/reservations/history?pageSize=50{(placeId is { } p ? $"&placeId={p}" : "")}", ct);
+
+    /// <summary>Past reservations at one place (the detail panel).</summary>
+    public Task<List<ReservationView>> PlaceReservationsAsync(int placeId, CancellationToken ct)
+        => Api.GetAsync<List<ReservationView>>($"/api/places/{placeId}/reservations", ct);
+
     /// <summary>Loyalty accounts are opened by the customer or an Admin; 409 = already joined.</summary>
     public async Task CreateLoyaltyAccountAsync(string userId, string displayName, CancellationToken ct)
     {

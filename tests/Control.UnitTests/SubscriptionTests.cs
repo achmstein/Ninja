@@ -28,7 +28,7 @@ public sealed class SubscriptionTests
     public void Free_includes_only_kds_starter_the_floor_and_pro_everything()
     {
         CollectionAssert.AreEquivalent(new[] { Module.Kds }, PlanCatalog.Included(TenantPlan.Free).ToArray());
-        CollectionAssert.AreEquivalent(new[] { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, PlanCatalog.Included(TenantPlan.Starter).ToArray());
         Assert.IsTrue(PlanCatalog.Included(TenantPlan.Pro).SetEquals(PlanCatalog.All));
         Assert.IsEmpty(PlanCatalog.AddonsAvailable(TenantPlan.Pro));
         CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll }, PlanCatalog.AddonsAvailable(TenantPlan.Starter).ToArray());
@@ -38,14 +38,14 @@ public sealed class SubscriptionTests
     public void Entitlements_are_the_plan_plus_the_addons_and_everything_for_a_demo()
     {
         var starterWithInventory = PlanCatalog.Entitlements(TenantPlan.Starter, [Module.Inventory], TenantKind.Customer);
-        CollectionAssert.AreEquivalent(new[] { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds, Module.Inventory }, starterWithInventory.ToArray());
+        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds, Module.Inventory }, starterWithInventory.ToArray());
         Assert.IsTrue(PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo).SetEquals(PlanCatalog.All), "a prospect sees the whole product");
     }
 
     [TestMethod]
     public void Normalizing_drops_addons_the_plan_includes_and_duplicates()
     {
-        CollectionAssert.AreEqual(new[] { Module.Inventory, Module.Finance }, PlanCatalog.NormalizeAddons(TenantPlan.Starter, [Module.Finance, Module.Spaces, Module.Inventory, Module.Finance]));
+        CollectionAssert.AreEqual(new[] { Module.Inventory, Module.Finance }, PlanCatalog.NormalizeAddons(TenantPlan.Starter, [Module.Finance, Module.Reservations, Module.Inventory, Module.Finance]));
         Assert.IsEmpty(PlanCatalog.NormalizeAddons(TenantPlan.Pro, [Module.Inventory]));
     }
 
@@ -53,9 +53,10 @@ public sealed class SubscriptionTests
     public void The_features_object_spells_the_switches_the_way_branch_api_does()
     {
         var features = PlanCatalog.ToFeatures(PlanCatalog.Entitlements(TenantPlan.Starter, [], TenantKind.Customer));
-        Assert.IsTrue(features["spaces"]!.GetValue<bool>());
+        Assert.IsTrue(features["reservations"]!.GetValue<bool>());
+        Assert.IsTrue(features["timeBilling"]!.GetValue<bool>(), "camelCase, the way System.Text.Json spells Branch.API's record");
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
-        CollectionAssert.AreEquivalent(new[] { "spaces", "loyalty", "tabs", "inventory", "finance", "payroll", "kds" }, features.Select(f => f.Key).ToArray());
+        CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds" }, features.Select(f => f.Key).ToArray());
     }
 
     [TestMethod]
@@ -74,8 +75,11 @@ public sealed class SubscriptionTests
         Assert.Contains($"{inventory}__TRANSFORMS__1__Set: \"inventory\"", yaml);
         Assert.DoesNotContain($"{inventory}__MATCH__QUERYPARAMETERS", yaml, "every api-version gets the 402");
 
-        // Rooms is in Starter: the stays and the room-only place routes are not blocked, /api/places goes to spaces
-        Assert.DoesNotContain("/api/places/{id}/hold", yaml);
+        // Reservations and Time billing are in Starter: their routes are not blocked, /api/places goes to spaces
+        Assert.DoesNotContain("/api/places/{id}/tariff", yaml);
+        Assert.DoesNotContain("/api/places/{id}/reservable", yaml);
+        var reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{reservations}__CLUSTERID: \"spaces\"", yaml);
         var places = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/places/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{places}__CLUSTERID: \"spaces\"", yaml);
         // Every container still runs and is still probed
@@ -84,17 +88,43 @@ public sealed class SubscriptionTests
     }
 
     [TestMethod]
-    public void Free_blocks_stays_and_the_timed_place_routes_but_not_places_itself()
+    public void Free_blocks_reservations_stays_and_the_timed_place_routes_but_not_places_itself()
     {
         var tenant = Customer(TenantPlan.Free);
         var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
-        Assert.Contains("__MATCH__PATH: \"/api/places/{id}/hold\"", yaml);
+        Assert.Contains("__MATCH__PATH: \"/api/places/{id}/tariff\"", yaml);
+        Assert.Contains("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml);
         Assert.Contains("__MATCH__PATH: \"/api/places/available\"", yaml);
+        var reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{reservations}__CLUSTERID: \"branch\"", yaml);
+        Assert.Contains($"{reservations}__TRANSFORMS__1__Set: \"reservations\"", yaml);
         var stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{stays}__CLUSTERID: \"branch\"", yaml);
-        Assert.Contains($"{stays}__TRANSFORMS__1__Set: \"spaces\"", yaml);
+        Assert.Contains($"{stays}__TRANSFORMS__1__Set: \"timeBilling\"", yaml);
         var places = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/places/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{places}__CLUSTERID: \"spaces\"", yaml, "tables and stations live under /api/places");
+    }
+
+    [TestMethod]
+    public void A_restaurant_buys_reservations_without_the_clock_and_a_gaming_cafe_the_clock_without_bookings()
+    {
+        var restaurant = Customer(TenantPlan.Free, Module.Reservations);
+        var yaml = Templates.Compose(restaurant, TenantHosts.For(restaurant, Platform), Platform);
+        var reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{reservations}__CLUSTERID: \"spaces\"", yaml, "bookings go through");
+        Assert.DoesNotContain("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml, "the reservable switch is not blocked");
+        var stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{stays}__CLUSTERID: \"branch\"", yaml, "the clock is not in the plan");
+        Assert.Contains("__MATCH__PATH: \"/api/places/{id}/tariff\"", yaml);
+
+        var gaming = Customer(TenantPlan.Free, Module.TimeBilling);
+        yaml = Templates.Compose(gaming, TenantHosts.For(gaming, Platform), Platform);
+        stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{stays}__CLUSTERID: \"spaces\"", yaml, "the clock goes through");
+        Assert.DoesNotContain("__MATCH__PATH: \"/api/places/{id}/tariff\"", yaml);
+        reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
+        Assert.Contains($"{reservations}__CLUSTERID: \"branch\"", yaml, "bookings are not in the plan");
+        Assert.Contains("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml);
     }
 
     [TestMethod]

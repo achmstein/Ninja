@@ -543,7 +543,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmHold => 'Confirm';
 
   @override
-  String get holdConfirmed => 'Hold confirmed';
+  String get holdConfirmed => 'Reservation confirmed';
+
+  @override
+  String get seatParty => 'Seat them';
+
+  @override
+  String get partySeated => 'Seated';
 
   @override
   String get startsOnConfirm => 'Timer starts on confirm';

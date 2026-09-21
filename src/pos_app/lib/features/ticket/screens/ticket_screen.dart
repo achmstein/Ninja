@@ -350,7 +350,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final activeSession = session != null && session.isRunning ? session : null;
     // Ended, bill still open: the time has landed and the roster stays
     // editable so every share can find its tab
-    final endedSession = session != null && !session.isRunning && !session.isHeld ? session : null;
+    final endedSession = session != null && !session.isRunning ? session : null;
     final groups = groupLinesByCustomer(lines);
     final shared = !(groups.length == 1 && groups.single.unattributed);
     // Selecting moves individual lines to another ticket, so the rounds

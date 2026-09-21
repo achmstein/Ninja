@@ -47,7 +47,8 @@ import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 
 const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey }[] = [
-  { key: 'spaces', label: 'featureSpaces' },
+  { key: 'reservations', label: 'featureReservations' },
+  { key: 'timeBilling', label: 'featureTimeBilling' },
   { key: 'loyalty', label: 'featureLoyalty' },
   { key: 'tabs', label: 'featureTabs' },
   { key: 'inventory', label: 'featureInventory' },
@@ -91,6 +92,7 @@ type ThemeForm = {
   accent: string
   surface: string
   radius: string
+  headerSize: string
   fontLatin: string
   fontArabic: string
   darkPrimary: string
@@ -102,6 +104,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   accent: t.accent ?? '',
   surface: t.surface ?? '',
   radius: t.radius ?? '',
+  headerSize: t.headerSize ?? '',
   fontLatin: t.fontLatin ?? '',
   fontArabic: t.fontArabic ?? '',
   darkPrimary: t.dark?.primary ?? '',
@@ -117,6 +120,7 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     accent: orNull(f.accent),
     surface: orNull(f.surface),
     radius: f.radius || null,
+    headerSize: f.headerSize || null,
     fontLatin: f.fontLatin || null,
     fontArabic: f.fontArabic || null,
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
@@ -308,6 +312,28 @@ function BrandForm({ brand }: { brand: Brand }) {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-header' className='text-xs'>
+                    {t('headerSize')}
+                  </Label>
+                  <Select
+                    value={theme.headerSize || NONE}
+                    onValueChange={(v) =>
+                      setTheme({ ...theme, headerSize: v === NONE ? '' : v })
+                    }
+                  >
+                    <SelectTrigger id='brand-header' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t('defaultOption')}</SelectItem>
+                      <SelectItem value='sm'>{t('headerSm')}</SelectItem>
+                      <SelectItem value='md'>{t('headerMd')}</SelectItem>
+                      <SelectItem value='lg'>{t('headerLg')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('headerSizeHint')}</p>
                 </div>
                 <FontSelect
                   id='brand-font-latin'

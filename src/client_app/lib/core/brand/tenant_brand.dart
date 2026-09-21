@@ -4,7 +4,8 @@ import '../models/localized_text.dart';
 /// The switches a tenant can turn off. Every one is on until the brand is
 /// known, so nothing flashes off and back at startup.
 class TenantFeatures {
-  final bool spaces;
+  final bool reservations;
+  final bool timeBilling;
   final bool loyalty;
   final bool tabs;
   final bool inventory;
@@ -13,7 +14,8 @@ class TenantFeatures {
   final bool kds;
 
   const TenantFeatures({
-    this.spaces = true,
+    this.reservations = true,
+    this.timeBilling = true,
     this.loyalty = true,
     this.tabs = true,
     this.inventory = true,
@@ -25,7 +27,9 @@ class TenantFeatures {
   static const all = TenantFeatures();
 
   factory TenantFeatures.fromJson(Map<String, dynamic> json) => TenantFeatures(
-        spaces: json['spaces'] as bool? ?? true,
+        // A cache from before the split says "spaces" for both
+        reservations: json['reservations'] as bool? ?? json['spaces'] as bool? ?? true,
+        timeBilling: json['timeBilling'] as bool? ?? json['spaces'] as bool? ?? true,
         loyalty: json['loyalty'] as bool? ?? true,
         tabs: json['tabs'] as bool? ?? true,
         inventory: json['inventory'] as bool? ?? true,
@@ -35,7 +39,8 @@ class TenantFeatures {
       );
 
   Map<String, dynamic> toJson() => {
-        'spaces': spaces,
+        'reservations': reservations,
+        'timeBilling': timeBilling,
         'loyalty': loyalty,
         'tabs': tabs,
         'inventory': inventory,
@@ -48,7 +53,8 @@ class TenantFeatures {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is TenantFeatures &&
-          other.spaces == spaces &&
+          other.reservations == reservations &&
+          other.timeBilling == timeBilling &&
           other.loyalty == loyalty &&
           other.tabs == tabs &&
           other.inventory == inventory &&
@@ -57,7 +63,7 @@ class TenantFeatures {
           other.kds == kds;
 
   @override
-  int get hashCode => Object.hash(spaces, loyalty, tabs, inventory, finance, payroll, kds);
+  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds);
 }
 
 /// The wide logo for headers and sign-in. [width] and [height] are the
@@ -255,6 +261,11 @@ class TenantTheme {
   /// One of [radii]
   final String? radius;
 
+  /// "sm", "md" or "lg": the room the web app's header gives the wordmark. The
+  /// app shows its wordmark hero-sized (login, profile) rather than in a
+  /// header, so it only carries the seed through the cached document.
+  final String? headerSize;
+
   /// Google Fonts family names, one per script
   final String? fontLatin;
   final String? fontArabic;
@@ -262,12 +273,15 @@ class TenantTheme {
   /// The dark scheme's own seeds, when derived ones do not suit the brand
   final TenantThemeDark? dark;
 
-  const TenantTheme({this.accentHex, this.surfaceHex, this.radius, this.fontLatin, this.fontArabic, this.dark});
+  const TenantTheme({this.accentHex, this.surfaceHex, this.radius, this.headerSize, this.fontLatin, this.fontArabic, this.dark});
+
+  static const headerSizes = ['sm', 'md', 'lg'];
 
   static const neutral = TenantTheme();
 
   factory TenantTheme.fromJson(Map<String, dynamic> json) {
     final radius = (json['radius'] as String?)?.trim().toLowerCase();
+    final headerSize = (json['headerSize'] as String?)?.trim().toLowerCase();
     String? font(String key) {
       final value = (json[key] as String?)?.trim();
       return value == null || value.isEmpty ? null : value;
@@ -277,6 +291,7 @@ class TenantTheme {
       accentHex: _hex(json['accent'] as String?),
       surfaceHex: _hex(json['surface'] as String?),
       radius: radius != null && radii.contains(radius) ? radius : null,
+      headerSize: headerSize != null && headerSizes.contains(headerSize) ? headerSize : null,
       fontLatin: font('fontLatin'),
       fontArabic: font('fontArabic'),
       dark: TenantThemeDark.parse(json['dark']),
@@ -289,6 +304,7 @@ class TenantTheme {
         'accent': accentHex,
         'surface': surfaceHex,
         'radius': radius,
+        'headerSize': headerSize,
         'fontLatin': fontLatin,
         'fontArabic': fontArabic,
         'dark': dark?.toJson(),

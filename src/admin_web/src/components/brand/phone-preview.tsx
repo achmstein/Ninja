@@ -100,9 +100,9 @@ export function PhonePreview({
         style={style}
         className={cn('bg-background text-foreground flex h-full flex-col', scheme === 'dark' && 'dark')}
       >
-        <div className='flex items-center gap-2 border-b px-4 py-3'>
+        <div className='flex items-center gap-2 border-b px-4' style={{ height: 'calc(var(--header-h, 3.5rem) * 0.8)' }}>
           {wordmark ? (
-            <img src={wordmark.url} alt='' style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}` }} className='h-6 w-auto max-w-[60%] object-contain' />
+            <img src={wordmark.url} alt='' style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}`, height: 'calc(var(--wordmark-h, 1.75rem) * 0.8)' }} className='w-auto max-w-[60%] object-contain' />
           ) : (
             <>
               {logo ? (

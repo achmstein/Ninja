@@ -5,7 +5,7 @@ import { isAxiosError } from 'axios'
 import { Clock, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
-import { holdPlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
+import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
 import { cn } from '@/lib/utils'
@@ -41,14 +41,14 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
   const [optionCode, setOptionCode] = useState<string | null>(null)
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyReservations' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getPlace' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'scanPlace' }] })
   }
 
   const hold = useMutation({
-    ...holdPlaceMutation(),
+    ...reservePlaceMutation(),
     onSuccess: () => {
       invalidate()
       toast.success(t('roomReservedSuccess'))
@@ -100,18 +100,21 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
           </div>
         </div>
 
-        {/* The clock starts the moment the counter confirms the hold,
-            instead of waiting for the cashier to start it. A plain row, not
-            a card: it is one setting of the hold, not a thing of its own */}
-        <label className='mt-3 flex items-center gap-3 px-1 py-2'>
-          <span className='flex-1 text-[15px] font-medium'>
-            {t('startTimeNow')}
-          </span>
-          <Switch
-            checked={startOnConfirm}
-            onCheckedChange={setStartOnConfirm}
-          />
-        </label>
+        {/* The clock starts the moment the counter confirms the
+            reservation, instead of waiting for the cashier to start it. A
+            plain row, not a card: it is one setting of the reservation, not
+            a thing of its own. A table with no clock has nothing to start */}
+        {place.isTimed && (
+          <label className='mt-3 flex items-center gap-3 px-1 py-2'>
+            <span className='flex-1 text-[15px] font-medium'>
+              {t('startTimeNow')}
+            </span>
+            <Switch
+              checked={startOnConfirm}
+              onCheckedChange={setStartOnConfirm}
+            />
+          </label>
+        )}
 
         {/* Which rate the clock starts at, where the tariff has a choice:
             the customer picks here, so the till confirms without asking */}
@@ -150,12 +153,12 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
 
         <Button
           size='lg'
-          className='mt-6 w-full rounded-full font-bold'
+          className='mt-6 w-full rounded-pill font-bold'
           disabled={hold.isPending}
           onClick={() =>
             hold.mutate({
-              path: { id: Number(place.id) },
               body: {
+                placeId: Number(place.id),
                 customerName:
                   auth.user?.profile?.name ||
                   auth.user?.profile?.preferred_username ||

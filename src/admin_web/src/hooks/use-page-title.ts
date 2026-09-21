@@ -8,6 +8,7 @@ import { sidebarData } from '@/components/layout/data/sidebar-data'
 const extraTitles: Record<string, TranslationKey> = {
   '/settings': 'settings',
   '/places/history': 'timeHistory',
+  '/places/reservations': 'reservationHistory',
   '/orders/history': 'orderHistory',
 }
 

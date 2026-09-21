@@ -114,7 +114,7 @@ export function usePosNotifications() {
     })
 
     const invalidatePlaces = () =>
-      refresh('listPlaces', 'getOpenStays', 'getStay')
+      refresh('listPlaces', 'getOpenStays', 'getOpenReservations', 'getStay')
 
     // Sessions start, end and get cancelled from the till, the admin apps
     // and the customers' phones alike; the rooms group carries all of it

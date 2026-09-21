@@ -42,7 +42,8 @@ export type BrandDto = {
 };
 
 export type BrandFeatures = {
-    spaces: boolean;
+    reservations: boolean;
+    timeBilling: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;
@@ -78,6 +79,7 @@ export type BrandTheme = {
     fontLatin: null | string;
     fontArabic: null | string;
     dark: null | BrandThemeDark;
+    headerSize?: null | string;
 };
 
 export type BrandThemeDark = {
@@ -202,7 +204,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Spaces' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
+export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
 
 export type PaymentDto = {
     id: number | string;
@@ -1079,6 +1081,45 @@ export type ExtendDemoResponses = {
 };
 
 export type ExtendDemoResponse = ExtendDemoResponses[keyof ExtendDemoResponses];
+
+export type ForgetTenantData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/record';
+};
+
+export type ForgetTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ForgetTenantError = ForgetTenantErrors[keyof ForgetTenantErrors];
+
+export type ForgetTenantResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ForgetTenantResponse = ForgetTenantResponses[keyof ForgetTenantResponses];
 
 export type GetTenantBrandData = {
     body?: never;

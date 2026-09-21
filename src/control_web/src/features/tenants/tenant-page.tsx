@@ -20,6 +20,7 @@ import {
 import {
   convertTenantMutation,
   destroyTenantMutation,
+  forgetTenantMutation,
   dismissTenantErrorMutation,
   extendDemoMutation,
   getTenantOptions,
@@ -54,6 +55,7 @@ import { problemDetail } from '@/lib/problem'
 import {
   canConvert,
   canDestroy,
+  canForget,
   canImpersonate,
   canProvision,
   canResume,
@@ -69,7 +71,7 @@ import {
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { ConvertDialog, DestroyDialog, ExtendDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
+import { ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
 import { AuditTab } from './tabs/audit'
 import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
@@ -93,7 +95,7 @@ const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'convert' | 'rotate' | 'rollback' | null
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'convert' | 'rotate' | 'rollback' | null
 
 function Loading() {
   return (
@@ -151,6 +153,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     onError: failed,
   })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
+  // The record is gone: back to the list, which no longer has it
+  const forget = useMutation({
+    ...forgetTenantMutation(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
+      toast.success(t('forgotten'))
+      navigate({ to: '/' })
+    },
+    onError: failed,
+  })
   const extend = useMutation({
     ...extendDemoMutation(),
     onSuccess: (detail) => {
@@ -218,7 +230,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     destroy.isPending
   const path = { path: { slug } }
   const alive = status !== 'Destroying' && status !== 'Destroyed'
-  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canSecure(status) || canImpersonate(status)
+  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canForget(status) || canSecure(status) || canImpersonate(status)
 
   return (
     <div className='flex flex-col gap-6'>
@@ -337,6 +349,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                         {t('destroy')}
                       </DropdownMenuItem>
                     </>
+                  )}
+                  {canForget(status) && (
+                    <DropdownMenuItem
+                      variant='destructive'
+                      disabled={forget.isPending}
+                      onSelect={() => setDialog('forget')}
+                    >
+                      <Trash2 />
+                      {t('forget')}
+                    </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -478,6 +500,13 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         slug={tenant.slug}
         name={name}
         onConfirm={() => destroy.mutate(path)}
+      />
+      <ForgetDialog
+        open={dialog === 'forget'}
+        onOpenChange={(v) => setDialog(v ? 'forget' : null)}
+        isPending={forget.isPending}
+        name={name}
+        onConfirm={() => forget.mutate(path)}
       />
     </div>
   )

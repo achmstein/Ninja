@@ -96,7 +96,7 @@ class _StayBarState extends ConsumerState<StayBar> {
       actionLabel: l10n.cancelSessionButton,
       destructive: true,
     );
-    if (ok && mounted) await _guarded((a) => a.cancelStay(session.id, wasActive: true));
+    if (ok && mounted) await _guarded((a) => a.cancelStay(session.id));
   }
 
   @override

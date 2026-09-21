@@ -130,16 +130,22 @@ namespace Ninja.Branch.API.Migrations
                         .HasMaxLength(7)
                         .HasColumnType("character varying(7)");
 
-                    b.Property<bool>("SpacesEnabled")
+                    b.Property<bool>("ReservationsEnabled")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("SpacesEntitled")
+                    b.Property<bool>("ReservationsEntitled")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("TabsEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("TabsEntitled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("TimeBillingEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("TimeBillingEntitled")
                         .HasColumnType("boolean");
 
                     b.Property<string>("TimeZone")
@@ -252,6 +258,8 @@ namespace Ninja.Branch.API.Migrations
                             b1.Property<string>("FontArabic");
 
                             b1.Property<string>("FontLatin");
+
+                            b1.Property<string>("HeaderSize");
 
                             b1.Property<string>("Radius");
 

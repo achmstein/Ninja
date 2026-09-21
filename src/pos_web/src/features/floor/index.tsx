@@ -33,9 +33,10 @@ import { StartStayDialog } from '@/features/places/start-stay-dialog'
 import {
   PLACE_AVAILABLE,
   elapsedSeconds,
+  expiresInSeconds,
   formatClock,
+  isHolding,
   isRunning,
-  isHeld,
   isTimed,
 } from '@/features/places/status'
 import { usePlaces, useSecondsClock } from '@/features/places/use-places'
@@ -45,7 +46,7 @@ import {
   usePendingOrders,
 } from '@/features/orders/use-pending-orders'
 import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import {
@@ -145,6 +146,7 @@ function BillCard({
 export function Floor() {
   const t = useT()
   const localized = useLocalized()
+  const locale = useLocale()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [newTabOpen, setNewTabOpen] = useState(false)
@@ -193,7 +195,9 @@ export function Floor() {
   const {
     places,
     stays,
+    reservations,
     stayForPlace,
+    reservationForPlace,
     placeById,
     isLoading: placesLoading,
   } = usePlaces()
@@ -239,11 +243,16 @@ export function Floor() {
       ? undefined
       : stays.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
 
-  // Holds are the one thing not yet a bill that the cashier must not
-  // miss: somebody is on their way
-  const reserved = stays.filter((stay) => isHeld(stay))
+  // Reservations are the one thing not yet a bill that the cashier must
+  // not miss: somebody is on their way, or due later today
+  const reserved = reservations
   const running = tickets.some((ticket) => isRunning(stayForTicket(ticket)))
   const nowMs = useSecondsClock(running || reserved.length > 0)
+  const timeOf = (iso: string) =>
+    new Date(iso).toLocaleTimeString(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+    })
 
   // Bills in the order of their places: rooms, then tables, then counter
   // tabs, each in place order, oldest first within a place
@@ -287,7 +296,8 @@ export function Floor() {
   const startPlace = placeById(startPlaceId ?? undefined) ?? null
 
   // A place with no clock opens a bill; one with a clock and nothing on it
-  // starts the clock; one with a hold or a running clock opens its panel
+  // starts the clock; one that is reserved or has a running clock opens
+  // its panel
   const openBill = (place: PlaceViewModel) =>
     openTable.mutate({
       // A retry on café Wi-Fi must not become a second command
@@ -301,10 +311,12 @@ export function Floor() {
     })
   const pickPlace = (place: PlaceViewModel) => {
     const id = toNumber(place.id)
-    if (!isTimed(place)) openBill(place)
+    const reservedNow = isHolding(reservationForPlace(place.id))
+    if (!isTimed(place) && !reservedNow) openBill(place)
     else if (
       Number(place.status) === PLACE_AVAILABLE &&
-      !stayForPlace(place.id)
+      !stayForPlace(place.id) &&
+      !reservedNow
     )
       setStartPlaceId(id)
     else setSelectedPlaceId(id)
@@ -331,6 +343,7 @@ export function Floor() {
         <PlaceList
           places={places}
           stayForPlace={stayForPlace}
+          reservationForPlace={reservationForPlace}
           tickets={tickets}
           busy={openTable.isPending}
           onNewTab={() => setNewTabOpen(true)}
@@ -408,29 +421,30 @@ export function Floor() {
             each of them, and the strip is gone when nobody is */}
         <PendingOrdersStrip />
 
-        {features.spaces && reserved.length > 0 && (
+        {features.reservations && reserved.length > 0 && (
           <div className='flex flex-col gap-2'>
             <Heading>{t('statusReserved')}</Heading>
             <div className='flex gap-3 overflow-x-auto pb-1'>
-              {reserved.map((stay) => {
-                const place = placeById(stay.placeId)
-                const expiresIn = stay.expiresAt
-                  ? Math.max(
-                      0,
-                      (new Date(stay.expiresAt).getTime() - nowMs) / 1000,
-                    )
+              {reserved.map((reservation) => {
+                const place = placeById(reservation.placeId)
+                const holding = isHolding(reservation)
+                // On their way: the minutes left to arrive. Due later: when.
+                const expiresIn = holding
+                  ? expiresInSeconds(reservation, nowMs)
                   : null
                 return (
                   <button
-                    key={String(stay.id)}
+                    key={String(reservation.id)}
                     type='button'
-                    onClick={() => setSelectedPlaceId(toNumber(stay.placeId))}
+                    onClick={() =>
+                      setSelectedPlaceId(toNumber(reservation.placeId))
+                    }
                     className='bg-card hover:bg-accent/50 flex w-[240px] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
                   >
                     <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
                       {/* The customer asked for the clock to start on arrival:
                           Confirm in the panel does both */}
-                      {stay.startOnConfirm ? (
+                      {reservation.startOnConfirm ? (
                         <TimerReset className='size-5 text-amber-600 dark:text-amber-500' />
                       ) : (
                         <Clock className='size-5 text-amber-600 dark:text-amber-500' />
@@ -438,17 +452,24 @@ export function Floor() {
                     </div>
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate text-base font-semibold'>
-                        {localized(place?.name ?? stay.placeName)}
+                        {localized(place?.name ?? reservation.placeName)}
                       </span>
                       <span className='text-muted-foreground block truncate text-sm'>
-                        {stay.customerName || t('statusReserved')}
+                        {reservation.customerName || t('statusReserved')}
+                        {reservation.partySize
+                          ? ` · ${t('partyOf', { count: reservation.partySize })}`
+                          : ''}
                       </span>
                     </span>
-                    {expiresIn != null && (
+                    {expiresIn != null ? (
                       <span className='font-mono text-sm text-amber-600 tabular-nums shrink-0 dark:text-amber-500'>
                         {formatClock(expiresIn).slice(3)}
                       </span>
-                    )}
+                    ) : reservation.for && !holding ? (
+                      <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                        {timeOf(reservation.for)}
+                      </span>
+                    ) : null}
                   </button>
                 )
               })}
@@ -481,7 +502,7 @@ export function Floor() {
           <div className='flex flex-col gap-3'>
             <div className='flex flex-wrap items-center gap-2'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
-                if (key === 'Room' && !features.spaces) return null
+                if (key === 'Room' && !features.timeBilling) return null
                 if (key !== 'all' && counts[key] === 0) return null
                 const label =
                   key === 'all'
@@ -605,12 +626,20 @@ export function Floor() {
       <PlacePanel
         place={selectedPlace}
         stay={selectedPlace ? stayForPlace(selectedPlace.id) : undefined}
+        reservation={
+          selectedPlace ? reservationForPlace(selectedPlace.id) : undefined
+        }
         onOpenChange={(open) => {
           if (!open) setSelectedPlaceId(null)
         }}
         onStarted={(placeId) => {
           setSelectedPlaceId(null)
           setStartedPlaceId(placeId)
+        }}
+        onSeated={(place) => {
+          // A plain table: the party sat down, and their bill opens
+          setSelectedPlaceId(null)
+          openBill(place)
         }}
       />
     </div>

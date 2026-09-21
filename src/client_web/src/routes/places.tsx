@@ -8,7 +8,7 @@ import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useT } from '@/lib/i18n'
-import { useTimedPlaces, useVisit, useVisitTab } from '@/lib/visit'
+import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
 import { ActiveStayView } from '@/components/places/active-stay'
 import { NotifyBanner } from '@/components/places/notify-banner'
@@ -81,9 +81,9 @@ function PlacesPage() {
   )
 }
 
-/** The timed places of the branch — the rooms and any table or
- *  station with a clock — and the customer's hold on one while they walk
- *  over. */
+/** The bookable places of the branch — the rooms and stations with a
+ *  clock, and any table the owner opened to reservations — and the
+ *  customer's reservation on one while they walk over. */
 function PlacesList({ atTable }: { atTable: boolean }) {
   const t = useT()
   const auth = useAuth()
@@ -96,7 +96,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
 
   // Live RoomStatusChanged updates + 30s fallback poll (app parity)
   useRoomsGroup()
-  const { data: places = [], isLoading } = useTimedPlaces()
+  const { data: places = [], isLoading } = useBookablePlaces()
 
   const reservationsEnabled = branch?.isReservationsEnabled ?? true
   const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
@@ -126,7 +126,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
         </div>
       )}
 
-      {hold && <HeldBanner stay={hold} />}
+      {hold && <HeldBanner reservation={hold} />}
       {allBusy && !hold && auth.isAuthenticated && <NotifyBanner />}
 
       {isLoading ? (

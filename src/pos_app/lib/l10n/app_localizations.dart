@@ -1037,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @holdConfirmed.
   ///
   /// In en, this message translates to:
-  /// **'Hold confirmed'**
+  /// **'Reservation confirmed'**
   String get holdConfirmed;
 
   /// No description provided for @startsOnConfirm.
@@ -1117,6 +1117,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ticket not found'**
   String get ticketNotFound;
+
+  /// No description provided for @seatParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat them'**
+  String get seatParty;
+
+  /// No description provided for @partySeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Seated'**
+  String get partySeated;
 
   /// No description provided for @backToFloor.
   ///

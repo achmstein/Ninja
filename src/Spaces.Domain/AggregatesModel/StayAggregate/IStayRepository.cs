@@ -7,18 +7,15 @@ public interface IStayRepository : IRepository<Stay>
     Task<Stay?> GetAsync(int stayId);
     Task<Stay?> GetWithPlaceAsync(int stayId);
 
-    /// <summary>The customer's held or running stay, if any (one at a time).</summary>
+    /// <summary>The customer's running stay, if any (one at a time).</summary>
     Task<Stay?> GetOpenStayForCustomerAsync(string customerId);
 
-    /// <summary>Every held or running stay (for the till's floor view).</summary>
+    /// <summary>Every running stay (for the till's floor view).</summary>
     Task<List<Stay>> GetOpenStaysAsync();
-
-    /// <summary>Held stays whose hold has lapsed.</summary>
-    Task<List<Stay>> GetExpiredHoldsAsync();
 
     Task<List<Stay>> GetCustomerStaysAsync(string customerId, int? limit = null);
 
-    /// <summary>Whether the place has a held or running stay (it is busy).</summary>
+    /// <summary>Whether a stay is running at the place.</summary>
     Task<bool> HasOpenStayAsync(int placeId);
 
     Task<Stay?> GetWithMembersAsync(int stayId);

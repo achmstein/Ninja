@@ -307,6 +307,13 @@ public static partial class TenantApi
             return theme;
         }
 
+        theme.HeaderSize = string.IsNullOrWhiteSpace(dto.HeaderSize) ? null : dto.HeaderSize.Trim().ToLowerInvariant();
+        if (theme.HeaderSize is not null && !TenantTheme.HeaderSizes.Contains(theme.HeaderSize))
+        {
+            error = $"The header size must be one of {string.Join(", ", TenantTheme.HeaderSizes)}.";
+            return theme;
+        }
+
         theme.FontLatin = Font(dto.FontLatin, TenantTheme.LatinFonts, "Latin", out error);
         if (error is not null) return theme;
         theme.FontArabic = Font(dto.FontArabic, TenantTheme.ArabicFonts, "Arabic", out error);
@@ -385,10 +392,10 @@ public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, Tenant
 
 /// <param name="Surface">The page's colour, light scheme; its hue tints the neutrals of both schemes.</param>
 /// <param name="Dark">The dark scheme's own seeds, when derived ones do not suit the brand.</param>
-public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark)
+public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark, string? HeaderSize = null)
 {
     public static TenantThemeDto From(TenantTheme t)
-        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface));
+        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface), t.HeaderSize);
 }
 
 public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
@@ -423,6 +430,7 @@ public record TenantResponse(
             string.IsNullOrWhiteSpace(authUrl) ? null : new TenantAuth(authUrl.TrimEnd('/')),
             t.Image(TenantImageSlots.Logo) is { } logo ? TenantWordmark.ImageUrl(TenantImageSlots.Logo, logo) : null,
             t.Image(TenantImageSlots.LogoDark) is { } logoDark ? TenantWordmark.ImageUrl(TenantImageSlots.LogoDark, logoDark) : null,
+        static string? Url(string? url) => string.IsNullOrWhiteSpace(url) ? null : url.TrimEnd('/');
             TenantWordmarks.From(t),
             TenantThemeDto.From(t.Theme),
             new(

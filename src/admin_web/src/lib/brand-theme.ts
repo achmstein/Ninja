@@ -34,6 +34,8 @@ export type BrandThemeInput = {
     /** The page's colour, light scheme; its hue tints every neutral in both schemes */
     surface?: string | null
     radius?: string | null
+    /** How tall the header is, and with it the wordmark: "sm" (the default), "md" or "lg" */
+    headerSize?: string | null
     fontLatin?: string | null
     fontArabic?: string | null
     /** What the dark scheme must use instead of what is derived */
@@ -47,6 +49,24 @@ export const RADII: Record<string, string> = {
   md: '0.625rem',
   lg: '1rem',
   xl: '1.5rem',
+}
+
+/** A chip or a pill button under each corner seed: square corners get square chips, a small radius a
+ *  small one, and from "md" up they are the full pills the neutral theme draws. Circles (dots, avatars,
+ *  icon buttons) are not corners and never follow this. */
+export const PILL_RADII: Record<string, string> = {
+  none: '0rem',
+  sm: '0.375rem',
+  md: '9999px',
+  lg: '9999px',
+  xl: '9999px',
+}
+
+/** The customer app's header height and the wordmark's height inside it, per seed. */
+export const HEADER_SIZES: Record<string, { header: string; wordmark: string }> = {
+  sm: { header: '3.5rem', wordmark: '1.75rem' },
+  md: { header: '4.5rem', wordmark: '2.75rem' },
+  lg: { header: '5.5rem', wordmark: '3.75rem' },
 }
 
 /** Latin families the apps know how to load from Google Fonts. */
@@ -310,7 +330,14 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   for (const [role, value] of Object.entries(colors.dark)) dark[VAR_OF[role as keyof SchemeColors]] = oklch(value)
 
   const theme = input?.theme
-  if (theme?.radius && RADII[theme.radius]) light['--radius'] = RADII[theme.radius]
+  if (theme?.radius && RADII[theme.radius]) {
+    light['--radius'] = RADII[theme.radius]
+    light['--radius-pill'] = PILL_RADII[theme.radius]
+  }
+  if (theme?.headerSize && HEADER_SIZES[theme.headerSize]) {
+    light['--header-h'] = HEADER_SIZES[theme.headerSize].header
+    light['--wordmark-h'] = HEADER_SIZES[theme.headerSize].wordmark
+  }
 
   const fontLatin = knownFont(theme?.fontLatin, LATIN_FONTS)
   const fontArabic = knownFont(theme?.fontArabic, ARABIC_FONTS)

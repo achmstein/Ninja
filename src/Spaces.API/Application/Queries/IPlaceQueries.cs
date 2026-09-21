@@ -7,7 +7,7 @@ public interface IPlaceQueries
     /// <summary>Every place of a branch with its display status; narrow by kind or to timed ones.</summary>
     Task<IEnumerable<PlaceViewModel>> GetPlacesAsync(int branchId, PlaceKind? kind = null, bool? timed = null);
 
-    /// <summary>Timed, active places nobody holds right now: what a customer can book.</summary>
+    /// <summary>Reservable, active places nobody keeps right now: what a customer can book for now.</summary>
     Task<IEnumerable<PlaceViewModel>> GetAvailablePlacesAsync(int branchId);
 
     Task<PlaceViewModel?> GetPlaceByIdAsync(int placeId);
@@ -15,7 +15,7 @@ public interface IPlaceQueries
     /// <summary>The customer's stays (owner or member), newest first, paged.</summary>
     Task<IEnumerable<StayViewModel>> GetCustomerStaysAsync(string customerId, int pageIndex = 0, int pageSize = 20);
 
-    /// <summary>Held and running stays of a branch (the till's floor).</summary>
+    /// <summary>Running stays of a branch (the till's floor).</summary>
     Task<IEnumerable<StayViewModel>> GetOpenStaysAsync(int branchId);
 
     Task<StayViewModel?> GetStayByIdAsync(int stayId);

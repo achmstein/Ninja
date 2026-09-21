@@ -67,7 +67,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         // Header
         FHeader(
-          title: AppText(l10n.profile, style: TextStyle(fontSize: 18)),
+          title: AppText(l10n.youTab, style: TextStyle(fontSize: 18)),
         ),
 
         // Body
@@ -143,9 +143,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       suffix: const Icon(FIcons.chevronRight),
                       onPress: () => context.go('/bills'),
                     ),
-                    if (features.spaces)
+                    if (features.timeBilling)
                       FTile(
-                        prefix: const Icon(FIcons.gamepad2),
+                        prefix: const Icon(FIcons.timer),
                         title: AppText(l10n.sessions),
                         suffix: const Icon(FIcons.chevronRight),
                         onPress: () => context.push('/stays'),

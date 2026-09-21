@@ -1,23 +1,26 @@
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.Events;
 using Ninja.Spaces.Domain.Exceptions;
 
 namespace Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 
 /// <summary>
-/// One party's timed occupancy of a place: the hold before it, the running
-/// clock, the segments cut at every rate-option change, the party, the cost,
-/// and the receipt Sales sends back. The customer's side of Spaces.
+/// One party's metered time at a timed place: the running clock, the
+/// segments cut at every rate-option change, the party, the cost, and the
+/// receipt Sales sends back. It begins running — as a walk-in, or when a
+/// <see cref="Reservation"/> is seated — and ends or is cut short; the
+/// promise before it belongs to the reservation.
 /// </summary>
 public class Stay : Entity, IAggregateRoot
 {
-    /// <summary>How long a customer has to arrive before a hold lapses.</summary>
-    public const int HoldMinutes = 10;
-
     public int PlaceId { get; private set; }
 
     /// <summary>Loaded when needed.</summary>
     public Place? Place { get; private set; }
+
+    /// <summary>The reservation this stay was seated from; null for a walk-in.</summary>
+    public int? ReservationId { get; private set; }
 
     /// <summary>Null for a walk-in nobody has claimed yet.</summary>
     public string? CustomerId { get; private set; }
@@ -30,24 +33,10 @@ public class Stay : Entity, IAggregateRoot
     public IReadOnlyCollection<StaySegment> Segments => _segments.AsReadOnly();
 
     public DateTime CreatedAt { get; private set; }
-
-    /// <summary>When the hold lapses. Null: never (staff-created holds).</summary>
-    public DateTime? ExpiresAt { get; private set; }
-
-    /// <summary>The customer asked that the till's Confirm also start the clock.</summary>
-    public bool StartOnConfirm { get; private set; }
-
-    /// <summary>
-    /// The rate option the customer asked for when holding, so Confirm can
-    /// start the clock at it without the cashier choosing. Null: the tariff's
-    /// default, or the cashier picks.
-    /// </summary>
-    public string? RequestedOptionCode { get; private set; }
-
-    public DateTime? StartedAt { get; private set; }
+    public DateTime StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 
-    /// <summary>The place's tariff as it was when the stay was created; what this stay is charged by.</summary>
+    /// <summary>The place's tariff as it was when the stay began; what this stay is charged by.</summary>
     public Tariff Tariff { get; private set; } = null!;
 
     /// <summary>The rate option in force while running; null otherwise.</summary>
@@ -71,37 +60,30 @@ public class Stay : Entity, IAggregateRoot
 
     protected Stay() { }
 
-    /// <summary>A hold: the customer has <see cref="HoldMinutes"/> to arrive.</summary>
-    public Stay(
-        int placeId,
-        Tariff tariff,
-        string? customerId,
-        string? customerName,
-        string? notes = null,
-        bool startOnConfirm = false,
-        bool isStaffCreated = false,
-        string? requestedOptionCode = null) : this()
+    private static Stay Begin(int placeId, Tariff tariff, string? customerId, string? customerName, string? optionCode, string? notes, int? reservationId)
     {
-        if (!isStaffCreated && string.IsNullOrWhiteSpace(customerId))
-            throw new SpacesDomainException("Customer ID is required");
         ArgumentNullException.ThrowIfNull(tariff);
+        var snapshot = tariff.Snapshot();
+        var option = optionCode is null ? snapshot.Default : snapshot.Require(optionCode);
 
-        PlaceId = placeId;
-        Tariff = tariff.Snapshot();
-        CustomerId = customerId;
-        CustomerName = customerName;
-        Notes = notes;
-        StartOnConfirm = startOnConfirm;
-        // Only a rate the tariff has, and only when the clock will start on
-        // Confirm — otherwise there is nothing for it to decide
-        RequestedOptionCode = startOnConfirm && requestedOptionCode is not null
-            ? Tariff.Require(requestedOptionCode).Code
-            : null;
-        CreatedAt = DateTime.UtcNow;
-        ExpiresAt = isStaffCreated ? null : CreatedAt.AddMinutes(HoldMinutes);
-        Status = StayStatus.Held;
+        var now = DateTime.UtcNow;
+        var stay = new Stay
+        {
+            PlaceId = placeId,
+            ReservationId = reservationId,
+            Tariff = snapshot,
+            CustomerId = string.IsNullOrWhiteSpace(customerId) ? null : customerId,
+            CustomerName = customerName,
+            CreatedAt = now,
+            StartedAt = now,
+            CurrentOptionCode = option.Code,
+            Notes = notes,
+            Status = StayStatus.Running,
+        };
+        stay._segments.Add(new StaySegment(0, option.Code, option.HourlyRate, now));
 
-        AddDomainEvent(new StayHeldDomainEvent(this));
+        stay.AddDomainEvent(new StayStartedDomainEvent(stay));
+        return stay;
     }
 
     /// <summary>
@@ -115,68 +97,30 @@ public class Stay : Entity, IAggregateRoot
         string? customerName = null,
         string? optionCode = null,
         string? notes = null)
+        => Begin(placeId, tariff, customerId, customerName, optionCode, notes, reservationId: null);
+
+    /// <summary>
+    /// A reservation's party sat down at a timed place: the clock starts now,
+    /// at the option the till names, else the one the customer asked for,
+    /// else the tariff's default. The reserving customer is in the party.
+    /// </summary>
+    public static Stay FromReservation(Reservation reservation, Tariff tariff, string? optionCode = null)
     {
-        ArgumentNullException.ThrowIfNull(tariff);
-        var snapshot = tariff.Snapshot();
-        var option = optionCode is null ? snapshot.Default : snapshot.Require(optionCode);
-
-        var now = DateTime.UtcNow;
-        var stay = new Stay
-        {
-            PlaceId = placeId,
-            Tariff = snapshot,
-            CustomerId = string.IsNullOrWhiteSpace(customerId) ? null : customerId,
-            CustomerName = customerName,
-            StartedAt = now,
-            CurrentOptionCode = option.Code,
-            Notes = notes,
-            CreatedAt = now,
-            Status = StayStatus.Running,
-        };
-        stay._segments.Add(new StaySegment(0, option.Code, option.HourlyRate, now));
-
-        stay.AddDomainEvent(new StayStartedDomainEvent(stay));
+        ArgumentNullException.ThrowIfNull(reservation);
+        var stay = Begin(
+            reservation.PlaceId,
+            tariff,
+            reservation.CustomerId,
+            reservation.CustomerName,
+            optionCode ?? reservation.RequestedOptionCode,
+            reservation.Notes,
+            reservation.Id);
+        if (stay.CustomerId is { } owner)
+            stay._members.Add(new StayMember(stay.Id, owner, stay.CustomerName, StayMemberRole.Owner));
         return stay;
     }
 
     // ---- the clock
-
-    /// <summary>Start the clock on a hold (the till's action).</summary>
-    public void Start(string? optionCode = null)
-    {
-        if (Status != StayStatus.Held)
-            throw new SpacesDomainException($"Cannot start from status {Status}. Only held stays can be started.");
-
-        var option = optionCode is null ? Tariff.Default : Tariff.Require(optionCode);
-        var now = DateTime.UtcNow;
-        StartedAt = now;
-        Status = StayStatus.Running;
-        CurrentOptionCode = option.Code;
-        _segments.Add(new StaySegment(Id, option.Code, option.HourlyRate, now));
-
-        if (!string.IsNullOrWhiteSpace(CustomerId) && !_members.Any(m => m.CustomerId == CustomerId))
-            _members.Add(new StayMember(Id, CustomerId, CustomerName, StayMemberRole.Owner));
-
-        AddDomainEvent(new StayStartedDomainEvent(this));
-    }
-
-    /// <summary>
-    /// The till confirms the hold. Starts the clock when the customer asked
-    /// for that — at the rate they asked for, unless the cashier names one —
-    /// otherwise the hold simply stays until Start. Returns whether the clock
-    /// started.
-    /// </summary>
-    public bool Confirm(string? optionCode = null)
-    {
-        if (Status != StayStatus.Held)
-            throw new SpacesDomainException($"Cannot confirm from status {Status}. Only held stays can be confirmed.");
-
-        if (!StartOnConfirm)
-            return false;
-
-        Start(optionCode ?? RequestedOptionCode);
-        return true;
-    }
 
     /// <summary>Switch the rate option mid-stay: closes the open segment and opens a new one.</summary>
     public void ChangeOption(string optionCode)
@@ -199,8 +143,6 @@ public class Stay : Entity, IAggregateRoot
     {
         if (Status != StayStatus.Running)
             throw new SpacesDomainException($"Cannot end from status {Status}. Only running stays can be ended.");
-        if (StartedAt == null)
-            throw new SpacesDomainException("The stay never started");
 
         var now = DateTime.UtcNow;
         EndedAt = now;
@@ -212,29 +154,18 @@ public class Stay : Entity, IAggregateRoot
         AddDomainEvent(new StayEndedDomainEvent(this));
     }
 
-    /// <summary>Give up a hold or cut a running stay short.</summary>
+    /// <summary>Cut a running stay short; nothing is billed.</summary>
     public void Cancel()
     {
-        if (Status == StayStatus.Ended)
-            throw new SpacesDomainException("Cannot cancel an ended stay");
-        if (Status == StayStatus.Cancelled)
-            throw new SpacesDomainException("The stay is already cancelled");
+        if (Status != StayStatus.Running)
+            throw new SpacesDomainException($"Cannot cancel from status {Status}. Only a running stay can be cut short.");
 
-        var previous = Status;
+        EndedAt = DateTime.UtcNow;
+        _segments.LastOrDefault(s => s.EndTime == null)?.End(EndedAt.Value);
         Status = StayStatus.Cancelled;
         CurrentOptionCode = null;
 
-        AddDomainEvent(new StayCancelledDomainEvent(this, previous));
-    }
-
-    /// <summary>The hold lapsed with nobody arriving (no event: nothing to bill, nobody to tell).</summary>
-    public void CancelDueToExpiration()
-    {
-        if (Status != StayStatus.Held)
-            throw new SpacesDomainException("Only held stays lapse");
-
-        Status = StayStatus.Cancelled;
-        EndedAt = DateTime.UtcNow;
+        AddDomainEvent(new StayCancelledDomainEvent(this));
     }
 
     /// <summary>
@@ -257,22 +188,10 @@ public class Stay : Entity, IAggregateRoot
 
     public RateOption? CurrentOption => Tariff.Find(CurrentOptionCode);
 
-    public bool IsOpen => Status is StayStatus.Held or StayStatus.Running;
-
-    public bool IsExpired() => Status == StayStatus.Held && ExpiresAt != null && DateTime.UtcNow > ExpiresAt;
-
-    public DateTime? GetExpirationTime() => Status == StayStatus.Held ? ExpiresAt : null;
-
-    public TimeSpan? GetTimeUntilExpiration()
-    {
-        if (Status != StayStatus.Held || ExpiresAt == null)
-            return null;
-        var remaining = ExpiresAt.Value - DateTime.UtcNow;
-        return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
-    }
+    public bool IsOpen => Status == StayStatus.Running;
 
     public TimeSpan? GetCurrentDuration()
-        => Status == StayStatus.Running && StartedAt != null ? DateTime.UtcNow - StartedAt.Value : null;
+        => Status == StayStatus.Running ? DateTime.UtcNow - StartedAt : null;
 
     /// <summary>Hours billed on one option: its closed segments, rounded by the tariff.</summary>
     public decimal HoursFor(string optionCode)
@@ -364,16 +283,16 @@ public class Stay : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(customerId))
             throw new SpacesDomainException("Customer ID is required");
         if (!IsOpen)
-            throw new SpacesDomainException("Can only assign customers to held or running stays");
+            throw new SpacesDomainException("Can only assign customers to a running stay");
         if (CustomerId != null)
             throw new SpacesDomainException("The stay already has a customer");
 
         CustomerId = customerId;
         CustomerName = customerName;
 
-        // A running walk-in: they are in the party now, and are told so —
-        // the way a member who scanned in is told — so their phone shows it
-        if (Status == StayStatus.Running && !_members.Any(m => m.CustomerId == customerId))
+        // They are in the party now, and are told so — the way a member who
+        // scanned in is told — so their phone shows it
+        if (!_members.Any(m => m.CustomerId == customerId))
         {
             _members.Add(new StayMember(Id, customerId, customerName, StayMemberRole.Owner));
             AddDomainEvent(new StayMemberJoinedDomainEvent(this, customerId));

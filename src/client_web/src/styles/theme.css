@@ -7,6 +7,11 @@
   --font-latin: 'Inter';
   --font-arabic: 'Cairo';
   --radius: 0.625rem;
+  /* Chips and pill buttons: a full pill until the brand's corner seed says otherwise (lib/brand-theme.ts) */
+  --radius-pill: 9999px;
+  /* The header and the wordmark in it; the brand's header size seed raises both */
+  --header-h: 3.5rem;
+  --wordmark-h: 1.75rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -56,6 +61,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Sheets and big cards follow the seed too, instead of Tailwind's fixed defaults */
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+  --radius-pill: var(--radius-pill);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

@@ -53,7 +53,8 @@ export type TenantAuth = {
 };
 
 export type TenantFeatures = {
-    spaces: boolean;
+    reservations: boolean;
+    timeBilling: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;
@@ -108,6 +109,7 @@ export type TenantThemeDto = {
     dark: null | TenantThemeDarkDto;
 };
 
+    headerSize?: null | string;
 export type TenantWordmark = {
     url: string;
     width: number | string;

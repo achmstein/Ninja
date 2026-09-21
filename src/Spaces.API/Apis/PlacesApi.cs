@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using Ninja.Spaces.Domain.Events;
 using Ninja.Spaces.API.Application.Commands;
-using Ninja.Spaces.API.Application.DomainEventHandlers;
 using Ninja.Spaces.API.Application.Queries;
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Ninja.Spaces.Domain.Exceptions;
 using Ninja.Spaces.Domain.SeedWork;
@@ -15,11 +15,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ninja.Spaces.API.Apis;
 
 /// <summary>
-/// Places (rooms, tables, stations) and the stays on them. Place set-up is
-/// Admin; running the floor (start, end, cancel, walk-in, option, members)
-/// is whoever is at the counter — the "Pos" policy; holds, joining, leaving
-/// and "my stays" are any signed-in customer. Reading a place is anonymous:
-/// the QR landing page is reachable before sign-in.
+/// Places (rooms, tables, stations). Place set-up is Admin; a walk-in and
+/// the stay history are whoever is at the counter — the "Pos" policy;
+/// joining is any signed-in customer. Reading a place is anonymous: the QR
+/// landing page is reachable before sign-in. Reservations and stays have
+/// their own groups (<see cref="ReservationsApi"/>, <see cref="StaysApi"/>).
 /// </summary>
 public static class PlacesApi
 {
@@ -31,7 +31,7 @@ public static class PlacesApi
             .WithSummary("List places")
             .WithDescription("Every place of the branch with its status; narrow by kind or to timed places");
         places.MapGet("/available", GetAvailablePlaces).WithName("GetAvailablePlaces")
-            .WithSummary("Places a customer can book now");
+            .WithSummary("Places a customer can reserve for now");
         places.MapGet("/{id:int}", GetPlaceById).WithName("GetPlace")
             .WithSummary("Get a place")
             .WithDescription("What a scanned place QR resolves to");
@@ -43,26 +43,26 @@ public static class PlacesApi
             .RequireAuthorization("Admin");
         places.MapPut("/{id:int}/tariff", SetPlaceTariff).WithName("SetPlaceTariff")
             .WithSummary("Give a place a tariff, change it, or take it away (Admin)")
-            .WithDescription("A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.")
+            .WithDescription("A place with a tariff is timed and becomes reservable; without one it only takes orders. Refused while a stay runs there.")
+            .RequireAuthorization("Admin");
+        places.MapPut("/{id:int}/reservable", SetPlaceReservable).WithName("SetPlaceReservable")
+            .WithSummary("Let customers reserve a place, or stop that (Admin)")
+            .WithDescription("A plain table can take reservations without a clock; a timed place can stop taking them. Refused while a reservation is open there.")
             .RequireAuthorization("Admin");
         places.MapPut("/{id:int}/active", SetPlaceActive).WithName("SetPlaceActive")
             .WithSummary("Activate or deactivate a place (Admin)")
-            .WithDescription("Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it")
+            .WithDescription("Deactivating keeps the place and its printed QR but stops customers ordering to it or reserving it")
             .RequireAuthorization("Admin");
         places.MapPut("/{id:int}/status", SetPlaceStatus).WithName("SetPlaceStatus")
             .WithSummary("Set a place's physical status (Admin)")
             .RequireAuthorization("Admin");
         places.MapDelete("/{id:int}", DeletePlace).WithName("DeletePlace")
             .WithSummary("Delete a place (Admin)")
-            .WithDescription("Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.")
+            .WithDescription("Its printed QR stops working — prefer deactivating. Refused while a reservation is open or a stay is running there.")
             .RequireAuthorization("Admin");
 
         places.MapGet("/{id:int}/scan", ScanPlace).WithName("ScanPlace")
             .WithSummary("What this customer sees after scanning the place's QR")
-            .RequireAuthorization();
-        places.MapPost("/{id:int}/hold", HoldPlace).WithName("HoldPlace")
-            .WithSummary("Hold a timed place")
-            .WithDescription("The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.")
             .RequireAuthorization();
         places.MapPost("/{id:int}/walk-in", StartWalkIn).WithName("StartWalkIn")
             .WithSummary("Start the clock for a party that walked in (staff)")
@@ -73,62 +73,12 @@ public static class PlacesApi
         places.MapGet("/{id:int}/stays", GetPlaceStayHistory).WithName("GetPlaceStayHistory")
             .WithSummary("Ended and cancelled stays at a place (Admin)")
             .RequireAuthorization("Admin");
-
-        var stays = app.MapGroup("api/stays").WithTags("Stays");
-
-        stays.MapGet("/my", GetMyStays).WithName("GetMyStays")
-            .WithSummary("The signed-in customer's stays, newest first")
-            .RequireAuthorization();
-        stays.MapGet("/open", GetOpenStays).WithName("GetOpenStays")
-            .WithSummary("Held and running stays of the branch (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapGet("/history", GetStayHistory).WithName("GetStayHistory")
-            .WithSummary("Ended and cancelled stays across the branch, paged (Admin)")
+        places.MapGet("/{id:int}/reservations", GetPlaceReservationHistory).WithName("GetPlaceReservationHistory")
+            .WithSummary("Seated, cancelled and lapsed reservations at a place (Admin)")
             .RequireAuthorization("Admin");
-        stays.MapGet("/stats", GetStayStats).WithName("GetStayStats")
-            .WithSummary("Per-day and per-place hours, stays and revenue (Admin)")
-            .RequireAuthorization("Admin");
-        stays.MapGet("/{id:int}", GetStayById).WithName("GetStay")
-            .WithSummary("Get a stay")
-            .RequireAuthorization();
-
-        stays.MapPost("/{id:int}/confirm", ConfirmStay).WithName("ConfirmStay")
-            .WithSummary("The customer arrived (staff)")
-            .WithDescription("Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/start", StartStay).WithName("StartStay")
-            .WithSummary("Start the clock on a held stay (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/end", EndStay).WithName("EndStay")
-            .WithSummary("Stop the clock and settle the cost (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/cancel", CancelStay).WithName("CancelStay")
-            .WithSummary("Give up a hold or cut a running stay short (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPut("/{id:int}/option", ChangeStayOption).WithName("ChangeStayOption")
-            .WithSummary("Switch a running stay to another rate option (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/assign-customer", AssignCustomer).WithName("AssignStayCustomer")
-            .WithSummary("Give an unclaimed walk-in its owner (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/members", AddMember).WithName("AddStayMember")
-            .WithSummary("Name someone in the party (staff)")
-            .WithDescription("Allowed on a running or ended stay: after the clock stops this still names who was there, so their share can go on their tab at settle")
-            .RequireAuthorization("Pos");
-        stays.MapDelete("/{id:int}/members/{customerId}", RemoveMember).WithName("RemoveStayMember")
-            .WithSummary("Remove a member (not the owner) from a running stay (staff)")
-            .RequireAuthorization("Pos");
-        stays.MapPost("/{id:int}/leave", LeaveStay).WithName("LeaveStay")
-            .WithSummary("Leave a stay you joined (not as its owner)")
-            .RequireAuthorization();
-        stays.MapPost("/my/{id:int}/cancel", CancelMyHold).WithName("CancelMyHold")
-            .WithSummary("Give up your own hold before it starts")
-            .RequireAuthorization();
 
         return app;
     }
-
-    // ---- places
 
     public static async Task<Ok<IEnumerable<PlaceViewModel>>> GetPlaces(
         [FromServices] IPlaceQueries queries,
@@ -164,7 +114,7 @@ public static class PlacesApi
         var branchId = httpContext.GetRequiredBranchId();
         try
         {
-            var place = new Place(request.Kind, request.Name, branchId, request.Tariff?.ToTariff(), request.Description);
+            var place = new Place(request.Kind, request.Name, branchId, request.Tariff?.ToTariff(), request.Description, request.Reservable);
             places.Add(place);
             await places.UnitOfWork.SaveEntitiesAsync();
             return TypedResults.Created($"/api/places/{place.Id}", place.Id);
@@ -218,6 +168,29 @@ public static class PlacesApi
         }
     }
 
+    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> SetPlaceReservable(
+        [FromServices] IPlaceRepository places,
+        [FromServices] IReservationRepository reservations,
+        [Description("The place ID")] int id,
+        SetPlaceReservableRequest request)
+    {
+        var place = await places.GetAsync(id);
+        if (place is null) return TypedResults.NotFound();
+        try
+        {
+            if (!request.Reservable && await reservations.HasOpenAsync(id))
+                throw new SpacesDomainException("Seat or cancel the reservations at this place before closing it to reservations");
+            place.SetReservable(request.Reservable);
+            places.Update(place);
+            await places.UnitOfWork.SaveEntitiesAsync();
+            return TypedResults.Ok();
+        }
+        catch (SpacesDomainException ex)
+        {
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
+        }
+    }
+
     public static async Task<Results<Ok, NotFound>> SetPlaceActive(
         [FromServices] IPlaceRepository places,
         [Description("The place ID")] int id,
@@ -259,13 +232,16 @@ public static class PlacesApi
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> DeletePlace(
         [FromServices] IPlaceRepository places,
         [FromServices] IStayRepository stays,
+        [FromServices] IReservationRepository reservations,
         [Description("The place ID")] int id)
     {
         var place = await places.GetAsync(id);
         if (place is null) return TypedResults.NotFound();
 
         if (await stays.HasOpenStayAsync(id))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Cannot delete a place with a held or running stay" });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Cannot delete a place with a running stay" });
+        if (await reservations.HasOpenAsync(id))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Cannot delete a place with an open reservation" });
 
         // The event rides the same unit of work as the delete (the outbox),
         // so a failed delete announces nothing and a crash after it loses nothing
@@ -283,42 +259,6 @@ public static class PlacesApi
         var customerId = httpContext.User.GetUserId() ?? string.Empty;
         var scan = await queries.GetScanInfoAsync(id, customerId);
         return scan is null ? TypedResults.NotFound() : TypedResults.Ok(scan);
-    }
-
-    public static async Task<Results<Created<int>, BadRequest<ProblemDetails>>> HoldPlace(
-        [FromServices] IMediator mediator,
-        HttpContext httpContext,
-        [Description("The place ID")] int id,
-        HoldPlaceRequest? request = null)
-    {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "User ID not found in token" });
-
-        var roles = httpContext.User.GetRoles().ToList();
-        var isStaff = roles.Contains("Admin", StringComparer.OrdinalIgnoreCase)
-            || roles.Contains("Owner", StringComparer.OrdinalIgnoreCase)
-            || roles.Contains("Cashier", StringComparer.OrdinalIgnoreCase);
-
-        try
-        {
-            // A staff hold is for a walk-in: the typed name is the customer,
-            // and it is not tied to the cashier's own account. A customer
-            // holding for themselves keeps their id and name.
-            var stayId = await mediator.Send(new HoldPlaceCommand(
-                id,
-                isStaff ? null : customerId,
-                isStaff ? request?.CustomerName : httpContext.User.GetUserName() ?? request?.CustomerName,
-                request?.Notes,
-                request?.StartOnConfirm ?? false,
-                isStaff,
-                request?.OptionCode));
-            return TypedResults.Created($"/api/stays/{stayId}", stayId);
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
     }
 
     public static async Task<Results<Created<StartWalkInStayResult>, BadRequest<ProblemDetails>>> StartWalkIn(
@@ -363,187 +303,13 @@ public static class PlacesApi
         [Description("Maximum number of stays to return")] int limit = 20)
         => TypedResults.Ok(await queries.GetPlaceStayHistoryAsync(id, limit));
 
-    // ---- stays
+    public static async Task<Ok<IEnumerable<ReservationViewModel>>> GetPlaceReservationHistory(
+        [FromServices] IReservationQueries queries,
+        [Description("The place ID")] int id,
+        [Description("Maximum number of reservations to return")] int limit = 20)
+        => TypedResults.Ok(await queries.GetPlaceHistoryAsync(id, Math.Clamp(limit, 1, 100)));
 
-    public static async Task<Ok<IEnumerable<StayViewModel>>> GetMyStays(
-        [FromServices] IPlaceQueries queries,
-        HttpContext httpContext,
-        int pageIndex = 0,
-        int pageSize = 20)
-    {
-        pageSize = Math.Clamp(pageSize, 1, 50);
-        var customerId = httpContext.User.GetUserId() ?? string.Empty;
-        return TypedResults.Ok(await queries.GetCustomerStaysAsync(customerId, Math.Max(0, pageIndex), pageSize));
-    }
-
-    public static async Task<Ok<IEnumerable<StayViewModel>>> GetOpenStays(
-        [FromServices] IPlaceQueries queries,
-        HttpContext httpContext)
-    {
-        var branchId = httpContext.GetRequiredBranchId();
-        return TypedResults.Ok(await queries.GetOpenStaysAsync(branchId));
-    }
-
-    public static async Task<Ok<PaginatedResult<StayViewModel>>> GetStayHistory(
-        [FromServices] IPlaceQueries queries,
-        HttpContext httpContext,
-        int pageIndex = 0,
-        int pageSize = 20,
-        [Description("Filter by place")] int? placeId = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null)
-    {
-        var branchId = httpContext.GetRequiredBranchId();
-        return TypedResults.Ok(await queries.GetStayHistoryAsync(branchId, pageIndex, pageSize, placeId, fromDate, toDate));
-    }
-
-    public static async Task<Ok<StayStats>> GetStayStats(
-        [FromServices] IPlaceQueries queries,
-        HttpContext httpContext,
-        DateTime fromDate,
-        DateTime toDate,
-        [Description("JS getTimezoneOffset() of the caller, for local-day bucketing")] int tzOffsetMinutes = 0)
-    {
-        var branchId = httpContext.GetRequiredBranchId();
-        return TypedResults.Ok(await queries.GetStayStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes));
-    }
-
-    public static async Task<Results<Ok<StayViewModel>, NotFound>> GetStayById(
-        [FromServices] IPlaceQueries queries,
-        [Description("The stay ID")] int id)
-    {
-        var stay = await queries.GetStayByIdAsync(id);
-        return stay is null ? TypedResults.NotFound() : TypedResults.Ok(stay);
-    }
-
-    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> ConfirmStay(
-        [FromServices] IMediator mediator,
-        [Description("The stay ID")] int id,
-        ConfirmStayRequest? request = null)
-        => Run(mediator, new ConfirmStayCommand(id, request?.OptionCode));
-
-    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> StartStay(
-        [FromServices] IMediator mediator,
-        [Description("The stay ID")] int id,
-        StartStayRequest? request = null)
-        => Run(mediator, new StartStayCommand(id, request?.OptionCode));
-
-    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> EndStay(
-        [FromServices] IMediator mediator,
-        [Description("The stay ID")] int id)
-        => Run(mediator, new EndStayCommand(id));
-
-    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> CancelStay(
-        [FromServices] IMediator mediator,
-        [Description("The stay ID")] int id)
-        => Run(mediator, new CancelStayCommand(id));
-
-    public static Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> ChangeStayOption(
-        [FromServices] IMediator mediator,
-        [Description("The stay ID")] int id,
-        ChangeStayOptionRequest request)
-        => Run(mediator, new ChangeStayOptionCommand(id, request.OptionCode));
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> LeaveStay(
-        [FromServices] IMediator mediator,
-        HttpContext httpContext,
-        [Description("The stay ID")] int id)
-    {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "User ID not found in token" });
-        return await Run(mediator, new LeaveStayCommand(id, customerId));
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AssignCustomer(
-        [FromServices] IStayRepository stays,
-        [Description("The stay ID")] int id,
-        AssignCustomerRequest request)
-    {
-        var stay = await stays.GetWithPlaceAsync(id);
-        if (stay is null) return TypedResults.NotFound();
-        try
-        {
-            stay.AssignCustomer(request.CustomerId, request.CustomerName);
-            stays.Update(stay);
-            await stays.UnitOfWork.SaveEntitiesAsync();
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> AddMember(
-        [FromServices] IStayRepository stays,
-        [Description("The stay ID")] int id,
-        AddMemberRequest request)
-    {
-        var stay = await stays.GetWithMembersAsync(id);
-        if (stay is null) return TypedResults.NotFound();
-        try
-        {
-            stay.AddMember(request.CustomerId, request.CustomerName);
-            stays.Update(stay);
-            await stays.UnitOfWork.SaveEntitiesAsync();
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> RemoveMember(
-        [FromServices] IStayRepository stays,
-        [Description("The stay ID")] int id,
-        [Description("The customer ID to remove")] string customerId)
-    {
-        var stay = await stays.GetWithMembersAsync(id);
-        if (stay is null) return TypedResults.NotFound();
-        try
-        {
-            stay.RemoveMember(customerId);
-            stays.Update(stay);
-            await stays.UnitOfWork.SaveEntitiesAsync();
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, NotFound, ForbidHttpResult, BadRequest<ProblemDetails>>> CancelMyHold(
-        [FromServices] IStayRepository stays,
-        HttpContext httpContext,
-        [Description("The stay ID")] int id)
-    {
-        var customerId = httpContext.User.GetUserId();
-        if (string.IsNullOrEmpty(customerId))
-            return TypedResults.Forbid();
-
-        var stay = await stays.GetWithPlaceAsync(id);
-        if (stay is null) return TypedResults.NotFound();
-        if (stay.CustomerId != customerId) return TypedResults.Forbid();
-        if (stay.Status != StayStatus.Held)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Only a hold that has not started can be given up. Ask the staff to end a running stay." });
-
-        try
-        {
-            stay.Cancel();
-            stays.Update(stay);
-            await stays.UnitOfWork.SaveEntitiesAsync();
-            return TypedResults.Ok();
-        }
-        catch (SpacesDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    /// <summary>Runs a stay command and turns its outcome into the usual three results.</summary>
+    /// <summary>Runs a command and turns its outcome into the usual three results.</summary>
     internal static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> Run(IMediator mediator, IRequest<bool> command)
     {
         try
@@ -556,6 +322,15 @@ public static class PlacesApi
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
         }
     }
+
+    /// <summary>Admin, Owner or Cashier: the till, acting for a customer rather than as one.</summary>
+    internal static bool IsStaff(this HttpContext httpContext)
+    {
+        var roles = httpContext.User.GetRoles().ToList();
+        return roles.Contains("Admin", StringComparer.OrdinalIgnoreCase)
+            || roles.Contains("Owner", StringComparer.OrdinalIgnoreCase)
+            || roles.Contains("Cashier", StringComparer.OrdinalIgnoreCase);
+    }
 }
 
 public record RateOptionRequest(string Code, LocalizedText Name, decimal HourlyRate);
@@ -565,29 +340,16 @@ public record TariffRequest(List<RateOptionRequest> Options, int RoundingMinutes
     public Tariff ToTariff() => new(Options.Select(o => new RateOption(o.Code, o.Name, o.HourlyRate)), RoundingMinutes);
 }
 
-public record CreatePlaceRequest(PlaceKind Kind, LocalizedText Name, LocalizedText? Description = null, TariffRequest? Tariff = null);
+/// <summary>Reservable null: on when the place has a tariff, off otherwise.</summary>
+public record CreatePlaceRequest(PlaceKind Kind, LocalizedText Name, LocalizedText? Description = null, TariffRequest? Tariff = null, bool? Reservable = null);
 
 public record UpdatePlaceRequest(LocalizedText Name, LocalizedText? Description = null);
 
 /// <summary>Null tariff: the place stops being timed and only takes orders.</summary>
 public record SetPlaceTariffRequest(TariffRequest? Tariff);
 
+public record SetPlaceReservableRequest(bool Reservable);
+
 public record SetPlaceActiveRequest(bool IsActive);
 
-public record HoldPlaceRequest(
-    string? CustomerName = null,
-    string? Notes = null,
-    bool StartOnConfirm = false,
-    [property: Description("The rate to start at when the clock starts on Confirm; one of the place's tariff options")] string? OptionCode = null);
-
 public record WalkInStayRequest(string? Notes = null, string? OptionCode = null, string? CustomerId = null, string? CustomerName = null);
-
-public record StartStayRequest(string? OptionCode = null);
-
-public record ConfirmStayRequest(string? OptionCode = null);
-
-public record ChangeStayOptionRequest(string OptionCode);
-
-public record AssignCustomerRequest(string CustomerId, string? CustomerName);
-
-public record AddMemberRequest(string CustomerId, string? CustomerName);
