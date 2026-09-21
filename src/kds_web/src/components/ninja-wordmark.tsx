@@ -25,7 +25,6 @@ export function PoweredBy({ className }: { className?: string }) {
   const t = useT()
   return (
     <span
-      dir='ltr'
       className={cn('text-muted-foreground inline-flex items-center gap-1.5 text-[11px]', className)}
     >
       {t('poweredBy')}
