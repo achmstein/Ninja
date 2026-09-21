@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Wordmark } from '@/components/wordmark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -105,9 +106,7 @@ function SignIn() {
 
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-8'>
-      <span className='text-2xl font-semibold tracking-tight'>
-        {t('appName')}
-      </span>
+      <Wordmark size='lg' />
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>
         <Loader2 className='h-4 w-4 animate-spin' />
         {t('redirectingToSignIn')}

@@ -154,6 +154,20 @@ body.nj-body {
   color: var(--foreground);
 }
 
+/* The platform's own realm: the N and the wordmark in its display face
+   (control_web's font-display). One weight, so none is synthesized. */
+.nj-brand-platform .nj-mark-tile,
+.nj-brand-platform .nj-brand-name {
+  font-family: 'Original Surfer', 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-synthesis-weight: none;
+  letter-spacing: 0;
+}
+
+.nj-brand-platform .nj-brand-name {
+  font-size: 1.5rem;
+}
+
 /* ---- Card ---- */
 
 .nj-card {

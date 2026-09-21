@@ -133,6 +133,15 @@
   }
 }
 
+/* The platform's display face, for its wordmark and mark only: titles,
+   body and controls stay in Inter/Cairo, and tenant apps never see it.
+   Original Surfer ships one weight, so it is pinned (no faux bold). */
+@utility font-display {
+  font-family: 'Original Surfer', 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  font-synthesis-weight: none;
+}
+
 @utility no-scrollbar {
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {

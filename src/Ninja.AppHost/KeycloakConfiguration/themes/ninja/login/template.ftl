@@ -18,11 +18,12 @@
     <meta name="color-scheme" content="light dark">
     <meta name="robots" content="noindex, nofollow">
     <title>${msg("loginTitle",(realm.displayName!'')?trim)}</title>
-    <#-- The platform's N tile; the café's own icon is what the header shows -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Inter,system-ui,sans-serif' font-size='36' font-weight='700' fill='%23fff'%3EN%3C/text%3E%3C/svg%3E">
+    <#-- The platform's N tile (the N of its display face, traced: a favicon
+         cannot load a web font); the café's own icon is what the header shows -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Cpath d='M49.03 14.8Q49.03 14.8 49.03 15.77Q49.03 16.74 48.99 18.44Q48.96 20.13 48.88 22.42Q48.81 24.72 48.68 27.38Q48.55 30.05 48.35 32.93Q48.16 35.82 47.85 38.69Q47.55 41.56 47.16 44.29Q46.78 47.02 46.24 49.35L41.61 49.54Q40.4 47.72 38.9 45.42Q37.39 43.12 35.76 40.58Q34.12 38.05 32.44 35.42Q30.75 32.79 29.2 30.32Q25.54 24.52 21.66 18.36Q21.54 24.96 21.49 30.92Q21.47 33.47 21.47 36.11Q21.47 38.75 21.48 41.2Q21.49 43.65 21.55 45.76Q21.61 47.87 21.71 49.35L16.55 50Q16.16 47.96 15.89 45.37Q15.62 42.78 15.44 39.92Q15.26 37.05 15.16 34.08Q15.07 31.12 15.02 28.3Q14.92 21.73 15.02 14.75L24.69 14L42.02 44.08Q42.29 40.93 42.34 37.31Q42.39 33.68 42.25 29.83Q42.12 25.98 41.81 22.02Q41.49 18.07 41.03 14.24Z' fill='%23fafafa'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700<#if realm.name == 'ninja'>&family=Original+Surfer</#if>&display=swap" rel="stylesheet">
     <#if properties.styles?has_content>
         <#list properties.styles?split(' ') as style>
             <#-- Versioned: Keycloak's resource path never changes when the
@@ -92,7 +93,11 @@
 
 <body class="${properties.kcBodyClass!} ${bodyClass}" data-page-id="login-${pageId}">
 <main class="nj-page">
-    <header class="nj-brand">
+    <#-- The platform's own realm gets the platform's brand: its N tile and
+         its lowercase wordmark in the display face. Every café realm keeps
+         its own mark and name, in the UI face. -->
+    <#assign platformRealm = (realm.name == 'ninja')>
+    <header class="nj-brand<#if platformRealm> nj-brand-platform</#if>">
         <#-- Keycloak hands back the display name when no HTML one is set, so a
              realm the control plane did not stamp gets a tile with its initial.
              The HTML is the platform's own (an <img> at the tenant's icon), so
@@ -102,7 +107,7 @@
         <#elseif realm.displayName?trim?has_content>
             <div class="nj-mark nj-mark-tile" aria-hidden="true">${realm.displayName?trim[0..0]?upper_case}</div>
         </#if>
-        <span class="nj-brand-name">${(realm.displayName!'')?trim}</span>
+        <span class="nj-brand-name"><#if platformRealm>${(realm.displayName!'')?trim?lower_case}<#else>${(realm.displayName!'')?trim}</#if></span>
     </header>
 
     <section class="nj-card">

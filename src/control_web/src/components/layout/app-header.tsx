@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Wordmark } from '@/components/wordmark'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
@@ -25,14 +26,8 @@ export function AppHeader() {
   return (
     <header className='bg-background sticky top-0 z-40 border-b'>
       <div className='mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4'>
-        <Link to='/' className='flex items-center gap-2'>
-          <span
-            aria-hidden
-            className='bg-foreground text-background grid size-7 shrink-0 place-items-center rounded-md text-sm font-semibold leading-none'
-          >
-            N
-          </span>
-          <span className='font-semibold tracking-tight'>{t('appName')}</span>
+        <Link to='/' className='flex items-center'>
+          <Wordmark />
         </Link>
         <div className='ms-auto flex items-center gap-1'>
           <DropdownMenu>

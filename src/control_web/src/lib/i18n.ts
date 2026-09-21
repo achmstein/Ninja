@@ -13,7 +13,6 @@ type Message =
 // (small zustand-backed dictionary, no framework). Egyptian Arabic.
 const dictionary = {
   // Brand / chrome
-  appName: { en: 'Ninja Control', ar: 'Ninja Control' },
   tenants: { en: 'Tenants', ar: 'العملاء' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },
   settings: { en: 'Settings', ar: 'الإعدادات' },
