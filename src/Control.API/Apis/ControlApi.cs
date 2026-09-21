@@ -43,7 +43,7 @@ public static partial class ControlApi
         MapJobsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
-        api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous();
+        api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
 
         return app;
     }

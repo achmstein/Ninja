@@ -1,5 +1,9 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Ninja.Control.API.Platform;
+using Ninja.ServiceDefaults;
 
 namespace Ninja.Control.API.Extensions;
 
@@ -7,9 +11,18 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
+        var isBuild = builder.Environment.IsBuild();
+
+        // The tenants' secrets at rest: under the key from .env, or in the clear on a dry run (which has no real secrets)
+        var encryptionKey = builder.Configuration[$"{PlatformOptions.Section}:EncryptionKey"];
+        var secrets = string.IsNullOrWhiteSpace(encryptionKey) ? SecretProtector.None : SecretProtector.FromBase64(encryptionKey);
+        builder.Services.AddSingleton(secrets);
+
         builder.AddNpgsqlDbContext<ControlContext>("controldb", configureDbContextOptions: options =>
         {
             options.UseNpgsql(builder => builder.MigrationsAssembly(typeof(ControlContext).Assembly.FullName));
+            options.UseSecretProtector(secrets);
         });
         builder.Services.AddMigration<ControlContext>();
 
@@ -17,6 +30,8 @@ public static class Extensions
             .Bind(builder.Configuration.GetSection(PlatformOptions.Section))
             .Validate(o => o.ServiceMemoryMb >= 128 && o.GatewayMemoryMb >= 64, "A service needs at least 128 MB and the gateway 64 MB")
             .Validate(o => o.StackFootprintMb <= o.StackLimitMb, "StackFootprintMb is more than the per-container caps add up to")
+            // The build boots the app to write its OpenAPI document with no configuration at all
+            .Validate(o => isBuild || o.DryRun || !string.IsNullOrWhiteSpace(o.EncryptionKey), "Platform:EncryptionKey is required (openssl rand -base64 32); the tenants' secrets are encrypted under it")
             .ValidateOnStart();
 
         // Kinds and statuses travel as their names, not their numbers
@@ -51,18 +66,19 @@ public static class Extensions
         if (mail.Configured) builder.Services.AddSingleton<IMailer, SmtpMailer>();
         else builder.Services.AddSingleton<IMailer, NullMailer>();
 
-        var dryRun = builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:DryRun");
-
         // The build boots the app once to write its OpenAPI document; there is no box, no database and no queue to serve then
         if (!builder.Environment.IsBuild())
         {
             // Recovery first (its StartAsync is awaited before the next service starts), then one worker per lane
+            // The secrets first (a tenant read before this could write one back in the clear), then recovery, then the workers
+            builder.Services.AddHostedService<SecretsMigrationService>();
             builder.Services.AddHostedService<JobRecoveryService>();
             builder.Services.AddHostedService<StampWorker>();
             builder.Services.AddHostedService<BackupWorker>();
             builder.Services.AddHostedService<MailSender>();
             builder.Services.AddHostedService<DemoExpiryService>();
             builder.Services.AddHostedService<SubscriptionSweepService>();
+            builder.Services.AddHostedService<OwnerPasswordSweepService>();
             builder.Services.AddHostedService<CapacityMonitor>();
             builder.Services.AddHostedService<UpdateMonitor>();
             builder.Services.AddHostedService<NightlyBackupService>();
@@ -110,7 +126,34 @@ public static class Extensions
         // The people who run the platform hold PlatformAdmin in the ninja realm
         builder.Services.AddAuthorizationBuilder()
             .AddPolicy("Platform", policy => policy.RequireRole("PlatformAdmin"));
+
+        // A token for the control API only: the ninja realm mints aud=control for control-web (the shared defaults leave the audience unchecked)
+        var audience = builder.Configuration["Identity:Audience"];
+        if (!string.IsNullOrWhiteSpace(audience))
+        {
+            builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, o =>
+            {
+                o.TokenValidationParameters.ValidateAudience = true;
+                o.TokenValidationParameters.ValidAudience = audience;
+            });
+        }
+
+        // The two anonymous endpoints (the edge's certificate question, the sign-in-as-owner link) are metered per address;
+        // everything else per signed-in admin, generously: a tab of the control app polls a handful of endpoints every few seconds
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(AnonymousRateLimit, http => RateLimitPartition.GetFixedWindowLimiter(
+                http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http => RateLimitPartition.GetFixedWindowLimiter(
+                http.User.Identity?.IsAuthenticated == true ? "user:" + (http.User.GetUserId() ?? "?") : "ip:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 600, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
     }
+
+    /// <summary>The policy the anonymous endpoints carry.</summary>
+    public const string AnonymousRateLimit = "anonymous";
 }
 
 /// <summary>Dry run: the user and the vhost exist as soon as they are asked for.</summary>

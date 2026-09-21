@@ -21,9 +21,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # Keycloak cannot create its own database; the control plane creates the tenants'
       POSTGRES_MULTIPLE_DATABASES: keycloak,controldb
+      # The control plane's own role: owns controldb and nothing else (the superuser stays for stamping tenants)
+      CONTROL_DB_PASSWORD: ${CONTROL_DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
+      - ./control-role.sh:/docker-entrypoint-initdb.d/zz-control-role.sh:ro
     networks: [aspire]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -82,7 +85,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       HTTP_PORTS: "8080"
-      ConnectionStrings__controldb: Host=postgres;Port=5432;Username=postgres;Password=${POSTGRES_PASSWORD};Database=controldb
+      ConnectionStrings__controldb: Host=postgres;Port=5432;Username=control;Password=${CONTROL_DB_PASSWORD};Database=controldb
       Identity__Url: http://keycloak:8080/realms/ninja
       Keycloak__Realm: ninja
       Platform__Domain: ${PLATFORM_DOMAIN}
@@ -95,8 +98,14 @@ services:
       Platform__PostgresPassword: ${POSTGRES_PASSWORD}
       Platform__RabbitPassword: ${EVENTBUS_PASSWORD}
       Platform__KeycloakPublicUrl: https://auth.${PLATFORM_DOMAIN}
-      Platform__KeycloakAdminPassword: ${KEYCLOAK_PASSWORD}
+      # Its own master-realm user (the deploy workflow creates it), so the bootstrap admin can be rotated on its own
+      Platform__KeycloakAdminUser: ${KEYCLOAK_CONTROL_USER:-platform-control}
+      Platform__KeycloakAdminPassword: ${KEYCLOAK_CONTROL_PASSWORD}
+      # What the tenants' secrets are encrypted under in controldb: openssl rand -base64 32; lose it and every stack's passwords go with it
+      Platform__EncryptionKey: ${PLATFORM_ENCRYPTION_KEY}
       Platform__GeminiApiKey: ${GEMINI_API_KEY}
+      # Which plans' stacks get the assistant key (a demo always does); a comma list of Free, Starter, Pro
+      Platform__AssistantPlans__0: ${ASSISTANT_PLAN_0:-Pro}
       # A copy of every backup off the box, into any S3-compatible bucket; off until a bucket and keys are set
       Platform__Offsite__Endpoint: ${OFFSITE_ENDPOINT:-}
       Platform__Offsite__Bucket: ${OFFSITE_BUCKET:-}
@@ -139,6 +148,8 @@ services:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
       PLATFORM_SLUG_LABEL: ${PLATFORM_SLUG_LABEL:-2}
       ACME_EMAIL: ${ACME_EMAIL}
+      # Where the Keycloak admin console may be opened from (space-separated networks); nowhere until set
+      ADMIN_ALLOW_CIDR: ${ADMIN_ALLOW_CIDR:-127.0.0.1/32}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./custom-domains.caddy:/etc/caddy/custom-domains.caddy:ro

@@ -66,6 +66,17 @@ auth.{$PLATFORM_DOMAIN} {
 	handle /api/control/impersonate/* {
 		reverse_proxy control-api:8080
 	}
+	# The admin console and the admin REST API: only from ADMIN_ALLOW_CIDR
+	# (space-separated networks; nothing is allowed until it is set). The
+	# control plane talks to Keycloak inside the docker network, not here.
+	@console path /admin/*
+	handle @console {
+		@allowed remote_ip {$ADMIN_ALLOW_CIDR:127.0.0.1/32}
+		handle @allowed {
+			reverse_proxy keycloak:8080
+		}
+		respond "The Keycloak admin console is not reachable from here." 403
+	}
 	handle {
 		reverse_proxy keycloak:8080
 	}

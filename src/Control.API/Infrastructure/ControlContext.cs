@@ -6,6 +6,8 @@ namespace Ninja.Control.API.Infrastructure;
 
 public class ControlContext(DbContextOptions<ControlContext> options) : DbContext(options)
 {
+    private readonly SecretProtector _secrets = options.SecretProtector();
+
     public DbSet<Tenant> Tenants => Set<Tenant>();
 
     public DbSet<ProvisioningStep> Steps => Set<ProvisioningStep>();
@@ -57,11 +59,14 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.PrimaryColor).HasMaxLength(7);
             entity.Property(e => e.CustomerDomain).HasMaxLength(253);
             entity.Property(e => e.OwnerEmail).HasMaxLength(254).IsRequired();
-            entity.Property(e => e.OwnerInitialPassword).HasMaxLength(64);
-            entity.Property(e => e.IdentitySecret).HasMaxLength(64).IsRequired();
-            entity.Property(e => e.ControlSecret).HasMaxLength(64).IsRequired();
-            entity.Property(e => e.DbPassword).HasMaxLength(64);
-            entity.Property(e => e.BrokerPassword).HasMaxLength(64);
+            // The secrets: encrypted at rest under the platform's key (enc:v1:… is 12 + 16 + n bytes in base64, 128 chars covers a 64-char secret)
+            var secret = _secrets.Converter();
+            var optionalSecret = _secrets.NullableConverter();
+            entity.Property(e => e.OwnerInitialPassword).HasMaxLength(128).HasConversion(optionalSecret);
+            entity.Property(e => e.IdentitySecret).HasMaxLength(128).IsRequired().HasConversion(secret);
+            entity.Property(e => e.ControlSecret).HasMaxLength(128).IsRequired().HasConversion(secret);
+            entity.Property(e => e.DbPassword).HasMaxLength(128).HasConversion(optionalSecret);
+            entity.Property(e => e.BrokerPassword).HasMaxLength(128).HasConversion(optionalSecret);
             entity.Property(e => e.ImageTag).HasMaxLength(64).IsRequired();
             entity.Property(e => e.PreviousImageTag).HasMaxLength(64);
             entity.Property(e => e.UpgradeBackupId).HasMaxLength(15);

@@ -1,3 +1,5 @@
+using Ninja.Control.API.Model;
+
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
@@ -159,6 +161,21 @@ public sealed class PlatformOptions
 
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
+
+    /// <summary>
+    /// Base64 of 32 random bytes (openssl rand -base64 32): what the tenants'
+    /// secrets are encrypted under in controldb. Required unless DryRun. Lose
+    /// it and every stack's passwords are lost with it; it is part of what a
+    /// platform restore needs, next to the backups.
+    /// </summary>
+    public string? EncryptionKey { get; set; }
+
+    /// <summary>The plans whose stacks get the shared assistant key; a demo always does. Everything else runs with the assistant off.</summary>
+    public TenantPlan[] AssistantPlans { get; set; } = [TenantPlan.Pro];
+
+    /// <summary>Whether this tenant's stack is handed the assistant key.</summary>
+    public bool AssistantFor(Tenant tenant)
+        => !string.IsNullOrEmpty(GeminiApiKey) && (tenant.Kind == TenantKind.Demo || AssistantPlans.Contains(tenant.Plan));
 }
 
 public sealed class RegistryOptions

@@ -8,11 +8,15 @@ name: Deploy Platform
 #
 # Secrets: PLATFORM_SERVER_HOST, PLATFORM_SERVER_USER, PLATFORM_SERVER_SSH_KEY,
 #   PLATFORM_POSTGRES_PASSWORD, PLATFORM_EVENTBUS_PASSWORD, PLATFORM_KEYCLOAK_PASSWORD,
+#   PLATFORM_CONTROL_DB_PASSWORD (the control plane's own Postgres role),
+#   PLATFORM_KEYCLOAK_CONTROL_PASSWORD (its own master-realm user),
+#   PLATFORM_ENCRYPTION_KEY (openssl rand -base64 32: the tenants' secrets at rest),
 #   PLATFORM_ADMIN_PASSWORD (first password of the `platform` user, temporary),
 #   GEMINI_API_KEY (optional), FIREBASE_WEB_* (optional, web push), GHCR_TOKEN
 #   (optional: the run's own GITHUB_TOKEN pulls this repo's images otherwise).
 # Variables: PLATFORM_DOMAIN (e.g. ninja.app), PLATFORM_SLUG_LABEL (2 for a
-#   two-label domain, 3 for co.uk-style), ACME_EMAIL.
+#   two-label domain, 3 for co.uk-style), ACME_EMAIL, PLATFORM_ADMIN_ALLOW_CIDR
+#   (where the Keycloak admin console may be opened from; nowhere until set).
 
 on:
   workflow_dispatch:
@@ -82,6 +86,10 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.PLATFORM_POSTGRES_PASSWORD }}
           EVENTBUS_PASSWORD: ${{ secrets.PLATFORM_EVENTBUS_PASSWORD }}
           KEYCLOAK_PASSWORD: ${{ secrets.PLATFORM_KEYCLOAK_PASSWORD }}
+          CONTROL_DB_PASSWORD: ${{ secrets.PLATFORM_CONTROL_DB_PASSWORD }}
+          KEYCLOAK_CONTROL_PASSWORD: ${{ secrets.PLATFORM_KEYCLOAK_CONTROL_PASSWORD }}
+          PLATFORM_ENCRYPTION_KEY: ${{ secrets.PLATFORM_ENCRYPTION_KEY }}
+          ADMIN_ALLOW_CIDR: ${{ vars.PLATFORM_ADMIN_ALLOW_CIDR }}
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # Optional: a copy of every backup off the box (any S3-compatible bucket) and the weekly restore drill
@@ -103,14 +111,18 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           set -e
-          for v in POSTGRES_PASSWORD EVENTBUS_PASSWORD KEYCLOAK_PASSWORD PLATFORM_ADMIN_PASSWORD ACME_EMAIL; do
+          for v in POSTGRES_PASSWORD EVENTBUS_PASSWORD KEYCLOAK_PASSWORD CONTROL_DB_PASSWORD KEYCLOAK_CONTROL_PASSWORD PLATFORM_ENCRYPTION_KEY PLATFORM_ADMIN_PASSWORD ACME_EMAIL; do
             if [ -z "${!v}" ]; then echo "::error::$v is empty"; exit 1; fi
           done
+          if [ "$(echo -n "$PLATFORM_ENCRYPTION_KEY" | base64 -d 2>/dev/null | wc -c)" != "32" ]; then
+            echo "::error::PLATFORM_ENCRYPTION_KEY must be the base64 of 32 bytes (openssl rand -base64 32)"; exit 1
+          fi
 
           mkdir -p platform-artifacts/realms platform-artifacts/themes
           cp deploy/platform/docker-compose.yml platform-artifacts/
           cp deploy/platform/Caddyfile platform-artifacts/
           cp deploy/platform/init-multiple-databases.sh platform-artifacts/
+          cp deploy/platform/control-role.sh platform-artifacts/
           cp deploy/platform/README.md platform-artifacts/
           # The control plane rewrites this file; only seed it when the server has none
           cp deploy/platform/custom-domains.caddy platform-artifacts/custom-domains.caddy.seed
@@ -124,6 +136,11 @@ jobs:
           POSTGRES_PASSWORD=$POSTGRES_PASSWORD
           EVENTBUS_PASSWORD=$EVENTBUS_PASSWORD
           KEYCLOAK_PASSWORD=$KEYCLOAK_PASSWORD
+          CONTROL_DB_PASSWORD=$CONTROL_DB_PASSWORD
+          KEYCLOAK_CONTROL_USER=platform-control
+          KEYCLOAK_CONTROL_PASSWORD=$KEYCLOAK_CONTROL_PASSWORD
+          PLATFORM_ENCRYPTION_KEY=$PLATFORM_ENCRYPTION_KEY
+          ADMIN_ALLOW_CIDR=${ADMIN_ALLOW_CIDR:-127.0.0.1/32}
           GEMINI_API_KEY=$GEMINI_API_KEY
           OFFSITE_ENDPOINT=$OFFSITE_ENDPOINT
           OFFSITE_BUCKET=$OFFSITE_BUCKET
@@ -225,6 +242,16 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             docker compose pull
+            # The shared services first: the control role must exist before the control plane connects as it
+            docker compose up -d postgres
+            for i in $(seq 1 30); do
+              if docker compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then break; fi
+              if [ "$i" -eq 30 ]; then echo "::error::Postgres never answered"; exit 1; fi
+              sleep 2
+            done
+            # Idempotent: the role, controldb handed to it, the password kept in step with .env (a fresh box did this on init)
+            CONTROL_DB_PASSWORD=$(grep -oP '^CONTROL_DB_PASSWORD=\K.*' .env)
+            docker compose exec -T -e CONTROL_DB_PASSWORD="$CONTROL_DB_PASSWORD" postgres bash /docker-entrypoint-initdb.d/zz-control-role.sh
             docker compose up -d --remove-orphans
             # The Caddyfile is a single-file bind mount; scp replaced the inode
             docker compose up -d --force-recreate caddy
@@ -243,7 +270,24 @@ jobs:
               sleep 5
             done
             docker compose exec -T keycloak $KC update realms/ninja -s loginTheme=ninja
-            echo "Platform realm: login theme applied"
+            # Short sessions for the console that can destroy tenants, and a second factor for everyone in it:
+            # the OTP form is REQUIRED in the browser flow, so a user without one is asked to set it up at sign-in
+            docker compose exec -T keycloak $KC update realms/ninja -s accessTokenLifespan=900 -s ssoSessionIdleTimeout=28800 -s ssoSessionMaxLifespan=86400 -s otpPolicyType=totp
+            docker compose exec -T keycloak $KC update authentication/required-actions/CONFIGURE_TOTP -r ninja -s enabled=true -s defaultAction=true
+            OTP_EXEC=$(docker compose exec -T keycloak $KC get authentication/flows/browser/executions -r ninja | python3 -c 'import json,sys; print(next(e["id"] for e in json.load(sys.stdin) if e.get("providerId") == "auth-otp-form"))')
+            docker compose exec -T keycloak $KC update authentication/flows/browser/executions -r ninja -b "{\"id\":\"$OTP_EXEC\",\"requirement\":\"REQUIRED\"}"
+            echo "Platform realm: login theme, sessions and OTP applied"
+
+            # The control plane's own master-realm user, so the bootstrap admin is only for people and can be rotated alone
+            KC_CONTROL_USER=$(grep -oP '^KEYCLOAK_CONTROL_USER=\K.*' .env)
+            KC_CONTROL_PASSWORD=$(grep -oP '^KEYCLOAK_CONTROL_PASSWORD=\K.*' .env)
+            if ! docker compose exec -T keycloak $KC get users -r master -q username="$KC_CONTROL_USER" -q exact=true | grep -q '"id"'; then
+              docker compose exec -T keycloak $KC create users -r master -s username="$KC_CONTROL_USER" -s enabled=true -s emailVerified=true
+              docker compose exec -T keycloak $KC add-roles -r master --uusername "$KC_CONTROL_USER" --rolename admin
+              echo "Keycloak: $KC_CONTROL_USER created with the admin role"
+            fi
+            docker compose exec -T keycloak $KC set-password -r master --username "$KC_CONTROL_USER" --new-password "$KC_CONTROL_PASSWORD"
+            docker compose up -d control-api
 
       # Through the edge, so DNS, certificates, Caddy, Keycloak and the control
       # plane are all on the path

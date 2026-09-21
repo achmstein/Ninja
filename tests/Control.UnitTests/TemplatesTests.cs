@@ -136,6 +136,14 @@ public sealed class TemplatesTests
         Assert.IsFalse(yaml.Contains("ConnectionStrings__identitydb"));
         var noAi = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), new PlatformOptions { Domain = "ninja.app" });
         StringAssert.Contains(noAi, "AI__Enabled: \"false\"");
+        // With a key, only the plans that include the assistant get it: a customer on Starter runs without, and its .env carries no key
+        var starter = Blue();
+        starter.Kind = TenantKind.Customer;
+        starter.Plan = TenantPlan.Starter;
+        StringAssert.Contains(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform), "AI__Enabled: \"false\"");
+        StringAssert.Contains(Templates.Env(starter, Platform), "GEMINI_API_KEY=\n");
+        starter.Plan = TenantPlan.Pro;
+        StringAssert.Contains(Templates.Compose(starter, TenantHosts.For(starter, Platform), Platform), "ConnectionStrings__chatModel");
     }
 
     [TestMethod]

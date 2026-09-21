@@ -47,6 +47,8 @@ public interface IKeycloakAdmin
     /// <summary>Creates the user with the roles and a temporary password, or leaves an existing one alone. Returns the user id.</summary>
     Task<string> EnsureUserAsync(string realm, string email, string firstName, string password, IReadOnlyList<string> realmRoles, CancellationToken ct);
     Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct);
+    /// <summary>Whether the user still carries the required action (UPDATE_PASSWORD until the first password is changed); false for a user who is not there.</summary>
+    Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct);
     /// <summary>The realm's SMTP settings (Keycloak's smtpServer map, as JSON), so it can send its own password resets.</summary>
     Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct);
     /// <summary>
@@ -305,22 +307,47 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<PlatformOptions>
 /// <summary>Keycloak's admin REST API as the master realm's admin: realms in and out, the first owner in.</summary>
 public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options) : IKeycloakAdmin
 {
+    private static readonly TimeSpan Margin = TimeSpan.FromSeconds(30);
+
+    private readonly SemaphoreSlim _tokenGate = new(1, 1);
+    private (string Token, DateTimeOffset ExpiresAt)? _token;
+
     private string Base => options.Value.KeycloakInternalUrl.TrimEnd('/');
 
+    /// <summary>A client carrying the admin token: fetched once and kept until shortly before it expires, not on every call (a stamp makes a dozen).</summary>
     private async Task<HttpClient> AdminClientAsync(CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient("keycloak");
-        var response = await client.PostAsync($"{Base}/realms/master/protocol/openid-connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["grant_type"] = "password",
-            ["client_id"] = "admin-cli",
-            ["username"] = options.Value.KeycloakAdminUser,
-            ["password"] = options.Value.KeycloakAdminPassword,
-        }), ct);
-        response.EnsureSuccessStatusCode();
-        var token = (await response.Content.ReadFromJsonAsync<JsonObject>(ct))!["access_token"]!.GetValue<string>();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await TokenAsync(ct));
         return client;
+    }
+
+    private async Task<string> TokenAsync(CancellationToken ct)
+    {
+        if (_token is { } cached && cached.ExpiresAt - Margin > DateTimeOffset.UtcNow) return cached.Token;
+        await _tokenGate.WaitAsync(ct);
+        try
+        {
+            if (_token is { } again && again.ExpiresAt - Margin > DateTimeOffset.UtcNow) return again.Token;
+            var client = httpClientFactory.CreateClient("keycloak");
+            var response = await client.PostAsync($"{Base}/realms/master/protocol/openid-connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "password",
+                ["client_id"] = "admin-cli",
+                ["username"] = options.Value.KeycloakAdminUser,
+                ["password"] = options.Value.KeycloakAdminPassword,
+            }), ct);
+            response.EnsureSuccessStatusCode();
+            var body = (await response.Content.ReadFromJsonAsync<JsonObject>(ct))!;
+            var token = body["access_token"]!.GetValue<string>();
+            var expiresIn = body["expires_in"]?.GetValue<int>() ?? 60;
+            _token = (token, DateTimeOffset.UtcNow.AddSeconds(expiresIn));
+            return token;
+        }
+        finally
+        {
+            _tokenGate.Release();
+        }
     }
 
     public async Task<bool> RealmExistsAsync(string realm, CancellationToken ct)
@@ -392,6 +419,14 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
         var client = await AdminClientAsync(ct);
         var users = await client.GetFromJsonAsync<JsonArray>($"{Base}/admin/realms/{realm}/users?email={Uri.EscapeDataString(email)}&exact=true", ct);
         return users is { Count: > 0 } ? users[0]!["id"]!.GetValue<string>() : null;
+    }
+
+    public async Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var users = await client.GetFromJsonAsync<JsonArray>($"{Base}/admin/realms/{realm}/users?email={Uri.EscapeDataString(email)}&exact=true", ct);
+        if (users is not { Count: > 0 }) return false;
+        return users[0]!["requiredActions"] is JsonArray actions && actions.Any(a => a?.GetValue<string>() == action);
     }
 
     public async Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct)
@@ -507,6 +542,7 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         return Task.FromResult(Guid.NewGuid().ToString());
     }
     public Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct) => Task.FromResult<string?>($"dry-run-{email}");
+    public Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct) => Task.FromResult(true);
     public Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct) { logger.LogInformation("(dry run) smtp on {Realm}", realm); return Task.CompletedTask; }
     public Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
         => Task.FromResult<IReadOnlyList<string>>([$"KEYCLOAK_IDENTITY=dry-run; Path=/realms/{realm}/; Secure; HttpOnly; SameSite=None"]);

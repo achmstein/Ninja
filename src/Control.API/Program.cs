@@ -18,6 +18,8 @@ app.UseDefaultOpenApi();
 app.MapDefaultEndpoints();
 
 app.UseAuthentication();
+// After authentication, so the global limiter can meter per admin rather than per address
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControlApi();

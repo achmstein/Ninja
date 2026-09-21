@@ -228,6 +228,44 @@ restore `controldb` and `keycloak` from the newest `_platform` backup
 backup under `tenants/{slug}/backups/`, and restore every tenant into its
 own slug from the control app.
 
+## Keys, roles and who may sign in
+
+The tenants' secrets on the record (each stack's database and broker
+passwords, its realm's client secrets, the owner's first password) are
+encrypted at rest under `PLATFORM_ENCRYPTION_KEY` (`openssl rand -base64
+32`), so a dump of `controldb` is not a dump of every café's credentials.
+The first start with the key rewrites rows written before it (audit
+`platform.secrets.encrypted`). The key is part of a platform restore:
+without it, a restored `controldb` has no usable secrets, so keep it with
+the backups and not only in `.env`. The owner's first password leaves the
+record once the owner has changed it (Keycloak stops asking them to) or
+after a month, whichever comes first (`owner.password.cleared`).
+
+The control plane connects to its own database as the role `control`
+(`CONTROL_DB_PASSWORD`), which owns `controldb` and nothing else; the
+superuser is only for stamping tenants. `control-role.sh` creates the role
+on a fresh box and, run by the deploy workflow on a box that predates it,
+hands `controldb` over. Keycloak's admin API is used as the master-realm
+user `platform-control` (`KEYCLOAK_CONTROL_PASSWORD`), which the deploy
+workflow creates with the `admin` role, so the bootstrap `admin` is only for
+people and can be rotated on its own; the token is fetched once per
+lifetime, not per call.
+
+The `ninja` realm asks everyone for a second factor: the OTP form is
+required in the browser flow, so a user without one sets it up at the next
+sign-in. Access tokens last fifteen minutes (the control app renews them
+silently), a session idles out after eight hours and ends after a day. The
+control API accepts only tokens minted for it (`aud=control`). The Keycloak
+admin console (`auth.{domain}/admin/*`) answers only from
+`ADMIN_ALLOW_CIDR` (space-separated networks; nowhere until set). The two
+anonymous endpoints, the edge's certificate question and the
+sign-in-as-owner link, are metered per address; everything else per admin.
+
+The assistant key reaches only the stacks whose plan is listed in
+`ASSISTANT_PLAN_0`, `ASSISTANT_PLAN_1`, … (`Pro` by default; a demo always
+gets it), so one café's compromised service does not hand the platform's
+key to everyone; the rest run with the assistant off.
+
 ## Not yet
 
 - The Chillax stack still deploys on its own (`.github/workflows/deploy.yml`);

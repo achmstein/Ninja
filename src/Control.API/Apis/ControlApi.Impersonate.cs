@@ -18,7 +18,7 @@ public static partial class ControlApi
     private static void MapImpersonationApi(RouteGroupBuilder api)
     {
         api.MapPost("/tenants/{slug}/impersonate", Impersonate).WithName("ImpersonateOwner").WithSummary("A one-time link that opens the café's admin app signed in as its owner").RequireAuthorization("Platform");
-        api.MapGet("/impersonate/{ticket}", RedeemImpersonation).WithName("RedeemImpersonation").WithSummary("Opened on the auth host: sets the owner's session and goes to the admin app").AllowAnonymous();
+        api.MapGet("/impersonate/{ticket}", RedeemImpersonation).WithName("RedeemImpersonation").WithSummary("Opened on the auth host: sets the owner's session and goes to the admin app").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
     }
 
     public static async Task<Results<Ok<ImpersonationLink>, NotFound, Conflict<ProblemDetails>, ProblemHttpResult>> Impersonate(

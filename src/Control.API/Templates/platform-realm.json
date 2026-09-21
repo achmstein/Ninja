@@ -16,9 +16,31 @@
   "resetPasswordAllowed": false,
   "bruteForceProtected": true,
   "sslRequired": "{{sslRequired}}",
-  "accessTokenLifespan": 3600,
-  "ssoSessionIdleTimeout": 2592000,
-  "ssoSessionMaxLifespan": 7776000,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyDigits": 6,
+  "otpPolicyPeriod": 30,
+  "requiredActions": [
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 10
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30
+    }
+  ],
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 86400,
   "roles": {
     "realm": [
       {
@@ -220,8 +242,7 @@
       ],
       "webOrigins": [
         "{{controlUrl}}",
-        "http://localhost:5177",
-        "+"
+        "http://localhost:5177"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
@@ -267,6 +288,9 @@
       ],
       "realmRoles": [
         "PlatformAdmin"
+      ],
+      "requiredActions": [
+        "CONFIGURE_TOTP"
       ]
     }
   ],

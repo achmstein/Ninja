@@ -144,11 +144,11 @@ public static partial class Templates
             {
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
-                    AppendChatModel(sb, platform);
+                    AppendChatModel(sb, tenant, platform);
                     break;
                 case "inventory":
                 case "finance":
-                    AppendChatModel(sb, platform);
+                    AppendChatModel(sb, tenant, platform);
                     break;
                 case "identity":
                     sb.AppendLine("      Keycloak__AdminClientId: \"identity-api-service\"");
@@ -226,7 +226,8 @@ public static partial class Templates
             $"DB_PASSWORD={tenant.DbPassword}",
             $"BROKER_PASSWORD={tenant.BrokerPassword}",
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
-            $"GEMINI_API_KEY={platform.GeminiApiKey ?? ""}",
+            // The shared key reaches only the stacks whose plan includes the assistant: one café's compromise is not every café's
+            $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
             "",
         ]);
     }
@@ -274,9 +275,9 @@ public static partial class Templates
         sb.AppendLine($"        max-file: \"{platform.LogMaxFile}\"");
     }
 
-    private static void AppendChatModel(StringBuilder sb, PlatformOptions platform)
+    private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform)
     {
-        if (string.IsNullOrEmpty(platform.GeminiApiKey))
+        if (!platform.AssistantFor(tenant))
         {
             sb.AppendLine("      AI__Enabled: \"false\"");
             return;
