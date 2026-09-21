@@ -69,7 +69,7 @@ public static partial class TenantApi
     public static async Task<Ok<TenantResponse>> GetTenant(BranchContext context, IConfiguration configuration)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleAsync(t => t.Id == Tenant.SingletonId);
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UpdateTenant(
@@ -114,7 +114,7 @@ public static partial class TenantApi
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
     public static async Task<Ok<TenantResponse>> SetEntitlements(BranchContext context, IConfiguration configuration, TenantFeatures request)
@@ -123,7 +123,7 @@ public static partial class TenantApi
         tenant.ApplyEntitlements(request);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
     public static ProblemHttpResult ModuleOff(HttpContext http)
@@ -158,7 +158,7 @@ public static partial class TenantApi
         };
         await context.SaveChangesAsync(ct);
 
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
     public static async Task<Results<Ok<TenantResponse>, NotFound>> DeleteImage(BranchContext context, IConfiguration configuration, TenantBrandStore store, string slot)
@@ -175,7 +175,7 @@ public static partial class TenantApi
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
 
-        return TypedResults.Ok(TenantResponse.From(tenant, configuration["Tenant:AuthUrl"]));
+        return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
     public static Results<PhysicalFileHttpResult, NotFound> GetImage(
@@ -405,11 +405,15 @@ public record TenantAuth(string Authority);
 
 /// <param name="LogoUrl">The square mark, light scheme; null when none is uploaded (the icons are then a tile in the brand color).</param>
 /// <param name="LogoDarkUrl">The mark for dark backgrounds; null falls back to <paramref name="LogoUrl"/>.</param>
+/// <param name="ApiUrl">The host the native till and kitchen apps connect to ("https://api.slug.example.com"); null when the stack was not told.</param>
+/// <param name="AppsUrl">Where those apps are downloaded from, the platform's page; null when the stack was not told.</param>
 public record TenantResponse(
     LocalizedText Name,
     string? PrimaryColor,
     string? CustomerUrl,
     TenantAuth? Auth,
+    string? ApiUrl,
+    string? AppsUrl,
     string? LogoUrl,
     string? LogoDarkUrl,
     TenantWordmarks Wordmarks,
@@ -420,17 +424,22 @@ public record TenantResponse(
     TenantLocaleDto Locale,
     long Version)
 {
-    public static TenantResponse From(Tenant t, string? authUrl)
+    public static TenantResponse From(Tenant t, IConfiguration configuration)
+        => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
+
+    public static TenantResponse From(Tenant t, string? authUrl, string? apiUrl = null, string? appsUrl = null)
     {
         var v = t.Version;
+        static string? Url(string? url) => string.IsNullOrWhiteSpace(url) ? null : url.TrimEnd('/');
         return new(
             t.Name,
             t.PrimaryColor,
             t.CustomerUrl,
-            string.IsNullOrWhiteSpace(authUrl) ? null : new TenantAuth(authUrl.TrimEnd('/')),
+            Url(authUrl) is { } authority ? new TenantAuth(authority) : null,
+            Url(apiUrl),
+            Url(appsUrl),
             t.Image(TenantImageSlots.Logo) is { } logo ? TenantWordmark.ImageUrl(TenantImageSlots.Logo, logo) : null,
             t.Image(TenantImageSlots.LogoDark) is { } logoDark ? TenantWordmark.ImageUrl(TenantImageSlots.LogoDark, logoDark) : null,
-        static string? Url(string? url) => string.IsNullOrWhiteSpace(url) ? null : url.TrimEnd('/');
             TenantWordmarks.From(t),
             TenantThemeDto.From(t.Theme),
             new(

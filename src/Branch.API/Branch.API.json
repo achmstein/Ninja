@@ -873,6 +873,8 @@
           "primaryColor",
           "customerUrl",
           "auth",
+          "apiUrl",
+          "appsUrl",
           "logoUrl",
           "logoDarkUrl",
           "wordmarks",
@@ -908,6 +910,18 @@
               {
                 "$ref": "#/components/schemas/TenantAuth"
               }
+            ]
+          },
+          "apiUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appsUrl": {
+            "type": [
+              "null",
+              "string"
             ]
           },
           "logoUrl": {
@@ -1028,6 +1042,12 @@
                 "$ref": "#/components/schemas/TenantThemeDarkDto"
               }
             ]
+          },
+          "headerSize": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1042,12 +1062,6 @@
           "url": {
             "type": "string"
           },
-          },
-          "headerSize": {
-            "type": [
-              "null",
-              "string"
-            ]
           "width": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [

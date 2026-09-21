@@ -17,6 +17,7 @@ import {
   Receipt,
   ReceiptText,
   ShieldCheck,
+  TabletSmartphone,
   Ticket,
   TrendingUp,
   Truck,
@@ -141,6 +142,8 @@ export const sidebarData: SidebarData = {
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
+        // The native till and kitchen display: where to get them, how a tablet connects
+        { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
       ],
     },
   ],

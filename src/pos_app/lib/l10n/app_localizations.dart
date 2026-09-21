@@ -128,6 +128,84 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @connectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which café is this?'**
+  String get connectTitle;
+
+  /// No description provided for @connectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your café\'s address, or scan the code on the Apps page of your admin app.'**
+  String get connectHint;
+
+  /// No description provided for @cafeAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Café address'**
+  String get cafeAddress;
+
+  /// No description provided for @connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connect;
+
+  /// No description provided for @scanConnectCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code'**
+  String get scanConnectCode;
+
+  /// No description provided for @connectInvalidAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not an address.'**
+  String get connectInvalidAddress;
+
+  /// No description provided for @connectUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing answered at that address. Check it, and that the tablet is online.'**
+  String get connectUnreachable;
+
+  /// No description provided for @connectNotACafe.
+  ///
+  /// In en, this message translates to:
+  /// **'That address is not a café on ninja.'**
+  String get connectNotACafe;
+
+  /// No description provided for @connectPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'This café is paused. Its owner can see why in the admin app.'**
+  String get connectPaused;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get thisDevice;
+
+  /// No description provided for @connectedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to'**
+  String get connectedTo;
+
+  /// No description provided for @changeCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Change café'**
+  String get changeCafe;
+
+  /// No description provided for @changeCafeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out and forget this café. The tablet starts over at the connect screen.'**
+  String get changeCafeConfirm;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:
@@ -1040,6 +1118,18 @@ abstract class AppLocalizations {
   /// **'Reservation confirmed'**
   String get holdConfirmed;
 
+  /// No description provided for @seatParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat them'**
+  String get seatParty;
+
+  /// No description provided for @partySeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Seated'**
+  String get partySeated;
+
   /// No description provided for @startsOnConfirm.
   ///
   /// In en, this message translates to:
@@ -1117,18 +1207,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ticket not found'**
   String get ticketNotFound;
-
-  /// No description provided for @seatParty.
-  ///
-  /// In en, this message translates to:
-  /// **'Seat them'**
-  String get seatParty;
-
-  /// No description provided for @partySeated.
-  ///
-  /// In en, this message translates to:
-  /// **'Seated'**
-  String get partySeated;
 
   /// No description provided for @backToFloor.
   ///

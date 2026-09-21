@@ -23,7 +23,7 @@ class KioskStatus {
 /// device-owner rights Android only offers its screen-pinning prompt, so the
 /// settings screen says which of the two it is.
 class KioskService {
-  static const _channel = MethodChannel('com.chillax.kds/kiosk');
+  static const _channel = MethodChannel('com.ninja.kds/kiosk');
 
   Future<KioskStatus> status() async {
     final prefs = await SharedPreferences.getInstance();

@@ -137,6 +137,7 @@ services:
       - ./web/pos-web:/srv/pos-web:ro
       - ./web/kds-web:/srv/kds-web:ro
       - ./web/control-web:/srv/control-web:ro
+      - ../apps:/srv/apps:ro
     depends_on:
       - control-api
     networks: [ninja-local]

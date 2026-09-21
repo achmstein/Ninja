@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+  The native apps' download page: https://{platform domain}/apps
+
+  One generic build of the till and the kitchen display serves every café;
+  which café a tablet belongs to is set inside the app, from the QR code on
+  the café's admin → Apps page. mobile-deploy.yml drops the APKs and their
+  version notes (ninja-pos.apk + ninja-pos.json, ninja-kds.apk + ninja-kds.json)
+  beside this file; a card whose note is missing says the app is not published
+  yet. Caddy serves this folder as-is (deploy/platform/Caddyfile), so this is
+  plain HTML: no build, no framework.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ninja · apps</title>
+  <meta name="description" content="Download the ninja till and kitchen display for Android tablets.">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: #18181b; color: #fafafa;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
+      display: flex; flex-direction: column; align-items: center; padding: 48px 16px 40px;
+    }
+    header { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+    header p { margin: 0; color: #a1a1aa; max-width: 34rem; line-height: 1.5; }
+    .lang { position: absolute; top: 16px; inset-inline-end: 16px; }
+    .lang button { background: none; border: 1px solid #3f3f46; color: #d4d4d8; border-radius: 999px; padding: 6px 14px; font: inherit; cursor: pointer; }
+    .lang button:hover { border-color: #71717a; color: #fafafa; }
+    main { width: 100%; max-width: 44rem; margin-top: 36px; display: grid; gap: 16px; }
+    @media (min-width: 640px) { main { grid-template-columns: 1fr 1fr; } }
+    .card { background: #27272a; border: 1px solid #3f3f46; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .card h2 { margin: 0; font-size: 1.125rem; }
+    .card p { margin: 0; color: #a1a1aa; line-height: 1.5; font-size: .9375rem; }
+    .meta { color: #71717a; font-size: .8125rem; margin-top: auto; padding-top: 8px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #fafafa; color: #18181b; text-decoration: none; font-weight: 600; border-radius: 999px; padding: 10px 18px; margin-top: 6px; }
+    .btn[aria-disabled="true"] { background: #3f3f46; color: #a1a1aa; pointer-events: none; }
+    ol { width: 100%; max-width: 44rem; margin: 32px 0 0; padding-inline-start: 1.25rem; color: #d4d4d8; line-height: 1.6; }
+    ol li + li { margin-top: 6px; }
+    footer { margin-top: 40px; color: #71717a; font-size: .8125rem; }
+    [dir="rtl"] ol { padding-inline-start: 1.25rem; }
+  </style>
+</head>
+<body>
+  <div class="lang"><button type="button" id="toggle" aria-label="العربية">العربية</button></div>
+
+  <header>
+    <svg viewBox="0 0 226.9 100" height="44" role="img" aria-label="ninja"><path d="M14.5 21.2 14 30.9Q15.4 28.3 17.4 26Q19.3 23.8 21.7 22.2Q24.2 20.6 27 19.9Q29.8 19.2 33 19.6Q38.1 20.3 41.6 22.7Q45.1 25 47.2 28.6Q49.4 32.2 50.3 37Q51.3 41.8 51.3 47.4Q51.3 50.5 50.7 54Q50.2 57.4 49.3 60.9Q48.4 64.3 47.3 67.6Q46.1 70.9 45 73.7L31.8 72.4Q32 72.3 32.5 71.1Q33.1 69.9 33.9 67.8Q34.7 65.8 35.6 63Q36.5 60.2 37.2 57Q38 53.7 38.5 50.1Q39 46.5 39 42.9Q39 39 38.3 35.9Q37.6 32.8 36.2 30.7Q34.7 28.6 32.4 27.4Q30.1 26.3 26.9 26.3Q24.1 26.3 21.9 27.8Q19.7 29.4 18.1 31.7Q16.5 34.1 15.3 37.1Q14.1 40.1 13.3 43.2L11.9 71.8L2.1 72.6L0 22.4ZM79 9.4Q79 11.4 78.3 13.1Q77.5 14.8 76.3 16Q75 17.3 73.3 18Q71.6 18.8 69.6 18.8Q67.7 18.8 66 18Q64.2 17.3 63 16Q61.7 14.8 60.9 13.1Q60.2 11.4 60.2 9.4Q60.2 7.5 60.9 5.8Q61.7 4 63 2.8Q64.2 1.5 66 0.7Q67.7 0 69.6 0Q71.6 0 73.3 0.7Q75 1.5 76.3 2.8Q77.5 4 78.3 5.8Q79 7.5 79 9.4ZM77.2 24.2 73.1 75.2 62.9 74.2 62.3 23.4ZM102.6 21.2 102.1 30.9Q103.5 28.3 105.4 26Q107.4 23.8 109.8 22.2Q112.2 20.6 115 19.9Q117.9 19.2 121.1 19.6Q126.1 20.3 129.6 22.7Q133.1 25 135.3 28.6Q137.4 32.2 138.4 37Q139.3 41.8 139.3 47.4Q139.3 50.5 138.8 54Q138.3 57.4 137.4 60.9Q136.5 64.3 135.3 67.6Q134.2 70.9 133 73.7L119.9 72.4Q120 72.3 120.6 71.1Q121.2 69.9 122 67.8Q122.8 65.8 123.6 63Q124.5 60.2 125.3 57Q126.1 53.7 126.6 50.1Q127.1 46.5 127.1 42.9Q127.1 39 126.4 35.9Q125.7 32.8 124.2 30.7Q122.8 28.6 120.5 27.4Q118.2 26.3 115 26.3Q112.2 26.3 110 27.8Q107.8 29.4 106.2 31.7Q104.5 34.1 103.3 37.1Q102.2 40.1 101.4 43.2L100 71.8L90.1 72.6L88.1 22.4ZM156.7 19.1Q154.8 19.1 153 18.3Q151.2 17.6 149.9 16.4Q148.5 15.1 147.7 13.4Q146.9 11.7 146.9 9.7Q146.9 7.7 147.7 6Q148.5 4.4 149.8 3.1Q151.1 1.9 152.9 1.1Q154.7 0.4 156.6 0.4Q158.6 0.4 160.4 1.1Q162.1 1.9 163.5 3.1Q164.8 4.4 165.6 6.1Q166.4 7.8 166.4 9.8Q166.4 11.7 165.6 13.4Q164.8 15.1 163.5 16.4Q162.2 17.6 160.4 18.3Q158.7 19.1 156.7 19.1ZM164.2 23.4Q164.5 27.2 164.6 31.1Q164.8 34.9 164.8 38.7Q164.8 42.2 164.6 46.7Q164.4 51.2 164 56.1Q163.5 61.1 162.6 66.3Q161.7 71.4 160.3 76.3Q158.8 81.2 156.7 85.5Q154.6 89.8 151.6 93Q148.7 96.2 144.9 98.1Q141.1 100 136.2 100Q132.5 100 129.1 98.8Q125.7 97.7 122.9 95.6Q120.1 93.5 118 90.6Q115.9 87.6 114.8 84.1L131.2 79.9Q131.2 80.6 131.1 81.3Q131.1 82 131.1 82.7Q131.1 84.4 131.3 86.8Q131.6 89.1 132.4 91.2Q133.2 93.4 134.7 94.9Q136.2 96.3 138.6 96.3Q140.6 96.3 142.3 95Q143.9 93.6 145.2 91.3Q146.4 89 147.4 86Q148.4 83 149 79.6Q149.7 76.3 150.2 73Q150.6 69.6 150.9 66.6Q151.2 63.6 151.3 61.2Q151.4 58.8 151.4 57.4Q151.4 53.3 151.2 48.9Q151 44.5 150.6 40.2Q150.2 35.8 149.7 31.7Q149.3 27.5 148.8 23.9ZM211.8 71.4 213.2 65.9Q211.3 67.5 209 68.8Q206.8 70.2 204.4 71.1Q202 72 199.7 72.5Q197.3 73 195.3 73Q191.9 73 188.2 72Q184.6 71 181.6 69Q178.6 67 176.7 64Q174.8 60.9 174.8 57Q174.8 51.8 176.6 47.9Q178.4 44.1 181.5 41.6Q184.6 39.1 188.8 37.9Q193 36.7 197.8 36.7Q200.1 36.7 202.5 37.1Q204.9 37.5 207.2 38.2Q209.4 39 211.5 40.2Q213.6 41.4 215.2 43Q215.1 40.2 214.5 37Q213.9 33.8 212.6 31.2Q211.3 28.6 209.1 26.8Q206.9 25.1 203.6 25.1Q198.7 25.1 195.3 27.6Q191.9 30.1 190.7 34.9L176.9 33.5Q178.1 30.2 180.5 27.7Q182.8 25.2 185.7 23.5Q188.7 21.8 192 20.9Q195.4 20 198.8 20Q204 20 208.1 21.5Q212.2 23 215.3 25.6Q218.5 28.2 220.6 31.7Q222.8 35.2 224.2 39.3Q225.6 43.4 226.2 47.8Q226.9 52.2 226.9 56.6Q226.9 60.6 226.4 64.4Q226 68.3 225.2 72.1ZM214.6 56.4Q214.8 55.2 214.9 54Q215 52.9 215.1 51.6Q214.8 49.2 213.3 47.2Q211.8 45.3 209.7 43.9Q207.6 42.6 205.1 41.9Q202.6 41.2 200.2 41.2Q197.5 41.2 195.1 42.1Q192.7 43 190.9 44.7Q189.2 46.4 188.2 48.8Q187.2 51.1 187.2 53.9Q187.2 56.8 188 59.2Q188.9 61.5 190.5 63.2Q192.1 65 194.4 65.9Q196.7 66.9 199.6 66.9Q202.1 66.9 204.6 66.1Q207 65.4 209 64Q211.1 62.7 212.6 60.7Q214 58.8 214.6 56.4Z" fill="#fafafa"/></svg>
+    <p data-t="intro"></p>
+  </header>
+
+  <main>
+    <section class="card" data-app="pos">
+      <h2 data-t="posTitle"></h2>
+      <p data-t="posAbout"></p>
+      <span class="meta" data-meta></span>
+      <a class="btn" href="ninja-pos.apk" download data-download data-t="download"></a>
+    </section>
+    <section class="card" data-app="kds">
+      <h2 data-t="kdsTitle"></h2>
+      <p data-t="kdsAbout"></p>
+      <span class="meta" data-meta></span>
+      <a class="btn" href="ninja-kds.apk" download data-download data-t="download"></a>
+    </section>
+  </main>
+
+  <ol>
+    <li data-t="step1"></li>
+    <li data-t="step2"></li>
+    <li data-t="step3"></li>
+  </ol>
+
+  <footer data-t="footer"></footer>
+
+  <script>
+    const T = {
+      en: {
+        intro: 'The till and the kitchen display, for Android tablets. One app for every café: install it, then connect it to yours from inside.',
+        posTitle: 'ninja POS', posAbout: 'The till: the floor, tickets, payments and shifts, on a landscape tablet by the counter.',
+        kdsTitle: 'ninja KDS', kdsAbout: 'The kitchen display: every order as it comes in, bumped when it is done.',
+        download: 'Download for Android', notYet: 'Not published yet', version: 'Version {v} · {d}',
+        step1: 'Download the app on the tablet and open the file. Android asks once to allow installs from this source.',
+        step2: 'Open the app. It asks which café it belongs to: scan the code on your admin app\'s Apps page, or type your café\'s address.',
+        step3: 'Sign in with a staff account. To move the tablet to another café, sign out and change the café from Settings.',
+        footer: 'iPhones and iPads run the web apps: pos.{café}.{domain} and kds.{café}.{domain}, added to the home screen.',
+        toggle: 'العربية', dir: 'ltr', lang: 'en',
+      },
+      ar: {
+        intro: 'الكاشير وشاشة المطبخ، لتابلت أندرويد. تطبيق واحد لكل الكافيهات: ثبّته، وبعدين وصّله بكافيهك من جواه.',
+        posTitle: 'ninja POS', posAbout: 'الكاشير: الصالة، التذاكر، الدفع والشيفتات، على تابلت عرضي جنب الكاونتر.',
+        kdsTitle: 'ninja KDS', kdsAbout: 'شاشة المطبخ: كل أوردر أول ما يوصل، ويتشال لما يخلص.',
+        download: 'تحميل لأندرويد', notYet: 'لسه منزلش', version: 'إصدار {v} · {d}',
+        step1: 'حمّل التطبيق على التابلت وافتح الملف. أندرويد هيسأل مرة واحدة تسمح بالتثبيت من المصدر ده.',
+        step2: 'افتح التطبيق. هيسألك تابع أنهي كافيه: امسح الكود من صفحة التطبيقات في تطبيق الإدارة، أو اكتب عنوان كافيهك.',
+        step3: 'سجّل دخول بحساب موظف. عشان تنقل التابلت لكافيه تاني، سجّل خروج وغيّر الكافيه من الإعدادات.',
+        footer: 'الآيفون والآيباد بيشغّلوا نسخة الويب: pos.{café}.{domain} و kds.{café}.{domain}، مضافة للشاشة الرئيسية.',
+        toggle: 'English', dir: 'rtl', lang: 'ar',
+      },
+    }
+    const domain = location.hostname
+    const asked = new URLSearchParams(location.search).get('lang')
+    let lang = asked || ((navigator.language || '').startsWith('ar') ? 'ar' : 'en')
+    if (!T[lang]) lang = 'en'
+    const apply = () => {
+      const t = T[lang]
+      document.documentElement.lang = t.lang
+      document.documentElement.dir = t.dir
+      document.querySelectorAll('[data-t]').forEach((el) => {
+        el.textContent = t[el.dataset.t].replace('{domain}', domain).replace('{domain}', domain)
+      })
+      document.getElementById('toggle').textContent = t.toggle
+      document.querySelectorAll('[data-app]').forEach((card) => {
+        const note = card._note
+        const meta = card.querySelector('[data-meta]')
+        const link = card.querySelector('[data-download]')
+        if (note === undefined) return
+        if (note) {
+          meta.textContent = t.version.replace('{v}', note.version + ' (' + note.build + ')').replace('{d}', note.date)
+          link.removeAttribute('aria-disabled')
+        } else {
+          meta.textContent = t.notYet
+          link.setAttribute('aria-disabled', 'true')
+        }
+      })
+    }
+    document.getElementById('toggle').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; apply() })
+    apply()
+    // Each card's version note, dropped by CI beside the APK; none means the app is not published yet
+    document.querySelectorAll('[data-app]').forEach(async (card) => {
+      try {
+        const r = await fetch('ninja-' + card.dataset.app + '.json', { cache: 'no-store' })
+        card._note = r.ok ? await r.json() : null
+      } catch { card._note = null }
+      apply()
+    })
+  </script>
+</body>
+</html>

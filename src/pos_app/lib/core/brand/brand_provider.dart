@@ -25,6 +25,15 @@ Future<void> initializeBrand() async {
   }
 }
 
+/// Drop the cached brand: the tablet is leaving this café
+Future<void> forgetBrand() async {
+  _initialBrand = null;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_brandKey);
+  } catch (_) {}
+}
+
 /// The tenant's brand: the cached copy first, the network's when it lands,
 /// and [TenantBrand.neutral] until either is known.
 class BrandNotifier extends Notifier<TenantBrand> {

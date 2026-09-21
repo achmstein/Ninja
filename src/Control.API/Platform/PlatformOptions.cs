@@ -21,6 +21,9 @@ public sealed class PlatformOptions
     /// <summary>Where the control app itself is served; goes into the platform realm's client.</summary>
     public string ControlUrl { get; set; } = "http://localhost:5177";
 
+    /// <summary>The download page for the native till and kitchen apps: the edge serves it on the platform's own domain (deploy/platform/apps).</summary>
+    public string AppsUrl => $"{Scheme}://{Domain}/apps";
+
     /// <summary>Where each tenant's compose project, env and uploads are written on the host.</summary>
     public string TenantsRoot { get; set; } = "/opt/ninja/tenants";
 

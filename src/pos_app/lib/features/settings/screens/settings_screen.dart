@@ -14,6 +14,7 @@ import '../../../core/printing/printer_settings.dart';
 import '../../../core/services/kiosk_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/widgets/connection_card.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -112,6 +113,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(l10n.settings, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
                 ],
               ),
+              const SizedBox(height: 16),
+              const ConnectionCard(),
               const SizedBox(height: 16),
               _OfflineSalesCard(),
               const SizedBox(height: 16),

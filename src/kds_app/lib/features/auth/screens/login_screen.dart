@@ -6,6 +6,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/widgets/app_text.dart';
+import '../../../core/widgets/connection_foot.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Keycloak is the only identity provider and the kitchen display signs in with a
@@ -185,6 +186,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
                   const PoweredBy(),
+                  const ConnectionFoot(),
                 ],
               ),
             ),

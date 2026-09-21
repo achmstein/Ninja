@@ -574,8 +574,8 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
-        "com.ninja.{{slug}}.pos://callback",
-        "com.ninja.{{slug}}.pos://*",
+        "com.ninja.pos://callback",
+        "com.ninja.pos://*",
         "http://localhost/*",
         "http://10.0.2.2/*"
       ],
@@ -619,8 +619,8 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
-        "com.ninja.{{slug}}.kds://callback",
-        "com.ninja.{{slug}}.kds://*",
+        "com.ninja.kds://callback",
+        "com.ninja.kds://*",
         "http://localhost/*",
         "http://10.0.2.2/*"
       ],

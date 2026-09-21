@@ -193,7 +193,9 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     // Dev is Chillax, tenant one; a stamp gets its own values from its env.
     .WithEnvironment("Tenant__Name__En", builder.Configuration["Tenant:Name:En"] ?? "Chillax")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
-    .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site");
+    .WithEnvironment("Tenant__CustomerUrl", builder.Configuration["Tenant:CustomerUrl"] ?? "https://chillax.site")
+    // Where the native apps sign in, as /api/tenant tells them; a stamp says its realm the same way
+    .WithEnvironment("Tenant__AuthUrl", keycloakRealmUrl);
 
 // What an empty database is planted with, and the tenant's locale. This
 // stack is tenant one: its own menu, branches and floor (the E2E suite rings
@@ -328,6 +330,9 @@ var mobileBff = builder.AddYarp("mobile-bff")
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
     .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+
+// The host a till on this machine connects to (adb reverse puts it on the tablet's localhost too)
+branchApi.WithEnvironment("Tenant__ApiUrl", mobileBff.GetEndpoint("http"));
 
 if (!isTestMode)
 {

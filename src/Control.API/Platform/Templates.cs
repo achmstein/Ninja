@@ -160,6 +160,9 @@ public static partial class Templates
                     if (!string.IsNullOrEmpty(tenant.PrimaryColor)) sb.AppendLine($"      Tenant__PrimaryColor: \"{tenant.PrimaryColor}\"");
                     sb.AppendLine($"      Tenant__CustomerUrl: \"{hosts.CustomerUrl}\"");
                     sb.AppendLine($"      Tenant__AuthUrl: \"{platform.KeycloakPublicUrl}/realms/{TenantNaming.Realm(slug)}\"");
+                    // The native till and kitchen apps: the host a tablet connects to, and where it downloads them
+                    sb.AppendLine($"      Tenant__ApiUrl: \"{hosts.ApiUrl}\"");
+                    sb.AppendLine($"      Tenant__AppsUrl: \"{platform.AppsUrl}\"");
                     sb.AppendLine("      Storage__Path: \"/app/uploads\"");
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.UploadsVolume(slug)}:/app/uploads\"");
@@ -294,10 +297,10 @@ public static partial class Templates
         yield return ("/api/catalog/{*any}", "catalog", ["1.0", "1", "2.0"], forwarded);
         yield return ("/api/orders/{*any}", "ordering", v1, none);
         yield return ("/api/places/{*any}", "spaces", v1, none);
+        yield return ("/api/reservations/{*any}", "spaces", v1, none);
         yield return ("/api/stays/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
-        yield return ("/api/reservations/{*any}", "spaces", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);
         yield return ("/api/payroll/{*any}", "payroll", v1, none);
         yield return ("/api/finance/{*any}", "finance", v1, none);
