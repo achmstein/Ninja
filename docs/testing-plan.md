@@ -27,8 +27,8 @@ run), never hand-rolled mocks of the same interface.
 | Control plane | 114 | **37** | 7 | **1 story** | — | control_web: 4 vitest, `e2e/ControlPlane.spec.ts` |
 | **Loyalty** | **6** | **6** | — | | | |
 | **Notification** | — | **6** | — | | | |
-| Catalog | 47 | 13 | — | | in scenarios | — |
-| Ordering | 86 | 11 | — | | in scenarios | — |
+| Catalog | 47 | **7** | — | | in scenarios | — |
+| Ordering | 86 | **9** | — | | in scenarios | — |
 | Sales | 71 | — | — | | in scenarios | — |
 | Spaces | 52 | **6** | — | | Reservation, RoomSession | — |
 | Inventory | 56 | — | — | | InventoryFlow | — |
