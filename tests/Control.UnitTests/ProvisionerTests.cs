@@ -25,6 +25,7 @@ public sealed class ProvisionerTests
     private CollectingAudit _audit = null!;
     private PlatformOptions _platform = null!;
     private Provisioner _provisioner = null!;
+    private DryRunBrokerAdmin _broker = null!;
     private Tenant _tenant = null!;
 
     private sealed class FailingStack : ITenantStack
@@ -75,9 +76,10 @@ public sealed class ProvisionerTests
         _stack = new FailingStack();
         _audit = new CollectingAudit();
         var backups = new BackupService(_box, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        _broker = new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance);
         _provisioner = new Provisioner(_context, options, _box,
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
-            new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
+            _broker,
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             _stack, _audit, backups, NullLogger<Provisioner>.Instance);
 
@@ -102,6 +104,95 @@ public sealed class ProvisionerTests
     private IEnumerable<string> Steps() => _context.Steps.OrderBy(s => s.Id).Select(s => $"{s.Name}:{s.Status}");
 
     private string ComposeOnDisk() => File.ReadAllText(Path.Combine(_root, "blue", "docker-compose.yaml"));
+
+    private async Task OnPlanAsync(TenantPlan plan, TenantStatus status = TenantStatus.Running)
+    {
+        _tenant.Plan = plan;
+        _tenant.Status = status;
+        _tenant.DbPassword ??= TenantNaming.NewPassword();
+        _tenant.BrokerPassword ??= TenantNaming.NewPassword();
+        await _context.SaveChangesAsync();
+    }
+
+    private static readonly string[] ModuleServices = ["inventory", "finance", "payroll", "loyalty", "accounts"];
+
+    private static void AssertShape(string yaml, params string[] present)
+    {
+        foreach (var service in ModuleServices)
+        {
+            if (present.Contains(service)) Assert.Contains($"blue-{service}-api:", yaml, $"{service} is in the plan");
+            else Assert.DoesNotContain($"blue-{service}-api:", yaml, $"{service} is not in the plan");
+        }
+        Assert.Contains("blue-spaces-api:", yaml, "spaces always runs");
+    }
+
+    /// <summary>An upgrade (or a rollback) rewrites the compose from the plan: a Starter café stays without inventory, finance and payroll.</summary>
+    [TestMethod]
+    public async Task An_upgrade_keeps_the_stack_in_the_plans_shape()
+    {
+        await OnPlanAsync(TenantPlan.Starter);
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        Assert.AreEqual("v2", _tenant.ImageTag);
+        AssertShape(ComposeOnDisk(), "loyalty", "accounts");
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Done", "health:Done", "broker-lockdown:Done" }, Steps().ToList());
+    }
+
+    /// <summary>Up to Pro: every service is stamped and no queue is touched; down to Free: five go, with their queues.</summary>
+    [TestMethod]
+    public async Task A_plan_going_up_stamps_every_service_and_going_down_takes_five_away_with_their_queues()
+    {
+        await OnPlanAsync(TenantPlan.Pro);
+        await _provisioner.EntitlementsAsync(_tenant.Id, CancellationToken.None);
+        AssertShape(ComposeOnDisk(), ModuleServices);
+        Assert.IsEmpty(_broker.DeletedQueues, "on Pro every service runs; nothing to drop");
+        Assert.AreEqual("every service runs", _context.Steps.Single(s => s.Name == "queues").Output);
+
+        await OnPlanAsync(TenantPlan.Free);
+        await _provisioner.EntitlementsAsync(_tenant.Id, CancellationToken.None);
+        AssertShape(ComposeOnDisk());
+        CollectionAssert.AreEquivalent(new[] { "blue/Inventory", "blue/Payroll", "blue/Finance", "blue/Loyalty", "blue/Accounts" }, _broker.DeletedQueues);
+        Assert.IsTrue(_shell.Commands.Count(c => c.Contains("compose -p ninja-blue up -d --remove-orphans")) >= 2, "each change is an up; the orphans go with it");
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+    }
+
+    /// <summary>A plan that changes while the stack is down rewrites the files and drops the queues now; the start applies the shape and tells Branch.API.</summary>
+    [TestMethod]
+    public async Task A_plan_change_while_stopped_waits_for_the_start_to_take_the_containers_down()
+    {
+        await OnPlanAsync(TenantPlan.Free, TenantStatus.Stopped);
+
+        await _provisioner.EntitlementsAsync(_tenant.Id, CancellationToken.None);
+        CollectionAssert.AreEqual(new[] { "stack:Done", "queues:Done" }, Steps().ToList(), "no health and no push while the stack is down");
+        Assert.AreEqual("files rewritten; applied on start", _context.Steps.Single(s => s.Name == "stack").Output);
+        Assert.AreEqual(5, _broker.DeletedQueues.Count);
+        Assert.IsFalse(_shell.Commands.Any(c => c.Contains("compose -p ninja-blue up")), "a stopped stack is not started by a plan change");
+        AssertShape(ComposeOnDisk());
+
+        await _provisioner.ComposeAsync(_tenant.Id, "start", CancellationToken.None);
+        CollectionAssert.AreEqual(new[] { "stack:Done", "queues:Done", "start:Done", "queues:Done", "health:Done", "entitlements:Done" }, Steps().ToList());
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("compose -p ninja-blue up -d --remove-orphans")), "the start is an up, so the orphans go");
+        Assert.AreEqual(10, _broker.DeletedQueues.Count, "the start drops them again; gone twice is nothing");
+    }
+
+    /// <summary>Stop and start on a plan: the shape holds, and the start tells Branch.API once the stack answers.</summary>
+    [TestMethod]
+    public async Task A_stop_and_a_start_keep_the_plans_shape()
+    {
+        await OnPlanAsync(TenantPlan.Starter);
+
+        await _provisioner.ComposeAsync(_tenant.Id, "stop", CancellationToken.None);
+        Assert.AreEqual(TenantStatus.Stopped, _tenant.Status);
+        await _provisioner.ComposeAsync(_tenant.Id, "start", CancellationToken.None);
+
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        CollectionAssert.AreEqual(new[] { "stop:Done", "start:Done", "queues:Done", "health:Done", "entitlements:Done" }, Steps().ToList());
+        AssertShape(ComposeOnDisk(), "loyalty", "accounts");
+        CollectionAssert.AreEquivalent(new[] { "blue/Inventory", "blue/Payroll", "blue/Finance" }, _broker.DeletedQueues);
+    }
 
     [TestMethod]
     public async Task A_plan_change_restamps_the_stack_without_the_modules_it_lost_and_drops_their_queues()
