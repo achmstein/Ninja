@@ -312,7 +312,7 @@ export function Floor() {
   const pickPlace = (place: PlaceViewModel) => {
     const id = toNumber(place.id)
     const reservedNow = isHolding(reservationForPlace(place.id))
-    if (!isTimed(place) && !reservedNow) openBill(place)
+    if (!isTimed(place, features.timeBilling) && !reservedNow) openBill(place)
     else if (
       Number(place.status) === PLACE_AVAILABLE &&
       !stayForPlace(place.id) &&

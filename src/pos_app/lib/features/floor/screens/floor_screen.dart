@@ -199,7 +199,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final reservedNow = ref.read(placesProvider.notifier).reservationHolding(placeId) != null;
     // A party seated on their reservation: the panel, where the till clears the table or opens its bill
     final seatedNow = room?.seatedReservation != null;
-    if (room != null && !room.isTimed && !reservedNow && !seatedNow) {
+    // With the clock off, a place that kept its tariff from a bigger plan is a plain table here
+    final timed = room != null && room.isTimed && ref.read(featuresProvider).timeBilling;
+    if (room != null && !timed && !reservedNow && !seatedNow) {
       await _pickTable(room);
       return;
     }
@@ -324,6 +326,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                               reservations: placesState.openReservations,
                               tickets: tickets.value ?? const [],
                               busy: _openingTable,
+                              timeBilling: features.timeBilling,
                               onNewTab: _newTab,
                               onPick: (place) => _pickPlace(place.id),
                             ),

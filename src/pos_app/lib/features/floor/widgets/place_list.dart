@@ -19,6 +19,8 @@ class PlaceList extends StatefulWidget {
   final List<TicketSummary> tickets;
   final List<Reservation> reservations;
   final bool busy;
+  /// The café bills time: without it a place with a tariff is a plain table
+  final bool timeBilling;
   final VoidCallback onNewTab;
   final ValueChanged<Place> onPick;
 
@@ -29,6 +31,7 @@ class PlaceList extends StatefulWidget {
     this.reservations = const [],
     required this.tickets,
     required this.busy,
+    this.timeBilling = true,
     required this.onNewTab,
     required this.onPick,
   });
@@ -141,9 +144,10 @@ class _PlaceListState extends State<PlaceList> {
               Builder(builder: (context) {
                 // A place with a clock has a state; one without is only
                 // ever free, unless somebody reserved it and is on their way
-                final session = place.isTimed ? _stayForPlace(place.id) : null;
+                final timed = place.isTimed && widget.timeBilling;
+                final session = timed ? _stayForPlace(place.id) : null;
                 final reservation = _reservationHolding(place.id);
-                final maintenance = place.isTimed && place.status == PlaceStatus.outOfService;
+                final maintenance = timed && place.status == PlaceStatus.outOfService;
                 // The dot already says free; text only when there is
                 // something to add
                 final detail = session?.status == StayStatus.running && session?.startedAt != null
@@ -155,7 +159,7 @@ class _PlaceListState extends State<PlaceList> {
                             : null;
                 return _PlaceRow(
                   leading: _StatusDot(
-                      color: place.isTimed || place.status == PlaceStatus.held ? _placeDot(place.status) : AppColors.successColor),
+                      color: timed || place.status == PlaceStatus.held ? _placeDot(place.status) : AppColors.successColor),
                   name: place.name.localized(context),
                   detail: detail,
                   icon: place.kind.icon,

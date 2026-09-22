@@ -52,9 +52,16 @@ export function isRoom(place: PlaceViewModel | null | undefined): boolean {
   return Number(place?.kind ?? PLACE_ROOM) === PLACE_ROOM
 }
 
-/** A place with a clock: it has a tariff, so it runs stays. */
-export function isTimed(place: PlaceViewModel | null | undefined): boolean {
-  return Boolean(place?.isTimed)
+/**
+ * A place with a clock: it has a tariff, so it runs stays. Pass the time
+ * billing switch where the café's is at hand: with it off, a place that
+ * kept its tariff from a bigger plan is a plain table here.
+ */
+export function isTimed(
+  place: PlaceViewModel | null | undefined,
+  timeBilling = true,
+): boolean {
+  return timeBilling && Boolean(place?.isTimed)
 }
 
 export function tariffOptions(

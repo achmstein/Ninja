@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -164,6 +165,8 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     final session = placesState.openStays.where((s) => s.placeId == widget.placeId && s.isRunning).firstOrNull;
     final reservation = ref.read(placesProvider.notifier).reservationHolding(widget.placeId);
     if (room == null) return const SizedBox(height: 120);
+    // With the clock off, a place that kept its tariff from a bigger plan is a plain table here
+    final timed = room.isTimed && ref.watch(featuresProvider).timeBilling;
 
     final now = DateTime.now();
     final active = session != null && session.isRunning;
@@ -390,7 +393,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           Center(child: circle(FIcons.clock, AppColors.amber500, AppColors.amber500.withValues(alpha: 0.1))),
           const SizedBox(height: 12),
-          Text(room.isTimed ? l10n.readyToStart : l10n.statusReserved,
+          Text(timed ? l10n.readyToStart : l10n.statusReserved,
               textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           if ((reservation.customerName ?? '').isNotEmpty)
@@ -451,7 +454,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: !room.isTimed
+                child: !timed
                     ? bigButton(l10n.seatParty,
                         icon: const Icon(FIcons.circleCheck, size: 20), onPress: _busy ? null : () => _seatAtTable(reservation))
                     : reservation.startOnConfirm

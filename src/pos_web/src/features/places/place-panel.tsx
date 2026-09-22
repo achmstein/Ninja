@@ -38,6 +38,7 @@ import {
 } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -95,6 +96,7 @@ export function PlacePanel({
   onSeated,
 }: PlacePanelProps) {
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const locale = useLocale()
   const money = useMoney()
@@ -115,7 +117,7 @@ export function PlacePanel({
   const held = !running && reservation != null && isHolding(reservation)
   // A party seated on their reservation at a plain table: theirs until the till clears it
   const seated = !running ? (place?.seatedReservation ?? null) : null
-  const timed = isTimed(place)
+  const timed = isTimed(place, features.timeBilling)
   const outOfService = Number(place?.status) === PLACE_OUT_OF_SERVICE
   const stayId = toNumber(stay?.id)
   const reservationId = toNumber(reservation?.id)

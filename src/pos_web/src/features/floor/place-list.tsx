@@ -30,6 +30,7 @@ import {
   placeStatusDot,
 } from '@/features/places/status'
 import { useSecondsClock } from '@/features/places/use-places'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -95,6 +96,7 @@ export function PlaceList({
   onPick,
 }: PlaceListProps) {
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const [term, setTerm] = useState('')
   const nowMs = useSecondsClock(true)
@@ -165,7 +167,7 @@ export function PlaceList({
               <Heading>{group.label}</Heading>
               {group.places.map((place) => {
                 const Icon = kindIcon[group.kind] ?? DoorOpen
-                const timed = isTimed(place)
+                const timed = isTimed(place, features.timeBilling)
                 const stay = timed ? stayForPlace(place.id) : undefined
                 const reservation = reservationForPlace(place.id)
                 const reservedNow = isHolding(reservation)
