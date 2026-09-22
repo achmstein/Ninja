@@ -15,17 +15,22 @@ public sealed class SubscriptionService(ControlContext context, ProvisioningQueu
 {
     private PlatformOptions Platform => options.Value;
 
-    /// <summary>A new plan or add-ons: saved, and the stack told when there is one to tell.</summary>
+    /// <summary>
+    /// A new plan or add-ons: saved, and the stack told when there is one to
+    /// tell. Told even when nothing changed: a stack that never heard its
+    /// entitlements (stamped before plans, or by hand) keeps every switch
+    /// usable until it does, and a save is how a platform admin sets that
+    /// right without restarting it.
+    /// </summary>
     public async Task ApplyAsync(Tenant tenant, TenantPlan plan, IEnumerable<Module> addons, int? graceDays, CancellationToken ct)
     {
-        var before = PlanCatalog.Entitlements(tenant);
         tenant.Plan = plan;
         tenant.Addons = PlanCatalog.NormalizeAddons(plan, addons);
         tenant.GraceDays = graceDays;
         await context.SaveChangesAsync(ct);
-        var after = PlanCatalog.Entitlements(tenant);
-        await audit.WriteAsync("subscription.changed", tenant.Slug, new { plan, addons = tenant.Addons.Select(PlanCatalog.Key), graceDays, entitled = after.Select(PlanCatalog.Key) }, ct);
-        if (!after.SetEquals(before) && tenant.Status is TenantStatus.Running or TenantStatus.Stopped or TenantStatus.Suspended)
+        var entitled = PlanCatalog.Entitlements(tenant);
+        await audit.WriteAsync("subscription.changed", tenant.Slug, new { plan, addons = tenant.Addons.Select(PlanCatalog.Key), graceDays, entitled = entitled.Select(PlanCatalog.Key) }, ct);
+        if (tenant.Status is TenantStatus.Running or TenantStatus.Stopped or TenantStatus.Suspended)
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "entitlements"), ct);
     }
 

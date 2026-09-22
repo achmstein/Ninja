@@ -280,7 +280,7 @@ function PlanCard({
   }, [plan])
   const entitled = new Set<ModuleName>(isDemo ? MODULES : [...included, ...addons])
   const graceValue = Number(grace)
-  const changed = plan !== currentPlan || addons.join() !== currentAddons.map(moduleName).sort().join() || graceValue !== graceDays
+  // Saving with nothing changed is still a save: it pushes the entitlements again, for a stack that drifted from them
   const valid = Number.isInteger(graceValue) && graceValue >= 0 && graceValue <= 90
 
   return (
@@ -345,7 +345,7 @@ function PlanCard({
           {isDemo ? t('demoHasEverything') : `${t('entitlements')}: ${MODULES.filter((m) => entitled.has(m)).map((m) => t(moduleLabelKey[m])).join(', ')}`}
         </div>
         <div className='flex justify-end'>
-          <Button disabled={!changed || !valid || isPending} onClick={() => onSave(plan, addons, graceValue)}>
+          <Button disabled={!valid || isPending} onClick={() => onSave(plan, addons, graceValue)}>
             {isPending && <Spinner />}
             {t('save')}
           </Button>

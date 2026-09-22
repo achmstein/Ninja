@@ -77,6 +77,7 @@ import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
 import { HealthTab } from './tabs/health'
 import { OverviewTab } from './tabs/overview'
+import { JobLabel } from '@/features/platform/queue-table'
 
 // Recharts and the brand editor only load once their tab opens
 const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
@@ -117,8 +118,13 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
 
   const query = useQuery({
     ...getTenantOptions({ path: { slug } }),
-    refetchInterval: (q) =>
-      q.state.data && isBusy(tenantStatus(q.state.data.status)) ? 5_000 : false,
+    // While the stack moves, and while a job waits to move it: an upgrade is
+    // Running when queued, Upgrading a few seconds later and Running again
+    // twenty seconds after that; polling on the status alone shows none of it
+    refetchInterval: (q) => {
+      const d = q.state.data
+      return d && (isBusy(tenantStatus(d.status)) || d.jobs.length > 0) ? 3_000 : false
+    },
   })
 
   const [dialog, setDialog] = useState<OpenDialog>(null)
@@ -222,6 +228,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const name = (language === 'ar' ? tenant.nameAr : tenant.nameEn) || tenant.nameEn
   const busy =
     isBusy(status) ||
+    tenant.jobs.some((j) => j.lane === 'Stamp') ||
     provision.isPending ||
     stop.isPending ||
     start.isPending ||
@@ -244,6 +251,15 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
             {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && <SubscriptionBadge status={tenant.subscription.status} />}
             {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
+            {tenant.jobs.map((job) => (
+              <Badge key={job.id} variant='outline' className='gap-1.5'>
+                <Spinner className='size-3' />
+                <JobLabel job={job} />
+                <span className='text-muted-foreground'>
+                  · {job.status === 'Running' ? t('laneRunning') : t('positionInLine', { position: job.position ?? 0 })}
+                </span>
+              </Badge>
+            ))}
             <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
               {tenant.slug}
             </span>
