@@ -50,7 +50,7 @@ export default defineConfig({
     {
       // The control app against the dry-run AppHost; it signs in on its own
       name: 'control plane',
-      testMatch: ['**/ControlPlane.spec.ts'],
+      testMatch: ['**/ControlPlane.spec.ts', '**/ControlPlanePlan.spec.ts'],
     }
     // {
     //   name: 'chromium',

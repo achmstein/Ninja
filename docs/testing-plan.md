@@ -24,22 +24,22 @@ run), never hand-rolled mocks of the same interface.
 
 | Area | Unit | Functional | Integration | Acceptance | E2E | UI |
 |---|---|---|---|---|---|---|
-| Control plane | 114 | **37** | 7 | **1 story** | — | control_web: 4 vitest, `e2e/ControlPlane.spec.ts` |
+| Control plane | 114 | **37** | 7 | **1 story** | — | control_web: 4 vitest, `e2e/ControlPlane*.spec.ts` (**2**) |
 | **Loyalty** | **6** | **6** | — | | | |
 | **Notification** | — | **6** | — | | | |
 | Catalog | 47 | **7** | — | | in scenarios | — |
 | Ordering | 86 | **9** | — | | in scenarios | — |
 | Sales | 71 | **17** | — | | in scenarios | — |
-| Spaces | 52 | **6** | — | | Reservation, RoomSession | — |
+| Spaces | 52 | **6** | — | | Reservation, RoomSession, **SmallerPlan** | — |
 | Inventory | 56 | **8** | — | | InventoryFlow | — |
 | Finance | 18 | **16** | — | | PayrollAndProfit | — |
 | Payroll | 12 | **12** | — | | PayrollAndProfit | — |
-| Branch | 15 | **10** | — | | — | — |
+| Branch | 15 | **10** | — | | **SmallerPlan** | — |
 | Identity | 13 | **8** | — | | — | — |
 | Accounts | 7 | **7** | — | | — | — |
 | Contracts (events, gateway table) | 8 | | | | | |
-| admin_web / pos_web / kds_web / client_web | 2 / 0 / 0 / 0 vitest | | | | | `e2e/`: 3 Playwright specs |
-| pos_app / client_app / kds_app | 17 / 2 / 6 widget | | | | | |
+| admin_web / pos_web / kds_web / client_web | **39 / 17 / 0 / 24** vitest | | | | | `e2e/`: 3 Playwright specs |
+| pos_app / client_app / kds_app | **62 / 20 / 29** widget | | | | | |
 
 What the layers cost: the control plane's functional suite is 23 s for 37
 scenarios, a service's is ~12 s, the acceptance story is 50 s against a
@@ -84,11 +84,14 @@ the apps are written against.
 3. **A smaller plan end to end.** One E2E scenario where the stack runs a
    Starter café: the gateway answers 402 for inventory, the admin app hides
    it, Spaces refuses a tariff.
-4. **UI.** vitest for the pure logic each web app carries (money, the visit
-   tab rule, `isTimed` with the clock off, feature gates); component tests
-   for `FeatureGate` / `RequireFeature`; Playwright flows for the plan
-   gating in admin and the control app's plan tab; Flutter widget tests for
-   the gated screens (cart points, reserve, the KDS lock).
+4. **UI.** The pure logic each app carries is covered (the floor's clock
+   and its money, the visit tab, the customer's bill, the café's day, the
+   filter clamp; the KDS lock, the POS floor list, the customer's room
+   row). What is not: component tests for `FeatureGate` / `RequireFeature`
+   themselves, which need a DOM and a testing library neither web app has
+   yet, and a Playwright flow for the plan gating in admin — it would have
+   to switch a module off on the café the dev stack runs, and put it back.
+   `SmallerPlanScenario` does that at the API level instead.
 5. **The control plane's remaining corners**: the brand proxy and its image
    slots, the seed images, metrics, containers, and the demo-expiry sweep.
 
@@ -99,7 +102,7 @@ the apps are written against.
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
 | 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** — 68 scenarios and the contract tests |
-| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
+| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | **written** — the E2E scenario, the control app's plan spec, and the app tests above; the two that need a running stack have not been run here |
 
 Each phase lands as its own commits and its own CI job where docker is
 needed: `control-integration`, `control-functional` and
