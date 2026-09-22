@@ -54,6 +54,7 @@ public static class KnownEvents
         new("StockConsumed", "Inventory", ["Finance"]),
         new("StockLow", "Inventory", ["Notification"]),
         new("TabPaymentRecorded", "Sales", ["Accounts"]),
+        new("TenantFeaturesChanged", "Branch", ["Spaces"]),
         new("TicketRefunded", "Sales", ["Finance", "Loyalty", "Accounts"]),
         new("TicketSettled", "Sales", ["Finance", "Accounts", "Notification"]),
         new("TicketUpdated", "Sales", ["Notification"]),

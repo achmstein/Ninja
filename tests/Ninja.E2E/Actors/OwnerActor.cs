@@ -359,7 +359,52 @@ public sealed class OwnerActor(ApiClient api)
 
     // --- Customers -------------------------------------------------------------
 
+    // --- The brand and its switches ----------------------------------------------
+
+    /// <summary>What every app reads at boot: the name, the colour, the switches and what the plan allows.</summary>
+    public Task<TenantView> TenantAsync(CancellationToken ct) => Api.GetAsync<TenantView>("/api/tenant", ct);
+
+    /// <summary>
+    /// The Brand page's switches (admin_web brand tab). An owner may switch
+    /// an entitled module off; switching an unentitled one on does nothing,
+    /// because Branch clamps what it is given to the plan.
+    /// </summary>
+    public async Task<TenantView> SetFeaturesAsync(FeatureSwitches features, CancellationToken ct)
+    {
+        var tenant = await TenantAsync(ct);
+        return await Api.PutAsync<TenantView>("/api/tenant", new
+        {
+            name = tenant.Name,
+            primaryColor = tenant.PrimaryColor,
+            customerUrl = (string?)null,
+            features,
+        }, ct);
+    }
+
     // --- Places -----------------------------------------------------------------
+
+    /// <summary>A place the owner adds from the floor plan; the answer is its id.</summary>
+    public async Task<int> CreatePlaceAsync(string nameEn, CancellationToken ct, int kind = 0, object? tariff = null, bool? reservable = null)
+    {
+        using var r = await Api.PostAsync("/api/places", new { kind, name = new { en = nameEn }, tariff, reservable }, ct);
+        return await r.Content.ReadFromJsonAsync<int>(ApiClient.Json, ct);
+    }
+
+    /// <summary>The same, unchecked: for the calls a café's plan is supposed to refuse.</summary>
+    public Task<HttpResponseMessage> TryCreatePlaceAsync(string nameEn, CancellationToken ct, int kind = 0, object? tariff = null, bool? reservable = null)
+        => Api.PostAsync("/api/places", new { kind, name = new { en = nameEn }, tariff, reservable }, ct, ensureSuccess: false);
+
+    /// <summary>Give a place a rate, change it, or (null) take it away.</summary>
+    public Task<HttpResponseMessage> TrySetTariffAsync(int placeId, object? tariff, CancellationToken ct)
+        => Api.PutAsync($"/api/places/{placeId}/tariff", new { tariff }, ct, ensureSuccess: false);
+
+    public Task<HttpResponseMessage> TrySetReservableAsync(int placeId, bool reservable, CancellationToken ct)
+        => Api.PutAsync($"/api/places/{placeId}/reservable", new { reservable }, ct, ensureSuccess: false);
+
+    public async Task DeletePlaceAsync(int placeId, CancellationToken ct)
+    {
+        using var r = await Api.DeleteAsync($"/api/places/{placeId}", ct, ensureSuccess: false);
+    }
 
     /// <summary>The owner opens a place to reservations, or closes it (place-dialog.tsx's switch).</summary>
     public async Task SetReservableAsync(int placeId, bool reservable, CancellationToken ct)

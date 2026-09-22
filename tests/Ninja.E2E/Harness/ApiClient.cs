@@ -72,6 +72,13 @@ public sealed class ApiClient : IDisposable
     public Task<HttpResponseMessage> PutAsync(string path, object? body, CancellationToken ct, Guid? requestId = null, bool ensureSuccess = true)
         => SendAsync(HttpMethod.Put, path, body, ct, requestId, ensureSuccess);
 
+    /// <summary>A PUT whose answer the caller reads, the way a settings form reads the saved record back.</summary>
+    public async Task<T> PutAsync<T>(string path, object? body, CancellationToken ct, Guid? requestId = null)
+    {
+        using var response = await SendAsync(HttpMethod.Put, path, body, ct, requestId);
+        return await ReadAsync<T>(response, ct);
+    }
+
     public Task<HttpResponseMessage> PatchAsync(string path, object? body, CancellationToken ct, Guid? requestId = null, bool ensureSuccess = true)
         => SendAsync(HttpMethod.Patch, path, body, ct, requestId, ensureSuccess);
 
