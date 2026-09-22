@@ -35,7 +35,7 @@ run), never hand-rolled mocks of the same interface.
 | Finance | 18 | **16** | — | | PayrollAndProfit | — |
 | Payroll | 12 | **12** | — | | PayrollAndProfit | — |
 | Branch | 15 | **10** | — | | — | — |
-| Identity | 13 | — | — | | — | — |
+| Identity | 13 | **8** | — | | — | — |
 | Accounts | 7 | **7** | — | | — | — |
 | Contracts (events, gateway table) | 8 | | | | | |
 | admin_web / pos_web / kds_web / client_web | 2 / 0 / 0 / 0 vitest | | | | | `e2e/`: 3 Playwright specs |
@@ -55,6 +55,10 @@ The pieces every new suite builds on:
   on its dry-run box.
 - `tests/Control.AcceptanceTests` — the platform on a real docker host,
   opt-in with `NINJA_ACCEPTANCE=1`.
+- `tests/Identity.FunctionalTests/FakeKeycloak.cs` — Keycloak's admin REST
+  API in the test process, for the one service whose work is all done
+  through it: the scenarios drive Identity's door and then read what was
+  written behind it.
 
 Two habits worth keeping. A suite declares the shape it reads off the wire
 (a `…View` record of its own) rather than reusing the service's DTOs: a
@@ -65,11 +69,12 @@ the apps are written against.
 
 ## The gaps, by weight
 
-1. **Front doors for the rest of the services**: Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so
-   each is scenarios and nothing else. Spaces has its places covered; its
-   reservations and stays are next in the same suite; Inventory's suite
-   covers the storeroom (deliveries, waste, counts, recipes), and its
-   transfers and suppliers are next in it.
+1. **The corners of the front doors already covered**: Spaces has its
+   places; its reservations and stays are next in the same suite.
+   Inventory's suite covers the storeroom (deliveries, waste, counts,
+   recipes); its transfers and suppliers are next in it. Identity's covers
+   the door onto Keycloak; the account a customer deletes and the email
+   they change are next in it.
 2. **Contracts.** Every integration event a service publishes has a
    consumer copy with the same shape (today: pairing only); the features
    event; the gateway route table (exists).
@@ -90,7 +95,7 @@ the apps are written against.
 |---|---|---|
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
-| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | all but Identity done |
+| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** except the event contracts |
 | 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
 Each phase lands as its own commits and its own CI job where docker is
