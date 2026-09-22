@@ -7,13 +7,31 @@ public class IntegrationEventLogService<TContext> : IIntegrationEventLogService,
     private readonly TContext _context;
     private readonly Type[] _eventTypes;
 
+    /// <summary>
+    /// The event types the outbox can read back, found once for the
+    /// process: the service's own and every other Ninja assembly loaded
+    /// with it. The entry assembly alone is not enough — a service hosted
+    /// by something else (a functional test, a tool) starts from an
+    /// assembly that has never heard of its events, and the outbox would
+    /// then fail to deserialize what it had just written.
+    /// </summary>
+    private static readonly Lazy<Type[]> KnownEventTypes = new(() =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => !a.IsDynamic && !(a.GetName().Name?.StartsWith("System.", StringComparison.Ordinal) ?? false)
+                                     && !(a.GetName().Name?.StartsWith("Microsoft.", StringComparison.Ordinal) ?? false))
+            .SelectMany(a =>
+            {
+                try { return a.GetTypes(); }
+                catch (ReflectionTypeLoadException ex) { return ex.Types.Where(t => t is not null)!; }
+            })
+            .Where(t => t is not null && !t.IsAbstract && t.IsAssignableTo(typeof(IntegrationEvent)))
+            .Distinct()
+            .ToArray()!, isThreadSafe: true);
+
     public IntegrationEventLogService(TContext context)
     {
         _context = context;
-        _eventTypes = Assembly.Load(Assembly.GetEntryAssembly().FullName)
-            .GetTypes()
-            .Where(t => t.Name.EndsWith(nameof(IntegrationEvent)))
-            .ToArray();
+        _eventTypes = KnownEventTypes.Value;
     }
 
     public async Task<IEnumerable<IntegrationEventLogEntry>> RetrieveEventLogsPendingToPublishAsync(Guid transactionId)

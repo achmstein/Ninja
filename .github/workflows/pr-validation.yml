@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [Loyalty, Notification, Branch]
+        service: [Loyalty, Notification, Branch, Spaces]
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET (global.json)
