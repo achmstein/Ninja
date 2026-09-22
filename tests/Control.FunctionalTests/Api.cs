@@ -56,6 +56,47 @@ public sealed class Api
 
     public async Task<List<AuditEntry>> AuditAsync(string slug) => await GetAsync<List<AuditEntry>>($"/api/control/audit?slug={slug}&take=200");
 
+    public Task<TenantDetail> UpdateAsync(string slug, UpdateTenantRequest record) => PutAsync<TenantDetail>($"/api/control/tenants/{slug}", record);
+    public Task<TenantDetail> ExtendAsync(string slug, int days) => PostAsync<TenantDetail>($"/api/control/tenants/{slug}/extend", new ExtendRequest(days), HttpStatusCode.OK);
+    public Task<SubscriptionDetail> RecordPaymentAsync(string slug, decimal amount, DateTimeOffset periodEnd, string currency = "EGP", string? reference = null)
+        => PostAsync<SubscriptionDetail>($"/api/control/tenants/{slug}/subscription/payments", new RecordPaymentRequest(amount, currency, periodEnd, null, reference), HttpStatusCode.Created);
+    public Task SuspendAsync(string slug) => AcceptedAsync($"/api/control/tenants/{slug}/subscription/suspend");
+    public Task ResumeAsync(string slug) => AcceptedAsync($"/api/control/tenants/{slug}/subscription/resume");
+    public Task RollbackAsync(string slug) => AcceptedAsync($"/api/control/tenants/{slug}/rollback");
+    public Task SecureAsync(string slug, bool rotate) => AcceptedAsync($"/api/control/tenants/{slug}/secure?rotate={(rotate ? "true" : "false")}");
+    public Task BackupAsync(string slug) => AcceptedAsync($"/api/control/tenants/{slug}/backups");
+    public Task<List<BackupInfo>> BackupsAsync(string slug) => GetAsync<List<BackupInfo>>($"/api/control/tenants/{slug}/backups");
+    public Task<TenantDetail> RestoreAsync(string slug, string id, string into) => PostAsync<TenantDetail>($"/api/control/tenants/{slug}/backups/{id}/restore", new RestoreRequest(into, Force: true), HttpStatusCode.Created);
+    public Task<QueueResponse> JobsAsync() => GetAsync<QueueResponse>("/api/control/platform/jobs?take=200");
+    public Task<PlatformResponse> PlatformAsync() => GetAsync<PlatformResponse>("/api/control/platform");
+    /// <summary>The box read now, not the last snapshot the monitor took.</summary>
+    public Task<CapacityResponse> CapacityAsync() => GetAsync<CapacityResponse>("/api/control/platform/capacity?refresh=true");
+    public Task<PlanCatalogResponse> PlansAsync() => GetAsync<PlanCatalogResponse>("/api/control/platform/plans");
+    public Task<UpdatesResponse> UpdatesAsync() => GetAsync<UpdatesResponse>("/api/control/platform/updates");
+    public Task<FleetUpgradeResponse> FleetUpgradeAsync(string tag, string? canary, params string[] slugs)
+        => PostAsync<FleetUpgradeResponse>("/api/control/platform/upgrade", new FleetUpgradeRequest(tag, canary, slugs.Length == 0 ? null : slugs), HttpStatusCode.Accepted);
+    public Task<List<TenantSummary>> ListAsync() => GetAsync<List<TenantSummary>>("/api/control/tenants");
+    public Task<ImpersonationLink> ImpersonateAsync(string slug) => PostAsync<ImpersonationLink>($"/api/control/tenants/{slug}/impersonate", new { }, HttpStatusCode.OK);
+    public Task<MailStatusResponse> MailAsync() => GetAsync<MailStatusResponse>("/api/control/platform/mail");
+    public Task<List<ServiceHealth>> HealthAsync(string slug) => GetAsync<List<ServiceHealth>>($"/api/control/tenants/{slug}/health");
+    public Task<BrandDto> BrandAsync(string slug) => GetAsync<BrandDto>($"/api/control/tenants/{slug}/brand");
+    public Task<BrandDto> SetBrandAsync(string slug, UpdateBrandRequest brand) => PutAsync<BrandDto>($"/api/control/tenants/{slug}/brand", brand);
+
+    /// <summary>A raw response, for the endpoints that answer with a file, a redirect or plain text.</summary>
+    public Task<HttpResponseMessage> RawAsync(HttpMethod method, string path, HttpContent? content = null)
+        => _http.SendAsync(new HttpRequestMessage(method, path) { Content = content });
+
+    /// <summary>A client that does not follow redirects, for the links the API hands out.</summary>
+    public static HttpClient NoRedirects() => ControlPlane.Factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+    /// <summary>The same moment: a timestamptz keeps microseconds, a DateTimeOffset in memory keeps ticks.</summary>
+    public static void AssertSameInstant(DateTimeOffset? expected, DateTimeOffset? actual, string because)
+        => Assert.IsTrue(expected.HasValue == actual.HasValue && (!expected.HasValue || (expected.Value - actual!.Value).Duration() < TimeSpan.FromMilliseconds(1)),
+            $"{because}: expected {expected:O}, got {actual:O}");
+
+    /// <summary>What the dry run stamped as the tenant's .env.</summary>
+    public static string EnvOnDisk(string slug) => File.ReadAllText(Path.Combine(ControlPlane.TenantsRoot, slug, ".env"));
+
     /// <summary>A refusal, as the API phrases it.</summary>
     public async Task<(HttpStatusCode Status, string Detail)> RefusedAsync(HttpMethod method, string path, object? payload = null)
     {
