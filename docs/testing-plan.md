@@ -30,11 +30,11 @@ run), never hand-rolled mocks of the same interface.
 | Catalog | 47 | 13 | — | | in scenarios | — |
 | Ordering | 86 | 11 | — | | in scenarios | — |
 | Sales | 71 | — | — | | in scenarios | — |
-| Spaces | 52 | — | — | | Reservation, RoomSession | — |
+| Spaces | 52 | **6** | — | | Reservation, RoomSession | — |
 | Inventory | 56 | — | — | | InventoryFlow | — |
 | Finance | 18 | — | — | | PayrollAndProfit | — |
 | Payroll | 12 | — | — | | PayrollAndProfit | — |
-| Branch | 15 | — | — | | — | — |
+| Branch | 15 | **10** | — | | — | — |
 | Identity | 13 | — | — | | — | — |
 | Accounts | 7 | — | — | | — | — |
 | Contracts (events, gateway table) | 8 | | | | | |
@@ -65,12 +65,11 @@ the apps are written against.
 
 ## The gaps, by weight
 
-1. **Front doors for the rest of the services.** Order by risk: Branch (the
-   switches and the entitlements clamp, the module-off page, the features
-   event), Spaces (the module checks on places, holds, stays), Sales
-   (settle, refund, shifts), then Inventory, Finance, Payroll, Accounts,
-   Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so each is
-   scenarios and nothing else.
+1. **Front doors for the rest of the services**: Sales (settle, refund,
+   shifts), then Inventory, Finance, Payroll, Accounts, Identity. Each is a
+   `X.FunctionalTests` on `Ninja.Testing`, so each is scenarios and nothing
+   else. Spaces has its places covered; its reservations and stays are next
+   in the same suite.
 2. **Contracts.** Every integration event a service publishes has a
    consumer copy with the same shape (today: pairing only); the features
    event; the gateway route table (exists).
@@ -90,7 +89,7 @@ the apps are written against.
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
-| 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | Loyalty and Notification **done**; Branch and Spaces next |
+| 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
 | 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | |
 | 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
