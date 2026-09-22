@@ -24,7 +24,7 @@ run), never hand-rolled mocks of the same interface.
 
 | Area | Unit | Functional | Integration | Acceptance | E2E | UI |
 |---|---|---|---|---|---|---|
-| Control plane | 114 | **37** | 7 | **1 story** | — | control_web: 4 vitest, `e2e/ControlPlane*.spec.ts` (**2**) |
+| Control plane | 114 | **37** | 7 | **1 story** | — | control_web: **15** vitest, `e2e/ControlPlane*.spec.ts` (**2**) |
 | **Loyalty** | **6** | **6** | — | | | |
 | **Notification** | — | **6** | — | | | |
 | Catalog | 47 | **7** | — | | in scenarios | — |

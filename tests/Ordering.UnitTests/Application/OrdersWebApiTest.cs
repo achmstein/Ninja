@@ -32,6 +32,8 @@ public class OrdersWebApiTest
         _branchSettingsMock.IsOrderingEnabledAsync(Arg.Any<int>()).Returns(true);
         // No place is known unless a test says otherwise (fail-open, like a fresh deployment)
         _placesMock = Substitute.For<IPlaceQueries>();
+        // The order is there unless a test says otherwise: confirm and cancel look it up first
+        _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns(new OrderOwnership("a-buyer", null));
     }
 
     [TestMethod]
@@ -47,6 +49,34 @@ public class OrdersWebApiTest
 
         // Assert
         Assert.IsInstanceOfType<Ok>(result.Result);
+    }
+
+    [TestMethod]
+    public async Task Cancel_an_order_nobody_placed_is_not_found()
+    {
+        // Arrange: the till asks about an order the service does not have
+        _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns((OrderOwnership?)null);
+
+        // Act
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), orderServices);
+
+        // Assert: not found, not a five hundred
+        Assert.IsInstanceOfType<NotFound<string>>(result.Result);
+    }
+
+    [TestMethod]
+    public async Task Confirm_an_order_nobody_placed_is_not_found()
+    {
+        // Arrange
+        _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns((OrderOwnership?)null);
+
+        // Act
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var result = await OrdersApi.ConfirmOrderAsync(Guid.NewGuid(), new ConfirmOrderCommand(1), orderServices);
+
+        // Assert
+        Assert.IsInstanceOfType<NotFound<string>>(result.Result);
     }
 
     [TestMethod]

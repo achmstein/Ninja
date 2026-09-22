@@ -5,12 +5,15 @@
 | `*.UnitTests` | One service's domain and application logic, mocked. | nothing |
 | `Ninja.Contracts.Tests` | The integration-event contracts as written in `src/`: every subscribed event has a publisher, every published event a consumer (known dead ends listed in `Allowlist.cs`), no service declares an event twice, and each consumer's copy of an event reads only properties the publisher's copy sends. Roslyn over the source, no host. | nothing |
 | `Ninja.E2E` | Whole workflows across every service — a cashier's day replayed through the BFF with the calls the React apps make — with each downstream effect asserted five ways: the consuming service's projection, the event on RabbitMQ, the outbox row, the SignalR push, and the service logs (a handler that throws has its message dead-lettered by `RabbitMQEventBus`; the log shows it). | Docker Desktop |
-| `*.FunctionalTests` | eShop-era in-process harnesses; stale. | Docker |
+| `*.FunctionalTests` | One service through its own front door, in process, on a Postgres and a RabbitMQ shared by the suite (`Ninja.Testing`): the calls the apps make, the answers they read, and what a refusal looks like. Thirteen of them, one per service plus the control plane. | Docker |
+| `Control.IntegrationTests` | The control plane's adapters against the real things they drive (a broker, a Keycloak). | Docker |
+| `Control.AcceptanceTests` | One café stamped on a real docker host and destroyed again. Opt-in: `NINJA_ACCEPTANCE=1`. | A local platform |
 
 ## Running
 
 ```sh
-dotnet test --solution Ninja.Web.slnf                          # what CI runs: unit + contracts (+ the stale functional tests)
+dotnet test --solution Ninja.Web.slnf                          # unit + contracts, no docker (what the PR gate runs first)
+dotnet test --project tests/Sales.FunctionalTests              # one service's front door; ~40 s with its containers
 dotnet test --project tests/Ninja.Contracts.Tests              # 2 s
 dotnet test --project tests/Ninja.E2E                          # ~2-3 min; boots the whole system
 dotnet run --project tests/Ninja.E2E -- --filter-class Ninja.E2E.Scenarios.CounterSaleScenario   # one scenario
