@@ -70,6 +70,7 @@
     <Project Path="tests/Ninja.Testing/Ninja.Testing.csproj" />
     <Project Path="tests/Loyalty.UnitTests/Loyalty.UnitTests.csproj" />
     <Project Path="tests/Loyalty.FunctionalTests/Loyalty.FunctionalTests.csproj" />
+    <Project Path="tests/Notification.FunctionalTests/Notification.FunctionalTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="tests/Inventory.UnitTests/Inventory.UnitTests.csproj" />
     <Project Path="tests/Payroll.UnitTests/Payroll.UnitTests.csproj" />
