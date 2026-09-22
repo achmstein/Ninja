@@ -24,14 +24,13 @@ import { customersKeys, useCustomerCount } from './hooks/use-customers'
 import { customersService } from './services/customers-service'
 import { getCustomerDisplayName } from './types'
 import { useFeatures } from '@/lib/brand'
+import { allowedFilter, type CustomerFilter } from './filter'
 
 const route = getRouteApi('/_authenticated/customers/')
 
 const PAGE_SIZE = 40
 // Staff accounts live on the Staff page
 const STAFF_ROLES = 'Admin,Owner,Cashier'
-
-type CustomerFilter = 'owing' | 'members'
 
 /** One list row, whatever list it came from */
 type Row = {
@@ -56,10 +55,7 @@ export function Customers() {
   const query = (search.q ?? '').trim()
   const features = useFeatures()
   // A view whose module is off (a /loyalty or /accounts link from before) is the whole list
-  const filter =
-    (search.filter === 'owing' && !features.tabs) || (search.filter === 'members' && !features.loyalty)
-      ? undefined
-      : search.filter
+  const filter = allowedFilter(search.filter, features)
 
   const select = (customer: string | undefined) =>
     navigate({ search: (prev) => ({ ...prev, customer }) })

@@ -132,7 +132,7 @@ jobs:
       - run: flutter analyze
       - name: Tests
         run: |
-          if [ -d test ] && ls test/*_test.dart test/**/*_test.dart >/dev/null 2>&1 && [ "${{ matrix.app }}" != "client_app" ]; then
+          if [ -d test ] && ls test/*_test.dart test/**/*_test.dart >/dev/null 2>&1; then
             flutter test
           else
             echo "no test suite for ${{ matrix.app }}"

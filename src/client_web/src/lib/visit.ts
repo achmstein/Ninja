@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { CalendarClock, Gamepad2, type LucideIcon } from 'lucide-react'
-import { type StayViewModel } from '@/api/spaces'
+import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
+import { type TenantFeatures } from '@/api/branch'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
@@ -10,22 +11,31 @@ import { useActiveStay, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
 import { useFeatures } from '@/lib/brand'
 
-/** The branch's bookable places, live — the rooms and stations with a
- *  clock, and any table the owner opened to reservations: one query the
- *  tab and the nav share. */
+/**
+ * The places a customer may book: in service, and offering something the
+ * café actually sells — a clock while it bills time, a booking while it
+ * takes them. A room that kept its rate from a bigger plan is not on the
+ * list, because nothing would come of tapping it.
+ */
+export function bookablePlaces(
+  places: PlaceViewModel[],
+  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>,
+): PlaceViewModel[] {
+  return places.filter(
+    (p) =>
+      p.isActive !== false &&
+      ((p.isTimed && features.timeBilling) ||
+        (p.reservable && features.reservations)),
+  )
+}
+
+/** The branch's bookable places, live — one query the tab and the nav share. */
 export function useBookablePlaces() {
-  const { reservations, timeBilling } = useFeatures()
+  const features = useFeatures()
   return useQuery({
     ...listPlacesOptions(),
     refetchInterval: 30_000,
-    // A place taken out of service is not on the customer's list; a clock
-    // counts while the café bills time, a booking while it takes them
-    select: (list) =>
-      list.filter(
-        (p) =>
-          p.isActive !== false &&
-          ((p.isTimed && timeBilling) || (p.reservable && reservations)),
-      ),
+    select: (list) => bookablePlaces(list, features),
   })
 }
 
@@ -70,12 +80,29 @@ export function useVisit(): Visit {
     bookable?.some((p) => Number(p.kind ?? PLACE_ROOM) === PLACE_ROOM) ??
     false
 
-  const seat: Visit['seat'] = stay
-    ? { kind: 'stay', stay }
-    : place
-      ? { kind: 'table', place }
-      : { kind: 'none' }
-  return { seat, hasBookablePlaces, hasRooms, settling }
+  return { seat: seatOf(stay, place), hasBookablePlaces, hasRooms, settling }
+}
+
+/** A clock always wins; then the table they scanned; then nothing. */
+export function seatOf(
+  stay: StayViewModel | null | undefined,
+  place: StoredPlace | null | undefined,
+): Visit['seat'] {
+  if (stay) return { kind: 'stay', stay }
+  if (place) return { kind: 'table', place }
+  return { kind: 'none' }
+}
+
+/**
+ * Whether the second tab is there at all: the café books something, and
+ * there is something to book. A café on a plan with neither has no tab,
+ * however its places are set up.
+ */
+export function visitTabVisible(
+  hasBookablePlaces: boolean,
+  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>,
+): boolean {
+  return hasBookablePlaces && (features.reservations || features.timeBilling)
 }
 
 /** The second tab, as the bars draw it: named after the clock's place when
@@ -111,7 +138,6 @@ export function useVisitTab(): {
   return {
     label: t('rooms'),
     icon: hasRooms ? Gamepad2 : CalendarClock,
-    visible:
-      hasBookablePlaces && (features.reservations || features.timeBilling),
+    visible: visitTabVisible(hasBookablePlaces, features),
   }
 }
