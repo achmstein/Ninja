@@ -36,4 +36,8 @@
     <ProjectReference Include="..\EventBusRabbitMQ\EventBusRabbitMQ.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Branch.FunctionalTests" />
+  </ItemGroup>
+
 </Project>
