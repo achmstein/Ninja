@@ -75,9 +75,12 @@ the apps are written against.
    recipes); its transfers and suppliers are next in it. Identity's covers
    the door onto Keycloak; the account a customer deletes and the email
    they change are next in it.
-2. **Contracts.** Every integration event a service publishes has a
-   consumer copy with the same shape (today: pairing only); the features
-   event; the gateway route table (exists).
+2. **Contracts.** Covered in `tests/Ninja.Contracts.Tests`, off the source
+   tree: every event is published by one service and consumed by someone,
+   each consumer's copy reads only what the publisher sends and reads it as
+   the same kind of value, nobody declares an event twice, and the gateway's
+   route table matches the AppHost's. What is not covered: the JSON a
+   running service actually puts on the wire.
 3. **A smaller plan end to end.** One E2E scenario where the stack runs a
    Starter café: the gateway answers 402 for inventory, the admin app hides
    it, Spaces refuses a tariff.
@@ -95,7 +98,7 @@ the apps are written against.
 |---|---|---|
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
-| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** except the event contracts |
+| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** — 68 scenarios and the contract tests |
 | 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
 Each phase lands as its own commits and its own CI job where docker is

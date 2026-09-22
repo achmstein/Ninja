@@ -117,20 +117,32 @@ public sealed class SourceTree
                 }
             }
 
-            // Publishers: `new XIntegrationEvent(...)` anywhere but the declarations folder.
+            // Publishers: `new XIntegrationEvent(...)`, or `XIntegrationEvent.From(...)`
+            // where the event builds itself, anywhere but the declarations folder.
             var inDeclarations = relative.Contains($"{Path.DirectorySeparatorChar}Events{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
                 || relative.Contains("/Events/", StringComparison.Ordinal);
             if (!inDeclarations)
             {
+                void Publishes(string? name)
+                {
+                    if (name is null || !name.EndsWith(EventSuffix, StringComparison.Ordinal))
+                        return;
+                    publishers.TryAdd(name, new HashSet<string>(StringComparer.Ordinal));
+                    publishers[name].Add(service);
+                    publishSites.TryAdd(name, []);
+                    publishSites[name].Add(new PublishSite(service, relative, visible));
+                }
+
                 foreach (var creation in unit.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
                 {
-                    var name = TypeName(creation.Type);
-                    if (name is not null && name.EndsWith(EventSuffix, StringComparison.Ordinal))
+                    Publishes(TypeName(creation.Type));
+                }
+
+                foreach (var call in unit.DescendantNodes().OfType<InvocationExpressionSyntax>())
+                {
+                    if (call.Expression is MemberAccessExpressionSyntax member)
                     {
-                        publishers.TryAdd(name, new HashSet<string>(StringComparer.Ordinal));
-                        publishers[name].Add(service);
-                        publishSites.TryAdd(name, []);
-                        publishSites[name].Add(new PublishSite(service, relative, visible));
+                        Publishes(SimpleNameOf(member.Expression));
                     }
                 }
             }
@@ -211,6 +223,14 @@ public sealed class SourceTree
     };
 
     /// <summary>The element type of a collection-ish declared type: `IReadOnlyList&lt;Foo&gt;`, `List&lt;Foo&gt;`, `Foo[]`, `Foo?` → Foo.</summary>
+    /// <summary>The name a static call is made on: <c>X.From(…)</c> and <c>Events.X.From(…)</c> are both X.</summary>
+    private static string? SimpleNameOf(ExpressionSyntax expression) => expression switch
+    {
+        IdentifierNameSyntax identifier => identifier.Identifier.Text,
+        MemberAccessExpressionSyntax member => member.Name.Identifier.Text,
+        _ => null,
+    };
+
     public static string? ElementTypeName(string declaredType)
     {
         var t = declaredType.Trim().TrimEnd('?');

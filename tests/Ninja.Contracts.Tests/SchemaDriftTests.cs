@@ -45,6 +45,22 @@ public sealed class SchemaDriftTests
             drift.Add($"{context}: {consumer.Service}'s copy ({consumer.File}) reads [{string.Join(", ", hint)}] which {publisher.Service}'s copy ({publisher.File}) does not send");
         }
 
+        // The properties both sides have must be the same kind of value: a
+        // number read as a string (or the other way round) throws on the
+        // consumer and dead-letters the message
+        foreach (var (property, consumerType) in consumer.PropertyTypes)
+        {
+            if (!publisher.PropertyTypes.TryGetValue(property, out var publisherType))
+                continue;
+
+            var mine = Simple(consumerType);
+            var theirs = Simple(publisherType);
+            if (mine is null || theirs is null || mine == theirs)
+                continue;
+
+            drift.Add($"{context}.{property}: {consumer.Service} reads it as {consumerType.Trim()}, {publisher.Service} sends {publisherType.Trim()}");
+        }
+
         if (depth > 3)
             return;
 
@@ -69,6 +85,38 @@ public sealed class SchemaDriftTests
 
             CompareShapes(tree, $"{context}.{property}", publisherPayload, consumerPayload, drift, depth + 1);
         }
+    }
+
+    /// <summary>
+    /// The value a property carries, when it is one JSON reads on its own
+    /// (a number, a string, a date). Null for anything else — a payload
+    /// record or a collection, which the nested walk below compares by
+    /// name. Nullability is not part of it: a consumer may read what the
+    /// publisher always sends as optional.
+    /// </summary>
+    private static string? Simple(string declaredType)
+    {
+        var t = declaredType.Trim().TrimEnd('?');
+        var dot = t.LastIndexOf('.');
+        if (dot >= 0) t = t[(dot + 1)..];
+
+        return t switch
+        {
+            "int" or "Int32" => "int",
+            "long" or "Int64" => "long",
+            "decimal" or "Decimal" => "decimal",
+            "double" or "Double" => "double",
+            "float" or "Single" => "float",
+            "bool" or "Boolean" => "bool",
+            "string" or "String" => "string",
+            "Guid" => "Guid",
+            "DateTime" => "DateTime",
+            "DateTimeOffset" => "DateTimeOffset",
+            "DateOnly" => "DateOnly",
+            "TimeOnly" => "TimeOnly",
+            "TimeSpan" => "TimeSpan",
+            _ => null,
+        };
     }
 
     [TestMethod]
