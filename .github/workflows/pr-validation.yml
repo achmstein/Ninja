@@ -59,6 +59,24 @@ jobs:
       - name: Test
         run: dotnet test tests/Control.FunctionalTests/Control.FunctionalTests.csproj --no-build --no-progress --output detailed
 
+  # Each service through its own front door, on the shared Postgres and RabbitMQ
+  # in containers (tests/Ninja.Testing). Docker, so its own job.
+  service-functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [Loyalty, Notification]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET (global.json)
+        uses: actions/setup-dotnet@v3
+      - name: Build
+        run: dotnet build tests/${{ matrix.service }}.FunctionalTests/${{ matrix.service }}.FunctionalTests.csproj
+      - name: Test
+        run: dotnet test tests/${{ matrix.service }}.FunctionalTests/${{ matrix.service }}.FunctionalTests.csproj --no-build --no-progress --output detailed
+
   web:
     runs-on: ubuntu-latest
     strategy:

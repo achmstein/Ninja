@@ -22,72 +22,79 @@ run), never hand-rolled mocks of the same interface.
 
 ## Where it stands (2026-09-22)
 
-| Area | Unit | Functional | Integration | E2E | UI |
-|---|---|---|---|---|---|
-| Control plane | 109 | **12** (new: `tests/Control.FunctionalTests`) | 6 | — | control_web: 4 vitest, `e2e/ControlPlane.spec.ts` |
-| Catalog | 47 | 13 | — | in scenarios | — |
-| Ordering | 86 | 11 | — | in scenarios | — |
-| Sales | 71 | — | — | in scenarios | — |
-| Spaces | 52 | — | — | Reservation, RoomSession | — |
-| Inventory | 56 | — | — | InventoryFlow | — |
-| Finance | 18 | — | — | PayrollAndProfit | — |
-| Payroll | 12 | — | — | PayrollAndProfit | — |
-| Branch | 15 | — | — | — | — |
-| Identity | 13 | — | — | — | — |
-| Accounts | 7 | — | — | — | — |
-| **Loyalty** | **0** | — | — | — | — |
-| **Notification** | **0** | — | — | — | — |
-| Contracts (events, gateway table) | 8 | | | | |
-| admin_web / pos_web / kds_web / client_web | 2 / 0 / 0 / 0 vitest | | | | `e2e/`: 3 Playwright specs |
-| pos_app / client_app / kds_app | 17 / 2 / 6 widget | | | | |
+| Area | Unit | Functional | Integration | Acceptance | E2E | UI |
+|---|---|---|---|---|---|---|
+| Control plane | 114 | **37** | 7 | **1 story** | — | control_web: 4 vitest, `e2e/ControlPlane.spec.ts` |
+| **Loyalty** | **6** | **6** | — | | | |
+| **Notification** | — | **6** | — | | | |
+| Catalog | 47 | 13 | — | | in scenarios | — |
+| Ordering | 86 | 11 | — | | in scenarios | — |
+| Sales | 71 | — | — | | in scenarios | — |
+| Spaces | 52 | — | — | | Reservation, RoomSession | — |
+| Inventory | 56 | — | — | | InventoryFlow | — |
+| Finance | 18 | — | — | | PayrollAndProfit | — |
+| Payroll | 12 | — | — | | PayrollAndProfit | — |
+| Branch | 15 | — | — | | — | — |
+| Identity | 13 | — | — | | — | — |
+| Accounts | 7 | — | — | | — | — |
+| Contracts (events, gateway table) | 8 | | | | | |
+| admin_web / pos_web / kds_web / client_web | 2 / 0 / 0 / 0 vitest | | | | | `e2e/`: 3 Playwright specs |
+| pos_app / client_app / kds_app | 17 / 2 / 6 widget | | | | | |
 
-Ten E2E scenarios exist (counter sale, table order, shift lifecycle, cash
-movements, room session, reservation, inventory flow, payroll and profit,
-full day, assistant). They run the chillax stack with every module on;
-nothing runs a café on a smaller plan end to end.
+What the layers cost: the control plane's functional suite is 23 s for 37
+scenarios, a service's is ~12 s, the acceptance story is 50 s against a
+real platform, the E2E suite is minutes after a ~6 minute boot.
+
+The pieces every new suite builds on:
+
+- `tests/Ninja.Testing` — the shared Postgres and RabbitMQ, a service
+  booted in-process on them (one database and one queue per suite), and the
+  personas (owner, admin, cashier, customer, nobody) whose claims are
+  spelled the way the realms spell them, so the real policies decide.
+- `tests/Control.FunctionalTests` — the same idea for the control plane,
+  on its dry-run box.
+- `tests/Control.AcceptanceTests` — the platform on a real docker host,
+  opt-in with `NINJA_ACCEPTANCE=1`.
+
+Two habits worth keeping. A suite declares the shape it reads off the wire
+(a `…View` record of its own) rather than reusing the service's DTOs: a
+change in the service's records then fails a test instead of being followed
+silently. And a suite asserts what the wire actually carries — Notification
+answers with the enums' numbers, and the tests say so, because that is what
+the apps are written against.
 
 ## The gaps, by weight
 
-1. **Control plane, the rest of its front door.** The functional suite
-   covers create/provision/convert/subscription/stop/start/upgrade/destroy.
-   Missing: backups (create, list, restore into a new slug, delete, platform
-   backups), the jobs queue (list, cancel, position), fleet upgrade with a
-   canary, rollback after a failed upgrade, secure/rotate, the record edits
-   and demo extension, the sweeps (demo expiry, subscription past-due →
-   suspend, resume by payment), impersonation ticket and redeem, mail
-   outbox, the platform endpoints (capacity, updates, health), and every
-   refusal the API writes. Then an **acceptance** skeleton against the local
-   platform for the one thing the dry run cannot prove: containers.
-2. **Two services with no tests at all**: Loyalty (points, tiers, clawback
-   on refund/void, redemption on order) and Notification (the hub groups,
-   what each event becomes on the wire). Unit and functional both.
-3. **Front doors for the rest of the services.** A shared
-   `tests/Ninja.Testing` helper (factory + Postgres + test auth + the event
-   bus doubled or a RabbitMQ container) so each `X.FunctionalTests` is
-   scenarios only. Order by risk: Branch (the switches and entitlements
-   clamp, the module-off page, the features event), Spaces (the module
-   checks on places, holds, stays), Sales (settle, refund, shifts), then
-   Inventory, Finance, Payroll, Accounts, Identity.
-4. **Contracts.** Every integration event a service publishes has a
+1. **Front doors for the rest of the services.** Order by risk: Branch (the
+   switches and the entitlements clamp, the module-off page, the features
+   event), Spaces (the module checks on places, holds, stays), Sales
+   (settle, refund, shifts), then Inventory, Finance, Payroll, Accounts,
+   Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so each is
+   scenarios and nothing else.
+2. **Contracts.** Every integration event a service publishes has a
    consumer copy with the same shape (today: pairing only); the features
    event; the gateway route table (exists).
-5. **A smaller plan end to end.** One E2E scenario where the stack runs a
+3. **A smaller plan end to end.** One E2E scenario where the stack runs a
    Starter café: the gateway answers 402 for inventory, the admin app hides
    it, Spaces refuses a tariff.
-6. **UI.** vitest for the pure logic each web app carries (money, the visit
+4. **UI.** vitest for the pure logic each web app carries (money, the visit
    tab rule, `isTimed` with the clock off, feature gates); component tests
    for `FeatureGate` / `RequireFeature`; Playwright flows for the plan
    gating in admin and the control app's plan tab; Flutter widget tests for
    the gated screens (cart points, reserve, the KDS lock).
+5. **The control plane's remaining corners**: the brand proxy and its image
+   slots, the seed images, metrics, containers, and the demo-expiry sweep.
 
 ## Order of work
 
-| Phase | Scope | Size |
+| Phase | Scope | State |
 |---|---|---|
-| 1 | Control plane functional suite to every endpoint group; acceptance skeleton | ~30 scenarios |
-| 2 | `Ninja.Testing` helper; Loyalty and Notification (unit + functional); Branch and Spaces functional | ~60 tests |
-| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | ~80 tests |
-| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | ~40 tests |
+| 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
+| 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | Loyalty and Notification **done**; Branch and Spaces next |
+| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | |
+| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
 Each phase lands as its own commits and its own CI job where docker is
-needed, the way `control-integration` and `control-functional` do.
+needed: `control-integration`, `control-functional` and
+`service-functional` (a matrix, one entry per service) in
+`.github/workflows/pr-validation.yml`.
