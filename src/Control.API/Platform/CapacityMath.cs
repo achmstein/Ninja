@@ -124,9 +124,36 @@ public static partial class CapacityMath
     public static bool DiskRoom(long freeMb, long totalMb, int floorMb, int footprintMb)
         => totalMb == 0 || freeMb >= floorMb + footprintMb / 4;
 
-    /// <summary>The compose projects that are tenant stacks with something running: ninja-{slug}, not the platform's own project.</summary>
-    public static int RunningStacks(IEnumerable<ProjectUsage> projects)
-        => projects.Count(p => p.Project.StartsWith("ninja-", StringComparison.Ordinal) && p.Running > 0);
+    /// <summary>
+    /// The compose project a container runs under, from the same <c>docker ps</c>
+    /// lines <see cref="Group"/> reads; null when the container is not on the box
+    /// or compose did not start it.
+    /// </summary>
+    public static string? ProjectOf(string psLines, string containerName)
+    {
+        foreach (var line in psLines.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var cols = line.Split('\t');
+            if (cols.Length < 2 || !string.Equals(cols[0].Trim(), containerName, StringComparison.Ordinal)) continue;
+            var project = cols[1].Trim();
+            return project.Length == 0 ? null : project;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// The compose projects that are tenant stacks with something running:
+    /// ninja-{slug}, never the platform's own project. Production's is
+    /// <c>ninja</c>, which the prefix alone rules out; a laptop's is
+    /// <c>ninja-local</c>, which reads like a tenant, so the platform's is
+    /// named too.
+    /// </summary>
+    public static int RunningStacks(IEnumerable<ProjectUsage> projects, string? platformProject = null)
+        => projects.Count(p => IsStack(p.Project, platformProject) && p.Running > 0);
+
+    /// <summary>Whether a compose project is a tenant stack by name: ninja-{slug}, and not the platform itself.</summary>
+    public static bool IsStack(string project, string? platformProject)
+        => project.StartsWith("ninja-", StringComparison.Ordinal) && !string.Equals(project, platformProject, StringComparison.Ordinal);
 
     private static double ParsePercent(string text)
         => double.TryParse(text.Trim().TrimEnd('%'), NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0;

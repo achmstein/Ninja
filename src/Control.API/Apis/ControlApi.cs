@@ -81,7 +81,7 @@ public static partial class ControlApi
             snapshot.At, snapshot.MemTotalMb, snapshot.MemAvailableMb, snapshot.Load, snapshot.Cpus,
             snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, snapshot.DockerUsedMb, snapshot.DockerReclaimableMb,
             o.StackFootprintMb, o.StackLimitMb, o.ReserveMb, capacity.RoomFor(snapshot), tenants,
-            o.MinFreeDiskMb, CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate), o.PostgresMaxConnections));
+            o.MinFreeDiskMb, CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects, snapshot.PlatformProject), o.ServiceConnectionsEstimate), o.PostgresMaxConnections));
     }
 
     public static async Task<Ok<List<TenantSummary>>> ListTenants(ControlContext context, UpdateCache updates, IOptions<PlatformOptions> options)

@@ -83,7 +83,7 @@ public sealed class KeycloakHealthCheck(IHttpClientFactory httpClientFactory, IO
 /// <summary>The arithmetic of reconciliation, apart from the box: which running tenants have no running containers, and which compose projects nobody's record explains.</summary>
 public static class Reconciler
 {
-    public static (IReadOnlyList<string> StackDown, IReadOnlyList<string> Orphans) Compare(IReadOnlyList<(string Slug, TenantStatus Status)> records, IReadOnlyList<ProjectUsage> projects)
+    public static (IReadOnlyList<string> StackDown, IReadOnlyList<string> Orphans) Compare(IReadOnlyList<(string Slug, TenantStatus Status)> records, IReadOnlyList<ProjectUsage> projects, string? platformProject = null)
     {
         var byProject = projects.ToDictionary(p => p.Project, StringComparer.Ordinal);
         var down = records
@@ -94,7 +94,7 @@ public static class Reconciler
             .ToList();
         var known = records.Where(r => r.Status != TenantStatus.Destroyed).Select(r => TenantNaming.Project(r.Slug)).ToHashSet(StringComparer.Ordinal);
         var orphans = projects
-            .Where(p => p.Project.StartsWith("ninja-", StringComparison.Ordinal) && !known.Contains(p.Project))
+            .Where(p => CapacityMath.IsStack(p.Project, platformProject) && !known.Contains(p.Project))
             .Select(p => p.Project)
             .Order(StringComparer.Ordinal)
             .ToList();
@@ -170,7 +170,7 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
         {
             _lastReconcile = now;
             var records = await context.Tenants.AsNoTracking().Select(t => new ValueTuple<string, TenantStatus>(t.Slug, t.Status)).ToListAsync(ct);
-            var (down, orphans) = Reconciler.Compare(records, snapshot.Projects);
+            var (down, orphans) = Reconciler.Compare(records, snapshot.Projects, snapshot.PlatformProject);
             foreach (var slug in down)
                 findings.Add(($"down:{slug}", $"{slug} is Running on the record but none of its containers run", "tenant.stack-down", new { slug }, MailTemplates.OpsStackDown(slug, platform)));
             foreach (var project in orphans)

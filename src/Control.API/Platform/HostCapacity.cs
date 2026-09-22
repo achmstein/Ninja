@@ -8,6 +8,7 @@ namespace Ninja.Control.API.Platform;
 /// <summary>What the box has and what the stacks on it take, at one moment.</summary>
 /// <param name="TenantsDiskFreeMb">Free space where the tenants' files and backups go.</param>
 /// <param name="DockerUsedMb">What images, containers and volumes take, as docker system df counts it.</param>
+/// <param name="PlatformProject">The compose project the platform's own containers run under (ninja in production, ninja-local on a laptop), read off the box; null when docker did not answer.</param>
 public sealed record CapacitySnapshot(
     DateTimeOffset At,
     long MemTotalMb,
@@ -18,7 +19,8 @@ public sealed record CapacitySnapshot(
     long TenantsDiskTotalMb,
     long DockerUsedMb,
     long DockerReclaimableMb,
-    IReadOnlyList<ProjectUsage> Projects);
+    IReadOnlyList<ProjectUsage> Projects,
+    string? PlatformProject = null);
 
 /// <summary>Reads the box. Behind an interface so the dry run answers with a box that is not there.</summary>
 public interface IHostCapacity
@@ -70,9 +72,11 @@ public sealed class ProcHostCapacity(IShell shell, IOptions<PlatformOptions> opt
         var ps = await shell.RunAsync("docker", ["ps", "-a", "--format", "{{.Names}}\t{{.Label \"com.docker.compose.project\"}}\t{{.State}}"], null, ct);
         var stats = await shell.RunAsync("docker", ["stats", "--no-stream", "--format", "{{json .}}"], null, ct);
         var projects = CapacityMath.Group(ps.Ok ? ps.Stdout : "", stats.Ok ? stats.Stdout : "");
+        // Which of those projects is the platform itself: the one its own Postgres runs under
+        var platformProject = ps.Ok ? CapacityMath.ProjectOf(ps.Stdout, options.Value.PostgresContainer) : null;
 
         return new CapacitySnapshot(DateTimeOffset.UtcNow, memTotal, memAvailable, load, Environment.ProcessorCount,
-            diskFree, diskTotal, dockerUsed, dockerReclaimable, projects);
+            diskFree, diskTotal, dockerUsed, dockerReclaimable, projects, platformProject);
     }
 
     private static async Task<string> ReadOrEmptyAsync(string path, CancellationToken ct)
@@ -129,7 +133,7 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
     {
         var o = options.Value;
         var memory = CapacityMath.RoomFor(snapshot.MemAvailableMb, o.ReserveMb, o.StackFootprintMb);
-        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate, o.PostgresMaxConnections);
+        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects, snapshot.PlatformProject), o.ServiceConnectionsEstimate, o.PostgresMaxConnections);
         var disk = CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb) ? int.MaxValue : 0;
         return Math.Min(memory, Math.Min(connections, disk));
     }
@@ -140,8 +144,9 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
         var o = options.Value;
         if (!CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb))
             return $"{snapshot.TenantsDiskFreeMb} MB free on the tenants drive; the floor is {o.MinFreeDiskMb} MB and a stack needs room above it for its backups.";
-        if (CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate, o.PostgresMaxConnections) == 0)
-            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks typically hold {CapacityMath.ConnectionsEstimate(CapacityMath.RunningStacks(snapshot.Projects), o.ServiceConnectionsEstimate)}.";
+        var stacks = CapacityMath.RunningStacks(snapshot.Projects, snapshot.PlatformProject);
+        if (CapacityMath.ConnectionRoomFor(stacks, o.ServiceConnectionsEstimate, o.PostgresMaxConnections) == 0)
+            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks typically hold {CapacityMath.ConnectionsEstimate(stacks, o.ServiceConnectionsEstimate)}.";
         return $"{snapshot.MemAvailableMb} MB free, {o.ReserveMb} MB kept for the shared services, {o.StackFootprintMb} MB per stack.";
     }
 

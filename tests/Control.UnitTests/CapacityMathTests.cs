@@ -51,6 +51,10 @@ public sealed class CapacityMathTests
         Assert.AreEqual(1.6, blue.CpuPercent, 0.01);
         var platform = usage.Single(u => u.Project == "ninja");
         Assert.AreEqual(1229, platform.MemoryMb);
+
+        Assert.AreEqual("ninja", CapacityMath.ProjectOf(ps, "ninja-postgres-1"), "the platform's project is whatever its own postgres runs under");
+        Assert.IsNull(CapacityMath.ProjectOf(ps, "stray"), "a container compose did not start has no project");
+        Assert.IsNull(CapacityMath.ProjectOf(ps, "ninja-local-postgres-1"), "a container that is not on the box");
     }
 
     [TestMethod]
@@ -77,6 +81,11 @@ public sealed class CapacityMathTests
 
         var projects = new List<ProjectUsage> { new("ninja-blue", 13, 13, 1800, 4), new("ninja-red", 13, 0, 0, 0), new("ninja", 5, 5, 3000, 6) };
         Assert.AreEqual(1, CapacityMath.RunningStacks(projects), "a stopped stack and the platform's own project do not count");
+
+        // On a laptop the platform is ninja-local, which reads like a tenant until it is named
+        var laptop = new List<ProjectUsage> { new("ninja-blue", 13, 13, 1800, 4), new("ninja-local", 7, 7, 3000, 6) };
+        Assert.AreEqual(2, CapacityMath.RunningStacks(laptop), "unnamed, the platform's own project passes for a stack");
+        Assert.AreEqual(1, CapacityMath.RunningStacks(laptop, "ninja-local"));
     }
 
     [TestMethod]
@@ -95,6 +104,11 @@ public sealed class CapacityMathTests
 
         CollectionAssert.AreEqual(new[] { "red" }, down.ToList(), "red is Running on the record with no project; green is Stopped, so its idle project is fine");
         CollectionAssert.AreEqual(new[] { "ninja-old", "ninja-stray" }, orphans.ToList(), "a destroyed record does not explain a project; the platform's own is not a stack");
+
+        // The laptop's platform project is explained by being the platform, not by a record
+        var laptop = new List<ProjectUsage> { new("ninja-blue", 13, 13, 1800, 4), new("ninja-local", 7, 7, 3000, 6) };
+        CollectionAssert.AreEqual(new[] { "ninja-local" }, Reconciler.Compare(records, laptop).Orphans.ToList(), "unnamed, it is an orphan");
+        Assert.AreEqual(0, Reconciler.Compare(records, laptop, "ninja-local").Orphans.Count);
 
         var now = DateTimeOffset.UtcNow;
         Assert.IsTrue(WorkerHealthCheck.IsAlive(now.AddSeconds(-30), now));
