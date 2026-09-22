@@ -33,7 +33,7 @@ run), never hand-rolled mocks of the same interface.
 | Spaces | 52 | **6** | — | | Reservation, RoomSession | — |
 | Inventory | 56 | **8** | — | | InventoryFlow | — |
 | Finance | 18 | **16** | — | | PayrollAndProfit | — |
-| Payroll | 12 | — | — | | PayrollAndProfit | — |
+| Payroll | 12 | **12** | — | | PayrollAndProfit | — |
 | Branch | 15 | **10** | — | | — | — |
 | Identity | 13 | — | — | | — | — |
 | Accounts | 7 | — | — | | — | — |
@@ -65,8 +65,7 @@ the apps are written against.
 
 ## The gaps, by weight
 
-1. **Front doors for the rest of the services**: Payroll, Accounts,
-   Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so
+1. **Front doors for the rest of the services**: Accounts and Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so
    each is scenarios and nothing else. Spaces has its places covered; its
    reservations and stays are next in the same suite; Inventory's suite
    covers the storeroom (deliveries, waste, counts, recipes), and its
@@ -91,7 +90,7 @@ the apps are written against.
 |---|---|---|
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
-| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | Sales, Inventory and Finance done |
+| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | all but Accounts and Identity done |
 | 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
 Each phase lands as its own commits and its own CI job where docker is
