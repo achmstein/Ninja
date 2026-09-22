@@ -42,7 +42,11 @@ test('a café on Starter buys the storeroom on top, and the stack is told', asyn
   await page.locator('#ownerEmail').fill(`owner@${slug}.test`);
   await page.locator('#kind').click();
   await page.getByRole('option', { name: 'Customer', exact: true }).click();
+  // A paying café is asked for its own domain; the field appearing is the kind taking
+  await expect(page.locator('#customerDomain')).toBeVisible();
   await page.locator('#slug').fill(slug);
+  // The plan sits in the form's second section, folded away until it is asked for
+  await page.getByRole('button', { name: 'Contact' }).click();
   await page.locator('#plan').click();
   await page.getByRole('option', { name: 'Starter', exact: true }).click();
   await page.getByRole('button', { name: 'Create' }).click();

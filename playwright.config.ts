@@ -88,13 +88,16 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* The AppHost, if one is not already running. The health check is the
+     control app's dev server (the app the live specs drive); the AppHost
+     takes a couple of minutes to bring twelve services and their containers
+     up, so the wait is the same as CI's. */
   webServer: {
     command: 'dotnet run --project src/Ninja.AppHost/Ninja.AppHost.csproj',
-    url: 'http://localhost:5045',
+    url: 'http://localhost:5177',
     reuseExistingServer: !process.env.CI,
     stderr: 'pipe',
     stdout: 'pipe',
-    timeout: process.env.CI ? (5 * 60_000) : 60_000,
+    timeout: 5 * 60_000,
   },
 });

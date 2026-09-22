@@ -102,7 +102,7 @@ the apps are written against.
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
 | 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | **done** — 68 scenarios and the contract tests |
-| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | **written** — the E2E scenario, the control app's plan spec, and the app tests above; the two that need a running stack have not been run here |
+| 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | **done** — `SmallerPlanScenario` (59 s, boot included), the control app's plan spec, and the app tests above |
 
 Each phase lands as its own commits and its own CI job where docker is
 needed: `control-integration`, `control-functional` and
