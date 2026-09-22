@@ -412,7 +412,7 @@ public static partial class OrdersApi
         return TypedResults.NoContent();
     }
 
-    public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> ConfirmOrderAsync(
+    public static async Task<Results<Ok, BadRequest<string>, NotFound<string>, ProblemHttpResult>> ConfirmOrderAsync(
         [FromHeader(Name = "x-requestid")] Guid requestId,
         ConfirmOrderCommand command,
         [AsParameters] OrderServices services)
@@ -420,6 +420,13 @@ public static partial class OrdersApi
         if (requestId == Guid.Empty)
         {
             return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+        }
+
+        // An order nobody placed is not a failure of this service: say so, so the
+        // till can tell "no such order" from "something went wrong here"
+        if (await services.Queries.GetOrderOwnershipAsync(command.OrderNumber) is null)
+        {
+            return TypedResults.NotFound($"Order {command.OrderNumber} was not found.");
         }
 
         var requestConfirmOrder = new IdentifiedCommand<ConfirmOrderCommand, bool>(command, requestId);
@@ -439,7 +446,7 @@ public static partial class OrdersApi
         return TypedResults.Ok();
     }
 
-    public static async Task<Results<Ok, BadRequest<string>, ProblemHttpResult>> CancelOrderAsync(
+    public static async Task<Results<Ok, BadRequest<string>, NotFound<string>, ProblemHttpResult>> CancelOrderAsync(
         [FromHeader(Name = "x-requestid")] Guid requestId,
         CancelOrderCommand command,
         [AsParameters] OrderServices services)
@@ -447,6 +454,11 @@ public static partial class OrdersApi
         if (requestId == Guid.Empty)
         {
             return TypedResults.BadRequest("Empty GUID is not valid for request ID");
+        }
+
+        if (await services.Queries.GetOrderOwnershipAsync(command.OrderNumber) is null)
+        {
+            return TypedResults.NotFound($"Order {command.OrderNumber} was not found.");
         }
 
         var requestCancelOrder = new IdentifiedCommand<CancelOrderCommand, bool>(command, requestId);

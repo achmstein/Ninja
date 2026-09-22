@@ -236,9 +236,7 @@ public sealed class OrderScenarios
     {
         using (var confirm = await SendAsync(Till, HttpMethod.Put, $"{Orders}/confirm?{Version}", new { orderNumber = 999999 }))
         {
-            // Today the service cannot tell "no such order" from "something broke" and answers 500 for both;
-            // what matters here is that it does not pretend to have confirmed one
-            Assert.IsFalse(confirm.IsSuccessStatusCode, "there is nothing to confirm");
+            Assert.AreEqual(HttpStatusCode.NotFound, confirm.StatusCode, "there is nothing to confirm");
         }
 
         var (missing, _) = await Suite.Ordering.AsAnonymous().RefusedAsync(HttpMethod.Get, $"{Orders}/999999?{Version}");
