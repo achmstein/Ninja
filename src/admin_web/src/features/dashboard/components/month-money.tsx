@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { getProfitOptions } from '@/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,6 +16,7 @@ import { Stat, StatStrip } from '@/components/stat-strip'
  */
 export function MonthMoney() {
   const t = useT()
+  const features = useFeatures()
   const locale = useLocale()
   const now = new Date()
   const year = now.getFullYear()
@@ -71,7 +73,7 @@ export function MonthMoney() {
                 ? percent.format(costs / toNumber(p.netSales))
                 : undefined
             }
-            to='/inventory/reports'
+            to={features.inventory ? '/inventory/reports' : undefined}
           />
           <Stat
             label={t('labourCost')}
@@ -81,7 +83,7 @@ export function MonthMoney() {
                 ? percent.format(toNumber(p.labour) / toNumber(p.netSales))
                 : undefined
             }
-            to='/payroll/payslips'
+            to={features.payroll ? '/payroll/payslips' : undefined}
             search={{ month: monthKey }}
           />
           <Stat

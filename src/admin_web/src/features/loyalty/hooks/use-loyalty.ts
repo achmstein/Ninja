@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useFeatures } from '@/lib/brand'
 import { translate } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { loyaltyService } from '../services/loyalty-service'
@@ -16,18 +17,23 @@ export const loyaltyKeys = {
     [...loyaltyKeys.all, 'transactions', userId] as const,
 }
 
+// Nothing is asked of Loyalty while the module is off: the lists stay empty
 export function useLoyaltyAccounts(first?: number, max?: number) {
+  const { loyalty } = useFeatures()
   return useQuery({
     queryKey: loyaltyKeys.accountsList(first, max),
     queryFn: () => loyaltyService.getAccounts(first, max),
+    enabled: loyalty,
   })
 }
 
 export function useLoyaltyStats() {
+  const { loyalty } = useFeatures()
   return useQuery({
     queryKey: loyaltyKeys.stats(),
     queryFn: () => loyaltyService.getStats(),
     refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: loyalty,
   })
 }
 

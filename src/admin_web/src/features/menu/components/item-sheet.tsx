@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,7 @@ export function ItemSheet({
   onDelete,
 }: ItemSheetProps) {
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const item =
     state?.mode === 'edit'
@@ -93,9 +95,11 @@ export function ItemSheet({
             <Section title={t('customizations')}>
               <CustomizationsSection item={item} />
             </Section>
-            <Section title={t('stock')}>
-              <StockRuleSection item={item} />
-            </Section>
+            {features.inventory && (
+              <Section title={t('stock')}>
+                <StockRuleSection item={item} />
+              </Section>
+            )}
             <Section title={t('thisBranch')}>
               <BranchOverrideSection item={item} />
             </Section>

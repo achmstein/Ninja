@@ -7,6 +7,7 @@ import {
   getRecipesOptions,
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { toNumber } from '@/lib/money'
 import { DEFAULT_FOOD_COST_TARGET } from './menu-cost-rows'
 import { standardCost } from './recipe-cost'
@@ -42,12 +43,16 @@ export type StockRuleBadge = {
 export function useStockRuleBadges(
   items: CatalogItemDto[]
 ): Map<number, StockRuleBadge> {
-  const recipes = useQuery(
-    getRecipesOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const costs = useQuery(
-    getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  // Nothing to badge without inventory: the map stays empty
+  const { inventory } = useFeatures()
+  const recipes = useQuery({
+    ...getRecipesOptions({ query: { 'api-version': API_VERSION } }),
+    enabled: inventory,
+  })
+  const costs = useQuery({
+    ...getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }),
+    enabled: inventory,
+  })
   return useMemo(() => {
     const costById = new Map<number, RecipeCostView>(
       (costs.data ?? []).map((c) => [toNumber(c.catalogItemId), c])

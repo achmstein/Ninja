@@ -74,6 +74,7 @@ export function Dashboard() {
   const lowStockQuery = useQuery({
     ...stockLevelsQueryOptions({ low: true }),
     refetchInterval: 60_000,
+    enabled: features.inventory,
   })
   const floor = usePlaces()
   const reportQuery = useQuery({

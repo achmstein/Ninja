@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { pagedSearch, rangeSearch } from '@/lib/search-schemas'
+import { FeatureGate } from '@/components/feature-gate'
 import { Reports } from '@/features/inventory/reports'
 
 const reportsSearchSchema = z.object({
@@ -11,5 +12,9 @@ const reportsSearchSchema = z.object({
 
 export const Route = createFileRoute('/_authenticated/inventory/reports')({
   validateSearch: reportsSearchSchema,
-  component: Reports,
+  component: () => (
+    <FeatureGate feature='inventory'>
+      <Reports />
+    </FeatureGate>
+  ),
 })

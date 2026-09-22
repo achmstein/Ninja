@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { brandQueryKey, type Brand } from '@/lib/brand'
 import { translate, useLanguage } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
@@ -118,6 +119,12 @@ export function useAdminNotifications() {
     // its reorder level at a branch. Every branch's levels are refreshed;
     // only the active branch's warning is worth a toast.
     connection.on('StockLow', (event: StockLowEvent) => {
+      // Not a warning without inventory (a stack that kept its levels from a bigger plan)
+      if (
+        queryClient.getQueryData<Brand>(brandQueryKey())?.features
+          ?.inventory === false
+      )
+        return
       refresh('getStockLevels')
       if (event.branchId == null || event.branchId !== getActiveBranchId()) {
         return

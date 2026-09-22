@@ -28,7 +28,7 @@ import {
   getPlaceStayHistoryOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import { useCustomerOrigin } from '@/lib/brand'
+import { useCustomerOrigin, useFeatures } from '@/lib/brand'
 import { placeQrUrl } from '@/lib/qr'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
@@ -104,6 +104,7 @@ export function PlaceDetailPanel({
 }: PlaceDetailPanelProps) {
   const t = useT()
   const customerOrigin = useCustomerOrigin()
+  const features = useFeatures()
   const locale = useLocale()
   const localized = useLocalized()
   const actions = useStayActions()
@@ -138,6 +139,7 @@ export function PlaceDetailPanel({
       query: { limit: reservationLimit },
     }),
     placeholderData: keepPreviousData,
+    enabled: features.reservations,
   })
   const pastReservations = reservationsQuery.data ?? []
 
@@ -501,15 +503,21 @@ export function PlaceDetailPanel({
                     {localized(place.description)}
                   </p>
                 )}
+                {/* Holding needs bookings, a walk-in the clock: a place that kept a
+                    tariff from a bigger plan is a plain table without them */}
                 <div className='mt-2 flex gap-2'>
-                  <Button variant='outline' onClick={onHold}>
-                    <CalendarClock className='me-1 h-4 w-4' />
-                    {t('hold')}
-                  </Button>
-                  <Button onClick={onWalkIn}>
-                    <Play className='me-1 h-4 w-4 rtl:rotate-180' />
-                    {t('walkIn')}
-                  </Button>
+                  {features.reservations && (
+                    <Button variant='outline' onClick={onHold}>
+                      <CalendarClock className='me-1 h-4 w-4' />
+                      {t('hold')}
+                    </Button>
+                  )}
+                  {features.timeBilling && (
+                    <Button onClick={onWalkIn}>
+                      <Play className='me-1 h-4 w-4 rtl:rotate-180' />
+                      {t('walkIn')}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -645,7 +653,7 @@ export function PlaceDetailPanel({
           </div>
         )}
         {/* Past reservations */}
-        {(place.reservable || pastReservations.length > 0) && (
+        {features.reservations && (place.reservable || pastReservations.length > 0) && (
           <div className='border-t p-4'>
             <h3 className='pb-1 text-sm font-medium'>
               {t('reservationHistory')}

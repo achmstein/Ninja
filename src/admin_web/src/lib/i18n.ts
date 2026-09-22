@@ -47,6 +47,10 @@ const webExtras = {
   poweredBy: { en: 'Powered by', ar: 'بدعم من' },
   adminName: { en: 'Admin', ar: 'الإدارة' },
   notInPlan: { en: 'Not in your plan', ar: 'مش في باقتك' },
+  featureOffDescription: {
+    en: 'This module is not in your plan, or is switched off on the Brand page.',
+    ar: 'الوحدة دي مش في باقتك، أو مقفولة من صفحة الهوية.',
+  },
   brandColor: { en: 'Brand color', ar: 'لون البراند' },
   brandColorDefault: { en: 'Default', ar: 'الافتراضي' },
   brandLogo: { en: 'Logo', ar: 'اللوجو' },

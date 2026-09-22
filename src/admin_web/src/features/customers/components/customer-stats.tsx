@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -27,10 +28,11 @@ export function CustomerStats() {
   const locale = useLocale()
   const [open, setOpen] = useState(false)
 
+  const features = useFeatures()
   const accounts = useQuery({
     queryKey: ['accounts'],
     queryFn: () => accountsService.getAccounts(),
-    enabled: open,
+    enabled: open && features.tabs,
   })
   const stats = useLoyaltyStats()
 
@@ -42,24 +44,34 @@ export function CustomerStats() {
     new Date()
   )
 
+  // The tab figures with tabs, the points figures with loyalty; nothing to show without either
   const cells: { label: string; value: React.ReactNode; tone?: string }[] = [
-    {
-      label: t('totalOutstanding'),
-      value: accounts.data ? formatEgp(outstanding) : null,
-      tone: outstanding > 0 ? 'text-destructive' : undefined,
-    },
-    {
-      label: t('customersOwing'),
-      value: accounts.data ? owing.length : null,
-    },
-    { label: t('members'), value: stats.data ? members : null },
-    {
-      label: `${t('pointsIssued')} · ${monthName}`,
-      value: stats.data
-        ? stats.data.pointsIssuedThisMonth.toLocaleString(locale)
-        : null,
-    },
+    ...(features.tabs
+      ? [
+          {
+            label: t('totalOutstanding'),
+            value: accounts.data ? formatEgp(outstanding) : null,
+            tone: outstanding > 0 ? 'text-destructive' : undefined,
+          },
+          {
+            label: t('customersOwing'),
+            value: accounts.data ? owing.length : null,
+          },
+        ]
+      : []),
+    ...(features.loyalty
+      ? [
+          { label: t('members'), value: stats.data ? members : null },
+          {
+            label: `${t('pointsIssued')} · ${monthName}`,
+            value: stats.data
+              ? stats.data.pointsIssuedThisMonth.toLocaleString(locale)
+              : null,
+          },
+        ]
+      : []),
   ]
+  if (cells.length === 0) return null
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>

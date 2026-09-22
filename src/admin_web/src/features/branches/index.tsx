@@ -6,6 +6,7 @@ import {
   getAllBranchesOptions,
   updateBranchSettingsMutation,
 } from '@/api/branch/@tanstack/react-query.gen'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,7 @@ import { PricingDialog } from './components/pricing-dialog'
 
 export function BranchesManagement() {
   const t = useT()
+  const features = useFeatures()
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -147,18 +149,20 @@ export function BranchesManagement() {
                         }
                       />
                     </div>
-                    <div className='flex items-center justify-between rounded-lg border p-3'>
-                      <Label className='text-sm'>
-                        {t('reservationsEnabled')}
-                      </Label>
-                      <Switch
-                        checked={branch.isReservationsEnabled}
-                        disabled={updateSettings.isPending}
-                        onCheckedChange={(v) =>
-                          toggleSetting(branch, 'isReservationsEnabled', v)
-                        }
-                      />
-                    </div>
+                    {features.reservations && (
+                      <div className='flex items-center justify-between rounded-lg border p-3'>
+                        <Label className='text-sm'>
+                          {t('reservationsEnabled')}
+                        </Label>
+                        <Switch
+                          checked={branch.isReservationsEnabled}
+                          disabled={updateSettings.isPending}
+                          onCheckedChange={(v) =>
+                            toggleSetting(branch, 'isReservationsEnabled', v)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { type RangeReport } from '@/api/sales'
+import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
@@ -27,6 +28,7 @@ export function TodaysTill({
   onRetry,
 }: TodaysTillProps) {
   const t = useT()
+  const features = useFeatures()
 
   if (error) {
     return <ErrorState error={error} onRetry={onRetry} />
@@ -50,7 +52,7 @@ export function TodaysTill({
     }
   })
 
-  const lines: {
+  const allLines: {
     key: string
     label: string
     value: string
@@ -83,6 +85,10 @@ export function TodaysTill({
       search: { view: 'payments', tender: '3' },
     },
   ]
+  // Tab payments are a tabs figure
+  const lines = allLines.filter(
+    (line) => line.key !== 'tabPayments' || features.tabs
+  )
 
   return (
     <section className='flex flex-col gap-5'>

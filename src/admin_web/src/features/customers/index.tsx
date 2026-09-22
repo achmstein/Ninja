@@ -54,8 +54,12 @@ export function Customers() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const query = (search.q ?? '').trim()
-  const filter = search.filter
   const features = useFeatures()
+  // A view whose module is off (a /loyalty or /accounts link from before) is the whole list
+  const filter =
+    (search.filter === 'owing' && !features.tabs) || (search.filter === 'members' && !features.loyalty)
+      ? undefined
+      : search.filter
 
   const select = (customer: string | undefined) =>
     navigate({ search: (prev) => ({ ...prev, customer }) })
@@ -66,6 +70,7 @@ export function Customers() {
   const accounts = useQuery({
     queryKey: ['accounts'],
     queryFn: () => accountsService.getAccounts(),
+    enabled: features.tabs,
   })
   const members = useLoyaltyAccounts(0, 1000)
   const balanceById = useMemo(

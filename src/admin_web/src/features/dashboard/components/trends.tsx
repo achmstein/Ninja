@@ -80,6 +80,7 @@ export function Trends() {
   const stayStats = useQuery({
     ...getStayStatsOptions({ query: statsQuery }),
     refetchInterval: 5 * 60_000,
+    enabled: features.timeBilling,
   })
 
   // The backend only returns days that have data; the axis needs every day

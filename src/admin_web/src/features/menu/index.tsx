@@ -41,6 +41,7 @@ import {
   toggleItemAvailabilityMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { SCAN_ACCEPT } from '@/lib/image'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -124,6 +125,7 @@ export function MenuManagement() {
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
   const items = itemsQuery.data ?? NO_ITEMS
+  const features = useFeatures()
   // Which items the storeroom tracks, and what a sale of each costs here
   const stockRules = useStockRuleBadges(items)
   const [trackOpen, setTrackOpen] = useState(false)
@@ -335,15 +337,17 @@ export function MenuManagement() {
                 />
               </>
             )}
-            <Button variant='outline' onClick={() => setTrackOpen(true)}>
-              <CookingPot className='me-2 h-4 w-4' />
-              {t('trackItems')}
-              {untracked.length > 0 && (
-                <Badge variant='secondary' className='ms-2 tabular-nums'>
-                  {untracked.length}
-                </Badge>
-              )}
-            </Button>
+            {features.inventory && (
+              <Button variant='outline' onClick={() => setTrackOpen(true)}>
+                <CookingPot className='me-2 h-4 w-4' />
+                {t('trackItems')}
+                {untracked.length > 0 && (
+                  <Badge variant='secondary' className='ms-2 tabular-nums'>
+                    {untracked.length}
+                  </Badge>
+                )}
+              </Button>
+            )}
             <Button
               variant='outline'
               onClick={() => setCategoryDialog({ category: null })}

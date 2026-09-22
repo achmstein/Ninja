@@ -14,6 +14,7 @@ import {
   type StayViewModel,
   type TariffViewModel,
 } from '@/api/spaces'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -98,6 +99,7 @@ function placeSubline(
 export function PlacesManagement() {
   const t = useT()
   const localized = useLocalized()
+  const features = useFeatures()
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const actions = useStayActions()
@@ -149,22 +151,26 @@ export function PlacesManagement() {
                     <QrCode size={20} className='stroke-muted-foreground' />
                   </Link>
                 </Button>
-                <Button size='icon' variant='ghost' asChild>
-                  <Link to='/places/history' aria-label={t('timeHistory')}>
-                    <History size={20} className='stroke-muted-foreground' />
-                  </Link>
-                </Button>
-                <Button size='icon' variant='ghost' asChild>
-                  <Link
-                    to='/places/reservations'
-                    aria-label={t('reservationHistory')}
-                  >
-                    <CalendarClock
-                      size={20}
-                      className='stroke-muted-foreground'
-                    />
-                  </Link>
-                </Button>
+                {features.timeBilling && (
+                  <Button size='icon' variant='ghost' asChild>
+                    <Link to='/places/history' aria-label={t('timeHistory')}>
+                      <History size={20} className='stroke-muted-foreground' />
+                    </Link>
+                  </Button>
+                )}
+                {features.reservations && (
+                  <Button size='icon' variant='ghost' asChild>
+                    <Link
+                      to='/places/reservations'
+                      aria-label={t('reservationHistory')}
+                    >
+                      <CalendarClock
+                        size={20}
+                        className='stroke-muted-foreground'
+                      />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
 

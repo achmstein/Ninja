@@ -4,6 +4,7 @@ import { getRouteApi, Link } from '@tanstack/react-router'
 import { Search, X } from 'lucide-react'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -38,6 +39,7 @@ type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
  */
 export function TillReport() {
   const t = useT()
+  const features = useFeatures()
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { dayWindow, fromIso, toIso } = useTillWindow(search)
@@ -248,17 +250,19 @@ export function TillReport() {
               search={open('refunds')}
               className={active('refunds')}
             />
-            <Stat
-              label={t('tabPayments')}
-              value={formatEgp(data?.tabPayments)}
-              hint={t('paymentsCount', {
-                count: toNumber(data?.tabPaymentCount),
-              })}
-              loading={loading}
-              to='/till'
-              search={open('tab-payments')}
-              className={active('tab-payments')}
-            />
+            {features.tabs && (
+              <Stat
+                label={t('tabPayments')}
+                value={formatEgp(data?.tabPayments)}
+                hint={t('paymentsCount', {
+                  count: toNumber(data?.tabPaymentCount),
+                })}
+                loading={loading}
+                to='/till'
+                search={open('tab-payments')}
+                className={active('tab-payments')}
+              />
+            )}
           </StatStrip>
 
           <div className='grid gap-10 lg:grid-cols-2'>
@@ -346,7 +350,7 @@ export function TillReport() {
               {view === 'tickets' && <TicketsList />}
               {view === 'payments' && <PaymentsList />}
               {view === 'refunds' && <RefundsList />}
-              {view === 'tab-payments' && <TabPaymentsList />}
+              {view === 'tab-payments' && features.tabs && <TabPaymentsList />}
             </section>
           )}
         </>

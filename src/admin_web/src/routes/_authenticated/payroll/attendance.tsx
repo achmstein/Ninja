@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
+import { FeatureGate } from '@/components/feature-gate'
 import { Attendance } from '@/features/payroll/attendance'
 
 const attendanceSearchSchema = z.object({
@@ -12,5 +13,9 @@ const attendanceSearchSchema = z.object({
 
 export const Route = createFileRoute('/_authenticated/payroll/attendance')({
   validateSearch: attendanceSearchSchema,
-  component: Attendance,
+  component: () => (
+    <FeatureGate feature='payroll'>
+      <Attendance />
+    </FeatureGate>
+  ),
 })

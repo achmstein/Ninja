@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { pagedSearch } from '@/lib/search-schemas'
+import { FeatureGate } from '@/components/feature-gate'
 import { MenuCost } from '@/features/inventory/menu-cost'
 
 const menuCostSearchSchema = z.object({
@@ -12,5 +13,9 @@ const menuCostSearchSchema = z.object({
 
 export const Route = createFileRoute('/_authenticated/inventory/menu-cost')({
   validateSearch: menuCostSearchSchema,
-  component: MenuCost,
+  component: () => (
+    <FeatureGate feature='inventory'>
+      <MenuCost />
+    </FeatureGate>
+  ),
 })

@@ -1,6 +1,6 @@
 import { ChefHat, Copy, Download, ReceiptText, Smartphone } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { useBrand } from '@/lib/brand'
+import { useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import { PageHeader } from '@/components/page-header'
 export function AppsPage() {
   const t = useT()
   const brand = useBrand()
+  const features = useFeatures()
   const apiUrl = brand?.apiUrl ?? defaultApiOrigin()
   const appsUrl = brand?.appsUrl ?? null
   const staffOrigin = (app: 'pos' | 'kds') => {
@@ -44,7 +45,8 @@ export function AppsPage() {
       about: t('appsKdsAbout'),
       file: 'ninja-kds.apk',
     },
-  ]
+    // The kitchen display is a module: no card for it when it is off
+  ].filter((app) => app.key !== 'kds' || features.kds)
 
   return (
     <Main>
