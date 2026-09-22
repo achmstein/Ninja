@@ -43,6 +43,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Control.UnitTests" />
+    <InternalsVisibleTo Include="Control.FunctionalTests" />
   </ItemGroup>
 
 </Project>

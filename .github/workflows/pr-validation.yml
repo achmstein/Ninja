@@ -43,6 +43,22 @@ jobs:
       - name: Test
         run: dotnet test tests/Control.IntegrationTests/Control.IntegrationTests.csproj --no-build --no-progress --output detailed
 
+  # The control plane through its front door: Control.API in-process on a dry-run
+  # box over a real controldb in a Postgres container (Testcontainers), every
+  # scenario a story from the audit trail. Docker for the container, so its
+  # own job like the one above.
+  control-functional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET (global.json)
+        uses: actions/setup-dotnet@v3
+      - name: Build
+        run: dotnet build tests/Control.FunctionalTests/Control.FunctionalTests.csproj
+      - name: Test
+        run: dotnet test tests/Control.FunctionalTests/Control.FunctionalTests.csproj --no-build --no-progress --output detailed
+
   web:
     runs-on: ubuntu-latest
     strategy:
