@@ -49,7 +49,6 @@
       "tests\\Identity.UnitTests\\Identity.UnitTests.csproj",
       "tests\\Loyalty.UnitTests\\Loyalty.UnitTests.csproj",
       "tests\\Inventory.UnitTests\\Inventory.UnitTests.csproj",
-      "tests\\Ordering.FunctionalTests\\Ordering.FunctionalTests.csproj",
       "tests\\Ordering.UnitTests\\Ordering.UnitTests.csproj",
       "tests\\Payroll.UnitTests\\Payroll.UnitTests.csproj",
       "tests\\Sales.UnitTests\\Sales.UnitTests.csproj",
