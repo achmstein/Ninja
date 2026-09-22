@@ -41,4 +41,8 @@
     <PackageReference Include="FluentValidation.AspNetCore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sales.FunctionalTests" />
+  </ItemGroup>
+
 </Project>
