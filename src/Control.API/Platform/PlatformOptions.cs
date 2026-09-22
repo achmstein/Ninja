@@ -114,7 +114,7 @@ public sealed class PlatformOptions
 
     public int MemoryFor(string service) => ServiceMemoryOverridesMb.TryGetValue(service, out var mb) ? mb : ServiceMemoryMb;
 
-    /// <summary>The most a whole stack may take: what its caps add up to (3584 MB by default). The footprint above is what it typically takes and must fit under this.</summary>
+    /// <summary>The most a whole stack may take: what the caps of all twelve services add up to (3584 MB by default); a plan that stamps fewer takes less. The footprint above is what it typically takes and must fit under this.</summary>
     public int StackLimitMb => TenantNaming.Services.Sum(MemoryFor) + GatewayMemoryMb;
 
     /// <summary>How often the box is read for the capacity view.</summary>

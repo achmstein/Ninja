@@ -222,6 +222,19 @@ public sealed class TemplatesTests
         Assert.HasCount(2, Regex.Matches(tuned, "memory: \"384M\""));
     }
 
+    /// <summary>The queue the control plane deletes when a module leaves the plan is the one its service declares.</summary>
+    [TestMethod]
+    public void Queue_names_match_the_services_subscription_client_names()
+    {
+        foreach (var service in TenantNaming.Services)
+        {
+            // appsettings carry comments, the way ASP.NET reads them
+            var json = File.ReadAllText(FindUp(Path.Combine("src", $"{TenantNaming.Queue(service)}.API", "appsettings.json")));
+            var settings = JsonNode.Parse(json, documentOptions: new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })!;
+            Assert.AreEqual(TenantNaming.Queue(service), settings["EventBus"]?["SubscriptionClientName"]?.GetValue<string>(), service);
+        }
+    }
+
     private static string FindUp(string relative)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

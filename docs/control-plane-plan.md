@@ -61,7 +61,7 @@ trusted: `curl --resolve control.localhost:443:127.0.0.1 -k …`.
   (`?preview-theme=dark&lang=ar`, honoured without touching the visitor's
   own storage). Caddy allows framing only from `control.{domain}`.
 - **Health:** containers (`compose ps`), the last lines of one service's
-  log, the twelve `/health` probes through the gateway.
+  log, a `/health` probe per stamped service through the gateway.
 - **Metrics:** orders, revenue, settled tickets, net sales, month profit,
   loyalty accounts, a daily series and top items, read from the stack's own
   APIs per branch; a failing service becomes a warning, never an error.
@@ -135,7 +135,11 @@ operator's view; this is the map.
   Entitlements are pushed to the stack's Branch.API (`PUT
   /api/tenant/entitlements`, policy `Control` = `azp == ninja-control`),
   which clamps the owner's switches, and stamped into the gateway, where
-  an unentitled module's routes become `402 module-off`. `Payment` rows,
+  an unentitled module's routes become `402 module-off`. The services of
+  the modules a plan lacks (inventory, finance, payroll, loyalty, accounts)
+  are not stamped at all, and their queues are deleted on the broker, so a
+  module bought back starts from then rather than replaying every order
+  since. `Payment` rows,
   `RecordPaymentAsync` as the one entry point, a daily sweep
   (`SubscriptionSweep.Decide`) for past due → suspended; `Suspended = 8`
   stops the stack and the edge answers `503 {"code":"paused"}`, which the

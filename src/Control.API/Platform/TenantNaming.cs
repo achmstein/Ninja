@@ -14,7 +14,7 @@ public static partial class TenantNaming
         "payrolldb", "financedb", "loyaltydb", "branchdb", "notificationdb",
     ];
 
-    /// <summary>The services a stack runs, as image suffix → compose service suffix.</summary>
+    /// <summary>Every service a stack can run, as image suffix → compose service suffix; PlanCatalog.Services says which a plan does.</summary>
     public static readonly string[] Services =
     [
         "catalog", "ordering", "spaces", "sales", "inventory", "payroll",
@@ -69,6 +69,9 @@ public static partial class TenantNaming
 
     /// <summary>A compose service name, unique on the shared network: {slug}-{service}-api.</summary>
     public static string Service(string slug, string service) => $"{slug}-{service}-api";
+
+    /// <summary>The durable queue a service consumes in the tenant's vhost: its EventBus:SubscriptionClientName, which every service spells as its own name capitalised (Inventory, Finance, …).</summary>
+    public static string Queue(string service) => char.ToUpperInvariant(service[0]) + service[1..];
 
     public static string Gateway(string slug) => $"{slug}-gateway";
 

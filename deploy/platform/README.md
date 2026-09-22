@@ -159,8 +159,11 @@ module's routes (`/api/inventory/*`, `/api/finance/*`, `/api/payroll/*`,
 room-only place routes), and its Branch.API clamps the owner's feature
 switches so an unentitled module can never be switched on; the admin app
 shows those switches locked with "not in your plan". Changing the
-subscription only recreates the gateway (seconds); every service keeps
-running. Billing is by hand for now: **Record payment** on the tab writes a
+subscription re-stamps the stack: the gateway recreates on its new routes,
+the containers of modules that left the plan are removed and their queues
+deleted on the broker (a module bought back starts from then, nothing is
+replayed), and one that joined is created. Billing is by hand for now:
+**Record payment** on the tab writes a
 payment with its period and moves *paid through*, and that is the one
 entry point a payment provider would call later. A daily sweep
 (`SubscriptionSweepHour`, 6) marks a customer past due when the date

@@ -85,7 +85,8 @@ public sealed class TenantOps(IShell shell, IStackProxy proxy)
 
     public async Task<IReadOnlyList<ServiceHealth>> HealthAsync(Tenant tenant, CancellationToken ct)
     {
-        var probes = TenantNaming.Services.Select(async service =>
+        // The services the plan stamps: a module's service that is not there is not unhealthy, it is absent
+        var probes = PlanCatalog.Services(tenant).Select(async service =>
         {
             var watch = Stopwatch.StartNew();
             try
@@ -218,10 +219,14 @@ public sealed class TenantMetricsCollector(IStackProxy proxy, ILogger<TenantMetr
                 rangeReports.Add(report);
         }
 
+        // Finance and Loyalty only where the plan has them: their services are not stamped otherwise, and a 402 is not a warning
+        var entitled = PlanCatalog.Entitlements(tenant);
         JsonObject? profit = null;
-        if (branchIds.Count > 0)
+        if (branchIds.Count > 0 && entitled.Contains(Module.Finance))
             profit = await GetAsync(tenant, $"/api/finance/profit?year={to.Year}&month={to.Month}&api-version=1.0", branchIds[0], warnings, ct) as JsonObject;
-        var loyalty = await GetAsync(tenant, "/api/loyalty/stats?api-version=1.0", branchIds.FirstOrDefault(), warnings, ct) as JsonObject;
+        var loyalty = entitled.Contains(Module.Loyalty)
+            ? await GetAsync(tenant, "/api/loyalty/stats?api-version=1.0", branchIds.FirstOrDefault(), warnings, ct) as JsonObject
+            : null;
 
         return TenantMetricsMath.Merge(days, branchIds.Count, orderStats, rangeReports, profit, loyalty, warnings.Distinct().ToList());
     }

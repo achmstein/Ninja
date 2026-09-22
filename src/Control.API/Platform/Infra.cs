@@ -37,6 +37,8 @@ public interface IBrokerAdmin
     Task ClearPermissionsAsync(string vhost, string user, CancellationToken ct);
     Task DeleteVHostAsync(string vhost, CancellationToken ct);
     Task DeleteUserAsync(string user, CancellationToken ct);
+    /// <summary>A service's durable queue off the vhost, with whatever it holds; nothing when there is none (the module was never on, or is gone twice).</summary>
+    Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct);
 }
 
 public interface IKeycloakAdmin
@@ -294,14 +296,19 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<PlatformOptions>
     public Task DeleteUserAsync(string user, CancellationToken ct)
         => CtlAsync(["delete_user", user], ct, tolerate: true);
 
+    public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct)
+        => CtlAsync(["delete_queue", "-p", vhost, queue], ct, tolerate: true);
+
     /// <summary>rabbitmqctl in the broker's container; <paramref name="tolerate"/> lets "already gone" pass on a delete.</summary>
     private async Task<string> CtlAsync(string[] args, CancellationToken ct, bool tolerate = false)
     {
         var result = await shell.RunAsync("docker", ["exec", Container, "rabbitmqctl", .. args], null, ct);
         if (result.Ok) return result.Output;
-        // "already gone" as the CLI has phrased it over the years: {:not_found, …}, no_such_user, and RabbitMQ 4's "Virtual host 'x' does not exist"
+        // "already gone" as the CLI has phrased it over the years: {:not_found, …}, no_such_user, RabbitMQ 4's "Virtual host 'x' does not exist"
+        // and delete_queue's "No such queue was found"
         if (tolerate && (result.Output.Contains("not_found", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("no_such", StringComparison.OrdinalIgnoreCase)
-                         || result.Output.Contains("does not exist", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("not found", StringComparison.OrdinalIgnoreCase)))
+                         || result.Output.Contains("does not exist", StringComparison.OrdinalIgnoreCase) || result.Output.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                         || result.Output.Contains("no such", StringComparison.OrdinalIgnoreCase)))
             return result.Output;
         throw new InvalidOperationException($"rabbitmqctl {args[0]} failed: {result.Output}");
     }
@@ -480,7 +487,8 @@ public sealed class HttpTenantStack(IStackProxy proxy, ILogger<HttpTenantStack> 
     public async Task WaitHealthyAsync(Tenant tenant, TimeSpan timeout, CancellationToken ct)
     {
         var deadline = DateTimeOffset.UtcNow + timeout;
-        var pending = TenantNaming.Services.ToHashSet();
+        // The services the plan stamps; a module's service that is not there has no probe to answer
+        var pending = PlanCatalog.Services(tenant).ToHashSet();
         while (pending.Count > 0)
         {
             foreach (var service in pending.ToArray())

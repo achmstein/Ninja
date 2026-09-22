@@ -243,9 +243,12 @@ public sealed class Provisioner(
         }, ct);
 
     /// <summary>
-    /// The plan changed: the gateway is re-stamped (only it recreates, its env
-    /// is all that differs; no pull) and Branch.API is told. A stack that is
-    /// not running gets both when it next starts.
+    /// The plan changed: the stack is re-stamped from what it entitles now.
+    /// The gateway recreates on its new routes; a module's service that left
+    /// the plan goes as an orphan and its queue is dropped; one that joined is
+    /// created (compose pulls an image the box has not seen). Then Branch.API
+    /// is told. A stack that is not running gets the stack on its next start,
+    /// the queues now: the broker is up regardless.
     /// </summary>
     public async Task EntitlementsAsync(Guid tenantId, CancellationToken ct)
     {
@@ -263,7 +266,14 @@ public sealed class Provisioner(
                 if (!result.Ok) throw new ShellException(result.Output);
                 return result.Output;
             }, ct);
-            if (tenant.Status == TenantStatus.Running) await EntitlementsStepAsync(tenant, runId, ct);
+            await QueuesStepAsync(tenant, runId, ct);
+            if (tenant.Status == TenantStatus.Running)
+            {
+                // The push goes through the gateway, which up just recreated when its routes changed: it answers again in a
+                // few seconds, and a push before that is refused, leaving the stack on its old entitlements
+                await HealthStepAsync(tenant, runId, ct);
+                await EntitlementsStepAsync(tenant, runId, ct);
+            }
             await audit.WriteAsync("tenant.entitlements.done", tenant.Slug, new { runId, entitled = PlanCatalog.Entitlements(tenant).Select(PlanCatalog.Key) }, ct, Source);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
@@ -294,6 +304,22 @@ public sealed class Provisioner(
             ? UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
             : UnixFileMode.UserRead | UnixFileMode.UserWrite);
     }
+
+    /// <summary>
+    /// The queues of the services the plan does not run. A consumer that is
+    /// gone leaves a durable queue filling with every order and ticket, and a
+    /// module bought back later must start from then, not replay them. Every
+    /// unentitled service's, each time: gone twice is nothing.
+    /// </summary>
+    private Task<string> QueuesStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
+        => Step(tenant, runId, "queues", async () =>
+        {
+            var vhost = TenantNaming.VHost(tenant.Slug);
+            var off = TenantNaming.Services.Except(PlanCatalog.Services(tenant)).Select(TenantNaming.Queue).ToList();
+            foreach (var queue in off)
+                await broker.DeleteQueueAsync(vhost, queue, ct);
+            return off.Count == 0 ? "every service runs" : $"{string.Join(", ", off)} off vhost {vhost}";
+        }, ct);
 
     /// <summary>The shared broker user off the vhost: what a stack stamped before it had a user of its own still connected as. Nothing to do for a fresh one.</summary>
     private Task<string> BrokerLockdownStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
@@ -579,10 +605,16 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync($"tenant.{action}.done", tenant.Slug, null, ct, Source);
 
-            // Back up, the stack hears what the plan allows now (its compose already does)
+            // Back up, the stack hears what the plan allows now (its compose already does, and the queues of
+            // what it no longer runs go, in case the plan shrank while it was down); once it answers
             if (action is "start" or "resume")
             {
-                try { await EntitlementsStepAsync(tenant, runId, ct); }
+                try
+                {
+                    await QueuesStepAsync(tenant, runId, ct);
+                    await HealthStepAsync(tenant, runId, ct);
+                    await EntitlementsStepAsync(tenant, runId, ct);
+                }
                 catch (Exception ex) when (!ct.IsCancellationRequested)
                 {
                     logger.LogWarning(ex, "{Slug}: entitlements not pushed after {Action}", tenant.Slug, action);

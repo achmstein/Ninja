@@ -23,10 +23,27 @@ public enum Module
 /// prices (those are the platform's, not the code's): change it here and
 /// the next entitlements push carries it to every stack. A demo is entitled
 /// to everything while it is a demo, so a prospect sees the whole product.
+/// What is entitled decides three things on the stack: which switches the
+/// owner may turn on, which routes the gateway answers, and which of the
+/// module services are stamped at all (<see cref="Services(IReadOnlySet{Module})"/>).
 /// </summary>
 public static class PlanCatalog
 {
     public static readonly IReadOnlySet<Module> All = Enum.GetValues<Module>().ToHashSet();
+
+    /// <summary>
+    /// The service a module runs in, for the five that have one of their own.
+    /// Reservations and Time billing live in Spaces beside the plain tables
+    /// every café has; Kds is a screen, not a service.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<Module, string> ServiceOf = new Dictionary<Module, string>
+    {
+        [Module.Inventory] = "inventory",
+        [Module.Finance] = "finance",
+        [Module.Payroll] = "payroll",
+        [Module.Loyalty] = "loyalty",
+        [Module.Tabs] = "accounts",
+    };
 
     private static readonly Dictionary<TenantPlan, IReadOnlySet<Module>> IncludedByPlan = new()
     {
@@ -68,6 +85,20 @@ public static class PlanCatalog
         => kind == TenantKind.Demo ? All : Included(plan).Union(addons).ToHashSet();
 
     public static IReadOnlySet<Module> Entitlements(Tenant t) => Entitlements(t.Plan, t.Addons, t.Kind);
+
+    /// <summary>
+    /// The services a stack runs: every one of <see cref="TenantNaming.Services"/>
+    /// less those whose module is not entitled, in the same order. A container
+    /// nobody may reach is not stamped, and its queue is dropped, so a module
+    /// bought later starts from then rather than replaying every order since.
+    /// </summary>
+    public static IReadOnlyList<string> Services(IReadOnlySet<Module> entitled)
+    {
+        var off = ServiceOf.Where(kv => !entitled.Contains(kv.Key)).Select(kv => kv.Value).ToHashSet();
+        return TenantNaming.Services.Where(s => !off.Contains(s)).ToArray();
+    }
+
+    public static IReadOnlyList<string> Services(Tenant t) => Services(Entitlements(t));
 
     /// <summary>The add-ons as kept on the record: none the plan already includes, no duplicates, in the enum's order.</summary>
     public static Module[] NormalizeAddons(TenantPlan plan, IEnumerable<Module> addons)

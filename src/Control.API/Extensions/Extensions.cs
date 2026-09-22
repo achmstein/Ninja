@@ -174,4 +174,6 @@ public sealed class DryRunBrokerAdmin(ILogger<DryRunBrokerAdmin> logger) : IBrok
     public Task ClearPermissionsAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) {User} off vhost {VHost}", user, vhost); return Task.CompletedTask; }
     public Task DeleteVHostAsync(string vhost, CancellationToken ct) { logger.LogInformation("(dry run) delete vhost {VHost}", vhost); return Task.CompletedTask; }
     public Task DeleteUserAsync(string user, CancellationToken ct) { Users.Remove(user); logger.LogInformation("(dry run) delete broker user {User}", user); return Task.CompletedTask; }
+    public List<string> DeletedQueues { get; } = [];
+    public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct) { DeletedQueues.Add($"{vhost}/{queue}"); logger.LogInformation("(dry run) delete queue {Queue} on {VHost}", queue, vhost); return Task.CompletedTask; }
 }

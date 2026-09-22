@@ -22,6 +22,7 @@ public sealed class InfraTests
         await admin.EnsureUserAsync("blue_app", "pw-1234567890123456", CancellationToken.None);
         await admin.EnsureVHostAsync("blue", "blue_app", CancellationToken.None);
         await admin.ClearPermissionsAsync("blue", "guest", CancellationToken.None);
+        await admin.DeleteQueueAsync("blue", "Inventory", CancellationToken.None);
         await admin.DeleteUserAsync("blue_app", CancellationToken.None);
 
         CollectionAssert.AreEqual(new[]
@@ -34,8 +35,28 @@ public sealed class InfraTests
             "docker exec broker rabbitmqctl set_permissions -p blue blue_app .* .* .*",
             "docker exec broker rabbitmqctl set_policy -p blue dead-letter .* {\"dead-letter-exchange\":\"ninja_dead_letters\"} --apply-to queues",
             "docker exec broker rabbitmqctl clear_permissions -p blue guest",
+            "docker exec broker rabbitmqctl delete_queue -p blue Inventory",
             "docker exec broker rabbitmqctl delete_user blue_app",
         }, shell.Commands);
+    }
+
+    /// <summary>A shell whose rabbitmqctl answers with the given exit code and text.</summary>
+    private sealed class AnsweringShell(int code, string output) : IShell
+    {
+        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct) => Task.FromResult(new ShellResult(code, output));
+        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct) => Task.FromResult(new ShellResult(code, output));
+    }
+
+    [TestMethod]
+    public async Task A_queue_that_is_already_gone_is_nothing_but_any_other_refusal_is_an_error()
+    {
+        static RabbitCtlBrokerAdmin With(int code, string output) => new(new AnsweringShell(code, output), Options.Create(new PlatformOptions { RabbitContainer = "broker" }));
+
+        // RabbitMQ 4.2, the second time a plan drops the same module
+        await With(64, "Deleting queue 'Payroll' on vhost 'lucaffe' ...\nError:\nNo such queue was found\n").DeleteQueueAsync("lucaffe", "Payroll", CancellationToken.None);
+        await With(64, "Error:\nVirtual host 'gone' does not exist\n").DeleteQueueAsync("gone", "Payroll", CancellationToken.None);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => With(69, "Error: unable to connect to node rabbit@broker\n").DeleteQueueAsync("lucaffe", "Payroll", CancellationToken.None));
     }
 
     [TestMethod]

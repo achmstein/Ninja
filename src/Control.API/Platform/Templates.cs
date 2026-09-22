@@ -9,8 +9,9 @@ namespace Ninja.Control.API.Platform;
 /// <summary>
 /// The files a tenant is stamped from, as embedded resources with
 /// {{placeholder}} slots. The compose file is built here rather than kept as
-/// a template because its shape (twelve services and a gateway) is the
-/// AppHost's shape, and the names must not collide on the shared network.
+/// a template because its shape (the services the plan runs, at most the
+/// AppHost's twelve, and a gateway) is decided per tenant, and the names
+/// must not collide on the shared network.
 /// </summary>
 public static partial class Templates
 {
@@ -93,20 +94,22 @@ public static partial class Templates
     private static string JsonEscape(string s) => System.Text.Json.JsonEncodedText.Encode(s).ToString();
 
     /// <summary>
-    /// The stack: twelve services and a gateway, every name prefixed with the
-    /// slug so nothing collides on the shared network, wired to the shared
-    /// Postgres (its own databases), the shared broker (its own vhost) and
-    /// the shared Keycloak (its own realm).
+    /// The stack: the services the plan runs (at most twelve) and a gateway,
+    /// every name prefixed with the slug so nothing collides on the shared
+    /// network, wired to the shared Postgres (its own databases), the shared
+    /// broker (its own vhost) and the shared Keycloak (its own realm).
     /// </summary>
     public static string Compose(Tenant tenant, TenantHosts hosts, PlatformOptions platform)
     {
         var slug = tenant.Slug;
+        var entitled = PlanCatalog.Entitlements(tenant);
+        var services = PlanCatalog.Services(entitled);
         var sb = new StringBuilder();
         sb.AppendLine($"# {TenantNaming.Project(slug)} — stamped by the Ninja control plane; edits are overwritten on upgrade");
         sb.AppendLine($"name: {TenantNaming.Project(slug)}");
         sb.AppendLine("services:");
 
-        foreach (var service in TenantNaming.Services)
+        foreach (var service in services)
         {
             var name = TenantNaming.Service(slug, service);
             sb.AppendLine($"  {name}:");
@@ -187,7 +190,6 @@ public static partial class Templates
         sb.AppendLine("      Kestrel__EndpointDefaults__Protocols: \"Http1AndHttp2\"");
         sb.AppendLine("      HTTP_PORTS: \"5000\"");
         var i = 0;
-        var entitled = PlanCatalog.Entitlements(tenant);
         foreach (var (path, cluster, versions, transforms) in GatewayRoutes(entitled))
         {
             var r = $"REVERSEPROXY__ROUTES__route{i++}";
@@ -207,7 +209,7 @@ public static partial class Templates
                 foreach (var (key, value) in transforms[t])
                     sb.AppendLine($"      {r}__TRANSFORMS__{t}__{key}: \"{value}\"");
         }
-        foreach (var service in TenantNaming.Services)
+        foreach (var service in services)
             sb.AppendLine($"      REVERSEPROXY__CLUSTERS__{service}__DESTINATIONS__d1__ADDRESS: \"http://{TenantNaming.Service(slug, service)}:8080\"");
         sb.AppendLine("    networks:");
         sb.AppendLine($"      - \"{platform.Network}\"");
@@ -325,17 +327,20 @@ public static partial class Templates
     /// routes keep their paths (never a duplicate template) but point at
     /// Branch.API's 402 page, and Reservations and Time billing additionally
     /// block their place routes one by one, since /api/places itself serves
-    /// tables and stations.
-    /// Every container keeps running; only the gateway changes.
+    /// tables and stations. A module's own service (inventory, finance,
+    /// payroll, loyalty, accounts) is not stamped at all when the module is
+    /// not entitled, so no route points at it: after the 402 re-pointing that
+    /// is its health probe.
     /// </summary>
     internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[][] Transforms)> GatewayRoutes(IReadOnlySet<Module> entitled)
     {
         var blocked = PlanCatalog.Routes.Where(r => !entitled.Contains(r.Module)).ToDictionary(r => r.Path, r => r.Module);
+        var services = PlanCatalog.Services(entitled).ToHashSet();
         foreach (var route in GatewayRoutes())
         {
             if (blocked.Remove(route.Path, out var module))
                 yield return Block(route.Path, module);
-            else
+            else if (services.Contains(route.Cluster))
                 yield return route;
         }
         // The reserving and timed routes under /api/places are not in the table: they are only ever added, to block

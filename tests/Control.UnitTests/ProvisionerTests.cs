@@ -104,6 +104,30 @@ public sealed class ProvisionerTests
     private string ComposeOnDisk() => File.ReadAllText(Path.Combine(_root, "blue", "docker-compose.yaml"));
 
     [TestMethod]
+    public async Task A_plan_change_restamps_the_stack_without_the_modules_it_lost_and_drops_their_queues()
+    {
+        _tenant.Plan = TenantPlan.Starter;
+        _tenant.DbPassword = TenantNaming.NewPassword();
+        _tenant.BrokerPassword = TenantNaming.NewPassword();
+        await _context.SaveChangesAsync();
+
+        await _provisioner.EntitlementsAsync(_tenant.Id, CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { "stack:Done", "queues:Done", "health:Done", "entitlements:Done" }, Steps().ToList());
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("compose -p ninja-blue up -d --remove-orphans")), "the orphaned containers go with the up");
+        var yaml = ComposeOnDisk();
+        Assert.DoesNotContain("blue-inventory-api:", yaml);
+        Assert.DoesNotContain("blue-finance-api:", yaml);
+        Assert.DoesNotContain("blue-payroll-api:", yaml);
+        Assert.Contains("blue-loyalty-api:", yaml);
+        var queues = _context.Steps.Single(s => s.Name == "queues").Output ?? "";
+        foreach (var queue in new[] { "Inventory", "Payroll", "Finance" }) Assert.Contains(queue, queues);
+        Assert.DoesNotContain("Loyalty", queues);
+        Assert.IsTrue(_audit.Entries.Any(e => e.Action == "tenant.entitlements.done"));
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+    }
+
+    [TestMethod]
     public async Task An_upgrade_backs_up_first_moves_the_tags_and_ends_running()
     {
         await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);

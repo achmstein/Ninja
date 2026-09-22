@@ -82,9 +82,31 @@ public sealed class SubscriptionTests
         Assert.Contains($"{reservations}__CLUSTERID: \"spaces\"", yaml);
         var places = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/places/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{places}__CLUSTERID: \"spaces\"", yaml);
-        // Every container still runs and is still probed
-        Assert.Contains("REVERSEPROXY__CLUSTERS__inventory__DESTINATIONS__d1__ADDRESS", yaml);
-        Assert.Contains("/health/inventory", yaml);
+        // The module's service is not stamped: no container, no cluster, no probe; what Starter has is
+        Assert.DoesNotContain("  blue-inventory-api:", yaml);
+        Assert.DoesNotContain("REVERSEPROXY__CLUSTERS__inventory__", yaml);
+        Assert.DoesNotContain("/health/inventory", yaml);
+        Assert.Contains("  blue-loyalty-api:", yaml);
+        Assert.Contains("REVERSEPROXY__CLUSTERS__loyalty__DESTINATIONS__d1__ADDRESS", yaml);
+        Assert.Contains("/health/loyalty", yaml);
+    }
+
+    [TestMethod]
+    public void A_plan_stamps_only_the_services_its_modules_run_in()
+    {
+        static string[] Without(params string[] off) => TenantNaming.Services.Where(s => !off.Contains(s)).ToArray();
+
+        CollectionAssert.AreEqual(Without("inventory", "payroll", "finance"), PlanCatalog.Services(PlanCatalog.Entitlements(TenantPlan.Starter, [], TenantKind.Customer)).ToArray());
+        CollectionAssert.AreEqual(Without("inventory", "payroll", "finance", "loyalty", "accounts"), PlanCatalog.Services(PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Customer)).ToArray());
+        CollectionAssert.AreEqual(Without("payroll", "finance"), PlanCatalog.Services(PlanCatalog.Entitlements(TenantPlan.Starter, [Module.Inventory], TenantKind.Customer)).ToArray(), "an add-on brings its service back");
+        CollectionAssert.AreEqual(TenantNaming.Services, PlanCatalog.Services(PlanCatalog.Entitlements(TenantPlan.Pro, [], TenantKind.Customer)).ToArray());
+        CollectionAssert.AreEqual(TenantNaming.Services, PlanCatalog.Services(PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Demo)).ToArray(), "a demo runs everything");
+
+        // No route points at a service that is not there
+        var free = PlanCatalog.Entitlements(TenantPlan.Free, [], TenantKind.Customer);
+        var stamped = PlanCatalog.Services(free).ToHashSet();
+        foreach (var route in Templates.GatewayRoutes(free))
+            Assert.IsTrue(stamped.Contains(route.Cluster), $"{route.Path} points at {route.Cluster}, which Free does not stamp");
     }
 
     [TestMethod]

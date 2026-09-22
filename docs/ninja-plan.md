@@ -15,7 +15,7 @@
 | Menu from a photo | **Built.** `POST /api/catalog/assist/menu/scan` (Catalog `Assist/MenuScanner.cs`) proposes sections and items with both languages and prices; `admin_web/src/features/menu/components/menu-review-sheet.tsx` reviews and creates them. Onboarding wires this in; it does not build it. |
 | Brand | Shallow. "Chillax" / "PlayStation" live in a dozen places per surface: page title, manifest, `app_config.dart`, realm JSON, Caddyfile, i18n `appTitle`. The web theme is already CSS variables in oklch (`client_web/src/styles/theme.css`), so a tenant's primary color is a runtime override, not a build. |
 | Feature switches | Started on `Branch` (`IsOrderingEnabled`, `IsReservationsEnabled`, `RequireSignInForTableOrders`). Rooms, loyalty, tabs, inventory, finance, payroll become the same kind of switch at tenant level. |
-| Twelve services | Every tenant needs all of them running. This drives D2. |
+| Twelve services | Nine run for every tenant; inventory, finance, payroll, loyalty and accounts only where the plan includes their module (`PlanCatalog.Services`). This drives D2. |
 | Event bus | Routing key is the event's short type name (`RabbitMQEventBus.cs`), and the outbox replays by short name too (`IntegrationEventLogEntry.EventTypeShortName`), so renaming namespaces does not break queues or pending outbox rows. |
 | OpenAPI | Schema ids do not carry namespaces (the generated web SDKs contain no `Chillax`), so the rename does not change the generated clients. |
 
