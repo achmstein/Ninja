@@ -97,6 +97,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     if (state == AppLifecycleState.resumed && _wasAuthenticated) {
       ref.read(signalRServiceProvider).reconnectIfNeeded();
       ref.read(myStaysProvider.notifier).refresh();
+      ref.read(myReservationsProvider.notifier).refresh();
       ref.read(branchProvider.notifier).refreshSilently();
       ref.read(brandProvider.notifier).refresh();
       final branchId = ref.read(selectedBranchIdProvider);
@@ -192,6 +193,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
         final branchId = ref.read(selectedBranchIdProvider);
         if (branchId != null) ref.invalidate(placesProvider(branchId));
         ref.read(myStaysProvider.notifier).refresh();
+        ref.read(myReservationsProvider.notifier).refresh();
         ref.read(myBillsProvider.notifier).refresh();
         ref.invalidate(roomAvailabilitySubscriptionProvider);
         WidgetsBinding.instance.ensureVisualUpdate();

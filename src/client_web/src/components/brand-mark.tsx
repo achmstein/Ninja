@@ -58,7 +58,7 @@ export function BrandWordmark({
         src={url}
         alt={name}
         style={{ aspectRatio: `${width} / ${height}` }}
-        className={cn('block h-7 w-auto max-w-full object-contain', className)}
+        className={cn('block h-(--wordmark-h) w-auto max-w-full object-contain', className)}
       />
     )
   }

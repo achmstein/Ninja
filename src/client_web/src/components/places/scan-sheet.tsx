@@ -159,7 +159,7 @@ export function ScanSheet({
                 )}
                 <Button
                   size='lg'
-                  className='w-full rounded-full font-bold'
+                  className='w-full rounded-pill font-bold'
                   disabled={joinStay.isPending}
                   onClick={async () => {
                     if (!(await ensureProfileComplete())) return

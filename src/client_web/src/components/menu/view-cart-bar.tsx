@@ -31,7 +31,7 @@ export function ViewCartBar() {
       <div className='bg-background fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom)-1px)] z-40 mx-auto max-w-lg border-t px-4 pt-2 pb-[calc(0.5rem+1px)] md:hidden'>
         <Link
           to='/cart'
-          className='bg-primary text-primary-foreground flex items-center justify-between rounded-full px-5 py-3 text-sm font-semibold'
+          className='bg-primary text-primary-foreground flex items-center justify-between rounded-pill px-5 py-3 text-sm font-semibold'
         >
           <span className='flex items-center gap-2'>
             <ShoppingBag className='h-4 w-4' />

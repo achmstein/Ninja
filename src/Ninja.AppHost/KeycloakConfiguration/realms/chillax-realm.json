@@ -644,8 +644,8 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
-        "com.chillax.pos://callback",
-        "com.chillax.pos://*",
+        "com.ninja.pos://callback",
+        "com.ninja.pos://*",
         "http://localhost/*",
         "http://10.0.2.2/*"
       ],
@@ -690,8 +690,8 @@
       "implicitFlowEnabled": false,
       "protocol": "openid-connect",
       "redirectUris": [
-        "com.chillax.kds://callback",
-        "com.chillax.kds://*",
+        "com.ninja.kds://callback",
+        "com.ninja.kds://*",
         "http://localhost/*",
         "http://10.0.2.2/*"
       ],

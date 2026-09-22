@@ -32,27 +32,6 @@ internal static class StayEventFields
     }
 }
 
-public class StayHeldDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayHeldDomainEventHandler> logger)
-    : INotificationHandler<StayHeldDomainEvent>
-{
-    public async Task Handle(StayHeldDomainEvent notification, CancellationToken cancellationToken)
-    {
-        var stay = notification.Stay;
-        logger.LogInformation("Stay held: {StayId} at place {PlaceId} for {Customer}", stay.Id, stay.PlaceId, stay.CustomerName ?? "Unknown");
-
-        await outbox.AddAndSaveEventAsync(new PlaceReservedIntegrationEvent(
-            stay.Id,
-            stay.PlaceId,
-            stay.PlaceKind(),
-            stay.PlaceName(),
-            stay.CustomerId,
-            stay.CustomerName,
-            stay.ExpiresAt,
-            stay.BranchId(),
-            stay.StartOnConfirm));
-    }
-}
-
 public class StayStartedDomainEventHandler(ISpacesIntegrationEventService outbox, ILogger<StayStartedDomainEventHandler> logger)
     : INotificationHandler<StayStartedDomainEvent>
 {
@@ -89,10 +68,11 @@ public class StayEndedDomainEventHandler(ISpacesIntegrationEventService outbox, 
         await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
             stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
 
-        // The bill. Every real stay gets one — a walk-in nobody claimed is
-        // still a bill Sales has to settle; CustomerId simply travels null.
-        if (stay.StartedAt is { } started && stay.EndedAt is { } ended)
+        // The bill. Every stay gets one — a walk-in nobody claimed is still a
+        // bill Sales has to settle; CustomerId simply travels null.
+        if (stay.EndedAt is { } ended)
         {
+            var started = stay.StartedAt;
             var costs = stay.CostBreakdown()
                 .Select(c => new SessionCostLine(c.OptionCode, c.OptionName, c.HourlyRate, c.Hours, c.Cost))
                 .ToList();
@@ -119,8 +99,9 @@ public class StayCancelledDomainEventHandler(ISpacesIntegrationEventService outb
     public async Task Handle(StayCancelledDomainEvent notification, CancellationToken cancellationToken)
     {
         var stay = notification.Stay;
-        logger.LogInformation("Stay cancelled: {StayId}, was {PreviousStatus}", stay.Id, notification.PreviousStatus);
+        logger.LogInformation("Stay cancelled: {StayId} at place {PlaceId}", stay.Id, stay.PlaceId);
 
+        // Sales drops (or flags) the ticket the time was going on; the party is told
         await outbox.AddAndSaveEventAsync(new ReservationCancelledIntegrationEvent(
             stay.Id,
             stay.PlaceId,
@@ -129,14 +110,11 @@ public class StayCancelledDomainEventHandler(ISpacesIntegrationEventService outb
             stay.CustomerId,
             stay.CustomerName,
             stay.BranchId(),
-            notification.PreviousStatus == StayStatus.Running));
+            WasRunning: true));
 
-        // A hold and a running stay both kept the place; either way it is free now
-        if (notification.PreviousStatus is StayStatus.Running or StayStatus.Held)
-        {
-            await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
-                stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
-        }
+        // The clock kept the place; it is free now
+        await outbox.AddAndSaveEventAsync(new PlaceBecameAvailableIntegrationEvent(
+            stay.PlaceId, stay.PlaceKind(), stay.PlaceName(), stay.BranchId()));
     }
 }
 

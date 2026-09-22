@@ -189,6 +189,8 @@ services:
       - ./web/pos-web:/srv/pos-web:ro
       - ./web/kds-web:/srv/kds-web:ro
       - ./web/control-web:/srv/control-web:ro
+      # The native apps' download page and the APKs mobile-deploy.yml drops beside it
+      - ./apps:/srv/apps:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

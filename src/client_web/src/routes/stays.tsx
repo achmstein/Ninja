@@ -6,7 +6,7 @@ import { type StayViewModel, type StaySegmentViewModel } from '@/api/spaces'
 import { dayStartHour, isOvernightShift, useSelectedBranch } from '@/lib/branch'
 import { businessDayStart } from '@/lib/business-day'
 import { hasOptions, optionColor, PlaceIcon } from '@/lib/places'
-import { STAY_HELD, STAY_RUNNING, useMyStays } from '@/lib/stays'
+import { STAY_RUNNING, useMyStays } from '@/lib/stays'
 import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
 import { Badge } from '@/components/ui/badge'
@@ -30,11 +30,6 @@ export const Route = createFileRoute('/stays')({
 })
 
 const statusMeta: Record<number, { key: TranslationKey; className: string }> = {
-  [STAY_HELD]: {
-    key: 'statusReserved',
-    className:
-      'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-  },
   [STAY_RUNNING]: {
     key: 'statusActive',
     className:
@@ -51,7 +46,7 @@ const statusMeta: Record<number, { key: TranslationKey; className: string }> = {
   },
 }
 
-/** When the stay's clock started: the real start, or the hold for one never started */
+/** When the stay's clock started */
 function startOf(stay: StayViewModel): Date | null {
   const raw = stay.startedAt ?? stay.createdAt
   return raw ? new Date(raw) : null

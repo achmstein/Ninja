@@ -136,7 +136,7 @@ export function Dashboard() {
       detailClass: urgencyTextClass(oldestUrgency),
     })
   }
-  if (features.spaces && requestCount > 0) {
+  if (requestCount > 0) {
     attention.push({
       key: 'requests',
       to: '/requests',
@@ -204,7 +204,7 @@ export function Dashboard() {
           loading={pendingQuery.isPending}
           to='/orders'
         />
-        {features.spaces && (
+        {features.timeBilling && (
           <Stat
             label={t('placesInUse')}
             value={t('ofTotal', {
@@ -215,18 +215,16 @@ export function Dashboard() {
             to='/places'
           />
         )}
-        {features.spaces && (
-          <Stat
-            label={t('tablesInUse')}
-            value={t('ofTotal', { count: busyTables, total: activeTables })}
-            loading={floor.isPending}
-            to='/places'
-          />
-        )}
+        <Stat
+          label={t('tablesInUse')}
+          value={t('ofTotal', { count: busyTables, total: activeTables })}
+          loading={floor.isPending}
+          to='/places'
+        />
       </StatStrip>
 
       <div className='grid gap-6 lg:grid-cols-2'>
-        {features.spaces && (
+        {(features.timeBilling || features.reservations) && (
           <LiveFloor
             stays={running}
             places={places}

@@ -119,9 +119,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // A feature the tenant turned off has no page
       final features = ref.read(brandProvider).features;
-      if (!features.spaces && (currentLocation.startsWith('/places') || currentLocation.startsWith('/stays'))) {
-        return '/menu';
-      }
+      // The places tab is booking and the clock; the stays list is the clock's
+      if (!features.reservations && !features.timeBilling && currentLocation.startsWith('/places')) return '/menu';
+      if (!features.timeBilling && currentLocation.startsWith('/stays')) return '/menu';
       if (!features.loyalty && currentLocation.startsWith('/loyalty')) return '/menu';
       if (!features.tabs && currentLocation.startsWith('/transactions')) return '/menu';
 

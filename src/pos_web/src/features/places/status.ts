@@ -2,6 +2,7 @@ import type {
   LocalizedText,
   PlaceViewModel,
   RateOptionViewModel,
+  ReservationViewModel,
   StayViewModel,
   TariffViewModel,
 } from '@/api/spaces/types.gen'
@@ -26,11 +27,18 @@ export const PLACE_OUT_OF_SERVICE = 4
 export const PLACE_PHYSICAL_AVAILABLE = 1
 export const PLACE_PHYSICAL_OUT_OF_SERVICE = 3
 
-// StayStatus
-export const STAY_HELD = 1
+// StayStatus (1 was Held, before the reservation became its own thing)
 export const STAY_RUNNING = 2
 export const STAY_ENDED = 3
 export const STAY_CANCELLED = 4
+
+// ReservationStatus
+export const RESERVATION_REQUESTED = 1
+export const RESERVATION_CONFIRMED = 2
+export const RESERVATION_SEATED = 3
+export const RESERVATION_CANCELLED = 4
+export const RESERVATION_EXPIRED = 5
+export const RESERVATION_COMPLETED = 6
 
 /** The one place colour means something on the floor: the place's state. */
 export const placeStatusDot: Record<number, string> = {
@@ -69,10 +77,8 @@ export function findOption(
   return code ? tariffOptions(tariff).find((o) => o.code === code) : undefined
 }
 
-// Branded so a failed guard does not narrow the stay away: "not running"
-// still leaves "held" on the table for the next check
+// Branded so a failed guard does not narrow the stay away
 export type RunningStay = StayViewModel & { readonly __state: 'running' }
-export type HeldStay = StayViewModel & { readonly __state: 'held' }
 
 export function isRunning(
   stay: StayViewModel | null | undefined,
@@ -80,10 +86,32 @@ export function isRunning(
   return stay != null && Number(stay.status) === STAY_RUNNING
 }
 
-export function isHeld(
-  stay: StayViewModel | null | undefined,
-): stay is HeldStay {
-  return stay != null && Number(stay.status) === STAY_HELD
+/** Requested or confirmed: somebody is on their way, or due later. */
+export function isOpenReservation(
+  reservation: ReservationViewModel | null | undefined,
+): reservation is ReservationViewModel {
+  if (reservation == null) return false
+  const status = Number(reservation.status)
+  return (
+    status === RESERVATION_REQUESTED || status === RESERVATION_CONFIRMED
+  )
+}
+
+/** Open and keeping the place right now: made for now, or its time has come. */
+export function isHolding(
+  reservation: ReservationViewModel | null | undefined,
+): boolean {
+  return isOpenReservation(reservation) && Boolean(reservation.isHolding)
+}
+
+/** Seconds a reservation has left before it lapses; null when it never will. */
+export function expiresInSeconds(
+  reservation: ReservationViewModel,
+  nowMs: number,
+): number | null {
+  return reservation.expiresAt
+    ? Math.max(0, (new Date(reservation.expiresAt).getTime() - nowMs) / 1000)
+    : null
 }
 
 export function formatClock(totalSeconds: number): string {

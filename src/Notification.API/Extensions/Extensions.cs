@@ -35,6 +35,8 @@ public static class Extensions
             .AddSubscription<ServiceRequestCreatedIntegrationEvent, ServiceRequestCreatedIntegrationEventHandler>()
             .AddSubscription<PlaceReservedIntegrationEvent, PlaceReservedIntegrationEventHandler>()
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
+            .AddSubscription<ReservationSeatedIntegrationEvent, ReservationSeatedIntegrationEventHandler>()
+            .AddSubscription<ReservationCompletedIntegrationEvent, ReservationCompletedIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToCancelledIntegrationEvent, OrderCancelledIntegrationEventHandler>()
             .AddSubscription<SessionStartedIntegrationEvent, SessionStartedIntegrationEventHandler>()
             .AddSubscription<SessionEndedIntegrationEvent, SessionEndedIntegrationEventHandler>()
@@ -67,6 +69,8 @@ public static class Extensions
 [JsonSerializable(typeof(ServiceRequestCreatedIntegrationEvent))]
 [JsonSerializable(typeof(PlaceReservedIntegrationEvent))]
 [JsonSerializable(typeof(ReservationCancelledIntegrationEvent))]
+[JsonSerializable(typeof(ReservationSeatedIntegrationEvent))]
+[JsonSerializable(typeof(ReservationCompletedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(SessionEndedIntegrationEvent))]

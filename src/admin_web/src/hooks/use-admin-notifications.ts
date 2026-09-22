@@ -72,6 +72,9 @@ export function useAdminNotifications() {
       refresh(
         'listPlaces',
         'getOpenStays',
+        'getOpenReservations',
+        'getReservationHistory',
+        'getPlaceReservationHistory',
         'getStay',
         'getStayHistory',
         'getPlaceStayHistory'

@@ -1,9 +1,0 @@
-package com.chillax.kds
-
-import android.app.admin.DeviceAdminReceiver
-
-/**
- * The device-admin component `dpm set-device-owner` points at. Nothing to
- * do on its callbacks: owner rights are only used to pin the app.
- */
-class KdsDeviceAdminReceiver : DeviceAdminReceiver()

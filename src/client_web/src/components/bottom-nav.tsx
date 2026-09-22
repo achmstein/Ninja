@@ -12,7 +12,7 @@ const tabs = [
   { to: '/', key: 'menu', icon: Coffee, exact: true },
   { to: '/places', key: 'rooms', icon: Gamepad2 },
   { to: '/bills', key: 'bills', icon: ReceiptText },
-  { to: '/profile', key: 'profile', icon: User },
+  { to: '/profile', key: 'youTab', icon: User },
 ] as const
 
 export function BottomNav() {

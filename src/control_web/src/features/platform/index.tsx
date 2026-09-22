@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { AlertTriangle, ArrowUpCircle, Mail, MailX, Plus } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import type { TenantSummary, TenantUsage } from '@/api/control'
 import {
   fleetUpgradeMutation,
@@ -92,6 +94,10 @@ export function PlatformPage() {
 
   const language = useLanguage((s) => s.language)
   const running = (tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running')
+  // Destroyed tenants are history: off the list unless asked for
+  const [showDestroyed, setShowDestroyed] = useState(false)
+  const listed = (tenants.data ?? []).filter((x) => showDestroyed || tenantStatus(x.status) !== 'Destroyed')
+  const destroyedCount = (tenants.data ?? []).length - (tenants.data ?? []).filter((x) => tenantStatus(x.status) !== 'Destroyed').length
   const behindCount = (tenants.data ?? []).filter((x) => x.update?.behind).length
 
   return (
@@ -200,8 +206,16 @@ export function PlatformPage() {
           <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
         </TabsList>
         <TabsContent value='tenants'>
+          {destroyedCount > 0 && (
+            <div className='mb-3 flex items-center justify-end gap-2'>
+              <Switch id='show-destroyed' checked={showDestroyed} onCheckedChange={setShowDestroyed} />
+              <Label htmlFor='show-destroyed' className='text-muted-foreground text-sm'>
+                {t('showDestroyed')} ({destroyedCount})
+              </Label>
+            </div>
+          )}
           <TenantsTable
-            tenants={tenants.data ?? []}
+            tenants={listed}
             usage={capacity.data?.tenants ?? []}
             loading={tenants.isLoading}
           />

@@ -37,6 +37,9 @@ export function usePushRegistration() {
           queryClient.invalidateQueries({
             queryKey: [{ _id: 'getMyStays' }],
           })
+          queryClient.invalidateQueries({
+            queryKey: [{ _id: 'getMyReservations' }],
+          })
           queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
           queryClient.invalidateQueries({
             queryKey: ['room-availability-subscription'],

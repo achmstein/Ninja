@@ -57,7 +57,7 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
     // field only applies to guests without an account
     const holdName = customer ? displayName(customer) : customerName.trim()
     const placeName = localized(place.name)
-    actions.hold(
+    actions.reserve(
       Number(place.id),
       {
         customerName: holdName || null,
@@ -65,18 +65,21 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
         startOnConfirm,
       },
       {
-        onSuccess: (stayId) => {
+        onSuccess: (reservationId) => {
           const finish = () => {
             toast.success(t('placeHeld', { name: placeName }))
             reset()
             onOpenChange(false)
           }
-          // Link the hold to the picked account so it shows up in their
-          // app and history
+          // Link the reservation to the picked account so it shows up in
+          // their app and history
           if (customer) {
-            actions.assignCustomer(stayId, customer.id, holdName, {
-              onSuccess: finish,
-            })
+            actions.assignReservationCustomer(
+              reservationId,
+              customer.id,
+              holdName,
+              { onSuccess: finish }
+            )
           } else {
             finish()
           }

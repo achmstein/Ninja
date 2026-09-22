@@ -20,6 +20,8 @@ import {
 import {
   convertTenantMutation,
   destroyTenantMutation,
+  forgetTenantMutation,
+  dismissTenantErrorMutation,
   extendDemoMutation,
   getTenantOptions,
   getTenantQueryKey,
@@ -53,6 +55,7 @@ import { problemDetail } from '@/lib/problem'
 import {
   canConvert,
   canDestroy,
+  canForget,
   canImpersonate,
   canProvision,
   canResume,
@@ -68,7 +71,7 @@ import {
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { ConvertDialog, DestroyDialog, ExtendDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
+import { ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
 import { AuditTab } from './tabs/audit'
 import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
@@ -92,7 +95,7 @@ const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'convert' | 'rotate' | 'rollback' | null
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'convert' | 'rotate' | 'rollback' | null
 
 function Loading() {
   return (
@@ -140,6 +143,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const secure = useMutation({ ...secureTenantMutation(), onSuccess: queued, onError: failed })
   const resume = useMutation({ ...resumeTenantMutation(), onSuccess: queued, onError: failed })
   const rollback = useMutation({ ...rollbackTenantMutation(), onSuccess: queued, onError: failed })
+  const dismiss = useMutation({ ...dismissTenantErrorMutation(), onSuccess: refresh, onError: failed })
   const resendWelcome = useMutation({
     ...resendWelcomeEmailMutation(),
     onSuccess: () => {
@@ -149,6 +153,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     onError: failed,
   })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
+  // The record is gone: back to the list, which no longer has it
+  const forget = useMutation({
+    ...forgetTenantMutation(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
+      toast.success(t('forgotten'))
+      navigate({ to: '/' })
+    },
+    onError: failed,
+  })
   const extend = useMutation({
     ...extendDemoMutation(),
     onSuccess: (detail) => {
@@ -216,7 +230,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     destroy.isPending
   const path = { path: { slug } }
   const alive = status !== 'Destroying' && status !== 'Destroyed'
-  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canSecure(status) || canImpersonate(status)
+  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canForget(status) || canSecure(status) || canImpersonate(status)
 
   return (
     <div className='flex flex-col gap-6'>
@@ -336,6 +350,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                       </DropdownMenuItem>
                     </>
                   )}
+                  {canForget(status) && (
+                    <DropdownMenuItem
+                      variant='destructive'
+                      disabled={forget.isPending}
+                      onSelect={() => setDialog('forget')}
+                    >
+                      <Trash2 />
+                      {t('forget')}
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -357,13 +381,16 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         </Alert>
       )}
 
-      {/* Running, with a story: an upgrade that did not take and was rolled back */}
+      {/* Running, with a story: an upgrade that did not take and was rolled back. It stays until read. */}
       {tenant.lastError && status === 'Running' && (
         <Alert className='border-amber-500/40 bg-amber-500/10 [&>svg]:text-amber-600'>
           <Undo2 />
           <AlertTitle>{t('rolledBack')}</AlertTitle>
-          <AlertDescription className='font-mono text-xs break-all' dir='ltr'>
-            {tenant.lastError}
+          <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
+            <span className='font-mono text-xs break-all' dir='ltr'>{tenant.lastError}</span>
+            <Button size='sm' variant='outline' disabled={busy || dismiss.isPending} onClick={() => dismiss.mutate(path)}>
+              {t('dismiss')}
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -473,6 +500,13 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         slug={tenant.slug}
         name={name}
         onConfirm={() => destroy.mutate(path)}
+      />
+      <ForgetDialog
+        open={dialog === 'forget'}
+        onOpenChange={(v) => setDialog(v ? 'forget' : null)}
+        isPending={forget.isPending}
+        name={name}
+        onConfirm={() => forget.mutate(path)}
       />
     </div>
   )

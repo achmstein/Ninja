@@ -9,6 +9,7 @@ import 'app_text.dart';
 import 'branch_switcher.dart';
 import 'destination_chip.dart';
 import '../brand/brand_provider.dart';
+import '../providers/branch_provider.dart';
 import '../providers/current_place_provider.dart';
 import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';
@@ -75,18 +76,23 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // The rooms tab exists only for a tenant with rooms
-    final rooms = ref.watch(featuresProvider).spaces;
+    // The rooms tab exists only for a tenant with something to book or a clock to watch
+    final features = ref.watch(featuresProvider);
+    final rooms = features.reservations || features.timeBilling;
+    // A café with rooms books rooms; a restaurant books tables — same tab, its own icon
+    final branchId = ref.watch(selectedBranchIdProvider);
+    final hasRooms = branchId != null &&
+        (ref.watch(placesProvider(branchId)).value?.any((p) => p.kind == PlaceKind.room) ?? true);
     final tabs = <_Tab>[
       (route: '/menu', icon: FIcons.utensils, label: l10n.menu),
       if (rooms)
         (
           route: '/places',
-          icon: FIcons.gamepad2,
+          icon: hasRooms ? FIcons.gamepad2 : FIcons.calendarClock,
           label: placesTabLabel(l10n, ref.watch(myStaysProvider).value ?? const []),
         ),
       (route: '/bills', icon: FIcons.receipt, label: l10n.bills),
-      (route: '/profile', icon: FIcons.user, label: l10n.profile),
+      (route: '/profile', icon: FIcons.user, label: l10n.youTab),
     ];
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = math.max(0, tabs.indexWhere((t) => location.startsWith(t.route)));

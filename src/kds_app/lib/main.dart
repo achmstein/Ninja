@@ -9,9 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 import 'core/brand/brand_provider.dart';
+import 'core/config/tenant_connection.dart';
 import 'core/demo/demo.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
+import 'features/connect/connect_screen.dart';
 
 void main() async {
   // Preserve the native splash screen
@@ -31,6 +33,8 @@ void main() async {
   await initializeLocale(override: kDemoMode ? kDemoLocale : null);
   await initializeBranch();
   await initializeBrand();
+  // Which café this tablet serves; the connect screen asks when none is known
+  await TenantConnection.initialize();
 
   // A kitchen display that crashes costs money: every Flutter and async error goes to
   // Crashlytics. Without google-services.json (the app not yet registered
@@ -48,10 +52,15 @@ void main() async {
   }
 
   runApp(
-    ProviderScope(
-      // Design-time mode swaps auth, branches and the board for samples
-      overrides: kDemoMode ? demoOverrides : const [],
-      child: const NinjaKdsApp(),
+    // Until the tablet is connected to a café the connect screen is the app;
+    // the demo has its samples and never asks
+    ConnectGate(
+      skip: kDemoMode,
+      child: () => ProviderScope(
+        // Design-time mode swaps auth, branches and the board for samples
+        overrides: kDemoMode ? demoOverrides : const [],
+        child: const NinjaKdsApp(),
+      ),
     ),
   );
 }

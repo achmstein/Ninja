@@ -23,7 +23,8 @@ const APP = 'pos'
 const BOOT_TIMEOUT_MS = 2500
 
 export const ALL_FEATURES: TenantFeatures = {
-  spaces: true,
+  reservations: true,
+  timeBilling: true,
   loyalty: true,
   tabs: true,
   inventory: true,

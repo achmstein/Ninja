@@ -166,6 +166,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profile => 'البروفايل';
 
   @override
+  String get youTab => 'أنت';
+
+  @override
   String get cart => 'السلة';
 
   @override

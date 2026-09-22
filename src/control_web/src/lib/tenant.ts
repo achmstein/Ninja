@@ -87,12 +87,13 @@ export const subscriptionLabelKey: Record<SubscriptionStatusName, TranslationKey
   Cancelled: 'subCancelled',
 }
 
-/** The seven switches as modules a plan includes or sells; the order the API's enum has. */
-export const MODULES = ['Spaces', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds'] as const
+/** The eight switches as modules a plan includes or sells; the order the API's enum has. */
+export const MODULES = ['Reservations', 'TimeBilling', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds'] as const
 export type ModuleName = (typeof MODULES)[number]
 
 export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
-  Spaces: 'featureSpaces',
+  Reservations: 'featureReservations',
+  TimeBilling: 'featureTimeBilling',
   Loyalty: 'featureLoyalty',
   Tabs: 'featureTabs',
   Inventory: 'featureInventory',
@@ -102,7 +103,7 @@ export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
 }
 
 /** The API sends modules as names; a number would be the enum index. */
-export const moduleName = (value: number | string) => nameOf(MODULES, value, 'Spaces')
+export const moduleName = (value: number | string) => nameOf(MODULES, value, 'Reservations')
 
 export const stepLabelKey: Record<StepStatusName, TranslationKey> = {
   Pending: 'stepPending',
@@ -124,6 +125,8 @@ export const canUpgrade = (status: TenantStatusName) =>
   status === 'Running' || status === 'Stopped'
 export const canDestroy = (status: TenantStatusName) =>
   status !== 'Destroying' && status !== 'Destroyed'
+/** A destroyed tenant is a row nobody needs on the list any more. */
+export const canForget = (status: TenantStatusName) => status === 'Destroyed'
 /** Stopped for non-payment; back with a payment or a resume. */
 export const canSuspend = (status: TenantStatusName) =>
   status === 'Running' || status === 'Stopped'

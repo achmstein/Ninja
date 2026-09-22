@@ -24,6 +24,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get connectTitle => 'Which café is this?';
+
+  @override
+  String get connectHint =>
+      'Type your café\'s address, or scan the code on the Apps page of your admin app.';
+
+  @override
+  String get cafeAddress => 'Café address';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get scanConnectCode => 'Scan the code';
+
+  @override
+  String get connectInvalidAddress => 'That is not an address.';
+
+  @override
+  String get connectUnreachable =>
+      'Nothing answered at that address. Check it, and that the tablet is online.';
+
+  @override
+  String get connectNotACafe => 'That address is not a café on ninja.';
+
+  @override
+  String get connectPaused =>
+      'This café is paused. Its owner can see why in the admin app.';
+
+  @override
+  String get thisDevice => 'This device';
+
+  @override
+  String get connectedTo => 'Connected to';
+
+  @override
+  String get changeCafe => 'Change café';
+
+  @override
+  String get changeCafeConfirm =>
+      'Sign out and forget this café. The tablet starts over at the connect screen.';
+
+  @override
   String get language => 'Language';
 
   @override
@@ -543,7 +586,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmHold => 'Confirm';
 
   @override
-  String get holdConfirmed => 'Hold confirmed';
+  String get holdConfirmed => 'Reservation confirmed';
+
+  @override
+  String get seatParty => 'Seat them';
+
+  @override
+  String get partySeated => 'Seated';
+
+  @override
+  String partyOf(int count) {
+    return 'Party of $count';
+  }
+
+  @override
+  String seatedSince(String time) {
+    return 'Since $time';
+  }
+
+  @override
+  String get partyLeft => 'Party left';
+
+  @override
+  String get tableCleared => 'Table cleared';
+
+  @override
+  String get failedToClearTable => 'Failed to clear the table';
 
   @override
   String get startsOnConfirm => 'Timer starts on confirm';

@@ -12,6 +12,7 @@ namespace Ninja.Spaces.Infrastructure;
 public class SpacesContext : DbContext
 {
     public DbSet<Place> Places { get; set; }
+    public DbSet<Reservation> Reservations { get; set; }
     public DbSet<Stay> Stays { get; set; }
     public DbSet<StayMember> StayMembers { get; set; }
     public DbSet<StaySegment> StaySegments { get; set; }
@@ -32,6 +33,7 @@ public class SpacesContext : DbContext
         modelBuilder.HasDefaultSchema("spaces");
         modelBuilder.ApplyConfiguration(new ClientRequestEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new ReservationEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new StayEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new StayMemberEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new StaySegmentEntityTypeConfiguration());

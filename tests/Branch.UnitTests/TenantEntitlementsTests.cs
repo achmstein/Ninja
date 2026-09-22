@@ -6,8 +6,8 @@ namespace Ninja.Branch.UnitTests;
 [TestClass]
 public sealed class TenantEntitlementsTests
 {
-    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true);
-    private static readonly TenantFeatures NoInventory = new(true, true, true, false, true, true, true);
+    private static readonly TenantFeatures AllOn = new(true, true, true, true, true, true, true, true);
+    private static readonly TenantFeatures NoInventory = new(true, true, true, true, false, true, true, true);
 
     [TestMethod]
     public void A_fresh_tenant_is_entitled_to_everything_and_has_everything_on()
@@ -31,9 +31,10 @@ public sealed class TenantEntitlementsTests
     public void An_owner_can_switch_an_entitled_module_off()
     {
         var tenant = new Tenant();
-        tenant.ApplyFeatures(AllOn with { Spaces = false });
-        Assert.IsFalse(tenant.SpacesEnabled);
-        Assert.IsTrue(tenant.SpacesEntitled);
+        tenant.ApplyFeatures(AllOn with { Reservations = false });
+        Assert.IsFalse(tenant.ReservationsEnabled);
+        Assert.IsTrue(tenant.ReservationsEntitled);
+        Assert.IsTrue(tenant.TimeBillingEnabled, "the clock is its own switch");
     }
 
     [TestMethod]

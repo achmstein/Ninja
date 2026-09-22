@@ -52,8 +52,11 @@ public class Tenant
     /// <summary>"ar" or "en": what the customer app opens in.</summary>
     public string DefaultLanguage { get; set; } = "ar";
 
-    /// <summary>Spaces: reservable, timed places (rooms, stations, tables with a tariff). Off for a café that only seats people.</summary>
-    public bool SpacesEnabled { get; set; } = true;
+    /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a café that only seats people.</summary>
+    public bool ReservationsEnabled { get; set; } = true;
+
+    /// <summary>Time billing: a tariff on a place, the clock, the cost line on the bill (PlayStation rooms, pool tables).</summary>
+    public bool TimeBillingEnabled { get; set; } = true;
 
     /// <summary>Points on purchases (Loyalty).</summary>
     public bool LoyaltyEnabled { get; set; } = true;
@@ -76,7 +79,9 @@ public class Tenant
     /// default, so a stack nobody has told otherwise (the dev host, a stack
     /// stamped before plans) keeps every switch usable.
     /// </summary>
-    public bool SpacesEntitled { get; set; } = true;
+    public bool ReservationsEntitled { get; set; } = true;
+
+    public bool TimeBillingEntitled { get; set; } = true;
 
     public bool LoyaltyEntitled { get; set; } = true;
 
@@ -90,15 +95,16 @@ public class Tenant
 
     public bool KdsEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(SpacesEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
 
-    public TenantFeatures Entitlements => new(SpacesEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
     {
         var f = requested.Clamp(Entitlements);
-        SpacesEnabled = f.Spaces;
+        ReservationsEnabled = f.Reservations;
+        TimeBillingEnabled = f.TimeBilling;
         LoyaltyEnabled = f.Loyalty;
         TabsEnabled = f.Tabs;
         InventoryEnabled = f.Inventory;
@@ -110,7 +116,8 @@ public class Tenant
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
     public void ApplyEntitlements(TenantFeatures entitled)
     {
-        SpacesEntitled = entitled.Spaces;
+        ReservationsEntitled = entitled.Reservations;
+        TimeBillingEntitled = entitled.TimeBilling;
         LoyaltyEntitled = entitled.Loyalty;
         TabsEntitled = entitled.Tabs;
         InventoryEntitled = entitled.Inventory;
@@ -137,6 +144,9 @@ public class TenantTheme
 {
     public static readonly string[] Radii = ["none", "sm", "md", "lg", "xl"];
 
+    /// <summary>How tall the customer app's header is, and with it the wordmark: a wide, thin wordmark reads at "sm"; a chunky one needs "lg".</summary>
+    public static readonly string[] HeaderSizes = ["sm", "md", "lg"];
+
     /// <summary>Latin families the surfaces know how to load.</summary>
     public static readonly string[] LatinFonts =
     [
@@ -157,6 +167,9 @@ public class TenantTheme
 
     /// <summary>One of <see cref="Radii"/>.</summary>
     public string? Radius { get; set; }
+
+    /// <summary>One of <see cref="HeaderSizes"/>; null is "sm".</summary>
+    public string? HeaderSize { get; set; }
 
     /// <summary>One of <see cref="LatinFonts"/>.</summary>
     public string? FontLatin { get; set; }
@@ -179,13 +192,13 @@ public class TenantThemeDark
     public string? Surface { get; set; }
 }
 
-/// <summary>The seven switches, as the surfaces read them and as the plan allows them.</summary>
-public record TenantFeatures(bool Spaces, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+/// <summary>The eight switches, as the surfaces read them and as the plan allows them.</summary>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
-        Spaces && entitled.Spaces, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs, Inventory && entitled.Inventory,
-        Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds);
+        Reservations && entitled.Reservations, TimeBilling && entitled.TimeBilling, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs,
+        Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>

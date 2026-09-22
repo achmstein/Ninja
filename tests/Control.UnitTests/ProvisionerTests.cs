@@ -20,6 +20,7 @@ public sealed class ProvisionerTests
     private string _root = null!;
     private ControlContext _context = null!;
     private RecordingShell _shell = null!;
+    private FailingShell _box = null!;
     private FailingStack _stack = null!;
     private CollectingAudit _audit = null!;
     private PlatformOptions _platform = null!;
@@ -40,6 +41,21 @@ public sealed class ProvisionerTests
         public Task PushEntitlementsAsync(Tenant tenant, JsonObject entitled, CancellationToken ct) => Task.CompletedTask;
     }
 
+    /// <summary>The dry-run box, except for the commands told to fail: each answers with the log given and exit 1, once, in order.</summary>
+    private sealed class FailingShell(IShell inner) : IShell
+    {
+        public Queue<(string Match, string Log)> Failures { get; } = new();
+
+        public async Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct)
+        {
+            var result = await inner.RunAsync(file, args, workingDirectory, ct);
+            return Failures.TryPeek(out var f) && $"{file} {string.Join(' ', args)}".Contains(f.Match, StringComparison.Ordinal) ? new ShellResult(1, Failures.Dequeue().Log) : result;
+        }
+
+        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
+            => inner.RunAsync(file, args, workingDirectory, stdin, stdout, ct);
+    }
+
     private sealed class CollectingAudit : IAuditWriter
     {
         public List<(string Action, string? Slug)> Entries { get; } = [];
@@ -55,10 +71,11 @@ public sealed class ProvisionerTests
         var options = Options.Create(_platform);
         _context = new ControlContext(new DbContextOptionsBuilder<ControlContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
+        _box = new FailingShell(_shell);
         _stack = new FailingStack();
         _audit = new CollectingAudit();
-        var backups = new BackupService(_shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
-        _provisioner = new Provisioner(_context, options, _shell,
+        var backups = new BackupService(_box, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        _provisioner = new Provisioner(_context, options, _box,
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
             new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
@@ -126,6 +143,22 @@ public sealed class ProvisionerTests
     }
 
     [TestMethod]
+    public async Task An_upgrade_to_images_nobody_has_keeps_the_compose_log_on_the_step_and_one_line_on_the_record()
+    {
+        _box.Failures.Enqueue(("compose -p ninja-blue up -d", ShellTests.PullDenied));
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "nope", null, CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { "credentials:Done", "databases:Done", "broker:Done", "backup:Done", "stack:Failed", "rollback:Done", "rollback-health:Done" }, Steps().ToList());
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        Assert.AreEqual("v1", _tenant.ImageTag);
+        Assert.AreEqual(
+            "upgrade to nope rolled back: pull access denied for ninja-inventory, repository does not exist or may require 'docker login': denied: requested access to the resource is denied",
+            _tenant.LastError);
+        Assert.Contains("Image ninja-spaces:nope Pulling", _context.Steps.Single(s => s.Name == "stack").Output!, "the step keeps everything compose printed");
+    }
+
+    [TestMethod]
     public async Task An_upgrade_on_the_same_tag_has_nothing_to_roll_back_to_and_fails_plainly()
     {
         _stack.FailHealthTimes = 1;
@@ -182,15 +215,6 @@ public sealed class ProvisionerTests
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
     }
 
-    /// <summary>A shell that records like the dry run's but fails one command.</summary>
-    private sealed class FailingShell(RecordingShell inner, string failing) : IShell
-    {
-        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, CancellationToken ct)
-            => args.Contains(failing) ? Task.FromResult(new ShellResult(1, $"{failing}: refused")) : inner.RunAsync(file, args, workingDirectory, ct);
-        public Task<ShellResult> RunAsync(string file, IReadOnlyList<string> args, string? workingDirectory, Stream? stdin, Stream stdout, CancellationToken ct)
-            => inner.RunAsync(file, args, workingDirectory, stdin, stdout, ct);
-    }
-
     [TestMethod]
     public async Task The_edge_file_is_checked_by_caddy_and_put_back_when_it_is_refused()
     {
@@ -198,15 +222,9 @@ public sealed class ProvisionerTests
         await File.WriteAllTextAsync(_platform.EdgeSnippetPath, "# before\n");
         _tenant.CustomerDomain = "menu.blue.test";
         await _context.SaveChangesAsync();
-        var options = Options.Create(_platform);
-        var backups = new BackupService(_shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
-        var provisioner = new Provisioner(_context, options, new FailingShell(_shell, "validate"),
-            new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
-            new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
-            new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
-            _stack, _audit, backups, NullLogger<Provisioner>.Instance);
+        _box.Failures.Enqueue(("caddy validate", "validate: refused"));
 
-        await provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
+        await _provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
 
         Assert.AreEqual("# before\n", await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "the file Caddy could not parse is gone");
         StringAssert.Contains(_tenant.LastError, "Caddy refused");

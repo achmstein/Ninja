@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, downloadPlatformBackup, downloadTenantBackup, extendDemo, fleetUpgrade, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DownloadPlatformBackupData, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, extendDemo, fleetUpgrade, forgetTenant, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -226,6 +226,23 @@ export const upgradeTenantMutation = (options?: Partial<Options<UpgradeTenantDat
 };
 
 /**
+ * Take the last error off a running tenant once it has been read; the audit keeps it
+ */
+export const dismissTenantErrorMutation = (options?: Partial<Options<DismissTenantErrorData>>): UseMutationOptions<DismissTenantErrorResponse, AxiosError<DismissTenantErrorError>, Options<DismissTenantErrorData>> => {
+    const mutationOptions: UseMutationOptions<DismissTenantErrorResponse, AxiosError<DismissTenantErrorError>, Options<DismissTenantErrorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await dismissTenantError({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead
  */
 export const rollbackTenantMutation = (options?: Partial<Options<RollbackTenantData>>): UseMutationOptions<unknown, AxiosError<RollbackTenantError>, Options<RollbackTenantData>> => {
@@ -301,6 +318,23 @@ export const extendDemoMutation = (options?: Partial<Options<ExtendDemoData>>): 
     const mutationOptions: UseMutationOptions<ExtendDemoResponse, AxiosError<ExtendDemoError>, Options<ExtendDemoData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await extendDemo({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays
+ */
+export const forgetTenantMutation = (options?: Partial<Options<ForgetTenantData>>): UseMutationOptions<ForgetTenantResponse, AxiosError<ForgetTenantError>, Options<ForgetTenantData>> => {
+    const mutationOptions: UseMutationOptions<ForgetTenantResponse, AxiosError<ForgetTenantError>, Options<ForgetTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await forgetTenant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

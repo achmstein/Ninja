@@ -56,9 +56,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     _startPolling();
 
     // Scroll to top when a new reservation appears
-    ref.listenManual(myStaysProvider, (previous, next) {
-      final hadReserved = previous?.value?.any((s) => s.status == StayStatus.reserved) ?? false;
-      final hasReserved = next.value?.any((s) => s.status == StayStatus.reserved) ?? false;
+    ref.listenManual(myReservationsProvider, (previous, next) {
+      final hadReserved = openReservationOf(previous?.value ?? const []) != null;
+      final hasReserved = openReservationOf(next.value ?? const []) != null;
       if (!hadReserved && hasReserved && _scrollController.hasClients) {
         _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
@@ -113,6 +113,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     }
     final roomsAsync = ref.watch(placesProvider(branchId));
     final sessionsAsync = ref.watch(myStaysProvider);
+    // The customer's open reservation, once the list has answered; until
+    // then none, so the rooms show rather than wait on it
+    final reservedSession = openReservationOf(ref.watch(myReservationsProvider).value ?? const []);
     final l10n = AppLocalizations.of(context)!;
     final isReservationsEnabled = ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true;
 
@@ -164,16 +167,13 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                 final activeSession = sessions
                     .where((s) => s.status == StayStatus.active)
                     .firstOrNull;
-                final reservedSession = sessions
-                    .where((s) => s.status == StayStatus.reserved)
-                    .firstOrNull;
 
                 // If user has active session, show session view
                 if (activeSession != null) {
                   return _ActiveStayView(session: activeSession);
                 }
 
-                // If user has reserved session, show reservation + rooms
+                // If user has a reservation, show it above the rooms
                 return _buildRoomsList(context, roomsAsync, reservedSession, null);
               },
             ),
@@ -186,7 +186,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
   Widget _buildRoomsList(
     BuildContext context,
     AsyncValue<List<Place>> roomsAsync,
-    Stay? reservedSession,
+    Reservation? reservedSession,
     Stay? activeSession,
   ) {
     final branchId = ref.read(selectedBranchIdProvider)!;
@@ -224,7 +224,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
   Widget _buildRoomsContent(
     BuildContext context,
     List<Place> rooms,
-    Stay? reservedSession,
+    Reservation? reservedSession,
     Stay? activeSession,
   ) {
     final branchId = ref.read(selectedBranchIdProvider)!;
@@ -288,7 +288,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     );
   }
 
-  int _getItemCount(List<Place> rooms, Stay? reservedSession, bool showNotifyBanner) {
+  int _getItemCount(List<Place> rooms, Reservation? reservedSession, bool showNotifyBanner) {
     int count = rooms.length;
     if (reservedSession != null) count++;
     if (showNotifyBanner) count++;
@@ -762,7 +762,7 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
 
 /// Reserved session banner - matches active session card style
 class _HeldStayBanner extends ConsumerWidget {
-  final Stay session;
+  final Reservation session;
 
   const _HeldStayBanner({required this.session});
 
@@ -1302,30 +1302,33 @@ class _HoldSheetState extends ConsumerState<HoldSheet> {
               ),
               const SizedBox(height: 12),
 
-              // The clock starts the moment the counter confirms the hold,
-              // instead of waiting for the cashier to start it. A plain row,
-              // not a card: it is one setting of the hold, not a thing of its own
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AppText(
-                        l10n.startTimeNow,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                          color: colors.foreground,
+              // The clock starts the moment the counter confirms the
+              // reservation, instead of waiting for the cashier to start it.
+              // A plain row, not a card: it is one setting of the
+              // reservation, not a thing of its own. A table with no clock
+              // has nothing to start
+              if (widget.room.isTimed)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: AppText(
+                          l10n.startTimeNow,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                            color: colors.foreground,
+                          ),
                         ),
                       ),
-                    ),
-                    FSwitch(
-                      value: _startOnConfirm,
-                      onChange: (value) => setState(() => _startOnConfirm = value),
-                    ),
-                  ],
+                      FSwitch(
+                        value: _startOnConfirm,
+                        onChange: (value) => setState(() => _startOnConfirm = value),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               // Which rate the clock starts at, where the tariff has a choice:
               // the customer picks here, so the till confirms without asking

@@ -20,7 +20,7 @@ class _Tenant implements TenantRepository {
     this.brand = const TenantBrand(
       name: LocalizedText(en: 'Chillax', ar: 'تشيلاكس'),
       primaryColorHex: '#0ea5e9',
-      features: TenantFeatures(spaces: false),
+      features: TenantFeatures(reservations: false, timeBilling: false),
     ),
   ]);
 
@@ -42,13 +42,15 @@ void main() {
     final neutral = container.read(brandProvider);
     expect(neutral.displayName(const Locale('en')), 'Ninja');
     expect(neutral.primaryColor, isNull);
-    expect(neutral.features.spaces, isTrue);
+    expect(neutral.features.reservations, isTrue);
+    expect(neutral.features.timeBilling, isTrue);
 
     await container.read(brandProvider.notifier).refresh();
     final brand = container.read(brandProvider);
     expect(brand.displayName(const Locale('ar')), 'تشيلاكس');
     expect(brand.primaryColor, const Color(0xFF0EA5E9));
-    expect(brand.features.spaces, isFalse);
+    expect(brand.features.reservations, isFalse);
+    expect(brand.features.timeBilling, isFalse);
     expect(brand.features.loyalty, isTrue);
   });
 
@@ -65,7 +67,9 @@ void main() {
       expect(brand.theme, TenantTheme.neutral);
       expect(brand.theme.accent, isNull);
       expect(brand.theme.fontLatin, isNull);
-      expect(brand.features.spaces, isFalse);
+      // A cache from before the split still gates both
+      expect(brand.features.reservations, isFalse);
+      expect(brand.features.timeBilling, isFalse);
     });
 
     test('the API shape carries the wordmarks and the theme; the URLs are made absolute', () {

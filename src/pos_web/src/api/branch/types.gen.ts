@@ -53,7 +53,8 @@ export type TenantAuth = {
 };
 
 export type TenantFeatures = {
-    spaces: boolean;
+    reservations: boolean;
+    timeBilling: boolean;
     loyalty: boolean;
     tabs: boolean;
     inventory: boolean;
@@ -82,6 +83,8 @@ export type TenantResponse = {
     primaryColor: null | string;
     customerUrl: null | string;
     auth: null | TenantAuth;
+    apiUrl: null | string;
+    appsUrl: null | string;
     logoUrl: null | string;
     logoDarkUrl: null | string;
     wordmarks: TenantWordmarks;
@@ -106,6 +109,7 @@ export type TenantThemeDto = {
     fontLatin: null | string;
     fontArabic: null | string;
     dark: null | TenantThemeDarkDto;
+    headerSize?: null | string;
 };
 
 export type TenantWordmark = {

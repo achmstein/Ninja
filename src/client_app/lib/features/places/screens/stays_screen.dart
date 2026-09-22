@@ -594,9 +594,6 @@ class _SessionTileState extends ConsumerState<SessionTile> {
     final l10n = AppLocalizations.of(context)!;
     String label;
     switch (status) {
-      case StayStatus.reserved:
-        label = l10n.statusReserved;
-        return FBadge(variant: FBadgeVariant.secondary, child: Text(label));
       case StayStatus.active:
         label = l10n.statusActive;
         return FBadge(child: Text(label));

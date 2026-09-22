@@ -3,11 +3,13 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What a café can be sold: the seven switches Branch.API keeps, as modules.</summary>
+/// <summary>What a café can be sold: the eight switches Branch.API keeps, as modules.</summary>
 public enum Module
 {
-    /// <summary>Reservable, timed places: rooms, stations and the tables that carry a tariff.</summary>
-    Spaces,
+    /// <summary>Booking a place ahead or holding it on the way: any place the owner opens to it, with or without a clock.</summary>
+    Reservations,
+    /// <summary>Billing time: a tariff on a place, the clock, the segments, the cost line on the bill.</summary>
+    TimeBilling,
     Loyalty,
     Tabs,
     Inventory,
@@ -29,11 +31,15 @@ public static class PlanCatalog
     private static readonly Dictionary<TenantPlan, IReadOnlySet<Module>> IncludedByPlan = new()
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
-        [TenantPlan.Starter] = new HashSet<Module> { Module.Spaces, Module.Loyalty, Module.Tabs, Module.Kds },
+        [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
         [TenantPlan.Pro] = All,
     };
 
-    /// <summary>The paths a module owns on the gateway; blocked (402) when the module is not in the plan. Spaces keeps /api/places itself: plain tables live there too and every café has those.</summary>
+    /// <summary>
+    /// The paths a module owns on the gateway; blocked (402) when the module
+    /// is not in the plan. Neither Spaces module keeps /api/places itself:
+    /// plain tables and their QR codes live there and every café has those.
+    /// </summary>
     public static readonly IReadOnlyList<(Module Module, string Path)> Routes =
     [
         (Module.Inventory, "/api/inventory/{*any}"),
@@ -41,13 +47,15 @@ public static class PlanCatalog
         (Module.Payroll, "/api/payroll/{*any}"),
         (Module.Loyalty, "/api/loyalty/{*any}"),
         (Module.Tabs, "/api/accounts/{*any}"),
-        (Module.Spaces, "/api/stays/{*any}"),
-        (Module.Spaces, "/api/places/available"),
-        (Module.Spaces, "/api/places/{id}/tariff"),
-        (Module.Spaces, "/api/places/{id}/hold"),
-        (Module.Spaces, "/api/places/{id}/walk-in"),
-        (Module.Spaces, "/api/places/{id}/join"),
-        (Module.Spaces, "/api/places/{id}/stays"),
+        (Module.Reservations, "/api/reservations/{*any}"),
+        (Module.Reservations, "/api/places/available"),
+        (Module.Reservations, "/api/places/{id}/reservable"),
+        (Module.Reservations, "/api/places/{id}/reservations"),
+        (Module.TimeBilling, "/api/stays/{*any}"),
+        (Module.TimeBilling, "/api/places/{id}/tariff"),
+        (Module.TimeBilling, "/api/places/{id}/walk-in"),
+        (Module.TimeBilling, "/api/places/{id}/join"),
+        (Module.TimeBilling, "/api/places/{id}/stays"),
     ];
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
@@ -65,7 +73,7 @@ public static class PlanCatalog
     public static Module[] NormalizeAddons(TenantPlan plan, IEnumerable<Module> addons)
         => addons.Where(a => !Included(plan).Contains(a)).Distinct().OrderBy(a => a).ToArray();
 
-    /// <summary>{ spaces, loyalty, … } as Branch.API's TenantFeatures spells them.</summary>
+    /// <summary>{ reservations, timeBilling, loyalty, … } as Branch.API's TenantFeatures spells them.</summary>
     public static JsonObject ToFeatures(IReadOnlySet<Module> entitled)
     {
         var o = new JsonObject();
@@ -73,5 +81,10 @@ public static class PlanCatalog
         return o;
     }
 
-    public static string Key(Module m) => m.ToString().ToLowerInvariant();
+    /// <summary>The module as the JSON keys spell it: camelCase ("timeBilling"), which is one lowercase letter for every one-word module.</summary>
+    public static string Key(Module m)
+    {
+        var name = m.ToString();
+        return char.ToLowerInvariant(name[0]) + name[1..];
+    }
 }

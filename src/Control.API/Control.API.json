@@ -532,6 +532,52 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/error": {
+      "delete": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Take the last error off a running tenant once it has been read; the audit keeps it",
+        "operationId": "DismissTenantError",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tenants/{slug}/rollback": {
       "post": {
         "tags": [
@@ -767,6 +813,52 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/record": {
+      "delete": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays",
+        "operationId": "ForgetTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -2829,7 +2921,8 @@
       },
       "BrandFeatures": {
         "required": [
-          "spaces",
+          "reservations",
+          "timeBilling",
           "loyalty",
           "tabs",
           "inventory",
@@ -2839,7 +2932,10 @@
         ],
         "type": "object",
         "properties": {
-          "spaces": {
+          "reservations": {
+            "type": "boolean"
+          },
+          "timeBilling": {
             "type": "boolean"
           },
           "loyalty": {
@@ -2979,6 +3075,12 @@
               {
                 "$ref": "#/components/schemas/BrandThemeDark"
               }
+            ]
+          },
+          "headerSize": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }
@@ -3827,7 +3929,8 @@
       },
       "Module": {
         "enum": [
-          "Spaces",
+          "Reservations",
+          "TimeBilling",
           "Loyalty",
           "Tabs",
           "Inventory",

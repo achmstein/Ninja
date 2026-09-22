@@ -815,7 +815,7 @@ function RatingSheet({
 
         <Button
           size='lg'
-          className='mt-6 w-full rounded-full font-bold'
+          className='mt-6 w-full rounded-pill font-bold'
           disabled={rateAll.isPending}
           onClick={() => rateAll.mutate()}
         >

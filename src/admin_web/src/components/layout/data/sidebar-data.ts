@@ -8,7 +8,7 @@ import {
   Coffee,
   ConciergeBell,
   Contact,
-  Gamepad2,
+  Armchair,
   Handshake,
   History,
   LayoutDashboard,
@@ -17,6 +17,7 @@ import {
   Receipt,
   ReceiptText,
   ShieldCheck,
+  TabletSmartphone,
   Ticket,
   TrendingUp,
   Truck,
@@ -36,8 +37,10 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'dashboard', url: '/', icon: LayoutDashboard },
         { title: 'orders', url: '/orders', icon: ClipboardList },
-        { title: 'placesNav', url: '/places', icon: Gamepad2, feature: 'spaces' },
-        { title: 'requests', url: '/requests', icon: ConciergeBell, feature: 'spaces' },
+        // Rooms & Tables is every café's: the tables and their QR codes live there whatever the plan
+        { title: 'placesNav', url: '/places', icon: Armchair },
+        // A waiter call or a bill request comes from any table's scan page, whatever the plan
+        { title: 'requests', url: '/requests', icon: ConciergeBell },
         { title: 'navTill', url: '/till', icon: ReceiptText },
       ],
     },
@@ -139,6 +142,8 @@ export const sidebarData: SidebarData = {
         { title: 'branches', url: '/branches', icon: Building2 },
         { title: 'staffAccounts', url: '/staff', icon: ShieldCheck },
         { title: 'brandNav', url: '/brand', icon: Palette },
+        // The native till and kitchen display: where to get them, how a tablet connects
+        { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
       ],
     },
   ],

@@ -51,9 +51,8 @@ enum PlaceStatus {
   }
 }
 
-/// Stay status
+/// Stay status (1 was Held, before the reservation became its own thing)
 enum StayStatus {
-  reserved(1, 'Held'),
   active(2, 'Running'),
   completed(3, 'Ended'),
   cancelled(4, 'Cancelled');
@@ -66,7 +65,117 @@ enum StayStatus {
   static StayStatus fromValue(int value) {
     return StayStatus.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => StayStatus.reserved,
+      orElse: () => StayStatus.completed,
+    );
+  }
+}
+
+/// Where a reservation is in its life
+enum ReservationStatus {
+  requested(1, 'Requested'),
+  confirmed(2, 'Confirmed'),
+  seated(3, 'Seated'),
+  cancelled(4, 'Cancelled'),
+  expired(5, 'Expired'),
+  completed(6, 'Completed');
+
+  final int value;
+  final String label;
+
+  const ReservationStatus(this.value, this.label);
+
+  /// Requested or confirmed: the customer is on their way, or due later
+  bool get isOpen => this == requested || this == confirmed;
+
+  /// The party is here: at a plain table this is what keeps the table
+  bool get isSeated => this == seated;
+
+  static ReservationStatus fromValue(int value) {
+    return ReservationStatus.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => ReservationStatus.expired,
+    );
+  }
+}
+
+/// A reservation: the customer's claim on a place — for now (they have ten
+/// minutes to arrive) or for later — with or without a clock. Once seated
+/// at a timed place, a Stay takes over.
+class Reservation {
+  final int id;
+  final int placeId;
+  final PlaceKind placeKind;
+  final LocalizedText placeName;
+  final bool placeIsTimed;
+  final String? customerName;
+  final int? partySize;
+
+  /// When the party is expected; null means it was made for now
+  final DateTime? forTime;
+  final DateTime createdAt;
+
+  /// When it lapses unseated; null while it never will, or once closed
+  final DateTime? expiresAt;
+
+  /// On a timed place: the customer asked that the till's Confirm also start the clock
+  final bool startOnConfirm;
+
+  /// The rate they asked to start at; the till confirms at it
+  final String? requestedOptionCode;
+  final LocalizedText? requestedOptionName;
+  final ReservationStatus status;
+
+  /// Open, and keeping the place right now
+  final bool isHolding;
+  final int? stayId;
+  final int branchId;
+  final DateTime? seatedAt;
+
+  Reservation({
+    required this.id,
+    required this.placeId,
+    this.placeKind = PlaceKind.room,
+    required this.placeName,
+    this.placeIsTimed = false,
+    this.customerName,
+    this.partySize,
+    this.forTime,
+    required this.createdAt,
+    this.expiresAt,
+    this.startOnConfirm = false,
+    this.requestedOptionCode,
+    this.requestedOptionName,
+    required this.status,
+    this.isHolding = false,
+    this.stayId,
+    this.branchId = 1,
+    this.seatedAt,
+  });
+
+  /// When the party is expected: the time it is for, or when it was made
+  DateTime get reservationTime => forTime ?? createdAt;
+
+  factory Reservation.fromJson(Map<String, dynamic> json) {
+    return Reservation(
+      id: json['id'] as int,
+      placeId: json['placeId'] as int,
+      placeKind: PlaceKind.fromValue(json['placeKind'] as int?),
+      placeName: LocalizedText.parse(json['placeName'] ?? 'Place ${json['placeId']}'),
+      placeIsTimed: json['placeIsTimed'] as bool? ?? false,
+      customerName: json['customerName'] as String?,
+      partySize: (json['partySize'] as num?)?.toInt(),
+      forTime: json['for'] != null ? DateTime.parse(json['for'] as String) : null,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt'] as String) : null,
+      startOnConfirm: json['startOnConfirm'] as bool? ?? false,
+      requestedOptionCode: json['requestedOptionCode'] as String?,
+      requestedOptionName:
+          json['requestedOptionName'] != null ? LocalizedText.parse(json['requestedOptionName']) : null,
+      status: ReservationStatus.fromValue(json['status'] as int),
+      isHolding: json['isHolding'] as bool? ?? false,
+      stayId: (json['stayId'] as num?)?.toInt(),
+      branchId: (json['branchId'] as num?)?.toInt() ?? 1,
+      seatedAt: json['seatedAt'] != null ? DateTime.parse(json['seatedAt'] as String) : null,
     );
   }
 }
@@ -94,7 +203,8 @@ List<RateOption> _parseOptions(dynamic tariff) {
       .toList();
 }
 
-/// A timed place: a PlayStation room, a table or a station with a clock.
+/// A place the customer can book: a PlayStation room, a station with a
+/// clock, or a table the owner opened to reservations.
 class Place {
   final int id;
   final PlaceKind kind;
@@ -103,6 +213,8 @@ class Place {
   final PlaceStatus displayStatus;
   final bool isActive;
   final List<RateOption> options;
+  final bool isTimed;
+  final bool reservable;
   final bool canReserve;
   final bool takesControllerRequests;
 
@@ -114,6 +226,8 @@ class Place {
     required this.displayStatus,
     this.isActive = true,
     this.options = const [],
+    this.isTimed = false,
+    this.reservable = false,
     this.canReserve = true,
     this.takesControllerRequests = true,
   });
@@ -133,6 +247,8 @@ class Place {
       displayStatus: PlaceStatus.fromValue(json['status'] as int? ?? 1),
       isActive: json['isActive'] as bool? ?? true,
       options: _parseOptions(json['tariff']),
+      isTimed: json['isTimed'] as bool? ?? json['tariff'] != null,
+      reservable: json['reservable'] as bool? ?? false,
       canReserve: json['canReserve'] as bool? ?? true,
       takesControllerRequests: json['takesControllerRequests'] as bool? ?? true,
     );
@@ -192,8 +308,8 @@ class StaySegment {
   }
 }
 
-/// A stay: one party's timed use of a place — the hold, the running clock,
-/// the ended one on the bill.
+/// A stay: one party's timed use of a place — the running clock, the
+/// ended one on the bill. The reservation before it is its own thing.
 class Stay {
   final int id;
   final int placeId;
@@ -211,13 +327,6 @@ class Stay {
   final String? notes;
   final String? currentOptionCode;
   final LocalizedText? currentOptionName;
-
-  /// The customer asked that the till's Confirm also start the clock
-  final bool startOnConfirm;
-
-  /// The rate they asked to start at, while held; the till confirms at it
-  final String? requestedOptionCode;
-  final LocalizedText? requestedOptionName;
   final String? customerId;
   final List<StayMember> members;
   final List<StaySegment> segments;
@@ -247,9 +356,6 @@ class Stay {
     this.notes,
     this.currentOptionCode,
     this.currentOptionName,
-    this.startOnConfirm = false,
-    this.requestedOptionCode,
-    this.requestedOptionName,
     this.customerId,
     this.members = const [],
     this.segments = const [],
@@ -314,10 +420,6 @@ class Stay {
       currentOptionCode: json['currentOptionCode'] as String?,
       currentOptionName:
           json['currentOptionName'] != null ? LocalizedText.parse(json['currentOptionName']) : null,
-      startOnConfirm: json['startOnConfirm'] as bool? ?? false,
-      requestedOptionCode: json['requestedOptionCode'] as String?,
-      requestedOptionName:
-          json['requestedOptionName'] != null ? LocalizedText.parse(json['requestedOptionName']) : null,
       customerId: json['customerId'] as String?,
       members: (json['members'] as List<dynamic>?)
               ?.map((e) => StayMember.fromJson(e as Map<String, dynamic>))

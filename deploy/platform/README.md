@@ -13,6 +13,7 @@ the control plane writes it, brings it up and takes it down.
   platform/web/        the five SPA builds (admin, client, pos, kds, control), shared by every tenant
   platform/realms/     ninja-realm.json (the platform realm, imported on first boot)
   platform/themes/     ninja/, the login theme every realm uses (its mark and name come from the realm)
+  platform/apps/       the native apps' download page (index.html) and the APKs mobile-deploy.yml drops beside it
   tenants/{slug}/      docker-compose.yaml, .env — written by the control plane
   tenants/{slug}/seed/     brand images uploaded before the stamp ({slot}.png)
   tenants/{slug}/backups/  one folder per backup: eleven *.dump, uploads.tar.gz, manifest.json

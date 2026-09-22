@@ -222,7 +222,7 @@ public sealed class Provisioner(
             var dir = Dir(tenant);
             await WriteStackFilesAsync(tenant, ct);
             var result = await shell.RunAsync("docker", UpArgs(tenant), dir, ct);
-            if (!result.Ok) throw new InvalidOperationException(result.Output);
+            if (!result.Ok) throw new ShellException(result.Output);
             return result.Output;
         }, ct);
 
@@ -260,7 +260,7 @@ public sealed class Provisioner(
                 await WriteStackFilesAsync(tenant, ct);
                 if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
                 var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new InvalidOperationException(result.Output);
+                if (!result.Ok) throw new ShellException(result.Output);
                 return result.Output;
             }, ct);
             if (tenant.Status == TenantStatus.Running) await EntitlementsStepAsync(tenant, runId, ct);
@@ -339,7 +339,7 @@ public sealed class Provisioner(
                 var dir = Dir(tenant);
                 if (!Directory.Exists(dir)) return "nothing stamped";
                 var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "down", "-v", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new InvalidOperationException(result.Output);
+                if (!result.Ok) throw new ShellException(result.Output);
                 Directory.Delete(dir, recursive: true);
                 return result.Output;
             }, ct);
@@ -554,7 +554,7 @@ public sealed class Provisioner(
                     await Step(tenant, runId, action, async () =>
                     {
                         var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "stop"], Directory.Exists(dir) ? dir : null, ct);
-                        if (!result.Ok) throw new InvalidOperationException(result.Output);
+                        if (!result.Ok) throw new ShellException(result.Output);
                         return result.Output;
                     }, ct);
                     break;
@@ -564,7 +564,7 @@ public sealed class Provisioner(
                     {
                         if (Directory.Exists(dir)) await WriteStackFilesAsync(tenant, ct);
                         var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], Directory.Exists(dir) ? dir : null, ct);
-                        if (!result.Ok) throw new InvalidOperationException(result.Output);
+                        if (!result.Ok) throw new ShellException(result.Output);
                         return result.Output;
                     }, ct);
                     break;
@@ -697,7 +697,7 @@ public sealed class Provisioner(
             throw new InvalidOperationException($"Caddy refused the custom domains; the previous file is back: {validate.Output}");
         }
         var reload = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "reload", "--config", "/etc/caddy/Caddyfile"], null, ct);
-        if (!reload.Ok) throw new InvalidOperationException(reload.Output);
+        if (!reload.Ok) throw new ShellException(reload.Output);
         return $"{live.Count} custom domain(s)";
     }
 
@@ -717,7 +717,8 @@ public sealed class Provisioner(
         catch (Exception ex)
         {
             step.Status = StepStatus.Failed;
-            step.Output = Truncate(ex.Message);
+            // A docker failure keeps everything it printed here; the record and the audit get the one line
+            step.Output = Truncate(ex is ShellException docker ? docker.Log : ex.Message);
             throw;
         }
         finally

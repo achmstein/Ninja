@@ -45,9 +45,19 @@ adb reverse tcp:8080 tcp:8080
 flutter run --dart-define=REALM=chillax
 ```
 
-The realm is the AppHost's tenant one; the code has none of its own. A
-release build is told everything by a record instead
+The realm is the AppHost's tenant one; the code has none of its own. Run
+without `REALM` and the app opens on its connect screen instead, as a
+tablet would: type `http://localhost:5000` (`/api/tenant` there names the
+realm) and it is connected.
+
+A release build is generic: the platform's download page
+(`https://{domain}/apps`, built by `mobile-deploy.yml`) serves every café,
+and the tablet is connected to its own on first open — the QR code on the
+admin's Apps page, or the café's address typed. Settings and the foot of the
+sign-in form have "Change café". A record pins a build to one stack instead
 (`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
+The launcher icon and splash are the platform's (`assets/images/ninja_*.png`;
+regenerate with `dart run flutter_launcher_icons && dart run flutter_native_splash:create`).
 
 If the local Keycloak volume already holds the realm, the new `kds-app`
 client is not re-imported: add it in the admin console (clone `pos-app`) or
@@ -85,7 +95,7 @@ prompt and a swipe can leave. To provision, on a freshly reset tablet with
 no Google account added yet:
 
 ```
-adb shell dpm set-device-owner com.chillax.kds/.KdsDeviceAdminReceiver
+adb shell dpm set-device-owner com.ninja.kds/.KdsDeviceAdminReceiver
 ```
 
 then install from Play and start kiosk mode from Settings. The choice is
@@ -112,7 +122,7 @@ lib/
     settings/    kiosk card
   l10n/          ARB sources (EN + Egyptian Arabic); keys mirror
                  kds_web/src/lib/i18n.ts
-android/app/src/main/kotlin/com/chillax/kds/
+android/app/src/main/kotlin/com/ninja/kds/
   MainActivity.kt          lock-task channel
   KdsDeviceAdminReceiver.kt device-owner component
 ```
@@ -125,5 +135,5 @@ flutter test
 ```
 
 Release builds go through `.github/workflows/mobile-deploy.yml`
-(`app: kds_app`), which needs the `ANDROID_KDS_*` keystore secrets and a
-Play Console app for `com.chillax.kds`.
+(`app: kds_app`), which needs the `ANDROID_KDS_*` keystore secrets and
+publishes the APK to the platform's download page.

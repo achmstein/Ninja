@@ -3,6 +3,7 @@ import {
   type LocalizedText,
   type PlaceViewModel,
   type RateOptionViewModel,
+  type ReservationViewModel,
   type StayViewModel,
   type TariffViewModel,
 } from '@/api/spaces'
@@ -57,18 +58,37 @@ export const placeStatusConfig: Record<
   [PLACE_OUT_OF_SERVICE]: { key: 'outOfService', dotClass: 'bg-gray-400' },
 }
 
-// StayStatus
-export const STAY_HELD = 1
+// StayStatus (1 was Held, before the reservation became its own thing)
 export const STAY_RUNNING = 2
 export const STAY_ENDED = 3
 export const STAY_CANCELLED = 4
+
+// ReservationStatus
+export const RESERVATION_REQUESTED = 1
+export const RESERVATION_CONFIRMED = 2
+export const RESERVATION_SEATED = 3
+export const RESERVATION_CANCELLED = 4
+export const RESERVATION_EXPIRED = 5
+export const RESERVATION_COMPLETED = 6
 
 export function isRunning(stay: StayViewModel | null | undefined): boolean {
   return stay != null && Number(stay.status) === STAY_RUNNING
 }
 
-export function isHeld(stay: StayViewModel | null | undefined): boolean {
-  return stay != null && Number(stay.status) === STAY_HELD
+/** Requested or confirmed: somebody is on their way, or due later. */
+export function isOpenReservation(
+  reservation: ReservationViewModel | null | undefined
+): boolean {
+  if (reservation == null) return false
+  const status = Number(reservation.status)
+  return status === RESERVATION_REQUESTED || status === RESERVATION_CONFIRMED
+}
+
+/** Open and keeping the place right now: made for now, or its time has come. */
+export function isHolding(
+  reservation: ReservationViewModel | null | undefined
+): boolean {
+  return isOpenReservation(reservation) && Boolean(reservation?.isHolding)
 }
 
 export function tariffOptions(
@@ -91,13 +111,24 @@ export function findOption(
   return code ? tariffOptions(tariff).find((o) => o.code === code) : undefined
 }
 
-/** The open stay on a place, if any: running first, then held. */
+/** The running stay on a place, if any. */
 export function stayForPlace(
   stays: StayViewModel[],
   placeId: number | string | undefined
 ): StayViewModel | undefined {
-  const own = stays.filter((s) => Number(s.placeId) === Number(placeId))
-  return own.find(isRunning) ?? own.find(isHeld)
+  return stays.find(
+    (s) => Number(s.placeId) === Number(placeId) && isRunning(s)
+  )
+}
+
+/** The next open reservation on a place: the one keeping it now, else the soonest due (the server sorts). */
+export function reservationForPlace(
+  reservations: ReservationViewModel[],
+  placeId: number | string | undefined
+): ReservationViewModel | undefined {
+  return reservations.find(
+    (r) => Number(r.placeId) === Number(placeId) && isOpenReservation(r)
+  )
 }
 
 /** Whole-number rates print bare ("60"), fractions keep their decimals. */

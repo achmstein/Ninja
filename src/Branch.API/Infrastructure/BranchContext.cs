@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Ninja.Branch.API.Model;
+using Ninja.Branch.API.Services;
 
 namespace Ninja.Branch.API.Infrastructure;
 
@@ -62,10 +63,14 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
     public static readonly JsonSerializerOptions ImagesJson = new(JsonSerializerDefaults.Web);
 }
 
-public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration configuration) : IDbSeeder<BranchContext>
+public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration configuration, TenantBrandStore brand) : IDbSeeder<BranchContext>
 {
     public async Task SeedAsync(BranchContext context)
     {
+        // Icons on disk cut by an older renderer are cut again from the mark, like a migration for the uploads
+        if (await brand.RecutStaleIconsAsync(CancellationToken.None))
+            logger.LogInformation("Cut the icons again from the mark (renderer {Renderer})", TenantBrandStore.IconRenderer);
+
         // The stack's tenant, from the environment the stack was provisioned
         // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor,
         // Tenant__CustomerUrl, Tenant__Country, Tenant__Currency,

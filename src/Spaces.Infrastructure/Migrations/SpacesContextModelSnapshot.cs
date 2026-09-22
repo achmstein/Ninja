@@ -26,6 +26,9 @@ namespace Spaces.Infrastructure.Migrations
             modelBuilder.HasSequence("placeseq", "spaces")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("reservationseq", "spaces")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("staymemberseq", "spaces")
                 .IncrementsBy(10);
 
@@ -94,6 +97,11 @@ namespace Spaces.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<bool>("Reservable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId");
@@ -103,6 +111,82 @@ namespace Spaces.Infrastructure.Migrations
                     b.HasIndex("PhysicalStatus");
 
                     b.ToTable("places", "spaces");
+                });
+
+            modelBuilder.Entity("Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate.Reservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "reservationseq", "spaces");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("For")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("PartySize")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlaceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RequestedOptionCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("SeatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("StartOnConfirm")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("StayId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("BranchId", "Status");
+
+                    b.HasIndex("CustomerId", "Status");
+
+                    b.HasIndex("PlaceId", "Status");
+
+                    b.HasIndex("Status", "ExpiresAt");
+
+                    b.ToTable("reservations", "spaces");
                 });
 
             modelBuilder.Entity("Ninja.Spaces.Domain.AggregatesModel.StayAggregate.Stay", b =>
@@ -131,9 +215,6 @@ namespace Spaces.Infrastructure.Migrations
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -151,16 +232,10 @@ namespace Spaces.Infrastructure.Migrations
                     b.Property<int?>("ReceiptNumber")
                         .HasColumnType("integer");
 
-                    b.Property<string>("RequestedOptionCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("integer");
 
-                    b.Property<bool>("StartOnConfirm")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime?>("StartedAt")
+                    b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
@@ -181,13 +256,13 @@ namespace Spaces.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    b.HasIndex("ReservationId");
+
                     b.HasIndex("Status");
 
                     b.HasIndex("CustomerId", "Status");
 
                     b.HasIndex("PlaceId", "Status");
-
-                    b.HasIndex("Status", "ExpiresAt");
 
                     b.ToTable("stays", "spaces");
                 });
@@ -408,6 +483,17 @@ namespace Spaces.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Tariff");
+                });
+
+            modelBuilder.Entity("Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate.Reservation", b =>
+                {
+                    b.HasOne("Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate.Place", "Place")
+                        .WithMany()
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Place");
                 });
 
             modelBuilder.Entity("Ninja.Spaces.Domain.AggregatesModel.StayAggregate.Stay", b =>

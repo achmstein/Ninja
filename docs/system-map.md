@@ -12,7 +12,7 @@
 |---|---|---|
 | Catalog | The menu, prices, customizations, availability | events; the assistant's menu features |
 | Ordering | Orders, baskets, validation | events |
-| Spaces | Rooms, tables, sessions and their time billing | events |
+| Spaces | Places (rooms, tables, stations), the reservations on them, the stays that run a clock and their time billing | events |
 | Sales | Tickets, tenders, shifts, the drawer | events (tickets are built from Ordering/Spaces events) |
 | Inventory | Stock items, recipes, the ledger, receipts, counts, transfers, costs | events; the assistant's receipt scan |
 | Finance | Expenses, suppliers' and partners' accounts, the P&L projection | events; the assistant's bill scan |
@@ -32,6 +32,7 @@ No service calls another over HTTP; where a screen needs two services' data, the
 | `admin_web` | Owner / manager at a desk | Everything back-office: dashboard, menu (with the assistant), inventory, finance, payroll, staff, customers, loyalty, announcements, branches, settings, till reports | The reference. Keep. |
 | `pos_web`, `pos_app` | Cashier at the counter (tablet), all day | Tickets, floor, sessions, tabs, drawer, requests, pay-outs to staff / suppliers / partners | Done. Keep. |
 | `kds_web`, `kds_app` | The kitchen screen | Orders to make | Done. Keep. |
+| `pos_app`, `kds_app` delivery | The café's tablets | One generic Android build each (ninja icon and splash) from the platform's download page `https://{domain}/apps`; the tablet connects to its café on first open (the QR code on the admin's Apps page, or the address typed) and signs in against that café's realm. iPads use the web versions. | Done 2026-09-21. |
 | `client_web`, `mobile_app` | Customers | Menu, ordering, rooms, loyalty, tabs | Keep. |
 | **Manager phone** — a new Flutter app scaffolded from `pos_app` (same forui / riverpod / go_router / dio stack) | Owner / manager on the move | The owner's glance (today's till, month money, low stock), stock on the go (count by area, receive with the camera and the receipt scan, waste), a bill scanned onto an expense, push (`new_order`, `stock_low`), approvals later | **To build.** Replaces `admin_app`. |
 | `admin_app` | — | — | **Retired 2026-09-18.** `admin_web` installs as a PWA (manifest, icons) and subscribes this browser as the admin push device from the profile menu, so the day's digest, new orders and requests reach the owner's phone without a store app. Its ARB strings moved to `src/admin_web/i18n/`. |

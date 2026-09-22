@@ -6,7 +6,8 @@ namespace Ninja.Spaces.API.Application.IntegrationEvents.Events;
 /// Consumer copy of the event Sales publishes when a ticket is paid. Same
 /// type name as the source (the routing key), only the properties Spaces
 /// reads: which session the receipt covered and how it was paid, so the
-/// customer's session list can show its cost as settled.
+/// customer's session list can show its cost as settled; and which place
+/// the bill was on, so a party seated there on their reservation is done.
 /// </summary>
 public record TicketSettledIntegrationEvent(
     int TicketId,
@@ -14,4 +15,5 @@ public record TicketSettledIntegrationEvent(
     int ReceiptNumber,
     int? SessionId = null,
     string? Tender = null,
-    DateTime SettledAt = default) : IntegrationEvent;
+    DateTime SettledAt = default,
+    int? PlaceId = null) : IntegrationEvent;

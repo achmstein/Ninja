@@ -51,13 +51,36 @@ public sealed class TenantBrandStoreTests
             using var icon = SKBitmap.Decode(_store.PathOf(name));
             Assert.AreEqual(spec.Size, icon.Width, name);
             Assert.AreEqual(spec.Size, icon.Height, name);
-            // Opaque white behind the mark: the corner is never part of a logo
-            Assert.AreEqual(SKColors.White, icon.GetPixel(1, 1), $"{name} corner");
+            // The corner is never part of a logo: white behind the home-screen icons, nothing behind the tab's
+            var corner = icon.GetPixel(1, 1);
+            if (spec.Opaque) Assert.AreEqual(SKColors.White, corner, $"{name} corner");
+            else Assert.AreEqual(0, corner.Alpha, $"{name} corner was {corner}");
             // And the mark is in the middle
             var centre = icon.GetPixel(spec.Size / 2, spec.Size / 2);
             Assert.IsTrue(centre.Red > 200 && centre.Green < 60 && centre.Blue < 60, $"{name} centre was {centre}");
         }
     }
+
+    [TestMethod]
+    public async Task Icons_cut_by_an_older_renderer_are_cut_again_at_boot_and_current_ones_left_alone()
+    {
+        await _store.SaveAsync(TenantImageSlots.Logo, PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);
+        Assert.IsFalse(await _store.RecutStaleIconsAsync(CancellationToken.None), "a fresh upload is current");
+
+        // What a stack from before the renderer was versioned has on disk: a favicon on white and no note of the renderer
+        File.Delete(Path.Combine(_root, "icons.renderer"));
+        File.WriteAllBytes(_store.PathOf("favicon.png"), TenantBrandStore.RenderPlaceholder(TenantBrandStore.Icons["favicon.png"], "#ffffff"));
+
+        Assert.IsTrue(await _store.RecutStaleIconsAsync(CancellationToken.None));
+
+        using var favicon = SKBitmap.Decode(_store.PathOf("favicon.png"));
+        Assert.AreEqual(0, favicon.GetPixel(1, 1).Alpha);
+        Assert.IsFalse(await _store.RecutStaleIconsAsync(CancellationToken.None), "cut once");
+    }
+
+    [TestMethod]
+    public async Task Without_a_mark_there_is_nothing_to_cut_again()
+        => Assert.IsFalse(await _store.RecutStaleIconsAsync(CancellationToken.None));
 
     [TestMethod]
     public async Task Upload_keeps_the_logo_within_the_size_cap()

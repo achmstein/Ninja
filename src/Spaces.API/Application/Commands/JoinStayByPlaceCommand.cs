@@ -44,7 +44,7 @@ public class JoinStayByPlaceCommandHandler(
             stay.PlaceId,
             stay.Place?.Name ?? new LocalizedText($"Place {stay.PlaceId}"),
             isOwner,
-            stay.StartedAt ?? DateTime.UtcNow);
+            stay.StartedAt);
     }
 
     public async Task<bool> Handle(LeaveStayCommand request, CancellationToken cancellationToken)

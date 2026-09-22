@@ -25,9 +25,9 @@ export function CategoryRail({ sections, activeId, onSelect }: CategoryRailProps
   }, [activeId])
 
   // Mobile has no app bar, so the rail sticks right below the status-bar
-  // inset; desktop sticks below the h-14 header
+  // inset; desktop sticks below the header (its height is the brand's)
   return (
-    <div className='bg-background/95 sticky top-[env(safe-area-inset-top)] z-30 -mx-4 px-4 py-2 backdrop-blur md:top-14'>
+    <div className='bg-background/95 sticky top-[env(safe-area-inset-top)] z-30 -mx-4 px-4 py-2 backdrop-blur md:top-(--header-h)'>
       <div ref={railRef} className='no-scrollbar flex gap-2 overflow-x-auto'>
         {sections.map((section) => (
           <Button
@@ -35,7 +35,7 @@ export function CategoryRail({ sections, activeId, onSelect }: CategoryRailProps
             data-id={section.id}
             size='sm'
             variant={section.id === activeId ? 'default' : 'outline'}
-            className='shrink-0 rounded-full'
+            className='shrink-0 rounded-pill'
             onClick={() => onSelect(section.id)}
           >
             {section.label}

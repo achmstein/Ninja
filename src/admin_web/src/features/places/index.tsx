@@ -1,7 +1,19 @@
 import { useState } from 'react'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { Gamepad2, History, MoreHorizontal, Plus, QrCode } from 'lucide-react'
-import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
+import {
+  Armchair,
+  CalendarClock,
+  History,
+  MoreHorizontal,
+  Plus,
+  QrCode,
+} from 'lucide-react'
+import {
+  type PlaceViewModel,
+  type ReservationViewModel,
+  type StayViewModel,
+  type TariffViewModel,
+} from '@/api/spaces'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +44,7 @@ import { PlaceKindIcon } from './components/place-kind-icon'
 import { StartHeldDialog } from './components/start-held-dialog'
 import { WalkInDialog } from './components/walk-in-dialog'
 import {
-  isHeld,
+  isHolding,
   isRunning,
   PLACE_AVAILABLE,
   PLACE_OUT_OF_SERVICE,
@@ -58,6 +70,7 @@ const statusFilters: { value: string; key: TranslationKey }[] = [
 function placeSubline(
   place: PlaceViewModel,
   stay: StayViewModel | undefined,
+  reservation: ReservationViewModel | undefined,
   t: (key: TranslationKey, params?: Record<string, string | number>) => string,
   localized: (
     text: { en?: string | null; ar?: string | null } | null | undefined
@@ -68,9 +81,9 @@ function placeSubline(
     const option = localized(stay!.currentOptionName)
     return option ? `${who} · ${option}` : who
   }
-  if (isHeld(stay)) {
-    return stay!.customerName
-      ? t('heldFor', { name: stay!.customerName })
+  if (isHolding(reservation)) {
+    return reservation!.customerName
+      ? t('heldFor', { name: reservation!.customerName })
       : t('held')
   }
   if (Number(place.status) === PLACE_OUT_OF_SERVICE) return t('outOfService')
@@ -89,7 +102,7 @@ export function PlacesManagement() {
   const navigate = route.useNavigate()
   const actions = useStayActions()
 
-  const { places, stayFor, isLoading } = usePlaces()
+  const { places, stayFor, reservationFor, isLoading } = usePlaces()
   const { ordersAt } = usePendingOrders()
 
   const [status, setStatus] = useState('all')
@@ -99,7 +112,8 @@ export function PlacesManagement() {
   const [holdPlace, setHoldPlace] = useState<PlaceViewModel | null>(null)
   const [walkInPlace, setWalkInPlace] = useState<PlaceViewModel | null>(null)
   const [startHeld, setStartHeld] = useState<{
-    stay: StayViewModel
+    reservation: ReservationViewModel
+    tariff: TariffViewModel | null | undefined
     mode: 'start' | 'confirm'
   } | null>(null)
 
@@ -140,6 +154,17 @@ export function PlacesManagement() {
                     <History size={20} className='stroke-muted-foreground' />
                   </Link>
                 </Button>
+                <Button size='icon' variant='ghost' asChild>
+                  <Link
+                    to='/places/reservations'
+                    aria-label={t('reservationHistory')}
+                  >
+                    <CalendarClock
+                      size={20}
+                      className='stroke-muted-foreground'
+                    />
+                  </Link>
+                </Button>
               </div>
             </div>
 
@@ -173,7 +198,7 @@ export function PlacesManagement() {
               ) : places.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={Gamepad2}
+                  icon={Armchair}
                   title={t('noPlacesYet')}
                   action={
                     <Button variant='outline' onClick={() => setAddOpen(true)}>
@@ -195,6 +220,7 @@ export function PlacesManagement() {
                       </h2>
                       {group.map((place) => {
                         const stay = stayFor(place.id)
+                        const reservation = reservationFor(place.id)
                         const orders = ordersAt(place)
                         const placeStatus =
                           placeStatusConfig[Number(place.status ?? 0)] ??
@@ -202,7 +228,7 @@ export function PlacesManagement() {
                         const outOfService =
                           Number(place.status) === PLACE_OUT_OF_SERVICE
                         const selected = Number(place.id) === search.place
-                        const busy = stay != null
+                        const busy = stay != null || isHolding(reservation)
                         return (
                           <div
                             key={String(place.id)}
@@ -232,7 +258,13 @@ export function PlacesManagement() {
                                   )}
                                 </div>
                                 <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                                  {placeSubline(place, stay, t, localized)}
+                                  {placeSubline(
+                                    place,
+                                    stay,
+                                    reservation,
+                                    t,
+                                    localized
+                                  )}
                                 </div>
                               </div>
                               <PlaceKindIcon
@@ -320,16 +352,23 @@ export function PlacesManagement() {
                 key={String(selectedPlace.id)}
                 place={selectedPlace}
                 stay={stayFor(selectedPlace.id)}
+                reservation={reservationFor(selectedPlace.id)}
                 orders={ordersAt(selectedPlace)}
                 onBack={() => select(undefined)}
                 onHold={() => setHoldPlace(selectedPlace)}
                 onWalkIn={() => setWalkInPlace(selectedPlace)}
-                onStartHeld={(stay, mode) => setStartHeld({ stay, mode })}
+                onStartHeld={(reservation, mode) =>
+                  setStartHeld({
+                    reservation,
+                    tariff: selectedPlace.tariff,
+                    mode,
+                  })
+                }
               />
             </div>
           ) : (
             <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-lg border sm:flex'>
-              <EmptyState icon={Gamepad2} title={t('selectPlace')} />
+              <EmptyState icon={Armchair} title={t('selectPlace')} />
             </div>
           )}
         </section>
@@ -350,7 +389,8 @@ export function PlacesManagement() {
       />
 
       <StartHeldDialog
-        stay={startHeld?.stay ?? null}
+        reservation={startHeld?.reservation ?? null}
+        tariff={startHeld?.tariff}
         mode={startHeld?.mode ?? 'start'}
         onOpenChange={(open) => {
           if (!open) setStartHeld(null)

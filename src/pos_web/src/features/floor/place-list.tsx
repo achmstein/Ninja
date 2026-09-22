@@ -9,15 +9,20 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { TicketSummary } from '@/api/sales/types.gen'
-import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import type {
+  PlaceViewModel,
+  ReservationViewModel,
+  StayViewModel,
+} from '@/api/spaces/types.gen'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   elapsedSeconds,
   formatClock,
+  isHolding,
   isRunning,
-  isHeld,
   isTimed,
+  PLACE_HELD,
   PLACE_OUT_OF_SERVICE,
   PLACE_ROOM,
   PLACE_STATION,
@@ -34,6 +39,9 @@ type PlaceListProps = {
   stayForPlace: (
     placeId: number | string | undefined,
   ) => StayViewModel | undefined
+  reservationForPlace: (
+    placeId: number | string | undefined,
+  ) => ReservationViewModel | undefined
   tickets: TicketSummary[]
   busy: boolean
   loading: boolean
@@ -72,12 +80,14 @@ export function hasBill(
  * Every place that has no bill yet, as a narrow column beside the bills so
  * opening one is a single tap. It stays a list, searchable, so forty tables
  * and twelve rooms cost a scroll or a couple of letters, never the screen.
- * A place with a clock opens its controls (start a walk-in, start the hold
- * that just arrived); a place without one opens a bill.
+ * A place with a clock opens its controls (start a walk-in, seat the
+ * reservation that just arrived); a place without one opens a bill, unless
+ * somebody reserved it and is on their way.
  */
 export function PlaceList({
   places,
   stayForPlace,
+  reservationForPlace,
   tickets,
   busy,
   loading,
@@ -157,14 +167,16 @@ export function PlaceList({
                 const Icon = kindIcon[group.kind] ?? DoorOpen
                 const timed = isTimed(place)
                 const stay = timed ? stayForPlace(place.id) : undefined
+                const reservation = reservationForPlace(place.id)
+                const reservedNow = isHolding(reservation)
                 const outOfService =
                   Number(place.status) === PLACE_OUT_OF_SERVICE
                 // The dot already says free; text only when there is
                 // something to add
                 const detail = isRunning(stay)
                   ? formatClock(elapsedSeconds(stay, nowMs))
-                  : isHeld(stay)
-                    ? stay.customerName || t('statusReserved')
+                  : reservedNow
+                    ? reservation?.customerName || t('statusReserved')
                     : outOfService
                       ? t('underMaintenance')
                       : null
@@ -179,7 +191,9 @@ export function PlaceList({
                     <span
                       className={cn(
                         'size-2.5 shrink-0 rounded-full',
-                        timed
+                        // A plain table's bill says whether it is taken;
+                        // its dot only turns for a reservation
+                        timed || Number(place.status) === PLACE_HELD
                           ? (placeStatusDot[Number(place.status ?? 0)] ??
                               'bg-muted')
                           : 'bg-green-500',

@@ -47,7 +47,18 @@ https:// {
 
 	@root host localhost
 	handle @root {
-		redir https://control.localhost{uri}
+		# The native apps' download page, as the platform serves it (deploy/platform/apps)
+		handle_path /apps* {
+			root * /srv/apps
+			file_server
+			header Cache-Control "no-cache"
+			# Android installs what it is told is a package; an unknown type would just be a file
+			@apk path *.apk
+			header @apk Content-Type application/vnd.android.package-archive
+		}
+		handle {
+			redir https://control.localhost{uri}
+		}
 	}
 
 	@auth host auth.localhost

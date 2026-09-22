@@ -40,16 +40,18 @@ class StayActions {
         failure: _l10n.failedToStartSession,
       );
 
-  Future<bool> startHeld(int sessionId, String? optionCode) => _run(
-        () => _places.startStay(sessionId, optionCode: optionCode),
-        success: _l10n.sessionStarted,
+  /// The party arrived and sat down: at a timed place the clock starts, at
+  /// a plain table the table is theirs until the till clears it
+  Future<bool> seat(int reservationId, String? optionCode, {required bool timed}) => _run(
+        () => _places.seatReservation(reservationId, optionCode: optionCode),
+        success: timed ? _l10n.sessionStarted : _l10n.partySeated,
         failure: _l10n.failedToStartSession,
       );
 
-  /// The customer arrived. A hold that asked for it starts the clock on
-  /// this; one that did not stays held until Start.
-  Future<bool> confirm(int sessionId, {required bool startsClock}) => _run(
-        () => _places.confirmStay(sessionId),
+  /// The customer arrived. A reservation that asked for it starts the
+  /// clock on this; one that did not stays reserved until Seat.
+  Future<bool> confirm(int reservationId, {required bool startsClock}) => _run(
+        () => _places.confirmReservation(reservationId),
         success: startsClock ? _l10n.sessionStarted : _l10n.holdConfirmed,
         failure: _l10n.failedToStartSession,
       );
@@ -60,11 +62,29 @@ class StayActions {
         failure: _l10n.failedToEndSession,
       );
 
-  // A reservation and a running session read differently
-  Future<bool> cancelStay(int sessionId, {required bool wasActive}) => _run(
+  Future<bool> cancelStay(int sessionId) => _run(
         () => _places.cancelStay(sessionId),
-        success: wasActive ? _l10n.sessionCancelled : _l10n.reservationCancelled,
+        success: _l10n.sessionCancelled,
         failure: _l10n.failedToCancelSession,
+      );
+
+  Future<bool> cancelReservation(int reservationId) => _run(
+        () => _places.cancelReservation(reservationId),
+        success: _l10n.reservationCancelled,
+        failure: _l10n.failedToCancelSession,
+      );
+
+  /// The party left a plain table: it is free again
+  Future<bool> completeReservation(int reservationId) => _run(
+        () => _places.completeReservation(reservationId),
+        success: _l10n.tableCleared,
+        failure: _l10n.failedToClearTable,
+      );
+
+  Future<bool> assignReservationCustomer(int reservationId, String customerId, String customerName) => _run(
+        () => _places.assignReservationCustomer(reservationId, customerId, customerName),
+        success: _l10n.customerAssigned,
+        failure: _l10n.failedToAssignCustomer,
       );
 
   Future<bool> changeOption(int sessionId, String optionCode) => _run(

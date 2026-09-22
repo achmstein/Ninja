@@ -232,7 +232,7 @@ export function ItemCustomizeForm({
                         key={optionId}
                         size='sm'
                         variant={isSelected ? 'default' : 'outline'}
-                        className='rounded-full'
+                        className='rounded-pill'
                         disabled={outOfStock}
                         onClick={() => toggleOption(customization, optionId)}
                       >
@@ -301,7 +301,7 @@ export function ItemCustomizeForm({
   const cta = (
     <Button
       size='lg'
-      className='w-full justify-between rounded-full'
+      className='w-full justify-between rounded-pill'
       disabled={!item.isAvailable || missingRequired || loadingPreference}
       onClick={() => onAdd(chosen, quantity, instructions.trim(), unitPrice)}
     >

@@ -1,5 +1,6 @@
 using System.Reflection;
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Ninja.Spaces.Domain.Events;
 using Ninja.Spaces.Domain.Exceptions;
@@ -12,50 +13,53 @@ public sealed class StayTests
     private static Tariff RoomTariff() => Tariff.Room(60m, 90m);
 
     [TestMethod]
-    public void A_customer_hold_lapses_after_ten_minutes_a_staff_hold_never()
+    public void A_walk_in_runs_from_the_start_on_the_default_option()
     {
-        var customer = new Stay(1, RoomTariff(), "c1", "Ahmed");
-        var staff = new Stay(1, RoomTariff(), null, "Walk-in", isStaffCreated: true);
+        var stay = Stay.CreateWalkIn(1, RoomTariff());
 
-        Assert.AreEqual(StayStatus.Held, customer.Status);
-        Assert.IsNotNull(customer.ExpiresAt);
-        Assert.AreEqual(Stay.HoldMinutes, Math.Round((customer.ExpiresAt!.Value - customer.CreatedAt).TotalMinutes));
-        Assert.IsFalse(customer.IsExpired());
-
-        Assert.IsNull(staff.ExpiresAt);
-        Assert.IsFalse(staff.IsExpired());
-        Assert.IsTrue(customer.DomainEvents!.OfType<StayHeldDomainEvent>().Any());
+        Assert.AreEqual(StayStatus.Running, stay.Status);
+        Assert.IsTrue(stay.IsOpen);
+        Assert.IsNull(stay.CustomerId);
+        Assert.IsNull(stay.ReservationId);
+        Assert.AreEqual(Tariff.SingleCode, stay.CurrentOptionCode);
+        Assert.AreEqual(1, stay.Segments.Count);
+        Assert.IsTrue(stay.DomainEvents!.OfType<StayStartedDomainEvent>().Any());
     }
 
     [TestMethod]
-    public void A_hold_needs_a_customer_unless_staff_made_it()
+    public void A_walk_in_takes_the_option_the_till_picked_and_is_case_insensitive()
     {
-        Assert.ThrowsExactly<SpacesDomainException>(() => new Stay(1, RoomTariff(), null, null));
-    }
-
-    [TestMethod]
-    public void Confirm_starts_the_clock_only_when_the_customer_asked_for_it()
-    {
-        var plain = new Stay(1, RoomTariff(), "c1", "Ahmed");
-        Assert.IsFalse(plain.Confirm());
-        Assert.AreEqual(StayStatus.Held, plain.Status);
-
-        var eager = new Stay(1, RoomTariff(), "c1", "Ahmed", startOnConfirm: true);
-        Assert.IsTrue(eager.Confirm());
-        Assert.AreEqual(StayStatus.Running, eager.Status);
-        Assert.AreEqual(Tariff.SingleCode, eager.CurrentOptionCode, "the clock starts on the tariff's first option");
-        Assert.IsNotNull(eager.StartedAt);
-        Assert.IsTrue(eager.DomainEvents!.OfType<StayStartedDomainEvent>().Any());
-        Assert.AreEqual(StayMemberRole.Owner, eager.GetMemberRole("c1"));
-    }
-
-    [TestMethod]
-    public void Start_takes_the_option_the_till_picked_and_is_case_insensitive()
-    {
-        var stay = new Stay(1, RoomTariff(), "c1", "Ahmed");
-        stay.Start("Multi");
+        var stay = Stay.CreateWalkIn(1, RoomTariff(), optionCode: "Multi");
         Assert.AreEqual(Tariff.MultiCode, stay.CurrentOptionCode);
         Assert.AreEqual(90m, stay.Segments.Single().HourlyRate);
+        Assert.ThrowsExactly<SpacesDomainException>(() => Stay.CreateWalkIn(1, RoomTariff(), optionCode: "vr"));
+    }
+
+    [TestMethod]
+    public void Seating_a_reservation_starts_the_clock_with_the_customer_in_the_party()
+    {
+        var room = Place.Room("Room 1", 60m, 90m, 1);
+        var reservation = new Reservation(room, "c1", "Ahmed", startOnConfirm: true, requestedOptionCode: Tariff.MultiCode, notes: "birthday");
+
+        var stay = Stay.FromReservation(reservation, room.Tariff!);
+
+        Assert.AreEqual(StayStatus.Running, stay.Status);
+        Assert.AreEqual(reservation.Id, stay.ReservationId);
+        Assert.AreEqual("c1", stay.CustomerId);
+        Assert.AreEqual("birthday", stay.Notes);
+        Assert.AreEqual(Tariff.MultiCode, stay.CurrentOptionCode, "the option the customer asked for");
+        Assert.AreEqual(StayMemberRole.Owner, stay.GetMemberRole("c1"));
+        Assert.IsTrue(stay.DomainEvents!.OfType<StayStartedDomainEvent>().Any());
+
+        // The till's choice wins over the customer's
+        var overridden = Stay.FromReservation(reservation, room.Tariff!, Tariff.SingleCode);
+        Assert.AreEqual(Tariff.SingleCode, overridden.CurrentOptionCode);
+
+        // A staff reservation for a party with no account: no owner yet, the first scan claims it
+        var staff = new Reservation(room, null, "Walk-in", isStaffCreated: true);
+        var unclaimed = Stay.FromReservation(staff, room.Tariff!);
+        Assert.IsNull(unclaimed.CustomerId);
+        Assert.AreEqual(0, unclaimed.Members.Count);
     }
 
     [TestMethod]
@@ -124,12 +128,10 @@ public sealed class StayTests
     public void The_stay_keeps_the_rates_it_started_with()
     {
         var tariff = RoomTariff();
-        var stay = new Stay(1, tariff, "c1", "Ahmed");
-        var later = Tariff.Room(999m, 999m);
+        var stay = Stay.CreateWalkIn(1, tariff, "c1", "Ahmed");
 
         Assert.AreEqual(60m, stay.Tariff.Require(Tariff.SingleCode).HourlyRate);
         Assert.AreNotSame(tariff, stay.Tariff, "a snapshot, not the place's own object");
-        _ = later;
     }
 
     [TestMethod]
@@ -148,32 +150,35 @@ public sealed class StayTests
     }
 
     [TestMethod]
-    public void Members_can_still_be_named_after_the_clock_stops_but_not_on_a_hold()
+    public void Members_can_still_be_named_after_the_clock_stops_but_not_once_cancelled()
     {
-        var held = new Stay(1, RoomTariff(), "c1", "Ahmed");
-        Assert.ThrowsExactly<SpacesDomainException>(() => held.AddMember("c2", "Sara"));
-
         var stay = Stay.CreateWalkIn(1, RoomTariff(), "c1", "Ahmed");
         stay.End();
         stay.AddMember("c2", "Sara");
         Assert.IsTrue(stay.HasMember("c2"));
+
+        var cut = Stay.CreateWalkIn(1, RoomTariff());
+        cut.Cancel();
+        Assert.ThrowsExactly<SpacesDomainException>(() => cut.AddMember("c3", "Omar"));
     }
 
     [TestMethod]
-    public void Cancelling_remembers_whether_a_clock_was_running()
+    public void Only_a_running_stay_is_cut_short_and_it_closes_its_segment()
     {
-        var held = new Stay(1, RoomTariff(), "c1", "Ahmed");
-        held.Cancel();
-        Assert.AreEqual(StayStatus.Held, held.DomainEvents!.OfType<StayCancelledDomainEvent>().Single().PreviousStatus);
-
         var running = Stay.CreateWalkIn(1, RoomTariff());
         running.Cancel();
-        Assert.AreEqual(StayStatus.Running, running.DomainEvents!.OfType<StayCancelledDomainEvent>().Single().PreviousStatus);
+        Assert.AreEqual(StayStatus.Cancelled, running.Status);
         Assert.IsNull(running.CurrentOptionCode);
+        Assert.IsNotNull(running.EndedAt);
+        Assert.IsNotNull(running.Segments.Single().EndTime);
+        Assert.IsNull(running.TotalCost, "nothing billed");
+        Assert.IsTrue(running.DomainEvents!.OfType<StayCancelledDomainEvent>().Any());
+        Assert.ThrowsExactly<SpacesDomainException>(running.Cancel);
 
         var ended = Stay.CreateWalkIn(1, RoomTariff());
         ended.End();
         Assert.ThrowsExactly<SpacesDomainException>(ended.Cancel);
+        Assert.ThrowsExactly<SpacesDomainException>(ended.End);
     }
 
     [TestMethod]

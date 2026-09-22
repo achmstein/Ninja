@@ -113,6 +113,9 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Tenant__PrimaryColor: \"#0055ff\"");
         StringAssert.Contains(yaml, "Tenant__CustomerUrl: \"https://blue.ninja.app\"");
         StringAssert.Contains(yaml, "Tenant__AuthUrl: \"https://auth.ninja.app/realms/blue\"");
+        // The native apps connect to the API host and download from the platform's page
+        StringAssert.Contains(yaml, "Tenant__ApiUrl: \"https://api.blue.ninja.app\"");
+        StringAssert.Contains(yaml, "Tenant__AppsUrl: \"https://ninja.app/apps\"");
         StringAssert.Contains(yaml, "blue-branch-uploads:/app/uploads");
         StringAssert.Contains(yaml, "CatalogOptions__PicBaseUrl: \"https://api.blue.ninja.app\"");
         // Every service plants its own tables from the same profile; a stamp is never tenant one

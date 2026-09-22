@@ -170,6 +170,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
+  String get youTab => 'You';
+
+  @override
   String get cart => 'Cart';
 
   @override

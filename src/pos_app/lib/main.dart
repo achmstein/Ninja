@@ -9,11 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 import 'core/brand/brand_provider.dart';
+import 'core/config/tenant_connection.dart';
 import 'core/demo/demo.dart';
 import 'core/offline/offline_queue.dart';
 import 'core/printing/printer_settings.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/locale_provider.dart';
+import 'features/connect/connect_screen.dart';
 import 'features/sale/providers/sale_provider.dart';
 
 void main() async {
@@ -37,6 +39,8 @@ void main() async {
   await initializeSale();
   await initializeOfflineQueue();
   await initializeBrand();
+  // Which café this tablet serves; the connect screen asks when none is known
+  await TenantConnection.initialize();
 
   // A till that crashes costs money: every Flutter and async error goes to
   // Crashlytics. Without google-services.json (the app not yet registered
@@ -54,10 +58,15 @@ void main() async {
   }
 
   runApp(
-    ProviderScope(
-      // Design-time mode swaps auth, branches and tickets for samples
-      overrides: kDemoMode ? demoOverrides : const [],
-      child: const NinjaPosApp(),
+    // Until the tablet is connected to a café the connect screen is the app;
+    // the demo has its samples and never asks
+    ConnectGate(
+      skip: kDemoMode,
+      child: () => ProviderScope(
+        // Design-time mode swaps auth, branches and tickets for samples
+        overrides: kDemoMode ? demoOverrides : const [],
+        child: const NinjaPosApp(),
+      ),
     ),
   );
 }

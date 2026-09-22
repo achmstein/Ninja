@@ -182,6 +182,9 @@ export function useHub() {
         queryKey: [{ _id: 'getAvailablePlaces' }],
       })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getMyStays' }] })
+      queryClient.invalidateQueries({
+        queryKey: [{ _id: 'getMyReservations' }],
+      })
     }
     const onBranchSettings = () => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })

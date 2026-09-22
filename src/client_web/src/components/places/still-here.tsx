@@ -28,10 +28,10 @@ export function StillHereCard({ place }: { place: StoredPlace }) {
         </span>
       </div>
       <div className='grid grid-cols-2 gap-2'>
-        <Button className='rounded-full' onClick={() => confirm(place.id)}>
+        <Button className='rounded-pill' onClick={() => confirm(place.id)}>
           {t('yesStillHere')}
         </Button>
-        <Button variant='outline' className='rounded-full' onClick={clearPlace}>
+        <Button variant='outline' className='rounded-pill' onClick={clearPlace}>
           {t('noLeftTable')}
         </Button>
       </div>

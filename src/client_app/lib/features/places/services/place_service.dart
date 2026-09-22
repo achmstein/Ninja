@@ -4,36 +4,40 @@ import '../../../core/network/api_client.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../models/place.dart';
 
-/// The timed places of the branch and the customer's stays on them
+/// The bookable places of the branch, the customer's reservations and
+/// their stays
 abstract class PlaceRepository {
-  /// Every timed place of the branch that takes customers
+  /// Every bookable place of the branch that takes customers: the rooms and
+  /// stations with a clock, and any table the owner opened to reservations
   Future<List<Place>> getPlaces();
 
   /// One place, whatever it is — the anonymous read a scanned code starts with
   Future<Place> getPlace(int id);
 
-  /// Hold a place; the customer has 10 minutes to arrive
+  /// Reserve a place for now; the customer has 10 minutes to arrive
   Future<int> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode});
   Future<List<Stay>> getMyStays();
-  Future<void> cancelHold(int sessionId);
+  Future<List<Reservation>> getMyReservations();
+  Future<void> cancelHold(int reservationId);
   Future<void> leaveStay(int sessionId);
   Future<PlaceScanResult> scanPlace(int roomId);
   Future<JoinStayResult> joinStay(int roomId);
 }
 
-/// API-backed repository over /api/places and /api/stays
+/// API-backed repository over /api/places, /api/reservations and /api/stays
 class ApiPlaceRepository implements PlaceRepository {
   final ApiClient _places;
+  final ApiClient _reservations;
   final ApiClient _stays;
 
-  ApiPlaceRepository(this._places, this._stays);
+  ApiPlaceRepository(this._places, this._reservations, this._stays);
 
   @override
   Future<List<Place>> getPlaces() async {
-    final response = await _places.get<List<dynamic>>('', queryParameters: {'timed': true});
+    final response = await _places.get<List<dynamic>>('');
     return (response.data ?? [])
         .map((e) => Place.fromJson(e as Map<String, dynamic>))
-        .where((p) => p.isActive)
+        .where((p) => p.isActive && (p.isTimed || p.reservable))
         .toList();
   }
 
@@ -45,10 +49,10 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<int> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode}) async {
-    final response = await _places.post<int>(
-      '$roomId/hold',
+    final response = await _reservations.post<int>(
+      '',
       // The rate to start at, when the clock starts on Confirm
-      data: {'startOnConfirm': startOnConfirm, 'optionCode': optionCode},
+      data: {'placeId': roomId, 'startOnConfirm': startOnConfirm, 'optionCode': optionCode},
     );
     return response.data!;
   }
@@ -62,8 +66,16 @@ class ApiPlaceRepository implements PlaceRepository {
   }
 
   @override
-  Future<void> cancelHold(int sessionId) async {
-    await _stays.post('my/$sessionId/cancel');
+  Future<List<Reservation>> getMyReservations() async {
+    final response = await _reservations.get<List<dynamic>>('my');
+    return (response.data ?? [])
+        .map((e) => Reservation.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<void> cancelHold(int reservationId) async {
+    await _reservations.post('my/$reservationId/cancel');
   }
 
   @override
@@ -86,10 +98,14 @@ class ApiPlaceRepository implements PlaceRepository {
 
 /// Provider for room repository
 final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
-  return ApiPlaceRepository(ref.watch(placesApiProvider), ref.watch(staysApiProvider));
+  return ApiPlaceRepository(
+    ref.watch(placesApiProvider),
+    ref.watch(reservationsApiProvider),
+    ref.watch(staysApiProvider),
+  );
 });
 
-/// Provider for the branch's timed places — keyed by branch ID for clean state per branch
+/// Provider for the branch's bookable places — keyed by branch ID for clean state per branch
 final placesProvider = FutureProvider.family<List<Place>, int>((ref, branchId) async {
   final service = ref.watch(placeRepositoryProvider);
   return service.getPlaces();
@@ -98,7 +114,14 @@ final placesProvider = FutureProvider.family<List<Place>, int>((ref, branchId) a
 /// Provider for customer stays
 final myStaysProvider = NotifierProvider<MyStaysNotifier, AsyncValue<List<Stay>>>(MyStaysNotifier.new);
 
-/// Stays notifier - refreshes on demand (app resume, screen focus, pull-to-refresh)
+/// Provider for the customer's reservations
+final myReservationsProvider =
+    NotifierProvider<MyReservationsNotifier, AsyncValue<List<Reservation>>>(MyReservationsNotifier.new);
+
+/// Stays notifier - refreshes on demand (app resume, screen focus,
+/// pull-to-refresh). The reservations ride along: every screen that asks
+/// for fresh stays is asking what is happening with this customer in the
+/// café, and a reservation that just got seated is part of that answer.
 class MyStaysNotifier extends Notifier<AsyncValue<List<Stay>>> {
   late PlaceRepository _roomService;
 
@@ -127,14 +150,59 @@ class MyStaysNotifier extends Notifier<AsyncValue<List<Stay>>> {
 
   /// Refresh (silent - no loading indicator)
   Future<void> refresh() async {
-    await _loadStays(silent: true);
+    await Future.wait([
+      _loadStays(silent: true),
+      ref.read(myReservationsProvider.notifier).refresh(),
+    ]);
   }
 
   /// Force refresh with loading indicator
   Future<void> forceRefresh() async {
-    await _loadStays(silent: false);
+    await Future.wait([
+      _loadStays(silent: false),
+      ref.read(myReservationsProvider.notifier).refresh(),
+    ]);
   }
 }
+
+/// Reservations notifier: the customer's open reservation and their history
+class MyReservationsNotifier extends Notifier<AsyncValue<List<Reservation>>> {
+  late PlaceRepository _roomService;
+
+  @override
+  AsyncValue<List<Reservation>> build() {
+    ref.watch(selectedBranchIdProvider);
+    _roomService = ref.watch(placeRepositoryProvider);
+    _load();
+    return const AsyncValue.loading();
+  }
+
+  Future<void> _load() async {
+    try {
+      final reservations = await _roomService.getMyReservations();
+      state = AsyncValue.data(reservations);
+    } catch (e, st) {
+      if (state.hasValue) return;
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Refresh (silent: whatever is showing stays until the answer lands)
+  Future<void> refresh() => _load();
+}
+
+/// The customer's open reservation, if any: they are on their way, or due later
+Reservation? openReservationOf(List<Reservation> reservations) =>
+    reservations.where((r) => r.status.isOpen).firstOrNull;
+
+/// The customer's party at a plain table right now: seated on their
+/// reservation, with no clock (a timed place hands over to a stay), and not
+/// yet cleared by the staff
+final seatedReservationProvider = Provider<Reservation?>((ref) {
+  return ref.watch(myReservationsProvider).whenOrNull(
+        data: (reservations) => reservations.where((r) => r.status.isSeated && r.stayId == null).firstOrNull,
+      );
+});
 
 /// Reservation state
 class HoldState {
@@ -171,7 +239,7 @@ class HoldNotifier extends Notifier<HoldState> {
     return const HoldState();
   }
 
-  /// Hold a place (the customer has 10 minutes to arrive)
+  /// Reserve a place for now (the customer has 10 minutes to arrive)
   Future<bool> holdPlace(int roomId, {bool startOnConfirm = false, String? optionCode}) async {
     state = state.copyWith(isLoading: true, error: null);
 

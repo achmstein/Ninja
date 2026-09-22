@@ -147,7 +147,7 @@ export function StayBar({ stay }: { stay: StayViewModel }) {
         cancelLabel={t('keepIt')}
         actionLabel={t('cancelSessionButton')}
         destructive
-        onAction={() => actions.cancelStay(stayId, true)}
+        onAction={() => actions.cancelStay(stayId)}
       />
     </>
   )

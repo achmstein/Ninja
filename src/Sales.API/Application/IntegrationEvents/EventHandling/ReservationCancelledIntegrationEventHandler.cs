@@ -6,9 +6,10 @@ namespace Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
 
 /// <summary>
 /// A session was cancelled rather than completed, so no time will ever land
-/// on its ticket. A reservation that never started has no ticket at all; an
-/// active session's still-empty ticket is dropped so it stops sitting on the
-/// floor. One that already carries orders stays open — somebody served
+/// on its ticket. A reservation that never seated anyone has no ticket at
+/// all (and is not looked for: its id belongs to another sequence); an
+/// active session's still-empty ticket is dropped so it stops sitting on
+/// the floor. One that already carries orders stays open — somebody served
 /// those, so somebody settles or voids them — and a warning names it.
 /// </summary>
 public class ReservationCancelledIntegrationEventHandler(
@@ -23,6 +24,12 @@ public class ReservationCancelledIntegrationEventHandler(
 
     private async Task Assemble(ReservationCancelledIntegrationEvent @event)
     {
+        if (!@event.WasRunning)
+        {
+            logger.LogInformation("Reservation {ReservationId} cancelled before anyone was seated - no ticket to drop", @event.ReservationId);
+            return;
+        }
+
         var ticket = await ticketRepository.FindOpenBySessionAsync(@event.ReservationId);
 
         if (ticket is null)

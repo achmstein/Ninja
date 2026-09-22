@@ -712,22 +712,26 @@ class _DemoPlaceRepository implements PlaceRepository {
       members: [StayMember(customerId: 'u1', customerName: 'Ahmed', joinedAt: _now.subtract(const Duration(minutes: 42)), role: 'Owner')],
       segments: [StaySegment(optionCode: 'single', optionName: _lt('Single', 'سنجل'), hourlyRate: 80, startTime: _now.subtract(const Duration(minutes: 42)))],
     ),
-    Stay(
+  ];
+  final List<Reservation> _reservations = [
+    Reservation(
       id: 8,
       placeId: 2,
       placeName: _lt('Room 2', 'اوضة 2'),
-      userName: 'Mona',
+      placeIsTimed: true,
+      customerName: 'Mona',
       createdAt: _now.subtract(const Duration(minutes: 3)),
-      status: StayStatus.held,
-      options: _roomTariff,
+      status: ReservationStatus.requested,
       startOnConfirm: true,
       expiresAt: _now.add(const Duration(minutes: 12)),
+      isHolding: true,
     ),
   ];
   int _nextSession = 9;
 
   Place _place(int id) => _places.firstWhere((r) => r.id == id);
   Stay _session(int id) => _sessions.firstWhere((s) => s.id == id);
+  Reservation _reservation(int id) => _reservations.firstWhere((r) => r.id == id);
 
   void _setStatus(int placeId, PlaceStatus status) {
     final i = _places.indexWhere((r) => r.id == placeId);
@@ -755,9 +759,7 @@ class _DemoPlaceRepository implements PlaceRepository {
         options: s.options,
         currentOptionCode: currentOptionCode ?? s.currentOptionCode,
         currentOptionName: s.option(currentOptionCode ?? s.currentOptionCode)?.name,
-        startOnConfirm: s.startOnConfirm,
         costs: s.costs,
-        expiresAt: s.expiresAt,
         members: members ?? s.members,
         segments: segments ?? s.segments,
       );
@@ -768,37 +770,81 @@ class _DemoPlaceRepository implements PlaceRepository {
   }
 
   @override
-  Future<({List<Place> places, List<Stay> openStays})> loadPlaces() async => (places: List.of(_places), openStays: List.of(_sessions));
+  Future<({List<Place> places, List<Stay> openStays, List<Reservation> openReservations})> loadPlaces() async =>
+      (places: List.of(_places), openStays: List.of(_sessions), openReservations: List.of(_reservations));
 
   @override
   Future<void> holdPlace(int placeId) async {
     final place = _place(placeId);
-    _sessions.add(Stay(
+    _reservations.add(Reservation(
       id: _nextSession++,
       placeId: placeId,
       placeKind: place.kind,
       placeName: place.name,
+      placeIsTimed: place.isTimed,
       createdAt: DateTime.now(),
-      status: StayStatus.held,
-      options: place.options,
-      expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+      status: ReservationStatus.requested,
+      isHolding: true,
     ));
     _setStatus(placeId, PlaceStatus.held);
   }
 
   @override
-  Future<void> startStay(int sessionId, {String? optionCode}) async {
-    final s = _session(sessionId);
-    final now = DateTime.now();
-    final code = optionCode ?? s.options.first.code;
-    _replace(_copy(s, status: StayStatus.running, startedAt: now, currentOptionCode: code, segments: [_segment(s, code, now)]));
-    _setStatus(s.placeId, PlaceStatus.occupied);
+  Future<void> seatReservation(int reservationId, {String? optionCode}) async {
+    final r = _reservation(reservationId);
+    _reservations.removeWhere((x) => x.id == reservationId);
+    final place = _place(r.placeId);
+    if (!place.isTimed) {
+      _setStatus(r.placeId, PlaceStatus.available);
+      return;
+    }
+    await startWalkIn(r.placeId, optionCode: optionCode ?? r.requestedOptionCode);
+    final started = _sessions.last;
+    _replace(_copy(started, userName: r.customerName, customerId: r.customerId));
   }
 
   @override
-  Future<void> confirmStay(int sessionId) async {
-    final s = _session(sessionId);
-    if (s.startOnConfirm) await startStay(sessionId);
+  Future<void> confirmReservation(int reservationId) async {
+    final r = _reservation(reservationId);
+    if (r.startOnConfirm) await seatReservation(reservationId);
+  }
+
+  @override
+  Future<void> cancelReservation(int reservationId) async {
+    final r = _reservation(reservationId);
+    _reservations.removeWhere((x) => x.id == reservationId);
+    _setStatus(r.placeId, PlaceStatus.available);
+  }
+
+  @override
+  Future<void> completeReservation(int reservationId) async {
+    // The demo seats nobody at a plain table; a completed party simply frees its place
+    final r = _reservation(reservationId);
+    _reservations.removeWhere((x) => x.id == reservationId);
+    _setStatus(r.placeId, PlaceStatus.available);
+  }
+
+  @override
+  Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
+    final r = _reservation(reservationId);
+    _reservations[_reservations.indexWhere((x) => x.id == reservationId)] = Reservation(
+      id: r.id,
+      placeId: r.placeId,
+      placeKind: r.placeKind,
+      placeName: r.placeName,
+      placeIsTimed: r.placeIsTimed,
+      customerId: customerId,
+      customerName: customerName,
+      partySize: r.partySize,
+      forTime: r.forTime,
+      createdAt: r.createdAt,
+      expiresAt: r.expiresAt,
+      startOnConfirm: r.startOnConfirm,
+      requestedOptionCode: r.requestedOptionCode,
+      requestedOptionName: r.requestedOptionName,
+      status: r.status,
+      isHolding: r.isHolding,
+    );
   }
 
   @override

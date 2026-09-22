@@ -549,8 +549,8 @@ jobs:
                 echo "  $NAME exists"
               fi
             }
-            ensure_native_client pos-app com.chillax.pos
-            ensure_native_client kds-app com.chillax.kds
+            ensure_native_client pos-app com.ninja.pos
+            ensure_native_client kds-app com.ninja.kds
 
             echo ""
             echo "=== Attach the 'branches' scope to the staff clients ==="

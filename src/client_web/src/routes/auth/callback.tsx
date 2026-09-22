@@ -24,7 +24,7 @@ function AuthCallback() {
         <p className='font-semibold'>Sign-in failed</p>
         <p className='text-muted-foreground text-sm'>{auth.error.message}</p>
         <Button
-          className='rounded-full px-8'
+          className='rounded-pill px-8'
           onClick={() => navigate({ to: '/', replace: true })}
         >
           Back

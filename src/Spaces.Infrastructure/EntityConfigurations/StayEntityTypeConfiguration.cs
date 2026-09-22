@@ -24,13 +24,10 @@ class StayEntityTypeConfiguration : IEntityTypeConfiguration<Stay>
         builder.Property(s => s.CreatedAt)
             .IsRequired();
 
-        builder.Property(s => s.ExpiresAt);
-        builder.Property(s => s.StartOnConfirm)
-            .IsRequired()
-            .HasDefaultValue(false);
-        builder.Property(s => s.RequestedOptionCode)
-            .HasMaxLength(50);
-        builder.Property(s => s.StartedAt);
+        // The reservation it was seated from: a plain column, the aggregates stay apart
+        builder.Property(s => s.ReservationId);
+        builder.Property(s => s.StartedAt)
+            .IsRequired();
         builder.Property(s => s.EndedAt);
 
         // The tariff as it was when the stay began: one JSON document
@@ -86,6 +83,6 @@ class StayEntityTypeConfiguration : IEntityTypeConfiguration<Stay>
         builder.HasIndex(s => s.CreatedAt);
         builder.HasIndex(s => new { s.PlaceId, s.Status });
         builder.HasIndex(s => new { s.CustomerId, s.Status });
-        builder.HasIndex(s => new { s.Status, s.ExpiresAt });
+        builder.HasIndex(s => s.ReservationId);
     }
 }

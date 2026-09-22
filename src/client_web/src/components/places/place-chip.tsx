@@ -28,7 +28,7 @@ export function DestinationChip() {
   if (destination.kind === 'place') return <TableChip />
 
   return (
-    <span className='bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium'>
+    <span className='bg-muted text-muted-foreground flex items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-medium'>
       <PlaceIcon
         kind={destination.placeKind}
         className='h-3.5 w-3.5 shrink-0'
@@ -63,7 +63,7 @@ function TableChip() {
         type='button'
         aria-label={localized(place.name)}
         className={cn(
-          'relative flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
+          'relative flex items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-medium transition-colors',
           confirmed
             ? 'bg-primary/10 text-primary hover:bg-primary/15'
             : 'bg-muted text-muted-foreground',

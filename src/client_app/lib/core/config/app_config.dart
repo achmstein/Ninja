@@ -36,7 +36,9 @@ class AppConfig {
   static String get ticketsApiUrl => '$bffBaseUrl/api/tickets/';
   /// Spaces' places: the rooms, the tables, the stations
   static String get placesApiUrl => '$bffBaseUrl/api/places/';
-  /// Spaces' stays: the customer's holds and running clocks
+  /// Spaces' reservations: the customer's claim on a place, for now or for later
+  static String get reservationsApiUrl => '$bffBaseUrl/api/reservations/';
+  /// Spaces' stays: the customer's running clocks and their history
   static String get staysApiUrl => '$bffBaseUrl/api/stays/';
   static String get loyaltyApiUrl => '$bffBaseUrl/api/loyalty/';
   static String get notificationsApiUrl => '$bffBaseUrl/api/notifications/';

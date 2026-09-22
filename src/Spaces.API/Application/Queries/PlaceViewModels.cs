@@ -1,10 +1,11 @@
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Ninja.Spaces.Domain.SeedWork;
 
 namespace Ninja.Spaces.API.Application.Queries;
 
-/// <summary>What a screen shows for a place: its physical state plus whether a hold is pending.</summary>
+/// <summary>What a screen shows for a place: its physical state plus whether a reservation is keeping it.</summary>
 public enum PlaceDisplayStatus
 {
     Available = 1,
@@ -39,10 +40,16 @@ public record PlaceViewModel
     public TariffViewModel? Tariff { get; init; }
     public bool IsTimed { get; init; }
     public bool HasOptions { get; init; }
+    /// <summary>The owner lets this place be booked (always on for a timed place unless switched off).</summary>
+    public bool Reservable { get; init; }
     public bool CanReserve { get; init; }
     public bool TakesControllerRequests { get; init; }
-    /// <summary>The held or running stay on it, if any.</summary>
+    /// <summary>The running stay on it, if any.</summary>
     public StayPreviewViewModel? CurrentStay { get; init; }
+    /// <summary>The next open reservation on it, if any: keeping the place now, or due later.</summary>
+    public ReservationPreviewViewModel? CurrentReservation { get; init; }
+    /// <summary>The party seated at this plain table right now, if any: it is theirs until the staff complete the reservation. A timed place has a stay instead.</summary>
+    public ReservationPreviewViewModel? SeatedReservation { get; init; }
 }
 
 public record StayCostViewModel
@@ -77,17 +84,13 @@ public record StayViewModel
     public int PlaceId { get; init; }
     public PlaceKind PlaceKind { get; init; }
     public LocalizedText PlaceName { get; init; } = new();
+    /// <summary>The reservation this stay was seated from; null for a walk-in.</summary>
+    public int? ReservationId { get; init; }
     /// <summary>Null for a walk-in nobody has claimed yet.</summary>
     public string? CustomerId { get; init; }
     public string? CustomerName { get; init; }
     public DateTime CreatedAt { get; init; }
-    /// <summary>When the hold lapses; only while held.</summary>
-    public DateTime? ExpiresAt { get; init; }
-    public bool StartOnConfirm { get; init; }
-    /// <summary>The rate the customer asked to start at, while held; the till confirms at it.</summary>
-    public string? RequestedOptionCode { get; init; }
-    public LocalizedText? RequestedOptionName { get; init; }
-    public DateTime? StartedAt { get; init; }
+    public DateTime StartedAt { get; init; }
     public DateTime? EndedAt { get; init; }
     public TariffViewModel Tariff { get; init; } = new();
     public string? CurrentOptionCode { get; init; }
@@ -113,11 +116,56 @@ public record StayPreviewViewModel
     public LocalizedText PlaceName { get; init; } = new();
     public StayStatus Status { get; init; }
     public DateTime StartTime { get; init; }
-    public DateTime? ExpiresAt { get; init; }
     public int MemberCount { get; init; }
 }
 
-/// <summary>What a scanned QR resolves to: the place, what it can do, and the stay on it.</summary>
+/// <summary>A reservation as the floor and the customer's phone show it.</summary>
+public record ReservationViewModel
+{
+    public int Id { get; init; }
+    public int PlaceId { get; init; }
+    public PlaceKind PlaceKind { get; init; }
+    public LocalizedText PlaceName { get; init; } = new();
+    public bool PlaceIsTimed { get; init; }
+    public int BranchId { get; init; }
+    public string? CustomerId { get; init; }
+    public string? CustomerName { get; init; }
+    public int? PartySize { get; init; }
+    /// <summary>When the party is expected; null means it was made for now.</summary>
+    public DateTime? For { get; init; }
+    public DateTime CreatedAt { get; init; }
+    /// <summary>When it lapses unseated; null while it never will (staff-made) or once closed.</summary>
+    public DateTime? ExpiresAt { get; init; }
+    public bool StartOnConfirm { get; init; }
+    /// <summary>The rate the customer asked to start at, on a timed place; the till confirms at it.</summary>
+    public string? RequestedOptionCode { get; init; }
+    public LocalizedText? RequestedOptionName { get; init; }
+    public ReservationStatus Status { get; init; }
+    /// <summary>Open, and keeping the place right now.</summary>
+    public bool IsHolding { get; init; }
+    public string? Notes { get; init; }
+    /// <summary>The stay that took over when the party was seated at a timed place.</summary>
+    public int? StayId { get; init; }
+    public DateTime? SeatedAt { get; init; }
+    public DateTime? ClosedAt { get; init; }
+}
+
+public record ReservationPreviewViewModel
+{
+    public int ReservationId { get; init; }
+    public int PlaceId { get; init; }
+    public LocalizedText PlaceName { get; init; } = new();
+    public ReservationStatus Status { get; init; }
+    public string? CustomerName { get; init; }
+    public int? PartySize { get; init; }
+    public DateTime? For { get; init; }
+    public DateTime? ExpiresAt { get; init; }
+    public bool IsHolding { get; init; }
+    public bool StartOnConfirm { get; init; }
+    public DateTime? SeatedAt { get; init; }
+}
+
+/// <summary>What a scanned QR resolves to: the place, what it can do, and what is on it.</summary>
 public record PlaceScanViewModel
 {
     public int BranchId { get; init; }
@@ -132,7 +180,10 @@ public record PlaceScanViewModel
     public bool CanReserve { get; init; }
     public bool TakesControllerRequests { get; init; }
     public bool HasRunningStay { get; init; }
+    /// <summary>The running stay, if any.</summary>
     public StayPreviewViewModel? Stay { get; init; }
+    /// <summary>The reservation keeping the place right now, if any.</summary>
+    public ReservationPreviewViewModel? Reservation { get; init; }
     public bool IsAlreadyMember { get; init; }
 }
 
@@ -181,15 +232,21 @@ public static class ViewModelMapping
         RoundingMinutes = tariff.RoundingMinutes,
     };
 
-    public static PlaceDisplayStatus DisplayStatus(Place place, IEnumerable<Stay> openStays)
+    /// <summary>The next open reservation on a place: the one keeping it now, else the soonest due.</summary>
+    public static Reservation? Next(this IEnumerable<Reservation> open, DateTime now)
+        => open.Where(r => r.IsOpen).OrderBy(r => r.EffectiveFor).FirstOrDefault();
+
+    /// <summary>The party seated at a plain table: seated, with no stay keeping the place for it.</summary>
+    public static Reservation? Seated(this IEnumerable<Reservation> live)
+        => live.Where(r => r.IsSeated && r.StayId is null).OrderByDescending(r => r.SeatedAt).FirstOrDefault();
+
+    public static PlaceDisplayStatus DisplayStatus(Place place, Stay? running, Reservation? next, DateTime now, Reservation? seated = null)
     {
         if (place.PhysicalStatus == PlaceStatus.OutOfService)
             return PlaceDisplayStatus.OutOfService;
-        if (place.PhysicalStatus == PlaceStatus.Occupied)
+        if (place.PhysicalStatus == PlaceStatus.Occupied || running is not null || seated is not null)
             return PlaceDisplayStatus.Occupied;
-        if (openStays.Any(s => s.Status == StayStatus.Running))
-            return PlaceDisplayStatus.Occupied;
-        if (openStays.Any(s => s.Status == StayStatus.Held))
+        if (next is not null && next.IsHolding(now))
             return PlaceDisplayStatus.Held;
         return PlaceDisplayStatus.Available;
     }
@@ -200,15 +257,31 @@ public static class ViewModelMapping
         PlaceId = place.Id,
         PlaceName = place.Name,
         Status = stay.Status,
-        StartTime = stay.StartedAt ?? stay.CreatedAt,
-        ExpiresAt = stay.GetExpirationTime(),
+        StartTime = stay.StartedAt,
         MemberCount = stay.Members.Count,
     };
 
-    public static PlaceViewModel ToViewModel(this Place place, List<Stay> openStays)
+    public static ReservationPreviewViewModel ToPreview(this Reservation r, Place place, DateTime now) => new()
     {
-        var current = openStays.FirstOrDefault(s => s.Status == StayStatus.Running)
-            ?? openStays.FirstOrDefault(s => s.Status == StayStatus.Held);
+        ReservationId = r.Id,
+        PlaceId = place.Id,
+        PlaceName = place.Name,
+        Status = r.Status,
+        CustomerName = r.CustomerName,
+        PartySize = r.PartySize,
+        For = r.For,
+        ExpiresAt = r.IsOpen ? r.ExpiresAt : null,
+        IsHolding = r.IsHolding(now),
+        StartOnConfirm = r.StartOnConfirm,
+        SeatedAt = r.SeatedAt,
+    };
+
+    /// <param name="liveReservations">The reservations that bear on the place now: open ones, and a party seated at a plain table.</param>
+    public static PlaceViewModel ToViewModel(this Place place, Stay? running, IEnumerable<Reservation> liveReservations, DateTime now)
+    {
+        var live = liveReservations.ToList();
+        var next = live.Next(now);
+        var seated = live.Seated();
         return new PlaceViewModel
         {
             Id = place.Id,
@@ -216,14 +289,17 @@ public static class ViewModelMapping
             Name = place.Name,
             Description = place.Description,
             BranchId = place.BranchId,
-            Status = DisplayStatus(place, openStays),
+            Status = DisplayStatus(place, running, next, now, seated),
             IsActive = place.IsActive,
             Tariff = place.Tariff?.ToViewModel(),
             IsTimed = place.IsTimed,
             HasOptions = place.HasOptions,
+            Reservable = place.Reservable,
             CanReserve = place.CanReserve,
             TakesControllerRequests = place.TakesControllerRequests,
-            CurrentStay = current?.ToPreview(place),
+            CurrentStay = running?.ToPreview(place),
+            CurrentReservation = next?.ToPreview(place, now),
+            SeatedReservation = seated?.ToPreview(place, now),
         };
     }
 
@@ -236,13 +312,10 @@ public static class ViewModelMapping
             PlaceId = stay.PlaceId,
             PlaceKind = place?.Kind ?? PlaceKind.Room,
             PlaceName = place?.Name ?? new LocalizedText($"Place {stay.PlaceId}"),
+            ReservationId = stay.ReservationId,
             CustomerId = stay.CustomerId,
             CustomerName = stay.CustomerName,
             CreatedAt = stay.CreatedAt,
-            ExpiresAt = stay.GetExpirationTime(),
-            StartOnConfirm = stay.StartOnConfirm,
-            RequestedOptionCode = stay.RequestedOptionCode,
-            RequestedOptionName = stay.Tariff.Find(stay.RequestedOptionCode)?.Name,
             StartedAt = stay.StartedAt,
             EndedAt = stay.EndedAt,
             Tariff = stay.Tariff.ToViewModel(),
@@ -278,6 +351,35 @@ public static class ViewModelMapping
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
             }).ToList(),
+        };
+    }
+
+    public static ReservationViewModel ToViewModel(this Reservation r, DateTime now)
+    {
+        var place = r.Place;
+        return new ReservationViewModel
+        {
+            Id = r.Id,
+            PlaceId = r.PlaceId,
+            PlaceKind = place?.Kind ?? PlaceKind.Table,
+            PlaceName = place?.Name ?? new LocalizedText($"Place {r.PlaceId}"),
+            PlaceIsTimed = place?.IsTimed ?? false,
+            BranchId = r.BranchId,
+            CustomerId = r.CustomerId,
+            CustomerName = r.CustomerName,
+            PartySize = r.PartySize,
+            For = r.For,
+            CreatedAt = r.CreatedAt,
+            ExpiresAt = r.IsOpen ? r.ExpiresAt : null,
+            StartOnConfirm = r.StartOnConfirm,
+            RequestedOptionCode = r.RequestedOptionCode,
+            RequestedOptionName = place?.Tariff?.Find(r.RequestedOptionCode)?.Name,
+            Status = r.Status,
+            IsHolding = r.IsHolding(now),
+            Notes = r.Notes,
+            StayId = r.StayId,
+            SeatedAt = r.SeatedAt,
+            ClosedAt = r.ClosedAt,
         };
     }
 }

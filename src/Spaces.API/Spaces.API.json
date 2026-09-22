@@ -107,7 +107,7 @@
         "tags": [
           "Places"
         ],
-        "summary": "Places a customer can book now",
+        "summary": "Places a customer can reserve for now",
         "operationId": "GetAvailablePlaces",
         "responses": {
           "200": {
@@ -225,7 +225,7 @@
           "Places"
         ],
         "summary": "Delete a place (Admin)",
-        "description": "Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.",
+        "description": "Its printed QR stops working — prefer deactivating. Refused while a reservation is open or a stay is running there.",
         "operationId": "DeletePlace",
         "parameters": [
           {
@@ -275,7 +275,7 @@
           "Places"
         ],
         "summary": "Give a place a tariff, change it, or take it away (Admin)",
-        "description": "A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.",
+        "description": "A place with a tariff is timed and becomes reservable; without one it only takes orders. Refused while a stay runs there.",
         "operationId": "SetPlaceTariff",
         "parameters": [
           {
@@ -329,13 +329,73 @@
         ]
       }
     },
+    "/api/places/{id}/reservable": {
+      "put": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Let customers reserve a place, or stop that (Admin)",
+        "description": "A plain table can take reservations without a clock; a timed place can stop taking them. Refused while a reservation is open there.",
+        "operationId": "SetPlaceReservable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlaceReservableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/places/{id}/active": {
       "put": {
         "tags": [
           "Places"
         ],
         "summary": "Activate or deactivate a place (Admin)",
-        "description": "Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it",
+        "description": "Deactivating keeps the place and its printed QR but stops customers ordering to it or reserving it",
         "operationId": "SetPlaceActive",
         "parameters": [
           {
@@ -470,81 +530,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/places/{id}/hold": {
-      "post": {
-        "tags": [
-          "Places"
-        ],
-        "summary": "Hold a timed place",
-        "description": "The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.",
-        "operationId": "HoldPlace",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The place ID",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/HoldPlaceRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "pattern": "^-?(?:0|[1-9]\\d*)$",
-                  "type": [
-                    "integer",
-                    "string"
-                  ],
-                  "format": "int32"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           },
           "401": {
             "description": "Unauthorized"
@@ -740,6 +725,696 @@
         ]
       }
     },
+    "/api/places/{id}/reservations": {
+      "get": {
+        "tags": [
+          "Places"
+        ],
+        "summary": "Seated, cancelled and lapsed reservations at a place (Admin)",
+        "operationId": "GetPlaceReservationHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The place ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of reservations to return",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Reserve a place",
+        "description": "For now — the customer has 10 minutes to arrive — or, with a time, for later. On a timed place, startOnConfirm asks that the clock start the moment the till confirms. Staff reserve on a customer's behalf: the typed name is the party, and it never lapses.",
+        "operationId": "ReservePlace",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservePlaceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "pattern": "^-?(?:0|[1-9]\\d*)$",
+                  "type": [
+                    "integer",
+                    "string"
+                  ],
+                  "format": "int32"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/my": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "The signed-in customer's reservations, newest first",
+        "operationId": "GetMyReservations",
+        "parameters": [
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/open": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Open reservations of the branch, soonest first (staff)",
+        "operationId": "GetOpenReservations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationViewModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/history": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Seated, cancelled and lapsed reservations across the branch, paged (Admin)",
+        "operationId": "GetReservationHistory",
+        "parameters": [
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "placeId",
+            "in": "query",
+            "description": "Filter by place",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResultOfReservationViewModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get a reservation",
+        "operationId": "GetReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationViewModel"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Acknowledge a reservation (staff)",
+        "description": "On a timed place where the customer asked for start-on-confirm, also seats them and starts the clock; otherwise the reservation waits, confirmed, for Seat",
+        "operationId": "ConfirmReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SeatReservationRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}/seat": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "The party arrived and sat down (staff)",
+        "description": "On a timed place the clock starts and the stay is returned; on a plain table the party keeps the table until the staff complete the reservation",
+        "operationId": "SeatReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SeatReservationRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}/complete": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "The party left a plain table; it is free again (staff)",
+        "description": "A party at a timed place is ended through its stay, which closes the reservation on its own",
+        "operationId": "CompleteReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}/assign-customer": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Name the customer on a reservation the till made for an unnamed party (staff)",
+        "operationId": "AssignReservationCustomer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Give up a reservation before anyone sat down (staff)",
+        "operationId": "CancelReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/reservations/my/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Give up your own reservation before you are seated",
+        "operationId": "CancelMyReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The reservation ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/stays/my": {
       "get": {
         "tags": [
@@ -806,7 +1481,7 @@
         "tags": [
           "Stays"
         ],
-        "summary": "Held and running stays of the branch (staff)",
+        "summary": "Running stays of the branch (staff)",
         "operationId": "GetOpenStays",
         "responses": {
           "200": {
@@ -1031,137 +1706,6 @@
         ]
       }
     },
-    "/api/stays/{id}/confirm": {
-      "post": {
-        "tags": [
-          "Stays"
-        ],
-        "summary": "The customer arrived (staff)",
-        "description": "Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start",
-        "operationId": "ConfirmStay",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The stay ID",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/ConfirmStayRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/stays/{id}/start": {
-      "post": {
-        "tags": [
-          "Stays"
-        ],
-        "summary": "Start the clock on a held stay (staff)",
-        "operationId": "StartStay",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The stay ID",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/StartStayRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
     "/api/stays/{id}/end": {
       "post": {
         "tags": [
@@ -1216,7 +1760,7 @@
         "tags": [
           "Stays"
         ],
-        "summary": "Give up a hold or cut a running stay short (staff)",
+        "summary": "Cut a running stay short; nothing is billed (staff)",
         "operationId": "CancelStay",
         "parameters": [
           {
@@ -1544,55 +2088,6 @@
           { }
         ]
       }
-    },
-    "/api/stays/my/{id}/cancel": {
-      "post": {
-        "tags": [
-          "Stays"
-        ],
-        "summary": "Give up your own hold before it starts",
-        "operationId": "CancelMyHold",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "The stay ID",
-            "required": true,
-            "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
     }
   },
   "components": {
@@ -1644,17 +2139,6 @@
           }
         }
       },
-      "ConfirmStayRequest": {
-        "type": "object",
-        "properties": {
-          "optionCode": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "CreatePlaceRequest": {
         "required": [
           "kind",
@@ -1687,34 +2171,12 @@
                 "$ref": "#/components/schemas/TariffRequest"
               }
             ]
-          }
-        }
-      },
-      "HoldPlaceRequest": {
-        "type": "object",
-        "properties": {
-          "customerName": {
+          },
+          "reservable": {
             "type": [
               "null",
-              "string"
+              "boolean"
             ]
-          },
-          "notes": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "startOnConfirm": {
-            "type": "boolean",
-            "default": false
-          },
-          "optionCode": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The rate to start at when the clock starts on Confirm; one of the place's tariff options"
           }
         }
       },
@@ -1767,6 +2229,55 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PaginatedResultOfReservationViewModel": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationViewModel"
+            }
+          },
+          "pageIndex": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          },
+          "hasPreviousPage": {
+            "type": "boolean"
           }
         }
       },
@@ -1891,6 +2402,16 @@
               }
             ]
           },
+          "reservation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationPreviewViewModel"
+              }
+            ]
+          },
           "isAlreadyMember": {
             "type": "boolean"
           }
@@ -1956,6 +2477,9 @@
           "hasOptions": {
             "type": "boolean"
           },
+          "reservable": {
+            "type": "boolean"
+          },
           "canReserve": {
             "type": "boolean"
           },
@@ -1969,6 +2493,26 @@
               },
               {
                 "$ref": "#/components/schemas/StayPreviewViewModel"
+              }
+            ]
+          },
+          "currentReservation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationPreviewViewModel"
+              }
+            ]
+          },
+          "seatedReservation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationPreviewViewModel"
               }
             ]
           }
@@ -2055,6 +2599,295 @@
           }
         }
       },
+      "ReservationPreviewViewModel": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "partySize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "for": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isHolding": {
+            "type": "boolean"
+          },
+          "startOnConfirm": {
+            "type": "boolean"
+          },
+          "seatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ReservationStatus": {
+        "type": "integer"
+      },
+      "ReservationViewModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "placeKind": {
+            "$ref": "#/components/schemas/PlaceKind"
+          },
+          "placeName": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "placeIsTimed": {
+            "type": "boolean"
+          },
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "partySize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "for": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "startOnConfirm": {
+            "type": "boolean"
+          },
+          "requestedOptionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedOptionName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "isHolding": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stayId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "seatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ReservePlaceRequest": {
+        "required": [
+          "placeId"
+        ],
+        "type": "object",
+        "properties": {
+          "placeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "for": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "partySize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "customerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startOnConfirm": {
+            "type": "boolean",
+            "default": false
+          },
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SeatReservationRequest": {
+        "type": "object",
+        "properties": {
+          "optionCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SeatResult": {
+        "required": [
+          "seated",
+          "stayId"
+        ],
+        "type": "object",
+        "properties": {
+          "seated": {
+            "type": "boolean"
+          },
+          "stayId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "SetPlaceActiveRequest": {
         "required": [
           "isActive"
@@ -2062,6 +2895,17 @@
         "type": "object",
         "properties": {
           "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetPlaceReservableRequest": {
+        "required": [
+          "reservable"
+        ],
+        "type": "object",
+        "properties": {
+          "reservable": {
             "type": "boolean"
           }
         }
@@ -2080,17 +2924,6 @@
               {
                 "$ref": "#/components/schemas/TariffRequest"
               }
-            ]
-          }
-        }
-      },
-      "StartStayRequest": {
-        "type": "object",
-        "properties": {
-          "optionCode": {
-            "type": [
-              "null",
-              "string"
             ]
           }
         }
@@ -2194,13 +3027,6 @@
           },
           "startTime": {
             "type": "string",
-            "format": "date-time"
-          },
-          "expiresAt": {
-            "type": [
-              "null",
-              "string"
-            ],
             "format": "date-time"
           },
           "memberCount": {
@@ -2364,6 +3190,15 @@
           "placeName": {
             "$ref": "#/components/schemas/LocalizedText"
           },
+          "reservationId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "customerId": {
             "type": [
               "null",
@@ -2380,37 +3215,8 @@
             "type": "string",
             "format": "date-time"
           },
-          "expiresAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "startOnConfirm": {
-            "type": "boolean"
-          },
-          "requestedOptionCode": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "requestedOptionName": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/LocalizedText"
-              }
-            ]
-          },
           "startedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
+            "type": "string",
             "format": "date-time"
           },
           "endedAt": {
@@ -2605,6 +3411,9 @@
   "tags": [
     {
       "name": "Places"
+    },
+    {
+      "name": "Reservations"
     },
     {
       "name": "Stays"

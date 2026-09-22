@@ -2,38 +2,47 @@ import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type OrderSummary } from '@/api/ordering'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
+import {
+  type PlaceViewModel,
+  type ReservationViewModel,
+  type StayViewModel,
+} from '@/api/spaces'
 import {
   addStayMemberMutation,
+  assignReservationCustomerMutation,
   assignStayCustomerMutation,
+  cancelReservationMutation,
+  completeReservationMutation,
   cancelStayMutation,
   changeStayOptionMutation,
-  confirmStayMutation,
+  confirmReservationMutation,
   deletePlaceMutation,
   endStayMutation,
+  getOpenReservationsOptions,
   getOpenStaysOptions,
-  holdPlaceMutation,
   listPlacesOptions,
   removeStayMemberMutation,
+  reservePlaceMutation,
+  seatReservationMutation,
   setPlaceActiveMutation,
   setPlaceStatusMutation,
-  startStayMutation,
   startWalkInMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import { comparePlaces, stayForPlace } from './status'
+import { comparePlaces, reservationForPlace, stayForPlace } from './status'
 
 const NO_PLACES: PlaceViewModel[] = []
 const NO_STAYS: StayViewModel[] = []
+const NO_RESERVATIONS: ReservationViewModel[] = []
 const NO_ORDERS: OrderSummary[] = []
 
 /**
- * The branch's places — rooms, tables, stations — and whatever is held or
- * running on them: the two reads behind the floor page and the dashboard.
- * SignalR's RoomStatusChanged is the primary update path (see
- * use-admin-notifications); the polls are fallbacks.
+ * The branch's places — rooms, tables, stations — whatever is running on
+ * them, and whoever has reserved one: the three reads behind the floor
+ * page and the dashboard. SignalR's RoomStatusChanged is the primary
+ * update path (see use-admin-notifications); the polls are fallbacks.
  */
 export function usePlaces() {
   const localized = useLocalized()
@@ -45,24 +54,33 @@ export function usePlaces() {
     ...getOpenStaysOptions(),
     refetchInterval: 60_000,
   })
+  const reservationsQuery = useQuery({
+    ...getOpenReservationsOptions(),
+    refetchInterval: 60_000,
+  })
 
   const places = useMemo(
     () => [...(placesQuery.data ?? NO_PLACES)].sort(comparePlaces(localized)),
     [placesQuery.data, localized]
   )
   const stays = staysQuery.data ?? NO_STAYS
+  const reservations = reservationsQuery.data ?? NO_RESERVATIONS
 
   return {
     places,
     stays,
+    reservations,
     stayFor: (placeId: number | string | undefined) =>
       stayForPlace(stays, placeId),
+    reservationFor: (placeId: number | string | undefined) =>
+      reservationForPlace(reservations, placeId),
     isLoading: placesQuery.isLoading,
     isPending: placesQuery.isPending || staysQuery.isPending,
-    error: placesQuery.error ?? staysQuery.error,
+    error: placesQuery.error ?? staysQuery.error ?? reservationsQuery.error,
     refetch: () => {
       placesQuery.refetch()
       staysQuery.refetch()
+      reservationsQuery.refetch()
     },
   }
 }
@@ -110,10 +128,10 @@ export function problemDetail(error: unknown, fallback: string): string {
 type Done = { onSuccess?: () => void }
 
 /**
- * Every place and stay control the admin has. Success refetches places and
- * stays and toasts; failure toasts the server's reason where it gives one.
- * Callers pass `onSuccess` for what only they know, like closing their own
- * dialog.
+ * Every place, reservation and stay control the admin has. Success
+ * refetches places, stays and reservations and toasts; failure toasts the
+ * server's reason where it gives one. Callers pass `onSuccess` for what
+ * only they know, like closing their own dialog.
  */
 export function useStayActions() {
   const t = useT()
@@ -122,8 +140,17 @@ export function useStayActions() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listPlaces' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenStays' }] })
+    queryClient.invalidateQueries({
+      queryKey: [{ _id: 'getOpenReservations' }],
+    })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getStay' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getStayHistory' }] })
+    queryClient.invalidateQueries({
+      queryKey: [{ _id: 'getReservationHistory' }],
+    })
+    queryClient.invalidateQueries({
+      queryKey: [{ _id: 'getPlaceReservationHistory' }],
+    })
     queryClient.invalidateQueries({
       queryKey: [{ _id: 'getPlaceStayHistory' }],
     })
@@ -140,32 +167,46 @@ export function useStayActions() {
     onError: (error: unknown) => toast.error(problemDetail(error, t(failure))),
   })
 
-  const hold = useMutation({
-    ...holdPlaceMutation(),
+  const reserve = useMutation({
+    ...reservePlaceMutation(),
     ...feedback(null, 'failedToHold'),
   })
   const walkIn = useMutation({
     ...startWalkInMutation(),
     ...feedback('clockStarted', 'failedToStartClock'),
   })
-  const startHeld = useMutation({
-    ...startStayMutation(),
-    ...feedback('clockStarted', 'failedToStartClock'),
+  // Seating a reservation at a timed place starts the clock; at a plain
+  // table it just closes the reservation, and the toast says which
+  const seat = useMutation({
+    ...seatReservationMutation(),
+    ...feedback(null, 'failedToStartClock'),
   })
-  // Confirming a hold that asked for it starts the clock; one that did not
-  // just stays held, and the toast says which
+  // Confirming a reservation that asked for it seats the party and starts
+  // the clock; one that did not just stays reserved, and the toast says which
   const confirm = useMutation({
-    ...confirmStayMutation(),
+    ...confirmReservationMutation(),
     ...feedback(null, 'failedToConfirm'),
   })
   const endStay = useMutation({
     ...endStayMutation(),
     ...feedback('timeEnded', 'failedToEndTime'),
   })
-  // Cancel toasts per call: a hold and a running stay read differently
   const cancelStay = useMutation({
     ...cancelStayMutation(),
-    ...feedback(null, 'failedToCancelHold'),
+    ...feedback('timeCancelled', 'failedToCancelHold'),
+  })
+  const cancelReservation = useMutation({
+    ...cancelReservationMutation(),
+    ...feedback('holdCancelled', 'failedToCancelHold'),
+  })
+  // The party left a plain table: it is free again
+  const completeReservation = useMutation({
+    ...completeReservationMutation(),
+    ...feedback('tableCleared', 'failedToClearTable'),
+  })
+  const assignReservationCustomer = useMutation({
+    ...assignReservationCustomerMutation(),
+    ...feedback('customerAssigned', 'failedToAssignCustomer'),
   })
   const changeOption = useMutation({
     ...changeStayOptionMutation(),
@@ -198,12 +239,15 @@ export function useStayActions() {
   })
 
   const isBusy =
-    hold.isPending ||
+    reserve.isPending ||
     walkIn.isPending ||
-    startHeld.isPending ||
+    seat.isPending ||
     confirm.isPending ||
     endStay.isPending ||
     cancelStay.isPending ||
+    cancelReservation.isPending ||
+    completeReservation.isPending ||
+    assignReservationCustomer.isPending ||
     changeOption.isPending ||
     assignCustomer.isPending ||
     addMember.isPending ||
@@ -220,34 +264,49 @@ export function useStayActions() {
   return {
     isBusy,
     invalidate,
-    hold: (
+    reserve: (
       placeId: number,
       body: {
         customerName: string | null
         notes: string | null
         startOnConfirm: boolean
+        for?: string | null
+        partySize?: number | null
       },
-      done?: { onSuccess?: (stayId: number) => void }
+      done?: { onSuccess?: (reservationId: number) => void }
     ) =>
-      hold.mutate(
-        { path: { id: placeId }, body },
-        { onSuccess: (stayId) => done?.onSuccess?.(Number(stayId)) }
+      reserve.mutate(
+        { body: { placeId, ...body } },
+        { onSuccess: (id) => done?.onSuccess?.(Number(id)) }
       ),
     walkIn: (
       placeId: number,
       body: { optionCode: string | null; notes: string | null },
       done?: Done
     ) => walkIn.mutate({ path: { id: placeId }, body }, done),
-    startHeld: (stayId: number, optionCode: string | null, done?: Done) =>
-      startHeld.mutate({ path: { id: stayId }, body: { optionCode } }, done),
+    seat: (
+      reservationId: number,
+      optionCode: string | null,
+      timed: boolean,
+      done?: Done
+    ) =>
+      seat.mutate(
+        { path: { id: reservationId }, body: { optionCode } },
+        {
+          onSuccess: () => {
+            toast.success(t(timed ? 'clockStarted' : 'partySeated'))
+            done?.onSuccess?.()
+          },
+        }
+      ),
     confirm: (
-      stayId: number,
+      reservationId: number,
       optionCode: string | null,
       startsClock: boolean,
       done?: Done
     ) =>
       confirm.mutate(
-        { path: { id: stayId }, body: { optionCode } },
+        { path: { id: reservationId }, body: { optionCode } },
         {
           onSuccess: () => {
             toast.success(t(startsClock ? 'clockStarted' : 'confirmed'))
@@ -257,15 +316,24 @@ export function useStayActions() {
       ),
     endStay: (stayId: number, done?: Done) =>
       endStay.mutate({ path: { id: stayId } }, done),
-    cancelStay: (stayId: number, wasHeld: boolean, done?: Done) =>
-      cancelStay.mutate(
-        { path: { id: stayId } },
+    cancelStay: (stayId: number, done?: Done) =>
+      cancelStay.mutate({ path: { id: stayId } }, done),
+    cancelReservation: (reservationId: number, done?: Done) =>
+      cancelReservation.mutate({ path: { id: reservationId } }, done),
+    completeReservation: (reservationId: number, done?: Done) =>
+      completeReservation.mutate({ path: { id: reservationId } }, done),
+    assignReservationCustomer: (
+      reservationId: number,
+      customerId: string,
+      customerName: string | null,
+      done?: Done
+    ) =>
+      assignReservationCustomer.mutate(
         {
-          onSuccess: () => {
-            toast.success(t(wasHeld ? 'holdCancelled' : 'timeCancelled'))
-            done?.onSuccess?.()
-          },
-        }
+          path: { id: reservationId },
+          body: customer(customerId, customerName),
+        },
+        done
       ),
     changeOption: (stayId: number, optionCode: string, done?: Done) =>
       changeOption.mutate({ path: { id: stayId }, body: { optionCode } }, done),

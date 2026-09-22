@@ -196,7 +196,7 @@ export function ActiveStayView({ stay }: { stay: StayViewModel }) {
             <Button
               variant='outline'
               size='lg'
-              className='text-destructive w-full rounded-full'
+              className='text-destructive w-full rounded-pill'
               disabled={leaveStay.isPending}
             >
               <LogOut className='h-4 w-4' />

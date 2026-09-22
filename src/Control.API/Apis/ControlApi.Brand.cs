@@ -176,13 +176,13 @@ public record BrandWordmark(string Url, int Width, int Height)
 
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
-public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark);
+public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark, string? HeaderSize = null);
 
 public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
-public record BrandFeatures(bool Spaces, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
+public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
 
 public record BrandLocale(string Country, string Currency, string TimeZone, string Language);
 

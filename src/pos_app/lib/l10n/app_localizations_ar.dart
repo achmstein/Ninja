@@ -24,6 +24,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
+  String get connectTitle => 'ده كافيه مين؟';
+
+  @override
+  String get connectHint =>
+      'اكتب عنوان كافيهك، أو امسح الكود من صفحة التطبيقات في تطبيق الإدارة.';
+
+  @override
+  String get cafeAddress => 'عنوان الكافيه';
+
+  @override
+  String get connect => 'اتصال';
+
+  @override
+  String get scanConnectCode => 'امسح الكود';
+
+  @override
+  String get connectInvalidAddress => 'ده مش عنوان.';
+
+  @override
+  String get connectUnreachable =>
+      'مفيش حاجة ردت على العنوان ده. اتأكد منه، وإن التابلت متصل بالنت.';
+
+  @override
+  String get connectNotACafe => 'العنوان ده مش كافيه على ninja.';
+
+  @override
+  String get connectPaused =>
+      'الكافيه ده موقوف. صاحبه يقدر يشوف السبب في تطبيق الإدارة.';
+
+  @override
+  String get thisDevice => 'الجهاز ده';
+
+  @override
+  String get connectedTo => 'متصل بـ';
+
+  @override
+  String get changeCafe => 'غيّر الكافيه';
+
+  @override
+  String get changeCafeConfirm =>
+      'هيسجّل خروج وينسى الكافيه ده. التابلت يبدأ من أول شاشة الاتصال.';
+
+  @override
   String get language => 'اللغة';
 
   @override
@@ -550,6 +593,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get holdConfirmed => 'الحجز اتأكد';
+
+  @override
+  String get seatParty => 'قعّدهم';
+
+  @override
+  String get partySeated => 'اتقعدوا';
+
+  @override
+  String partyOf(int count) {
+    return '$count أفراد';
+  }
+
+  @override
+  String seatedSince(String time) {
+    return 'من الساعة $time';
+  }
+
+  @override
+  String get partyLeft => 'الناس مشيوا';
+
+  @override
+  String get tableCleared => 'الترابيزة اتفضّت';
+
+  @override
+  String get failedToClearTable => 'معرفناش نفضّي الترابيزة';
 
   @override
   String get startsOnConfirm => 'الوقت يبدأ لما تأكد';

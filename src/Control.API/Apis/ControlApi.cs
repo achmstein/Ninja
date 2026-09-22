@@ -26,12 +26,14 @@ public static partial class ControlApi
         api.MapPost("/tenants/{slug}/stop", Stop).WithName("StopTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/start", Start).WithName("StartTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes").RequireAuthorization("Platform");
+        api.MapDelete("/tenants/{slug}/error", DismissError).WithName("DismissTenantError").WithSummary("Take the last error off a running tenant once it has been read; the audit keeps it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/rollback", Rollback).WithName("RollbackTenant").WithSummary("Back to the previous tag. Migrations are forward-only: to go back past one, restore the pre-upgrade backup into a new tenant instead").RequireAuthorization("Platform");
         api.MapPost("/platform/upgrade", FleetUpgrade).WithName("FleetUpgrade").WithSummary("Running tenants (all, or the slugs given) onto a tag, one at a time; with a canary, the rest follow only while it stays running on it").RequireAuthorization("Platform");
         api.MapGet("/platform/updates", GetUpdates).WithName("GetPlatformUpdates").WithSummary("The releases the registry holds, the tags in use, and which tenants run something older than their tag points to; refresh=true checks now").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/secure", Secure).WithName("SecureTenant").WithSummary("Give the stack its own database role and broker user (or, with rotate, new passwords) and restart it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/extend", Extend).WithName("ExtendDemo").WithSummary("Push a demo's expiry out").RequireAuthorization("Platform");
         api.MapDelete("/tenants/{slug}", Destroy).WithName("DestroyTenant").WithSummary("Take the stack, realm, vhost and databases down").RequireAuthorization("Platform");
+        api.MapDelete("/tenants/{slug}/record", Forget).WithName("ForgetTenant").WithSummary("Drop a destroyed tenant's record, steps and payments from the control plane; the slug is free again. The audit keeps its history; the archived backup stays").RequireAuthorization("Platform");
 
         MapBrandApi(api);
         MapRecordApi(api);
@@ -226,6 +228,38 @@ public static partial class ControlApi
             Conflict<ProblemDetails> c => c,
             _ => throw new InvalidOperationException(),
         };
+    }
+
+    /// <summary>A rolled-back upgrade leaves its reason on a running tenant until someone has read it. A failed tenant keeps its reason: the action that gets it going again clears it.</summary>
+    /// <summary>
+    /// A destroyed tenant is a row nobody needs on the list any more. Only
+    /// from Destroyed: destroy first is what takes the stack down, and the
+    /// one step keeps a mis-click from wiping a café. The audit rows are
+    /// keyed by slug, not by id, so the history reads on after the record.
+    /// </summary>
+    public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> Forget(ControlContext context, IAuditWriter audit, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.Include(t => t.Steps).Include(t => t.Payments).SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.Status != TenantStatus.Destroyed)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Only a destroyed tenant can be forgotten; {slug} is {tenant.Status}. Destroy it first." });
+        await audit.WriteAsync("tenant.forgotten", slug, new { tenant.NameEn, tenant.Kind, tenant.Plan, steps = tenant.Steps.Count, payments = tenant.Payments.Count }, ct);
+        context.Tenants.Remove(tenant);
+        await context.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> DismissError(ControlContext context, IAuditWriter audit, string slug, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.Status == TenantStatus.Failed)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is Failed; retry, start or destroy it instead." });
+        if (tenant.LastError is not { } error) return TypedResults.NoContent();
+        tenant.LastError = null;
+        await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.error.dismissed", slug, new { error }, ct);
+        return TypedResults.NoContent();
     }
 
     public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> Rollback(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)

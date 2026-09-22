@@ -35,7 +35,7 @@ on:
         required: false
         type: string
       tenant:
-        description: 'Which stack the apps are built for: tenants/<slug>.json'
+        description: 'client_app only: which stack it is built for, tenants/<slug>.json (the till and the kitchen are generic)'
         required: false
         default: chillax
         type: string
@@ -43,7 +43,9 @@ on:
 env:
   FLUTTER_VERSION: '3.41.2'
   JAVA_VERSION: '17'
-  # The record every flutter build below is given (see tenants/README.md)
+  # The record the customer app's builds are given (see tenants/README.md).
+  # The till and the kitchen display take none: one generic build serves
+  # every café, and a tablet connects to its own from inside the app.
   TENANT: ${{ github.event.inputs.tenant || 'chillax' }}
 
 jobs:
@@ -136,11 +138,18 @@ jobs:
           target: ${{ secrets.DEPLOY_PATH }}/website/apk
           strip_components: 4
 
+  # ==========================================
+  # The till: one generic APK, published to the platform's download page
+  # (https://{PLATFORM_DOMAIN}/apps). No store, no tenant record: the tablet
+  # installs from the page and connects to its café from inside the app.
+  # ==========================================
+
   build-android-pos:
     if: |
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'pos_app') &&
       (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
     runs-on: ubuntu-latest
+    environment: platform
     defaults:
       run:
         working-directory: src/pos_app
@@ -163,73 +172,65 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # No codegen step: the POS app has no freezed/riverpod_generator parts
+      # No codegen step: the app has no freezed/riverpod_generator parts
 
       - name: Analyze and test
         run: |
           flutter analyze
           flutter test
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-          working-directory: src/pos_app/android
-
-      - name: Create Play Store service account key
-        env:
-          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > /tmp/play-store-key.json
-          echo "PLAY_STORE_JSON_KEY_PATH=/tmp/play-store-key.json" >> $GITHUB_ENV
-
-      - name: Build and deploy with Fastlane
-        working-directory: src/pos_app/android
+      # The same upload key as before, so an installed app updates in place
+      - name: Signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_POS_KEYSTORE_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_POS_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_POS_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_POS_STORE_PASSWORD }}
-        run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
+        run: |
+          echo -n "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          PROPS
 
-      # Kept even when the Play upload fails (a brand-new app refuses API
-      # uploads until its first bundle goes in by hand), so the signed bundle
-      # is always there to download
-      - name: Upload AAB artifact
-        if: ${{ !cancelled() }}
+      - name: Build APK
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apps-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-pos.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apps-publish/ninja-pos.json
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          if-no-files-found: ignore
-          name: pos-app-android-aab
-          path: src/pos_app/build/app/outputs/bundle/release/app-release.aab
+          name: pos-app-android-apk
+          path: src/pos_app/build/apps-publish/*
 
-      # The same signed build as an APK, for tablets and phones that install
-      # from chillax.site instead of Google Play. key.properties is still in
-      # place from the Fastlane step, so it carries the same upload signature.
-      - name: Build APK for direct download
-        run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
-          mkdir -p build/apk-publish
-          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-pos.apk
-          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax-pos.json
-
-      - name: Publish APK to chillax.site
+      - name: Publish to the platform's download page
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "src/pos_app/build/apk-publish/*"
-          target: ${{ secrets.DEPLOY_PATH }}/website/apk
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          source: "src/pos_app/build/apps-publish/*"
+          target: /opt/ninja/platform/apps
           strip_components: 4
+
+  # ==========================================
+  # The kitchen display: one generic APK, published to the platform's download page
+  # (https://{PLATFORM_DOMAIN}/apps). No store, no tenant record: the tablet
+  # installs from the page and connects to its café from inside the app.
+  # ==========================================
 
   build-android-kds:
     if: |
       (github.event.inputs.app == 'all' || github.event.inputs.app == 'kds_app') &&
       (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android')
     runs-on: ubuntu-latest
+    environment: platform
     defaults:
       run:
         working-directory: src/kds_app
@@ -252,66 +253,51 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # No codegen step: the kitchen app has no freezed/riverpod_generator parts
+      # No codegen step: the app has no freezed/riverpod_generator parts
 
       - name: Analyze and test
         run: |
           flutter analyze
           flutter test
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-          working-directory: src/kds_app/android
-
-      - name: Create Play Store service account key
-        env:
-          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
-        run: |
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > /tmp/play-store-key.json
-          echo "PLAY_STORE_JSON_KEY_PATH=/tmp/play-store-key.json" >> $GITHUB_ENV
-
-      - name: Build and deploy with Fastlane
-        working-directory: src/kds_app/android
+      # The same upload key as before, so an installed app updates in place
+      - name: Signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KDS_KEYSTORE_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KDS_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KDS_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_KDS_STORE_PASSWORD }}
-        run: bundle exec fastlane beta track:${{ github.event.inputs.track || 'internal' }} build_number:${{ github.event.inputs.build_number || github.run_number }}
+        run: |
+          echo -n "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          PROPS
 
-      # Kept even when the Play upload fails (a brand-new app refuses API
-      # uploads until its first bundle goes in by hand), so the signed bundle
-      # is always there to download
-      - name: Upload AAB artifact
-        if: ${{ !cancelled() }}
+      - name: Build APK
+        run: |
+          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }}
+          mkdir -p build/apps-publish
+          cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-kds.apk
+          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
+          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apps-publish/ninja-kds.json
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          if-no-files-found: ignore
-          name: kds-app-android-aab
-          path: src/kds_app/build/app/outputs/bundle/release/app-release.aab
+          name: kds-app-android-apk
+          path: src/kds_app/build/apps-publish/*
 
-      # The same signed build as an APK, for tablets and phones that install
-      # from chillax.site instead of Google Play. key.properties is still in
-      # place from the Fastlane step, so it carries the same upload signature.
-      - name: Build APK for direct download
-        run: |
-          flutter build apk --release --build-number=${{ github.event.inputs.build_number || github.run_number }} --dart-define-from-file=../../tenants/${{ env.TENANT }}.json
-          mkdir -p build/apk-publish
-          cp build/app/outputs/flutter-apk/app-release.apk build/apk-publish/chillax-kds.apk
-          version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apk-publish/chillax-kds.json
-
-      - name: Publish APK to chillax.site
+      - name: Publish to the platform's download page
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "src/kds_app/build/apk-publish/*"
-          target: ${{ secrets.DEPLOY_PATH }}/website/apk
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          source: "src/kds_app/build/apps-publish/*"
+          target: /opt/ninja/platform/apps
           strip_components: 4
 
   # ==========================================

@@ -10,6 +10,36 @@ public sealed record ShellResult(int ExitCode, string Output, string Stdout = ""
     public bool Ok => ExitCode == 0;
 }
 
+/// <summary>
+/// A docker command that did not exit 0. The message is the one line that
+/// says why, for the record and the audit; the log is everything the command
+/// printed, for the step that ran it.
+/// </summary>
+public sealed class ShellException(string log) : InvalidOperationException(Summarize(log))
+{
+    public string Log { get; } = log;
+
+    private const string Daemon = "Error response from daemon: ";
+
+    /// <summary>
+    /// The line worth reading in what docker printed: the daemon's first
+    /// answer, else the first line that opens with "error", else the first
+    /// compose progress line that ended in Error, else the last line. One
+    /// line comes back as it is.
+    /// </summary>
+    public static string Summarize(string log)
+    {
+        var lines = log.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (lines.Length <= 1) return log.Trim();
+        var line = lines.FirstOrDefault(l => l.StartsWith(Daemon, StringComparison.Ordinal))
+            ?? lines.FirstOrDefault(l => l.StartsWith("error", StringComparison.OrdinalIgnoreCase))
+            ?? lines.FirstOrDefault(l => l.Contains(" Error ", StringComparison.Ordinal))
+            ?? lines[^1];
+        if (line.StartsWith(Daemon, StringComparison.Ordinal)) return line[Daemon.Length..];
+        return line.StartsWith("error:", StringComparison.OrdinalIgnoreCase) ? line[6..].TrimStart() : line;
+    }
+}
+
 /// <summary>Runs a command on the host the control plane lives on: docker and docker compose, nothing else.</summary>
 public interface IShell
 {

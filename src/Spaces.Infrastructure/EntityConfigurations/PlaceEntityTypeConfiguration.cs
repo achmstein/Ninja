@@ -41,6 +41,10 @@ class PlaceEntityTypeConfiguration : IEntityTypeConfiguration<Place>
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(p => p.Reservable)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(p => p.BranchId)
             .IsRequired()
             .HasDefaultValue(1);

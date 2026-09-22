@@ -6,6 +6,7 @@ using Ninja.Spaces.API.Application.IntegrationEvents.EventHandling;
 using Ninja.IntegrationEventLogEF.Services;
 using Ninja.Spaces.API.Application.Queries;
 using Ninja.Spaces.Domain.AggregatesModel.PlaceAggregate;
+using Ninja.Spaces.Domain.AggregatesModel.ReservationAggregate;
 using Ninja.Spaces.Domain.AggregatesModel.StayAggregate;
 using Ninja.Spaces.API.Infrastructure;
 using Ninja.Spaces.Infrastructure;
@@ -41,6 +42,7 @@ public static class Extensions
         });
 
         builder.Services.AddScoped<IPlaceRepository, PlaceRepository>();
+        builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
         builder.Services.AddScoped<IStayRepository, StayRepository>();
 
         // The outbox: events are written with the rows that produced them and
@@ -53,13 +55,14 @@ public static class Extensions
         builder.Services.AddScoped<IRequestManager, RequestManager>();
 
         builder.Services.AddScoped<IPlaceQueries, PlaceQueries>();
+        builder.Services.AddScoped<IReservationQueries, ReservationQueries>();
         builder.Services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
 
-        builder.Services.AddHostedService<HoldExpirationService>();
+        builder.Services.AddHostedService<ReservationExpiryService>();
 
         builder.AddRabbitMqEventBus("eventbus")
             // Branch.API's flags, projected locally: a branch with reservations
-            // paused refuses customer holds without a call across services
+            // paused refuses customer reservations without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             // Sales' receipt, projected onto the stay it covered: the
             // customer sees the cost as paid without a call to Sales

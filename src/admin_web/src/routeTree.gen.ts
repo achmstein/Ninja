@@ -33,12 +33,14 @@ import { Route as AuthenticatedInventoryIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedBrandIndexRouteImport } from './routes/_authenticated/brand/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
+import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedAccountsIndexRouteImport } from './routes/_authenticated/accounts/index'
 import { Route as AuthenticatedTillTicketsRouteImport } from './routes/_authenticated/till/tickets'
 import { Route as AuthenticatedTillShiftsRouteImport } from './routes/_authenticated/till/shifts'
 import { Route as AuthenticatedTillRefundsRouteImport } from './routes/_authenticated/till/refunds'
 import { Route as AuthenticatedTillPaymentsRouteImport } from './routes/_authenticated/till/payments'
 import { Route as AuthenticatedTillBreakdownRouteImport } from './routes/_authenticated/till/breakdown'
+import { Route as AuthenticatedPlacesReservationsRouteImport } from './routes/_authenticated/places/reservations'
 import { Route as AuthenticatedPlacesPrintRouteImport } from './routes/_authenticated/places/print'
 import { Route as AuthenticatedPlacesHistoryRouteImport } from './routes/_authenticated/places/history'
 import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll/payslips'
@@ -186,6 +188,11 @@ const AuthenticatedBranchesIndexRoute =
     path: '/branches/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
+  id: '/apps/',
+  path: '/apps/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAccountsIndexRoute =
   AuthenticatedAccountsIndexRouteImport.update({
     id: '/accounts/',
@@ -219,6 +226,12 @@ const AuthenticatedTillBreakdownRoute =
   AuthenticatedTillBreakdownRouteImport.update({
     id: '/till/breakdown',
     path: '/till/breakdown',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlacesReservationsRoute =
+  AuthenticatedPlacesReservationsRouteImport.update({
+    id: '/places/reservations',
+    path: '/places/reservations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPlacesPrintRoute =
@@ -347,12 +360,14 @@ export interface FileRoutesByFullPath {
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/places/print': typeof AuthenticatedPlacesPrintRoute
+  '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/till/shifts': typeof AuthenticatedTillShiftsRoute
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
+  '/apps': typeof AuthenticatedAppsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -395,12 +410,14 @@ export interface FileRoutesByTo {
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/places/print': typeof AuthenticatedPlacesPrintRoute
+  '/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/till/shifts': typeof AuthenticatedTillShiftsRoute
   '/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/accounts': typeof AuthenticatedAccountsIndexRoute
+  '/apps': typeof AuthenticatedAppsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/brand': typeof AuthenticatedBrandIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
@@ -445,12 +462,14 @@ export interface FileRoutesById {
   '/_authenticated/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/_authenticated/places/history': typeof AuthenticatedPlacesHistoryRoute
   '/_authenticated/places/print': typeof AuthenticatedPlacesPrintRoute
+  '/_authenticated/places/reservations': typeof AuthenticatedPlacesReservationsRoute
   '/_authenticated/till/breakdown': typeof AuthenticatedTillBreakdownRoute
   '/_authenticated/till/payments': typeof AuthenticatedTillPaymentsRoute
   '/_authenticated/till/refunds': typeof AuthenticatedTillRefundsRoute
   '/_authenticated/till/shifts': typeof AuthenticatedTillShiftsRoute
   '/_authenticated/till/tickets': typeof AuthenticatedTillTicketsRoute
   '/_authenticated/accounts/': typeof AuthenticatedAccountsIndexRoute
+  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/brand/': typeof AuthenticatedBrandIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
@@ -495,12 +514,14 @@ export interface FileRouteTypes {
     | '/payroll/payslips'
     | '/places/history'
     | '/places/print'
+    | '/places/reservations'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
     | '/till/shifts'
     | '/till/tickets'
     | '/accounts'
+    | '/apps'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -543,12 +564,14 @@ export interface FileRouteTypes {
     | '/payroll/payslips'
     | '/places/history'
     | '/places/print'
+    | '/places/reservations'
     | '/till/breakdown'
     | '/till/payments'
     | '/till/refunds'
     | '/till/shifts'
     | '/till/tickets'
     | '/accounts'
+    | '/apps'
     | '/branches'
     | '/brand'
     | '/customers'
@@ -592,12 +615,14 @@ export interface FileRouteTypes {
     | '/_authenticated/payroll/payslips'
     | '/_authenticated/places/history'
     | '/_authenticated/places/print'
+    | '/_authenticated/places/reservations'
     | '/_authenticated/till/breakdown'
     | '/_authenticated/till/payments'
     | '/_authenticated/till/refunds'
     | '/_authenticated/till/shifts'
     | '/_authenticated/till/tickets'
     | '/_authenticated/accounts/'
+    | '/_authenticated/apps/'
     | '/_authenticated/branches/'
     | '/_authenticated/brand/'
     | '/_authenticated/customers/'
@@ -800,6 +825,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBranchesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/apps/': {
+      id: '/_authenticated/apps/'
+      path: '/apps'
+      fullPath: '/apps'
+      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/accounts/': {
       id: '/_authenticated/accounts/'
       path: '/accounts'
@@ -840,6 +872,13 @@ declare module '@tanstack/react-router' {
       path: '/till/breakdown'
       fullPath: '/till/breakdown'
       preLoaderRoute: typeof AuthenticatedTillBreakdownRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/places/reservations': {
+      id: '/_authenticated/places/reservations'
+      path: '/places/reservations'
+      fullPath: '/places/reservations'
+      preLoaderRoute: typeof AuthenticatedPlacesReservationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/places/print': {
@@ -979,12 +1018,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPayrollPayslipsRoute: typeof AuthenticatedPayrollPayslipsRoute
   AuthenticatedPlacesHistoryRoute: typeof AuthenticatedPlacesHistoryRoute
   AuthenticatedPlacesPrintRoute: typeof AuthenticatedPlacesPrintRoute
+  AuthenticatedPlacesReservationsRoute: typeof AuthenticatedPlacesReservationsRoute
   AuthenticatedTillBreakdownRoute: typeof AuthenticatedTillBreakdownRoute
   AuthenticatedTillPaymentsRoute: typeof AuthenticatedTillPaymentsRoute
   AuthenticatedTillRefundsRoute: typeof AuthenticatedTillRefundsRoute
   AuthenticatedTillShiftsRoute: typeof AuthenticatedTillShiftsRoute
   AuthenticatedTillTicketsRoute: typeof AuthenticatedTillTicketsRoute
   AuthenticatedAccountsIndexRoute: typeof AuthenticatedAccountsIndexRoute
+  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedBrandIndexRoute: typeof AuthenticatedBrandIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
@@ -1020,12 +1061,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPayrollPayslipsRoute: AuthenticatedPayrollPayslipsRoute,
   AuthenticatedPlacesHistoryRoute: AuthenticatedPlacesHistoryRoute,
   AuthenticatedPlacesPrintRoute: AuthenticatedPlacesPrintRoute,
+  AuthenticatedPlacesReservationsRoute: AuthenticatedPlacesReservationsRoute,
   AuthenticatedTillBreakdownRoute: AuthenticatedTillBreakdownRoute,
   AuthenticatedTillPaymentsRoute: AuthenticatedTillPaymentsRoute,
   AuthenticatedTillRefundsRoute: AuthenticatedTillRefundsRoute,
   AuthenticatedTillShiftsRoute: AuthenticatedTillShiftsRoute,
   AuthenticatedTillTicketsRoute: AuthenticatedTillTicketsRoute,
   AuthenticatedAccountsIndexRoute: AuthenticatedAccountsIndexRoute,
+  AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedBrandIndexRoute: AuthenticatedBrandIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,

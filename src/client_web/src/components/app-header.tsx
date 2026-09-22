@@ -57,7 +57,7 @@ export function AppHeader() {
   // the menu page (see MobileTopBar)
   return (
     <header className='bg-background/95 sticky top-0 z-40 hidden border-b backdrop-blur md:block'>
-      <div className='mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4'>
+      <div className='mx-auto flex h-(--header-h) w-full max-w-6xl items-center gap-2 px-4'>
         <Link to='/' className='flex shrink-0 items-center gap-2'>
           <BrandWordmark />
         </Link>
@@ -73,7 +73,7 @@ export function AppHeader() {
                 key={to}
                 to={to}
                 className={cn(
-                  'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-pill px-3 py-1.5 text-sm font-medium transition-colors',
                   active
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground hover:text-foreground',
@@ -100,7 +100,7 @@ export function AppHeader() {
             <Link to='/cart' aria-label={t('cart')}>
               <ShoppingBag className='size-[1.2rem]' />
               {count > 0 && (
-                <span className='bg-primary text-primary-foreground absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold'>
+                <span className='bg-primary text-primary-foreground absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-pill px-1 text-[10px] font-bold'>
                   {count}
                 </span>
               )}

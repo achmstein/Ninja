@@ -16,6 +16,13 @@ Future<void> initializeBranch() async {
   _initialBranchId = prefs.getInt(_branchKey);
 }
 
+/// Drop the remembered branch: the tablet is leaving this café
+Future<void> forgetBranch() async {
+  _initialBranchId = null;
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_branchKey);
+}
+
 class BranchState {
   final List<Branch> branches;
   final int? selectedBranchId;

@@ -5,7 +5,8 @@
 # thing a new tenant needs outside this compose project.
 #
 # Host scheme, with PLATFORM_DOMAIN=ninja.app:
-#   ninja.app                → the platform's site (control redirect for now)
+#   ninja.app                → the platform's site (control redirect for now); /apps is the
+#                              download page for the native till and kitchen apps
 #   auth.ninja.app           → Keycloak, every realm
 #   control.ninja.app        → the control app + its API
 #   {slug}.ninja.app         → the café's customer app, served from the shared build
@@ -57,7 +58,20 @@
 }
 
 {$PLATFORM_DOMAIN} {
-	redir https://control.{$PLATFORM_DOMAIN}{uri}
+	# The native apps: one generic build of each, published here by mobile-deploy.yml;
+	# a tablet installs from this page and connects to its café from inside the app
+	handle_path /apps* {
+		root * /srv/apps
+		file_server
+		# The APKs and their version notes change under the same name; never a stale copy
+		header Cache-Control "no-cache"
+		# Android installs what it is told is a package; an unknown type would just be a file
+		@apk path *.apk
+		header @apk Content-Type application/vnd.android.package-archive
+	}
+	handle {
+		redir https://control.{$PLATFORM_DOMAIN}{uri}
+	}
 }
 
 auth.{$PLATFORM_DOMAIN} {

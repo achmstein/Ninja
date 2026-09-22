@@ -160,6 +160,7 @@ class AppColors {
   static const Color emerald600 = Color(0xFF059669);
   static const Color emerald500 = Color(0xFF10B981);
   static const Color red500 = Color(0xFFEF4444);
+  static const Color sky500 = Color(0xFF0EA5E9);
   static const Color gray400 = Color(0xFF9CA3AF);
 
   static Color amber(Brightness b) => b == Brightness.dark ? amber500 : amber600;

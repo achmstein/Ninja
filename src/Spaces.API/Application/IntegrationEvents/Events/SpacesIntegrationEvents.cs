@@ -17,7 +17,11 @@ public record PlaceUpdatedIntegrationEvent(
     bool IsActive,
     bool Deleted = false) : IntegrationEvent;
 
-/// <summary>A customer holds a place; staff see it and the hold's expiry.</summary>
+/// <summary>
+/// A party reserved a place: for now (For null; ExpiresAt says how long
+/// they have to arrive) or for later. Staff see it on the floor and get a
+/// push.
+/// </summary>
 public record PlaceReservedIntegrationEvent(
     int ReservationId,
     int PlaceId,
@@ -27,9 +31,11 @@ public record PlaceReservedIntegrationEvent(
     string? CustomerName,
     DateTime? ExpiresAt,
     int BranchId = 1,
-    bool StartOnConfirm = false) : IntegrationEvent;
+    bool StartOnConfirm = false,
+    DateTime? For = null,
+    int? PartySize = null) : IntegrationEvent;
 
-/// <summary>The clock started (from a hold or as a walk-in); OptionCode is the rate option it runs on.</summary>
+/// <summary>The clock started (from a seated reservation or as a walk-in); OptionCode is the rate option it runs on. ReservationId is the stay's id: the session Sales bills.</summary>
 public record SessionStartedIntegrationEvent(
     int ReservationId,
     int PlaceId,
@@ -102,7 +108,12 @@ public record SessionCustomerAssignedIntegrationEvent(
     string? CustomerName,
     int BranchId = 0) : IntegrationEvent;
 
-/// <summary>A hold was given up or a running stay cut short; nothing is billed.</summary>
+/// <summary>
+/// A reservation was given up before anyone sat down (ReservationId is the
+/// reservation's), or a running stay was cut short (WasRunning, and
+/// ReservationId is the stay's — the session Sales opened a ticket for).
+/// Nothing is billed either way.
+/// </summary>
 public record ReservationCancelledIntegrationEvent(
     int ReservationId,
     int PlaceId,
@@ -112,6 +123,33 @@ public record ReservationCancelledIntegrationEvent(
     string? CustomerName,
     int BranchId = 1,
     bool WasRunning = false) : IntegrationEvent;
+
+/// <summary>
+/// A party sat down at a plain table on their reservation: the table is
+/// theirs until the staff complete it. At a timed place the stay that took
+/// over announces its own start instead, so this is never sent there.
+/// </summary>
+public record ReservationSeatedIntegrationEvent(
+    int ReservationId,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
+    string? CustomerId,
+    string? CustomerName,
+    int BranchId = 1) : IntegrationEvent;
+
+/// <summary>
+/// The party left a plain table: the reservation is over and the table is
+/// free. A stay's end says the same for a timed place.
+/// </summary>
+public record ReservationCompletedIntegrationEvent(
+    int ReservationId,
+    int PlaceId,
+    string PlaceKind,
+    LocalizedText PlaceName,
+    string? CustomerId,
+    string? CustomerName,
+    int BranchId = 1) : IntegrationEvent;
 
 /// <summary>
 /// The bill a stay's time was on was paid. Carries the party, so

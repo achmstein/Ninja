@@ -161,6 +161,9 @@ public static partial class Templates
                     if (!string.IsNullOrEmpty(tenant.PrimaryColor)) sb.AppendLine($"      Tenant__PrimaryColor: \"{tenant.PrimaryColor}\"");
                     sb.AppendLine($"      Tenant__CustomerUrl: \"{hosts.CustomerUrl}\"");
                     sb.AppendLine($"      Tenant__AuthUrl: \"{platform.KeycloakPublicUrl}/realms/{TenantNaming.Realm(slug)}\"");
+                    // The native till and kitchen apps: the host a tablet connects to, and where it downloads them
+                    sb.AppendLine($"      Tenant__ApiUrl: \"{hosts.ApiUrl}\"");
+                    sb.AppendLine($"      Tenant__AppsUrl: \"{platform.AppsUrl}\"");
                     sb.AppendLine("      Storage__Path: \"/app/uploads\"");
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.UploadsVolume(slug)}:/app/uploads\"");
@@ -296,6 +299,7 @@ public static partial class Templates
         yield return ("/api/catalog/{*any}", "catalog", ["1.0", "1", "2.0"], forwarded);
         yield return ("/api/orders/{*any}", "ordering", v1, none);
         yield return ("/api/places/{*any}", "spaces", v1, none);
+        yield return ("/api/reservations/{*any}", "spaces", v1, none);
         yield return ("/api/stays/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
@@ -319,8 +323,9 @@ public static partial class Templates
     /// <summary>
     /// The same table with a module that is not entitled taken out: its
     /// routes keep their paths (never a duplicate template) but point at
-    /// Branch.API's 402 page, and Spaces additionally blocks the timed-place
-    /// place routes, since /api/places itself serves tables and stations.
+    /// Branch.API's 402 page, and Reservations and Time billing additionally
+    /// block their place routes one by one, since /api/places itself serves
+    /// tables and stations.
     /// Every container keeps running; only the gateway changes.
     /// </summary>
     internal static IEnumerable<(string Path, string Cluster, string[]? Versions, (string, string)[][] Transforms)> GatewayRoutes(IReadOnlySet<Module> entitled)
@@ -333,7 +338,7 @@ public static partial class Templates
             else
                 yield return route;
         }
-        // The room-only place routes are not in the table: they are only ever added, to block
+        // The reserving and timed routes under /api/places are not in the table: they are only ever added, to block
         foreach (var (path, module) in blocked)
             yield return Block(path, module);
     }

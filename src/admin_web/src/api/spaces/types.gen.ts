@@ -18,25 +18,12 @@ export type ChangeStayOptionRequest = {
     optionCode: string;
 };
 
-export type ConfirmStayRequest = {
-    optionCode?: null | string;
-};
-
 export type CreatePlaceRequest = {
     kind: PlaceKind;
     name: LocalizedText;
     description?: null | LocalizedText;
     tariff?: null | TariffRequest;
-};
-
-export type HoldPlaceRequest = {
-    customerName?: null | string;
-    notes?: null | string;
-    startOnConfirm?: boolean;
-    /**
-     * The rate to start at when the clock starts on Confirm; one of the place's tariff options
-     */
-    optionCode?: null | string;
+    reservable?: null | boolean;
 };
 
 export type JoinStayResult = {
@@ -50,6 +37,16 @@ export type JoinStayResult = {
 export type LocalizedText = {
     en?: string;
     ar?: null | string;
+};
+
+export type PaginatedResultOfReservationViewModel = {
+    items?: Array<ReservationViewModel>;
+    pageIndex?: number | string;
+    pageSize?: number | string;
+    totalCount?: number | string;
+    totalPages?: number | string;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 };
 
 export type PaginatedResultOfStayViewModel = {
@@ -80,6 +77,7 @@ export type PlaceScanViewModel = {
     takesControllerRequests?: boolean;
     hasRunningStay?: boolean;
     stay?: null | StayPreviewViewModel;
+    reservation?: null | ReservationPreviewViewModel;
     isAlreadyMember?: boolean;
 };
 
@@ -96,9 +94,12 @@ export type PlaceViewModel = {
     tariff?: null | TariffViewModel;
     isTimed?: boolean;
     hasOptions?: boolean;
+    reservable?: boolean;
     canReserve?: boolean;
     takesControllerRequests?: boolean;
     currentStay?: null | StayPreviewViewModel;
+    currentReservation?: null | ReservationPreviewViewModel;
+    seatedReservation?: null | ReservationPreviewViewModel;
 };
 
 export type ProblemDetails = {
@@ -121,16 +122,75 @@ export type RateOptionViewModel = {
     hourlyRate?: number | string;
 };
 
+export type ReservationPreviewViewModel = {
+    reservationId?: number | string;
+    placeId?: number | string;
+    placeName?: LocalizedText;
+    status?: ReservationStatus;
+    customerName?: null | string;
+    partySize?: null | number | string;
+    for?: null | string;
+    expiresAt?: null | string;
+    isHolding?: boolean;
+    startOnConfirm?: boolean;
+    seatedAt?: null | string;
+};
+
+export type ReservationStatus = number;
+
+export type ReservationViewModel = {
+    id?: number | string;
+    placeId?: number | string;
+    placeKind?: PlaceKind;
+    placeName?: LocalizedText;
+    placeIsTimed?: boolean;
+    branchId?: number | string;
+    customerId?: null | string;
+    customerName?: null | string;
+    partySize?: null | number | string;
+    for?: null | string;
+    createdAt?: string;
+    expiresAt?: null | string;
+    startOnConfirm?: boolean;
+    requestedOptionCode?: null | string;
+    requestedOptionName?: null | LocalizedText;
+    status?: ReservationStatus;
+    isHolding?: boolean;
+    notes?: null | string;
+    stayId?: null | number | string;
+    seatedAt?: null | string;
+    closedAt?: null | string;
+};
+
+export type ReservePlaceRequest = {
+    placeId: number | string;
+    for?: null | string;
+    partySize?: null | number | string;
+    customerName?: null | string;
+    notes?: null | string;
+    startOnConfirm?: boolean;
+    optionCode?: null | string;
+};
+
+export type SeatReservationRequest = {
+    optionCode?: null | string;
+};
+
+export type SeatResult = {
+    seated: boolean;
+    stayId: null | number | string;
+};
+
 export type SetPlaceActiveRequest = {
     isActive: boolean;
 };
 
-export type SetPlaceTariffRequest = {
-    tariff: null | TariffRequest;
+export type SetPlaceReservableRequest = {
+    reservable: boolean;
 };
 
-export type StartStayRequest = {
-    optionCode?: null | string;
+export type SetPlaceTariffRequest = {
+    tariff: null | TariffRequest;
 };
 
 export type StartWalkInStayResult = {
@@ -158,7 +218,6 @@ export type StayPreviewViewModel = {
     placeName?: LocalizedText;
     status?: StayStatus;
     startTime?: string;
-    expiresAt?: null | string;
     memberCount?: number | string;
 };
 
@@ -198,14 +257,11 @@ export type StayViewModel = {
     placeId?: number | string;
     placeKind?: PlaceKind;
     placeName?: LocalizedText;
+    reservationId?: null | number | string;
     customerId?: null | string;
     customerName?: null | string;
     createdAt?: string;
-    expiresAt?: null | string;
-    startOnConfirm?: boolean;
-    requestedOptionCode?: null | string;
-    requestedOptionName?: null | LocalizedText;
-    startedAt?: null | string;
+    startedAt?: string;
     endedAt?: null | string;
     tariff?: TariffViewModel;
     currentOptionCode?: null | string;
@@ -466,6 +522,46 @@ export type SetPlaceTariffResponses = {
     200: unknown;
 };
 
+export type SetPlaceReservableData = {
+    body: SetPlaceReservableRequest;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/places/{id}/reservable';
+};
+
+export type SetPlaceReservableErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPlaceReservableError = SetPlaceReservableErrors[keyof SetPlaceReservableErrors];
+
+export type SetPlaceReservableResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type SetPlaceActiveData = {
     body: SetPlaceActiveRequest;
     path: {
@@ -581,44 +677,6 @@ export type ScanPlaceResponses = {
 
 export type ScanPlaceResponse = ScanPlaceResponses[keyof ScanPlaceResponses];
 
-export type HoldPlaceData = {
-    body?: null | HoldPlaceRequest;
-    path: {
-        /**
-         * The place ID
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/api/places/{id}/hold';
-};
-
-export type HoldPlaceErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-};
-
-export type HoldPlaceError = HoldPlaceErrors[keyof HoldPlaceErrors];
-
-export type HoldPlaceResponses = {
-    /**
-     * Created
-     */
-    201: number | string;
-};
-
-export type HoldPlaceResponse = HoldPlaceResponses[keyof HoldPlaceResponses];
-
 export type StartWalkInData = {
     body?: null | WalkInStayRequest;
     path: {
@@ -731,6 +789,441 @@ export type GetPlaceStayHistoryResponses = {
 };
 
 export type GetPlaceStayHistoryResponse = GetPlaceStayHistoryResponses[keyof GetPlaceStayHistoryResponses];
+
+export type GetPlaceReservationHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * The place ID
+         */
+        id: number;
+    };
+    query?: {
+        /**
+         * Maximum number of reservations to return
+         */
+        limit?: number | string;
+    };
+    url: '/api/places/{id}/reservations';
+};
+
+export type GetPlaceReservationHistoryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPlaceReservationHistoryResponses = {
+    /**
+     * OK
+     */
+    200: Array<ReservationViewModel>;
+};
+
+export type GetPlaceReservationHistoryResponse = GetPlaceReservationHistoryResponses[keyof GetPlaceReservationHistoryResponses];
+
+export type ReservePlaceData = {
+    body: ReservePlaceRequest;
+    path?: never;
+    query?: never;
+    url: '/api/reservations';
+};
+
+export type ReservePlaceErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ReservePlaceError = ReservePlaceErrors[keyof ReservePlaceErrors];
+
+export type ReservePlaceResponses = {
+    /**
+     * Created
+     */
+    201: number | string;
+};
+
+export type ReservePlaceResponse = ReservePlaceResponses[keyof ReservePlaceResponses];
+
+export type GetMyReservationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+    };
+    url: '/api/reservations/my';
+};
+
+export type GetMyReservationsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetMyReservationsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ReservationViewModel>;
+};
+
+export type GetMyReservationsResponse = GetMyReservationsResponses[keyof GetMyReservationsResponses];
+
+export type GetOpenReservationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/reservations/open';
+};
+
+export type GetOpenReservationsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetOpenReservationsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ReservationViewModel>;
+};
+
+export type GetOpenReservationsResponse = GetOpenReservationsResponses[keyof GetOpenReservationsResponses];
+
+export type GetReservationHistoryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * Filter by place
+         */
+        placeId?: number | string;
+        fromDate?: string;
+        toDate?: string;
+    };
+    url: '/api/reservations/history';
+};
+
+export type GetReservationHistoryErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetReservationHistoryResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedResultOfReservationViewModel;
+};
+
+export type GetReservationHistoryResponse = GetReservationHistoryResponses[keyof GetReservationHistoryResponses];
+
+export type GetReservationData = {
+    body?: never;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}';
+};
+
+export type GetReservationErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetReservationResponses = {
+    /**
+     * OK
+     */
+    200: ReservationViewModel;
+};
+
+export type GetReservationResponse = GetReservationResponses[keyof GetReservationResponses];
+
+export type ConfirmReservationData = {
+    body?: null | SeatReservationRequest;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/confirm';
+};
+
+export type ConfirmReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ConfirmReservationError = ConfirmReservationErrors[keyof ConfirmReservationErrors];
+
+export type ConfirmReservationResponses = {
+    /**
+     * OK
+     */
+    200: SeatResult;
+};
+
+export type ConfirmReservationResponse = ConfirmReservationResponses[keyof ConfirmReservationResponses];
+
+export type SeatReservationData = {
+    body?: null | SeatReservationRequest;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/seat';
+};
+
+export type SeatReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SeatReservationError = SeatReservationErrors[keyof SeatReservationErrors];
+
+export type SeatReservationResponses = {
+    /**
+     * OK
+     */
+    200: SeatResult;
+};
+
+export type SeatReservationResponse = SeatReservationResponses[keyof SeatReservationResponses];
+
+export type CompleteReservationData = {
+    body?: never;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/complete';
+};
+
+export type CompleteReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CompleteReservationError = CompleteReservationErrors[keyof CompleteReservationErrors];
+
+export type CompleteReservationResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type AssignReservationCustomerData = {
+    body: AssignCustomerRequest;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/assign-customer';
+};
+
+export type AssignReservationCustomerErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type AssignReservationCustomerError = AssignReservationCustomerErrors[keyof AssignReservationCustomerErrors];
+
+export type AssignReservationCustomerResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelReservationData = {
+    body?: never;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/cancel';
+};
+
+export type CancelReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelReservationError = CancelReservationErrors[keyof CancelReservationErrors];
+
+export type CancelReservationResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelMyReservationData = {
+    body?: never;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/my/{id}/cancel';
+};
+
+export type CancelMyReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CancelMyReservationError = CancelMyReservationErrors[keyof CancelMyReservationErrors];
+
+export type CancelMyReservationResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type GetMyStaysData = {
     body?: never;
@@ -894,86 +1387,6 @@ export type GetStayResponses = {
 };
 
 export type GetStayResponse = GetStayResponses[keyof GetStayResponses];
-
-export type ConfirmStayData = {
-    body?: null | ConfirmStayRequest;
-    path: {
-        /**
-         * The stay ID
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/api/stays/{id}/confirm';
-};
-
-export type ConfirmStayErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type ConfirmStayError = ConfirmStayErrors[keyof ConfirmStayErrors];
-
-export type ConfirmStayResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type StartStayData = {
-    body?: null | StartStayRequest;
-    path: {
-        /**
-         * The stay ID
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/api/stays/{id}/start';
-};
-
-export type StartStayErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type StartStayError = StartStayErrors[keyof StartStayErrors];
-
-export type StartStayResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
 
 export type EndStayData = {
     body?: never;
@@ -1253,46 +1666,6 @@ export type LeaveStayErrors = {
 export type LeaveStayError = LeaveStayErrors[keyof LeaveStayErrors];
 
 export type LeaveStayResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type CancelMyHoldData = {
-    body?: never;
-    path: {
-        /**
-         * The stay ID
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/api/stays/my/{id}/cancel';
-};
-
-export type CancelMyHoldErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type CancelMyHoldError = CancelMyHoldErrors[keyof CancelMyHoldErrors];
-
-export type CancelMyHoldResponses = {
     /**
      * OK
      */

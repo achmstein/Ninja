@@ -17,6 +17,7 @@ class PlaceList extends StatefulWidget {
   final List<Place> places;
   final List<Stay> sessions;
   final List<TicketSummary> tickets;
+  final List<Reservation> reservations;
   final bool busy;
   final VoidCallback onNewTab;
   final ValueChanged<Place> onPick;
@@ -25,6 +26,7 @@ class PlaceList extends StatefulWidget {
     super.key,
     required this.places,
     required this.sessions,
+    this.reservations = const [],
     required this.tickets,
     required this.busy,
     required this.onNewTab,
@@ -65,6 +67,14 @@ class _PlaceListState extends State<PlaceList> {
   Stay? _stayForPlace(int placeId) {
     for (final session in widget.sessions) {
       if (session.placeId == placeId) return session;
+    }
+    return null;
+  }
+
+  /// The reservation keeping a place right now, if any
+  Reservation? _reservationHolding(int placeId) {
+    for (final r in widget.reservations) {
+      if (r.placeId == placeId && r.isOpen && r.isHolding) return r;
     }
     return null;
   }
@@ -129,20 +139,23 @@ class _PlaceListState extends State<PlaceList> {
             Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: Heading(label)),
             for (final place in free.where((p) => p.kind == kind))
               Builder(builder: (context) {
-                // A place with a clock has a state; one without is only ever free
+                // A place with a clock has a state; one without is only
+                // ever free, unless somebody reserved it and is on their way
                 final session = place.isTimed ? _stayForPlace(place.id) : null;
+                final reservation = _reservationHolding(place.id);
                 final maintenance = place.isTimed && place.status == PlaceStatus.outOfService;
                 // The dot already says free; text only when there is
                 // something to add
                 final detail = session?.status == StayStatus.running && session?.startedAt != null
                     ? _formatClock(now.difference(session!.startedAt!))
-                    : session?.status == StayStatus.held
-                        ? (session!.userName ?? l10n.statusReserved)
+                    : reservation != null
+                        ? (reservation.customerName ?? l10n.statusReserved)
                         : maintenance
                             ? l10n.underMaintenance
                             : null;
                 return _PlaceRow(
-                  leading: _StatusDot(color: place.isTimed ? _placeDot(place.status) : AppColors.successColor),
+                  leading: _StatusDot(
+                      color: place.isTimed || place.status == PlaceStatus.held ? _placeDot(place.status) : AppColors.successColor),
                   name: place.name.localized(context),
                   detail: detail,
                   icon: place.kind.icon,

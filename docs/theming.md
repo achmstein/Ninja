@@ -14,9 +14,19 @@ stay neutral. This is the pattern every surface follows, and why.
 2. **Light and dark are two mappings of the same tokens.** Every token has a
    value in each scheme. A component never asks which scheme is on.
 3. **A brand supplies seeds, not values.** The seeds are: `primaryColor`,
-   and in `theme`: `accent`, `surface`, `radius`, `fontLatin`, `fontArabic`,
-   and an optional `dark` with its own `primary`, `accent`, `surface`.
-   Everything else is derived.
+   and in `theme`: `accent`, `surface`, `radius`, `headerSize`, `fontLatin`,
+   `fontArabic`, and an optional `dark` with its own `primary`, `accent`,
+   `surface`. Everything else is derived.
+   - `radius` (`none`…`xl`) sets `--radius`, and with it every corner:
+     cards and inputs through shadcn's `--radius-sm…xl`, sheets through
+     `--radius-2xl/3xl`, and chips and pill buttons through `--radius-pill`
+     (`rounded-pill`): square for `none`, small for `sm`, a full pill from
+     `md` up. Circles (dots, avatars, icon buttons) are not corners and stay
+     `rounded-full`.
+   - `headerSize` (`sm` the default, `md`, `lg`) sets `--header-h` and
+     `--wordmark-h`: the customer app's header and the wordmark in it, for a
+     wide logo that needs more room than a thin one. The Flutter app shows
+     its wordmark hero-sized (login, profile) and only carries the seed.
 4. **Derivation is one function, ported once.** `brandTokens()` in
    `src/*_web/src/lib/brand-theme.ts` (identical in every web app) and
    `brandedColors()` in `src/client_app/lib/core/brand/brand_theme.dart` run

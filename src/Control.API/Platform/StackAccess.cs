@@ -217,12 +217,13 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         },
         ["entitlements"] = new JsonObject
         {
-            ["spaces"] = true, ["loyalty"] = true, ["tabs"] = true, ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
+            ["reservations"] = true, ["timeBilling"] = true, ["loyalty"] = true, ["tabs"] = true,
+            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
         },
         ["features"] = new JsonObject
         {
-            ["spaces"] = true, ["loyalty"] = true, ["tabs"] = true, ["inventory"] = true,
-            ["finance"] = true, ["payroll"] = true, ["kds"] = true,
+            ["reservations"] = true, ["timeBilling"] = true, ["loyalty"] = true, ["tabs"] = true,
+            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
         },
         ["locale"] = new JsonObject
         {

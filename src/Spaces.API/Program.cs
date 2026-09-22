@@ -21,6 +21,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapPlacesApi();
+app.MapReservationsApi();
+app.MapStaysApi();
 
 app.UseDefaultOpenApi();
 app.Run();

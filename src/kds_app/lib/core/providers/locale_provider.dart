@@ -15,6 +15,17 @@ Future<void> initializeLocale({String? override}) async {
   _initialLocale = savedLocale != null ? Locale(savedLocale) : const Locale('en');
 }
 
+/// The saved locale, for what shows before the providers exist (the
+/// connect screen)
+Locale get initialLocale => _initialLocale ?? const Locale('en');
+
+/// Keep a language chosen before the providers exist; the app starts in it
+Future<void> persistLocale(Locale locale) async {
+  _initialLocale = locale;
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_localeKey, locale.languageCode);
+}
+
 /// Provider for managing the app's locale/language setting. Direction
 /// follows the language (no separate setting), as on kds_web.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(() {

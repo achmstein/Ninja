@@ -30,7 +30,7 @@ describe('tenant enums', () => {
     expect(subscriptionStatus('PastDue')).toBe('PastDue')
     expect(subscriptionStatus(undefined)).toBe('Active')
     expect(moduleName('Kds')).toBe('Kds')
-    expect(moduleName(0)).toBe('Spaces')
+    expect(moduleName(0)).toBe('Reservations')
   })
 
   it('a stack mid-change is busy, and only a live demo converts', () => {

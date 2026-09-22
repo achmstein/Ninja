@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddStayMemberData, AddStayMemberErrors, AddStayMemberResponses, AssignStayCustomerData, AssignStayCustomerErrors, AssignStayCustomerResponses, CancelMyHoldData, CancelMyHoldErrors, CancelMyHoldResponses, CancelStayData, CancelStayErrors, CancelStayResponses, ChangeStayOptionData, ChangeStayOptionErrors, ChangeStayOptionResponses, ConfirmStayData, ConfirmStayErrors, ConfirmStayResponses, CreatePlaceData, CreatePlaceErrors, CreatePlaceResponses, DeletePlaceData, DeletePlaceErrors, DeletePlaceResponses, EndStayData, EndStayErrors, EndStayResponses, GetAvailablePlacesData, GetAvailablePlacesResponses, GetMyStaysData, GetMyStaysErrors, GetMyStaysResponses, GetOpenStaysData, GetOpenStaysErrors, GetOpenStaysResponses, GetPlaceData, GetPlaceErrors, GetPlaceResponses, GetPlaceStayHistoryData, GetPlaceStayHistoryErrors, GetPlaceStayHistoryResponses, GetStayData, GetStayErrors, GetStayHistoryData, GetStayHistoryErrors, GetStayHistoryResponses, GetStayResponses, GetStayStatsData, GetStayStatsErrors, GetStayStatsResponses, HoldPlaceData, HoldPlaceErrors, HoldPlaceResponses, JoinStayData, JoinStayErrors, JoinStayResponses, LeaveStayData, LeaveStayErrors, LeaveStayResponses, ListPlacesData, ListPlacesResponses, RemoveStayMemberData, RemoveStayMemberErrors, RemoveStayMemberResponses, ScanPlaceData, ScanPlaceErrors, ScanPlaceResponses, SetPlaceActiveData, SetPlaceActiveErrors, SetPlaceActiveResponses, SetPlaceStatusData, SetPlaceStatusErrors, SetPlaceStatusResponses, SetPlaceTariffData, SetPlaceTariffErrors, SetPlaceTariffResponses, StartStayData, StartStayErrors, StartStayResponses, StartWalkInData, StartWalkInErrors, StartWalkInResponses, UpdatePlaceData, UpdatePlaceErrors, UpdatePlaceResponses } from './types.gen';
+import type { AddStayMemberData, AddStayMemberErrors, AddStayMemberResponses, AssignReservationCustomerData, AssignReservationCustomerErrors, AssignReservationCustomerResponses, AssignStayCustomerData, AssignStayCustomerErrors, AssignStayCustomerResponses, CancelMyReservationData, CancelMyReservationErrors, CancelMyReservationResponses, CancelReservationData, CancelReservationErrors, CancelReservationResponses, CancelStayData, CancelStayErrors, CancelStayResponses, ChangeStayOptionData, ChangeStayOptionErrors, ChangeStayOptionResponses, CompleteReservationData, CompleteReservationErrors, CompleteReservationResponses, ConfirmReservationData, ConfirmReservationErrors, ConfirmReservationResponses, CreatePlaceData, CreatePlaceErrors, CreatePlaceResponses, DeletePlaceData, DeletePlaceErrors, DeletePlaceResponses, EndStayData, EndStayErrors, EndStayResponses, GetAvailablePlacesData, GetAvailablePlacesResponses, GetMyReservationsData, GetMyReservationsErrors, GetMyReservationsResponses, GetMyStaysData, GetMyStaysErrors, GetMyStaysResponses, GetOpenReservationsData, GetOpenReservationsErrors, GetOpenReservationsResponses, GetOpenStaysData, GetOpenStaysErrors, GetOpenStaysResponses, GetPlaceData, GetPlaceErrors, GetPlaceReservationHistoryData, GetPlaceReservationHistoryErrors, GetPlaceReservationHistoryResponses, GetPlaceResponses, GetPlaceStayHistoryData, GetPlaceStayHistoryErrors, GetPlaceStayHistoryResponses, GetReservationData, GetReservationErrors, GetReservationHistoryData, GetReservationHistoryErrors, GetReservationHistoryResponses, GetReservationResponses, GetStayData, GetStayErrors, GetStayHistoryData, GetStayHistoryErrors, GetStayHistoryResponses, GetStayResponses, GetStayStatsData, GetStayStatsErrors, GetStayStatsResponses, JoinStayData, JoinStayErrors, JoinStayResponses, LeaveStayData, LeaveStayErrors, LeaveStayResponses, ListPlacesData, ListPlacesResponses, RemoveStayMemberData, RemoveStayMemberErrors, RemoveStayMemberResponses, ReservePlaceData, ReservePlaceErrors, ReservePlaceResponses, ScanPlaceData, ScanPlaceErrors, ScanPlaceResponses, SeatReservationData, SeatReservationErrors, SeatReservationResponses, SetPlaceActiveData, SetPlaceActiveErrors, SetPlaceActiveResponses, SetPlaceReservableData, SetPlaceReservableErrors, SetPlaceReservableResponses, SetPlaceStatusData, SetPlaceStatusErrors, SetPlaceStatusResponses, SetPlaceTariffData, SetPlaceTariffErrors, SetPlaceTariffResponses, StartWalkInData, StartWalkInErrors, StartWalkInResponses, UpdatePlaceData, UpdatePlaceErrors, UpdatePlaceResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -43,7 +43,7 @@ export const createPlace = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * Places a customer can book now
+ * Places a customer can reserve for now
  */
 export const getAvailablePlaces = <ThrowOnError extends boolean = false>(options?: Options<GetAvailablePlacesData, ThrowOnError>): RequestResult<GetAvailablePlacesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAvailablePlacesResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -54,7 +54,7 @@ export const getAvailablePlaces = <ThrowOnError extends boolean = false>(options
 /**
  * Delete a place (Admin)
  *
- * Its printed QR stops working — prefer deactivating. Refused while a stay is held or running there.
+ * Its printed QR stops working — prefer deactivating. Refused while a reservation is open or a stay is running there.
  */
 export const deletePlace = <ThrowOnError extends boolean = false>(options: Options<DeletePlaceData, ThrowOnError>): RequestResult<DeletePlaceResponses, DeletePlaceErrors, ThrowOnError> => (options.client ?? client).delete<DeletePlaceResponses, DeletePlaceErrors, ThrowOnError>({ url: '/api/places/{id}', ...options });
 
@@ -84,7 +84,7 @@ export const updatePlace = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Give a place a tariff, change it, or take it away (Admin)
  *
- * A place with a tariff is timed and can be reserved; without one it only takes orders. Refused while a stay runs there.
+ * A place with a tariff is timed and becomes reservable; without one it only takes orders. Refused while a stay runs there.
  */
 export const setPlaceTariff = <ThrowOnError extends boolean = false>(options: Options<SetPlaceTariffData, ThrowOnError>): RequestResult<SetPlaceTariffResponses, SetPlaceTariffErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceTariffResponses, SetPlaceTariffErrors, ThrowOnError>({
     url: '/api/places/{id}/tariff',
@@ -96,9 +96,23 @@ export const setPlaceTariff = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
+ * Let customers reserve a place, or stop that (Admin)
+ *
+ * A plain table can take reservations without a clock; a timed place can stop taking them. Refused while a reservation is open there.
+ */
+export const setPlaceReservable = <ThrowOnError extends boolean = false>(options: Options<SetPlaceReservableData, ThrowOnError>): RequestResult<SetPlaceReservableResponses, SetPlaceReservableErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceReservableResponses, SetPlaceReservableErrors, ThrowOnError>({
+    url: '/api/places/{id}/reservable',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Activate or deactivate a place (Admin)
  *
- * Deactivating keeps the place and its printed QR but stops customers ordering to it or holding it
+ * Deactivating keeps the place and its printed QR but stops customers ordering to it or reserving it
  */
 export const setPlaceActive = <ThrowOnError extends boolean = false>(options: Options<SetPlaceActiveData, ThrowOnError>): RequestResult<SetPlaceActiveResponses, SetPlaceActiveErrors, ThrowOnError> => (options.client ?? client).put<SetPlaceActiveResponses, SetPlaceActiveErrors, ThrowOnError>({
     url: '/api/places/{id}/active',
@@ -121,21 +135,6 @@ export const scanPlace = <ThrowOnError extends boolean = false>(options: Options
     responseType: 'json',
     url: '/api/places/{id}/scan',
     ...options
-});
-
-/**
- * Hold a timed place
- *
- * The customer has 10 minutes to arrive. With startOnConfirm the clock starts the moment the till confirms.
- */
-export const holdPlace = <ThrowOnError extends boolean = false>(options: Options<HoldPlaceData, ThrowOnError>): RequestResult<HoldPlaceResponses, HoldPlaceErrors, ThrowOnError> => (options.client ?? client).post<HoldPlaceResponses, HoldPlaceErrors, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/places/{id}/hold',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
 });
 
 /**
@@ -170,6 +169,125 @@ export const getPlaceStayHistory = <ThrowOnError extends boolean = false>(option
 });
 
 /**
+ * Seated, cancelled and lapsed reservations at a place (Admin)
+ */
+export const getPlaceReservationHistory = <ThrowOnError extends boolean = false>(options: Options<GetPlaceReservationHistoryData, ThrowOnError>): RequestResult<GetPlaceReservationHistoryResponses, GetPlaceReservationHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetPlaceReservationHistoryResponses, GetPlaceReservationHistoryErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/places/{id}/reservations',
+    ...options
+});
+
+/**
+ * Reserve a place
+ *
+ * For now — the customer has 10 minutes to arrive — or, with a time, for later. On a timed place, startOnConfirm asks that the clock start the moment the till confirms. Staff reserve on a customer's behalf: the typed name is the party, and it never lapses.
+ */
+export const reservePlace = <ThrowOnError extends boolean = false>(options: Options<ReservePlaceData, ThrowOnError>): RequestResult<ReservePlaceResponses, ReservePlaceErrors, ThrowOnError> => (options.client ?? client).post<ReservePlaceResponses, ReservePlaceErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The signed-in customer's reservations, newest first
+ */
+export const getMyReservations = <ThrowOnError extends boolean = false>(options?: Options<GetMyReservationsData, ThrowOnError>): RequestResult<GetMyReservationsResponses, GetMyReservationsErrors, ThrowOnError> => (options?.client ?? client).get<GetMyReservationsResponses, GetMyReservationsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/my',
+    ...options
+});
+
+/**
+ * Open reservations of the branch, soonest first (staff)
+ */
+export const getOpenReservations = <ThrowOnError extends boolean = false>(options?: Options<GetOpenReservationsData, ThrowOnError>): RequestResult<GetOpenReservationsResponses, GetOpenReservationsErrors, ThrowOnError> => (options?.client ?? client).get<GetOpenReservationsResponses, GetOpenReservationsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/open',
+    ...options
+});
+
+/**
+ * Seated, cancelled and lapsed reservations across the branch, paged (Admin)
+ */
+export const getReservationHistory = <ThrowOnError extends boolean = false>(options?: Options<GetReservationHistoryData, ThrowOnError>): RequestResult<GetReservationHistoryResponses, GetReservationHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetReservationHistoryResponses, GetReservationHistoryErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/history',
+    ...options
+});
+
+/**
+ * Get a reservation
+ */
+export const getReservation = <ThrowOnError extends boolean = false>(options: Options<GetReservationData, ThrowOnError>): RequestResult<GetReservationResponses, GetReservationErrors, ThrowOnError> => (options.client ?? client).get<GetReservationResponses, GetReservationErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/{id}',
+    ...options
+});
+
+/**
+ * Acknowledge a reservation (staff)
+ *
+ * On a timed place where the customer asked for start-on-confirm, also seats them and starts the clock; otherwise the reservation waits, confirmed, for Seat
+ */
+export const confirmReservation = <ThrowOnError extends boolean = false>(options: Options<ConfirmReservationData, ThrowOnError>): RequestResult<ConfirmReservationResponses, ConfirmReservationErrors, ThrowOnError> => (options.client ?? client).post<ConfirmReservationResponses, ConfirmReservationErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/{id}/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The party arrived and sat down (staff)
+ *
+ * On a timed place the clock starts and the stay is returned; on a plain table the party keeps the table until the staff complete the reservation
+ */
+export const seatReservation = <ThrowOnError extends boolean = false>(options: Options<SeatReservationData, ThrowOnError>): RequestResult<SeatReservationResponses, SeatReservationErrors, ThrowOnError> => (options.client ?? client).post<SeatReservationResponses, SeatReservationErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/reservations/{id}/seat',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The party left a plain table; it is free again (staff)
+ *
+ * A party at a timed place is ended through its stay, which closes the reservation on its own
+ */
+export const completeReservation = <ThrowOnError extends boolean = false>(options: Options<CompleteReservationData, ThrowOnError>): RequestResult<CompleteReservationResponses, CompleteReservationErrors, ThrowOnError> => (options.client ?? client).post<CompleteReservationResponses, CompleteReservationErrors, ThrowOnError>({ url: '/api/reservations/{id}/complete', ...options });
+
+/**
+ * Name the customer on a reservation the till made for an unnamed party (staff)
+ */
+export const assignReservationCustomer = <ThrowOnError extends boolean = false>(options: Options<AssignReservationCustomerData, ThrowOnError>): RequestResult<AssignReservationCustomerResponses, AssignReservationCustomerErrors, ThrowOnError> => (options.client ?? client).post<AssignReservationCustomerResponses, AssignReservationCustomerErrors, ThrowOnError>({
+    url: '/api/reservations/{id}/assign-customer',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Give up a reservation before anyone sat down (staff)
+ */
+export const cancelReservation = <ThrowOnError extends boolean = false>(options: Options<CancelReservationData, ThrowOnError>): RequestResult<CancelReservationResponses, CancelReservationErrors, ThrowOnError> => (options.client ?? client).post<CancelReservationResponses, CancelReservationErrors, ThrowOnError>({ url: '/api/reservations/{id}/cancel', ...options });
+
+/**
+ * Give up your own reservation before you are seated
+ */
+export const cancelMyReservation = <ThrowOnError extends boolean = false>(options: Options<CancelMyReservationData, ThrowOnError>): RequestResult<CancelMyReservationResponses, CancelMyReservationErrors, ThrowOnError> => (options.client ?? client).post<CancelMyReservationResponses, CancelMyReservationErrors, ThrowOnError>({ url: '/api/reservations/my/{id}/cancel', ...options });
+
+/**
  * The signed-in customer's stays, newest first
  */
 export const getMyStays = <ThrowOnError extends boolean = false>(options?: Options<GetMyStaysData, ThrowOnError>): RequestResult<GetMyStaysResponses, GetMyStaysErrors, ThrowOnError> => (options?.client ?? client).get<GetMyStaysResponses, GetMyStaysErrors, ThrowOnError>({
@@ -179,7 +297,7 @@ export const getMyStays = <ThrowOnError extends boolean = false>(options?: Optio
 });
 
 /**
- * Held and running stays of the branch (staff)
+ * Running stays of the branch (staff)
  */
 export const getOpenStays = <ThrowOnError extends boolean = false>(options?: Options<GetOpenStaysData, ThrowOnError>): RequestResult<GetOpenStaysResponses, GetOpenStaysErrors, ThrowOnError> => (options?.client ?? client).get<GetOpenStaysResponses, GetOpenStaysErrors, ThrowOnError>({
     responseType: 'json',
@@ -215,38 +333,12 @@ export const getStay = <ThrowOnError extends boolean = false>(options: Options<G
 });
 
 /**
- * The customer arrived (staff)
- *
- * Starts the clock when the hold asked for start-on-confirm; otherwise the hold waits for Start
- */
-export const confirmStay = <ThrowOnError extends boolean = false>(options: Options<ConfirmStayData, ThrowOnError>): RequestResult<ConfirmStayResponses, ConfirmStayErrors, ThrowOnError> => (options.client ?? client).post<ConfirmStayResponses, ConfirmStayErrors, ThrowOnError>({
-    url: '/api/stays/{id}/confirm',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Start the clock on a held stay (staff)
- */
-export const startStay = <ThrowOnError extends boolean = false>(options: Options<StartStayData, ThrowOnError>): RequestResult<StartStayResponses, StartStayErrors, ThrowOnError> => (options.client ?? client).post<StartStayResponses, StartStayErrors, ThrowOnError>({
-    url: '/api/stays/{id}/start',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
  * Stop the clock and settle the cost (staff)
  */
 export const endStay = <ThrowOnError extends boolean = false>(options: Options<EndStayData, ThrowOnError>): RequestResult<EndStayResponses, EndStayErrors, ThrowOnError> => (options.client ?? client).post<EndStayResponses, EndStayErrors, ThrowOnError>({ url: '/api/stays/{id}/end', ...options });
 
 /**
- * Give up a hold or cut a running stay short (staff)
+ * Cut a running stay short; nothing is billed (staff)
  */
 export const cancelStay = <ThrowOnError extends boolean = false>(options: Options<CancelStayData, ThrowOnError>): RequestResult<CancelStayResponses, CancelStayErrors, ThrowOnError> => (options.client ?? client).post<CancelStayResponses, CancelStayErrors, ThrowOnError>({ url: '/api/stays/{id}/cancel', ...options });
 
@@ -297,8 +389,3 @@ export const removeStayMember = <ThrowOnError extends boolean = false>(options: 
  * Leave a stay you joined (not as its owner)
  */
 export const leaveStay = <ThrowOnError extends boolean = false>(options: Options<LeaveStayData, ThrowOnError>): RequestResult<LeaveStayResponses, LeaveStayErrors, ThrowOnError> => (options.client ?? client).post<LeaveStayResponses, LeaveStayErrors, ThrowOnError>({ url: '/api/stays/{id}/leave', ...options });
-
-/**
- * Give up your own hold before it starts
- */
-export const cancelMyHold = <ThrowOnError extends boolean = false>(options: Options<CancelMyHoldData, ThrowOnError>): RequestResult<CancelMyHoldResponses, CancelMyHoldErrors, ThrowOnError> => (options.client ?? client).post<CancelMyHoldResponses, CancelMyHoldErrors, ThrowOnError>({ url: '/api/stays/my/{id}/cancel', ...options });

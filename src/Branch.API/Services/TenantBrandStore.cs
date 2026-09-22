@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Options;
 using Ninja.Branch.API.Model;
 using SkiaSharp;
@@ -21,7 +22,7 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
 {
     public const string LogoFile = "logo.png";
 
-    /// <summary>File name → (side in px, share of the side the logo fills, opaque background).</summary>
+    /// <summary>File name → (side in px, share of the side the logo fills, whether white is painted behind it).</summary>
     public static readonly IReadOnlyDictionary<string, IconSpec> Icons = new Dictionary<string, IconSpec>
     {
         // Regular launcher icons: a bit of air so rounded masks keep the whole logo
@@ -29,12 +30,17 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
         ["icon-512.png"] = new(512, 0.76f),
         // Maskable: Android may crop to a circle of 80% of the side; keep the logo inside it
         ["maskable-512.png"] = new(512, 0.68f),
-        // iOS home screen and the browser tab
+        // iOS home screen: iOS paints black behind anything transparent, so white goes first
         ["apple-touch-icon.png"] = new(180, 0.76f),
-        ["favicon.png"] = new(48, 0.84f),
+        // The browser tab: the mark alone, on whatever the tab bar is
+        ["favicon.png"] = new(48, 0.84f, Opaque: false),
     };
 
-    public sealed record IconSpec(int Size, float Fill);
+    public sealed record IconSpec(int Size, float Fill, bool Opaque = true);
+
+    /// <summary>Bumped when the icons are drawn differently; a stack whose icons an older renderer cut cuts them again at boot.</summary>
+    public const int IconRenderer = 2;
+    private const string IconRendererFile = "icons.renderer";
 
     private const int MaxLogoSide = 1024;
     private const int MaxWordmarkSide = 1600;
@@ -77,18 +83,42 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
             await File.WriteAllBytesAsync(PathOfSlot(slot), EncodePng(image), ct);
 
             if (slot == TenantImageSlots.Logo)
-            {
-                foreach (var (name, spec) in Icons)
-                    await File.WriteAllBytesAsync(PathOf(name), RenderIcon(image, spec, SKColors.White), ct);
-            }
+                await CutIconsAsync(image, ct);
 
             return (image.Width, image.Height, null);
         }
     }
 
+    /// <summary>
+    /// The icons cut again from the stored mark when an older renderer cut
+    /// them (the first painted white behind the favicon). Nothing without a
+    /// mark, nothing when they are current. Returns whether they were.
+    /// </summary>
+    public async Task<bool> RecutStaleIconsAsync(CancellationToken ct)
+    {
+        if (!Exists(LogoFile) || RendererOnDisk() == IconRenderer) return false;
+        using var logo = SKBitmap.Decode(PathOf(LogoFile));
+        if (logo is null) return false;
+        await CutIconsAsync(logo, ct);
+        return true;
+    }
+
+    private int RendererOnDisk()
+    {
+        var path = PathOf(IconRendererFile);
+        return File.Exists(path) && int.TryParse(File.ReadAllText(path), out var version) ? version : 1;
+    }
+
+    private async Task CutIconsAsync(SKBitmap logo, CancellationToken ct)
+    {
+        foreach (var (name, spec) in Icons)
+            await File.WriteAllBytesAsync(PathOf(name), RenderIcon(logo, spec), ct);
+        await File.WriteAllTextAsync(PathOf(IconRendererFile), IconRenderer.ToString(CultureInfo.InvariantCulture), ct);
+    }
+
     public void Delete(string slot)
     {
-        var files = slot == TenantImageSlots.Logo ? Icons.Keys.Append(LogoFile) : [FileOf(slot)];
+        string[] files = slot == TenantImageSlots.Logo ? [.. Icons.Keys, LogoFile, IconRendererFile] : [FileOf(slot)];
         foreach (var name in files)
         {
             var path = PathOf(name);
@@ -130,11 +160,11 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
         return Snapshot(surface);
     }
 
-    private static byte[] RenderIcon(SKBitmap logo, IconSpec spec, SKColor background)
+    private static byte[] RenderIcon(SKBitmap logo, IconSpec spec)
     {
         using var surface = SKSurface.Create(new SKImageInfo(spec.Size, spec.Size, SKColorType.Rgba8888, SKAlphaType.Premul));
         var canvas = surface.Canvas;
-        canvas.Clear(background);
+        canvas.Clear(spec.Opaque ? SKColors.White : SKColors.Transparent);
 
         var box = spec.Size * spec.Fill;
         var scale = Math.Min(box / logo.Width, box / logo.Height);
