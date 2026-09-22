@@ -4471,7 +4471,8 @@
           "upgradeBackupId",
           "update",
           "isDrill",
-          "jobs"
+          "jobs",
+          "services"
         ],
         "type": "object",
         "properties": {
@@ -4614,6 +4615,13 @@
             "items": {
               "$ref": "#/components/schemas/JobDto"
             }
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The services the plan stamps (catalog, ordering, …): a module's own service only with its module"
           }
         }
       },

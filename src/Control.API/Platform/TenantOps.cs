@@ -63,7 +63,8 @@ public static class ComposePs
 /// <summary>Runs docker compose against one tenant's project and probes its services through the gateway.</summary>
 public sealed class TenantOps(IShell shell, IStackProxy proxy)
 {
-    public static readonly string[] LogSources = [.. TenantNaming.Services, "gateway"];
+    /// <summary>What has a log on this stack: the services the plan stamps, and the gateway.</summary>
+    public static string[] LogSources(Tenant tenant) => [.. PlanCatalog.Services(tenant), "gateway"];
 
     public async Task<IReadOnlyList<ContainerInfo>> ContainersAsync(Tenant tenant, CancellationToken ct)
     {

@@ -492,7 +492,8 @@ public record TenantDetail(
     string? UpgradeBackupId,
     TenantUpdate? Update,
     bool IsDrill,
-    IReadOnlyList<JobDto> Jobs)
+    IReadOnlyList<JobDto> Jobs,
+    [property: Description("The services the plan stamps (catalog, ordering, …): a module's own service only with its module")] IReadOnlyList<string> Services)
 {
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null)
         => new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, TenantLocaleDto.From(t), t.PrimaryColor, t.CustomerDomain, TenantHostsDto.From(TenantHosts.For(t, p)), TenantSummary.LogoUrlOf(t, TenantHosts.For(t, p)), t.OwnerEmail, t.OwnerInitialPassword,
@@ -507,7 +508,8 @@ public record TenantDetail(
             t.UpgradeBackupId,
             update,
             t.IsDrill,
-            jobs ?? []);
+            jobs ?? [],
+            PlanCatalog.Services(t));
 }
 
 /// <summary>Where the café stands with its subscription, on the tenant itself; the Subscription tab has the rest.</summary>

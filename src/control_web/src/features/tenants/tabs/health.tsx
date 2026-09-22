@@ -34,23 +34,6 @@ import { useT } from '@/lib/i18n'
 import { isStamped, tenantStatus } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 
-// The stack's twelve services and its gateway, as Control names them
-const SERVICES = [
-  'catalog',
-  'ordering',
-  'spaces',
-  'sales',
-  'inventory',
-  'payroll',
-  'finance',
-  'identity',
-  'loyalty',
-  'notification',
-  'accounts',
-  'branch',
-  'gateway',
-] as const
-
 const ALL = '__all__'
 const TAILS = [100, 500, 2000] as const
 
@@ -180,14 +163,16 @@ export function HealthTab({ tenant }: { tenant: TenantDetail }) {
         </Table>
       </div>
 
-      <Logs slug={slug} />
+      <Logs slug={slug} sources={[...tenant.services, 'gateway']} />
     </div>
   )
 }
 
-function Logs({ slug }: { slug: string }) {
+/** The services the plan stamps and the gateway have a log; a plan change can take the chosen one away, which reads as every service again. */
+function Logs({ slug, sources }: { slug: string; sources: string[] }) {
   const t = useT()
-  const [service, setService] = useState<string>(ALL)
+  const [chosen, setService] = useState<string>(ALL)
+  const service = chosen !== ALL && !sources.includes(chosen) ? ALL : chosen
   const [tail, setTail] = useState<number>(500)
   const [autoRefresh, setAutoRefresh] = useState(false)
   const viewport = useRef<HTMLDivElement>(null)
@@ -218,7 +203,7 @@ function Logs({ slug }: { slug: string }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>{t('allServices')}</SelectItem>
-            {SERVICES.map((s) => (
+            {sources.map((s) => (
               <SelectItem key={s} value={s}>
                 {s}
               </SelectItem>

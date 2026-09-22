@@ -39,10 +39,12 @@ public static partial class ControlApi
         [Description("Lines from the end, 10 to 2000")] int tail = 200,
         CancellationToken ct = default)
     {
-        if (service is not null && !TenantOps.LogSources.Contains(service))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"service must be one of {string.Join(", ", TenantOps.LogSources)}." });
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
+        // Only what the plan stamps has a log
+        var sources = TenantOps.LogSources(tenant);
+        if (service is not null && !sources.Contains(service))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"service must be one of {string.Join(", ", sources)}." });
         if (!Stamped(tenant)) return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} has no stack: it is {tenant.Status}." });
         try
         {

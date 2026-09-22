@@ -373,6 +373,10 @@ export type TenantDetail = {
     update: null | TenantUpdate;
     isDrill: boolean;
     jobs: Array<JobDto>;
+    /**
+     * The services the plan stamps (catalog, ordering, …): a module's own service only with its module
+     */
+    services: Array<string>;
 };
 
 export type TenantHostsDto = {
