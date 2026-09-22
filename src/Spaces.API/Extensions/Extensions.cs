@@ -57,6 +57,7 @@ public static class Extensions
         builder.Services.AddScoped<IPlaceQueries, PlaceQueries>();
         builder.Services.AddScoped<IReservationQueries, ReservationQueries>();
         builder.Services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
+        builder.Services.AddScoped<ITenantFeaturesQueries, TenantFeaturesQueries>();
 
         builder.Services.AddHostedService<ReservationExpiryService>();
 
@@ -64,6 +65,9 @@ public static class Extensions
             // Branch.API's flags, projected locally: a branch with reservations
             // paused refuses customer reservations without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
+            // The café's switches, projected locally: a place is only given a rate or opened to
+            // bookings while the module is on, whatever the request says
+            .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             // Sales' receipt, projected onto the stay it covered: the
             // customer sees the cost as paid without a call to Sales
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
@@ -82,6 +86,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
 [JsonSerializable(typeof(SessionCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(SessionPaidIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext

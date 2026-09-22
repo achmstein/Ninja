@@ -8,6 +8,7 @@ import {
   setPlaceTariffMutation,
   updatePlaceMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
+import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -156,6 +157,7 @@ export function PlaceDialog({
 }: PlaceDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
+  const features = useFeatures()
   const isEditing = place !== null
 
   const [kind, setKind] = useState<number>(() =>
@@ -167,13 +169,19 @@ export function PlaceDialog({
   const [description, setDescription] = useState<LocalizedValue>(() =>
     toLocalizedValue(place?.description)
   )
+  // With the clock or the bookings off (not in the plan, or switched off on
+  // the brand page) their switches are not shown: a new place starts without
+  // them, an existing one keeps what it has, since nothing about the rate or
+  // the bookings is sent unless the owner changed it here
   const [timed, setTimed] = useState(() =>
-    place ? Boolean(place.isTimed) : kind === PLACE_ROOM
+    place ? Boolean(place.isTimed) : kind === PLACE_ROOM && features.timeBilling
   )
   // Whether customers can book it: on by default with a clock, the
   // owner's call without one (a restaurant books tables, a café does not)
   const [reservable, setReservable] = useState(() =>
-    place ? Boolean(place.reservable) : kind === PLACE_ROOM
+    place
+      ? Boolean(place.reservable)
+      : kind === PLACE_ROOM && features.reservations
   )
   const [reservableTouched, setReservableTouched] = useState(false)
   const [options, setOptions] = useState<OptionDraft[]>(() =>
@@ -223,13 +231,13 @@ export function PlaceDialog({
     if (options.every((o) => o.rate === '')) {
       setOptions(defaultOptions(next, places))
     }
-    if (!timed && next === PLACE_ROOM) changeTimed(true)
+    if (!timed && next === PLACE_ROOM && features.timeBilling) changeTimed(true)
   }
 
   // A clock brings bookings with it unless the owner already decided
   const changeTimed = (next: boolean) => {
     setTimed(next)
-    if (next && !reservableTouched) setReservable(true)
+    if (next && !reservableTouched && features.reservations) setReservable(true)
   }
 
   const updateOption = (key: number, patch: Partial<OptionDraft>) =>
@@ -281,7 +289,11 @@ export function PlaceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-lg'>
+      {/* A column capped like every other dialog, so the fields scroll only
+          once the whole thing is taller than the window, with Save pinned
+          under them: a room's rates used to trip a fixed 65svh cap long
+          before that */}
+      <DialogContent className='flex max-h-[90svh] flex-col sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             {isEditing && (
@@ -294,10 +306,8 @@ export function PlaceDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {/* The rates list grows past a short laptop window; scroll the
-            fields rather than pushing Save off screen */}
         <LocalizedFields>
-          <div className='-mx-1 max-h-[65svh] space-y-5 overflow-y-auto px-1'>
+          <div className='-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto px-1'>
             {/* The kind first: it decides what the rest of the form is */}
             <div className='space-y-4'>
               {!isEditing && (
@@ -348,142 +358,146 @@ export function PlaceDialog({
             </div>
 
             {/* Time: off means the place only takes orders */}
-            <div className='rounded-lg border'>
-              <div className='flex items-center justify-between gap-4 px-3 py-2.5'>
-                <Label htmlFor='place-timed' className='cursor-pointer'>
-                  {t('chargedByTheHour')}
-                </Label>
-                <Switch
-                  id='place-timed'
-                  checked={timed}
-                  onCheckedChange={changeTimed}
-                />
-              </div>
+            {features.timeBilling && (
+              <div className='rounded-lg border'>
+                <div className='flex items-center justify-between gap-4 px-3 py-2.5'>
+                  <Label htmlFor='place-timed' className='cursor-pointer'>
+                    {t('chargedByTheHour')}
+                  </Label>
+                  <Switch
+                    id='place-timed'
+                    checked={timed}
+                    onCheckedChange={changeTimed}
+                  />
+                </div>
 
-              {timed && (
-                <div className='space-y-4 border-t px-3 py-3'>
-                  <div className='space-y-2'>
-                    {/* Column heads once, not a label per cell */}
-                    <div className='text-muted-foreground grid grid-cols-[1fr_8rem_2rem] gap-2 px-0.5 text-xs'>
-                      <span>{t('rateOptions')}</span>
-                      <span>{t('hourlyRate')}</span>
-                      <span />
+                {timed && (
+                  <div className='space-y-4 border-t px-3 py-3'>
+                    <div className='space-y-2'>
+                      {/* Column heads once, not a label per cell */}
+                      <div className='text-muted-foreground grid grid-cols-[1fr_8rem_2rem] gap-2 px-0.5 text-xs'>
+                        <span>{t('rateOptions')}</span>
+                        <span>{t('hourlyRate')}</span>
+                        <span />
+                      </div>
+
+                      {options.map((option) => (
+                        <div
+                          key={option.key}
+                          className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'
+                        >
+                          <LocalizedInput
+                            id={`option-name-${option.key}`}
+                            ariaLabel={t('rateOptions')}
+                            value={option.name}
+                            onChange={(value) =>
+                              updateOption(option.key, { name: value })
+                            }
+                            compact
+                          />
+                          <InputGroup className='h-8'>
+                            <InputGroupInput
+                              id={`option-rate-${option.key}`}
+                              type='number'
+                              inputMode='decimal'
+                              min={0}
+                              step='0.01'
+                              value={option.rate}
+                              aria-label={t('hourlyRate')}
+                              onChange={(e) =>
+                                updateOption(option.key, {
+                                  rate: e.target.value,
+                                })
+                              }
+                              dir='ltr'
+                            />
+                            <InputGroupAddon align='inline-end'>
+                              <InputGroupText>{t('perHour')}</InputGroupText>
+                            </InputGroupAddon>
+                          </InputGroup>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                            aria-label={t('remove')}
+                            disabled={options.length <= 1}
+                            onClick={() =>
+                              setOptions((list) =>
+                                list.filter((o) => o.key !== option.key)
+                              )
+                            }
+                          >
+                            <X className='h-4 w-4' />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        className='-ms-2'
+                        onClick={() =>
+                          setOptions((list) => [
+                            ...list,
+                            draft('', { en: '', ar: '' }, undefined),
+                          ])
+                        }
+                      >
+                        <Plus className='me-1 h-4 w-4' />
+                        {t('addRateOption')}
+                      </Button>
                     </div>
 
-                    {options.map((option) => (
-                      <div
-                        key={option.key}
-                        className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'
+                    <div className='flex items-center justify-between gap-4'>
+                      <Label>{t('roundTimeTo')}</Label>
+                      <ToggleGroup
+                        type='single'
+                        variant='outline'
+                        size='sm'
+                        value={String(rounding)}
+                        onValueChange={(value) =>
+                          value && setRounding(Number(value))
+                        }
                       >
-                        <LocalizedInput
-                          id={`option-name-${option.key}`}
-                          ariaLabel={t('rateOptions')}
-                          value={option.name}
-                          onChange={(value) =>
-                            updateOption(option.key, { name: value })
-                          }
-                          compact
-                        />
-                        <InputGroup className='h-8'>
-                          <InputGroupInput
-                            id={`option-rate-${option.key}`}
-                            type='number'
-                            inputMode='decimal'
-                            min={0}
-                            step='0.01'
-                            value={option.rate}
-                            aria-label={t('hourlyRate')}
-                            onChange={(e) =>
-                              updateOption(option.key, {
-                                rate: e.target.value,
-                              })
-                            }
-                            dir='ltr'
-                          />
-                          <InputGroupAddon align='inline-end'>
-                            <InputGroupText>{t('perHour')}</InputGroupText>
-                          </InputGroupAddon>
-                        </InputGroup>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='icon'
-                          className='size-8'
-                          aria-label={t('remove')}
-                          disabled={options.length <= 1}
-                          onClick={() =>
-                            setOptions((list) =>
-                              list.filter((o) => o.key !== option.key)
-                            )
-                          }
-                        >
-                          <X className='h-4 w-4' />
-                        </Button>
-                      </div>
-                    ))}
-
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      className='-ms-2'
-                      onClick={() =>
-                        setOptions((list) => [
-                          ...list,
-                          draft('', { en: '', ar: '' }, undefined),
-                        ])
-                      }
-                    >
-                      <Plus className='me-1 h-4 w-4' />
-                      {t('addRateOption')}
-                    </Button>
+                        {roundingChoices.map((minutes) => (
+                          <ToggleGroupItem
+                            key={minutes}
+                            value={String(minutes)}
+                            className='px-2.5 tabular-nums'
+                          >
+                            {t('minutesShort', { count: minutes })}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </div>
                   </div>
-
-                  <div className='flex items-center justify-between gap-4'>
-                    <Label>{t('roundTimeTo')}</Label>
-                    <ToggleGroup
-                      type='single'
-                      variant='outline'
-                      size='sm'
-                      value={String(rounding)}
-                      onValueChange={(value) =>
-                        value && setRounding(Number(value))
-                      }
-                    >
-                      {roundingChoices.map((minutes) => (
-                        <ToggleGroupItem
-                          key={minutes}
-                          value={String(minutes)}
-                          className='px-2.5 tabular-nums'
-                        >
-                          {t('minutesShort', { count: minutes })}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Bookings: with a clock or without one */}
-            <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
-              <div className='min-w-0'>
-                <Label htmlFor='place-reservable' className='cursor-pointer'>
-                  {t('takesReservations')}
-                </Label>
-                <p className='text-muted-foreground text-xs'>
-                  {t('takesReservationsHint')}
-                </p>
+            {features.reservations && (
+              <div className='flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5'>
+                <div className='min-w-0'>
+                  <Label htmlFor='place-reservable' className='cursor-pointer'>
+                    {t('takesReservations')}
+                  </Label>
+                  <p className='text-muted-foreground text-xs'>
+                    {t('takesReservationsHint')}
+                  </p>
+                </div>
+                <Switch
+                  id='place-reservable'
+                  checked={reservable}
+                  onCheckedChange={(next) => {
+                    setReservableTouched(true)
+                    setReservable(next)
+                  }}
+                />
               </div>
-              <Switch
-                id='place-reservable'
-                checked={reservable}
-                onCheckedChange={(next) => {
-                  setReservableTouched(true)
-                  setReservable(next)
-                }}
-              />
-            </div>
+            )}
           </div>
         </LocalizedFields>
 

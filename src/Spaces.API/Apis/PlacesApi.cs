@@ -23,6 +23,10 @@ namespace Ninja.Spaces.API.Apis;
 /// </summary>
 public static class PlacesApi
 {
+    /// <summary>Why a place cannot be given a rate or opened to bookings: the switch is off, by the plan or by the owner.</summary>
+    internal const string TimeBillingOff = "Time billing is off for this café: a place cannot be charged by the hour.";
+    internal const string ReservationsOff = "Reservations are off for this café: a place cannot take bookings.";
+
     public static IEndpointRouteBuilder MapPlacesApi(this IEndpointRouteBuilder app)
     {
         var places = app.MapGroup("api/places").WithTags("Places");
@@ -108,13 +112,20 @@ public static class PlacesApi
 
     public static async Task<Results<Created<int>, BadRequest<ProblemDetails>>> CreatePlace(
         [FromServices] IPlaceRepository places,
+        [FromServices] ITenantFeaturesQueries features,
         HttpContext httpContext,
         CreatePlaceRequest request)
     {
         var branchId = httpContext.GetRequiredBranchId();
         try
         {
-            var place = new Place(request.Kind, request.Name, branchId, request.Tariff?.ToTariff(), request.Description, request.Reservable);
+            // The gateway blocks the clock and the bookings themselves when they are not in the plan; what a
+            // place is created with is decided here, so a switch the form hides is not one a request can use
+            var on = await features.GetAsync();
+            if (request.Tariff is not null && !on.TimeBilling) throw new SpacesDomainException(TimeBillingOff);
+            if (request.Reservable == true && !on.Reservations) throw new SpacesDomainException(ReservationsOff);
+            var reservable = request.Reservable ?? (on.Reservations ? null : false);
+            var place = new Place(request.Kind, request.Name, branchId, request.Tariff?.ToTariff(), request.Description, reservable);
             places.Add(place);
             await places.UnitOfWork.SaveEntitiesAsync();
             return TypedResults.Created($"/api/places/{place.Id}", place.Id);
@@ -148,6 +159,7 @@ public static class PlacesApi
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> SetPlaceTariff(
         [FromServices] IPlaceRepository places,
         [FromServices] IStayRepository stays,
+        [FromServices] ITenantFeaturesQueries features,
         [Description("The place ID")] int id,
         SetPlaceTariffRequest request)
     {
@@ -155,6 +167,9 @@ public static class PlacesApi
         if (place is null) return TypedResults.NotFound();
         try
         {
+            // Taking a rate off is always allowed; putting one on needs the clock
+            if (request.Tariff is not null && !(await features.GetAsync()).TimeBilling)
+                throw new SpacesDomainException(TimeBillingOff);
             if (request.Tariff is null && await stays.HasOpenStayAsync(id))
                 throw new SpacesDomainException("End or cancel the stay at this place before removing its tariff");
             place.SetTariff(request.Tariff?.ToTariff());
@@ -171,6 +186,7 @@ public static class PlacesApi
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>>> SetPlaceReservable(
         [FromServices] IPlaceRepository places,
         [FromServices] IReservationRepository reservations,
+        [FromServices] ITenantFeaturesQueries features,
         [Description("The place ID")] int id,
         SetPlaceReservableRequest request)
     {
@@ -178,6 +194,9 @@ public static class PlacesApi
         if (place is null) return TypedResults.NotFound();
         try
         {
+            // Closing a place to bookings is always allowed; opening one needs bookings on
+            if (request.Reservable && !(await features.GetAsync()).Reservations)
+                throw new SpacesDomainException(ReservationsOff);
             if (!request.Reservable && await reservations.HasOpenAsync(id))
                 throw new SpacesDomainException("Seat or cancel the reservations at this place before closing it to reservations");
             place.SetReservable(request.Reservable);

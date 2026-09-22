@@ -17,6 +17,7 @@ public class SpacesContext : DbContext
     public DbSet<StayMember> StayMembers { get; set; }
     public DbSet<StaySegment> StaySegments { get; set; }
     public DbSet<BranchSettings> BranchSettings { get; set; }
+    public DbSet<TenantFeatures> TenantFeatures { get; set; }
 
     private IDbContextTransaction? _currentTransaction;
 
@@ -38,6 +39,7 @@ public class SpacesContext : DbContext
         modelBuilder.ApplyConfiguration(new StayMemberEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new StaySegmentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

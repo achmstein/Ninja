@@ -2,8 +2,10 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Ninja.Branch.API.IntegrationEvents;
 using Ninja.Branch.API.Model;
 using Ninja.Branch.API.Services;
+using Ninja.EventBus.Abstractions;
 
 namespace Ninja.Branch.API.Apis;
 
@@ -75,6 +77,7 @@ public static partial class TenantApi
     public static async Task<Results<Ok<TenantResponse>, BadRequest<ProblemDetails>>> UpdateTenant(
         BranchContext context,
         IConfiguration configuration,
+        IEventBus eventBus,
         UpdateTenantRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name.En))
@@ -113,16 +116,19 @@ public static partial class TenantApi
         tenant.ApplyFeatures(request.Features);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
+        // The services that own a module keep their own copy of the switches
+        await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
 
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
-    public static async Task<Ok<TenantResponse>> SetEntitlements(BranchContext context, IConfiguration configuration, TenantFeatures request)
+    public static async Task<Ok<TenantResponse>> SetEntitlements(BranchContext context, IConfiguration configuration, IEventBus eventBus, TenantFeatures request)
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == Tenant.SingletonId);
         tenant.ApplyEntitlements(request);
         tenant.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync();
+        await eventBus.PublishAsync(TenantFeaturesChangedIntegrationEvent.From(tenant.Features));
         return TypedResults.Ok(TenantResponse.From(tenant, configuration));
     }
 
