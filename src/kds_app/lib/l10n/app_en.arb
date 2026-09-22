@@ -77,5 +77,7 @@
   "startKiosk": "Start kiosk",
   "stopKiosk": "Stop kiosk",
   "noBranchTitle": "No branch assigned",
-  "noBranchDescription": "Ask the owner to assign a branch."
+  "noBranchDescription": "Ask the owner to assign a branch.",
+  "kdsNotInPlan": "The kitchen display is not in your plan",
+  "kdsNotInPlanNote": "Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription."
 }

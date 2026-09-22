@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -59,6 +60,9 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The kitchen display is a module of the plan: without it there is nothing to show but that
+    if (!ref.watch(featuresProvider).kds) return const _NotInPlan();
+
     final async = ref.watch(kitchenOrdersProvider);
     final orders = async.value ?? const <KitchenOrder>[];
     final isLoading = async.isLoading && async.value == null;
@@ -80,6 +84,36 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
             onReady: () => _markReady(order),
           ),
       ],
+    );
+  }
+}
+
+/// The module is off: the board says so instead of asking for orders it may not show
+class _NotInPlan extends StatelessWidget {
+  const _NotInPlan();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.colors.mutedForeground;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(FIcons.lock, size: 48, color: muted.withValues(alpha: 0.6)),
+            const SizedBox(height: 12),
+            Text(l10n.kdsNotInPlan, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Text(l10n.kdsNotInPlanNote, style: theme.typography.sm.copyWith(color: muted), textAlign: TextAlign.center),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

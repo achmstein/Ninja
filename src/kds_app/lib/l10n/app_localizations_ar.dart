@@ -199,4 +199,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noBranchDescription => 'اطلب من المالك يعينك على فرع.';
+
+  @override
+  String get kdsNotInPlan => 'شاشة المطبخ مش في باقتك';
+
+  @override
+  String get kdsNotInPlanNote =>
+      'الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك.';
 }

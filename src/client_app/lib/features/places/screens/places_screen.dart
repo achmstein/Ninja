@@ -12,6 +12,7 @@ import '../../../core/widgets/profile_gate.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';
@@ -272,7 +273,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
             children: [
               PlaceListItem(
                 room: room,
-                canReserve: reservedSession == null && (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
+                canReserve: reservedSession == null &&
+                    ref.watch(featuresProvider).reservations &&
+                    (ref.read(branchProvider).selectedBranch?.isReservationsEnabled ?? true),
               ),
               if (currentIndex < rooms.length - 1)
                 Divider(

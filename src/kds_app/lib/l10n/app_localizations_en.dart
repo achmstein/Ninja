@@ -201,4 +201,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noBranchDescription => 'Ask the owner to assign a branch.';
+
+  @override
+  String get kdsNotInPlan => 'The kitchen display is not in your plan';
+
+  @override
+  String get kdsNotInPlanNote =>
+      'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.';
 }

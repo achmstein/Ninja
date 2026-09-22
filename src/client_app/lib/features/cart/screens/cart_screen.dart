@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -40,8 +41,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       // Reset checkout state to clear stale loading/error from previous checkout
       ref.read(checkoutProvider.notifier).reset();
       ref.read(loyaltyRedemptionProvider.notifier).reset();
-      // Refresh loyalty balance so points earned from confirmed orders are up to date
-      ref.read(loyaltyProvider.notifier).loadLoyaltyInfo();
+      // Refresh loyalty balance so points earned from confirmed orders are up to date; nothing to ask without the module
+      if (ref.read(featuresProvider).loyalty) ref.read(loyaltyProvider.notifier).loadLoyaltyInfo();
     });
   }
 
@@ -261,9 +262,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     _buildPromoSection(cart.totalPrice, colors),
                                     const SizedBox(height: 16),
 
-                                    // Points redemption
-                                    _buildPointsRedemption(cart.totalPrice, colors),
-                                    const SizedBox(height: 16),
+                                    // Points redemption, while the café runs loyalty
+                                    if (ref.watch(featuresProvider).loyalty) ...[
+                                      _buildPointsRedemption(cart.totalPrice, colors),
+                                      const SizedBox(height: 16),
+                                    ],
 
                                     // Total
                                     _buildTotalSection(cart.totalPrice, colors),

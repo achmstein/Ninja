@@ -77,5 +77,7 @@
   "startKiosk": "شغّل الكشك",
   "stopKiosk": "اقفل الكشك",
   "noBranchTitle": "مفيش فرع متعين ليك",
-  "noBranchDescription": "اطلب من المالك يعينك على فرع."
+  "noBranchDescription": "اطلب من المالك يعينك على فرع.",
+  "kdsNotInPlan": "شاشة المطبخ مش في باقتك",
+  "kdsNotInPlanNote": "الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك."
 }

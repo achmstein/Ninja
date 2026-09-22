@@ -463,6 +463,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask the owner to assign a branch.'**
   String get noBranchDescription;
+
+  /// No description provided for @kdsNotInPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'The kitchen display is not in your plan'**
+  String get kdsNotInPlan;
+
+  /// No description provided for @kdsNotInPlanNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.'**
+  String get kdsNotInPlanNote;
 }
 
 class _AppLocalizationsDelegate

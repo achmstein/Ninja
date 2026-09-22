@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -191,7 +192,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
   void _showScanResult(PlaceScanResult result) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!result.canReserve || result.displayStatus != PlaceStatus.available) {
+    if (!result.canReserve || !ref.read(featuresProvider).reservations || result.displayStatus != PlaceStatus.available) {
       showFToast(
         context: context,
         title: Text(l10n.roomNotAvailable),

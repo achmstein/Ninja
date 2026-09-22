@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';
 import '../../../core/router/app_router.dart';
@@ -185,7 +186,8 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       );
     }
 
-    final available = scan.canReserve && scan.displayStatus == PlaceStatus.available;
+    // The stack says whether this place may be reserved; the café's bookings switch says whether any may
+    final available = scan.canReserve && ref.watch(featuresProvider).reservations && scan.displayStatus == PlaceStatus.available;
 
     return Scaffold(
       appBar: AppBar(
