@@ -1,4 +1,4 @@
-import { ChefHat, Copy, Download, ReceiptText, Smartphone } from 'lucide-react'
+import { Copy, Download, Smartphone } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
@@ -30,17 +30,18 @@ export function AppsPage() {
     toast.success(t('appsAddressCopied'))
   }
 
+  // Each app's launcher icon (the platform's N mark on its own tile), the one a tablet shows once installed
   const apps = [
     {
       key: 'pos' as const,
-      icon: ReceiptText,
+      icon: '/apps/pos.svg',
       title: t('appsPosTitle'),
       about: t('appsPosAbout'),
       file: 'ninja-pos.apk',
     },
     {
       key: 'kds' as const,
-      icon: ChefHat,
+      icon: '/apps/kds.svg',
       title: t('appsKdsTitle'),
       about: t('appsKdsAbout'),
       file: 'ninja-kds.apk',
@@ -58,9 +59,7 @@ export function AppsPage() {
             <Card key={app.key}>
               <CardContent className='flex h-full flex-col gap-3 pt-6'>
                 <div className='flex items-center gap-3'>
-                  <div className='bg-muted grid size-10 place-items-center rounded-lg'>
-                    <app.icon className='size-5' />
-                  </div>
+                  <img src={app.icon} alt='' className='size-10 rounded-lg' />
                   <div className='text-base font-semibold'>{app.title}</div>
                 </div>
                 <p className='text-muted-foreground text-sm'>{app.about}</p>
