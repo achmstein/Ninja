@@ -82,7 +82,7 @@ function ProfilePage() {
       path: { userId },
       query: { 'api-version': API_VERSION },
     }),
-    enabled: auth.isAuthenticated && !!userId,
+    enabled: features.loyalty && auth.isAuthenticated && !!userId,
     retry: false,
   })
   const loyalty = loyaltyQuery.isError ? null : loyaltyQuery.data
@@ -90,7 +90,7 @@ function ProfilePage() {
 
   const houseAccountQuery = useQuery({
     ...getMyAccountOptions(),
-    enabled: auth.isAuthenticated,
+    enabled: features.tabs && auth.isAuthenticated,
     retry: false,
   })
   const houseBalance = houseAccountQuery.isError

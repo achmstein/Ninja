@@ -52,6 +52,7 @@ import { PlaceIcon, placeKindName } from '@/lib/places'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { StillHereCard } from '@/components/places/still-here'
+import { useFeatures } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/cart')({
@@ -77,6 +78,8 @@ function CartPage() {
   const localized = useLocalized()
   const price = usePrice()
   const auth = useAuth()
+  // Points are loyalty's: without the module there is no balance to ask for and nothing to redeem
+  const { loyalty: loyaltyOn } = useFeatures()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   // Room-beats-table lives in useOrderDestination so the header chip and this
@@ -116,10 +119,10 @@ function CartPage() {
       path: { userId },
       query: { 'api-version': API_VERSION },
     }),
-    enabled: auth.isAuthenticated && !!userId && lines.length > 0,
+    enabled: loyaltyOn && auth.isAuthenticated && !!userId && lines.length > 0,
     retry: false,
   })
-  const pointsBalance = Number(loyaltyAccount?.pointsBalance ?? 0)
+  const pointsBalance = loyaltyOn ? Number(loyaltyAccount?.pointsBalance ?? 0) : 0
 
   const subtotal = cartTotal(lines)
   // Mobile parity: at most 100 points per EGP of the order total
@@ -565,7 +568,7 @@ function CartPage() {
           </form>
         )}
 
-        {auth.isAuthenticated && maxRedeemable > 0 && (
+        {loyaltyOn && auth.isAuthenticated && maxRedeemable > 0 && (
           <div className='flex flex-col gap-3 border-t pt-4'>
             <div className='flex items-center justify-between'>
               <span className='flex items-center gap-2 text-sm font-semibold'>

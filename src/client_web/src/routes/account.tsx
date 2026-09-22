@@ -8,14 +8,17 @@ import {
 import { BackHeader } from '@/components/back-header'
 import { BalanceCard } from '@/components/balance-card'
 import { RequireAuth } from '@/components/require-auth'
+import { RequireFeature } from '@/components/require-feature'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, useT } from '@/lib/i18n'
 
 export const Route = createFileRoute('/account')({
   component: () => (
-    <RequireAuth>
-      <AccountPage />
-    </RequireAuth>
+    <RequireFeature feature='tabs'>
+      <RequireAuth>
+        <AccountPage />
+      </RequireAuth>
+    </RequireFeature>
   ),
 })
 

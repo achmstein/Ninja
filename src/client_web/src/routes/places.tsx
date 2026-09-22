@@ -7,6 +7,7 @@ import { useSelectedBranch } from '@/lib/branch'
 import { useRoomsGroup } from '@/lib/hub'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
+import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useBookablePlaces, useVisit, useVisitTab } from '@/lib/visit'
 import { useProfileGate } from '@/components/profile-gate'
@@ -89,6 +90,7 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   const auth = useAuth()
   const branch = useSelectedBranch()
   const hold = useMyHold()
+  const features = useFeatures()
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
 
   const [reservePlace, setReservePlace] = useState<PlaceViewModel | null>(null)
@@ -98,7 +100,8 @@ function PlacesList({ atTable }: { atTable: boolean }) {
   useRoomsGroup()
   const { data: places = [], isLoading } = useBookablePlaces()
 
-  const reservationsEnabled = branch?.isReservationsEnabled ?? true
+  const reservationsEnabled =
+    features.reservations && (branch?.isReservationsEnabled ?? true)
   const canReserve = auth.isAuthenticated && !hold && reservationsEnabled
   const allBusy =
     places.length > 0 &&

@@ -13,6 +13,7 @@ import {
 import { API_VERSION } from '@/lib/api-client'
 import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
+import { RequireFeature } from '@/components/require-feature'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,9 +23,11 @@ const pointsFormat = new Intl.NumberFormat('en-US')
 
 export const Route = createFileRoute('/loyalty')({
   component: () => (
-    <RequireAuth>
-      <LoyaltyPage />
-    </RequireAuth>
+    <RequireFeature feature='loyalty'>
+      <RequireAuth>
+        <LoyaltyPage />
+      </RequireAuth>
+    </RequireFeature>
   ),
 })
 

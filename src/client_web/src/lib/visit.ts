@@ -14,12 +14,18 @@ import { useFeatures } from '@/lib/brand'
  *  clock, and any table the owner opened to reservations: one query the
  *  tab and the nav share. */
 export function useBookablePlaces() {
+  const { reservations, timeBilling } = useFeatures()
   return useQuery({
     ...listPlacesOptions(),
     refetchInterval: 30_000,
-    // A place taken out of service is not on the customer's list
+    // A place taken out of service is not on the customer's list; a clock
+    // counts while the café bills time, a booking while it takes them
     select: (list) =>
-      list.filter((p) => p.isActive !== false && (p.isTimed || p.reservable)),
+      list.filter(
+        (p) =>
+          p.isActive !== false &&
+          ((p.isTimed && timeBilling) || (p.reservable && reservations)),
+      ),
   })
 }
 
@@ -105,6 +111,7 @@ export function useVisitTab(): {
   return {
     label: t('rooms'),
     icon: hasRooms ? Gamepad2 : CalendarClock,
-    visible: hasBookablePlaces && features.reservations,
+    visible:
+      hasBookablePlaces && (features.reservations || features.timeBilling),
   }
 }

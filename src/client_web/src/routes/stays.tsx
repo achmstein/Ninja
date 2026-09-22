@@ -9,6 +9,7 @@ import { hasOptions, optionColor, PlaceIcon } from '@/lib/places'
 import { STAY_RUNNING, useMyStays } from '@/lib/stays'
 import { BackHeader } from '@/components/back-header'
 import { RequireAuth } from '@/components/require-auth'
+import { RequireFeature } from '@/components/require-feature'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -23,9 +24,11 @@ import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/stays')({
   component: () => (
-    <RequireAuth>
-      <StaysPage />
-    </RequireAuth>
+    <RequireFeature feature='timeBilling'>
+      <RequireAuth>
+        <StaysPage />
+      </RequireAuth>
+    </RequireFeature>
   ),
 })
 
