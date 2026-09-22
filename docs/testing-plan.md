@@ -29,9 +29,9 @@ run), never hand-rolled mocks of the same interface.
 | **Notification** | — | **6** | — | | | |
 | Catalog | 47 | **7** | — | | in scenarios | — |
 | Ordering | 86 | **9** | — | | in scenarios | — |
-| Sales | 71 | — | — | | in scenarios | — |
+| Sales | 71 | **17** | — | | in scenarios | — |
 | Spaces | 52 | **6** | — | | Reservation, RoomSession | — |
-| Inventory | 56 | — | — | | InventoryFlow | — |
+| Inventory | 56 | **8** | — | | InventoryFlow | — |
 | Finance | 18 | — | — | | PayrollAndProfit | — |
 | Payroll | 12 | — | — | | PayrollAndProfit | — |
 | Branch | 15 | **10** | — | | — | — |
@@ -65,11 +65,12 @@ the apps are written against.
 
 ## The gaps, by weight
 
-1. **Front doors for the rest of the services**: Sales (settle, refund,
-   shifts), then Inventory, Finance, Payroll, Accounts, Identity. Each is a
-   `X.FunctionalTests` on `Ninja.Testing`, so each is scenarios and nothing
-   else. Spaces has its places covered; its reservations and stays are next
-   in the same suite.
+1. **Front doors for the rest of the services**: Finance, Payroll,
+   Accounts, Identity. Each is a `X.FunctionalTests` on `Ninja.Testing`, so
+   each is scenarios and nothing else. Spaces has its places covered; its
+   reservations and stays are next in the same suite; Inventory's suite
+   covers the storeroom (deliveries, waste, counts, recipes), and its
+   transfers and suppliers are next in it.
 2. **Contracts.** Every integration event a service publishes has a
    consumer copy with the same shape (today: pairing only); the features
    event; the gateway route table (exists).
@@ -90,7 +91,7 @@ the apps are written against.
 |---|---|---|
 | 1 | Control plane: functional suite over every endpoint group; acceptance skeleton | **done** — 37 scenarios + the acceptance story |
 | 2 | `Ninja.Testing`; Loyalty and Notification; Branch and Spaces functional | **done** |
-| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | |
+| 3 | Sales, Inventory, Finance, Payroll, Accounts, Identity functional; event contracts | Sales and Inventory done |
 | 4 | Starter-café E2E scenario; UI: vitest + Playwright + Flutter widget tests | |
 
 Each phase lands as its own commits and its own CI job where docker is

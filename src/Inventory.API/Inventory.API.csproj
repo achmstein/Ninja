@@ -42,4 +42,8 @@
     <PackageReference Include="FluentValidation.AspNetCore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Inventory.FunctionalTests" />
+  </ItemGroup>
+
 </Project>
