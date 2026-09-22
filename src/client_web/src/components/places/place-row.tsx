@@ -27,6 +27,8 @@ export function PlaceRow({ place, canReserve, onReserve }: PlaceRowProps) {
   const status =
     placeStatusMeta[Number(place.status ?? 0)] ?? placeStatusMeta[1]
   const isAvailable = canHold(place) && canReserve
+  // A plain table has no rate: the status then starts the line, with no gap or bullet before it
+  const hasRate = tariffOptions(place.tariff).length > 0
 
   return (
     <button
@@ -58,11 +60,14 @@ export function PlaceRow({ place, canReserve, onReserve }: PlaceRowProps) {
           </p>
         )}
         <div className='mt-1 flex items-center gap-2 text-sm'>
-          <span className='font-bold'>
-            <TariffLine place={place} />
-          </span>
+          {hasRate && (
+            <span className='font-bold'>
+              <TariffLine place={place} />
+            </span>
+          )}
           <span className={cn('text-[13px]', status.className)}>
-            • {t(status.key)}
+            {hasRate && '• '}
+            {t(status.key)}
           </span>
         </div>
       </div>

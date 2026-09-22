@@ -1041,6 +1041,7 @@ class PlaceListItem extends ConsumerWidget {
     final colors = context.theme.colors;
     final isAvailable = room.canBookNow && canReserve;
     final statusColor = _getStatusColor(colors);
+    final rate = tariffLine(context, ref.watch(moneyProvider), room.options);
 
     return GestureDetector(
       onTap: isAvailable ? () => _showReservationDialog(context, ref) : null,
@@ -1096,19 +1097,24 @@ class PlaceListItem extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Flexible(
-                        child: AppText(
-                          tariffLine(context, ref.watch(moneyProvider), room.options),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: colors.foreground,
+                      // A plain table has no rate: the status then starts the line, with no gap or bullet before it
+                      if (rate.isNotEmpty) ...[
+                        Flexible(
+                          child: AppText(
+                            rate,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: colors.foreground,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
+                      ],
                       AppText(
-                        '• ${_getLocalizedStatus(context, room.displayStatus)}',
+                        rate.isEmpty
+                            ? _getLocalizedStatus(context, room.displayStatus)
+                            : '• ${_getLocalizedStatus(context, room.displayStatus)}',
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 13,
