@@ -1,8 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+// CONTROL_URL, PLATFORM_USER and PLATFORM_PASSWORD may be set in a .env
 require("dotenv").config({ path: "./.env" });
-import path from 'path';
-
-export const STORAGE_STATE = path.join(__dirname, 'playwright/.auth/user.json');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -21,8 +19,7 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5045',
+    /* Each spec names the app it drives, so there is no base URL to share */
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -31,22 +28,6 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'setup',
-      testMatch: '**/*.setup.ts',
-    },
-    {
-      name: 'e2e tests logged in',
-      testMatch: ['**/AddItemTest.spec.ts', '**/RemoveItemTest.spec.ts'],
-      dependencies: ['setup'],
-      use: {
-        storageState: STORAGE_STATE,
-      },
-    },
-    {
-      name: 'e2e tests without logged in',
-      testMatch: ['**/BrowseItemTest.spec.ts'],
-    },
     {
       // The control app against the dry-run AppHost; it signs in on its own
       name: 'control plane',

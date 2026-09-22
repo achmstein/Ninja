@@ -38,7 +38,7 @@ run), never hand-rolled mocks of the same interface.
 | Identity | 13 | **8** | — | | — | — |
 | Accounts | 7 | **7** | — | | — | — |
 | Contracts (events, gateway table) | 8 | | | | | |
-| admin_web / pos_web / kds_web / client_web | **39 / 17 / 0 / 24** vitest | | | | | `e2e/`: 3 Playwright specs |
+| admin_web / pos_web / kds_web / client_web | **39 / 17 / 0 / 24** vitest | | | | | — |
 | pos_app / client_app / kds_app | **62 / 20 / 29** widget | | | | | |
 
 What the layers cost: the control plane's functional suite is 23 s for 37
