@@ -75,6 +75,7 @@
     <Project Path="tests/Spaces.FunctionalTests/Spaces.FunctionalTests.csproj" />
     <Project Path="tests/Sales.FunctionalTests/Sales.FunctionalTests.csproj" />
     <Project Path="tests/Inventory.FunctionalTests/Inventory.FunctionalTests.csproj" />
+    <Project Path="tests/Finance.FunctionalTests/Finance.FunctionalTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="tests/Inventory.UnitTests/Inventory.UnitTests.csproj" />
     <Project Path="tests/Payroll.UnitTests/Payroll.UnitTests.csproj" />
