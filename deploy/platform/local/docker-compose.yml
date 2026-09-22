@@ -92,6 +92,8 @@ services:
       Platform__Network: ninja-local
       Platform__PostgresPassword: local
       Platform__RabbitPassword: local
+      # What the tenants' secrets are encrypted under in controldb; a fixed key, like every other secret on this machine
+      Platform__EncryptionKey: kQY7YRaqL9rR+9CELPia/l0+ArhG4VfV8OK44j3Ek4M=
       Platform__RabbitContainer: ninja-local-eventbus-1
       Platform__EdgeContainer: ninja-local-caddy-1
       Platform__PostgresContainer: ninja-local-postgres-1
