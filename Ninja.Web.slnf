@@ -41,7 +41,6 @@
       "tests\\Accounts.UnitTests\\Accounts.UnitTests.csproj",
       "tests\\Branch.UnitTests\\Branch.UnitTests.csproj",
       "tests\\Control.UnitTests\\Control.UnitTests.csproj",
-      "tests\\Catalog.FunctionalTests\\Catalog.FunctionalTests.csproj",
       "tests\\Catalog.UnitTests\\Catalog.UnitTests.csproj",
       "tests\\Ninja.AI.UnitTests\\Ninja.AI.UnitTests.csproj",
       "tests\\Ninja.AppHost.UnitTests\\Ninja.AppHost.UnitTests.csproj",
