@@ -193,6 +193,9 @@ public sealed class PlatformOptions
     /// <summary>Renders and records every step but touches no docker, database, broker or realm. Dev and tests.</summary>
     public bool DryRun { get; set; }
 
+    /// <summary>The control app's operators are managed in the real platform realm even on a dry run (dev, where control-web signs in against it).</summary>
+    public bool LiveOperators { get; set; }
+
     /// <summary>
     /// Base64 of 32 random bytes (openssl rand -base64 32): what the tenants'
     /// secrets are encrypted under in controldb. Required unless DryRun. Lose

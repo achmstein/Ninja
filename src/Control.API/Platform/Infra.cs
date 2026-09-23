@@ -328,18 +328,22 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<PlatformOptions>
     }
 }
 
-/// <summary>Keycloak's admin REST API as the master realm's admin: realms in and out, the first owner in.</summary>
-public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options) : IKeycloakAdmin
+/// <summary>
+/// The master realm admin's token, fetched once and kept until shortly before
+/// it expires, not on every call (a stamp makes a dozen). Shared by everything
+/// that speaks Keycloak's admin REST API.
+/// </summary>
+public sealed class KeycloakAdminToken(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options)
 {
     private static readonly TimeSpan Margin = TimeSpan.FromSeconds(30);
 
     private readonly SemaphoreSlim _tokenGate = new(1, 1);
     private (string Token, DateTimeOffset ExpiresAt)? _token;
 
-    private string Base => options.Value.KeycloakInternalUrl.TrimEnd('/');
+    public string Base => options.Value.KeycloakInternalUrl.TrimEnd('/');
 
-    /// <summary>A client carrying the admin token: fetched once and kept until shortly before it expires, not on every call (a stamp makes a dozen).</summary>
-    private async Task<HttpClient> AdminClientAsync(CancellationToken ct)
+    /// <summary>A client carrying the admin token.</summary>
+    public async Task<HttpClient> ClientAsync(CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient("keycloak");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await TokenAsync(ct));
@@ -373,6 +377,18 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
             _tokenGate.Release();
         }
     }
+}
+
+/// <summary>Keycloak's admin REST API as the master realm's admin: realms in and out, the first owner in.</summary>
+public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options) : IKeycloakAdmin
+{
+    /// <summary>With a token of its own, for a caller outside the container.</summary>
+    public KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOptions<PlatformOptions> options)
+        : this(new KeycloakAdminToken(httpClientFactory, options), httpClientFactory, options) { }
+
+    private string Base => admin.Base;
+
+    private Task<HttpClient> AdminClientAsync(CancellationToken ct) => admin.ClientAsync(ct);
 
     public async Task<bool> RealmExistsAsync(string realm, CancellationToken ct)
     {

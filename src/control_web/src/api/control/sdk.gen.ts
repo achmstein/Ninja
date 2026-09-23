@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DisableOperatorData, DisableOperatorErrors, DisableOperatorResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, EnableOperatorData, EnableOperatorErrors, EnableOperatorResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, InviteOperatorData, InviteOperatorErrors, InviteOperatorResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListOperatorsData, ListOperatorsErrors, ListOperatorsResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorErrors, ResetOperatorAuthenticatorResponses, ResetOperatorPasswordData, ResetOperatorPasswordErrors, ResetOperatorPasswordResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, SignOutOperatorData, SignOutOperatorErrors, SignOutOperatorResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -450,6 +450,57 @@ export const getPlatformJobs = <ThrowOnError extends boolean = false>(options?: 
  * Take a queued job off the line; a running one cannot be stopped
  */
 export const cancelPlatformJob = <ThrowOnError extends boolean = false>(options: Options<CancelPlatformJobData, ThrowOnError>): RequestResult<CancelPlatformJobResponses, CancelPlatformJobErrors, ThrowOnError> => (options.client ?? client).delete<CancelPlatformJobResponses, CancelPlatformJobErrors, ThrowOnError>({ url: '/api/control/platform/jobs/{id}', ...options });
+
+/**
+ * Everyone who can sign in to the control app
+ */
+export const listOperators = <ThrowOnError extends boolean = false>(options?: Options<ListOperatorsData, ThrowOnError>): RequestResult<ListOperatorsResponses, ListOperatorsErrors, ThrowOnError> => (options?.client ?? client).get<ListOperatorsResponses, ListOperatorsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/operators',
+    ...options
+});
+
+/**
+ * A new operator with a temporary password, shown once; they choose their own and set up an authenticator on first sign-in
+ */
+export const inviteOperator = <ThrowOnError extends boolean = false>(options: Options<InviteOperatorData, ThrowOnError>): RequestResult<InviteOperatorResponses, InviteOperatorErrors, ThrowOnError> => (options.client ?? client).post<InviteOperatorResponses, InviteOperatorErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/operators',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Shut an operator out and end their sessions
+ */
+export const disableOperator = <ThrowOnError extends boolean = false>(options: Options<DisableOperatorData, ThrowOnError>): RequestResult<DisableOperatorResponses, DisableOperatorErrors, ThrowOnError> => (options.client ?? client).post<DisableOperatorResponses, DisableOperatorErrors, ThrowOnError>({ url: '/api/control/operators/{id}/disable', ...options });
+
+/**
+ * Let a disabled operator back in
+ */
+export const enableOperator = <ThrowOnError extends boolean = false>(options: Options<EnableOperatorData, ThrowOnError>): RequestResult<EnableOperatorResponses, EnableOperatorErrors, ThrowOnError> => (options.client ?? client).post<EnableOperatorResponses, EnableOperatorErrors, ThrowOnError>({ url: '/api/control/operators/{id}/enable', ...options });
+
+/**
+ * A new temporary password, shown once, for an operator who lost theirs; their sessions end
+ */
+export const resetOperatorPassword = <ThrowOnError extends boolean = false>(options: Options<ResetOperatorPasswordData, ThrowOnError>): RequestResult<ResetOperatorPasswordResponses, ResetOperatorPasswordErrors, ThrowOnError> => (options.client ?? client).post<ResetOperatorPasswordResponses, ResetOperatorPasswordErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/operators/{id}/password',
+    ...options
+});
+
+/**
+ * Forget an operator's authenticator app (a lost phone); they set up a new one on the next sign-in
+ */
+export const resetOperatorAuthenticator = <ThrowOnError extends boolean = false>(options: Options<ResetOperatorAuthenticatorData, ThrowOnError>): RequestResult<ResetOperatorAuthenticatorResponses, ResetOperatorAuthenticatorErrors, ThrowOnError> => (options.client ?? client).post<ResetOperatorAuthenticatorResponses, ResetOperatorAuthenticatorErrors, ThrowOnError>({ url: '/api/control/operators/{id}/authenticator', ...options });
+
+/**
+ * End every session an operator has
+ */
+export const signOutOperator = <ThrowOnError extends boolean = false>(options: Options<SignOutOperatorData, ThrowOnError>): RequestResult<SignOutOperatorResponses, SignOutOperatorErrors, ThrowOnError> => (options.client ?? client).post<SignOutOperatorResponses, SignOutOperatorErrors, ThrowOnError>({ url: '/api/control/operators/{id}/sign-out', ...options });
 
 /**
  * 200 when the host belongs to a tenant, 404 otherwise

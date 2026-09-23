@@ -179,11 +179,28 @@ export type FleetUpgradeResponse = {
     canary: null | string;
 };
 
+export type HttpValidationProblemDetails = {
+    type?: null | string;
+    title?: null | string;
+    status?: null | number | string;
+    detail?: null | string;
+    instance?: null | string;
+    errors?: {
+        [key: string]: Array<string>;
+    };
+};
+
 export type IFormFile = Blob | File;
 
 export type ImpersonationLink = {
     url: string;
     expiresAt: string;
+};
+
+export type InviteOperatorRequest = {
+    email: null | string;
+    firstName: null | string;
+    lastName: null | string;
 };
 
 export type JobDto = {
@@ -238,6 +255,28 @@ export type MetricsTopItem = {
 };
 
 export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
+
+export type OperatorInvitedResponse = {
+    id: string;
+    email: string;
+    temporaryPassword: string;
+};
+
+export type OperatorPasswordResponse = {
+    temporaryPassword: string;
+};
+
+export type OperatorResponse = {
+    id: string;
+    email: string;
+    firstName: null | string;
+    lastName: null | string;
+    enabled: boolean;
+    createdAt: null | string;
+    hasAuthenticator: boolean;
+    pendingSetup: boolean;
+    isYou: boolean;
+};
 
 export type PaymentDto = {
     id: number | string;
@@ -2408,6 +2447,265 @@ export type CancelPlatformJobResponses = {
 };
 
 export type CancelPlatformJobResponse = CancelPlatformJobResponses[keyof CancelPlatformJobResponses];
+
+export type ListOperatorsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/operators';
+};
+
+export type ListOperatorsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListOperatorsResponses = {
+    /**
+     * OK
+     */
+    200: Array<OperatorResponse>;
+};
+
+export type ListOperatorsResponse = ListOperatorsResponses[keyof ListOperatorsResponses];
+
+export type InviteOperatorData = {
+    body: InviteOperatorRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/operators';
+};
+
+export type InviteOperatorErrors = {
+    /**
+     * Bad Request
+     */
+    400: HttpValidationProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type InviteOperatorError = InviteOperatorErrors[keyof InviteOperatorErrors];
+
+export type InviteOperatorResponses = {
+    /**
+     * Created
+     */
+    201: OperatorInvitedResponse;
+};
+
+export type InviteOperatorResponse = InviteOperatorResponses[keyof InviteOperatorResponses];
+
+export type DisableOperatorData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/operators/{id}/disable';
+};
+
+export type DisableOperatorErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type DisableOperatorError = DisableOperatorErrors[keyof DisableOperatorErrors];
+
+export type DisableOperatorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DisableOperatorResponse = DisableOperatorResponses[keyof DisableOperatorResponses];
+
+export type EnableOperatorData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/operators/{id}/enable';
+};
+
+export type EnableOperatorErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type EnableOperatorError = EnableOperatorErrors[keyof EnableOperatorErrors];
+
+export type EnableOperatorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type EnableOperatorResponse = EnableOperatorResponses[keyof EnableOperatorResponses];
+
+export type ResetOperatorPasswordData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/operators/{id}/password';
+};
+
+export type ResetOperatorPasswordErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ResetOperatorPasswordError = ResetOperatorPasswordErrors[keyof ResetOperatorPasswordErrors];
+
+export type ResetOperatorPasswordResponses = {
+    /**
+     * OK
+     */
+    200: OperatorPasswordResponse;
+};
+
+export type ResetOperatorPasswordResponse = ResetOperatorPasswordResponses[keyof ResetOperatorPasswordResponses];
+
+export type ResetOperatorAuthenticatorData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/operators/{id}/authenticator';
+};
+
+export type ResetOperatorAuthenticatorErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ResetOperatorAuthenticatorError = ResetOperatorAuthenticatorErrors[keyof ResetOperatorAuthenticatorErrors];
+
+export type ResetOperatorAuthenticatorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ResetOperatorAuthenticatorResponse = ResetOperatorAuthenticatorResponses[keyof ResetOperatorAuthenticatorResponses];
+
+export type SignOutOperatorData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/control/operators/{id}/sign-out';
+};
+
+export type SignOutOperatorErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type SignOutOperatorError = SignOutOperatorErrors[keyof SignOutOperatorErrors];
+
+export type SignOutOperatorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SignOutOperatorResponse = SignOutOperatorResponses[keyof SignOutOperatorResponses];
 
 export type TlsAskData = {
     body?: never;

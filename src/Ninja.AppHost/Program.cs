@@ -247,6 +247,11 @@ var controlApi = builder.AddProject<Projects.Control_API>("control-api")
     .WithEnvironment("Identity__Url", ReferenceExpression.Create($"{keycloakEndpoint}/realms/ninja"))
     .WithEnvironment("Keycloak__Realm", "ninja")
     .WithEnvironment("Platform__DryRun", "true")
+    // The operators, though, are the real realm's: the control app's Team tab manages them as the master admin
+    // (Aspire's Keycloak admin is "admin", PlatformOptions' default)
+    .WithEnvironment("Platform__LiveOperators", "true")
+    .WithEnvironment("Platform__KeycloakInternalUrl", keycloakEndpoint)
+    .WithEnvironment("Platform__KeycloakAdminPassword", keycloak.Resource.AdminPasswordParameter)
     .WithEnvironment("Platform__TenantsRoot", Path.Combine(Path.GetTempPath(), "ninja-tenants"))
     .ExcludeFromManifest();
 

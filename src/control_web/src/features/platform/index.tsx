@@ -51,10 +51,11 @@ import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
+import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -221,6 +222,7 @@ export function PlatformPage() {
           <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
           <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
           <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
+          <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
         </TabsList>
         <TabsContent value='tenants'>
           {destroyedCount > 0 && (
@@ -251,6 +253,9 @@ export function PlatformPage() {
         </TabsContent>
         <TabsContent value='audit'>
           <AuditTable />
+        </TabsContent>
+        <TabsContent value='team'>
+          <TeamTable />
         </TabsContent>
       </Tabs>
     </div>

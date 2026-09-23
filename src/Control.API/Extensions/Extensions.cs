@@ -90,6 +90,19 @@ public static class Extensions
             if (!dryRun) builder.Services.AddHostedService<PlatformLockdownService>();
         }
 
+        // The master admin's token, shared by the realm adapter and the operators
+        builder.Services.AddSingleton<KeycloakAdminToken>();
+
+        // The operators are the platform realm's own users: managed for real on a box, and in dev too, where
+        // control-web signs in against a real realm even though stamping is a dry run; tests keep them in memory
+        if (!dryRun || builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:LiveOperators"))
+            builder.Services.AddSingleton<IOperatorDirectory, KeycloakOperatorDirectory>();
+        else
+        {
+            builder.Services.AddSingleton<DryRunOperatorDirectory>();
+            builder.Services.AddSingleton<IOperatorDirectory>(sp => sp.GetRequiredService<DryRunOperatorDirectory>());
+        }
+
         if (dryRun)
         {
             // Dev and tests: every step runs and is recorded, nothing on the box is touched

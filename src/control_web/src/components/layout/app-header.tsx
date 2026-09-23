@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { Languages, LogOut, Moon, Settings, Sun } from 'lucide-react'
+import { KeyRound, Languages, LogOut, Moon, Settings, ShieldCheck, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,12 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Wordmark } from '@/components/wordmark'
+import { authority, loginPageParams } from '@/config/oidc-config'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
 /**
  * The single app-chrome row: the mark on the start side, the settings menu
- * (language, theme, sign-out) on the end side.
+ * (language, theme, your own account, sign-out) on the end side.
+ *
+ * Your password and authenticator change on Keycloak's own pages, which ask
+ * for you again first; the control API never sets them for you.
  */
 export function AppHeader() {
   const t = useT()
@@ -61,6 +65,25 @@ export function AppHeader() {
                 <span className='text-muted-foreground'>
                   {resolvedTheme === 'dark' ? t('themeDark') : t('themeLight')}
                 </span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => {
+                  // Back to this page once Keycloak is done (the callback reads it)
+                  sessionStorage.setItem('auth_redirect', window.location.pathname + window.location.search)
+                  const { extraQueryParams } = loginPageParams(resolvedTheme, language)
+                  auth.signinRedirect({ extraQueryParams: { ...extraQueryParams, kc_action: 'UPDATE_PASSWORD' } })
+                }}
+              >
+                <KeyRound className='size-4' />
+                {t('changePassword')}
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                {/* Keycloak's account console: the authenticator app and the signed-in devices */}
+                <a href={`${authority}/account/account-security/signing-in?kc_locale=${language}`} target='_blank' rel='noreferrer'>
+                  <ShieldCheck className='size-4' />
+                  {t('securitySettings')}
+                </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

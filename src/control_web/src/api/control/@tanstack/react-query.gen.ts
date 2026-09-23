@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, extendDemo, fleetUpgrade, forgetTenant, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, listAudit, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ListAuditData, ListAuditResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fleetUpgrade, forgetTenant, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAudit, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, tlsAsk, updateTenant, updateTenantBrand, updateTenantSubscription, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAuditData, ListAuditResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TlsAskData, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -941,6 +941,126 @@ export const cancelPlatformJobMutation = (options?: Partial<Options<CancelPlatfo
     const mutationOptions: UseMutationOptions<CancelPlatformJobResponse, AxiosError<CancelPlatformJobError>, Options<CancelPlatformJobData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await cancelPlatformJob({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listOperatorsQueryKey = (options?: Options<ListOperatorsData>) => createQueryKey('listOperators', options);
+
+/**
+ * Everyone who can sign in to the control app
+ */
+export const listOperatorsOptions = (options?: Options<ListOperatorsData>) => queryOptions<ListOperatorsResponse, AxiosError<DefaultError>, ListOperatorsResponse, ReturnType<typeof listOperatorsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listOperators({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listOperatorsQueryKey(options)
+});
+
+/**
+ * A new operator with a temporary password, shown once; they choose their own and set up an authenticator on first sign-in
+ */
+export const inviteOperatorMutation = (options?: Partial<Options<InviteOperatorData>>): UseMutationOptions<InviteOperatorResponse, AxiosError<InviteOperatorError>, Options<InviteOperatorData>> => {
+    const mutationOptions: UseMutationOptions<InviteOperatorResponse, AxiosError<InviteOperatorError>, Options<InviteOperatorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await inviteOperator({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Shut an operator out and end their sessions
+ */
+export const disableOperatorMutation = (options?: Partial<Options<DisableOperatorData>>): UseMutationOptions<DisableOperatorResponse, AxiosError<DisableOperatorError>, Options<DisableOperatorData>> => {
+    const mutationOptions: UseMutationOptions<DisableOperatorResponse, AxiosError<DisableOperatorError>, Options<DisableOperatorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await disableOperator({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Let a disabled operator back in
+ */
+export const enableOperatorMutation = (options?: Partial<Options<EnableOperatorData>>): UseMutationOptions<EnableOperatorResponse, AxiosError<EnableOperatorError>, Options<EnableOperatorData>> => {
+    const mutationOptions: UseMutationOptions<EnableOperatorResponse, AxiosError<EnableOperatorError>, Options<EnableOperatorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await enableOperator({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * A new temporary password, shown once, for an operator who lost theirs; their sessions end
+ */
+export const resetOperatorPasswordMutation = (options?: Partial<Options<ResetOperatorPasswordData>>): UseMutationOptions<ResetOperatorPasswordResponse, AxiosError<ResetOperatorPasswordError>, Options<ResetOperatorPasswordData>> => {
+    const mutationOptions: UseMutationOptions<ResetOperatorPasswordResponse, AxiosError<ResetOperatorPasswordError>, Options<ResetOperatorPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resetOperatorPassword({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Forget an operator's authenticator app (a lost phone); they set up a new one on the next sign-in
+ */
+export const resetOperatorAuthenticatorMutation = (options?: Partial<Options<ResetOperatorAuthenticatorData>>): UseMutationOptions<ResetOperatorAuthenticatorResponse, AxiosError<ResetOperatorAuthenticatorError>, Options<ResetOperatorAuthenticatorData>> => {
+    const mutationOptions: UseMutationOptions<ResetOperatorAuthenticatorResponse, AxiosError<ResetOperatorAuthenticatorError>, Options<ResetOperatorAuthenticatorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resetOperatorAuthenticator({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * End every session an operator has
+ */
+export const signOutOperatorMutation = (options?: Partial<Options<SignOutOperatorData>>): UseMutationOptions<SignOutOperatorResponse, AxiosError<SignOutOperatorError>, Options<SignOutOperatorData>> => {
+    const mutationOptions: UseMutationOptions<SignOutOperatorResponse, AxiosError<SignOutOperatorError>, Options<SignOutOperatorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await signOutOperator({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
