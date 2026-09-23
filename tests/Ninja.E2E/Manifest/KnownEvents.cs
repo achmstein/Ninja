@@ -21,6 +21,7 @@ public static class KnownEvents
         new("CatalogItemStockChanged", "Inventory", ["Catalog"]),
         new("CatalogOptionStockChanged", "Inventory", ["Catalog"]),
         new("EmployeeEarningsChanged", "Payroll", ["Finance"]),
+        new("KitchenTicketQueued", "Ordering", ["Notification"]),
         new("OrderConfirmedWithPreferences", "", ["Catalog"]),          // dead consumer: nobody publishes it
         new("OrderCustomerAssigned", "Ordering", ["Sales", "Loyalty"]),
         new("OrderPaymentChanged", "Ordering", ["Notification"]),

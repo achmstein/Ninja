@@ -45,11 +45,13 @@ public interface IOrderQueries
     Task<IEnumerable<OrderSummary>> GetOpenOrdersAtPlaceAsync(int placeId, string? userId, string? guestId);
 
     /// <summary>
-    /// The kitchen's queue for a branch: confirmed orders not yet ready, plus
-    /// those marked ready in the last half hour so a card can be recalled.
-    /// Orders confirmed before the kitchen display existed are left out.
+    /// The kitchen's queue for a branch: confirmed orders, ready or not, from
+    /// the last day. For a <paramref name="stationId"/>, only the orders with
+    /// a part on that station's screen, with only its lines and its part's
+    /// ready time; without one, the pass: whole orders with every part.
+    /// Orders made only at printers are on no screen at all.
     /// </summary>
-    Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId);
+    Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId, int? stationId = null);
 
     /// <summary>
     /// Get all orders paginated (admin), filtered by branch and optionally by

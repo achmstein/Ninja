@@ -27,6 +27,8 @@ public class OrderRepository
             await _context.Entry(order)
                 .Collection(i => i.OrderItems).LoadAsync();
             await _context.Entry(order)
+                .Collection(i => i.StationParts).LoadAsync();
+            await _context.Entry(order)
                 .Reference(i => i.Buyer).LoadAsync();
             await _context.Entry(order)
                 .Reference(i => i.Rating).LoadAsync();

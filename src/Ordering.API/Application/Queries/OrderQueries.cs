@@ -143,7 +143,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         };
     }
 
-    public async Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId)
+    public async Task<IEnumerable<KitchenOrder>> GetKitchenOrdersAsync(int branchId, int? stationId = null)
     {
         // A card left on the board overnight is stale, not work; ready orders
         // stay in the same window as the day's history the screen can recall from
@@ -155,26 +155,48 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
             // Confirmed before the kitchen display existed: not its business
             .Where(o => o.ConfirmedAt != null && o.ConfirmedAt >= confirmedSince)
+            // A station sees the orders with a part on its screen; the pass
+            // sees every order someone will mark ready — those confirmed
+            // before stations included, printer-only ones not
+            .Where(o => stationId == null
+                ? !o.StationParts.Any() || o.StationParts.Any(p => p.ShowsOnScreen)
+                : o.StationParts.Any(p => p.StationId == stationId && p.ShowsOnScreen))
             .OrderBy(o => o.ConfirmedAt)
             .Select(o => new KitchenOrder
             {
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 ConfirmedAt = o.ConfirmedAt,
-                ReadyAt = o.ReadyAt,
+                // A station's board and history follow its own part
+                ReadyAt = stationId == null
+                    ? o.ReadyAt
+                    : o.StationParts.Where(p => p.StationId == stationId).Select(p => p.ReadyAt).FirstOrDefault(),
                 Source = o.Source.ToString(),
                 PlaceId = o.PlaceId,
                 PlaceKind = o.PlaceKind,
                 PlaceName = o.PlaceName,
                 CustomerName = o.Buyer != null ? o.Buyer.Name : o.GuestName,
                 CustomerNote = o.CustomerNote,
-                Items = o.OrderItems.Select(oi => new KitchenOrderItem
-                {
-                    ProductName = oi.ProductName,
-                    Units = oi.Units,
-                    CustomizationsDescription = oi.CustomizationsDescription,
-                    SpecialInstructions = oi.SpecialInstructions
-                }).ToList()
+                Items = o.OrderItems
+                    .Where(oi => stationId == null || oi.StationId == stationId)
+                    .Select(oi => new KitchenOrderItem
+                    {
+                        ProductName = oi.ProductName,
+                        Units = oi.Units,
+                        CustomizationsDescription = oi.CustomizationsDescription,
+                        SpecialInstructions = oi.SpecialInstructions,
+                        StationId = oi.StationId
+                    }).ToList(),
+                Parts = o.StationParts
+                    .OrderBy(p => p.Id)
+                    .Select(p => new KitchenOrderPart
+                    {
+                        StationId = p.StationId,
+                        StationName = p.StationName,
+                        ShowsOnScreen = p.ShowsOnScreen,
+                        PrintsTickets = p.PrintsTickets,
+                        ReadyAt = p.ReadyAt
+                    }).ToList()
             })
             .ToListAsync();
     }

@@ -54,6 +54,9 @@ internal static class Extensions
         services.AddScoped<IPlaceQueries, PlaceQueries>();
         services.AddScoped<IBuyerRepository, BuyerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IKitchenQueries, KitchenQueries>();
+        services.AddScoped<IKitchenStationRepository, KitchenStationRepository>();
+        services.AddScoped<IKitchenPrintJobRepository, KitchenPrintJobRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
 
         // Background service for pending order reminders

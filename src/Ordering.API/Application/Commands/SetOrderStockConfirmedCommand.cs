@@ -9,4 +9,5 @@ namespace Ninja.Ordering.API.Application.Commands;
 public record SetOrderStockConfirmedCommand(
     [property: DataMember] int OrderNumber,
     [property: DataMember] string? PromoCode = null,
-    [property: DataMember] decimal PromoDiscount = 0) : IRequest<bool>;
+    [property: DataMember] decimal PromoDiscount = 0,
+    [property: DataMember] Dictionary<int, int>? Categories = null) : IRequest<bool>;

@@ -88,6 +88,8 @@ public record KitchenOrder
     public string? CustomerName { get; init; }
     public string? CustomerNote { get; init; }
     public List<KitchenOrderItem> Items { get; init; } = new();
+    /// <summary>The order by station, for the pass; empty on orders from before stations.</summary>
+    public List<KitchenOrderPart> Parts { get; init; } = new();
 }
 
 public record KitchenOrderItem
@@ -96,6 +98,19 @@ public record KitchenOrderItem
     public int Units { get; init; }
     public LocalizedText? CustomizationsDescription { get; init; }
     public string? SpecialInstructions { get; init; }
+    /// <summary>The station that makes it; null on orders from before stations.</summary>
+    public int? StationId { get; init; }
+}
+
+/// <summary>One station's share of an order, as the pass shows it.</summary>
+public record KitchenOrderPart
+{
+    public int StationId { get; init; }
+    public LocalizedText StationName { get; init; } = new();
+    public bool ShowsOnScreen { get; init; }
+    public bool PrintsTickets { get; init; }
+    /// <summary>When its screen marked it done; always null for a part that only prints.</summary>
+    public DateTime? ReadyAt { get; init; }
 }
 
 /// <summary>

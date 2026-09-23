@@ -118,13 +118,13 @@ public static partial class OrdersApi
         api.MapGet("/kitchen", GetKitchenOrdersAsync)
             .WithName("GetKitchenOrders")
             .WithSummary("Confirmed orders in the kitchen, for the kitchen display (staff)")
-            .WithDescription("Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.")
+            .WithDescription("Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.")
             .RequireAuthorization("Pos");
 
         api.MapPut("/{orderId:int}/ready", SetOrderReadyAsync)
             .WithName("SetOrderReady")
             .WithSummary("Mark a confirmed order ready in the kitchen, or bring it back (staff)")
-            .WithDescription("Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.")
+            .WithDescription("From the pass: ready true marks every part on a screen done, false brings the order back to the board. Refused for an order made only at printers. Repeating the current state is a no-op.")
             .RequireAuthorization("Pos");
 
         api.MapGet("/all", GetAllOrdersAsync)
@@ -761,10 +761,11 @@ public static partial class OrdersApi
 
     public static async Task<Ok<IEnumerable<KitchenOrder>>> GetKitchenOrdersAsync(
         HttpContext httpContext,
-        [AsParameters] OrderServices services)
+        [AsParameters] OrderServices services,
+        int? stationId = null)
     {
         var branchId = httpContext.GetRequiredBranchId();
-        var orders = await services.Queries.GetKitchenOrdersAsync(branchId);
+        var orders = await services.Queries.GetKitchenOrdersAsync(branchId, stationId);
         return TypedResults.Ok(orders);
     }
 

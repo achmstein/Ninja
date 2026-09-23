@@ -22,7 +22,13 @@ app.UseRateLimiter();
 var orders = app.NewVersionedApi("Orders");
 
 orders.MapOrdersApiV1()
+      .MapKitchenOrderRoutes()
       .RequireAuthorization();
+
+var kitchen = app.NewVersionedApi("Kitchen");
+
+kitchen.MapKitchenApiV1()
+       .RequireAuthorization();
 
 app.UseDefaultOpenApi();
 app.Run();

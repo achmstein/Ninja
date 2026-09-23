@@ -20,6 +20,7 @@ global using Ninja.Ordering.API.Extensions;
 global using Ninja.Ordering.API.Infrastructure;
 global using Ninja.Ordering.API.Infrastructure.Services;
 global using Ninja.Ordering.Domain.AggregatesModel.BuyerAggregate;
+global using Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate;
 global using Ninja.Ordering.Domain.AggregatesModel.OrderAggregate;
 global using Ninja.Ordering.Domain.Events;
 global using Ninja.Ordering.Domain.Exceptions;

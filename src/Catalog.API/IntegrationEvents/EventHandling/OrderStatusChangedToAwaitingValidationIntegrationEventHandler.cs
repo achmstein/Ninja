@@ -17,6 +17,7 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
             .ToDictionaryAsync(o => o.CatalogItemId);
 
         var confirmedOrderStockItems = new List<ConfirmedOrderStockItem>();
+        var categories = new Dictionary<int, int>();
 
         foreach (var orderStockItem in @event.OrderStockItems)
         {
@@ -31,12 +32,13 @@ public class OrderStatusChangedToAwaitingValidationIntegrationEventHandler(
                 var confirmedOrderStockItem = new ConfirmedOrderStockItem(catalogItem.Id, isAvailable);
 
                 confirmedOrderStockItems.Add(confirmedOrderStockItem);
+                categories[catalogItem.Id] = catalogItem.CatalogTypeId;
             }
         }
 
         var confirmedIntegrationEvent = confirmedOrderStockItems.Any(c => !c.HasStock)
             ? (IntegrationEvent)new OrderStockRejectedIntegrationEvent(@event.OrderId, confirmedOrderStockItems)
-            : await ConfirmWithPromoAsync(@event);
+            : await ConfirmWithPromoAsync(@event) with { Categories = categories };
 
         await catalogIntegrationEventService.SaveEventAndCatalogContextChangesAsync(confirmedIntegrationEvent);
         await catalogIntegrationEventService.PublishThroughEventBusAsync(confirmedIntegrationEvent);

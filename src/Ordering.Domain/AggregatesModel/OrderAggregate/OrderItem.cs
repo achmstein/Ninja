@@ -40,6 +40,19 @@ public class OrderItem
     /// </summary>
     public List<int>? OptionIds { get; private set; }
 
+    /// <summary>
+    /// The menu category the product sat in when Catalog checked the order —
+    /// Catalog's word, never the client's. What routes the line to a kitchen
+    /// station. Null on lines from before it was recorded.
+    /// </summary>
+    public int? CategoryId { get; private set; }
+
+    /// <summary>
+    /// The kitchen station that makes this line, fixed when the order was
+    /// confirmed. Null before then, and on orders confirmed before stations.
+    /// </summary>
+    public int? StationId { get; private set; }
+
     protected OrderItem() { }
 
     public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null)
@@ -77,6 +90,10 @@ public class OrderItem
 
         Discount = discount;
     }
+
+    public void SetCategory(int? categoryId) => CategoryId = categoryId;
+
+    public void RouteTo(int stationId) => StationId = stationId;
 
     public void AddUnits(int units)
     {

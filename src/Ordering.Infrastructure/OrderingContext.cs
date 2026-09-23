@@ -1,5 +1,6 @@
 #nullable enable
 using Ninja.IntegrationEventLogEF;
+using Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate;
 using Ninja.Ordering.Infrastructure.Projections;
 
 namespace Ninja.Ordering.Infrastructure;
@@ -18,6 +19,8 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<BranchSettings> BranchSettings { get; set; }
     public DbSet<GuestBlock> GuestBlocks { get; set; }
     public DbSet<Place> Places { get; set; }
+    public DbSet<KitchenStation> KitchenStations { get; set; }
+    public DbSet<KitchenPrintJob> KitchenPrintJobs { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -46,6 +49,9 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new BranchSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new GuestBlockEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new KitchenStationEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new OrderStationPartEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new KitchenPrintJobEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

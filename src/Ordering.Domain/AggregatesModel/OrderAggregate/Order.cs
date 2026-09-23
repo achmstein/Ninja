@@ -148,6 +148,15 @@ public class Order
 
     public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
 
+    private readonly List<OrderStationPart> _stationParts;
+
+    /// <summary>
+    /// The order split by kitchen station, one part per station that makes
+    /// any of its lines. Set when the order reaches the kitchen; empty on
+    /// orders confirmed before stations, which the kitchen treats as whole.
+    /// </summary>
+    public IReadOnlyCollection<OrderStationPart> StationParts => _stationParts.AsReadOnly();
+
     /// <summary>
     /// Order rating (null if not rated yet)
     /// </summary>
@@ -172,9 +181,10 @@ public class Order
 
     /// <summary>
     /// When the kitchen finished it; null while it is still on the board,
-    /// and null again if the kitchen brings it back. The order's only
-    /// kitchen state: never shown to the customer, never changes what the
-    /// order costs.
+    /// and null again if the kitchen brings it back. With stations, it is
+    /// set when the last part on a screen is ready — a printed part never
+    /// counts, and an order made only at printers is never marked ready.
+    /// Never changes what the order costs.
     /// </summary>
     public DateTime? ReadyAt { get; private set; }
 
@@ -192,6 +202,7 @@ public class Order
     protected Order()
     {
         _orderItems = new List<OrderItem>();
+        _stationParts = new List<OrderStationPart>();
         _isDraft = false;
     }
 
@@ -352,9 +363,10 @@ public class Order
     /// <summary>
     /// Set order to submitted after stock validation passes. Catalog answers
     /// the promo code in the same breath: the code as redeemed and its worth,
-    /// or nothing when it did not apply.
+    /// or nothing when it did not apply — and each product's menu category,
+    /// which is what later sends a line to its kitchen station.
     /// </summary>
-    public void SetStockConfirmedStatus(string? promoCode = null, decimal promoDiscount = 0)
+    public void SetStockConfirmedStatus(string? promoCode = null, decimal promoDiscount = 0, IReadOnlyDictionary<int, int>? categories = null)
     {
         if (OrderStatus != OrderStatus.AwaitingValidation)
         {
@@ -365,6 +377,15 @@ public class Order
         Description = "Items validated. Order ready for confirmation.";
         PromoCode = promoDiscount > 0 ? promoCode : null;
         PromoDiscount = Math.Clamp(promoDiscount, 0, Math.Max(0, GetItemsTotal()));
+
+        if (categories is not null)
+        {
+            foreach (var item in _orderItems)
+            {
+                item.SetCategory(categories.TryGetValue(item.ProductId, out var categoryId) ? categoryId : null);
+            }
+        }
+
         AddDomainEvent(new OrderStatusChangedToSubmittedDomainEvent(Id));
     }
 
@@ -384,9 +405,11 @@ public class Order
     }
 
     /// <summary>
-    /// Confirm the order (admin action) - moves to POS
+    /// Confirm the order (admin action) - moves to POS, and to the kitchen:
+    /// with the branch's <paramref name="routing"/>, every line goes to the
+    /// station that makes it and the order is split into one part per station.
     /// </summary>
-    public void SetConfirmedStatus()
+    public void SetConfirmedStatus(KitchenRouting? routing = null)
     {
         if (OrderStatus != OrderStatus.Submitted)
         {
@@ -397,29 +420,110 @@ public class Order
         OrderStatus = OrderStatus.Confirmed;
         ConfirmedAt = DateTime.UtcNow;
         Description = "Order confirmed and sent to POS.";
+
+        if (routing is not null)
+        {
+            RouteToStations(routing);
+        }
+    }
+
+    private void RouteToStations(KitchenRouting routing)
+    {
+        foreach (var item in _orderItems)
+        {
+            var station = routing.StationFor(item.CategoryId);
+            item.RouteTo(station.Id);
+
+            if (_stationParts.All(p => p.StationId != station.Id))
+            {
+                _stationParts.Add(new OrderStationPart(station.Id, station.Name, station.ShowsOnScreen, station.PrintsTickets));
+            }
+        }
+
+        if (_stationParts.Any(p => p.PrintsTickets))
+        {
+            AddDomainEvent(new OrderSentToKitchenPrintersDomainEvent(
+                Id, BranchId, _stationParts.Where(p => p.PrintsTickets).Select(p => p.StationId).ToList()));
+        }
     }
 
     /// <summary>
-    /// Mark the order ready in the kitchen, or bring a ready one back to the
-    /// board (a card bumped too early, or a remake). The same state twice is
-    /// a no-op, so two screens tapping the same card do not race each other
+    /// Mark the whole order ready in the kitchen, or bring a ready one back
+    /// to the board (a card bumped too early, or a remake) — from the pass,
+    /// where every part on a screen goes with it. The same state twice is a
+    /// no-op, so two screens tapping the same card do not race each other
     /// into an error. Only a confirmed order is in the kitchen at all.
     /// </summary>
     public void SetReady(bool ready)
     {
-        if (OrderStatus != OrderStatus.Confirmed)
+        EnsureInKitchen();
+
+        if (_stationParts.Count == 0)
         {
-            throw new OrderingDomainException($"Cannot change kitchen state from status {OrderStatus}. Only a confirmed order is in the kitchen.");
+            // Confirmed before stations: the order is one card
+            if (ready != IsReady)
+            {
+                ReadyAt = ready ? DateTime.UtcNow : null;
+                AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
+            }
+            return;
         }
 
+        var onScreen = _stationParts.Where(p => p.ShowsOnScreen).ToList();
+        if (onScreen.Count == 0)
+        {
+            throw new OrderingDomainException("This order only went to kitchen printers; nobody marks it ready.");
+        }
+
+        var now = DateTime.UtcNow;
+        foreach (var part in onScreen)
+        {
+            part.SetReady(ready, now);
+        }
+
+        SyncReady(now);
+    }
+
+    /// <summary>
+    /// One station's screen marked its part done, or brought it back. The
+    /// order is ready once every part on a screen is; bringing one back
+    /// takes the whole order back. The same state twice is a no-op.
+    /// </summary>
+    public void SetStationReady(int stationId, bool ready)
+    {
+        EnsureInKitchen();
+
+        var part = _stationParts.SingleOrDefault(p => p.StationId == stationId)
+            ?? throw new OrderingDomainException($"Nothing on order {Id} is made at station {stationId}.");
+
+        if (!part.ShowsOnScreen)
+        {
+            throw new OrderingDomainException("That station prints its part; nobody marks it ready.");
+        }
+
+        var now = DateTime.UtcNow;
+        part.SetReady(ready, now);
+        SyncReady(now);
+    }
+
+    private void SyncReady(DateTime now)
+    {
+        var ready = _stationParts.Where(p => p.ShowsOnScreen).All(p => p.IsReady);
         if (ready == IsReady)
         {
             return;
         }
 
-        ReadyAt = ready ? DateTime.UtcNow : null;
-
+        ReadyAt = ready ? now : null;
         AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
+    }
+
+    private void EnsureInKitchen()
+    {
+        if (OrderStatus != OrderStatus.Confirmed)
+        {
+            throw new OrderingDomainException($"Cannot change kitchen state from status {OrderStatus}. Only a confirmed order is in the kitchen.");
+        }
     }
 
     /// <summary>
