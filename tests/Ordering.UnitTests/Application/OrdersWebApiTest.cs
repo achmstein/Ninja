@@ -33,7 +33,7 @@ public class OrdersWebApiTest
         // No place is known unless a test says otherwise (fail-open, like a fresh deployment)
         _placesMock = Substitute.For<IPlaceQueries>();
         // The order is there unless a test says otherwise: confirm and cancel look it up first
-        _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns(new OrderOwnership("a-buyer", null));
+        _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns(new OrderOwnership("a-buyer", null, 1));
     }
 
     [TestMethod]
@@ -268,7 +268,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns(userId);
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(userId, null)));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(userId, null, 1)));
         _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
             .Returns(Task.FromResult(fakeDynamicResult));
 
@@ -290,7 +290,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns(userId);
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(userId, null)));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(userId, null, 1)));
 #pragma warning disable NS5003
         _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
             .Throws(new KeyNotFoundException());
@@ -313,7 +313,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns(Guid.NewGuid().ToString());
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(Guid.NewGuid().ToString(), null)));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(Guid.NewGuid().ToString(), null, 1)));
 
         // Act
         var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
@@ -334,7 +334,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns((string)null);
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, guestId)));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, guestId, 1)));
         _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
             .Returns(Task.FromResult(fakeDynamicResult));
 
@@ -357,7 +357,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns((string)null);
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, Guid.NewGuid().ToString())));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, Guid.NewGuid().ToString(), 1)));
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = Guid.NewGuid().ToString();
@@ -371,6 +371,31 @@ public class OrdersWebApiTest
         await _orderQueriesMock.DidNotReceive().GetOrderAsync(Arg.Any<int>());
     }
 
+    [DataTestMethod]
+    [DataRow("Cashier", "1", true, DisplayName = "a cashier of the order's branch")]
+    [DataRow("Cashier", "2", false, DisplayName = "a cashier of another branch")]
+    [DataRow("Owner", null, true, DisplayName = "the owner, who holds every branch")]
+    [DataRow("Customer", "1", false, DisplayName = "a customer who did not place it")]
+    public async Task Get_order_is_readable_by_the_till_staff_of_its_branch(string role, string branch, bool readable)
+    {
+        // A customer's order, opened on the till to confirm it
+        var fakeOrderId = 123;
+        _identityServiceMock.GetUserIdentity().Returns(Guid.NewGuid().ToString());
+        _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(Guid.NewGuid().ToString(), null, 1)));
+        _orderQueriesMock.GetOrderAsync(Arg.Any<int>()).Returns(Task.FromResult(new Order()));
+
+        List<Claim> claims = [new("role", role)];
+        if (branch is not null) claims.Add(new("branches", branch));
+        var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test", "name", "role")) };
+
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var result = await OrdersApi.GetOrderAsync(fakeOrderId, httpContext, orderServices);
+
+        if (readable) Assert.IsInstanceOfType<Ok<Order>>(result.Result);
+        else Assert.IsInstanceOfType<NotFound>(result.Result);
+    }
+
     [TestMethod]
     public async Task Get_order_is_readable_by_an_admin()
     {
@@ -380,7 +405,7 @@ public class OrdersWebApiTest
 
         _identityServiceMock.GetUserIdentity().Returns((string)null);
         _orderQueriesMock.GetOrderOwnershipAsync(fakeOrderId)
-            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, Guid.NewGuid().ToString())));
+            .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(null, Guid.NewGuid().ToString(), 1)));
         _orderQueriesMock.GetOrderAsync(Arg.Any<int>())
             .Returns(Task.FromResult(fakeDynamicResult));
 

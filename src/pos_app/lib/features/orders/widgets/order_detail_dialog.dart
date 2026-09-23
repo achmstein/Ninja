@@ -49,7 +49,12 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final order = ref.watch(orderDetailsProvider(widget.orderId)).value;
+    final details = ref.watch(orderDetailsProvider(widget.orderId));
+    final order = details.value;
+    // A failed load says so and offers another try; the order can still be confirmed or
+    // cancelled, as it can from the card, since neither needs the details
+    final failed = order == null && details.hasError;
+    final canAct = order != null || failed;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
     final place = order?.placeName?.localized(context) ?? '';
@@ -96,7 +101,30 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
               ),
             ],
             const SizedBox(height: 16),
-            if (order == null)
+            if (failed)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                child: Row(
+                  children: [
+                    Icon(FIcons.circleAlert, size: 20, color: theme.colors.mutedForeground),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(l10n.orderDetailsFailed, style: theme.typography.sm)),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      height: 40,
+                      child: FButton(
+                        variant: FButtonVariant.outline,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () => ref.invalidate(orderDetailsProvider(widget.orderId)),
+                        prefix: const Icon(FIcons.refreshCw, size: 16),
+                        child: Text(l10n.retry, style: theme.typography.sm.forButton),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (order == null)
               Shimmer.fromColors(
                 baseColor: theme.colors.muted,
                 highlightColor: theme.colors.background,
@@ -219,7 +247,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                     child: FButton(
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
-                      onPress: order == null ? null : () => setState(() => _cancelling = true),
+                      onPress: canAct ? () => setState(() => _cancelling = true) : null,
                       prefix: Icon(FIcons.x, size: 20, color: theme.colors.destructive),
                       child: Text(l10n.cancelOrder,
                           style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
@@ -230,7 +258,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                     height: 48,
                     child: FButton(
                       mainAxisSize: MainAxisSize.min,
-                      onPress: order == null ? null : () => pick(OrderDetailAction.confirm),
+                      onPress: canAct ? () => pick(OrderDetailAction.confirm) : null,
                       prefix: const Icon(FIcons.check, size: 20),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),

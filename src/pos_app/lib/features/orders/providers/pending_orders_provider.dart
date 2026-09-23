@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -58,9 +59,16 @@ class PendingOrdersNotifier extends AsyncNotifier<List<Order>> {
 final pendingOrdersProvider = AsyncNotifierProvider<PendingOrdersNotifier, List<Order>>(PendingOrdersNotifier.new);
 
 /// One order in full, for the look-before-accepting dialog
-final orderDetailsProvider = FutureProvider.autoDispose.family<Order, int>((ref, orderId) {
-  return ref.read(orderRepositoryProvider).getOrderDetails(orderId);
-});
+final orderDetailsProvider = FutureProvider.autoDispose.family<Order, int>(
+  (ref, orderId) => ref.read(orderRepositoryProvider).getOrderDetails(orderId),
+  // A refusal (404, 403) stays a refusal: say so at once instead of looping back to loading;
+  // a dropped connection gets Riverpod's usual retries
+  retry: (count, error) {
+    final status = error is DioException ? error.response?.statusCode : null;
+    if (status != null && status >= 400 && status < 500) return null;
+    return count < 3 ? Duration(milliseconds: 200 * (1 << count)) : null;
+  },
+);
 
 /// The pending orders that will land on this ticket once confirmed: a room
 /// order carries its session, a table order its table. Counter tickets

@@ -1457,4 +1457,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get installUpdate => 'Install';
+
+  @override
+  String get orderDetailsFailed =>
+      'Couldn\'t load this order\'s items. You can still confirm or cancel it.';
 }

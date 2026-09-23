@@ -1468,4 +1468,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get installUpdate => 'تثبيت';
+
+  @override
+  String get orderDetailsFailed =>
+      'مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.';
 }

@@ -734,5 +734,6 @@
   "updateNeedsPermission": "اسمح بالتثبيت من التطبيق ده في الإعدادات اللي أندرويد فتحها، وبعدين دوس تثبيت تاني",
   "updateFailed": "مقدرناش ندوّر على تحديث",
   "checkForUpdates": "دوّر على تحديث",
-  "installUpdate": "تثبيت"
+  "installUpdate": "تثبيت",
+  "orderDetailsFailed": "مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه."
 }

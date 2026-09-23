@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { OrderSummary } from '@/api/ordering/types.gen'
-import { Check, MessageSquare, ShieldQuestion, UserX, X } from 'lucide-react'
+import { Check, CircleAlert, MessageSquare, RefreshCw, ShieldQuestion, UserX, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import {
@@ -55,13 +55,22 @@ export function OrderDetailDialog({
     if (!open) setCancelling(false)
   }, [open])
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, isError, refetch } = useQuery({
     ...getOrderOptions({
       path: { orderId: orderNumber ?? 0 },
       query: { 'api-version': API_VERSION },
     }),
     enabled: open,
+    // A refusal stays a refusal: say so at once rather than retrying it three times
+    retry: (count, error) => {
+      const status = (error as { status?: number; response?: { status?: number } })?.response?.status
+      return !(status != null && status >= 400 && status < 500) && count < 3
+    },
   })
+  // A failed load says so and offers another try; the order can still be
+  // confirmed or cancelled, as it can from the card, since neither needs it
+  const failed = !order && isError
+  const canAct = !!order || failed
 
   const loyaltyDiscount = toNumber(order?.loyaltyDiscount)
   const place = localized(order?.placeName)
@@ -113,7 +122,16 @@ export function OrderDetailDialog({
           )}
         </DialogHeader>
 
-        {isLoading || !order ? (
+        {failed ? (
+          <div className='bg-muted flex items-center gap-2 rounded-lg p-3 text-sm'>
+            <CircleAlert className='text-muted-foreground size-5 shrink-0' />
+            <span className='flex-1'>{t('orderDetailsFailed')}</span>
+            <Button variant='outline' size='sm' onClick={() => refetch()}>
+              <RefreshCw className='size-4' />
+              {t('retry')}
+            </Button>
+          </div>
+        ) : isLoading || !order ? (
           <div className='flex flex-col gap-2'>
             <Skeleton className='h-5 w-3/4' />
             <Skeleton className='h-5 w-2/3' />
@@ -221,7 +239,7 @@ export function OrderDetailDialog({
               variant='outline'
               size='lg'
               className='text-destructive hover:text-destructive h-12'
-              disabled={!order}
+              disabled={!canAct}
               onClick={() => setCancelling(true)}
             >
               <X className='size-5' />
@@ -230,7 +248,7 @@ export function OrderDetailDialog({
             <Button
               size='lg'
               className='h-12 px-6'
-              disabled={!order}
+              disabled={!canAct}
               onClick={() => orderNumber != null && onConfirm(orderNumber)}
             >
               <Check className='size-5' />

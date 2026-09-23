@@ -652,7 +652,8 @@ public static partial class OrdersApi
         [AsParameters] OrderServices services)
     {
         // Order numbers are sequential, so the id alone proves nothing: the
-        // caller has to be an admin, the customer who placed it, or the guest
+        // caller has to be an admin, till staff of the order's branch (who
+        // open it to confirm it), the customer who placed it, or the guest
         // holding the id it was placed under. A stranger gets the same 404 as
         // a missing order, which keeps the endpoint from confirming what exists.
         var ownership = await services.Queries.GetOrderOwnershipAsync(orderId);
@@ -676,6 +677,16 @@ public static partial class OrdersApi
     private static bool CanReadOrder(OrderOwnership ownership, HttpContext httpContext, OrderServices services)
     {
         if (httpContext.User.IsInRole(Roles.Admin))
+        {
+            return true;
+        }
+
+        // The till's cashiers and owners, by the same rule as every branch-scoped
+        // till endpoint: an owner holds every branch, anyone else the ones in their
+        // token. The extension, not ClaimsPrincipal's own IsInRole (see IsPosStaff).
+        var user = httpContext.User;
+        if (user.IsPosStaff()
+            && (ClaimsPrincipalExtensions.IsInRole(user, "Owner") || user.GetBranchIds().Contains(ownership.BranchId)))
         {
             return true;
         }

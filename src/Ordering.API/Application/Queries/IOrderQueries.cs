@@ -80,7 +80,8 @@ public interface IOrderQueries
 /// or the guest id it was placed under. Exactly one is set. Never returned to
 /// a client — the guest id is a secret, not an identifier to hand out.
 /// </summary>
-public record OrderOwnership(string? BuyerIdentityGuid, string? GuestId);
+/// <param name="BranchId">Where the order was placed: till staff read the orders of the branches they work in.</param>
+public record OrderOwnership(string? BuyerIdentityGuid, string? GuestId, int BranchId);
 
 /// <summary>
 /// Paginated result wrapper

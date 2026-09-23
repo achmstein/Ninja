@@ -2689,6 +2689,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install'**
   String get installUpdate;
+
+  /// No description provided for @orderDetailsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this order\'s items. You can still confirm or cancel it.'**
+  String get orderDetailsFailed;
 }
 
 class _AppLocalizationsDelegate

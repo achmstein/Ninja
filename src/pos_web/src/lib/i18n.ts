@@ -609,6 +609,10 @@ const dictionary = {
 
   // Errors / generic
   retry: { en: 'Retry', ar: 'حاول تاني' },
+  orderDetailsFailed: {
+    en: "Couldn't load this order's items. You can still confirm or cancel it.",
+    ar: 'مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.',
+  },
   somethingWentWrong: { en: 'Something went wrong!', ar: 'في حاجة غلط حصلت!' },
   contentNotFound: { en: 'Content not found.', ar: 'المحتوى مش موجود.' },
   sessionExpired: { en: 'Session expired!', ar: 'الجلسة خلصت!' },

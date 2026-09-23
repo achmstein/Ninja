@@ -77,7 +77,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .Where(o => o.Id == id)
             .Select(o => new OrderOwnership(
                 o.Buyer != null ? o.Buyer.IdentityGuid : null,
-                o.GuestId))
+                o.GuestId,
+                o.BranchId))
             .FirstOrDefaultAsync();
 
     /// <summary>
