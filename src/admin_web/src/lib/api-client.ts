@@ -23,9 +23,10 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     // Branch-scoped endpoints resolve the branch from this header; the
-    // sidebar branch switcher controls it.
+    // sidebar branch switcher controls it, unless a request names its own
+    // branch (a branch's kitchen, set up from the branches page).
     const branchId = getActiveBranchId()
-    if (branchId !== null) {
+    if (branchId !== null && !config.headers['X-Branch-Id']) {
       config.headers['X-Branch-Id'] = String(branchId)
     }
     return config

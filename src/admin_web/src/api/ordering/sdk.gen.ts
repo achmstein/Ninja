@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses } from './types.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ClaimKitchenPrintJobData, ClaimKitchenPrintJobErrors, ClaimKitchenPrintJobResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateKitchenStationData, CreateKitchenStationErrors, CreateKitchenStationResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteKitchenStationData, DeleteKitchenStationErrors, DeleteKitchenStationResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetKitchenPrintJobsData, GetKitchenPrintJobsErrors, GetKitchenPrintJobsResponses, GetKitchenStationsData, GetKitchenStationsErrors, GetKitchenStationsResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedErrors, MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedErrors, MarkKitchenPrintJobPrintedResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, ReprintKitchenTicketData, ReprintKitchenTicketErrors, ReprintKitchenTicketResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses, SetOrderStationReadyData, SetOrderStationReadyErrors, SetOrderStationReadyResponses, TestPrintKitchenStationData, TestPrintKitchenStationErrors, TestPrintKitchenStationResponses, UpdateKitchenStationData, UpdateKitchenStationErrors, UpdateKitchenStationResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -171,7 +171,7 @@ export const getPendingOrders = <ThrowOnError extends boolean = false>(options: 
 /**
  * Confirmed orders in the kitchen, for the kitchen display (staff)
  *
- * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.
+ * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.
  */
 export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: Options<GetKitchenOrdersData, ThrowOnError>): RequestResult<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError>({
     responseType: 'json',
@@ -182,7 +182,7 @@ export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: 
 /**
  * Mark a confirmed order ready in the kitchen, or bring it back (staff)
  *
- * Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.
+ * From the pass: ready true marks every part on a screen done, false brings the order back to the board. Refused for an order made only at printers. Repeating the current state is a no-op.
  */
 export const setOrderReady = <ThrowOnError extends boolean = false>(options: Options<SetOrderReadyData, ThrowOnError>): RequestResult<SetOrderReadyResponses, SetOrderReadyErrors, ThrowOnError> => (options.client ?? client).put<SetOrderReadyResponses, SetOrderReadyErrors, ThrowOnError>({
     url: '/api/orders/{orderId}/ready',
@@ -228,6 +228,122 @@ export const getOrdersByUserId = <ThrowOnError extends boolean = false>(options:
 export const createOrderDraft = <ThrowOnError extends boolean = false>(options: Options<CreateOrderDraftData, ThrowOnError>): RequestResult<CreateOrderDraftResponses, CreateOrderDraftErrors, ThrowOnError> => (options.client ?? client).post<CreateOrderDraftResponses, CreateOrderDraftErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/draft',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Mark a station's part of an order ready, or bring it back (staff)
+ *
+ * The order is ready once every part on a screen is. A part that only prints is never marked. Repeating the current state is a no-op.
+ */
+export const setOrderStationReady = <ThrowOnError extends boolean = false>(options: Options<SetOrderStationReadyData, ThrowOnError>): RequestResult<SetOrderStationReadyResponses, SetOrderStationReadyErrors, ThrowOnError> => (options.client ?? client).put<SetOrderStationReadyResponses, SetOrderStationReadyErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/stations/{stationId}/ready',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Print a station's ticket for an order again (staff)
+ */
+export const reprintKitchenTicket = <ThrowOnError extends boolean = false>(options: Options<ReprintKitchenTicketData, ThrowOnError>): RequestResult<ReprintKitchenTicketResponses, ReprintKitchenTicketErrors, ThrowOnError> => (options.client ?? client).post<ReprintKitchenTicketResponses, ReprintKitchenTicketErrors, ThrowOnError>({ url: '/api/orders/{orderId}/stations/{stationId}/reprint', ...options });
+
+/**
+ * The branch's kitchen stations (staff)
+ *
+ * In display order. A branch that has none gets its default station, which makes everything on one screen.
+ */
+export const getKitchenStations = <ThrowOnError extends boolean = false>(options: Options<GetKitchenStationsData, ThrowOnError>): RequestResult<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/kitchen/stations',
+    ...options
+});
+
+/**
+ * Add a kitchen station (admin)
+ *
+ * Refused when another station already makes one of its categories, when it neither shows nor prints, or when it prints without a printer address.
+ */
+export const createKitchenStation = <ThrowOnError extends boolean = false>(options: Options<CreateKitchenStationData, ThrowOnError>): RequestResult<CreateKitchenStationResponses, CreateKitchenStationErrors, ThrowOnError> => (options.client ?? client).post<CreateKitchenStationResponses, CreateKitchenStationErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/kitchen/stations',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove a kitchen station (admin)
+ *
+ * The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order.
+ */
+export const deleteKitchenStation = <ThrowOnError extends boolean = false>(options: Options<DeleteKitchenStationData, ThrowOnError>): RequestResult<DeleteKitchenStationResponses, DeleteKitchenStationErrors, ThrowOnError> => (options.client ?? client).delete<DeleteKitchenStationResponses, DeleteKitchenStationErrors, ThrowOnError>({ url: '/api/kitchen/stations/{stationId}', ...options });
+
+/**
+ * Change a kitchen station (admin)
+ *
+ * Orders already in the kitchen keep the station as it was when they arrived.
+ */
+export const updateKitchenStation = <ThrowOnError extends boolean = false>(options: Options<UpdateKitchenStationData, ThrowOnError>): RequestResult<UpdateKitchenStationResponses, UpdateKitchenStationErrors, ThrowOnError> => (options.client ?? client).put<UpdateKitchenStationResponses, UpdateKitchenStationErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/kitchen/stations/{stationId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Queue a test page for a station's printer (admin)
+ */
+export const testPrintKitchenStation = <ThrowOnError extends boolean = false>(options: Options<TestPrintKitchenStationData, ThrowOnError>): RequestResult<TestPrintKitchenStationResponses, TestPrintKitchenStationErrors, ThrowOnError> => (options.client ?? client).post<TestPrintKitchenStationResponses, TestPrintKitchenStationErrors, ThrowOnError>({ url: '/api/kitchen/stations/{stationId}/test-print', ...options });
+
+/**
+ * Tickets waiting for a kitchen printer (staff)
+ *
+ * The branch's unprinted tickets from the last day, oldest first, each with its printer's address and the lines to print. A ticket with a live claim is being printed by another device.
+ */
+export const getKitchenPrintJobs = <ThrowOnError extends boolean = false>(options: Options<GetKitchenPrintJobsData, ThrowOnError>): RequestResult<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/kitchen/print-jobs',
+    ...options
+});
+
+/**
+ * Take a ticket to print (print host)
+ *
+ * 204 when this device has it; 409 when it is printed or another device holds it. A claim lapses after a minute.
+ */
+export const claimKitchenPrintJob = <ThrowOnError extends boolean = false>(options: Options<ClaimKitchenPrintJobData, ThrowOnError>): RequestResult<ClaimKitchenPrintJobResponses, ClaimKitchenPrintJobErrors, ThrowOnError> => (options.client ?? client).post<ClaimKitchenPrintJobResponses, ClaimKitchenPrintJobErrors, ThrowOnError>({
+    url: '/api/kitchen/print-jobs/{jobId}/claim',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Report a ticket printed (print host)
+ */
+export const markKitchenPrintJobPrinted = <ThrowOnError extends boolean = false>(options: Options<MarkKitchenPrintJobPrintedData, ThrowOnError>): RequestResult<MarkKitchenPrintJobPrintedResponses, MarkKitchenPrintJobPrintedErrors, ThrowOnError> => (options.client ?? client).post<MarkKitchenPrintJobPrintedResponses, MarkKitchenPrintJobPrintedErrors, ThrowOnError>({ url: '/api/kitchen/print-jobs/{jobId}/printed', ...options });
+
+/**
+ * Report the printer refused a ticket (print host)
+ *
+ * Lets the claim go so any device can try again; the error is kept for the till's warning.
+ */
+export const markKitchenPrintJobFailed = <ThrowOnError extends boolean = false>(options: Options<MarkKitchenPrintJobFailedData, ThrowOnError>): RequestResult<MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobFailedErrors, ThrowOnError> => (options.client ?? client).post<MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobFailedErrors, ThrowOnError>({
+    url: '/api/kitchen/print-jobs/{jobId}/failed',
     ...options,
     headers: {
         'Content-Type': 'application/json',

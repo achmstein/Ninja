@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
+import { ChefHat, MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
 import { type BranchResponse } from '@/api/branch'
 import {
   getAllBranchesOptions,
@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { BranchDialog } from './components/branch-dialog'
+import { KitchenDialog } from './components/kitchen-dialog'
 import { PricingDialog } from './components/pricing-dialog'
 
 export function BranchesManagement() {
@@ -27,6 +28,9 @@ export function BranchesManagement() {
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(
+    null
+  )
+  const [kitchenBranch, setKitchenBranch] = useState<BranchResponse | null>(
     null
   )
   const [editingBranch, setEditingBranch] = useState<BranchResponse | null>(
@@ -97,6 +101,16 @@ export function BranchesManagement() {
                       </div>
                     </div>
                     <div className='flex items-center'>
+                      {features.kds && (
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t('kitchenStations')}
+                          onClick={() => setKitchenBranch(branch)}
+                        >
+                          <ChefHat className='h-4 w-4' />
+                        </Button>
+                      )}
                       <Button
                         variant='ghost'
                         size='icon'
@@ -170,6 +184,13 @@ export function BranchesManagement() {
           </div>
         )}
       </Main>
+
+      <KitchenDialog
+        branch={kitchenBranch}
+        onOpenChange={(open) => {
+          if (!open) setKitchenBranch(null)
+        }}
+      />
 
       <PricingDialog
         branch={pricingBranch}

@@ -742,5 +742,32 @@
   "visitsLabel": "visits",
   "copyPlaceLink": "Copy QR link",
   "placeLinkCopied": "Link copied",
-  "acceptingCustomers": "Open"
+  "acceptingCustomers": "Open",
+  "kitchenStations": "Kitchen stations",
+  "kitchenStationsHint": "Split orders by menu category. Each station shows its part on a kitchen screen, prints it, or both.",
+  "addStation": "Add station",
+  "editStation": "Edit station",
+  "deleteStation": "Remove station",
+  "defaultStation": "Default",
+  "defaultStationHint": "Makes everything no other station makes",
+  "stationShowsOnScreen": "Kitchen screen",
+  "stationPrintsTickets": "Printer",
+  "printerAddress": "Printer IP address",
+  "printerPort": "Port",
+  "stationCategories": "Categories it makes",
+  "categoryTakenBy": "at {station}",
+  "@categoryTakenBy": {
+    "placeholders": {
+      "station": {
+        "type": "String"
+      }
+    }
+  },
+  "sendTestTicket": "Send test ticket",
+  "testTicketQueued": "Test ticket sent to the printer",
+  "stationSaved": "Station saved",
+  "stationDeleted": "Station removed",
+  "failedToSaveStation": "Could not save the station",
+  "stationNeedsOutput": "Choose a kitchen screen, a printer, or both",
+  "printerAddressRequired": "Enter the printer's address"
 }
