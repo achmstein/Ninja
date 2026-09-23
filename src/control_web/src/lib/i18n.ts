@@ -72,6 +72,22 @@ const dictionary = {
   subPastDue: { en: 'Past due', ar: 'متأخر' },
   subSuspended: { en: 'Suspended', ar: 'موقوف' },
   subCancelled: { en: 'Cancelled', ar: 'ملغي' },
+  dueToday: { en: 'Due today', ar: 'مستحق النهارده' },
+  overdueDays: {
+    plural: 'count',
+    en: { one: '1 day overdue', other: '{count} days overdue' },
+    ar: { one: 'متأخر يوم', two: 'متأخر يومين', few: 'متأخر {count} أيام', many: 'متأخر {count} يوم', other: 'متأخر {count} يوم' },
+  },
+  dueInDays: {
+    plural: 'count',
+    en: { one: '1 day left', other: '{count} days left' },
+    ar: { one: 'فاضل يوم', two: 'فاضل يومين', few: 'فاضل {count} أيام', many: 'فاضل {count} يوم', other: 'فاضل {count} يوم' },
+  },
+  needsPaymentCount: {
+    plural: 'count',
+    en: { one: '1 needs payment', other: '{count} need payment' },
+    ar: { one: 'عميل محتاج دفع', two: 'عميلين محتاجين دفع', few: '{count} عملاء محتاجين دفع', many: '{count} عميل محتاجين دفع', other: '{count} عميل محتاج دفع' },
+  },
   tabSubscription: { en: 'Subscription', ar: 'الاشتراك' },
   subscriptionStatus: { en: 'Subscription', ar: 'الاشتراك' },
   planNote: { en: 'What the plan includes is on; anything else can be added on top. The stack follows within a minute.', ar: 'اللي في الباقة شغّال؛ أي حاجة تانية ممكن تتضاف فوقها. العميل بيتحدّث في دقيقة.' },

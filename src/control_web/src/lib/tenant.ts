@@ -87,6 +87,70 @@ export const subscriptionLabelKey: Record<SubscriptionStatusName, TranslationKey
   Cancelled: 'subCancelled',
 }
 
+/** A period ending within this many days is worth seeing before it lapses. */
+export const DUE_SOON_DAYS = 7
+
+/** How loudly a list should say something about where a tenant stands on money. */
+export type BillingTone = 'none' | 'ok' | 'soon' | 'overdue' | 'stopped'
+
+export type BillingStanding = {
+  /** The day that matters for this kind: a demo runs out, a customer is paid through. */
+  due: string | null | undefined
+  /** Whole calendar days until `due`; negative once it has passed, null without one. */
+  days: number | null
+  tone: BillingTone
+}
+
+/**
+ * Whole days between two dates, the time of day on either ignored, read in
+ * the viewer's own zone -- the same way format.date() renders them, so the
+ * count a row shows always agrees with the date it shows next to it.
+ */
+const calendarDaysBetween = (from: Date, to: Date) =>
+  Math.round(
+    (Date.UTC(to.getFullYear(), to.getMonth(), to.getDate()) -
+      Date.UTC(from.getFullYear(), from.getMonth(), from.getDate())) /
+      86_400_000
+  )
+
+/**
+ * Where a tenant stands on money, as a row of the list needs it: which date
+ * matters, how far off it is, and how loudly to say so. The status the API
+ * computed wins over the date, because it knows the grace days that a list
+ * row does not carry: a stack is suspended only once the grace runs out too.
+ */
+export function billingStanding(
+  tenant: {
+    kind: number | string
+    subscription: number | string
+    expiresAt?: string | null
+    paidThrough?: string | null
+  },
+  now: Date = new Date()
+): BillingStanding {
+  const due =
+    tenantKind(tenant.kind) === 'Demo' ? tenant.expiresAt : tenant.paidThrough
+  const days = due ? calendarDaysBetween(now, new Date(due)) : null
+
+  switch (subscriptionStatus(tenant.subscription)) {
+    case 'Suspended':
+      return { due, days, tone: 'stopped' }
+    case 'PastDue':
+      return { due, days, tone: 'overdue' }
+    // Nothing left to chase on a tenant that has gone
+    case 'Cancelled':
+      return { due, days, tone: 'none' }
+  }
+
+  if (days === null) return { due, days, tone: 'none' }
+  if (days < 0) return { due, days, tone: 'overdue' }
+  return { due, days, tone: days <= DUE_SOON_DAYS ? 'soon' : 'ok' }
+}
+
+/** The tenants an operator should chase today, as opposed to keep an eye on. */
+export const needsPayment = (tone: BillingTone) =>
+  tone === 'overdue' || tone === 'stopped'
+
 /** The eight switches as modules a plan includes or sells; the order the API's enum has. */
 export const MODULES = ['Reservations', 'TimeBilling', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds'] as const
 export type ModuleName = (typeof MODULES)[number]

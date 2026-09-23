@@ -37,7 +37,15 @@ import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { megabytes, useFormat } from '@/lib/format'
 import { useLanguage, useT } from '@/lib/i18n'
-import { isBusy, planLabelKey, subscriptionStatus, tenantKind, tenantStatus } from '@/lib/tenant'
+import {
+  billingStanding,
+  isBusy,
+  needsPayment,
+  planLabelKey,
+  tenantStatus,
+  type BillingTone,
+} from '@/lib/tenant'
+import { cn } from '@/lib/utils'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
@@ -99,6 +107,10 @@ export function PlatformPage() {
   const listed = (tenants.data ?? []).filter((x) => showDestroyed || tenantStatus(x.status) !== 'Destroyed')
   const destroyedCount = (tenants.data ?? []).length - (tenants.data ?? []).filter((x) => tenantStatus(x.status) !== 'Destroyed').length
   const behindCount = (tenants.data ?? []).filter((x) => x.update?.behind).length
+  // Money that wants chasing today; a destroyed stack owes nobody anything
+  const needsPaymentCount = (tenants.data ?? []).filter(
+    (x) => tenantStatus(x.status) !== 'Destroyed' && needsPayment(billingStanding(x).tone)
+  ).length
 
   return (
     <div className='flex flex-col gap-4'>
@@ -117,6 +129,11 @@ export function PlatformPage() {
             {behindCount > 0 && (
               <Badge variant='outline' className='border-transparent bg-sky-500/15 text-sky-700 dark:text-sky-400'>
                 {t('behindCount', { count: behindCount })}
+              </Badge>
+            )}
+            {needsPaymentCount > 0 && (
+              <Badge variant='outline' className='border-transparent bg-rose-500/15 text-rose-700 dark:text-rose-400'>
+                {t('needsPaymentCount', { count: needsPaymentCount })}
               </Badge>
             )}
           </>
@@ -240,7 +257,47 @@ export function PlatformPage() {
   )
 }
 
-const COLUMNS = 9
+const COLUMNS = 10
+
+// The date column speaks in the same colours as the badges: rose is stopped,
+// red needs chasing, amber is about to lapse, quiet is fine.
+const dueToneClass: Record<BillingTone, string> = {
+  stopped: 'text-rose-700 dark:text-rose-400',
+  overdue: 'text-destructive',
+  soon: 'text-amber-700 dark:text-amber-400',
+  ok: 'text-muted-foreground',
+  none: 'text-muted-foreground',
+}
+
+/**
+ * The day a tenant runs out and how far off that is. A bare date makes the
+ * reader compare every row against today; the line underneath is the part
+ * that can actually be scanned, and it stays quiet while there is nothing
+ * to say.
+ */
+function DueCell({ tenant }: { tenant: TenantSummary }) {
+  const t = useT()
+  const format = useFormat()
+  const { due, days, tone } = billingStanding(tenant)
+
+  if (!due) return <span className='text-muted-foreground'>—</span>
+  const loud = tone !== 'ok' && tone !== 'none' && days !== null
+
+  return (
+    <div className='flex flex-col'>
+      <span className='text-muted-foreground'>{format.date(due)}</span>
+      {loud && (
+        <span className={cn('tabular-nums', dueToneClass[tone])}>
+          {days < 0
+            ? t('overdueDays', { count: -days })
+            : days === 0
+              ? t('dueToday')
+              : t('dueInDays', { count: days })}
+        </span>
+      )}
+    </div>
+  )
+}
 
 type TenantsTableProps = {
   tenants: TenantSummary[]
@@ -252,7 +309,6 @@ type TenantsTableProps = {
 /** Every tenant, newest first, with what its stack takes in memory. */
 function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
   const t = useT()
-  const format = useFormat()
   const language = useLanguage((s) => s.language)
 
   const memoryBySlug = new Map(
@@ -279,9 +335,11 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
             <TableHead>{t('kind')}</TableHead>
             <TableHead>{t('plan')}</TableHead>
             <TableHead>{t('status')}</TableHead>
+            {/* The money, as two columns side by side: where it stands, and until when */}
+            <TableHead>{t('subscriptionStatus')}</TableHead>
+            <TableHead>{t('expiresOrPaidThrough')}</TableHead>
             <TableHead>{t('memory')}</TableHead>
             <TableHead>{t('customerUrl')}</TableHead>
-            <TableHead>{t('expiresOrPaidThrough')}</TableHead>
             <TableHead>{t('lastError')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -326,13 +384,19 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                 <TableCell className='text-xs'>
                   {t(planLabelKey[tenant.plan])}
                 </TableCell>
+                {/* What the stack is doing */}
                 <TableCell>
                   <div className='flex flex-wrap gap-1'>
                     <StatusBadge status={tenant.status} />
-                    {/* Quiet while the money is fine; a word when it is not */}
-                    {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription)) && <SubscriptionBadge status={tenant.subscription} />}
                     {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
                   </div>
+                </TableCell>
+                {/* Where it stands on money, its own column so it reads down the page */}
+                <TableCell>
+                  <SubscriptionBadge status={tenant.subscription} />
+                </TableCell>
+                <TableCell className='text-xs'>
+                  <DueCell tenant={tenant} />
                 </TableCell>
                 <TableCell className='text-muted-foreground text-xs tabular-nums'>
                   {memory !== undefined ? megabytes(memory) : ''}
@@ -346,11 +410,6 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                   >
                     {tenant.customerUrl.replace(/^https?:\/\//, '')}
                   </a>
-                </TableCell>
-                <TableCell className='text-muted-foreground text-xs'>
-                  {tenantKind(tenant.kind) === 'Demo'
-                    ? format.date(tenant.expiresAt)
-                    : format.date(tenant.paidThrough)}
                 </TableCell>
                 <TableCell
                   className='text-destructive max-w-64 truncate text-xs'
