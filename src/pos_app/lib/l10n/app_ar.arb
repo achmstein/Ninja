@@ -169,7 +169,7 @@
   "roomReserved": "الأوضة اتحجزت",
   "failedToReserveRoom": "معرفناش نحجز الأوضة",
   "serviceRequests": "الطلبات",
-  "requestCallWaiter": "نداء الجرسون",
+  "requestCallWaiter": "نداء الويتر",
   "requestControllerChange": "تغيير الدراع",
   "requestReceiptToPay": "هات الحساب",
   "acknowledgeRequest": "استلمنا",

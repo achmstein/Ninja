@@ -186,7 +186,7 @@ const dictionary = {
 
   // Service requests (from a customer in a room)
   serviceRequests: { en: 'Requests', ar: 'الطلبات' },
-  requestCallWaiter: { en: 'Call waiter', ar: 'نداء الجرسون' },
+  requestCallWaiter: { en: 'Call waiter', ar: 'نداء الويتر' },
   requestControllerChange: { en: 'Change controller', ar: 'تغيير الدراع' },
   requestReceiptToPay: { en: 'Bring the bill', ar: 'هات الحساب' },
   requestChangeOption: { en: 'Switch to {option}', ar: 'عايز يحوّل {option}' },
