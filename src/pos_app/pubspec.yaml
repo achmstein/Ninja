@@ -124,4 +124,4 @@ flutter_native_splash:
 
   android_12:
     color: "#18181B"
-    image: assets/images/ninja_splash.png
+    image: assets/images/ninja_splash_android12.png

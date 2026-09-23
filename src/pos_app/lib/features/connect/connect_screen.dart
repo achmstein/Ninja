@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/brand/brand_mark.dart';
@@ -45,6 +46,14 @@ class _ConnectApp extends StatefulWidget {
 
 class _ConnectAppState extends State<_ConnectApp> {
   late Locale _locale = initialLocale;
+
+  @override
+  void initState() {
+    super.initState();
+    // main() holds the native splash until the app has signed in; a tablet
+    // not yet connected never gets that far, so the connect screen lifts it
+    FlutterNativeSplash.remove();
+  }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
