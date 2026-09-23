@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/printing/image_raster.dart';
+import 'package:ninja_printing/ninja_printing.dart';
 
 void main() {
   test('packs a 4×2 RGBA bitmap into one byte per row, MSB first, black = 1', () {

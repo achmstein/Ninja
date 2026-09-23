@@ -10,12 +10,9 @@ import '../../features/shifts/models/shift.dart';
 import '../../features/shifts/widgets/shift_report_sheet.dart';
 import '../../features/tickets/models/ticket_detail.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:ninja_printing/ninja_printing.dart';
 import 'brand_logo.dart';
-import 'escpos_builder.dart';
-import 'image_raster.dart';
-import 'network_escpos_printer.dart';
 import 'printer_settings.dart';
-import 'widget_rasterizer.dart';
 
 /// This till has no printer address yet
 class PrinterNotConfigured implements Exception {

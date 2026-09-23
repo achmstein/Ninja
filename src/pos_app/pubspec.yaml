@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # ESC/POS printing, shared with the kitchen display
+  ninja_printing:
+    path: ../ninja_printing
   flutter_localizations:
     sdk: flutter
 

@@ -115,6 +115,9 @@ jobs:
             codegen: false
           - app: kds_app
             codegen: false
+          # The printing the till and the kitchen display share
+          - app: ninja_printing
+            codegen: false
     defaults:
       run:
         working-directory: src/${{ matrix.app }}

@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/printing/escpos_builder.dart';
-import 'package:pos_app/core/printing/image_raster.dart';
+import 'package:ninja_printing/ninja_printing.dart';
 
 void main() {
   test('init, feed, cut and drawer kick are the documented bytes', () {
