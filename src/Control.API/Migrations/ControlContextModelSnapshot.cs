@@ -302,6 +302,11 @@ namespace Ninja.Control.API.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("AssistantSecret")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("BrokerPassword")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");

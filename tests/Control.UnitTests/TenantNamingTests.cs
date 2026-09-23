@@ -76,7 +76,7 @@ public sealed class TenantNamingTests
         Assert.AreEqual("blue-branch-uploads", TenantNaming.UploadsVolume("blue"));
         Assert.AreEqual("ninja-blue_blue-branch-uploads", TenantNaming.UploadsVolumeOnDocker("blue"));
         Assert.AreEqual(11, TenantNaming.Databases.Length);
-        Assert.AreEqual(12, TenantNaming.Services.Length);
+        Assert.AreEqual(13, TenantNaming.Services.Length);
         Assert.AreEqual("Inventory", TenantNaming.Queue("inventory"));
     }
 

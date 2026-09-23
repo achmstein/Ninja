@@ -146,7 +146,7 @@ public sealed class SecretsMigrationService(IServiceScopeFactory scopes, SecretP
         var plain = await context.Tenants
             .FromSqlRaw("""
                 SELECT * FROM "Tenants"
-                WHERE "IdentitySecret" NOT LIKE 'enc:v1:%' OR "ControlSecret" NOT LIKE 'enc:v1:%'
+                WHERE "IdentitySecret" NOT LIKE 'enc:v1:%' OR "ControlSecret" NOT LIKE 'enc:v1:%' OR "AssistantSecret" NOT LIKE 'enc:v1:%'
                    OR "DbPassword" NOT LIKE 'enc:v1:%' OR "BrokerPassword" NOT LIKE 'enc:v1:%' OR "OwnerInitialPassword" NOT LIKE 'enc:v1:%'
                 """)
             .ToListAsync(ct);
@@ -154,7 +154,7 @@ public sealed class SecretsMigrationService(IServiceScopeFactory scopes, SecretP
         foreach (var tenant in plain)
         {
             var entry = context.Entry(tenant);
-            foreach (var property in new[] { nameof(Tenant.IdentitySecret), nameof(Tenant.ControlSecret), nameof(Tenant.DbPassword), nameof(Tenant.BrokerPassword), nameof(Tenant.OwnerInitialPassword) })
+            foreach (var property in new[] { nameof(Tenant.IdentitySecret), nameof(Tenant.ControlSecret), nameof(Tenant.AssistantSecret), nameof(Tenant.DbPassword), nameof(Tenant.BrokerPassword), nameof(Tenant.OwnerInitialPassword) })
                 if (entry.Property(property).CurrentValue is not null) entry.Property(property).IsModified = true;
         }
         await context.SaveChangesAsync(ct);

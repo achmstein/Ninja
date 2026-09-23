@@ -19,6 +19,8 @@ public static partial class TenantNaming
     [
         "catalog", "ordering", "spaces", "sales", "inventory", "payroll",
         "finance", "identity", "loyalty", "notification", "accounts", "branch",
+        // The owner's MCP server: no database, no bus, every plan
+        "assistant",
     ];
 
     [GeneratedRegex("^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){2,23}$")]
@@ -72,6 +74,9 @@ public static partial class TenantNaming
 
     /// <summary>The durable queue a service consumes in the tenant's vhost: its EventBus:SubscriptionClientName, which every service spells as its own name capitalised (Inventory, Finance, …).</summary>
     public static string Queue(string service) => char.ToUpperInvariant(service[0]) + service[1..];
+
+    /// <summary>Whether the service consumes the bus at all: the assistant only calls the other services over HTTP.</summary>
+    public static bool HasQueue(string service) => service != "assistant";
 
     public static string Gateway(string slug) => $"{slug}-gateway";
 

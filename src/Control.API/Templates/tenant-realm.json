@@ -101,6 +101,12 @@
     "Customer",
     "offline_access"
   ],
+  "defaultDefaultClientScopes": [ "openid", "profile", "email", "roles", "branches", "mcp" ],
+  "defaultOptionalClientScopes": [ "offline_access" ],
+  "scopeMappings": [
+    { "clientScope": "mcp", "roles": [ "Owner", "Admin", "Cashier" ] },
+    { "clientScope": "offline_access", "roles": [ "offline_access" ] }
+  ],
   "clientScopes": [
     {
       "name": "openid",
@@ -328,6 +334,40 @@
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true"
       }
+    },
+    {
+      "name": "mcp",
+      "description": "The owner's assistant: what a chat app may read and, on the owner's say-so, record (Assistant.API)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Read the cafe's sales, profit, stock and staff figures, and record expenses or pause ordering when you ask"
+      },
+      "protocolMappers": [
+        {
+          "name": "mcp audience: endpoint",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "{{apiUrl}}/mcp",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "mcp audience: exchange client",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "assistant-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "clients": [
@@ -699,6 +739,64 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "ninja-mcp",
+      "name": "Owner's assistant (chat apps)",
+      "description": "Pre-registered public client for chat apps that do not register themselves (Claude Code, a connector's advanced settings). Claude.ai and ChatGPT register their own.",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "https://claude.ai/api/mcp/auth_callback",
+        "http://localhost:8765/callback",
+        "http://127.0.0.1:8765/callback"
+      ],
+      "webOrigins": [],
+      "consentRequired": true,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "branches",
+        "mcp"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "assistant-api",
+      "name": "Assistant service (token exchange)",
+      "description": "Assistant.API exchanges a chat app's token (audience: this client) for its own before calling the other services (RFC 8693).",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "secret": "{{assistantSecret}}",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
+        "branches"
+      ],
+      "optionalClientScopes": [],
+      "attributes": {
+        "standard.token.exchange.enabled": "true"
+      }
     }
   ],
   "users": [
@@ -734,6 +832,26 @@
     }
   ],
   "components": {
+    "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
+      {
+        "name": "Trusted Hosts",
+        "providerId": "trusted-hosts",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "trusted-hosts": [ "chatgpt.com", "*.chatgpt.com", "openai.com", "*.openai.com", "*.oaistatic.com", "*.oaiusercontent.com", "claude.ai", "*.claude.ai", "anthropic.com", "*.anthropic.com" ],
+          "host-sending-registration-request-must-match": [ "false" ],
+          "client-uris-must-match": [ "true" ]
+        }
+      },
+      { "name": "Consent Required", "providerId": "consent-required", "subType": "anonymous", "subComponents": {}, "config": {} },
+      { "name": "Full Scope Disabled", "providerId": "scope", "subType": "anonymous", "subComponents": {}, "config": {} },
+      { "name": "Max Clients Limit", "providerId": "max-clients", "subType": "anonymous", "subComponents": {}, "config": { "max-clients": [ "50" ] } },
+      { "name": "Allowed Protocol Mapper Types", "providerId": "allowed-protocol-mappers", "subType": "anonymous", "subComponents": {}, "config": { "allowed-protocol-mapper-types": [ "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper" ] } },
+      { "name": "Allowed Client Scopes", "providerId": "allowed-client-templates", "subType": "anonymous", "subComponents": {}, "config": { "allow-default-scopes": [ "true" ], "allowed-client-scopes": [ "mcp", "offline_access" ] } },
+      { "name": "Allowed Protocol Mapper Types", "providerId": "allowed-protocol-mappers", "subType": "authenticated", "subComponents": {}, "config": { "allowed-protocol-mapper-types": [ "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper" ] } },
+      { "name": "Allowed Client Scopes", "providerId": "allowed-client-templates", "subType": "authenticated", "subComponents": {}, "config": { "allow-default-scopes": [ "true" ] } }
+    ],
     "org.keycloak.userprofile.UserProfileProvider": [
       {
         "providerId": "declarative-user-profile",

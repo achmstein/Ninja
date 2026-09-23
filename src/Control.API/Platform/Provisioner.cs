@@ -68,7 +68,12 @@ public sealed class Provisioner(
             await Step(tenant, runId, "realm", async () =>
             {
                 var realm = TenantNaming.Realm(tenant.Slug);
-                if (await keycloak.RealmExistsAsync(realm, ct)) return $"realm {realm} already there";
+                if (await keycloak.RealmExistsAsync(realm, ct))
+                {
+                    // Realms are never re-imported: what the template gained since this one was made is added by hand
+                    await keycloak.EnsureAssistantClientsAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
+                    return $"realm {realm} already there (assistant clients ensured)";
+                }
                 await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts, Platform), ct);
                 return $"realm {realm}";
             }, ct);
@@ -193,6 +198,8 @@ public sealed class Provisioner(
             var fresh = !tenant.HasOwnCredentials;
             tenant.DbPassword ??= TenantNaming.NewSecret();
             tenant.BrokerPassword ??= TenantNaming.NewSecret();
+            // Stamped before the owner's assistant existed: the realm step hands the realm this secret
+            if (string.IsNullOrEmpty(tenant.AssistantSecret)) tenant.AssistantSecret = TenantNaming.NewSecret();
             await context.SaveChangesAsync(ct);
             await databases.EnsureRoleAsync(TenantNaming.DbRole(tenant.Slug), tenant.DbPassword, ct);
             await broker.EnsureUserAsync(TenantNaming.BrokerUser(tenant.Slug), tenant.BrokerPassword, ct);

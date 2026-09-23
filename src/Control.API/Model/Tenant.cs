@@ -149,6 +149,9 @@ public class Tenant
 
     public string ControlSecret { get; set; } = "";
 
+    /// <summary>The realm's assistant-api client secret: the owner's MCP server exchanges chat-app tokens with it. Filled by the credentials step for stacks stamped before there was one.</summary>
+    public string AssistantSecret { get; set; } = "";
+
     /// <summary>
     /// The stack's own database role and broker user passwords ({slug}_app on
     /// both). Null while the stack still runs on the shared credentials it was

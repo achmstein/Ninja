@@ -133,6 +133,7 @@ internal static class Extensions
         IResourceBuilder<ProjectResource> notificationApi,
         IResourceBuilder<ProjectResource> accountsApi,
         IResourceBuilder<ProjectResource> branchApi,
+        IResourceBuilder<ProjectResource> assistantApi,
         IResourceBuilder<TKeycloak> keycloak) where TKeycloak : IResourceWithEndpoints
     {
         return builder.WithConfiguration(yarp =>
@@ -215,6 +216,19 @@ internal static class Extensions
             yarp.AddRoute("/api/tenant/{*any}", branchCluster)
                 .WithTransformXForwarded();
 
+            // The owner's MCP server, and the OAuth document (RFC 9728) a chat
+            // app reads to find the realm: served next to the endpoint at the
+            // path-aware /.well-known/oauth-protected-resource/mcp and at the root.
+            var assistantCluster = yarp.AddCluster(assistantApi);
+            yarp.AddRoute("/mcp", assistantCluster)
+                .WithTransformXForwarded();
+            yarp.AddRoute("/mcp/{*any}", assistantCluster)
+                .WithTransformXForwarded();
+            yarp.AddRoute("/.well-known/oauth-protected-resource", assistantCluster)
+                .WithTransformXForwarded();
+            yarp.AddRoute("/.well-known/oauth-protected-resource/{*any}", assistantCluster)
+                .WithTransformXForwarded();
+
             // Health, one path per service, so the edge can ask each API
             // whether it is up and can reach its database and the bus:
             // api.chillax.site/health/sales -> sales-api/health. Read by the
@@ -225,6 +239,7 @@ internal static class Extensions
                 ("sales", salesCluster), ("inventory", inventoryCluster), ("payroll", payrollCluster),
                 ("finance", financeCluster), ("identity", identityCluster), ("loyalty", loyaltyCluster),
                 ("notification", notificationCluster), ("accounts", accountsCluster), ("branch", branchCluster),
+                ("assistant", assistantCluster),
             })
             {
                 yarp.AddRoute($"/health/{name}", cluster).WithTransformPathSet("/health");

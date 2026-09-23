@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    The owner's MCP server: a remote Model Context Protocol endpoint at
+    api.<tenant>/mcp that Claude, ChatGPT and Claude Code connect to. It holds
+    no data of its own: every tool validates the owner's Keycloak token,
+    exchanges it for the service's own (RFC 8693) and calls the read and write
+    endpoints the other services already expose. No database, no bus, no
+    chat model.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>assistant-api-user-secrets</UserSecretsId>
+    <RootNamespace>Ninja.Assistant.API</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Assistant.UnitTests" />
+  </ItemGroup>
+
+</Project>

@@ -73,6 +73,7 @@ jobs:
           Parameters__keycloak_password: admin
           # Resolved so publish never waits on a prompt; the .env still gets an empty placeholder, filled below
           Parameters__gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          Parameters__assistant_secret: ${{ secrets.ASSISTANT_SECRET }}
         run: |
           cd src/Ninja.AppHost
           aspire publish -o ../../deploy-artifacts
@@ -80,6 +81,7 @@ jobs:
       - name: Prepare deployment artifacts
         run: |
           cp src/Ninja.AppHost/KeycloakConfiguration/realms/chillax-realm.json deploy-artifacts/chillax-realm.json
+          cp deploy/keycloak-assistant.py deploy-artifacts/keycloak-assistant.py
           sed -i 's|source: ".*KeycloakConfiguration/realms"|source: "./chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
           sed -i 's|target: "/opt/keycloak/data/import"|target: "/opt/keycloak/data/import/chillax-realm.json"|g' deploy-artifacts/docker-compose.yaml
 
@@ -120,6 +122,8 @@ jobs:
           # src/Ninja.AppHost/appsettings.json). An empty secret trips the
           # guard below on purpose: ship without AI by choice, not by accident.
           sed -i 's|^GEMINI_API_KEY=$|GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}|' deploy-artifacts/.env
+          # The owner's MCP server exchanges tokens as the realm's assistant-api client: the same secret the realm holds
+          sed -i 's|^ASSISTANT_SECRET=$|ASSISTANT_SECRET=${{ secrets.ASSISTANT_SECRET }}|' deploy-artifacts/.env
 
           # Fill port values for service discovery
           sed -i 's/^CATALOG_API_PORT=$/CATALOG_API_PORT=8080/' deploy-artifacts/.env
@@ -134,13 +138,14 @@ jobs:
           sed -i 's/^INVENTORY_API_PORT=$/INVENTORY_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^PAYROLL_API_PORT=$/PAYROLL_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^FINANCE_API_PORT=$/FINANCE_API_PORT=8080/' deploy-artifacts/.env
+          sed -i 's/^ASSISTANT_API_PORT=$/ASSISTANT_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^MOBILE_BFF_PORT=$/MOBILE_BFF_PORT=5000/' deploy-artifacts/.env
 
           # Aspire also emits an empty *_API_IMAGE per service. The compose file
           # names the images itself, so these are unused today; fill them with
           # the same references so the guard below passes and they are right
           # should a future Aspire start reading them.
-          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch assistant; do
             upper=$(echo "$svc" | tr a-z A-Z)
             sed -i "s|^${upper}_API_IMAGE=$|${upper}_API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${svc}:latest|" deploy-artifacts/.env
           done
@@ -249,7 +254,7 @@ jobs:
             return 1
           }
           failed=0
-          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch assistant; do
             check "https://api.chillax.site/health/$svc" || failed=1
           done
           for host in app admin pos kds; do
@@ -592,6 +597,26 @@ jobs:
     needs: deploy
     if: always()
     steps:
+      - name: Setup Keycloak for the owner's assistant
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            set -e
+            DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
+            # The realm was imported once and is never re-read: what chillax-realm.json gained for
+            # Assistant.API (the mcp scope, the two clients, the registration policies) is added
+            # through the admin API, idempotently. See docs/owner-assistant.md.
+            KEYCLOAK_PASSWORD=$(grep -oP '^KEYCLOAK_PASSWORD=\K.*' "$DEPLOY_DIR/.env" 2>/dev/null || echo "admin") \
+            python3 "$DEPLOY_DIR/keycloak-assistant.py" \
+              --keycloak https://auth.chillax.site --realm chillax \
+              --realm-file "$DEPLOY_DIR/chillax-realm.json" \
+              --api-url https://api.chillax.site \
+              --secret "$(grep -oP '^ASSISTANT_SECRET=\K.*' "$DEPLOY_DIR/.env")"
+
       - name: Notify deployment status
         run: |
           if [ "${{ needs.deploy.result }}" == "success" ]; then

@@ -16,6 +16,8 @@ public static class KnownResources
     [
         "catalog-api", "ordering-api", "spaces-api", "sales-api", "inventory-api", "payroll-api",
         "finance-api", "identity-api", "loyalty-api", "notification-api", "accounts-api", "branch-api",
+        // The owner's MCP server
+        "assistant-api",
         // The platform's own control plane rides along in dry-run mode
         "control-api",
     ];

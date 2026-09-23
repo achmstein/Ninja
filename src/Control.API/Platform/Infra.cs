@@ -54,6 +54,14 @@ public interface IKeycloakAdmin
     /// <summary>The realm's SMTP settings (Keycloak's smtpServer map, as JSON), so it can send its own password resets.</summary>
     Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct);
     /// <summary>
+    /// The owner's assistant in a realm that was created before there was one:
+    /// the mcp client scope with its audience and role mappings, the realm's
+    /// default scopes, the ninja-mcp and assistant-api clients and the anonymous
+    /// registration policies, all as the realm template declares them. Idempotent;
+    /// a realm created from the current template gets nothing new.
+    /// </summary>
+    Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct);
+    /// <summary>
     /// Signs the user in without their password, as the master admin may: a
     /// browser session in their realm, returned as the Set-Cookie headers a
     /// browser on <paramref name="publicAuthHost"/> would have received.
@@ -448,6 +456,117 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
             throw new InvalidOperationException($"Keycloak refused the SMTP settings for {realm} ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
     }
 
+    public async Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
+    {
+        var parts = Templates.AssistantRealmParts(apiUrl, assistantSecret);
+        var client = await AdminClientAsync(ct);
+        var admin = $"{Base}/admin/realms/{realm}";
+
+        // The mcp client scope, and its audience mapper kept on the current API host
+        var scopes = await client.GetFromJsonAsync<JsonArray>($"{admin}/client-scopes", ct) ?? [];
+        string? ScopeId(string name) => scopes.FirstOrDefault(s => s?["name"]?.GetValue<string>() == name)?["id"]?.GetValue<string>();
+        var mcpId = ScopeId("mcp");
+        if (mcpId is null)
+        {
+            var created = await client.PostAsJsonAsync($"{admin}/client-scopes", parts.McpScope, ct);
+            await ThrowIfRefusedAsync(created, $"the mcp client scope in {realm}", ct);
+            mcpId = created.Headers.Location!.Segments[^1];
+        }
+        else
+        {
+            // Each mapper by name: the endpoint audience follows the API host, the exchange-client one stays
+            var mappers = await client.GetFromJsonAsync<JsonArray>($"{admin}/client-scopes/{mcpId}/protocol-mappers/models", ct) ?? [];
+            foreach (var wanted in parts.McpScope["protocolMappers"]!.AsArray().Select(m => (JsonObject)m!.DeepClone()))
+            {
+                var name = wanted["name"]!.GetValue<string>();
+                var existing = mappers.FirstOrDefault(m => m?["name"]?.GetValue<string>() == name) as JsonObject;
+                if (existing is null)
+                {
+                    await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/client-scopes/{mcpId}/protocol-mappers/models", wanted, ct), $"mapper '{name}' in {realm}", ct);
+                }
+                else
+                {
+                    wanted["id"] = existing["id"]!.GetValue<string>();
+                    await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/client-scopes/{mcpId}/protocol-mappers/models/{wanted["id"]}", wanted, ct), $"mapper '{name}' in {realm}", ct);
+                }
+            }
+        }
+
+        // Realm defaults for clients that register themselves (ChatGPT, Claude): the template's lists
+        foreach (var name in parts.DefaultScopes)
+        {
+            var id = ScopeId(name) ?? (name == "mcp" ? mcpId : null);
+            if (id is null) continue;
+            await ThrowIfRefusedAsync(await client.PutAsync($"{admin}/default-default-client-scopes/{id}", null, ct), $"default scope {name} in {realm}", ct);
+        }
+        foreach (var name in parts.OptionalScopes)
+        {
+            if (ScopeId(name) is not { } id) continue;
+            await ThrowIfRefusedAsync(await client.PutAsync($"{admin}/default-optional-client-scopes/{id}", null, ct), $"optional scope {name} in {realm}", ct);
+        }
+
+        // The realm roles the mcp scope hands a client that may not see every role
+        var roles = new JsonArray();
+        foreach (var role in parts.McpRoles)
+        {
+            using var lookup = await client.GetAsync($"{admin}/roles/{role}", ct);
+            if (!lookup.IsSuccessStatusCode) continue;
+            var rep = await lookup.Content.ReadFromJsonAsync<JsonObject>(ct);
+            if (rep is not null) roles.Add(new JsonObject { ["id"] = rep["id"]!.GetValue<string>(), ["name"] = role });
+        }
+        if (roles.Count > 0)
+            await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/client-scopes/{mcpId}/scope-mappings/realm", roles, ct), $"the mcp role mappings in {realm}", ct);
+
+        // The two clients: created, or brought up to the template (redirect URIs, scopes, the secret on the record)
+        foreach (var wanted in parts.Clients.Select(c => (JsonObject)c!.DeepClone()))
+        {
+            var clientId = wanted["clientId"]!.GetValue<string>();
+            var found = await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId={Uri.EscapeDataString(clientId)}", ct) ?? [];
+            if (found.Count == 0)
+            {
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/clients", wanted, ct), $"client {clientId} in {realm}", ct);
+            }
+            else
+            {
+                var id = found[0]!["id"]!.GetValue<string>();
+                wanted["id"] = id;
+                await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/clients/{id}", wanted, ct), $"client {clientId} in {realm}", ct);
+            }
+        }
+
+        // The anonymous registration policies: trusted hosts and allowed scopes for the clients that register themselves
+        var realmRep = await client.GetFromJsonAsync<JsonObject>(admin, ct);
+        var realmId = realmRep!["id"]!.GetValue<string>();
+        var components = await client.GetFromJsonAsync<JsonArray>($"{admin}/components?type={Uri.EscapeDataString(Templates.ClientRegistrationPolicyType)}", ct) ?? [];
+        foreach (var wanted in parts.Policies.Select(p => (JsonObject)p!.DeepClone()))
+        {
+            var providerId = wanted["providerId"]!.GetValue<string>();
+            var subType = wanted["subType"]!.GetValue<string>();
+            var existing = components.FirstOrDefault(c => c?["providerId"]?.GetValue<string>() == providerId && c?["subType"]?.GetValue<string>() == subType) as JsonObject;
+            wanted["parentId"] = realmId;
+            wanted["providerType"] = Templates.ClientRegistrationPolicyType;
+            wanted.Remove("subComponents"); // import-only; the admin API rejects it on a component
+            if (existing is null)
+            {
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/components", wanted, ct), $"registration policy {providerId} in {realm}", ct);
+            }
+            else
+            {
+                wanted["id"] = existing["id"]!.GetValue<string>();
+                await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/components/{wanted["id"]}", wanted, ct), $"registration policy {providerId} in {realm}", ct);
+            }
+        }
+    }
+
+    private static async Task ThrowIfRefusedAsync(HttpResponseMessage response, string what, CancellationToken ct)
+    {
+        using (response)
+        {
+            if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Conflict) return;
+            throw new InvalidOperationException($"Keycloak refused {what} ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
+        }
+    }
+
     public async Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
     {
         // Keycloak (KC_PROXY_HEADERS=xforwarded) mints the cookies for the host and scheme the browser will use, not for the
@@ -574,6 +693,13 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     public Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct) => Task.FromResult<string?>($"dry-run-{email}");
     public Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct) => Task.FromResult(true);
     public Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct) { logger.LogInformation("(dry run) smtp on {Realm}", realm); return Task.CompletedTask; }
+    public Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
+    {
+        // The template must still yield the parts, so a broken realm file fails a dry run too
+        var parts = Templates.AssistantRealmParts(apiUrl, assistantSecret);
+        logger.LogInformation("(dry run) assistant in {Realm}: mcp scope, {Clients} clients, {Policies} policies", realm, parts.Clients.Count, parts.Policies.Count);
+        return Task.CompletedTask;
+    }
     public Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)
         => Task.FromResult<IReadOnlyList<string>>([$"KEYCLOAK_IDENTITY=dry-run; Path=/realms/{realm}/; Secure; HttpOnly; SameSite=None"]);
 }

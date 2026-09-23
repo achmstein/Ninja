@@ -11,7 +11,7 @@ public sealed class PlatformOptionsTests
         var options = new PlatformOptions();
         Assert.AreEqual(384, options.MemoryFor("catalog"));
         Assert.AreEqual(256, options.MemoryFor("sales"));
-        Assert.AreEqual(9 * 256 + 3 * 384 + 128, options.StackLimitMb);
+        Assert.AreEqual(10 * 256 + 3 * 384 + 128, options.StackLimitMb);
         Assert.IsLessThanOrEqualTo(options.StackLimitMb, options.StackFootprintMb, "the typical footprint must fit under the caps");
     }
 }

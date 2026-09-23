@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Ninja.Control.API.Model;
 
@@ -50,12 +51,63 @@ public static partial class Templates
             ["kdsUrl"] = hosts.KdsUrl,
             ["identitySecret"] = tenant.IdentitySecret,
             ["controlSecret"] = tenant.ControlSecret,
+            // The owner's MCP server: its token-exchange client and the audience its tokens carry (the endpoint as an owner types it)
+            ["assistantSecret"] = tenant.AssistantSecret,
+            ["apiUrl"] = hosts.ApiUrl,
             ["sslRequired"] = SslRequired(platform),
             // Inside the user profile, which is JSON kept as a string inside the realm JSON: escaped twice
             ["phonePattern"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Pattern)),
             ["phonePlaceholder"] = JsonEscape(JsonEscape(PhoneRules.For(tenant.Country).Placeholder)),
             ["smtpServer"] = SmtpServerJson(platform.Mail),
         });
+
+    /// <summary>The type Keycloak files client registration policies under, in a realm's components.</summary>
+    public const string ClientRegistrationPolicyType = "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy";
+
+    /// <summary>The owner's assistant as the realm template declares it, for a realm created before there was one.</summary>
+    public sealed record AssistantRealmPartsView(JsonObject McpScope, JsonArray Clients, JsonArray Policies, string[] DefaultScopes, string[] OptionalScopes, string[] McpRoles);
+
+    /// <summary>
+    /// The pieces of the realm template that make the owner's assistant work:
+    /// the mcp client scope (audience = the API host's /mcp and the exchange
+    /// client), the ninja-mcp and assistant-api clients, the realm's default
+    /// scope lists, the realm roles the mcp scope grants, and the anonymous
+    /// registration policies. Read from the template itself so a realm brought
+    /// up to date by hand matches one created from it.
+    /// </summary>
+    public static AssistantRealmPartsView AssistantRealmParts(string apiUrl, string assistantSecret)
+    {
+        var json = Render(Read("tenant-realm.json"), new Dictionary<string, string>
+        {
+            ["slug"] = "template",
+            ["displayName"] = "",
+            ["displayNameHtml"] = "",
+            ["customerUrl"] = "https://template.invalid",
+            ["adminUrl"] = "https://admin.template.invalid",
+            ["posUrl"] = "https://pos.template.invalid",
+            ["kdsUrl"] = "https://kds.template.invalid",
+            ["identitySecret"] = "unused",
+            ["controlSecret"] = "unused",
+            ["sslRequired"] = "external",
+            ["phonePattern"] = "",
+            ["phonePlaceholder"] = "",
+            ["smtpServer"] = "{}",
+            ["assistantSecret"] = assistantSecret,
+            ["apiUrl"] = apiUrl.TrimEnd('/'),
+        });
+        var realm = JsonNode.Parse(json)!.AsObject();
+        static string Name(JsonNode? n, string key) => n![key]!.GetValue<string>();
+
+        var scope = realm["clientScopes"]!.AsArray().Single(s => Name(s, "name") == "mcp")!.DeepClone().AsObject();
+        var clients = new JsonArray(realm["clients"]!.AsArray()
+            .Where(c => Name(c, "clientId") is "ninja-mcp" or "assistant-api")
+            .Select(c => c!.DeepClone()).ToArray());
+        var policies = new JsonArray(realm["components"]![ClientRegistrationPolicyType]!.AsArray().Select(p => p!.DeepClone()).ToArray());
+        var defaults = realm["defaultDefaultClientScopes"]!.AsArray().Select(s => s!.GetValue<string>()).ToArray();
+        var optionals = realm["defaultOptionalClientScopes"]!.AsArray().Select(s => s!.GetValue<string>()).ToArray();
+        var roles = realm["scopeMappings"]!.AsArray().Single(m => Name(m, "clientScope") == "mcp")!["roles"]!.AsArray().Select(r => r!.GetValue<string>()).ToArray();
+        return new AssistantRealmPartsView(scope, clients, policies, defaults, optionals, roles);
+    }
 
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
     public static string PlatformRealm(PlatformOptions platform, string initialPassword)
@@ -134,7 +186,7 @@ public static partial class Templates
 
             var db = service switch
             {
-                "identity" => null,
+                "identity" or "assistant" => null,
                 "notification" => "notificationdb",
                 _ => $"{service}db",
             };
@@ -157,6 +209,18 @@ public static partial class Templates
                 case "identity":
                     sb.AppendLine("      Keycloak__AdminClientId: \"identity-api-service\"");
                     sb.AppendLine("      Keycloak__AdminClientSecret: \"${IDENTITY_SECRET}\"");
+                    break;
+                case "assistant":
+                    // The MCP endpoint as a chat app reaches it, the realm's public issuer, and the token-exchange client
+                    sb.AppendLine($"      Assistant__PublicUrl: \"{hosts.ApiUrl}/mcp\"");
+                    sb.AppendLine($"      Assistant__Issuer: \"{platform.KeycloakPublicUrl}/realms/{TenantNaming.Realm(slug)}\"");
+                    sb.AppendLine("      Assistant__TokenExchange__ClientId: \"assistant-api\"");
+                    sb.AppendLine("      Assistant__TokenExchange__ClientSecret: \"${ASSISTANT_SECRET}\"");
+                    // It calls the other services by their Aspire names; service discovery reads these. A service the plan
+                    // leaves out gets no line, so its name does not resolve and the tools say "not in this cafe's plan".
+                    foreach (var target in new[] { "branch", "sales", "finance", "inventory", "ordering", "payroll", "catalog" })
+                        if (services.Contains(target))
+                            sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;
                 case "branch":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
@@ -232,6 +296,7 @@ public static partial class Templates
             $"DB_PASSWORD={tenant.DbPassword}",
             $"BROKER_PASSWORD={tenant.BrokerPassword}",
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
+            $"ASSISTANT_SECRET={tenant.AssistantSecret}",
             // The shared key reaches only the stacks whose plan includes the assistant: one café's compromise is not every café's
             $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
             "",
@@ -315,6 +380,11 @@ public static partial class Templates
         yield return ("/api/accounts/{*any}", "accounts", v1, none);
         yield return ("/api/branches/{*any}", "branch", null, none);
         yield return ("/api/tenant/{*any}", "branch", null, forwarded);
+        // The owner's MCP server and its OAuth protected-resource document (RFC 9728), path-aware and at the root
+        yield return ("/mcp", "assistant", null, forwarded);
+        yield return ("/mcp/{*any}", "assistant", null, forwarded);
+        yield return ("/.well-known/oauth-protected-resource", "assistant", null, forwarded);
+        yield return ("/.well-known/oauth-protected-resource/{*any}", "assistant", null, forwarded);
         foreach (var service in TenantNaming.Services)
             yield return ($"/health/{service}", service, null, [[("PathSet", "/health")]]);
     }

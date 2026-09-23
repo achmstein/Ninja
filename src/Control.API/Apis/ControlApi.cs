@@ -164,6 +164,7 @@ public static partial class ControlApi
             Notes = Clean(request.Notes),
             IdentitySecret = TenantNaming.NewSecret(),
             ControlSecret = TenantNaming.NewSecret(),
+            AssistantSecret = TenantNaming.NewSecret(),
             ImageTag = options.Value.DefaultImageTag,
             ExpiresAt = request.Kind == TenantKind.Demo ? DateTimeOffset.UtcNow.AddDays(request.DemoDays ?? options.Value.DemoDays) : null,
         };

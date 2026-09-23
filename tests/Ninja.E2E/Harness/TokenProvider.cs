@@ -68,7 +68,7 @@ public sealed class TokenProvider(Uri keycloakBaseAddress) : IDisposable
     }
 
     /// <summary>Raw ROPC call; for users a scenario registers itself.</summary>
-    public async Task<AccessToken> PasswordGrantAsync(string clientId, string username, string password, CancellationToken ct)
+    public async Task<AccessToken> PasswordGrantAsync(string clientId, string username, string password, CancellationToken ct, string scope = "openid")
     {
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -76,7 +76,7 @@ public sealed class TokenProvider(Uri keycloakBaseAddress) : IDisposable
             ["client_id"] = clientId,
             ["username"] = username,
             ["password"] = password,
-            ["scope"] = "openid",
+            ["scope"] = scope,
         });
 
         using var response = await _http.PostAsync($"realms/{Realm}/protocol/openid-connect/token", content, ct);

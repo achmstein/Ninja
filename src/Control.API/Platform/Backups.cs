@@ -584,6 +584,7 @@ public sealed class RestoreDrillService(IServiceScopeFactory scopes, Provisionin
         drill.WelcomeSentAt = DateTimeOffset.UtcNow;
         drill.IdentitySecret = TenantNaming.NewSecret();
         drill.ControlSecret = TenantNaming.NewSecret();
+        drill.AssistantSecret = TenantNaming.NewSecret();
         drill.ImageTag = string.IsNullOrEmpty(newest.ImageTag) ? source.ImageTag : newest.ImageTag;
         drill.RestoreFrom = $"{source.Slug}/{newest.Id}";
         drill.ExpiresAt = DateTimeOffset.UtcNow;

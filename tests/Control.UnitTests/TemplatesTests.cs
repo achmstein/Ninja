@@ -56,7 +56,7 @@ public sealed class TemplatesTests
 
         var clients = realm["clients"]!.AsArray().ToDictionary(c => c!["clientId"]!.GetValue<string>(), c => c!.AsObject());
         CollectionAssert.AreEquivalent(
-            new[] { "mobile-app", "admin-panel", "client-web", "pos-web", "kds-web", "pos-app", "kds-app", "identity-api-service", "ninja-control" },
+            new[] { "mobile-app", "admin-panel", "client-web", "pos-web", "kds-web", "pos-app", "kds-app", "identity-api-service", "ninja-control", "ninja-mcp", "assistant-api" },
             clients.Keys.ToArray());
         Assert.AreEqual("https://admin.blue.ninja.app/*", clients["admin-panel"]["redirectUris"]![0]!.GetValue<string>());
         Assert.AreEqual("https://blue.ninja.app/*", clients["client-web"]["redirectUris"]![0]!.GetValue<string>());
@@ -206,15 +206,15 @@ public sealed class TemplatesTests
         var tenant = Blue();
         var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
 
-        // Twelve services and the gateway: the assistant's three get more, the gateway less
-        Assert.HasCount(9, Regex.Matches(yaml, "memory: \"256M\""));
+        // Thirteen services and the gateway: the AI assistant's three get more, the gateway less
+        Assert.HasCount(10, Regex.Matches(yaml, "memory: \"256M\""));
         Assert.HasCount(3, Regex.Matches(yaml, "memory: \"384M\""));
         Assert.HasCount(1, Regex.Matches(yaml, "memory: \"128M\""));
-        Assert.HasCount(12, Regex.Matches(yaml, "cpus: \"1.0\""));
+        Assert.HasCount(13, Regex.Matches(yaml, "cpus: \"1.0\""));
         Assert.HasCount(1, Regex.Matches(yaml, "cpus: \"0.5\""));
-        Assert.HasCount(13, Regex.Matches(yaml, "pids: 256"));
-        Assert.HasCount(13, Regex.Matches(yaml, "max-size: \"10m\""));
-        Assert.HasCount(13, Regex.Matches(yaml, "max-file: \"3\""));
+        Assert.HasCount(14, Regex.Matches(yaml, "pids: 256"));
+        Assert.HasCount(14, Regex.Matches(yaml, "max-size: \"10m\""));
+        Assert.HasCount(14, Regex.Matches(yaml, "max-file: \"3\""));
 
         var heavier = new PlatformOptions { Domain = "ninja.app", ServiceMemoryOverridesMb = { ["catalog"] = 512 } };
         var tuned = Templates.Compose(tenant, TenantHosts.For(tenant, heavier), heavier);
@@ -228,6 +228,13 @@ public sealed class TemplatesTests
     {
         foreach (var service in TenantNaming.Services)
         {
+            if (!TenantNaming.HasQueue(service))
+            {
+                // No bus: the settings must not name a queue either, or the broker would get a consumer it never sees
+                var noBus = JsonNode.Parse(File.ReadAllText(FindUp(Path.Combine("src", $"{TenantNaming.Queue(service)}.API", "appsettings.json"))))!;
+                Assert.IsNull(noBus["EventBus"], service);
+                continue;
+            }
             // appsettings carry comments, the way ASP.NET reads them
             var json = File.ReadAllText(FindUp(Path.Combine("src", $"{TenantNaming.Queue(service)}.API", "appsettings.json")));
             var settings = JsonNode.Parse(json, documentOptions: new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })!;
@@ -240,5 +247,40 @@ public sealed class TemplatesTests
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "Ninja.slnx"))) dir = dir.Parent;
         return Path.Combine(dir!.FullName, relative);
+    }
+
+    [TestMethod]
+    public void The_assistant_parts_of_the_realm_come_from_the_template()
+    {
+        var parts = Templates.AssistantRealmParts("https://api.blue.ninja.app/", "sec-ret");
+
+        // The mcp scope carries the endpoint and the exchange client as audiences, and grants the roles a self-registered client may not see
+        // Two mappers, because Keycloak's audience mapper takes the client audience instead of the custom one when both are set
+        var mappers = parts.McpScope["protocolMappers"]!.AsArray().Select(m => m!["config"]!.AsObject()).ToList();
+        Assert.AreEqual("https://api.blue.ninja.app/mcp", mappers.Single(m => m.ContainsKey("included.custom.audience"))["included.custom.audience"]!.GetValue<string>());
+        Assert.AreEqual("assistant-api", mappers.Single(m => m.ContainsKey("included.client.audience"))["included.client.audience"]!.GetValue<string>());
+        CollectionAssert.AreEquivalent(new[] { "Owner", "Admin", "Cashier" }, parts.McpRoles);
+        CollectionAssert.Contains(parts.DefaultScopes, "mcp");
+        CollectionAssert.Contains(parts.DefaultScopes, "branches");
+        CollectionAssert.Contains(parts.OptionalScopes, "offline_access");
+
+        // Both clients, the exchange client with the tenant's secret and no browser flow, the public one with the chat apps' callbacks
+        var clients = parts.Clients.ToDictionary(c => c!["clientId"]!.GetValue<string>(), c => c!.AsObject());
+        Assert.AreEqual("sec-ret", clients["assistant-api"]["secret"]!.GetValue<string>());
+        Assert.IsFalse(clients["assistant-api"]["publicClient"]!.GetValue<bool>());
+        Assert.IsFalse(clients["assistant-api"]["standardFlowEnabled"]!.GetValue<bool>());
+        Assert.AreEqual("true", clients["assistant-api"]["attributes"]!["standard.token.exchange.enabled"]!.GetValue<string>());
+        Assert.IsTrue(clients["ninja-mcp"]["publicClient"]!.GetValue<bool>());
+        Assert.IsFalse(clients["ninja-mcp"]["directAccessGrantsEnabled"]!.GetValue<bool>(), "password grants are for the dev realm's tests only");
+        CollectionAssert.Contains(clients["ninja-mcp"]["redirectUris"]!.AsArray().Select(u => u!.GetValue<string>()).ToArray(), "https://claude.ai/api/mcp/auth_callback");
+
+        // The anonymous registration policies let ChatGPT and Claude register a client of their own, and nothing else
+        var trusted = parts.Policies.Single(p => p!["providerId"]!.GetValue<string>() == "trusted-hosts" && p["subType"]!.GetValue<string>() == "anonymous")!;
+        var hosts = trusted["config"]!["trusted-hosts"]!.AsArray().Select(h => h!.GetValue<string>()).ToArray();
+        CollectionAssert.Contains(hosts, "chatgpt.com");
+        CollectionAssert.Contains(hosts, "claude.ai");
+        Assert.AreEqual("false", trusted["config"]!["host-sending-registration-request-must-match"]![0]!.GetValue<string>());
+        var allowed = parts.Policies.Single(p => p!["providerId"]!.GetValue<string>() == "allowed-client-templates" && p["subType"]!.GetValue<string>() == "anonymous")!;
+        CollectionAssert.Contains(allowed["config"]!["allowed-client-scopes"]!.AsArray().Select(s => s!.GetValue<string>()).ToArray(), "mcp");
     }
 }

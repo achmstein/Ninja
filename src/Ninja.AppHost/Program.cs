@@ -197,6 +197,33 @@ var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
     // Where the native apps sign in, as /api/tenant tells them; a stamp says its realm the same way
     .WithEnvironment("Tenant__AuthUrl", keycloakRealmUrl);
 
+// The owner's MCP server. Chat apps (Claude, ChatGPT, Claude Code) reach it
+// at api.<tenant>/mcp through the BFF; it calls the other services by their
+// names, never through the BFF, with a token it exchanges at the realm as the
+// confidential client assistant-api. The dev realm's secret is the literal
+// below (chillax-realm.json); a deploy fills ASSISTANT_SECRET in .env.
+var assistantSecret = builder.AddParameter("assistant-secret",
+    () => builder.Configuration["Parameters:assistant-secret"] ?? "assistant-api-secret",
+    secret: true);
+var assistantApi = builder.AddProject<Projects.Assistant_API>("assistant-api")
+    .WithReference(keycloak)
+    .WithReference(branchApi).WithReference(salesApi).WithReference(financeApi).WithReference(inventoryApi)
+    .WithReference(orderingApi).WithReference(payrollApi).WithReference(catalogApi)
+    .WithEnvironment("Identity__Url", keycloakRealmUrl)
+    .WithEnvironment("Keycloak__Realm", "chillax")
+    .WithEnvironment("Assistant__TokenExchange__ClientId", "assistant-api")
+    .WithEnvironment("Assistant__TokenExchange__ClientSecret", assistantSecret);
+
+if (builder.ExecutionContext.IsPublishMode)
+{
+    // The issuer as a chat app (and the token's iss claim) sees it: the public host
+    assistantApi.WithEnvironment("Assistant__Issuer", "https://auth.chillax.site/realms/chillax");
+}
+else
+{
+    assistantApi.WithEnvironment("Assistant__Issuer", keycloakRealmUrl);
+}
+
 // What an empty database is planted with, and the tenant's locale. This
 // stack is tenant one: its own menu, branches and floor (the E2E suite rings
 // up Turkish Coffee at Table 1), Egypt, pounds, Cairo time, Arabic first. A
@@ -249,14 +276,14 @@ if (isTestMode)
     // once the migration hosted service has migrated and seeded (Kestrel is
     // the last hosted service to start), so "healthy" means "ready to use".
     foreach (var api in new[] { catalogApi, spacesApi, salesApi, inventoryApi, payrollApi,
-                                financeApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+                                financeApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi })
     {
         api.WithHttpHealthCheck("/health", endpointName: "http");
     }
 
     // The dashboard is off under test; keep the OTLP exporters off too.
     foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
-                                financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+                                financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi })
     {
         api.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "");
     }
@@ -295,6 +322,7 @@ notificationApi.PublishAsDockerComposeService((resource, service) =>
     });
 });
 ConfigureApiService(accountsApi, "accounts");
+ConfigureApiService(assistantApi, "assistant");
 branchApi.PublishAsDockerComposeService((resource, service) =>
 {
     service.Image = $"{ImageRegistry}-branch:latest";
@@ -329,10 +357,21 @@ var mobileBff = builder.AddYarp("mobile-bff")
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
-    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, keycloak);
+    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi, keycloak);
 
 // The host a till on this machine connects to (adb reverse puts it on the tablet's localhost too)
 branchApi.WithEnvironment("Tenant__ApiUrl", mobileBff.GetEndpoint("http"));
+
+// The MCP endpoint exactly as an owner types it into a connector: through the
+// BFF. The protected resource metadata names it and every token must carry it.
+if (builder.ExecutionContext.IsPublishMode)
+{
+    assistantApi.WithEnvironment("Assistant__PublicUrl", "https://api.chillax.site/mcp");
+}
+else
+{
+    assistantApi.WithEnvironment("Assistant__PublicUrl", ReferenceExpression.Create($"{mobileBff.GetEndpoint("http")}/mcp"));
+}
 
 if (!isTestMode)
 {
