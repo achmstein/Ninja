@@ -13,6 +13,7 @@ import 'core/network/network_status.dart';
 import 'core/services/chime_service.dart';
 import 'core/services/kiosk_service.dart';
 import 'core/services/signalr_service.dart';
+import 'core/services/update_service.dart';
 import 'core/widgets/kds_toast.dart';
 import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
@@ -84,6 +85,9 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
     await ref.read(authServiceProvider.notifier).initialize();
     // Remove the native splash screen after auth is initialized
     FlutterNativeSplash.remove();
+
+    // New builds from the platform's download page
+    ref.read(updateProvider.notifier).start();
 
     // Connect SignalR and load branches if authenticated
     final authState = ref.read(authServiceProvider);

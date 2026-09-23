@@ -79,5 +79,20 @@
   "noBranchTitle": "No branch assigned",
   "noBranchDescription": "Ask the owner to assign a branch.",
   "kdsNotInPlan": "The kitchen display is not in your plan",
-  "kdsNotInPlanNote": "Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription."
+  "kdsNotInPlanNote": "Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.",
+  "appVersion": "App version",
+  "appVersionHint": "New builds come from the platform's download page. The app looks for one when it starts and every few hours, and installs it when it has just started, or overnight on a kiosk tablet. Otherwise tap Install.",
+  "appVersionInstalled": "Version {version} (build {build})",
+  "@appVersionInstalled": {"placeholders": {"version": {"type": "String"}, "build": {"type": "int"}}},
+  "updateUpToDate": "Up to date",
+  "updateChecking": "Checking for updates…",
+  "updateDownloading": "Downloading update… {percent}%",
+  "@updateDownloading": {"placeholders": {"percent": {"type": "int"}}},
+  "updateReady": "Version {version} is ready to install",
+  "@updateReady": {"placeholders": {"version": {"type": "String"}}},
+  "updateInstalling": "Installing… the app reopens by itself",
+  "updateNeedsPermission": "Allow installs from this app in the settings Android opened, then tap Install again",
+  "updateFailed": "Could not check for updates",
+  "checkForUpdates": "Check for updates",
+  "installUpdate": "Install"
 }

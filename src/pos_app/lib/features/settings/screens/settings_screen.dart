@@ -12,6 +12,7 @@ import '../../../core/offline/offline_sale.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import '../../../core/services/kiosk_service.dart';
+import '../../../core/services/update_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/connection_card.dart';
@@ -175,6 +176,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              const _UpdateCard(),
+              const SizedBox(height: 16),
               FCard(
                 title: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -256,6 +259,70 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The build on this tablet and the newest one on the platform's download page
+class _UpdateCard extends ConsumerWidget {
+  const _UpdateCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final update = ref.watch(updateProvider);
+    final notifier = ref.read(updateProvider.notifier);
+    final installed = update.installedVersion;
+    final status = switch (update.phase) {
+      UpdatePhase.checking => l10n.updateChecking,
+      UpdatePhase.downloading => l10n.updateDownloading((update.progress * 100).round()),
+      UpdatePhase.ready => l10n.updateReady(update.available?.version ?? ''),
+      UpdatePhase.installing => l10n.updateInstalling,
+      UpdatePhase.needsPermission => l10n.updateNeedsPermission,
+      UpdatePhase.failed => l10n.updateFailed,
+      UpdatePhase.upToDate || UpdatePhase.idle => l10n.updateUpToDate,
+    };
+    final canInstall = update.phase == UpdatePhase.ready || update.phase == UpdatePhase.needsPermission;
+    final busy = update.phase == UpdatePhase.checking || update.phase == UpdatePhase.downloading || update.phase == UpdatePhase.installing;
+
+    return FCard(
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [Text(l10n.appVersion), const SizedBox(width: 4), InfoTip(text: l10n.appVersionHint)],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (installed != null)
+                    Text(l10n.appVersionInstalled(installed, update.installedBuild ?? 0),
+                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                  Text(status, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              height: 48,
+              child: FButton(
+                variant: canInstall ? null : FButtonVariant.outline,
+                mainAxisSize: MainAxisSize.min,
+                onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
+                prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: 20),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

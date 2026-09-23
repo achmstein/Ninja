@@ -475,6 +475,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.'**
   String get kdsNotInPlanNote;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get appVersion;
+
+  /// No description provided for @appVersionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New builds come from the platform\'s download page. The app looks for one when it starts and every few hours, and installs it when it has just started, or overnight on a kiosk tablet. Otherwise tap Install.'**
+  String get appVersionHint;
+
+  /// No description provided for @appVersionInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} (build {build})'**
+  String appVersionInstalled(String version, int build);
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date'**
+  String get updateUpToDate;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updateChecking;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update… {percent}%'**
+  String updateDownloading(int percent);
+
+  /// No description provided for @updateReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is ready to install'**
+  String updateReady(String version);
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing… the app reopens by itself'**
+  String get updateInstalling;
+
+  /// No description provided for @updateNeedsPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow installs from this app in the settings Android opened, then tap Install again'**
+  String get updateNeedsPermission;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates'**
+  String get updateFailed;
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @installUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get installUpdate;
 }
 
 class _AppLocalizationsDelegate

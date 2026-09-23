@@ -206,4 +206,48 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kdsNotInPlanNote =>
       'الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك.';
+
+  @override
+  String get appVersion => 'نسخة التطبيق';
+
+  @override
+  String get appVersionHint =>
+      'النسخ الجديدة بتيجي من صفحة التحميل بتاعة المنصة. التطبيق بيدوّر على نسخة جديدة أول ما يفتح وكل كام ساعة، وبيثبّتها لوحده أول ما يفتح، أو بالليل على تابلت الكشك. غير كده دوس تثبيت.';
+
+  @override
+  String appVersionInstalled(String version, int build) {
+    return 'النسخة $version (بناء $build)';
+  }
+
+  @override
+  String get updateUpToDate => 'آخر نسخة';
+
+  @override
+  String get updateChecking => 'بيدوّر على تحديث…';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'بينزّل التحديث… $percent%';
+  }
+
+  @override
+  String updateReady(String version) {
+    return 'النسخة $version جاهزة للتثبيت';
+  }
+
+  @override
+  String get updateInstalling => 'بيثبّت… التطبيق هيفتح لوحده';
+
+  @override
+  String get updateNeedsPermission =>
+      'اسمح بالتثبيت من التطبيق ده في الإعدادات اللي أندرويد فتحها، وبعدين دوس تثبيت تاني';
+
+  @override
+  String get updateFailed => 'مقدرناش ندوّر على تحديث';
+
+  @override
+  String get checkForUpdates => 'دوّر على تحديث';
+
+  @override
+  String get installUpdate => 'تثبيت';
 }

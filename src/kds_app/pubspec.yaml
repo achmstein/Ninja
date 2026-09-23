@@ -27,6 +27,8 @@ dependencies:
 
   # HTTP Client
   dio: ^5.4.0
+  # Where an update is downloaded before it is installed
+  path_provider: ^2.1.0
 
   # Authentication (token storage)
   flutter_secure_storage: ^10.0.0

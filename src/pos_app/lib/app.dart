@@ -11,9 +11,11 @@ import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/network/network_status.dart';
 import 'core/offline/offline_queue.dart';
+import 'core/offline/offline_sale.dart';
 import 'core/services/chime_service.dart';
 import 'core/services/kiosk_service.dart';
 import 'core/services/signalr_service.dart';
+import 'core/services/update_service.dart';
 import 'core/widgets/pos_toast.dart';
 import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
@@ -94,6 +96,11 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     await ref.read(authServiceProvider.notifier).initialize();
     // Remove the native splash screen after auth is initialized
     FlutterNativeSplash.remove();
+
+    // New builds from the platform's download page; sales still waiting to replay hold an install back
+    final updates = ref.read(updateProvider.notifier);
+    updates.isBusy = () => ref.read(offlineQueueProvider).any((sale) => sale.status == OfflineSaleStatus.queued);
+    updates.start();
 
     // Connect SignalR and load branches if authenticated
     final authState = ref.read(authServiceProvider);

@@ -201,7 +201,9 @@ jobs:
           mkdir -p build/apps-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-pos.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apps-publish/ninja-pos.json
+          # What the installed tills check for an update: a newer build, and the checksum they verify before installing
+          sha=$(sha256sum build/apps-publish/ninja-pos.apk | cut -d' ' -f1)
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-pos.json
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -282,7 +284,9 @@ jobs:
           mkdir -p build/apps-publish
           cp build/app/outputs/flutter-apk/app-release.apk build/apps-publish/ninja-kds.apk
           version=$(grep -oP '^version:\s*\K[^+]+' pubspec.yaml)
-          printf '{"version":"%s","build":%s,"date":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" > build/apps-publish/ninja-kds.json
+          # What the installed kitchen displays check for an update: a newer build, and the checksum they verify before installing
+          sha=$(sha256sum build/apps-publish/ninja-kds.apk | cut -d' ' -f1)
+          printf '{"version":"%s","build":%s,"date":"%s","sha256":"%s"}\n' "$version" "${{ github.event.inputs.build_number || github.run_number }}" "$(date -u +%Y-%m-%d)" "$sha" > build/apps-publish/ninja-kds.json
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

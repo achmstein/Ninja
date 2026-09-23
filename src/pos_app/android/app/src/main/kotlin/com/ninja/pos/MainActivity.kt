@@ -21,6 +21,8 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Updates from the platform's download page (see AppUpdater)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.ninja.pos/update").setMethodCallHandler(AppUpdater(this))
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName).setMethodCallHandler { call, result ->
             val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             val admin = ComponentName(this, PosDeviceAdminReceiver::class.java)

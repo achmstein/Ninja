@@ -208,4 +208,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kdsNotInPlanNote =>
       'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.';
+
+  @override
+  String get appVersion => 'App version';
+
+  @override
+  String get appVersionHint =>
+      'New builds come from the platform\'s download page. The app looks for one when it starts and every few hours, and installs it when it has just started, or overnight on a kiosk tablet. Otherwise tap Install.';
+
+  @override
+  String appVersionInstalled(String version, int build) {
+    return 'Version $version (build $build)';
+  }
+
+  @override
+  String get updateUpToDate => 'Up to date';
+
+  @override
+  String get updateChecking => 'Checking for updates…';
+
+  @override
+  String updateDownloading(int percent) {
+    return 'Downloading update… $percent%';
+  }
+
+  @override
+  String updateReady(String version) {
+    return 'Version $version is ready to install';
+  }
+
+  @override
+  String get updateInstalling => 'Installing… the app reopens by itself';
+
+  @override
+  String get updateNeedsPermission =>
+      'Allow installs from this app in the settings Android opened, then tap Install again';
+
+  @override
+  String get updateFailed => 'Could not check for updates';
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get installUpdate => 'Install';
 }
