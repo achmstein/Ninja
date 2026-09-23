@@ -39,7 +39,9 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
     networks: [ninja-local]
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      # As root, the CLI writes .erlang.cookie itself when the broker has not yet:
+      # a root-owned cookie the broker then cannot read, on a fresh volume. Wait for the broker's own.
+      test: ["CMD-SHELL", "test -f /var/lib/rabbitmq/.erlang.cookie && rabbitmq-diagnostics -q ping"]
       interval: 10s
       timeout: 10s
       retries: 20
