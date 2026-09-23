@@ -41,3 +41,9 @@ export function formatMoney(value: number | string | null | undefined, code: str
   const n = typeof value === 'string' ? Number(value) : (value ?? 0)
   return `${(Number.isFinite(n) ? n : 0).toFixed(2)} ${currencyLabel(code, language)}`
 }
+
+/** `12 EGP`: a rate, a tariff, anything quoted without its piastres. */
+export function formatMoneyWhole(value: number | string | null | undefined, code: string, language: 'en' | 'ar'): string {
+  const n = typeof value === 'string' ? Number(value) : (value ?? 0)
+  return `${(Number.isFinite(n) ? n : 0).toFixed(0)} ${currencyLabel(code, language)}`
+}

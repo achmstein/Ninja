@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { formatMoney, useCurrency } from '@/lib/currency'
+import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
 import { preview } from '@/lib/preview'
 import type { LocalizedText } from '@/api/catalog'
 import { messages, type Message } from './i18n.gen'
@@ -197,11 +197,17 @@ export function translate(
   return format(dictionary[key], useLanguage.getState().language, params)
 }
 
-// A price in the tenant's currency, matching the mobile app ("12.00 EGP" / "12.00 ج.م")
+// A price in the tenant's currency, matching the mobile app ("12.00 EGP" / "12.00 ج.م"),
+// with its rate form ("12 EGP") and its discount form ("-12.00 EGP")
 export function usePrice() {
   const language = useLanguage((s) => s.language)
   const currency = useCurrency((s) => s.code)
-  return (value: number | string | null | undefined) => formatMoney(value, currency, language)
+  type Value = number | string | null | undefined
+  const price = (value: Value) => formatMoney(value, currency, language)
+  return Object.assign(price, {
+    whole: (value: Value) => formatMoneyWhole(value, currency, language),
+    discount: (value: Value) => `-${price(value)}`,
+  })
 }
 
 // Picks the right side of a LocalizedText for the active language

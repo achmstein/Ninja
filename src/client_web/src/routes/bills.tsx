@@ -911,13 +911,13 @@ function OrderTile({ order }: { order: OrderSummary }) {
         {promoDiscount > 0 && (
           <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
             <Tag className='h-3 w-3' />
-            {t('discountFormat', { price: promoDiscount.toFixed(2) })}
+            {price.discount(promoDiscount)}
           </div>
         )}
         {discount > 0 && (
           <div className='flex items-center justify-end gap-0.5 text-xs text-green-600 dark:text-green-500'>
             <Star className='h-3 w-3 fill-current' />
-            {t('discountFormat', { price: discount.toFixed(2) })}
+            {price.discount(discount)}
           </div>
         )}
       </div>

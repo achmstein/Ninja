@@ -6,7 +6,7 @@ import { Clock, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,7 @@ interface HoldSheetProps {
 export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
   const t = useT()
   const localized = useLocalized()
+  const price = usePrice()
   const auth = useAuth()
   const queryClient = useQueryClient()
   const [startOnConfirm, setStartOnConfirm] = useState(false)
@@ -142,7 +143,7 @@ export function HoldSheet({ place, onOpenChange, onReserved }: HoldSheetProps) {
                   </span>
                   <span className='text-muted-foreground text-xs'>
                     {t('hourlyRateFormat', {
-                      rate: String(Number(option.hourlyRate ?? 0)),
+                      rate: price.whole(option.hourlyRate),
                     })}
                   </span>
                 </button>

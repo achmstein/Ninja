@@ -1,6 +1,6 @@
 import { CalendarPlus } from 'lucide-react'
 import { type PlaceViewModel } from '@/api/spaces'
-import { useLocalized, useT } from '@/lib/i18n'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import {
   canHold,
   hasOptions,
@@ -82,7 +82,7 @@ export function PlaceRow({ place, canReserve, onReserve }: PlaceRowProps) {
 }
 
 /** The rate: one figure for a one-rate place, one per option when there is
- *  a choice ("Single £50 · Multi £80 /hr"). */
+ *  a choice ("Single 50 EGP · Multi 80 EGP /hr"). */
 export function TariffLine({
   place,
 }: {
@@ -90,13 +90,14 @@ export function TariffLine({
 }) {
   const t = useT()
   const localized = useLocalized()
+  const price = usePrice()
   const options = tariffOptions(place.tariff)
   if (options.length === 0) return null
   if (!hasOptions(place.tariff)) {
     return (
       <>
         {t('hourlyRateFormat', {
-          rate: String(Number(options[0].hourlyRate ?? 0)),
+          rate: price.whole(options[0].hourlyRate),
         })}
       </>
     )
@@ -107,7 +108,7 @@ export function TariffLine({
         .map((o) =>
           t('optionRateFormat', {
             option: localized(o.name),
-            rate: String(Number(o.hourlyRate ?? 0)),
+            rate: price.whole(o.hourlyRate),
           }),
         )
         .join(' · ')}{' '}
