@@ -116,6 +116,18 @@ abstract class AppLocalizations {
   /// **'Branches'**
   String get branches;
 
+  /// No description provided for @station.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get station;
+
+  /// No description provided for @allStations.
+  ///
+  /// In en, this message translates to:
+  /// **'All stations'**
+  String get allStations;
+
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:

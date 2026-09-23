@@ -44,6 +44,7 @@ class AppConfig {
 
   // API endpoints (through BFF) - trailing slash required for Dio path resolution
   static String get ordersApiUrl => '$bffBaseUrl/api/orders/';
+  static String get kitchenApiUrl => '$bffBaseUrl/api/kitchen/';
   static String get branchesApiUrl => '$bffBaseUrl/api/branches/';
   /// The tenant's brand: one anonymous resource, no sub-paths
   static String get tenantApiUrl => '$bffBaseUrl/api/tenant';

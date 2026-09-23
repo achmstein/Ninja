@@ -17,6 +17,8 @@ import '../status.dart';
 ///   to call;
 /// - the lines, big enough to read at arm's length, quantity in its own
 ///   column, modifiers under the product, special instructions in amber;
+/// - on the pass, the stations it is split between, each ticked when done
+///   (or marked printed, where a printer took it and nobody taps);
 /// - the one tap that moves it along — Ready on the board, Bring back in
 ///   the history.
 ///
@@ -30,6 +32,9 @@ class OrderCard extends StatelessWidget {
   final VoidCallback? onReady;
   final VoidCallback? onBringBack;
 
+  /// The pass: which stations the order is split between
+  final bool showParts;
+
   const OrderCard({
     super.key,
     required this.order,
@@ -37,6 +42,7 @@ class OrderCard extends StatelessWidget {
     required this.acting,
     this.onReady,
     this.onBringBack,
+    this.showParts = false,
   });
 
   @override
@@ -80,6 +86,9 @@ class OrderCard extends StatelessWidget {
         : (order.isPos || place.isNotEmpty)
             ? ''
             : l10n.walkIn;
+
+    // One station is the whole order; the split is only worth showing past that
+    final parts = showParts && order.parts.length > 1 ? order.parts : const <KitchenOrderPart>[];
 
     // The band is the one place colour means something on the board: the
     // whole strip tints with the clock, so a late ticket is read across the
@@ -158,6 +167,22 @@ class OrderCard extends StatelessWidget {
                     style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, height: 1.25),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (parts.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      for (final part in parts)
+                        _partChip(
+                          theme,
+                          icon: part.showsOnScreen ? (part.isReady ? FIcons.check : null) : FIcons.printer,
+                          label: part.stationName.localized(context),
+                          done: part.isReady,
+                        ),
+                    ],
                   ),
                 ],
               ],
@@ -250,6 +275,32 @@ class OrderCard extends StatelessWidget {
             const SizedBox(width: 4),
             Flexible(
               child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.foreground), overflow: TextOverflow.ellipsis),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// A station's share of the order on the pass: filled once its screen
+  /// marked it done; a printer's shows the printer, since nobody marks it
+  Widget _partChip(FThemeData theme, {required IconData? icon, required String label, required bool done}) {
+    final ink = done ? theme.colors.primaryForeground : theme.colors.foreground;
+    return FBadge.raw(
+      // No variant is the filled, primary badge
+      variant: done ? null : FBadgeVariant.outline,
+      style: done ? const FBadgeStyleDelta.context() : FBadgeStyleDelta.delta(decoration: BoxDecorationDelta.delta(color: theme.colors.background)),
+      builder: (context, style) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: done ? ink : theme.colors.mutedForeground),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
+              child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: ink), overflow: TextOverflow.ellipsis),
             ),
           ],
         ),

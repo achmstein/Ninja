@@ -23,9 +23,35 @@ class KitchenOrderItem {
       );
 }
 
+/// One station's share of an order, as the pass shows it: done once its
+/// screen says so; a part that only prints is never marked.
+class KitchenOrderPart {
+  final int stationId;
+  final LocalizedText stationName;
+  final bool showsOnScreen;
+  final DateTime? readyAt;
+
+  const KitchenOrderPart({
+    required this.stationId,
+    required this.stationName,
+    this.showsOnScreen = true,
+    this.readyAt,
+  });
+
+  bool get isReady => readyAt != null;
+
+  factory KitchenOrderPart.fromJson(Map<String, dynamic> json) => KitchenOrderPart(
+        stationId: readInt(json['stationId']),
+        stationName: LocalizedText.parse(json['stationName']),
+        showsOnScreen: json['showsOnScreen'] != false,
+        readyAt: readUtc(json['readyAt']),
+      );
+}
+
 /// An order in the kitchen: `GET /api/orders/kitchen` returns the confirmed
-/// orders of the last day, oldest first. `readyAt` is the only kitchen
-/// state — null while it is on the board, set once it is done.
+/// orders of the last day, oldest first. `readyAt` is the kitchen state —
+/// null while it is on the board, set once it is done. On a station's
+/// screen it is that station's part; on the pass, the whole order.
 class KitchenOrder {
   final int orderNumber;
   final DateTime date;
@@ -41,6 +67,9 @@ class KitchenOrder {
   final String? customerNote;
   final List<KitchenOrderItem> items;
 
+  /// The stations the order is split between; empty on orders from before stations
+  final List<KitchenOrderPart> parts;
+
   const KitchenOrder({
     required this.orderNumber,
     required this.date,
@@ -52,6 +81,7 @@ class KitchenOrder {
     this.customerName,
     this.customerNote,
     this.items = const [],
+    this.parts = const [],
   });
 
   /// The clock runs from confirmation — the moment the order reached the kitchen
@@ -71,6 +101,7 @@ class KitchenOrder {
         customerName: customerName,
         customerNote: customerNote,
         items: items,
+        parts: parts,
       );
 
   factory KitchenOrder.fromJson(Map<String, dynamic> json) => KitchenOrder(
@@ -85,6 +116,9 @@ class KitchenOrder {
         customerNote: _text(json['customerNote']),
         items: [
           for (final item in (json['items'] as List<dynamic>? ?? const [])) KitchenOrderItem.fromJson(item as Map<String, dynamic>),
+        ],
+        parts: [
+          for (final part in (json['parts'] as List<dynamic>? ?? const [])) KitchenOrderPart.fromJson(part as Map<String, dynamic>),
         ],
       );
 }

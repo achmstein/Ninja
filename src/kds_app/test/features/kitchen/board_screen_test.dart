@@ -7,6 +7,7 @@ import 'package:kds_app/core/brand/brand_provider.dart';
 import 'package:kds_app/core/brand/tenant_brand.dart';
 import 'package:kds_app/core/theme/app_theme.dart';
 import 'package:kds_app/features/kitchen/models/kitchen_order.dart';
+import 'package:kds_app/features/kitchen/models/kitchen_station.dart';
 import 'package:kds_app/features/kitchen/screens/board_screen.dart';
 import 'package:kds_app/features/kitchen/services/kitchen_service.dart';
 import 'package:kds_app/l10n/app_localizations.dart';
@@ -17,7 +18,7 @@ class _Kitchen implements KitchenRepository {
   int asked = 0;
 
   @override
-  Future<List<KitchenOrder>> getKitchenOrders() async {
+  Future<List<KitchenOrder>> getKitchenOrders({int? stationId}) async {
     asked++;
     return [
       KitchenOrder.fromJson({
@@ -36,7 +37,10 @@ class _Kitchen implements KitchenRepository {
   }
 
   @override
-  Future<void> setReady(int orderNumber, bool ready, {required String requestId}) async {}
+  Future<List<KitchenStation>> getStations() async => const [];
+
+  @override
+  Future<void> setReady(int orderNumber, bool ready, {int? stationId, required String requestId}) async {}
 }
 
 Widget _board(_Kitchen kitchen, {required bool kds}) => ProviderScope(

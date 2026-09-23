@@ -112,6 +112,12 @@ final ordersApiProvider = Provider<ApiClient>((ref) {
   return ApiClient(authService, baseUrl: AppConfig.ordersApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
+/// The kitchen's stations — branch-scoped, like the board
+final kitchenApiProvider = Provider<ApiClient>((ref) {
+  final authService = ref.read(authServiceProvider.notifier);
+  return ApiClient(authService, baseUrl: AppConfig.kitchenApiUrl, branchIdGetter: _branchIdGetter(ref));
+});
+
 /// Branches API — no branch header (it IS the branch service)
 final branchesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);

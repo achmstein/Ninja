@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
+import { StationSwitcher } from '@/components/layout/station-switcher'
 import { HistoryDialog } from '@/features/board/history-dialog'
 import { useSoundUnlock } from '@/features/board/use-sound-unlock'
 import { useFullscreen } from '@/hooks/use-fullscreen'
@@ -60,6 +61,7 @@ export function KitchenHeader() {
   return (
     <header className='bg-background sticky top-0 z-40 flex h-16 items-center gap-2 border-b px-3'>
       <BranchSwitcher />
+      <StationSwitcher />
       <div className='ms-auto flex items-center gap-1'>
         {/* Browsers keep audio muted until a tap; the crossed speaker is
             that tap, and it leaves once sound is unlocked */}

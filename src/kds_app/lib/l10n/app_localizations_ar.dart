@@ -18,6 +18,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get branches => 'الفروع';
 
   @override
+  String get station => 'المحطة';
+
+  @override
+  String get allStations => 'كل المحطات';
+
+  @override
   String get signOut => 'تسجيل الخروج';
 
   @override

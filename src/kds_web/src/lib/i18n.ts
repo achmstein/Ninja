@@ -24,6 +24,8 @@ const dictionary = {
   kdsNotInPlan: { en: 'The kitchen display is not in your plan', ar: 'شاشة المطبخ مش في باقتك' },
   kdsNotInPlanNote: { en: 'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.', ar: 'الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك.' },
   branches: { en: 'Branches', ar: 'الفروع' },
+  station: { en: 'Station', ar: 'المحطة' },
+  allStations: { en: 'All stations', ar: 'كل المحطات' },
   signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },
   settings: { en: 'Settings', ar: 'الإعدادات' },
   language: { en: 'Language', ar: 'اللغة' },

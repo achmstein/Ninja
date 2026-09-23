@@ -3,6 +3,8 @@
   "appName": "المطبخ",
   "poweredBy": "بدعم من",
   "branches": "الفروع",
+  "station": "المحطة",
+  "allStations": "كل المحطات",
   "signOut": "تسجيل الخروج",
   "settings": "الإعدادات",
   "connectTitle": "ده كافيه مين؟",

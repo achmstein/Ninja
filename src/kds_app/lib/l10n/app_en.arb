@@ -3,6 +3,8 @@
   "appName": "Kitchen",
   "poweredBy": "Powered by",
   "branches": "Branches",
+  "station": "Station",
+  "allStations": "All stations",
   "signOut": "Sign out",
   "settings": "Settings",
   "connectTitle": "Which café is this?",

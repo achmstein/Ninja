@@ -1,4 +1,5 @@
 import '../../features/kitchen/models/kitchen_order.dart';
+import '../../features/kitchen/models/kitchen_station.dart';
 import '../../features/kitchen/services/kitchen_service.dart';
 import '../auth/auth_service.dart';
 import '../brand/brand_service.dart';
@@ -86,10 +87,16 @@ class _DemoKitchenRepository implements KitchenRepository {
   final List<KitchenOrder> _orders = kDemoEmpty ? [] : List.of(_sampleOrders);
 
   @override
-  Future<List<KitchenOrder>> getKitchenOrders() async => List.of(_orders);
+  Future<List<KitchenOrder>> getKitchenOrders({int? stationId}) async => List.of(_orders);
+
+  /// One kitchen, as a café that never split it
+  @override
+  Future<List<KitchenStation>> getStations() async => [
+        KitchenStation(id: 1, name: _lt('Kitchen', 'المطبخ'), isDefault: true),
+      ];
 
   @override
-  Future<void> setReady(int orderNumber, bool ready, {required String requestId}) async {
+  Future<void> setReady(int orderNumber, bool ready, {int? stationId, required String requestId}) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     final now = DateTime.now().toUtc();
     for (var i = 0; i < _orders.length; i++) {

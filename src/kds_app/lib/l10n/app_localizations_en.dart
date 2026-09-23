@@ -18,6 +18,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get branches => 'Branches';
 
   @override
+  String get station => 'Station';
+
+  @override
+  String get allStations => 'All stations';
+
+  @override
   String get signOut => 'Sign out';
 
   @override

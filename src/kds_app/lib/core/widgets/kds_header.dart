@@ -9,6 +9,7 @@ import '../network/api_errors.dart';
 import '../providers/locale_provider.dart';
 import '../theme/app_theme.dart';
 import '../../features/kitchen/widgets/history_dialog.dart';
+import '../../features/kitchen/widgets/station_switcher.dart';
 import 'branch_switcher.dart';
 import 'kds_toast.dart';
 
@@ -74,6 +75,8 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
       child: Row(
         children: [
           const BranchSwitcher(),
+          const SizedBox(width: 8),
+          const StationSwitcher(),
           const Spacer(),
           SizedBox.square(
             dimension: 48,

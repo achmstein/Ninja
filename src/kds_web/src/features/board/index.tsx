@@ -4,6 +4,7 @@ import { useT } from '@/lib/i18n'
 import { OrderCard, OrderCardSkeleton } from './order-card'
 import { useKitchenOrders, useNowMs } from './use-kitchen-orders'
 import { useReady } from './use-ready'
+import { useStation } from './use-station'
 
 /**
  * The kitchen board: one grid of open orders, oldest first, as many across
@@ -18,6 +19,7 @@ export function Board() {
   const nowMs = useNowMs()
   const { orders, isLoading } = useKitchenOrders()
   const { setReady, actingOrderNumber } = useReady()
+  const { stationId } = useStation()
 
   const open = useMemo(
     () => orders.filter((order) => order.readyAt == null),
@@ -54,6 +56,7 @@ export function Board() {
                     nowMs={nowMs}
                     isActing={actingOrderNumber === id}
                     onReady={() => setReady(id, true)}
+                    showParts={stationId == null}
                   />
                 </div>
               )

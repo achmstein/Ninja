@@ -3,6 +3,7 @@ import {
   Check,
   DoorOpen,
   MessageSquareText,
+  Printer,
   ShoppingBag,
   Store,
   Undo2,
@@ -35,6 +36,8 @@ import {
  *   to call;
  * - the lines, big enough to read at arm's length, quantity in its own
  *   column, modifiers under the product, special instructions in amber;
+ * - on the pass, the stations it is split between, each ticked when done
+ *   (or marked printed, where a printer took it and nobody taps);
  * - the one tap that moves it along — Ready on the board, Bring back in
  *   the history.
  *
@@ -46,12 +49,15 @@ export function OrderCard({
   isActing,
   onReady,
   onBringBack,
+  showParts = false,
 }: {
   order: KitchenOrder
   nowMs: number
   isActing: boolean
   onReady?: () => void
   onBringBack?: () => void
+  /** The pass: which stations the order is split between */
+  showParts?: boolean
 }) {
   const t = useT()
   const locale = useLocale()
@@ -88,6 +94,9 @@ export function OrderCard({
   // pickup without a name is a guest.
   const who = order.customerName || (isPos || place ? '' : t('walkIn'))
 
+  // One station is the whole order; the split is only worth showing past that
+  const parts = showParts && (order.parts ?? []).length > 1 ? order.parts! : []
+
   return (
     <Card className={cn('gap-0 overflow-hidden py-0', toneBorderClass(tone))}>
       <CardHeader
@@ -118,6 +127,26 @@ export function OrderCard({
         {who && (
           <div className='line-clamp-2 text-lg leading-tight font-semibold break-words'>
             {who}
+          </div>
+        )}
+        {parts.length > 0 && (
+          <div className='flex flex-wrap gap-1 pt-0.5'>
+            {parts.map((part) => {
+              const done = part.readyAt != null
+              return (
+                <Badge
+                  key={String(part.stationId)}
+                  variant={done ? 'default' : 'outline'}
+                  className={cn(
+                    'gap-1 px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5',
+                    !done && 'bg-card'
+                  )}
+                >
+                  {part.showsOnScreen ? done && <Check /> : <Printer />}
+                  {localized(part.stationName)}
+                </Badge>
+              )
+            })}
           </div>
         )}
       </CardHeader>

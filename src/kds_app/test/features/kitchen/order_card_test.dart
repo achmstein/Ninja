@@ -8,7 +8,7 @@ import 'package:kds_app/features/kitchen/models/kitchen_order.dart';
 import 'package:kds_app/features/kitchen/widgets/order_card.dart';
 import 'package:kds_app/l10n/app_localizations.dart';
 
-Widget _card(KitchenOrder order, {required double width}) => MaterialApp(
+Widget _card(KitchenOrder order, {required double width, bool showParts = false}) => MaterialApp(
       locale: const Locale('en'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -24,7 +24,10 @@ Widget _card(KitchenOrder order, {required double width}) => MaterialApp(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
-          child: SizedBox(width: width, child: OrderCard(order: order, now: DateTime.utc(2026, 9, 5, 20), acting: false)),
+          child: SizedBox(
+            width: width,
+            child: OrderCard(order: order, now: DateTime.utc(2026, 9, 5, 20), acting: false, showParts: showParts),
+          ),
         ),
       ),
     );
@@ -54,5 +57,47 @@ void main() {
     final paragraph = tester.renderObject<RenderParagraph>(find.text('Table 1'));
     expect(paragraph.didExceedMaxLines, isFalse);
     expect(paragraph.size.width, greaterThanOrEqualTo(paragraph.getMaxIntrinsicWidth(double.infinity) - 0.5));
+  });
+
+  KitchenOrder split() => KitchenOrder.fromJson({
+        'orderNumber': 3122,
+        'date': '2026-09-05T19:50:00Z',
+        'confirmedAt': '2026-09-05T19:52:00Z',
+        'source': 'Pos',
+        'items': [
+          {
+            'productName': {'en': 'Burger', 'ar': 'برجر'},
+            'units': 1,
+          },
+        ],
+        'parts': [
+          {
+            'stationId': 1,
+            'stationName': {'en': 'Grill', 'ar': 'الشواية'},
+            'showsOnScreen': true,
+            'readyAt': '2026-09-05T19:58:00Z',
+          },
+          {
+            'stationId': 3,
+            'stationName': {'en': 'Shisha', 'ar': 'الشيشة'},
+            'showsOnScreen': false,
+          },
+        ],
+      });
+
+  testWidgets('the pass shows the stations an order is split between', (tester) async {
+    await tester.pumpWidget(_card(split(), width: 400, showParts: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Grill'), findsOneWidget);
+    expect(find.text('Shisha'), findsOneWidget);
+    expect(find.byIcon(FIcons.printer), findsOneWidget, reason: 'the printed part says so instead of waiting for a tap');
+  });
+
+  testWidgets('a station screen keeps to its own part', (tester) async {
+    await tester.pumpWidget(_card(split(), width: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shisha'), findsNothing);
   });
 }

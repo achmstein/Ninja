@@ -9,6 +9,7 @@ import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
 import '../providers/kitchen_orders_provider.dart';
+import '../providers/station_provider.dart';
 import '../widgets/order_card.dart';
 import '../widgets/order_grid.dart';
 
@@ -68,6 +69,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     final isLoading = async.isLoading && async.value == null;
     final now = DateTime.now();
     final open = openOrders(orders);
+    final onPass = ref.watch(selectedStationIdProvider) == null;
 
     if (!isLoading && open.isEmpty) return const _EmptyBoard();
 
@@ -82,6 +84,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
             now: now,
             acting: _acting.contains(order.orderNumber),
             onReady: () => _markReady(order),
+            showParts: onPass,
           ),
       ],
     );

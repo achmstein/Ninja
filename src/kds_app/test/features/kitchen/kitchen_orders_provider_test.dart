@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kds_app/features/kitchen/models/kitchen_order.dart';
+import 'package:kds_app/features/kitchen/models/kitchen_station.dart';
 import 'package:kds_app/features/kitchen/providers/kitchen_orders_provider.dart';
+import 'package:kds_app/features/kitchen/providers/station_provider.dart';
 import 'package:kds_app/features/kitchen/services/kitchen_service.dart';
 
 /// The server in memory: answers the board, records every tap, and can be
@@ -13,12 +15,23 @@ class _FakeKitchen implements KitchenRepository {
   Completer<void>? gate;
   final List<(int, bool, String)> calls = [];
 
-  @override
-  Future<List<KitchenOrder>> getKitchenOrders() async => List.of(orders);
+  /// The station each board fetch and each tap was for; null is the pass
+  final List<int?> boardsFor = [];
+  final List<int?> tapsFor = [];
 
   @override
-  Future<void> setReady(int orderNumber, bool ready, {required String requestId}) async {
+  Future<List<KitchenOrder>> getKitchenOrders({int? stationId}) async {
+    boardsFor.add(stationId);
+    return List.of(orders);
+  }
+
+  @override
+  Future<List<KitchenStation>> getStations() async => const [];
+
+  @override
+  Future<void> setReady(int orderNumber, bool ready, {int? stationId, required String requestId}) async {
     calls.add((orderNumber, ready, requestId));
+    tapsFor.add(stationId);
     if (gate != null) await gate!.future;
     if (failWith != null) throw failWith!;
     orders = [
@@ -59,6 +72,31 @@ void main() {
     expect([for (final o in board) o.orderNumber], [1, 4, 2, 3]);
     expect([for (final o in openOrders(board)) o.orderNumber], [1, 3]);
     expect([for (final o in finishedOrders(board)) o.orderNumber], [2, 4]);
+  });
+
+  test('a station display asks for its own board and readies its own part', () async {
+    final grill = ProviderContainer(overrides: [
+      kitchenRepositoryProvider.overrideWithValue(kitchen),
+      selectedStationIdProvider.overrideWithValue(12),
+    ]);
+    addTearDown(grill.dispose);
+    kitchen.orders = [order(7, minutesAgo: 3)];
+
+    await grill.read(kitchenOrdersProvider.future);
+    await grill.read(kitchenOrdersProvider.notifier).setReady(7, true);
+
+    expect(kitchen.boardsFor, everyElement(12));
+    expect(kitchen.tapsFor, [12]);
+  });
+
+  test('the pass asks for every order whole', () async {
+    kitchen.orders = [order(7, minutesAgo: 3)];
+
+    await container.read(kitchenOrdersProvider.future);
+    await container.read(kitchenOrdersProvider.notifier).setReady(7, true);
+
+    expect(kitchen.boardsFor, everyElement(isNull));
+    expect(kitchen.tapsFor, [null]);
   });
 
   test('a tap moves the card at once, and each tap carries its own request id', () async {
