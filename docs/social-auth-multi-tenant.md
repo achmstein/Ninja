@@ -139,6 +139,7 @@ which is correct — a customer of one café is not a customer of another.
 | `Templates.SocialProviders` — the hidden `google`/`apple` representations, only the configured ones | `src/Control.API/Platform/Templates.cs` |
 | `EnsureSocialProvidersAsync` — idempotent, re-runnable, a no-op with no app; a rotated secret lands on a realm that already has the provider | `src/Control.API/Platform/Infra.cs` |
 | Called from the realm step, on a fresh realm and on one that already exists | `src/Control.API/Platform/Provisioner.cs` |
+| `SOCIAL_*` through the deploy: the box's `.env`, the `control-api` service's env, and the four `PLATFORM_SOCIAL_*` secrets | `deploy/platform/docker-compose.yml`, `deploy/platform/.env.example`, `.github/workflows/deploy-platform.yml` |
 
 Still to do — the browser half:
 

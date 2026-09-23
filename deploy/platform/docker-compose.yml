@@ -127,6 +127,12 @@ services:
       # What the tenants' secrets are encrypted under in controldb: openssl rand -base64 32; lose it and every stack's passwords go with it
       Platform__EncryptionKey: ${PLATFORM_ENCRYPTION_KEY}
       Platform__GeminiApiKey: ${GEMINI_API_KEY}
+      # The one Google and one Apple app every tenant's customers sign in with;
+      # empty leaves a realm with no providers rather than broken ones
+      Platform__Social__Google__ClientId: ${SOCIAL_GOOGLE_CLIENT_ID:-}
+      Platform__Social__Google__ClientSecret: ${SOCIAL_GOOGLE_CLIENT_SECRET:-}
+      Platform__Social__Apple__ClientId: ${SOCIAL_APPLE_CLIENT_ID:-}
+      Platform__Social__Apple__ClientSecret: ${SOCIAL_APPLE_CLIENT_SECRET:-}
       # What the capacity guard counts against (the same number as the postgres command above) and the pool each service is stamped with
       Platform__PostgresMaxConnections: ${POSTGRES_MAX_CONNECTIONS:-400}
       Platform__ServicePoolSize: ${SERVICE_POOL_SIZE:-20}
