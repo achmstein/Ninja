@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/services/kiosk_service.dart';
 import '../../../core/services/update_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
-import '../../../core/widgets/connection_card.dart';
-import '../../../core/widgets/info_tip.dart';
+import '../../../core/widgets/connection_row.dart';
+import '../../../core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
-/// Per-tablet settings: kiosk mode (language and theme live in the header
-/// menu).
+/// Per-tablet settings, laid out like the till's: this device (the café,
+/// kiosk mode, the app's version). Language and theme live in the header
+/// menu.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -42,11 +44,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
+    final kiosk = _kiosk;
 
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
+        constraints: const BoxConstraints(maxWidth: 768),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -66,67 +69,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(l10n.settings, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
                 ],
               ),
-              const SizedBox(height: 16),
-              const ConnectionCard(),
-              const SizedBox(height: 16),
-              // The tablet as a kitchen display and nothing else
-              FCard(
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [Text(l10n.kiosk), const SizedBox(width: 4), InfoTip(text: l10n.kioskHint)],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Builder(builder: (context) {
-                    final kiosk = _kiosk;
-                    if (kiosk == null) return const SizedBox(height: 48);
-                    final emerald = AppColors.emerald(theme.colors.brightness);
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(color: kiosk.isPinned ? AppColors.emerald500 : AppColors.gray400, shape: BoxShape.circle),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(kiosk.isPinned ? l10n.kioskPinned : l10n.kioskNotPinned,
-                                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                                ],
-                              ),
-                              Text(
-                                kiosk.isDeviceOwner ? l10n.kioskDeviceOwner : l10n.kioskNotDeviceOwner,
-                                style: theme.typography.sm.copyWith(color: kiosk.isDeviceOwner ? emerald : theme.colors.mutedForeground),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          height: 48,
-                          child: FButton(
-                            variant: kiosk.enabled ? FButtonVariant.outline : null,
-                            mainAxisSize: MainAxisSize.min,
-                            onPress: () => _setKiosk(!kiosk.enabled),
-                            prefix: Icon(kiosk.enabled ? FIcons.lockOpen : FIcons.lock, size: 20),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(kiosk.enabled ? l10n.stopKiosk : l10n.startKiosk, style: theme.typography.base.forButton),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
+              const SizedBox(height: 24),
+              SettingsSection(
+                title: l10n.thisDevice,
+                children: [
+                  if (!AppConfig.isPinned && AppConfig.connection != null) const ConnectionRow(),
+                  // The tablet as a kitchen display and nothing else; the whole row flips it
+                  SettingsRow(
+                    title: l10n.kiosk,
+                    hint: l10n.kioskHint,
+                    subtitle: kiosk == null
+                        ? null
+                        : '${kiosk.isPinned ? l10n.kioskPinned : l10n.kioskNotPinned} · '
+                            '${kiosk.isDeviceOwner ? l10n.kioskDeviceOwner : l10n.kioskNotDeviceOwner}',
+                    subtitleColor: kiosk?.isPinned == true ? AppColors.emerald(theme.colors.brightness) : null,
+                    onPress: kiosk == null ? null : () => _setKiosk(!kiosk.enabled),
+                    trailing: FSwitch(value: kiosk?.enabled ?? false, onChange: kiosk == null ? null : _setKiosk),
+                  ),
+                  const _UpdateRow(),
+                ],
               ),
-              const SizedBox(height: 16),
-              const _UpdateCard(),
             ],
           ),
         ),
@@ -136,8 +98,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 }
 
 /// The build on this tablet and the newest one on the platform's download page
-class _UpdateCard extends ConsumerWidget {
-  const _UpdateCard();
+class _UpdateRow extends ConsumerWidget {
+  const _UpdateRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -158,41 +120,19 @@ class _UpdateCard extends ConsumerWidget {
     final canInstall = update.phase == UpdatePhase.ready || update.phase == UpdatePhase.needsPermission;
     final busy = update.phase == UpdatePhase.checking || update.phase == UpdatePhase.downloading || update.phase == UpdatePhase.installing;
 
-    return FCard(
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [Text(l10n.appVersion), const SizedBox(width: 4), InfoTip(text: l10n.appVersionHint)],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (installed != null)
-                    Text(l10n.appVersionInstalled(installed, update.installedBuild ?? 0),
-                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                  Text(status, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            SizedBox(
-              height: 48,
-              child: FButton(
-                variant: canInstall ? null : FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
-                prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: 20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
-                ),
-              ),
-            ),
-          ],
+    return SettingsRow(
+      title: l10n.appVersion,
+      hint: l10n.appVersionHint,
+      subtitle: [if (installed != null) l10n.appVersionInstalled(installed, update.installedBuild ?? 0), status].join(' · '),
+      subtitleColor: update.phase == UpdatePhase.failed ? theme.colors.destructive : null,
+      trailing: SizedBox(
+        height: 44,
+        child: FButton(
+          variant: canInstall ? null : FButtonVariant.outline,
+          mainAxisSize: MainAxisSize.min,
+          onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
+          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: 18),
+          child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
         ),
       ),
     );
