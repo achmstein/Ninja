@@ -130,9 +130,21 @@ class OrderCard extends StatelessWidget {
                       style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
                     ),
                     const SizedBox(width: 8),
-                    Flexible(child: _chip(theme, icon: placeIcon, label: channel)),
+                    // All the free width is the chip's to use (kds_web's ms-auto on the clock); a Flexible next to a
+                    // Spacer split it in half and cut even "Table 1" short
+                    Expanded(
+                      child: LayoutBuilder(
+                        // No room for even the chip's icon (a clock run to hundreds of hours on a narrow card): the
+                        // number and the clock keep the row
+                        builder: (context, constraints) => constraints.maxWidth < 48
+                            ? const SizedBox.shrink()
+                            : Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: _chip(theme, icon: placeIcon, label: channel),
+                              ),
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    const Spacer(),
                     Text(
                       clock,
                       style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, color: clockColor, fontFeatures: tabular, height: 1),

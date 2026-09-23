@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import {
   formatElapsed,
@@ -90,7 +91,9 @@ export function OrderCard({
   return (
     <Card className={cn('gap-0 overflow-hidden py-0', toneBorderClass(tone))}>
       <CardHeader
-        className={cn('flex flex-col gap-1 px-3 py-2', toneBandClass(tone))}
+        // items-stretch: CardHeader's own items-start would shrink each row to
+        // its content, and the clock's ms-auto would have nothing to push into
+        className={cn('flex flex-col items-stretch gap-1 px-3 py-2', toneBandClass(tone))}
       >
         <div className='flex items-center gap-2'>
           <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums'>
@@ -179,6 +182,36 @@ export function OrderCard({
           )}
         </CardFooter>
       )}
+    </Card>
+  )
+}
+
+/**
+ * A card-shaped placeholder while the board loads: the header band with the
+ * number, the place and the clock, a few item lines and the Ready bar, so
+ * the first real card lands where its outline already was.
+ */
+export function OrderCardSkeleton({ items = 2 }: { items?: number }) {
+  return (
+    <Card className='gap-0 overflow-hidden py-0'>
+      <CardHeader className='bg-muted/40 flex flex-col items-stretch gap-1 px-3 py-2'>
+        <div className='flex items-center gap-2'>
+          <Skeleton className='h-4 w-10' />
+          <Skeleton className='h-6 w-20 rounded-md' />
+          <Skeleton className='ms-auto h-5 w-12' />
+        </div>
+      </CardHeader>
+      <CardContent className='flex flex-col border-t px-3 py-1'>
+        {Array.from({ length: items }, (_, i) => (
+          <div key={i} className='flex gap-2 py-2'>
+            <Skeleton className='h-5 w-7 shrink-0' />
+            <Skeleton className='h-5 flex-1' />
+          </div>
+        ))}
+      </CardContent>
+      <CardFooter className='px-3 pt-1 pb-3'>
+        <Skeleton className='h-12 flex-1 rounded-md' />
+      </CardFooter>
     </Card>
   )
 }

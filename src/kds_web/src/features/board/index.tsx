@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { ChefHat } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/lib/i18n'
-import { OrderCard } from './order-card'
+import { OrderCard, OrderCardSkeleton } from './order-card'
 import { useKitchenOrders, useNowMs } from './use-kitchen-orders'
 import { useReady } from './use-ready'
 
@@ -41,8 +40,10 @@ export function Board() {
               under the short ones */}
           <div className='columns-[16rem] gap-3'>
             {isLoading &&
-              [0, 1, 2].map((i) => (
-                <Skeleton key={i} className='mb-3 h-36 rounded-xl' />
+              [2, 3, 1, 2].map((items, i) => (
+                <div key={i} className='mb-3 break-inside-avoid'>
+                  <OrderCardSkeleton items={items} />
+                </div>
               ))}
             {open.map((order) => {
               const id = Number(order.orderNumber)

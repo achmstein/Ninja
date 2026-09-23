@@ -74,7 +74,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     return OrderGrid(
       children: [
         if (isLoading)
-          for (var i = 0; i < 3; i++) const _CardSkeleton(),
+          for (final items in const [2, 3, 1, 2]) _CardSkeleton(items: items),
         for (final order in open)
           OrderCard(
             key: ValueKey(order.orderNumber),
@@ -118,19 +118,59 @@ class _NotInPlan extends StatelessWidget {
   }
 }
 
-/// A card-sized placeholder while the first board loads
+/// A card-shaped placeholder while the first board loads, the same outline
+/// kds_web draws: the header band with the number, the place and the clock,
+/// a few item lines and the Ready bar
 class _CardSkeleton extends StatelessWidget {
-  const _CardSkeleton();
+  final int items;
+
+  const _CardSkeleton({this.items = 2});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return Shimmer.fromColors(
-      baseColor: theme.colors.muted,
-      highlightColor: theme.colors.background,
-      child: Container(
-        height: 144,
-        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12)),
+    Widget bar({double? width, double height = 16, double radius = 4}) => Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(radius)),
+        );
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colors.card,
+        border: Border.all(color: theme.colors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Shimmer.fromColors(
+        baseColor: theme.colors.muted,
+        highlightColor: theme.colors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  bar(width: 40),
+                  const SizedBox(width: 8),
+                  bar(width: 80, height: 24, radius: 6),
+                  const Spacer(),
+                  bar(width: 48, height: 20),
+                ],
+              ),
+            ),
+            Container(height: 1, color: theme.colors.border),
+            for (var i = 0; i < items; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(children: [bar(width: 28, height: 20), const SizedBox(width: 8), Expanded(child: bar(height: 20))]),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: bar(height: 48, radius: 8),
+            ),
+          ],
+        ),
       ),
     );
   }
