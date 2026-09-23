@@ -765,5 +765,9 @@
   "kitchenPrinterStuck": "Kitchen tickets are not printing: {stations}",
   "@kitchenPrinterStuck": {"placeholders": {"stations": {"type": "String"}}},
   "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right.",
-  "kitchenPrintingOffHere": "Turn on “Print kitchen tickets” in settings on a device in the shop."
+  "kitchenPrintingOffHere": "Turn on “Print kitchen tickets” in settings on a device in the shop.",
+  "kitchenTickets": "Kitchen tickets",
+  "kitchenTicketsHint": "Print an order's kitchen tickets again, marked REPRINT.",
+  "kitchenTicketsSent": "Sent to the kitchen printer",
+  "reprint": "Reprint"
 }

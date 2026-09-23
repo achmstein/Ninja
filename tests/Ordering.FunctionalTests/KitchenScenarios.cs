@@ -186,4 +186,15 @@ public sealed class KitchenScenarios
         var (status, _) = await BackOffice(branch).RefusedAsync(HttpMethod.Post, $"{Kitchen}/stations/{stations.Single().Id}/test-print?{Version}");
         Assert.AreEqual(HttpStatusCode.BadRequest, status);
     }
+
+    [TestMethod]
+    public async Task An_order_that_is_not_there_has_nothing_to_reprint()
+    {
+        var (status, _) = await Till(711).RefusedAsync(HttpMethod.Post, $"/api/orders/999999/reprint?{Version}");
+        Assert.AreEqual(HttpStatusCode.NotFound, status);
+
+        var customer = Suite.Ordering.As(Persona.Customer(), 711);
+        var (refused, _) = await customer.RefusedAsync(HttpMethod.Post, $"/api/orders/999999/reprint?{Version}");
+        Assert.AreEqual(HttpStatusCode.Forbidden, refused, "reprinting is the till's");
+    }
 }

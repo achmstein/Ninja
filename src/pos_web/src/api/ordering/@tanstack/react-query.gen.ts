@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, confirmOrder, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteOrder, getAllOrders, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, type Options, rateOrder, rejectGuestOrder, reprintKitchenTicket, setOrderReady, setOrderStationReady, testPrintKitchenStation, updateKitchenStation } from '../sdk.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ConfirmOrderData, ConfirmOrderError, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse } from '../types.gen';
+import { assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, confirmOrder, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteOrder, getAllOrders, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, type Options, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, setOrderReady, setOrderStationReady, testPrintKitchenStation, updateKitchenStation } from '../sdk.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ConfirmOrderData, ConfirmOrderError, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -404,6 +404,25 @@ export const setOrderStationReadyMutation = (options?: Partial<Options<SetOrderS
     const mutationOptions: UseMutationOptions<SetOrderStationReadyResponse, AxiosError<SetOrderStationReadyError>, Options<SetOrderStationReadyData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await setOrderStationReady({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Print an order's kitchen tickets again (staff)
+ *
+ * Every station that printed its part gets its ticket again, marked REPRINT. Refused for an order nothing of which went to a printer.
+ */
+export const reprintOrderKitchenTicketsMutation = (options?: Partial<Options<ReprintOrderKitchenTicketsData>>): UseMutationOptions<ReprintOrderKitchenTicketsResponse, AxiosError<ReprintOrderKitchenTicketsError>, Options<ReprintOrderKitchenTicketsData>> => {
+    const mutationOptions: UseMutationOptions<ReprintOrderKitchenTicketsResponse, AxiosError<ReprintOrderKitchenTicketsError>, Options<ReprintOrderKitchenTicketsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await reprintOrderKitchenTickets({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

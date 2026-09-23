@@ -2755,6 +2755,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on “Print kitchen tickets” in settings on a device in the shop.'**
   String get kitchenPrintingOffHere;
+
+  /// No description provided for @kitchenTickets.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen tickets'**
+  String get kitchenTickets;
+
+  /// No description provided for @kitchenTicketsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print an order\'s kitchen tickets again, marked REPRINT.'**
+  String get kitchenTicketsHint;
+
+  /// No description provided for @kitchenTicketsSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to the kitchen printer'**
+  String get kitchenTicketsSent;
+
+  /// No description provided for @reprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reprint'**
+  String get reprint;
 }
 
 class _AppLocalizationsDelegate

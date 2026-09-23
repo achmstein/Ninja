@@ -745,5 +745,9 @@
   "pickup": "استلام",
   "kitchenPrinterStuck": "تذاكر المطبخ لا تُطبع: {stations}",
   "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.",
-  "kitchenPrintingOffHere": "فعّل «طباعة تذاكر المطبخ» من الإعدادات على جهاز في المحل."
+  "kitchenPrintingOffHere": "فعّل «طباعة تذاكر المطبخ» من الإعدادات على جهاز في المحل.",
+  "kitchenTickets": "تذاكر المطبخ",
+  "kitchenTicketsHint": "اطبع تذاكر المطبخ للطلب مرة أخرى، مكتوبًا عليها «إعادة طباعة».",
+  "kitchenTicketsSent": "أُرسلت إلى طابعة المطبخ",
+  "reprint": "إعادة طباعة"
 }

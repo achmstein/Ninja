@@ -80,6 +80,12 @@ public static class KitchenApi
             .WithDescription("The order is ready once every part on a screen is. A part that only prints is never marked. Repeating the current state is a no-op.")
             .RequireAuthorization("Pos");
 
+        orders.MapPost("/{orderId:int}/reprint", ReprintOrderAsync)
+            .WithName("ReprintOrderKitchenTickets")
+            .WithSummary("Print an order's kitchen tickets again (staff)")
+            .WithDescription("Every station that printed its part gets its ticket again, marked REPRINT. Refused for an order nothing of which went to a printer.")
+            .RequireAuthorization("Pos");
+
         orders.MapPost("/{orderId:int}/stations/{stationId:int}/reprint", ReprintAsync)
             .WithName("ReprintKitchenTicket")
             .WithSummary("Print a station's ticket for an order again (staff)")
@@ -166,8 +172,14 @@ public static class KitchenApi
         IMediator mediator)
         => QueueAsync(new QueueKitchenTicketCommand(httpContext.GetRequiredBranchId(), stationId, orderId), mediator);
 
+    public static Task<Results<NoContent, BadRequest<string>, NotFound, Conflict>> ReprintOrderAsync(
+        int orderId,
+        HttpContext httpContext,
+        IMediator mediator)
+        => QueueAsync(new ReprintOrderTicketsCommand(httpContext.GetRequiredBranchId(), orderId), mediator);
+
     private static async Task<Results<NoContent, BadRequest<string>, NotFound, Conflict>> QueueAsync(
-        QueueKitchenTicketCommand command, IMediator mediator)
+        IRequest<PrintJobOutcome> command, IMediator mediator)
     {
         try
         {

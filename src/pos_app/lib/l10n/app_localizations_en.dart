@@ -1496,4 +1496,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kitchenPrintingOffHere =>
       'Turn on “Print kitchen tickets” in settings on a device in the shop.';
+
+  @override
+  String get kitchenTickets => 'Kitchen tickets';
+
+  @override
+  String get kitchenTicketsHint =>
+      'Print an order\'s kitchen tickets again, marked REPRINT.';
+
+  @override
+  String get kitchenTicketsSent => 'Sent to the kitchen printer';
+
+  @override
+  String get reprint => 'Reprint';
 }

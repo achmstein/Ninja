@@ -1507,4 +1507,17 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get kitchenPrintingOffHere =>
       'فعّل «طباعة تذاكر المطبخ» من الإعدادات على جهاز في المحل.';
+
+  @override
+  String get kitchenTickets => 'تذاكر المطبخ';
+
+  @override
+  String get kitchenTicketsHint =>
+      'اطبع تذاكر المطبخ للطلب مرة أخرى، مكتوبًا عليها «إعادة طباعة».';
+
+  @override
+  String get kitchenTicketsSent => 'أُرسلت إلى طابعة المطبخ';
+
+  @override
+  String get reprint => 'إعادة طباعة';
 }

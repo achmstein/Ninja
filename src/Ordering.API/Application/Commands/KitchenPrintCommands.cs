@@ -97,3 +97,40 @@ public class QueueKitchenTicketCommandHandler(
         return PrintJobOutcome.Done;
     }
 }
+
+/// <summary>
+/// Print an order's kitchen tickets again, every station that printed its
+/// part — what the till offers when the paper jammed or a cook lost it.
+/// Refused for an order nothing of which went to a printer.
+/// </summary>
+public record ReprintOrderTicketsCommand(int BranchId, int OrderId) : IRequest<PrintJobOutcome>;
+
+public class ReprintOrderTicketsCommandHandler(
+    IOrderRepository orders,
+    IKitchenPrintJobRepository jobs,
+    IOrderingIntegrationEventService integrationEvents) : IRequestHandler<ReprintOrderTicketsCommand, PrintJobOutcome>
+{
+    public async Task<PrintJobOutcome> Handle(ReprintOrderTicketsCommand command, CancellationToken cancellationToken)
+    {
+        var order = await orders.GetAsync(command.OrderId);
+        if (order is null || order.BranchId != command.BranchId)
+        {
+            return PrintJobOutcome.NotFound;
+        }
+
+        var printed = order.StationParts.Where(p => p.PrintsTickets).ToList();
+        if (printed.Count == 0)
+        {
+            throw new OrderingDomainException("Nothing on this order went to a kitchen printer.");
+        }
+
+        foreach (var part in printed)
+        {
+            jobs.Add(KitchenPrintJob.Reprint(command.BranchId, order.Id, part.StationId));
+        }
+
+        await integrationEvents.AddAndSaveEventAsync(new KitchenTicketQueuedIntegrationEvent(command.BranchId));
+        await jobs.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        return PrintJobOutcome.Done;
+    }
+}

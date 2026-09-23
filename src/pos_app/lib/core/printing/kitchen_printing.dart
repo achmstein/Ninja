@@ -183,3 +183,14 @@ final stuckKitchenTicketsProvider =
 
 /// The ticket's station in [locale]'s language, for the warning
 String stationLabel(KitchenTicket ticket, Locale locale) => ticket.stationName.pick(locale.languageCode);
+
+/// Whether any of the branch's kitchen stations prints — the till only
+/// offers a kitchen reprint where there is paper to reprint
+final branchPrintsKitchenTicketsProvider = FutureProvider<bool>((ref) async {
+  if (ref.watch(selectedBranchIdProvider) == null) return false;
+  final response = await ref.read(kitchenApiProvider).get<List<dynamic>>('stations');
+  return (response.data ?? const []).any((station) => station is Map && station['printsTickets'] == true);
+});
+
+/// Ask for an order's kitchen tickets again: every station that printed its part
+Future<void> reprintOrderTickets(ApiClient orders, int orderId) => orders.post('$orderId/reprint');

@@ -66,6 +66,7 @@ import { RefundDialog } from './refund-dialog'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
+import { KitchenReprintButton } from './kitchen-reprint'
 import { BreakdownDialog } from './breakdown-dialog'
 
 const percent = (rate: number | string | undefined) =>
@@ -631,6 +632,8 @@ export function TicketScreen({
                 <span className='hidden sm:inline'>{t('discount')}</span>
               )}
             </Button>
+            {/* The kitchen's paper again, where a station prints */}
+            <KitchenReprintButton lines={lines} />
             {/* Both ways out live up here, deliberately far from the Settle
                 button in the bottom bar, so neither can be fat-fingered.
                 Nothing on the ticket yet means nothing to audit, so any

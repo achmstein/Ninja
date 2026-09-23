@@ -42,6 +42,7 @@ import '../dialogs/refund_dialog.dart';
 import '../dialogs/settle_dialog.dart';
 import '../dialogs/void_dialog.dart';
 import '../dialogs/discount_dialog.dart';
+import '../dialogs/kitchen_reprint_dialog.dart';
 import '../dialogs/breakdown_dialog.dart';
 import '../lines.dart';
 import '../../../core/utils/bidi.dart';
@@ -693,6 +694,8 @@ class _Header extends StatelessWidget {
                   style: theme.typography.base.forButton),
             ),
           ),
+          // The kitchen's paper again, where a station prints
+          KitchenReprintButton(ticket: ticket),
           // Both ways out live up here, deliberately far from the Settle
           // button in the bottom bar, so neither can be fat-fingered
           if (canDiscard) ...[
