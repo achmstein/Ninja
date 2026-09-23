@@ -64,11 +64,62 @@ public sealed class TemplatesTests
         Assert.AreEqual(tenant.ControlSecret, clients["ninja-control"]["secret"]!.GetValue<string>());
         Assert.IsTrue(clients["ninja-control"]["serviceAccountsEnabled"]!.GetValue<bool>());
 
-        Assert.IsNull(realm["identityProviders"], "a café brings its own social apps");
+        // The shared Google and Apple apps are the platform's and their secrets rotate, so they
+        // go on through the admin API after the import, never into the realm file
+        Assert.IsNull(realm["identityProviders"], "social providers are added by EnsureSocialProvidersAsync, not stamped");
         var users = realm["users"]!.AsArray().Select(u => u!["username"]!.GetValue<string>()).ToArray();
         CollectionAssert.AreEquivalent(new[] { "service-account-identity-api-service", "service-account-ninja-control" }, users);
         var control = realm["users"]!.AsArray().Single(u => u!["username"]!.GetValue<string>() == "service-account-ninja-control")!;
         CollectionAssert.Contains(control["realmRoles"]!.AsArray().Select(r => r!.GetValue<string>()).ToList(), "Owner");
+    }
+
+    // The shared provider apps: one Google, one Apple, the same pair in every
+    // tenant's realm, hidden from the login page because only the native
+    // token-exchange path can use them until a hub realm exists.
+    private static PlatformOptions WithSocial(bool google = true, bool apple = true) => new()
+    {
+        Domain = "ninja.app",
+        Social = new SocialOptions
+        {
+            Google = google ? new SocialProviderOptions { ClientId = "g-id.apps.googleusercontent.com", ClientSecret = "g-secret" } : new(),
+            Apple = apple ? new SocialProviderOptions { ClientId = "app.ninja.client", ClientSecret = "a-jwt" } : new(),
+        },
+    };
+
+    [TestMethod]
+    public void Social_providers_carry_the_shared_app_and_stay_off_the_login_page()
+    {
+        var providers = Templates.SocialProviders(WithSocial());
+        var byAlias = providers.ToDictionary(p => p!["alias"]!.GetValue<string>(), p => p!.AsObject());
+        CollectionAssert.AreEquivalent(new[] { "google", "apple" }, byAlias.Keys.ToArray());
+
+        foreach (var (alias, provider) in byAlias)
+        {
+            // Keycloak 26 reads this off the representation; config.hideOnLoginPage is gone
+            Assert.IsTrue(provider["hideOnLogin"]!.GetValue<bool>(), $"{alias} would otherwise offer a browser flow with no redirect URI registered");
+            Assert.IsTrue(provider["enabled"]!.GetValue<bool>());
+            Assert.IsTrue(provider["trustEmail"]!.GetValue<bool>(), $"{alias} already verified the address");
+            Assert.AreEqual("IMPORT", provider["config"]!["syncMode"]!.GetValue<string>());
+        }
+
+        Assert.AreEqual("google", byAlias["google"]["providerId"]!.GetValue<string>());
+        Assert.AreEqual("g-id.apps.googleusercontent.com", byAlias["google"]["config"]!["clientId"]!.GetValue<string>());
+        // Apple is plain OIDC with its endpoints spelled out, not a built-in provider
+        Assert.AreEqual("oidc", byAlias["apple"]["providerId"]!.GetValue<string>());
+        Assert.AreEqual("https://appleid.apple.com", byAlias["apple"]["config"]!["issuer"]!.GetValue<string>());
+        Assert.AreEqual("a-jwt", byAlias["apple"]["config"]!["clientSecret"]!.GetValue<string>());
+    }
+
+    [TestMethod]
+    public void A_provider_the_platform_has_no_app_for_is_left_out_entirely()
+    {
+        Assert.AreEqual(1, Templates.SocialProviders(WithSocial(apple: false)).Count);
+        Assert.AreEqual("google", Templates.SocialProviders(WithSocial(apple: false))[0]!["alias"]!.GetValue<string>());
+        // Nothing configured: a realm with no providers beats one with providers that cannot work
+        Assert.AreEqual(0, Templates.SocialProviders(Platform).Count);
+        // Half a provider is no provider
+        var halfGoogle = new PlatformOptions { Social = new SocialOptions { Google = new SocialProviderOptions { ClientId = "g-id" } } };
+        Assert.AreEqual(0, Templates.SocialProviders(halfGoogle).Count);
     }
 
     [TestMethod]

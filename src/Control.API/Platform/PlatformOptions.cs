@@ -71,6 +71,9 @@ public sealed class PlatformOptions
     /// <summary>Shared assistant key handed to every stack; empty leaves the assistant off.</summary>
     public string? GeminiApiKey { get; set; }
 
+    /// <summary>The one Google and one Apple app every tenant's customers sign in with; empty leaves social sign-in off.</summary>
+    public SocialOptions Social { get; set; } = new();
+
     /// <summary>How long a demo lives before it is stopped, and how long a stopped demo waits before it is destroyed.</summary>
     public int DemoDays { get; set; } = 14;
 
@@ -255,6 +258,32 @@ public sealed class MailOptions
     public string? OpsTo { get; set; }
 
     public bool Configured => !string.IsNullOrWhiteSpace(Host);
+}
+
+/// <summary>
+/// The provider apps the whole platform signs customers in with. They belong
+/// to Ninja, not to a café: a café would need its own paid Apple account and
+/// a walk through the Google console before it could sell a coffee. One app
+/// each, shared by every realm. Empty leaves a realm with no providers at
+/// all, which is better than broken ones.
+/// </summary>
+public sealed class SocialOptions
+{
+    public SocialProviderOptions Google { get; set; } = new();
+
+    public SocialProviderOptions Apple { get; set; } = new();
+}
+
+public sealed class SocialProviderOptions
+{
+    /// <summary>The shared app's client id (Apple: the Services ID).</summary>
+    public string? ClientId { get; set; }
+
+    /// <summary>Apple's is a JWT signed with the .p8 key and expires; rotate-apple-secret.yml renews it.</summary>
+    public string? ClientSecret { get; set; }
+
+    /// <summary>Both halves, or this provider stays off.</summary>
+    public bool Configured => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
 }
 
 public sealed class RestoreDrillOptions

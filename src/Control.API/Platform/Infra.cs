@@ -62,6 +62,12 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureAssistantClientsAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct);
     /// <summary>
+    /// The platform's shared Google and Apple providers in a tenant's realm,
+    /// so the native apps can exchange a provider token for one of the realm's
+    /// own. Idempotent, and a no-op while the platform holds no social app.
+    /// </summary>
+    Task EnsureSocialProvidersAsync(string realm, CancellationToken ct);
+    /// <summary>
     /// Signs the user in without their password, as the master admin may: a
     /// browser session in their realm, returned as the Set-Cookie headers a
     /// browser on <paramref name="publicAuthHost"/> would have received.
@@ -558,6 +564,32 @@ public sealed class KeycloakRestAdmin(IHttpClientFactory httpClientFactory, IOpt
         }
     }
 
+    public async Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)
+    {
+        var wanted = Templates.SocialProviders(options.Value);
+        if (wanted.Count == 0) return;
+
+        var client = await AdminClientAsync(ct);
+        var admin = $"{Base}/admin/realms/{realm}";
+        var existing = await client.GetFromJsonAsync<JsonArray>($"{admin}/identity-provider/instances", ct) ?? [];
+
+        foreach (var provider in wanted.Select(p => (JsonObject)p!.DeepClone()))
+        {
+            var alias = provider["alias"]!.GetValue<string>();
+            var found = existing.FirstOrDefault(p => p?["alias"]?.GetValue<string>() == alias) as JsonObject;
+            if (found is null)
+            {
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/identity-provider/instances", provider, ct), $"the {alias} identity provider in {realm}", ct);
+            }
+            else
+            {
+                // A rotated secret (Apple's expires) lands on the realm that already has the provider
+                provider["internalId"] = found["internalId"]?.GetValue<string>();
+                await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/identity-provider/instances/{alias}", provider, ct), $"the {alias} identity provider in {realm}", ct);
+            }
+        }
+    }
+
     private static async Task ThrowIfRefusedAsync(HttpResponseMessage response, string what, CancellationToken ct)
     {
         using (response)
@@ -698,6 +730,11 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
         // The template must still yield the parts, so a broken realm file fails a dry run too
         var parts = Templates.AssistantRealmParts(apiUrl, assistantSecret);
         logger.LogInformation("(dry run) assistant in {Realm}: mcp scope, {Clients} clients, {Policies} policies", realm, parts.Clients.Count, parts.Policies.Count);
+        return Task.CompletedTask;
+    }
+    public Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)
+    {
+        logger.LogInformation("(dry run) social providers in {Realm}", realm);
         return Task.CompletedTask;
     }
     public Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)

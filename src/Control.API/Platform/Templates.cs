@@ -109,6 +109,80 @@ public static partial class Templates
         return new AssistantRealmPartsView(scope, clients, policies, defaults, optionals, roles);
     }
 
+    /// <summary>
+    /// The identity providers a tenant realm needs so the native apps can hand
+    /// a Google or Apple token straight to the realm and get one of its own
+    /// back (token exchange, subject_issuer=google|apple). That path never
+    /// opens a browser, so it needs no redirect URI — which is why these can
+    /// be stamped into every realm for free.
+    ///
+    /// They are hidden from the login page on purpose. The browser flow
+    /// (kc_idp_hint) would send the person out to the provider and back to
+    /// <c>/realms/{slug}/broker/{alias}/endpoint</c>, and that URI has to be
+    /// registered with Google by hand, per realm, in a console with no API.
+    /// Turning these on for the browser would put a human in the middle of
+    /// provisioning; docs/social-auth-multi-tenant.md has the way out (a hub
+    /// realm with one redirect URI), which is not built yet.
+    ///
+    /// Only the providers the platform actually holds an app for: a realm
+    /// with no provider is better than one with a provider that cannot work.
+    /// </summary>
+    public static JsonArray SocialProviders(PlatformOptions platform)
+    {
+        var providers = new JsonArray();
+        if (platform.Social.Google.Configured)
+        {
+            providers.Add(Provider("google", "google", "Google", platform.Social.Google, new JsonObject
+            {
+                ["useJwksUrl"] = "true",
+                ["defaultScope"] = "openid profile email",
+            }));
+        }
+        if (platform.Social.Apple.Configured)
+        {
+            // Apple is not a first-class Keycloak provider: it is plain OIDC with its endpoints spelled out
+            providers.Add(Provider("apple", "oidc", "Apple", platform.Social.Apple, new JsonObject
+            {
+                ["authorizationUrl"] = "https://appleid.apple.com/auth/authorize",
+                ["tokenUrl"] = "https://appleid.apple.com/auth/token",
+                ["jwksUrl"] = "https://appleid.apple.com/auth/keys",
+                ["issuer"] = "https://appleid.apple.com",
+                ["useJwksUrl"] = "true",
+                ["validateSignature"] = "true",
+                ["disableUserInfo"] = "true",
+                ["disableTypeClaimCheck"] = "true",
+                ["clientAuthMethod"] = "client_secret_post",
+                ["defaultScope"] = "openid name email",
+            }));
+        }
+        return providers;
+    }
+
+    private static JsonObject Provider(string alias, string providerId, string displayName, SocialProviderOptions app, JsonObject config)
+    {
+        config["clientId"] = app.ClientId;
+        config["clientSecret"] = app.ClientSecret;
+        config["syncMode"] = "IMPORT";
+        return new JsonObject
+        {
+            ["alias"] = alias,
+            ["displayName"] = displayName,
+            ["providerId"] = providerId,
+            ["enabled"] = true,
+            // The provider has already verified the address; asking the café's customer to verify it again is a dead end on a phone
+            ["trustEmail"] = true,
+            ["storeToken"] = false,
+            ["addReadTokenRoleOnCreate"] = false,
+            ["authenticateByDefault"] = false,
+            ["linkOnly"] = false,
+            // Keycloak 26 keeps this on the representation; the old config.hideOnLoginPage is gone
+            ["hideOnLogin"] = true,
+            ["updateProfileFirstLoginMode"] = "on",
+            ["firstBrokerLoginFlowAlias"] = "first broker login",
+            ["config"] = config,
+        };
+    }
+
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
     public static string PlatformRealm(PlatformOptions platform, string initialPassword)
         => Render(Read("platform-realm.json"), new Dictionary<string, string>
