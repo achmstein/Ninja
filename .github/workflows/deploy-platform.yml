@@ -215,6 +215,25 @@ jobs:
           fi
           find platform-artifacts -maxdepth 2 -not -path '*/web-incoming/*' | sort
 
+      # /opt is root's, so on a box that has never been deployed to the copy
+      # below cannot create its own target: scp runs as the login user and gets
+      # "Permission denied" before a single file lands. The folders have to
+      # exist and belong to that user first, which only sudo can arrange.
+      - name: Make room on the server
+        uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_DIR: ${{ env.DEPLOY_DIR }}
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          envs: DEPLOY_DIR
+          script: |
+            set -e
+            sudo mkdir -p /opt/ninja/tenants "$DEPLOY_DIR/web"
+            sudo chown -R "$USER:$USER" /opt/ninja
+            echo "ready: $(stat -c '%U:%G %a' /opt/ninja) $DEPLOY_DIR"
+
       - name: Copy to server
         uses: appleboy/scp-action@v0.1.7
         with:
