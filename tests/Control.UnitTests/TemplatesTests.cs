@@ -229,6 +229,10 @@ public sealed class TemplatesTests
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
         StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app https://admin.blue.ninja.app");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted café needs no site of its own");
+        // tenant_api proxies; the paused answer is a snippet of its own, and a café on its
+        // own domain needs it as much as one on {slug}.{domain} -- without it a suspended
+        // stack shows a bare 502 instead of the app's paused page
+        StringAssert.Contains(snippet, "import paused_api");
     }
 
     [TestMethod]

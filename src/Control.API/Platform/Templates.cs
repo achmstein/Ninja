@@ -399,6 +399,10 @@ public static partial class Templates
             sb.AppendLine("\thandle {");
             sb.AppendLine("\t\timport spa /srv/client-web");
             sb.AppendLine("\t}");
+            // The paused answer is its own snippet, not part of tenant_api: a café on its
+            // own domain must hear the same {"code":"paused"} as one on {slug}.{domain},
+            // or its app shows a bare 502 while the stack is suspended
+            sb.AppendLine("\timport paused_api");
             sb.AppendLine("}");
         }
         return sb.ToString();
