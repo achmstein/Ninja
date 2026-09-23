@@ -248,8 +248,37 @@ jobs:
             fi
             sudo mkdir -p /opt/ninja/tenants "$DEPLOY_DIR/web"
             sudo chown -R "$USER:$USER" /opt/ninja
-            if command -v ufw >/dev/null 2>&1; then
+            # 80, 443 and 443/udp (Caddy serves HTTP/3) on whichever firewall is
+            # really in force. Asking only "is ufw installed?" is not enough: Oracle
+            # Cloud's Ubuntu images ship ufw inactive and do the blocking with
+            # pre-loaded iptables rules that drop everything but 22, so `ufw allow`
+            # there succeeds and changes nothing, and the edge stays unreachable.
+            if command -v firewall-cmd >/dev/null 2>&1 && sudo firewall-cmd --state >/dev/null 2>&1; then
+              sudo firewall-cmd --permanent --add-service=http >/dev/null
+              sudo firewall-cmd --permanent --add-service=https >/dev/null
+              sudo firewall-cmd --permanent --add-port=443/udp >/dev/null
+              sudo firewall-cmd --reload >/dev/null
+              echo "firewall: firewalld"
+            elif command -v ufw >/dev/null 2>&1 && sudo ufw status 2>/dev/null | grep -qi '^Status: active'; then
               sudo ufw allow 22/tcp >/dev/null; sudo ufw allow 80/tcp >/dev/null; sudo ufw allow 443/tcp >/dev/null; sudo ufw allow 443/udp >/dev/null
+              echo "firewall: ufw"
+            elif command -v iptables >/dev/null 2>&1; then
+              # -C first so a redeploy does not stack duplicates; -I 1 to land above the drop
+              for spec in "tcp 80" "tcp 443" "udp 443"; do
+                proto=${spec% *}; port=${spec#* }
+                sudo iptables -C INPUT -p "$proto" --dport "$port" -j ACCEPT 2>/dev/null \
+                  || sudo iptables -I INPUT 1 -p "$proto" --dport "$port" -j ACCEPT
+              done
+              if command -v netfilter-persistent >/dev/null 2>&1; then
+                sudo netfilter-persistent save >/dev/null
+              elif [ -d /etc/iptables ]; then
+                sudo sh -c 'iptables-save > /etc/iptables/rules.v4'
+              else
+                echo "::warning::iptables rules opened but not persisted; they will be lost on reboot"
+              fi
+              echo "firewall: iptables"
+            else
+              echo "::warning::no firewall tool found; make sure 80/tcp, 443/tcp and 443/udp are open"
             fi
 
             cd "$DEPLOY_DIR"
