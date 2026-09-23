@@ -80,6 +80,17 @@
 }
 
 auth.{$PLATFORM_DOMAIN} {
+	# On demand, like the tenant hosts, and for a reason that is not obvious:
+	# the on-demand *.{domain} site below covers this name, and Caddy will not
+	# manage a certificate for a name it believes a wildcard already covers.
+	# That wildcard is on-demand and a real wildcard certificate would need a
+	# DNS challenge, so nothing is ever issued -- the handshake answers a TLS
+	# internal error with no certificate, and no attempt appears in the log.
+	# /api/control/tls/ask already approves this host, the control host and
+	# the apex by name, which is what on-demand asks before it issues.
+	tls {
+		on_demand
+	}
 	# "Sign in as the owner": the control plane hands the owner's session
 	# cookies to the browser from this host, where they belong
 	handle /api/control/impersonate/* {
@@ -102,6 +113,10 @@ auth.{$PLATFORM_DOMAIN} {
 }
 
 control.{$PLATFORM_DOMAIN} {
+	# On demand for the same reason as the auth host above
+	tls {
+		on_demand
+	}
 	handle /api/* {
 		reverse_proxy control-api:8080
 	}
