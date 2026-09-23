@@ -17,7 +17,13 @@ public sealed class AssistantOptions
     /// <summary>The realm's public issuer, e.g. https://auth.chillax.site/realms/chillax: where a chat app sends the owner to sign in.</summary>
     public string Issuer { get; set; } = "";
 
-    /// <summary>The scope a chat app asks for; the realm's "mcp" client scope carries the audience.</summary>
+    /// <summary>
+    /// The scope a chat app asks for; the realm's "mcp" client scope carries the
+    /// audience. The default lives here and nowhere else: the configuration binder
+    /// APPENDS a bound array to the one the property already holds, so repeating it
+    /// in appsettings.json would advertise ["mcp", "mcp"]. Configure it only to add
+    /// a scope, and expect the default to stay in front of it.
+    /// </summary>
     public string[] ScopesSupported { get; set; } = ["mcp"];
 
     public TokenExchangeOptions TokenExchange { get; set; } = new();

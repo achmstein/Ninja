@@ -68,7 +68,10 @@ public sealed class McpAssistantScenario(NinjaApp app, DaySetup day) : ScenarioB
 
         var again = Json(await client.CallToolAsync("record_expense", arguments, null, null, Ct));
         Assert.True(again.GetProperty("recorded").GetBoolean());
-        Assert.Equal(JsonValueKind.Null, again.GetProperty("expenseId").ValueKind);
+        // Nothing was written twice, so there is no new id to report: the tools
+        // leave nulls out of their JSON, which is the property being absent.
+        Assert.False(again.TryGetProperty("expenseId", out _));
+        Assert.Contains("already been recorded", again.GetProperty("note").GetString());
 
         var expenses = await Owner.ExpensesAsync(BusinessDay, BusinessDay, Ct);
         var recorded = expenses.Expenses.Where(e => e.Vendor == vendor).ToList();
