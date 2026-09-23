@@ -308,6 +308,7 @@
         }
       ],
       "realmRoles": [
+        "default-roles-ninja",
         "PlatformAdmin"
       ],
       "requiredActions": [

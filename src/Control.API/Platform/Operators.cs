@@ -231,3 +231,30 @@ public sealed class DryRunOperatorDirectory(ILogger<DryRunOperatorDirectory> log
         return Task.CompletedTask;
     }
 }
+
+/// <summary>
+/// The platform realm is imported once and never stamped, so what the
+/// template gained since is put on at start: Keycloak's account pages (the
+/// control app's "Authenticator &amp; sessions") given a token that says who
+/// is asking. Retried each minute until Keycloak answers, then done.
+/// </summary>
+public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, ILogger<PlatformRealmService> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+        do
+        {
+            try
+            {
+                await keycloak.EnsureAccountConsoleAsync(KeycloakOperatorDirectory.Realm, stoppingToken);
+                logger.LogInformation("Account console ensured in the {Realm} realm", KeycloakOperatorDirectory.Realm);
+                return;
+            }
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "Could not ensure the account console in the {Realm} realm; trying again in a minute", KeycloakOperatorDirectory.Realm);
+            }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+}

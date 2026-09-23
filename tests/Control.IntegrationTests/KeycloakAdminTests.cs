@@ -58,6 +58,14 @@ public sealed class KeycloakAdminTests
         Assert.IsNotEmpty(cookies);
         Assert.IsTrue(cookies.Any(c => c.StartsWith("KEYCLOAK_IDENTITY", StringComparison.Ordinal)), string.Join(" | ", cookies));
 
+        // Keycloak's account pages, which the realm template's own scopes leave without a user or roles until they are ensured
+        await admin.EnsureAccountConsoleAsync("blue", CancellationToken.None);
+        var http = await new KeycloakAdminToken(new PlainHttpClientFactory(), Containers.Options).ClientAsync(CancellationToken.None);
+        var console = (await http.GetFromJsonAsync<JsonArray>($"{platform.KeycloakInternalUrl}/admin/realms/blue/clients?clientId=account-console"))![0]!["id"]!.GetValue<string>();
+        var claims = (await http.GetFromJsonAsync<JsonObject>($"{platform.KeycloakInternalUrl}/admin/realms/blue/clients/{console}/evaluate-scopes/generate-example-access-token?userId={id}&scope=openid"))!;
+        Assert.AreEqual(id, claims["sub"]?.GetValue<string>(), claims.ToJsonString());
+        CollectionAssert.Contains(claims["resource_access"]?["account"]?["roles"]?.AsArray().Select(r => r!.GetValue<string>()).ToList() ?? [], "manage-account", claims.ToJsonString());
+
         await admin.DeleteRealmAsync("blue", CancellationToken.None);
         await admin.DeleteRealmAsync("blue", CancellationToken.None);
         Assert.IsFalse(await admin.RealmExistsAsync("blue", CancellationToken.None));

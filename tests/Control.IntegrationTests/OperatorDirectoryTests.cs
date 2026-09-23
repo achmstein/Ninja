@@ -17,12 +17,6 @@ public sealed class OperatorDirectoryTests
             await realms.CreateRealmAsync(Templates.PlatformRealm(Containers.Platform, "First123$"), CancellationToken.None);
         var directory = new KeycloakOperatorDirectory(token);
 
-        // The account console (the control app's "Authenticator & sessions") needs a token with the user and their account roles
-        var client = await token.ClientAsync(CancellationToken.None);
-        var console = (await client.GetFromJsonAsync<JsonArray>($"{token.Base}/admin/realms/ninja/clients?clientId=account-console"))![0]!["id"]!.GetValue<string>();
-        var scopes = (await client.GetFromJsonAsync<JsonArray>($"{token.Base}/admin/realms/ninja/clients/{console}/default-client-scopes"))!.Select(s => s!["name"]!.GetValue<string>()).ToList();
-        CollectionAssert.IsSubsetOf(new[] { "openid", "roles" }, scopes, $"account-console has {string.Join(", ", scopes)}");
-
         var seeded = (await directory.ListAsync(CancellationToken.None)).Single(o => o.Email.StartsWith("platform@", StringComparison.Ordinal));
         Assert.IsTrue(seeded.Enabled);
 
@@ -50,6 +44,39 @@ public sealed class OperatorDirectoryTests
         CollectionAssert.IsSubsetOf(new[] { "UPDATE_PASSWORD", "CONFIGURE_TOTP" }, await RequiredActionsAsync(token, id));
 
         Assert.IsNull(await directory.FindAsync(Guid.NewGuid().ToString(), CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task The_account_console_hands_an_operator_a_token_that_says_who_they_are_and_that_they_may_manage_their_account()
+    {
+        var token = new KeycloakAdminToken(new PlainHttpClientFactory(), Containers.Options);
+        var realms = new KeycloakRestAdmin(token, new PlainHttpClientFactory(), Containers.Options);
+        if (!await realms.RealmExistsAsync(KeycloakOperatorDirectory.Realm, CancellationToken.None))
+            await realms.CreateRealmAsync(Templates.PlatformRealm(Containers.Platform, "First123$"), CancellationToken.None);
+        var operators = new KeycloakOperatorDirectory(token);
+        var seeded = (await operators.ListAsync(CancellationToken.None)).Single(o => o.Email.StartsWith("platform@", StringComparison.Ordinal));
+        var invited = await operators.InviteAsync("sami@ninja.test", null, null, "Temp1234abcd", CancellationToken.None)
+            ?? (await operators.ListAsync(CancellationToken.None)).Single(o => o.Email == "sami@ninja.test").Id;
+
+        // Twice: the second finds everything in place
+        await realms.EnsureAccountConsoleAsync(KeycloakOperatorDirectory.Realm, CancellationToken.None);
+        await realms.EnsureAccountConsoleAsync(KeycloakOperatorDirectory.Realm, CancellationToken.None);
+
+        foreach (var user in new[] { seeded.Id, invited })
+        {
+            var claims = await ExampleTokenAsync(token, "account-console", user);
+            Assert.AreEqual(user, claims["sub"]?.GetValue<string>(), claims.ToJsonString());
+            var account = claims["resource_access"]?["account"]?["roles"]?.AsArray().Select(r => r!.GetValue<string>()).ToList() ?? [];
+            CollectionAssert.Contains(account, "manage-account", claims.ToJsonString());
+        }
+    }
+
+    /// <summary>The access token Keycloak would mint for this client and user, as its admin console's "evaluate" tab shows it.</summary>
+    private static async Task<JsonObject> ExampleTokenAsync(KeycloakAdminToken token, string clientId, string userId)
+    {
+        var client = await token.ClientAsync(CancellationToken.None);
+        var id = (await client.GetFromJsonAsync<JsonArray>($"{token.Base}/admin/realms/ninja/clients?clientId={clientId}"))![0]!["id"]!.GetValue<string>();
+        return (await client.GetFromJsonAsync<JsonObject>($"{token.Base}/admin/realms/ninja/clients/{id}/evaluate-scopes/generate-example-access-token?userId={userId}&scope=openid"))!;
     }
 
     private static async Task<List<string>> RequiredActionsAsync(KeycloakAdminToken token, string id)

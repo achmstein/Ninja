@@ -68,6 +68,16 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureSocialProvidersAsync(string realm, CancellationToken ct);
     /// <summary>
+    /// Keycloak's own account pages (password, authenticator, signed-in
+    /// devices) working in a realm whose template declares its own client
+    /// scopes: Keycloak creates its built-in account-console client with none
+    /// of them, so its token names no user and no account roles and every
+    /// account call is refused. Gives it the realm's user and role scopes, and
+    /// the roles scope a client-roles mapper (the account API checks
+    /// account/manage-account). Idempotent.
+    /// </summary>
+    Task EnsureAccountConsoleAsync(string realm, CancellationToken ct);
+    /// <summary>
     /// Signs the user in without their password, as the master admin may: a
     /// browser session in their realm, returned as the Set-Cookie headers a
     /// browser on <paramref name="publicAuthHost"/> would have received.
@@ -606,6 +616,33 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         }
     }
 
+    public async Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var admin = $"{Base}/admin/realms/{realm}";
+        var scopes = await client.GetFromJsonAsync<JsonArray>($"{admin}/client-scopes", ct) ?? [];
+        string? ScopeId(string name) => scopes.FirstOrDefault(s => s?["name"]?.GetValue<string>() == name)?["id"]?.GetValue<string>();
+
+        // resource_access.account.roles, where the account API looks for manage-account
+        if (ScopeId("roles") is { } roles)
+        {
+            var mappers = await client.GetFromJsonAsync<JsonArray>($"{admin}/client-scopes/{roles}/protocol-mappers/models", ct) ?? [];
+            if (!mappers.Any(m => m?["protocolMapper"]?.GetValue<string>() == Templates.ClientRolesMapperType))
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/client-scopes/{roles}/protocol-mappers/models", Templates.ClientRolesMapper(), ct), $"the client roles mapper in {realm}", ct);
+        }
+
+        var found = await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId=account-console", ct) ?? [];
+        if (found.FirstOrDefault()?["id"]?.GetValue<string>() is not { } console) return;
+        var current = (await client.GetFromJsonAsync<JsonArray>($"{admin}/clients/{console}/default-client-scopes", ct) ?? [])
+            .Select(s => s?["name"]?.GetValue<string>()).ToHashSet();
+        // basic is Keycloak's own home of sub; our templates put sub in openid instead. Whichever the realm has.
+        foreach (var name in Templates.AccountConsoleScopes)
+        {
+            if (current.Contains(name) || ScopeId(name) is not { } id) continue;
+            await ThrowIfRefusedAsync(await client.PutAsync($"{admin}/clients/{console}/default-client-scopes/{id}", null, ct), $"scope {name} on account-console in {realm}", ct);
+        }
+    }
+
     private static async Task ThrowIfRefusedAsync(HttpResponseMessage response, string what, CancellationToken ct)
     {
         using (response)
@@ -751,6 +788,13 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     public Task EnsureSocialProvidersAsync(string realm, CancellationToken ct)
     {
         logger.LogInformation("(dry run) social providers in {Realm}", realm);
+        return Task.CompletedTask;
+    }
+    public List<string> AccountConsolesEnsured { get; } = [];
+    public Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
+    {
+        AccountConsolesEnsured.Add(realm);
+        logger.LogInformation("(dry run) account console in {Realm}", realm);
         return Task.CompletedTask;
     }
     public Task<IReadOnlyList<string>> ImpersonateAsync(string realm, string userId, string publicAuthHost, CancellationToken ct)

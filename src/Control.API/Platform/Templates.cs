@@ -183,6 +183,30 @@ public static partial class Templates
         };
     }
 
+    /// <summary>What Keycloak's account-console client is given (see <see cref="IKeycloakAdmin.EnsureAccountConsoleAsync"/>): whichever of these the realm has.</summary>
+    public static readonly string[] AccountConsoleScopes = ["basic", "openid", "profile", "email", "roles"];
+
+    public const string ClientRolesMapperType = "oidc-usermodel-client-role-mapper";
+
+    /// <summary>Client roles into the access token as resource_access.{client}.roles, the way Keycloak's own roles scope carries them.</summary>
+    public static JsonObject ClientRolesMapper() => new()
+    {
+        ["name"] = "client roles",
+        ["protocol"] = "openid-connect",
+        ["protocolMapper"] = ClientRolesMapperType,
+        ["consentRequired"] = false,
+        ["config"] = new JsonObject
+        {
+            ["multivalued"] = "true",
+            ["claim.name"] = "resource_access.${client_id}.roles",
+            ["jsonType.label"] = "String",
+            ["id.token.claim"] = "false",
+            ["access.token.claim"] = "true",
+            ["introspection.token.claim"] = "true",
+            ["userinfo.token.claim"] = "false",
+        },
+    };
+
     /// <summary>The platform's own realm, for the people who run Ninja.</summary>
     public static string PlatformRealm(PlatformOptions platform, string initialPassword)
         => Render(Read("platform-realm.json"), new Dictionary<string, string>

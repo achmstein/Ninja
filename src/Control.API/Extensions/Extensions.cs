@@ -96,7 +96,12 @@ public static class Extensions
         // The operators are the platform realm's own users: managed for real on a box, and in dev too, where
         // control-web signs in against a real realm even though stamping is a dry run; tests keep them in memory
         if (!dryRun || builder.Configuration.GetValue<bool>($"{PlatformOptions.Section}:LiveOperators"))
+        {
             builder.Services.AddSingleton<IOperatorDirectory, KeycloakOperatorDirectory>();
+            // The platform realm is never stamped: what its template gained since the import is put on at start
+            builder.Services.AddSingleton<KeycloakRestAdmin>();
+            if (!isBuild) builder.Services.AddHostedService<PlatformRealmService>();
+        }
         else
         {
             builder.Services.AddSingleton<DryRunOperatorDirectory>();

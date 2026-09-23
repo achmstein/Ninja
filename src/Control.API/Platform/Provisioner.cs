@@ -73,12 +73,15 @@ public sealed class Provisioner(
                     // Realms are never re-imported: what the template gained since this one was made is added by hand
                     await keycloak.EnsureAssistantClientsAsync(realm, hosts.ApiUrl, tenant.AssistantSecret, ct);
                     await keycloak.EnsureSocialProvidersAsync(realm, ct);
-                    return $"realm {realm} already there (assistant clients and social providers ensured)";
+                    await keycloak.EnsureAccountConsoleAsync(realm, ct);
+                    return $"realm {realm} already there (assistant clients, social providers and account console ensured)";
                 }
                 await keycloak.CreateRealmAsync(Templates.TenantRealm(tenant, hosts, Platform), ct);
                 // The shared Google and Apple apps are the platform's, not the template's: they carry
                 // secrets that rotate, so they go on through the admin API rather than into the realm file
                 await keycloak.EnsureSocialProvidersAsync(realm, ct);
+                // Keycloak makes its built-in account console on import, without the template's scopes
+                await keycloak.EnsureAccountConsoleAsync(realm, ct);
                 return $"realm {realm}";
             }, ct);
 

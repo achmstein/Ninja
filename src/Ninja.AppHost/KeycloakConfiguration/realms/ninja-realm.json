@@ -264,6 +264,7 @@
         }
       ],
       "realmRoles": [
+        "default-roles-ninja",
         "PlatformAdmin"
       ]
     }
