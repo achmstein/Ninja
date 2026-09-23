@@ -265,6 +265,15 @@ jobs:
               sudo usermod -aG docker "$USER"
               sudo systemctl enable --now docker
             fi
+            # usermod adds the group, but not to the session that ran it: this
+            # one still cannot open /var/run/docker.sock, and every docker call
+            # below would answer "permission denied". Reach it through sudo for
+            # the rest of this deploy; the next one logs in afresh, has the
+            # group, and uses the socket directly.
+            if ! docker info >/dev/null 2>&1; then
+              echo "docker: not in the group yet on this session, using sudo"
+              docker() { sudo docker "$@"; }
+            fi
             sudo mkdir -p /opt/ninja/tenants "$DEPLOY_DIR/web"
             sudo chown -R "$USER:$USER" /opt/ninja
             # 80, 443 and 443/udp (Caddy serves HTTP/3) on whichever firewall is
