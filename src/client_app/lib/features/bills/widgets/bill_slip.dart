@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import '../../../core/brand/brand_mark.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -27,6 +29,28 @@ String tenderLabel(String tender, AppLocalizations l10n) => switch (tender) {
 
 /// Whole hours print as "2", a quarter as "1.25"
 String hoursOf(double hours) => hours % 1 == 0 ? hours.toInt().toString() : hours.toString();
+
+/// The top of the paper, about half its width, as the till prints it: the
+/// wordmark, else the logo, else the name in bold. Paper is white, so the
+/// light versions whatever the screen.
+class ReceiptBrand extends ConsumerWidget {
+  const ReceiptBrand({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brand = ref.watch(brandProvider);
+    return BrandWordmark(
+      height: 48,
+      maxWidth: 136,
+      brightness: Brightness.light,
+      fallback: switch (brand.logoUrl) {
+        final logoUrl? => Image.network(logoUrl, width: 136),
+        null => AppText(brand.displayName(Localizations.localeOf(context)),
+            style: const TextStyle(fontSize: 20, color: Colors.black, height: 1.3, fontWeight: FontWeight.w700)),
+      },
+    );
+  }
+}
 
 /// The bill as the slip the till would print: every line on the ticket
 /// with the name the till put on it, the place's time, the discount,
@@ -81,6 +105,8 @@ class BillSlip extends ConsumerWidget {
           children: [
             Column(
               children: [
+                const ReceiptBrand(),
+                const SizedBox(height: 8),
                 AppText(
                   bill.receiptNumber != null
                       ? l10n.receiptNumber(bill.receiptNumber!)

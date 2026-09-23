@@ -15,10 +15,10 @@ import {
 } from '@/lib/i18n'
 import { BackHeader } from '@/components/back-header'
 import { BillSlip } from '@/components/bills/bill-slip'
+import { ReceiptBrand } from '@/components/bills/receipt-brand'
 import { RequireAuth } from '@/components/require-auth'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useGuestStore } from '@/stores/guest-store'
-import { useBrand, useBrandName, wordmarkFor } from '@/lib/brand'
 
 export const Route = createFileRoute('/receipts/$ticketId')({
   component: ReceiptRoute,
@@ -122,28 +122,13 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
   // The dashed rule a thermal printer draws between the receipt's parts
   const rule = <div className='border-t border-dashed border-black' />
   const footer = localized(branch?.receiptFooter)?.trim()
-  const brand = useBrand()
-  const brandName = useBrandName()
-  // Paper is white, so the light wordmark whatever the screen's scheme
-  const wordmark = wordmarkFor(brand, language, 'light')
 
   return (
     // The paper the till prints, on screen: black on white whatever the
     // theme, the wordmark on top, 72mm wide
     <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
       <div className='flex flex-col items-center text-center'>
-        {wordmark ? (
-          <img
-            src={wordmark.url}
-            alt=''
-            style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}` }}
-            className='mb-2 block h-auto w-40 max-h-16 object-contain'
-          />
-        ) : brand?.logoUrl ? (
-          <img src={brand.logoUrl} alt='' className='mb-2 block h-auto w-24' />
-        ) : (
-          <div className='mb-2 text-lg font-bold tracking-tight'>{brandName}</div>
-        )}
+        <ReceiptBrand />
         {branch && (
           <div className='mb-1.5 text-[11px]'>
             <div className='font-semibold'>{localized(branch.name)}</div>

@@ -17,6 +17,7 @@ import {
 } from '@/lib/i18n'
 import { useActiveStay } from '@/lib/stays'
 import { cn } from '@/lib/utils'
+import { ReceiptBrand } from './receipt-brand'
 
 const tenderKey: Record<string, TranslationKey> = {
   Cash: 'cash',
@@ -60,6 +61,7 @@ export function BillSlip({ bill }: { bill: BillView }) {
   return (
     <div className='mx-auto flex w-full max-w-[300px] flex-col gap-2 bg-white px-4 py-5 text-[12px] leading-snug text-black shadow-sm'>
       <div className='flex flex-col items-center text-center'>
+        <ReceiptBrand />
         <div className='text-[13px] font-semibold'>
           {bill.receiptNumber != null
             ? t('receiptNumber', { number: Number(bill.receiptNumber) })
