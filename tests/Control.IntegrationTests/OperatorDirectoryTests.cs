@@ -17,6 +17,12 @@ public sealed class OperatorDirectoryTests
             await realms.CreateRealmAsync(Templates.PlatformRealm(Containers.Platform, "First123$"), CancellationToken.None);
         var directory = new KeycloakOperatorDirectory(token);
 
+        // The account console (the control app's "Authenticator & sessions") needs a token with the user and their account roles
+        var client = await token.ClientAsync(CancellationToken.None);
+        var console = (await client.GetFromJsonAsync<JsonArray>($"{token.Base}/admin/realms/ninja/clients?clientId=account-console"))![0]!["id"]!.GetValue<string>();
+        var scopes = (await client.GetFromJsonAsync<JsonArray>($"{token.Base}/admin/realms/ninja/clients/{console}/default-client-scopes"))!.Select(s => s!["name"]!.GetValue<string>()).ToList();
+        CollectionAssert.IsSubsetOf(new[] { "openid", "roles" }, scopes, $"account-console has {string.Join(", ", scopes)}");
+
         var seeded = (await directory.ListAsync(CancellationToken.None)).Single(o => o.Email.StartsWith("platform@", StringComparison.Ordinal));
         Assert.IsTrue(seeded.Enabled);
 
