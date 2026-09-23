@@ -32,8 +32,13 @@ public interface IImageRegistry
     /// <summary>The tags one service's image carries; empty when the registry cannot be asked.</summary>
     Task<IReadOnlyList<string>> TagsAsync(string service, CancellationToken ct);
 
-    /// <summary>The image id (the config digest) a tag resolves to for this box's architecture; null when unknown.</summary>
-    Task<string?> ImageIdAsync(string service, string tag, CancellationToken ct);
+    /// <summary>
+    /// Every id docker may report for the image a tag resolves to on this
+    /// box's architecture: the tag's own digest (an index, on the containerd
+    /// image store), this architecture's manifest digest, and the config
+    /// digest (the classic store's image id). Empty when unknown.
+    /// </summary>
+    Task<IReadOnlyList<string>> ImageIdsAsync(string service, string tag, CancellationToken ct);
 }
 
 /// <summary>The arithmetic of "behind", apart from docker and the registry so it can be tested.</summary>
@@ -54,16 +59,18 @@ public static partial class UpdateMath
     /// image other than the one its tag points to now is behind, and a tenant
     /// on a release older than the newest is behind on the tag itself. A
     /// service nobody can say anything about (no container, or the tag's
-    /// current image unknown) counts as current.
+    /// current image unknown) counts as current. The tag's image goes by
+    /// several ids (see <see cref="IImageRegistry.ImageIdsAsync"/>); running
+    /// any one of them is running it.
     /// </summary>
-    public static TenantUpdate Assess(string tag, IReadOnlyDictionary<string, string> running, Func<string, string?> newestId, string? newestRelease)
+    public static TenantUpdate Assess(string tag, IReadOnlyDictionary<string, string> running, Func<string, IReadOnlyCollection<string>?> newestIds, string? newestRelease)
     {
         var behind = new List<string>();
         foreach (var service in TenantNaming.Services)
         {
             if (!running.TryGetValue(service, out var runs)) continue;
-            var newest = newestId(service);
-            if (newest is not null && !string.Equals(newest, runs, StringComparison.Ordinal)) behind.Add(service);
+            var newest = newestIds(service);
+            if (newest is { Count: > 0 } && !newest.Contains(runs, StringComparer.Ordinal)) behind.Add(service);
         }
 
         string? newerTag = null;
@@ -149,15 +156,15 @@ public sealed class UpdateCache(IServiceScopeFactory scopes, IShell shell, IImag
         var local = await LocalImagesAsync(ct);
 
         // The registry, once per service and tag in use; a tag it cannot answer for falls back to the box's copy
-        var newest = new Dictionary<string, string>(StringComparer.Ordinal);
+        var newest = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
         IReadOnlyList<string> releases = [];
         if (platform.PullImages)
         {
             var tags = tenants.Select(t => t.Tag).Distinct().ToList();
             var lookups = TenantNaming.Services.SelectMany(s => tags.Select(t => (Service: s, Tag: t))).ToList();
-            var ids = await Task.WhenAll(lookups.Select(l => registry.ImageIdAsync(l.Service, l.Tag, ct)));
+            var ids = await Task.WhenAll(lookups.Select(l => registry.ImageIdsAsync(l.Service, l.Tag, ct)));
             for (var i = 0; i < lookups.Count; i++)
-                if (ids[i] is { } id) newest[$"{lookups[i].Service}:{lookups[i].Tag}"] = id;
+                if (ids[i].Count > 0) newest[$"{lookups[i].Service}:{lookups[i].Tag}"] = ids[i];
 
             // A release is a tag every one of the twelve carries
             var perService = await Task.WhenAll(TenantNaming.Services.Select(s => registry.TagsAsync(s, ct)));
@@ -172,7 +179,7 @@ public sealed class UpdateCache(IServiceScopeFactory scopes, IShell shell, IImag
             var runs = running.TryGetValue(project, out var services) ? services : new Dictionary<string, string>(StringComparer.Ordinal);
             result[slug] = UpdateMath.Assess(tag, runs, service =>
                 newest.TryGetValue($"{service}:{tag}", out var fromRegistry) ? fromRegistry
-                : local.TryGetValue($"{platform.ImageRegistry}-{service}:{tag}", out var onBox) ? onBox
+                : local.TryGetValue($"{platform.ImageRegistry}-{service}:{tag}", out var onBox) ? [onBox]
                 : null, releases.Count > 0 ? releases[0] : null);
         }
 
@@ -244,8 +251,9 @@ public sealed class UpdateMonitor(UpdateCache cache, IOptions<PlatformOptions> o
 
 /// <summary>
 /// The registry over the OCI distribution API: a tags list and, for a tag,
-/// the manifest for this box's architecture and its config digest, which is
-/// the image id docker shows for the same image once pulled. Anonymous
+/// the digests docker may show as the image id once it is pulled: the tag's
+/// own (the containerd image store, Docker 29's default, shows the index),
+/// this architecture's manifest, and its config (the classic store). Anonymous
 /// where the packages are public; the registry's own token dance
 /// (WWW-Authenticate: Bearer realm=...) with the platform's credentials
 /// where they are not.
@@ -272,22 +280,35 @@ public sealed class OciImageRegistry(IHttpClientFactory httpClientFactory, IOpti
         return doc?["tags"] is JsonArray tags ? tags.Select(t => t?.GetValue<string>()).OfType<string>().ToList() : [];
     }
 
-    public async Task<string?> ImageIdAsync(string service, string tag, CancellationToken ct)
+    public async Task<IReadOnlyList<string>> ImageIdsAsync(string service, string tag, CancellationToken ct)
     {
         var (host, repository) = Split(service);
-        if (host is null) return null;
-        var manifest = await GetJsonAsync(host, repository, $"manifests/{tag}", ManifestAccept, ct);
-        if (manifest is null) return null;
+        if (host is null) return [];
+        var (manifest, tagDigest) = await GetManifestAsync(host, repository, tag, ct);
+        if (manifest is null) return [];
+        var ids = new List<string>();
+        if (tagDigest is not null) ids.Add(tagDigest);
 
         // An index: the one manifest built for this architecture (attestations say unknown/unknown)
         if (manifest["manifests"] is JsonArray list)
         {
             var mine = list.FirstOrDefault(m => m?["platform"]?["os"]?.GetValue<string>() == "linux" && m?["platform"]?["architecture"]?.GetValue<string>() == Arch);
             var digest = mine?["digest"]?.GetValue<string>();
-            if (digest is null) return null;
-            manifest = await GetJsonAsync(host, repository, $"manifests/{digest}", ManifestAccept, ct);
+            if (digest is null) return [];
+            ids.Add(digest);
+            (manifest, _) = await GetManifestAsync(host, repository, digest, ct);
         }
-        return manifest?["config"]?["digest"]?.GetValue<string>();
+        if (manifest?["config"]?["digest"]?.GetValue<string>() is { } config) ids.Add(config);
+        return ids;
+    }
+
+    /// <summary>A manifest and the digest the registry gives it (Docker-Content-Digest): for a tag, what the tag resolves to.</summary>
+    private async Task<(JsonObject? Manifest, string? Digest)> GetManifestAsync(string host, string repository, string reference, CancellationToken ct)
+    {
+        string? digest = null;
+        var manifest = await GetJsonAsync(host, repository, $"manifests/{reference}", ManifestAccept, ct,
+            response => digest = response.Headers.TryGetValues("Docker-Content-Digest", out var values) ? values.FirstOrDefault() : null);
+        return (manifest, digest);
     }
 
     /// <summary>ghcr.io/achmstein/ninja + branch → (ghcr.io, achmstein/ninja-branch); no host (images built on the box) → nothing to ask.</summary>
@@ -300,7 +321,7 @@ public sealed class OciImageRegistry(IHttpClientFactory httpClientFactory, IOpti
         return host.Contains('.') || host.Contains(':') || host == "localhost" ? (host, image[(slash + 1)..]) : (null, image);
     }
 
-    private async Task<JsonObject?> GetJsonAsync(string host, string repository, string path, string? accept, CancellationToken ct)
+    private async Task<JsonObject?> GetJsonAsync(string host, string repository, string path, string? accept, CancellationToken ct, Action<HttpResponseMessage>? read = null)
     {
         var client = httpClientFactory.CreateClient("registry");
         var url = $"https://{host}/v2/{repository}/{path}";
@@ -320,6 +341,7 @@ public sealed class OciImageRegistry(IHttpClientFactory httpClientFactory, IOpti
                     logger.LogWarning("Registry {Url} answered {Status}", url, (int)response.StatusCode);
                     return null;
                 }
+                read?.Invoke(response);
                 return JsonNode.Parse(await response.Content.ReadAsStringAsync(ct)) as JsonObject;
             }
         }
@@ -373,6 +395,6 @@ public sealed class DryRunImageRegistry : IImageRegistry
     public Task<IReadOnlyList<string>> TagsAsync(string service, CancellationToken ct)
         => Task.FromResult<IReadOnlyList<string>>(Images.TryGetValue(service, out var tags) ? tags.Keys.ToList() : []);
 
-    public Task<string?> ImageIdAsync(string service, string tag, CancellationToken ct)
-        => Task.FromResult(Images.TryGetValue(service, out var tags) && tags.TryGetValue(tag, out var id) ? id : null);
+    public Task<IReadOnlyList<string>> ImageIdsAsync(string service, string tag, CancellationToken ct)
+        => Task.FromResult<IReadOnlyList<string>>(Images.TryGetValue(service, out var tags) && tags.TryGetValue(tag, out var id) ? [id] : []);
 }

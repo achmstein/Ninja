@@ -23,13 +23,26 @@ public sealed class UpdateTests
     public void A_service_on_another_image_than_its_tag_points_to_is_behind()
     {
         var running = new Dictionary<string, string> { ["catalog"] = "sha256:old", ["branch"] = "sha256:same" };
-        var newest = new Dictionary<string, string?> { ["catalog"] = "sha256:new", ["branch"] = "sha256:same", ["sales"] = "sha256:x" };
+        var newest = new Dictionary<string, string[]> { ["catalog"] = ["sha256:new"], ["branch"] = ["sha256:same"], ["sales"] = ["sha256:x"] };
 
         var update = UpdateMath.Assess("latest", running, s => newest.GetValueOrDefault(s), null);
 
         Assert.IsTrue(update.Behind);
         CollectionAssert.AreEqual(new[] { "catalog" }, update.Services.ToArray());
         Assert.IsNull(update.NewerTag);
+    }
+
+    [TestMethod]
+    public void A_service_running_any_id_of_its_tags_image_is_current()
+    {
+        // The containerd image store (Docker 29's default) reports the tag's index digest as the image id;
+        // the classic store reports the config digest. Either is the image the tag points to.
+        var ids = new[] { "sha256:index", "sha256:arm64-manifest", "sha256:config" };
+        var containerd = new Dictionary<string, string> { ["catalog"] = "sha256:index" };
+        var classic = new Dictionary<string, string> { ["catalog"] = "sha256:config" };
+
+        Assert.AreSame(TenantUpdate.Current, UpdateMath.Assess("v2026.9.23", containerd, _ => ids, "v2026.9.23"));
+        Assert.AreSame(TenantUpdate.Current, UpdateMath.Assess("v2026.9.23", classic, _ => ids, "v2026.9.23"));
     }
 
     [TestMethod]
@@ -45,15 +58,15 @@ public sealed class UpdateTests
     public void A_release_older_than_the_newest_is_behind_on_the_tag()
     {
         var running = new Dictionary<string, string> { ["catalog"] = "sha256:a" };
-        var update = UpdateMath.Assess("v2026.9.1", running, _ => "sha256:a", "v2026.9.21");
+        var update = UpdateMath.Assess("v2026.9.1", running, _ => ["sha256:a"], "v2026.9.21");
         Assert.IsTrue(update.Behind);
         Assert.AreEqual(0, update.Services.Count);
         Assert.AreEqual("v2026.9.21", update.NewerTag);
 
         // latest and a build tag are not releases: only the images say whether they are behind
-        Assert.IsFalse(UpdateMath.Assess("latest", running, _ => "sha256:a", "v2026.9.21").Behind);
-        Assert.IsFalse(UpdateMath.Assess("abc1234", running, _ => "sha256:a", "v2026.9.21").Behind);
-        Assert.IsFalse(UpdateMath.Assess("v2026.9.21", running, _ => "sha256:a", "v2026.9.21").Behind);
+        Assert.IsFalse(UpdateMath.Assess("latest", running, _ => ["sha256:a"], "v2026.9.21").Behind);
+        Assert.IsFalse(UpdateMath.Assess("abc1234", running, _ => ["sha256:a"], "v2026.9.21").Behind);
+        Assert.IsFalse(UpdateMath.Assess("v2026.9.21", running, _ => ["sha256:a"], "v2026.9.21").Behind);
     }
 
     /// <summary>Answers docker ps, docker inspect and docker images with what a box would say.</summary>
