@@ -46,8 +46,13 @@
 	handle /hub/* {
 		reverse_proxy {args[0]}:5000
 	}
-	# A stack that is off (suspended for non-payment, or stopped) answers nothing: say so,
-	# as JSON the apps recognise, instead of a bare 502
+}
+
+# A stack that is off (suspended for non-payment, or stopped) answers nothing: say so,
+# as JSON the apps recognise, instead of a bare 502. It sits at the site level
+# and not in (tenant_api), because handle_errors is not an ordered handler and
+# so cannot be imported inside a handle block.
+(paused_api) {
 	handle_errors 502 503 {
 		@apipath path /api/* /hub/*
 		handle @apipath {
@@ -108,47 +113,68 @@ control.{$PLATFORM_DOMAIN} {
 # Cafés on their own domains: the map fills {slug} from the host
 import custom-domains.caddy
 
-# Staff apps: admin|pos|kds.{slug}.{domain}
-https://admin.*.{$PLATFORM_DOMAIN} {
+# The staff apps and the native apps' API host, two labels deep:
+# admin|pos|kds|api.{slug}.{domain}.
+#
+# One site block with host matchers, not four blocks. A wildcard in a site
+# address has to be the leftmost label -- Caddy refuses to adapt a config
+# with `admin.*.{domain}` in one ("subject does not qualify for
+# certificate"), on every version from 2.7 to 2.11, on_demand or not. Two
+# leftmost wildcards are fine, and the matchers sort the hosts out inside.
+# deploy/platform/local/Caddyfile does the same thing with one `https://`.
+https://*.*.{$PLATFORM_DOMAIN} {
 	tls {
 		on_demand
 	}
-	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
-	handle {
-		import spa /srv/admin-web
-	}
-}
 
-https://pos.*.{$PLATFORM_DOMAIN} {
-	tls {
-		on_demand
+	@admin host admin.*.{$PLATFORM_DOMAIN}
+	handle @admin {
+		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+		handle {
+			import spa /srv/admin-web
+		}
 	}
-	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
-	handle {
-		import spa /srv/pos-web
-	}
-}
 
-https://kds.*.{$PLATFORM_DOMAIN} {
-	tls {
-		on_demand
+	@pos host pos.*.{$PLATFORM_DOMAIN}
+	handle @pos {
+		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+		handle {
+			import spa /srv/pos-web
+		}
 	}
-	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
-	handle {
-		import spa /srv/kds-web
-	}
-}
 
-# The native apps' API host
-https://api.*.{$PLATFORM_DOMAIN} {
-	tls {
-		on_demand
+	@kds host kds.*.{$PLATFORM_DOMAIN}
+	handle @kds {
+		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
+		handle {
+			import spa /srv/kds-web
+		}
 	}
-	reverse_proxy {labels.{$PLATFORM_SLUG_LABEL}}-gateway:5000
-	# The native apps hear the same word as the web ones
+
+	# The native apps' API host
+	@api host api.*.{$PLATFORM_DOMAIN}
+	handle @api {
+		reverse_proxy {labels.{$PLATFORM_SLUG_LABEL}}-gateway:5000
+	}
+
+	# Two labels deep and none of the four: nothing here answers for it
+	handle {
+		respond 404
+	}
+
+	# The staff apps proxy /api/* and /hub/*; on the API host every path is one,
+	# so the native apps hear the same word as the web ones either way
 	handle_errors 502 503 {
-		header Content-Type application/json
-		respond `{"code":"paused"}` 503
+		@apihost host api.*.{$PLATFORM_DOMAIN}
+		handle @apihost {
+			header Content-Type application/json
+			respond `{"code":"paused"}` 503
+		}
+		@apipath path /api/* /hub/*
+		handle @apipath {
+			header Content-Type application/json
+			respond `{"code":"paused"}` 503
+		}
 	}
 }
 
@@ -163,4 +189,5 @@ https://*.{$PLATFORM_DOMAIN} {
 	handle {
 		import spa /srv/client-web
 	}
+	import paused_api
 }
