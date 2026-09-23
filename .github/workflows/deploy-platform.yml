@@ -353,8 +353,13 @@ jobs:
               sleep 2
             done
             # Idempotent: the role, controldb handed to it, the password kept in step with .env (a fresh box did this on init)
+            # pg_hba here is scram-sha-256 even on the local socket, so psql needs
+            # the superuser password; without it it prompts, reads nothing and
+            # fails. The pre-deploy dump above reads it the same way, but only
+            # when Postgres was already running, which a first deploy is not.
             CONTROL_DB_PASSWORD=$(grep -oP '^CONTROL_DB_PASSWORD=\K.*' .env)
-            docker compose exec -T -e CONTROL_DB_PASSWORD="$CONTROL_DB_PASSWORD" postgres bash /docker-entrypoint-initdb.d/zz-control-role.sh
+            PG_PASSWORD=$(grep -oP '^POSTGRES_PASSWORD=\K.*' .env)
+            docker compose exec -T -e PGPASSWORD="$PG_PASSWORD" -e CONTROL_DB_PASSWORD="$CONTROL_DB_PASSWORD" postgres bash /docker-entrypoint-initdb.d/zz-control-role.sh
             docker compose up -d --remove-orphans
             # The Caddyfile is a single-file bind mount; scp replaced the inode
             docker compose up -d --force-recreate caddy
