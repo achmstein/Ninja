@@ -258,4 +258,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get installUpdate => 'Install';
+
+  @override
+  String get kitchenPrinting => 'Print kitchen tickets';
+
+  @override
+  String get kitchenPrintingHint =>
+      'This device prints each station\'s tickets on its printer. One device in the shop is enough; keep it on.';
+
+  @override
+  String get kitchenTicketReprint => 'REPRINT';
+
+  @override
+  String get kitchenTicketTest => 'TEST';
+
+  @override
+  String get kitchenTicketTestBody => 'This station\'s printer works';
 }

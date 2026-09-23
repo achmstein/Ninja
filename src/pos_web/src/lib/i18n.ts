@@ -609,6 +609,8 @@ const dictionary = {
 
   // Errors / generic
   retry: { en: 'Retry', ar: 'حاول تاني' },
+  kitchenPrinterStuck: { en: 'Kitchen tickets are not printing: {stations}', ar: 'تذاكر المطبخ لا تُطبع: {stations}' },
+  kitchenPrintingElsewhere: { en: 'Check the printer, or turn on “Print kitchen tickets” in the till app or on a kitchen tablet.', ar: 'تأكد من الطابعة، أو فعّل «طباعة تذاكر المطبخ» في تطبيق الكاشير أو على تابلت المطبخ.' },
   orderDetailsFailed: {
     en: "Couldn't load this order's items. You can still confirm or cancel it.",
     ar: 'مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.',

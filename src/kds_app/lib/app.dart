@@ -19,6 +19,7 @@ import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_service.dart';
 import 'core/demo/demo.dart';
+import 'features/kitchen/printing/kitchen_printing.dart';
 import 'features/kitchen/providers/kitchen_orders_provider.dart';
 
 /// Global navigator key for dialogs shown from outside the widget tree
@@ -104,6 +105,8 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
   void _connectSignalR() {
     final signalR = ref.read(signalRServiceProvider);
     signalR.connect();
+    // Printing the kitchen's tickets, when this tablet is set to: its poll starts here
+    ref.read(kitchenPrintHostProvider);
 
     // Events for another branch still refetch (the refetch carries
     // X-Branch-Id), but only this branch's ring the kitchen. An event with
@@ -124,6 +127,11 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
     // cancellation removes one. Only a confirmation is worth a sound.
     _signalRSubscriptions.add(
       signalR.onOrderStatusChanged.listen((event) {
+        // A ticket waiting for a kitchen printer: nothing on the board changed
+        if (event['type'] == 'kitchen_ticket') {
+          if (forActiveBranch(event)) ref.read(kitchenPrintHostProvider).nudge();
+          return;
+        }
         _refreshBoard();
         if (!forActiveBranch(event)) return;
         if (event['type'] != 'order_confirmed') return;
@@ -147,6 +155,7 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
         _refreshBoard();
         ref.read(branchProvider.notifier).refresh();
         ref.read(brandProvider.notifier).refresh();
+        ref.read(kitchenPrintHostProvider).nudge();
       }),
     );
   }

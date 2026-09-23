@@ -559,6 +559,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install'**
   String get installUpdate;
+
+  /// No description provided for @kitchenPrinting.
+  ///
+  /// In en, this message translates to:
+  /// **'Print kitchen tickets'**
+  String get kitchenPrinting;
+
+  /// No description provided for @kitchenPrintingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This device prints each station\'s tickets on its printer. One device in the shop is enough; keep it on.'**
+  String get kitchenPrintingHint;
+
+  /// No description provided for @kitchenTicketReprint.
+  ///
+  /// In en, this message translates to:
+  /// **'REPRINT'**
+  String get kitchenTicketReprint;
+
+  /// No description provided for @kitchenTicketTest.
+  ///
+  /// In en, this message translates to:
+  /// **'TEST'**
+  String get kitchenTicketTest;
+
+  /// No description provided for @kitchenTicketTestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This station\'s printer works'**
+  String get kitchenTicketTestBody;
 }
 
 class _AppLocalizationsDelegate

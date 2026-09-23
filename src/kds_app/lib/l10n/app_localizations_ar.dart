@@ -256,4 +256,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get installUpdate => 'تثبيت';
+
+  @override
+  String get kitchenPrinting => 'طباعة تذاكر المطبخ';
+
+  @override
+  String get kitchenPrintingHint =>
+      'هذا الجهاز يطبع تذاكر كل محطة على طابعتها. يكفي جهاز واحد في المحل؛ اتركه يعمل.';
+
+  @override
+  String get kitchenTicketReprint => 'إعادة طباعة';
+
+  @override
+  String get kitchenTicketTest => 'تجربة';
+
+  @override
+  String get kitchenTicketTestBody => 'طابعة هذه المحطة تعمل';
 }

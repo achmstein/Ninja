@@ -637,6 +637,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.4"
+  ninja_printing:
+    dependency: "direct main"
+    description:
+      path: "../ninja_printing"
+      relative: true
+    source: path
+    version: "1.0.0"
   nitrogen_types:
     dependency: transitive
     description:

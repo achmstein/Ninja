@@ -736,5 +736,14 @@
   "checkForUpdates": "دوّر على تحديث",
   "installUpdate": "تثبيت",
   "orderDetailsFailed": "مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.",
-  "printerTest": "جرّب الطابعة"
+  "printerTest": "جرّب الطابعة",
+  "kitchenPrinting": "طباعة تذاكر المطبخ",
+  "kitchenPrintingHint": "هذا الجهاز يطبع تذاكر كل محطة على طابعتها. يكفي جهاز واحد في المحل؛ اتركه يعمل.",
+  "kitchenTicketReprint": "إعادة طباعة",
+  "kitchenTicketTest": "تجربة",
+  "kitchenTicketTestBody": "طابعة هذه المحطة تعمل",
+  "pickup": "استلام",
+  "kitchenPrinterStuck": "تذاكر المطبخ لا تُطبع: {stations}",
+  "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.",
+  "kitchenPrintingOffHere": "فعّل «طباعة تذاكر المطبخ» من الإعدادات على جهاز في المحل."
 }

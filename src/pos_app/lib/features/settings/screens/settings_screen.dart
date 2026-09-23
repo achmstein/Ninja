@@ -9,6 +9,7 @@ import '../../../core/models/money.dart';
 import '../../../core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
+import '../../../core/printing/kitchen_printing.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import '../../../core/services/kiosk_service.dart';
@@ -180,6 +181,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(width: 12),
                         button(l10n.save, _busy ? null : _save, primary: true),
                       ],
+                    ),
+                  ),
+                  SettingsRow(
+                    title: l10n.kitchenPrinting,
+                    hint: l10n.kitchenPrintingHint,
+                    onPress: () => ref.read(kitchenPrintingProvider.notifier).set(!ref.read(kitchenPrintingProvider)),
+                    trailing: FSwitch(
+                      value: ref.watch(kitchenPrintingProvider),
+                      onChange: (on) => ref.read(kitchenPrintingProvider.notifier).set(on),
                     ),
                   ),
                   SettingsRow(

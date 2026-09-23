@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
 import '../../../core/widgets/settings_list.dart';
+import '../../kitchen/printing/kitchen_printing.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Per-tablet settings, laid out like the till's: this device (the café,
@@ -85,6 +86,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitleColor: kiosk?.isPinned == true ? AppColors.emerald(theme.colors.brightness) : null,
                     onPress: kiosk == null ? null : () => _setKiosk(!kiosk.enabled),
                     trailing: FSwitch(value: kiosk?.enabled ?? false, onChange: kiosk == null ? null : _setKiosk),
+                  ),
+                  // A shop whose till runs in a browser prints the kitchen's tickets from here
+                  SettingsRow(
+                    title: l10n.kitchenPrinting,
+                    hint: l10n.kitchenPrintingHint,
+                    onPress: () => ref.read(kitchenPrintingProvider.notifier).set(!ref.read(kitchenPrintingProvider)),
+                    trailing: FSwitch(
+                      value: ref.watch(kitchenPrintingProvider),
+                      onChange: (on) => ref.read(kitchenPrintingProvider.notifier).set(on),
+                    ),
                   ),
                   const _UpdateRow(),
                 ],

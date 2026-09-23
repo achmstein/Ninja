@@ -1464,4 +1464,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printerTest => 'Test the printer';
+
+  @override
+  String get kitchenPrinting => 'Print kitchen tickets';
+
+  @override
+  String get kitchenPrintingHint =>
+      'This device prints each station\'s tickets on its printer. One device in the shop is enough; keep it on.';
+
+  @override
+  String get kitchenTicketReprint => 'REPRINT';
+
+  @override
+  String get kitchenTicketTest => 'TEST';
+
+  @override
+  String get kitchenTicketTestBody => 'This station\'s printer works';
+
+  @override
+  String get pickup => 'Pickup';
+
+  @override
+  String kitchenPrinterStuck(String stations) {
+    return 'Kitchen tickets are not printing: $stations';
+  }
+
+  @override
+  String get kitchenPrinterStuckHint =>
+      'Check the printer is on, has paper and its address is right.';
+
+  @override
+  String get kitchenPrintingOffHere =>
+      'Turn on “Print kitchen tickets” in settings on a device in the shop.';
 }

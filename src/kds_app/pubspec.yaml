@@ -27,6 +27,9 @@ dependencies:
 
   # HTTP Client
   dio: ^5.4.0
+  # ESC/POS printing, shared with the till: a tablet can print the kitchen's tickets
+  ninja_printing:
+    path: ../ninja_printing
   # Where an update is downloaded before it is installed
   path_provider: ^2.1.0
 

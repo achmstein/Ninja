@@ -21,6 +21,7 @@ import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_service.dart';
 import 'core/demo/demo.dart';
+import 'core/printing/kitchen_printing.dart';
 import 'features/catalog/providers/catalog_provider.dart';
 import 'features/orders/providers/pending_orders_provider.dart';
 import 'features/places/providers/places_provider.dart';
@@ -115,6 +116,8 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
   void _connectSignalR() {
     final signalR = ref.read(signalRServiceProvider);
     signalR.connect();
+    // Printing the kitchen's tickets, when this till is set to: its poll starts here
+    ref.read(kitchenPrintHostProvider);
 
     void refreshTickets() => ref.read(openTicketsProvider.notifier).refresh();
     // An item marked sold out on another till, or a price change from admin
@@ -146,6 +149,11 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     // 10 min) — from the third one on, ring rather than politely ping.
     _signalRSubscriptions.add(
       signalR.onOrderStatusChanged.listen((event) {
+        // A kitchen ticket waiting for a printer: nothing on the till changed
+        if (event['type'] == 'kitchen_ticket') {
+          if (forActiveBranch(event)) ref.read(kitchenPrintHostProvider).nudge();
+          return;
+        }
         refreshTickets();
         refreshOrders();
         if (!forActiveBranch(event)) return;
@@ -193,6 +201,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         refreshCatalog();
         ref.read(branchProvider.notifier).refresh();
         ref.read(brandProvider.notifier).refresh();
+        ref.read(kitchenPrintHostProvider).nudge();
       }),
     );
   }

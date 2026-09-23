@@ -10,6 +10,7 @@ import { BootSplash } from '@/components/boot-splash'
 import { Button } from '@/components/ui/button'
 import { BranchGate } from '@/components/branch-gate'
 import { getRealmRoles } from '@/config/oidc-config'
+import { KitchenPrinterBanner } from '@/components/layout/kitchen-printer-banner'
 import { PosHeader } from '@/components/layout/pos-header'
 import { usePosNotifications } from '@/hooks/use-pos-notifications'
 import { useT } from '@/lib/i18n'
@@ -31,6 +32,7 @@ function AuthenticatedLayout() {
       <PosHeader />
       <main className='flex-1'>
         <BranchGate>
+          <KitchenPrinterBanner />
           <Outlet />
         </BranchGate>
       </main>

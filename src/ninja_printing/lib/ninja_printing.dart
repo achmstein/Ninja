@@ -7,3 +7,6 @@ export 'src/escpos_builder.dart';
 export 'src/image_raster.dart';
 export 'src/network_escpos_printer.dart';
 export 'src/widget_rasterizer.dart';
+export 'src/kitchen_print_agent.dart';
+export 'src/kitchen_ticket.dart';
+export 'src/kitchen_ticket_sheet.dart';

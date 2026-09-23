@@ -1475,4 +1475,36 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get printerTest => 'جرّب الطابعة';
+
+  @override
+  String get kitchenPrinting => 'طباعة تذاكر المطبخ';
+
+  @override
+  String get kitchenPrintingHint =>
+      'هذا الجهاز يطبع تذاكر كل محطة على طابعتها. يكفي جهاز واحد في المحل؛ اتركه يعمل.';
+
+  @override
+  String get kitchenTicketReprint => 'إعادة طباعة';
+
+  @override
+  String get kitchenTicketTest => 'تجربة';
+
+  @override
+  String get kitchenTicketTestBody => 'طابعة هذه المحطة تعمل';
+
+  @override
+  String get pickup => 'استلام';
+
+  @override
+  String kitchenPrinterStuck(String stations) {
+    return 'تذاكر المطبخ لا تُطبع: $stations';
+  }
+
+  @override
+  String get kitchenPrinterStuckHint =>
+      'تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.';
+
+  @override
+  String get kitchenPrintingOffHere =>
+      'فعّل «طباعة تذاكر المطبخ» من الإعدادات على جهاز في المحل.';
 }

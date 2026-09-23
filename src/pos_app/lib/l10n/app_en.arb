@@ -755,5 +755,15 @@
   "checkForUpdates": "Check for updates",
   "installUpdate": "Install",
   "orderDetailsFailed": "Couldn't load this order's items. You can still confirm or cancel it.",
-  "printerTest": "Test the printer"
+  "printerTest": "Test the printer",
+  "kitchenPrinting": "Print kitchen tickets",
+  "kitchenPrintingHint": "This device prints each station's tickets on its printer. One device in the shop is enough; keep it on.",
+  "kitchenTicketReprint": "REPRINT",
+  "kitchenTicketTest": "TEST",
+  "kitchenTicketTestBody": "This station's printer works",
+  "pickup": "Pickup",
+  "kitchenPrinterStuck": "Kitchen tickets are not printing: {stations}",
+  "@kitchenPrinterStuck": {"placeholders": {"stations": {"type": "String"}}},
+  "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right.",
+  "kitchenPrintingOffHere": "Turn on “Print kitchen tickets” in settings on a device in the shop."
 }

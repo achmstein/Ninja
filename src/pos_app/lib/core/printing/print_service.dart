@@ -100,16 +100,8 @@ class PrintService {
   /// receipt not printing
   Future<ui.Image?> _logo() => brandLogo(_ref.read(brandProvider).receiptImageUrl);
 
-  Future<List<int>> _job(Widget sheet, {bool kickDrawer = false}) async {
-    final image = await rasterizeWidget(sheet, width: receiptWidth);
-    final rgba = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-    final raster = packMonochrome(rgba!.buffer.asUint8List(), image.width, image.height);
-    image.dispose();
-    final builder = EscPosBuilder().init();
-    // The drawer first: the cashier reaches for change while the paper moves
-    if (kickDrawer) builder.kickDrawer();
-    return builder.alignCenter().raster(raster).feed(4).cut().toBytes();
-  }
+  Future<List<int>> _job(Widget sheet, {bool kickDrawer = false}) =>
+      sheetJob(sheet, width: receiptWidth, kickDrawer: kickDrawer);
 }
 
 final printServiceProvider = Provider<PrintService>((ref) => PrintService(ref));

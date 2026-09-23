@@ -2701,6 +2701,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test the printer'**
   String get printerTest;
+
+  /// No description provided for @kitchenPrinting.
+  ///
+  /// In en, this message translates to:
+  /// **'Print kitchen tickets'**
+  String get kitchenPrinting;
+
+  /// No description provided for @kitchenPrintingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This device prints each station\'s tickets on its printer. One device in the shop is enough; keep it on.'**
+  String get kitchenPrintingHint;
+
+  /// No description provided for @kitchenTicketReprint.
+  ///
+  /// In en, this message translates to:
+  /// **'REPRINT'**
+  String get kitchenTicketReprint;
+
+  /// No description provided for @kitchenTicketTest.
+  ///
+  /// In en, this message translates to:
+  /// **'TEST'**
+  String get kitchenTicketTest;
+
+  /// No description provided for @kitchenTicketTestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This station\'s printer works'**
+  String get kitchenTicketTestBody;
+
+  /// No description provided for @pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get pickup;
+
+  /// No description provided for @kitchenPrinterStuck.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen tickets are not printing: {stations}'**
+  String kitchenPrinterStuck(String stations);
+
+  /// No description provided for @kitchenPrinterStuckHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the printer is on, has paper and its address is right.'**
+  String get kitchenPrinterStuckHint;
+
+  /// No description provided for @kitchenPrintingOffHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on “Print kitchen tickets” in settings on a device in the shop.'**
+  String get kitchenPrintingOffHere;
 }
 
 class _AppLocalizationsDelegate

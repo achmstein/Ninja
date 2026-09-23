@@ -96,5 +96,10 @@
   "updateNeedsPermission": "Allow installs from this app in the settings Android opened, then tap Install again",
   "updateFailed": "Could not check for updates",
   "checkForUpdates": "Check for updates",
-  "installUpdate": "Install"
+  "installUpdate": "Install",
+  "kitchenPrinting": "Print kitchen tickets",
+  "kitchenPrintingHint": "This device prints each station's tickets on its printer. One device in the shop is enough; keep it on.",
+  "kitchenTicketReprint": "REPRINT",
+  "kitchenTicketTest": "TEST",
+  "kitchenTicketTestBody": "This station's printer works"
 }
