@@ -2695,6 +2695,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load this order\'s items. You can still confirm or cancel it.'**
   String get orderDetailsFailed;
+
+  /// No description provided for @printerTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test the printer'**
+  String get printerTest;
 }
 
 class _AppLocalizationsDelegate

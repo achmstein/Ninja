@@ -754,5 +754,6 @@
   "updateFailed": "Could not check for updates",
   "checkForUpdates": "Check for updates",
   "installUpdate": "Install",
-  "orderDetailsFailed": "Couldn't load this order's items. You can still confirm or cancel it."
+  "orderDetailsFailed": "Couldn't load this order's items. You can still confirm or cancel it.",
+  "printerTest": "Test the printer"
 }

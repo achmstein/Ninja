@@ -1472,4 +1472,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get orderDetailsFailed =>
       'مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.';
+
+  @override
+  String get printerTest => 'جرّب الطابعة';
 }

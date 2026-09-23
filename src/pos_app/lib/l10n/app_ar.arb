@@ -735,5 +735,6 @@
   "updateFailed": "مقدرناش ندوّر على تحديث",
   "checkForUpdates": "دوّر على تحديث",
   "installUpdate": "تثبيت",
-  "orderDetailsFailed": "مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه."
+  "orderDetailsFailed": "مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.",
+  "printerTest": "جرّب الطابعة"
 }
