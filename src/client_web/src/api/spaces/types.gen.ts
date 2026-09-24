@@ -99,6 +99,7 @@ export type PlaceViewModel = {
     takesControllerRequests?: boolean;
     currentStay?: null | StayPreviewViewModel;
     currentReservation?: null | ReservationPreviewViewModel;
+    seatedReservation?: null | ReservationPreviewViewModel;
 };
 
 export type ProblemDetails = {
@@ -132,6 +133,7 @@ export type ReservationPreviewViewModel = {
     expiresAt?: null | string;
     isHolding?: boolean;
     startOnConfirm?: boolean;
+    seatedAt?: null | string;
 };
 
 export type ReservationStatus = number;
@@ -1062,6 +1064,46 @@ export type SeatReservationResponses = {
 };
 
 export type SeatReservationResponse = SeatReservationResponses[keyof SeatReservationResponses];
+
+export type CompleteReservationData = {
+    body?: never;
+    path: {
+        /**
+         * The reservation ID
+         */
+        id: number;
+    };
+    query?: never;
+    url: '/api/reservations/{id}/complete';
+};
+
+export type CompleteReservationErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CompleteReservationError = CompleteReservationErrors[keyof CompleteReservationErrors];
+
+export type CompleteReservationResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type AssignReservationCustomerData = {
     body: AssignCustomerRequest;
