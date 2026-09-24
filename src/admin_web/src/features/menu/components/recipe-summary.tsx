@@ -1,17 +1,28 @@
 import { type RecipeView } from '@/api/inventory'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { formatQuantity } from '@/features/inventory/format'
-import { fromApi, type SlotDraft } from '@/features/inventory/recipe-model'
+import {
+  fromApi,
+  optionSetKey,
+  type SlotDraft,
+} from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from '../menu-options'
-import { combos, reconstruct, type IngredientSpec } from '../recipe-cards'
+import {
+  combos,
+  ONE,
+  reconstruct,
+  type IngredientSpec,
+  type Varying,
+} from '../recipe-cards'
 import { Arrow, OptionChips, type StockInfo } from './recipe-editor'
 
 /**
  * A saved recipe read the way it was written: one card per ingredient —
- * which item (or the table of bags by choice), how much (or per choice),
- * when — the same three lines the builder asks for. A slot the cards
- * cannot express is listed rule by rule.
+ * which item and how much, each either one value or one per combination
+ * of the choices it was split by. A slot the cards cannot express is
+ * listed rule by rule.
  */
 export function RecipeSummary({
   recipe,
@@ -32,7 +43,7 @@ export function RecipeSummary({
     menu.groups.map((g) => g.id)
   )
   const { ingredients, custom } = reconstruct(draft, menu)
-  const label = (id: string | null) =>
+  const label = (id: string | null | undefined) =>
     (id && stock.get(id)?.label) || t('pickStockItem')
   const unit = (id: string | null) => (id && stock.get(id)?.unit) || ''
 
@@ -60,6 +71,12 @@ export function RecipeSummary({
   )
 }
 
+/** The groups a value is split by, as the menu has them */
+const groupsOf = (varying: Varying<unknown>, menu: MenuOptions): MenuGroup[] =>
+  varying.groupIds
+    .map((id) => menu.groups.find((g) => g.id === id))
+    .filter((g): g is MenuGroup => !!g)
+
 function IngredientSummary({
   spec,
   menu,
@@ -68,24 +85,20 @@ function IngredientSummary({
 }: {
   spec: IngredientSpec
   menu: MenuOptions
-  label: (id: string | null) => string
+  label: (id: string | null | undefined) => string
   unit: (id: string | null) => string
 }) {
   const t = useT()
-  const itemGroups = spec.item.groupIds
-    .map((id) => menu.groups.find((g) => g.id === id))
-    .filter((g): g is MenuGroup => !!g)
-  const amountGroup = menu.groups.find((g) => g.id === spec.amount.groupId)
-  const whenGroup = menu.groups.find((g) => g.id === spec.when.groupId)
-  const baseId =
-    spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
+  const itemGroups = groupsOf(spec.item, menu)
+  const amountGroups = groupsOf(spec.amount, menu)
+  const baseId = Object.values(spec.item.cells).find((v) => v) ?? null
   const u = unit(baseId)
 
   return (
     <div className='rounded-lg border px-3 py-2'>
-      {/* The item, and the table of bags when the choices decide it */}
+      {/* The item, and the cells when the choices decide it */}
       {itemGroups.length === 0 ? (
-        <div className='font-medium'>{label(spec.item.fixed)}</div>
+        <div className='font-medium'>{label(spec.item.cells[ONE])}</div>
       ) : (
         <>
           <div className='text-muted-foreground text-xs'>
@@ -93,97 +106,122 @@ function IngredientSummary({
               groups: itemGroups.map((g) => g.label).join(' × '),
             })}
           </div>
-          {itemGroups.length === 1 ? (
-            <ul className='mt-1 grid gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2'>
-              {itemGroups[0].options.map((o) => (
-                <li key={o.id} className='flex gap-1.5'>
-                  <span className='text-muted-foreground min-w-16'>
-                    {o.label}
-                  </span>
-                  <span>{label(spec.item.cells[o.id] ?? null)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <table className='mt-1 text-xs'>
-              <thead>
-                <tr>
-                  <th />
-                  {itemGroups[1].options.map((c) => (
-                    <th key={c.id} className='pe-3 text-start font-medium'>
-                      {c.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {itemGroups[0].options.map((r) => (
-                  <tr key={r.id}>
-                    <td className='text-muted-foreground pe-3 font-medium'>
-                      {r.label}
-                    </td>
-                    {itemGroups[1].options.map((c) => {
-                      const key = combos([itemGroups[0], itemGroups[1]])
-                        .map((combo) => combo.map((o) => o.id))
-                        .find(
-                          (ids) => ids.includes(r.id) && ids.includes(c.id)
-                        )!
-                      return (
-                        <td key={c.id} className='pe-3'>
-                          {label(
-                            spec.item.cells[
-                              [...key]
-                                .sort((a, b) => Number(a) - Number(b))
-                                .join('+')
-                            ] ?? null
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          <Cells
+            varying={spec.item}
+            groups={itemGroups}
+            menu={menu}
+            render={(value) => label(value)}
+          />
         </>
       )}
 
-      {/* The amount: one row per choice when a group decides it, laid out like the item table */}
-      {amountGroup ? (
+      {/* The amount, laid out the same way; nothing is how a choice drops it */}
+      {amountGroups.length === 0 ? (
+        <div className='mt-1 text-xs tabular-nums'>
+          {formatQuantity(spec.amount.cells[ONE] ?? '', u, t)}
+        </div>
+      ) : (
         <>
           <div className='text-muted-foreground mt-1 text-xs'>
-            {t('dependsOn', { groups: amountGroup.label })}
+            {t('dependsOn', {
+              groups: amountGroups.map((g) => g.label).join(' × '),
+            })}
           </div>
-          <ul className='mt-1 grid gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2'>
-            {amountGroup.options.map((o) => (
-              <li key={o.id} className='flex gap-1.5'>
-                <span className='text-muted-foreground min-w-16'>
-                  {o.label}
-                </span>
-                <span className='tabular-nums'>
-                  {toNumber(spec.amount.values[o.id]) > 0
-                    ? formatQuantity(spec.amount.values[o.id], u, t)
-                    : t('nothing')}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <Cells
+            varying={spec.amount}
+            groups={amountGroups}
+            menu={menu}
+            numeric
+            render={(value) =>
+              toNumber(value ?? '') > 0
+                ? formatQuantity(value ?? '', u, t)
+                : t('nothing')
+            }
+          />
         </>
-      ) : (
-        <div className='mt-1 text-xs tabular-nums'>
-          {formatQuantity(spec.amount.fixed, u, t)}
-        </div>
-      )}
-      {whenGroup && (
-        <div className='text-muted-foreground mt-1 text-xs'>
-          {t('onlyWith', { group: whenGroup.label })}:{' '}
-          {whenGroup.options
-            .filter((o) => spec.when.only.includes(o.id))
-            .map((o) => o.label)
-            .join('، ')}
-        </div>
       )}
     </div>
+  )
+}
+
+/** A split value's cells: a list for one group, a table for two, chips beyond */
+function Cells<T>({
+  varying,
+  groups,
+  menu,
+  render,
+  numeric,
+}: {
+  varying: Varying<T>
+  groups: MenuGroup[]
+  menu: MenuOptions
+  render: (value: T | undefined) => string
+  numeric?: boolean
+}) {
+  const at = (ids: string[]) => varying.cells[optionSetKey(ids)]
+  const value = numeric ? 'tabular-nums' : undefined
+
+  if (groups.length === 1) {
+    return (
+      <ul className='mt-1 grid gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2'>
+        {groups[0].options.map((o) => (
+          <li key={o.id} className='flex gap-1.5'>
+            <span className='text-muted-foreground min-w-16'>{o.label}</span>
+            <span className={value}>{render(at([o.id]))}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  if (groups.length === 2) {
+    const [rows, cols] = groups
+    return (
+      <table className='mt-1 text-xs'>
+        <thead>
+          <tr>
+            <th />
+            {cols.options.map((c) => (
+              <th key={c.id} className='pe-3 text-start font-medium'>
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.options.map((r) => (
+            <tr key={r.id}>
+              <td className='text-muted-foreground pe-3 font-medium'>
+                {r.label}
+              </td>
+              {cols.options.map((c) => (
+                <td key={c.id} className={cn('pe-3', value)}>
+                  {render(at([r.id, c.id]))}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )
+  }
+
+  return (
+    <ul className='mt-1 space-y-0.5 text-xs'>
+      {combos(groups).map((combo) => {
+        const ids = combo.map((o) => o.id)
+        return (
+          <li
+            key={optionSetKey(ids)}
+            className='flex flex-wrap items-center gap-x-1.5'
+          >
+            <OptionChips optionIds={ids} menu={menu} />
+            <Arrow className='text-muted-foreground' />
+            <span className={value}>{render(at(ids))}</span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -195,7 +233,7 @@ function CustomSlot({
 }: {
   slot: SlotDraft
   menu: MenuOptions
-  label: (id: string | null) => string
+  label: (id: string | null | undefined) => string
   unit: (id: string | null) => string
 }) {
   const t = useT()

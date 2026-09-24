@@ -1,19 +1,43 @@
 import { useState } from 'react'
-import { ChevronsUpDown, Plus, SlidersHorizontal, X } from 'lucide-react'
+import { CookingPot, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { InfoTip } from '@/components/info-tip'
+import { toNumber } from '@/lib/money'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
-import { unitLabel } from '@/features/inventory/format'
+import { formatQuantity, unitLabel } from '@/features/inventory/format'
 import {
   optionSetKey,
   type RecipeDraft,
@@ -24,27 +48,25 @@ import {
   compile,
   guessCell,
   newIngredient,
+  ONE,
   reconstruct,
+  resplit,
   type BuilderState,
   type IngredientSpec,
+  type Varying,
 } from '../recipe-cards'
-import {
-  Arrow,
-  RecipeSlotsEditor,
-  type IngredientOption,
-} from './recipe-editor'
+import { RecipeSlotsEditor, type IngredientOption } from './recipe-editor'
 
 /**
- * The recipe the way the admin describes it: for each ingredient, which
- * item (fixed, or a table by the choices that decide it — the bag by
- * roast × spice), how much (fixed, or a number per choice — the grams by
- * size, the sugar by sugar level), and when (always, or only with some
- * choices — the paper cup). No defaults to think about: every cell of a
- * table is asked for, bags are guessed from their names, and the slot
- * draft the till reads is compiled from the answers (recipe-cards.ts),
- * with what the till sends for an untouched group worked out there. What
- * the cards cannot express is kept as custom rules for the advanced
- * editor.
+ * The recipe the way the admin describes it. Each ingredient answers two
+ * things — which item, and how much — and each answer is either one value
+ * or, once it is *split* by a choice, one value per combination. Splitting
+ * is the only verb, and it sits on the field it applies to as a row of
+ * chips, so what a recipe depends on is readable without opening anything.
+ * There is no third "when" question: an amount of nothing is how a choice
+ * drops an ingredient (سادة takes no sugar). The slot draft the till reads
+ * is compiled from the answers (recipe-cards.ts); what the cards cannot
+ * express is kept as custom rules for the advanced editor.
  */
 type Props = {
   draft: RecipeDraft
@@ -53,12 +75,34 @@ type Props = {
   ingredients: IngredientOption[]
 }
 
+/** The groups a value is split by, as the menu has them */
+const groupsOf = (varying: Varying<unknown>, menu: MenuOptions): MenuGroup[] =>
+  varying.groupIds
+    .map((id) => menu.groups.find((g) => g.id === id))
+    .filter((g): g is MenuGroup => !!g)
+
+/** What the menu's choices are, as one string: it changes when a customization is edited */
+const menuSignature = (menu: MenuOptions) =>
+  menu.groups
+    .map((g) => `${g.id}:${g.options.map((o) => o.id).join(',')}`)
+    .join('|')
+
 export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
   const t = useT()
   const [advanced, setAdvanced] = useState(false)
   const [state, setState] = useState<BuilderState>(() =>
     reconstruct(draft, menu)
   )
+
+  // The cards hold option ids, so editing a customization on its own page
+  // leaves them stale; re-read from the draft when the choices move
+  const signature = menuSignature(menu)
+  const [seen, setSeen] = useState(signature)
+  if (seen !== signature) {
+    setSeen(signature)
+    setState(reconstruct(draft, menu))
+  }
+
   const byValue = new Map(ingredients.map((i) => [i.value, i]))
   const options: ComboboxOption[] = ingredients.map((i) => ({
     value: i.value,
@@ -77,10 +121,15 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
         i.key === key ? { ...i, ...patch } : i
       ),
     })
+  const add = () =>
+    commit({
+      ...state,
+      ingredients: [...state.ingredients, newIngredient()],
+    })
 
   if (advanced) {
     return (
-      <div className='space-y-3'>
+      <div className='flex flex-col gap-3'>
         <RecipeSlotsEditor
           draft={draft}
           onChange={onChange}
@@ -91,7 +140,7 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
           type='button'
           variant='link'
           size='sm'
-          className='h-auto p-0 text-xs'
+          className='h-auto self-start p-0'
           onClick={() => {
             setState(reconstruct(draft, menu))
             setAdvanced(false)
@@ -103,12 +152,28 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
     )
   }
 
-  return (
-    <div className='space-y-3'>
-      <div className='flex justify-end'>
-        <InfoTip>{t('builderHint')}</InfoTip>
-      </div>
+  if (state.ingredients.length === 0 && state.custom.length === 0) {
+    return (
+      <Empty className='border border-dashed'>
+        <EmptyHeader>
+          <EmptyMedia variant='icon'>
+            <CookingPot />
+          </EmptyMedia>
+          <EmptyTitle>{t('noIngredientsTitle')}</EmptyTitle>
+          <EmptyDescription>{t('noIngredientsHint')}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button type='button' onClick={add}>
+            <Plus />
+            {t('addIngredient')}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    )
+  }
 
+  return (
+    <div className='flex flex-col gap-4'>
       {state.ingredients.map((spec) => (
         <IngredientCard
           key={spec.key}
@@ -128,50 +193,49 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
       ))}
 
       {state.custom.length > 0 && (
-        <div className='flex flex-wrap items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-xs'>
-          <Badge variant='outline' className='font-normal'>
+        <Alert>
+          <SlidersHorizontal />
+          <AlertTitle>
             {t('customRulesCount', { count: state.custom.length })}
-          </Badge>
-          <button
-            type='button'
-            className='underline'
-            onClick={() => setAdvanced(true)}
-          >
-            {t('advancedEditor')}
-          </button>
-          <button
-            type='button'
-            className='text-muted-foreground underline'
-            onClick={() => commit({ ...state, custom: [] })}
-          >
-            {t('dropCustomRules')}
-          </button>
-        </div>
+          </AlertTitle>
+          <AlertDescription>
+            <div className='flex flex-wrap items-center gap-4'>
+              <Button
+                type='button'
+                variant='link'
+                size='sm'
+                className='h-auto p-0'
+                onClick={() => setAdvanced(true)}
+              >
+                {t('advancedEditor')}
+              </Button>
+              <Button
+                type='button'
+                variant='link'
+                size='sm'
+                className='text-muted-foreground h-auto p-0'
+                onClick={() => commit({ ...state, custom: [] })}
+              >
+                {t('dropCustomRules')}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div className='flex flex-wrap items-center gap-3'>
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          onClick={() =>
-            commit({
-              ...state,
-              ingredients: [...state.ingredients, newIngredient()],
-            })
-          }
-        >
-          <Plus className='me-1 h-3.5 w-3.5' />
+      <div className='flex flex-wrap items-center gap-4'>
+        <Button type='button' variant='outline' size='sm' onClick={add}>
+          <Plus />
           {t('addIngredient')}
         </Button>
         <Button
           type='button'
           variant='link'
           size='sm'
-          className='text-muted-foreground h-auto p-0 text-xs'
+          className='text-muted-foreground h-auto p-0'
           onClick={() => setAdvanced(true)}
         >
-          <SlidersHorizontal className='me-1 size-3' />
+          <SlidersHorizontal />
           {t('advancedEditor')}
         </Button>
       </div>
@@ -180,7 +244,7 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
 }
 
 // ---------------------------------------------------------------------------
-// One card per ingredient: which item, how much, when
+// One card per ingredient: which item, how much — each fixed or split
 
 function IngredientCard({
   spec,
@@ -200,405 +264,320 @@ function IngredientCard({
   onRemove: () => void
 }) {
   const t = useT()
-  const single = menu.groups.filter((g) => !g.allowMultiple)
-  const baseId =
-    spec.item.fixed ?? Object.values(spec.item.cells).find((v) => v) ?? null
+  // An item is decided by exclusive choices only: a sale can carry several
+  // options of an add-on group at once, so it cannot name one bag
+  const exclusive = menu.groups.filter((g) => !g.allowMultiple)
+  const baseId = Object.values(spec.item.cells).find((v) => v) ?? null
   const base = baseId ? byValue.get(baseId) : undefined
   const unit = base?.unit ?? ''
-  const itemGroups = spec.item.groupIds
-    .map((id) => menu.groups.find((g) => g.id === id))
-    .filter((g): g is MenuGroup => !!g)
-  const amountGroup = menu.groups.find((g) => g.id === spec.amount.groupId)
-  const whenGroup = menu.groups.find((g) => g.id === spec.when.groupId)
+  const itemGroups = groupsOf(spec.item, menu)
+  const amountGroups = groupsOf(spec.amount, menu)
 
-  // Switching the item to "depends on": every cell guessed from the base bag's name
+  // Splitting the item: the cells it gains are guessed from the base bag's name
   const setItemGroups = (groupIds: string[]) => {
-    const groups = groupIds
-      .map((id) => menu.groups.find((g) => g.id === id))
-      .filter((g): g is MenuGroup => !!g)
-    const cells: Record<string, string | null> = {}
-    for (const combo of combos(groups)) {
-      const key = optionSetKey(combo.map((o) => o.id))
-      cells[key] =
-        spec.item.cells[key] ??
-        (base ? guessCell(base, combo, groups, ingredients) : null)
+    const next = resplit(spec.item, groupIds, menu)
+    const groups = groupsOf(next, menu)
+    const cells = { ...next.cells }
+    if (base) {
+      for (const combo of combos(groups)) {
+        const key = optionSetKey(combo.map((o) => o.id))
+        if (!cells[key]) {
+          cells[key] = guessCell(base, combo, groups, ingredients)
+        }
+      }
     }
-    onChange({ item: { ...spec.item, groupIds, cells } })
+    onChange({ item: { ...next, cells } })
   }
 
   // One bag picked in any cell: the empty cells are guessed from its name
-  const setCell = (key: string, value: string | null) => {
+  const setItemCell = (key: string, value: string | null) => {
     const cells = { ...spec.item.cells, [key]: value }
-    let fixed = spec.item.fixed
     const picked = value ? byValue.get(value) : undefined
     if (picked) {
-      if (!fixed) fixed = value
       for (const combo of combos(itemGroups)) {
         const k = optionSetKey(combo.map((o) => o.id))
-        if (!cells[k])
+        if (!cells[k]) {
           cells[k] = guessCell(picked, combo, itemGroups, ingredients)
+        }
       }
     }
-    onChange({ item: { ...spec.item, fixed, cells } })
+    onChange({ item: { ...spec.item, cells } })
   }
 
-  const setAmountGroup = (groupId: string | null) => {
-    const group = menu.groups.find((g) => g.id === groupId)
-    const values: Record<string, string> = {}
-    for (const o of group?.options ?? []) {
-      values[o.id] = spec.amount.values[o.id] ?? spec.amount.fixed
-    }
-    onChange({ amount: { ...spec.amount, groupId, values } })
-  }
-
-  const setWhenGroup = (groupId: string | null) => {
-    const group = menu.groups.find((g) => g.id === groupId)
+  const setAmountCell = (key: string, value: string) =>
     onChange({
-      when: { groupId, only: group ? group.options.map((o) => o.id) : [] },
+      amount: { ...spec.amount, cells: { ...spec.amount.cells, [key]: value } },
     })
-  }
 
   return (
-    <div className='rounded-lg border'>
-      <div className='flex items-center gap-2 border-b px-3 py-2'>
-        <span className='text-muted-foreground w-14 shrink-0 text-xs'>
-          {t('whichItem')}
-        </span>
-        <div className='min-w-0 flex-1'>
-          {itemGroups.length === 0 ? (
+    <Card>
+      <CardHeader>
+        <CardTitle className='truncate'>
+          {base?.label ?? (
+            <span className='text-muted-foreground font-normal'>
+              {t('pickStockItem')}
+            </span>
+          )}
+        </CardTitle>
+        <CardAction className='flex items-center gap-2'>
+          <AmountBadge amount={spec.amount} unit={unit} />
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='size-8'
+            aria-label={t('removeLine')}
+            onClick={onRemove}
+          >
+            <X />
+          </Button>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className='flex flex-col gap-6'>
+        <FieldRow
+          label={t('whichItem')}
+          groups={exclusive}
+          split={spec.item.groupIds}
+          onSplit={setItemGroups}
+          control={
             <Combobox
-              value={spec.item.fixed}
+              value={spec.item.cells[ONE] ?? null}
               onChange={(value) =>
-                onChange({ item: { ...spec.item, fixed: value } })
+                onChange({ item: { groupIds: [], cells: { [ONE]: value } } })
               }
               options={options}
               placeholder={t('pickStockItem')}
-              size='sm'
               wrap
             />
-          ) : (
-            <span className='text-muted-foreground text-xs'>
-              {t('itemDecidedBelow')}
-            </span>
-          )}
-        </div>
-        {single.length > 0 && (
-          <GroupPicker
-            groups={single}
-            value={spec.item.groupIds}
-            max={2}
-            label={
-              itemGroups.length > 0
-                ? t('dependsOn', {
-                    groups: itemGroups.map((g) => g.label).join(' × '),
-                  })
-                : t('fixed')
-            }
-            onChange={setItemGroups}
-          />
-        )}
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='size-8 shrink-0'
-          aria-label={t('removeLine')}
-          onClick={onRemove}
-        >
-          <X className='h-4 w-4' />
-        </Button>
-      </div>
-
-      {itemGroups.length > 0 && (
-        <>
-          <ItemTable
-            groups={itemGroups}
-            cells={spec.item.cells}
-            options={options}
-            onCell={setCell}
-          />
-          <p className='text-muted-foreground px-3 pb-2 text-xs'>
-            {t('guessHint')}
-          </p>
-        </>
-      )}
-
-      <div className='border-t'>
-        <div className='flex items-center gap-2 px-3 py-2'>
-          <span className='text-muted-foreground w-14 shrink-0 text-xs'>
-            {t('howMuch')}
-          </span>
-          <div className='min-w-0 flex-1'>
-            {amountGroup ? (
-              <span className='text-muted-foreground text-xs'>
-                {t('amountDecidedBelow')}
-              </span>
-            ) : (
-              <Quantity
-                value={spec.amount.fixed}
-                unit={unit}
-                onChange={(fixed) =>
-                  onChange({ amount: { ...spec.amount, fixed } })
-                }
+          }
+          cells={
+            itemGroups.length > 0 && (
+              <Cells
+                groups={itemGroups}
+                hint={t('guessHint')}
+                render={(key) => (
+                  <Combobox
+                    value={spec.item.cells[key] ?? null}
+                    onChange={(v) => setItemCell(key, v)}
+                    options={options}
+                    placeholder={t('pickStockItem')}
+                    wrap
+                  />
+                )}
               />
-            )}
-          </div>
-          {single.length > 0 && (
-            <GroupPicker
-              groups={single}
-              value={spec.amount.groupId ? [spec.amount.groupId] : []}
-              max={1}
-              label={
-                amountGroup
-                  ? t('dependsOn', { groups: amountGroup.label })
-                  : t('fixed')
+            )
+          }
+        />
+
+        <FieldRow
+          label={t('howMuch')}
+          // The amount may hang on an add-on too: nothing for a choice is
+          // how an ingredient is left out of a sale entirely
+          groups={menu.groups}
+          split={spec.amount.groupIds}
+          onSplit={(groupIds) =>
+            onChange({ amount: resplit(spec.amount, groupIds, menu) })
+          }
+          control={
+            <Quantity
+              value={spec.amount.cells[ONE] ?? ''}
+              unit={unit}
+              onChange={(value) =>
+                onChange({ amount: { groupIds: [], cells: { [ONE]: value } } })
               }
-              onChange={(ids) => setAmountGroup(ids[0] ?? null)}
             />
-          )}
-        </div>
-        {amountGroup && (
-          <>
-            <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
-              {amountGroup.options.map((o) => (
-                <div
-                  key={o.id}
-                  className='grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-xs'
-                >
-                  <span className='truncate'>{o.label}</span>
+          }
+          cells={
+            amountGroups.length > 0 && (
+              <Cells
+                groups={amountGroups}
+                hint={t('zeroMeansNothing')}
+                render={(key) => (
                   <Quantity
-                    value={spec.amount.values[o.id] ?? ''}
+                    value={spec.amount.cells[key] ?? ''}
                     unit={unit}
-                    compact
-                    onChange={(v) =>
-                      onChange({
-                        amount: {
-                          ...spec.amount,
-                          values: { ...spec.amount.values, [o.id]: v },
-                        },
-                      })
-                    }
+                    onChange={(v) => setAmountCell(key, v)}
                   />
-                </div>
+                )}
+              />
+            )
+          }
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+/** The amount at a glance: one number, or the range the choices cover */
+function AmountBadge({
+  amount,
+  unit,
+}: {
+  amount: Varying<string>
+  unit: string
+}) {
+  const t = useT()
+  const values = Object.values(amount.cells)
+    .map(toNumber)
+    .filter((n) => n > 0)
+  if (values.length === 0) return null
+  const low = Math.min(...values)
+  const high = Math.max(...values)
+  return (
+    <Badge variant='secondary' className='tabular-nums'>
+      {low === high
+        ? formatQuantity(String(low), unit, t)
+        : `${low}–${high} ${unitLabel(unit, t)}`}
+    </Badge>
+  )
+}
+
+/**
+ * One answer: its label, the chips that split it, the control when it is
+ * one value, and the cells when it is not.
+ */
+function FieldRow({
+  label,
+  groups,
+  split,
+  onSplit,
+  control,
+  cells,
+}: {
+  label: string
+  groups: MenuGroup[]
+  split: string[]
+  onSplit: (groupIds: string[]) => void
+  control: React.ReactNode
+  cells: React.ReactNode
+}) {
+  const t = useT()
+  return (
+    <div className='flex flex-col gap-3'>
+      <div className='flex flex-wrap items-center justify-between gap-x-4 gap-y-2'>
+        <Label className='text-sm'>{label}</Label>
+        {groups.length > 0 && (
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='text-muted-foreground text-xs'>
+              {t('splitBy')}
+            </span>
+            <ToggleGroup
+              type='multiple'
+              variant='outline'
+              size='sm'
+              value={split}
+              onValueChange={onSplit}
+            >
+              {groups.map((group) => (
+                <ToggleGroupItem key={group.id} value={group.id}>
+                  {group.label}
+                </ToggleGroupItem>
               ))}
-            </div>
-            <p className='text-muted-foreground px-3 pb-2 text-xs'>
-              {t('zeroMeansNothing')}
-            </p>
-          </>
+            </ToggleGroup>
+          </div>
         )}
       </div>
-
-      {menu.groups.length > 0 && (
-        <div className='border-t'>
-          <div className='flex items-center gap-2 px-3 py-2'>
-            <span className='text-muted-foreground w-14 shrink-0 text-xs'>
-              {t('whenDeducted')}
-            </span>
-            <div className='min-w-0 flex-1'>
-              <span
-                className={cn('text-xs', whenGroup && 'text-muted-foreground')}
-              >
-                {whenGroup ? t('whenDecidedBelow') : t('always')}
-              </span>
-            </div>
-            <GroupPicker
-              groups={menu.groups}
-              value={spec.when.groupId ? [spec.when.groupId] : []}
-              max={1}
-              label={
-                whenGroup
-                  ? t('onlyWith', { group: whenGroup.label })
-                  : t('always')
-              }
-              onChange={(ids) => setWhenGroup(ids[0] ?? null)}
-            />
-          </div>
-          {whenGroup && (
-            <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
-              {whenGroup.options.map((o) => (
-                <label
-                  key={o.id}
-                  className='flex cursor-pointer items-center gap-2 text-xs'
-                >
-                  <Checkbox
-                    checked={spec.when.only.includes(o.id)}
-                    onCheckedChange={(on) =>
-                      onChange({
-                        when: {
-                          ...spec.when,
-                          only:
-                            on === true
-                              ? [...spec.when.only, o.id]
-                              : spec.when.only.filter((id) => id !== o.id),
-                        },
-                      })
-                    }
-                  />
-                  {o.label}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {cells || <div className='max-w-sm'>{control}</div>}
     </div>
   )
 }
 
-/** "Fixed" or "depends on …": a popover of group checkboxes, at most `max` ticked */
-function GroupPicker({
+/** A split value's cells: a row per choice, a table for a pair, chips beyond */
+function Cells({
   groups,
-  value,
-  max,
-  label,
-  onChange,
+  hint,
+  render,
 }: {
   groups: MenuGroup[]
-  value: string[]
-  max: number
-  label: string
-  onChange: (groupIds: string[]) => void
+  hint: string
+  render: (key: string) => React.ReactNode
 }) {
-  const t = useT()
-  const [open, setOpen] = useState(false)
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          role='combobox'
-          aria-expanded={open}
-          className='h-7 max-w-52 text-xs font-normal'
-        >
-          <span className='truncate'>{label}</span>
-          <ChevronsUpDown className='ms-1 h-3 w-3 shrink-0 opacity-50' />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className='w-56 space-y-2 p-3' align='start'>
-        <label className='flex cursor-pointer items-center gap-2 text-sm'>
-          <Checkbox
-            checked={value.length === 0}
-            onCheckedChange={(on) => on === true && onChange([])}
-          />
-          {t('fixed')}
-        </label>
-        <p className='text-muted-foreground text-xs'>{t('dependsOnWhich')}</p>
-        {groups.map((group) => {
-          const on = value.includes(group.id)
-          const full = !on && value.length >= max
-          return (
-            <label
-              key={group.id}
-              className={cn(
-                'flex items-center gap-2 text-sm',
-                full ? 'text-muted-foreground' : 'cursor-pointer'
-              )}
-            >
-              <Checkbox
-                checked={on}
-                disabled={full}
-                onCheckedChange={(checked) =>
-                  onChange(
-                    checked === true
-                      ? groups
-                          .map((g) => g.id)
-                          .filter((id) => id === group.id || value.includes(id))
-                      : value.filter((id) => id !== group.id)
-                  )
-                }
-              />
-              {group.label}
-            </label>
-          )
-        })}
-      </PopoverContent>
-    </Popover>
+    <div className='flex flex-col gap-2'>
+      <Grid groups={groups} render={render} />
+      <p className='text-muted-foreground text-xs'>{hint}</p>
+    </div>
   )
 }
 
-/** One picker per choice (one group) or per pair (two groups) */
-function ItemTable({
+function Grid({
   groups,
-  cells,
-  options,
-  onCell,
+  render,
 }: {
   groups: MenuGroup[]
-  cells: Record<string, string | null>
-  options: ComboboxOption[]
-  onCell: (key: string, value: string | null) => void
+  render: (key: string) => React.ReactNode
 }) {
-  const t = useT()
   if (groups.length === 1) {
     const [group] = groups
     return (
-      <div className='grid gap-2 border-t p-2 sm:grid-cols-2'>
-        {group.options.map((o) => {
-          const key = optionSetKey([o.id])
-          return (
-            <div
-              key={o.id}
-              className='grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-2 text-xs'
-            >
-              <span className='truncate'>{o.label}</span>
-              <Combobox
-                value={cells[key] ?? null}
-                onChange={(v) => onCell(key, v)}
-                options={options}
-                placeholder={t('pickStockItem')}
-                size='sm'
-                wrap
-              />
-            </div>
-          )
-        })}
+      <div className='grid gap-3 sm:grid-cols-2'>
+        {group.options.map((o) => (
+          <div key={o.id} className='flex items-center gap-3'>
+            <Label className='text-muted-foreground w-24 shrink-0 truncate font-normal'>
+              {o.label}
+            </Label>
+            <div className='min-w-0 flex-1'>{render(optionSetKey([o.id]))}</div>
+          </div>
+        ))}
       </div>
     )
   }
-  const [rows, cols] = groups
-  return (
-    <div className='overflow-x-auto border-t p-2'>
-      <table className='w-full text-xs'>
-        <thead>
-          <tr>
-            <th className='text-muted-foreground w-24 pb-1 text-start font-normal'>
-              {rows.label} ↓ {cols.label} <Arrow />
-            </th>
-            {cols.options.map((c) => (
-              <th key={c.id} className='min-w-40 pb-1 text-start font-medium'>
-                {c.label}
-              </th>
+
+  if (groups.length === 2) {
+    const [rows, cols] = groups
+    return (
+      <div className='overflow-x-auto'>
+        <Table>
+          <TableHeader>
+            <TableRow className='hover:bg-transparent'>
+              <TableHead className='w-28'>{rows.label}</TableHead>
+              {cols.options.map((c) => (
+                <TableHead key={c.id} className='min-w-44'>
+                  {c.label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.options.map((r) => (
+              <TableRow key={r.id} className='hover:bg-transparent'>
+                <TableCell className='text-muted-foreground font-medium'>
+                  {r.label}
+                </TableCell>
+                {cols.options.map((c) => (
+                  <TableCell key={c.id}>
+                    {render(optionSetKey([r.id, c.id]))}
+                  </TableCell>
+                ))}
+              </TableRow>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.options.map((r) => (
-            <tr key={r.id} className='border-t'>
-              <td className='py-1.5 pe-2 align-middle font-medium'>
-                {r.label}
-              </td>
-              {cols.options.map((c) => {
-                const key = optionSetKey([r.id, c.id])
-                return (
-                  <td key={c.id} className='py-1.5 pe-2 align-middle'>
-                    <Combobox
-                      value={cells[key] ?? null}
-                      onChange={(v) => onCell(key, v)}
-                      options={options}
-                      placeholder={t('pickStockItem')}
-                      size='sm'
-                      wrap
-                    />
-                  </td>
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
+
+  return (
+    <div className='flex flex-col gap-2'>
+      {combos(groups).map((combo) => {
+        const ids = combo.map((o) => o.id)
+        return (
+          <div
+            key={optionSetKey(ids)}
+            className='flex flex-wrap items-center gap-2'
+          >
+            <div className='flex min-w-44 flex-wrap items-center gap-1'>
+              {combo.map((o) => (
+                <Badge key={o.id} variant='secondary' className='font-normal'>
+                  {o.label}
+                </Badge>
+              ))}
+            </div>
+            <div className='min-w-48 flex-1'>{render(optionSetKey(ids))}</div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -606,35 +585,30 @@ function ItemTable({
 function Quantity({
   value,
   unit,
-  compact,
   onChange,
 }: {
   value: string
   unit: string
-  compact?: boolean
   onChange: (value: string) => void
 }) {
   const t = useT()
   return (
-    <div className='relative'>
-      <Input
+    <InputGroup>
+      <InputGroupInput
         type='number'
         min='0'
         step='any'
         placeholder={t('quantity')}
         aria-label={t('quantity')}
-        className={cn(
-          compact ? 'h-7 w-24 text-xs' : 'h-8 w-32',
-          unit && 'pe-8'
-        )}
+        className='tabular-nums'
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
       {unit && (
-        <span className='text-muted-foreground pointer-events-none absolute inset-y-0 end-2 flex items-center text-xs'>
-          {unitLabel(unit, t)}
-        </span>
+        <InputGroupAddon align='inline-end'>
+          <InputGroupText>{unitLabel(unit, t)}</InputGroupText>
+        </InputGroupAddon>
       )}
-    </div>
+    </InputGroup>
   )
 }

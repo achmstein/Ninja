@@ -9,9 +9,13 @@ import { type MenuGroup, type MenuOptions } from './menu-options'
 import {
   compile,
   guessCell,
+  merge,
   reconstruct,
+  single,
+  split,
   type BuilderState,
   type IngredientSpec,
+  type Varying,
 } from './recipe-cards'
 
 // The cards compile to what the till deducts; these tests read the result
@@ -48,17 +52,21 @@ const menuOf = (...groups: MenuGroup[]): MenuOptions => ({
   ),
 })
 
+/** A value split across some groups, written as the cells it holds */
+const by = <T>(groupIds: string[], cells: Record<string, T>): Varying<T> => ({
+  groupIds,
+  cells,
+})
+
 let nextKey = 1000
 function ingredient(patch: {
-  item?: Partial<IngredientSpec['item']>
-  amount?: Partial<IngredientSpec['amount']>
-  when?: Partial<IngredientSpec['when']>
+  item?: Varying<string | null>
+  amount?: Varying<string>
 }): IngredientSpec {
   return {
     key: nextKey++,
-    item: { fixed: null, groupIds: [], cells: {}, ...patch.item },
-    amount: { fixed: '', groupId: null, values: {}, ...patch.amount },
-    when: { groupId: null, only: [], ...patch.when },
+    item: patch.item ?? single<string | null>(null),
+    amount: patch.amount ?? single(''),
   }
 }
 
@@ -96,6 +104,52 @@ const CARAMEL = '101'
 const COFFEE = '102'
 const SUGAR = '103'
 
+describe('split and merge', () => {
+  const menu = menuOf(size, extras, sugar)
+
+  it('fans a value out over a group without changing what it says', () => {
+    expect(split(single('7'), size, menu)).toEqual({
+      groupIds: ['size'],
+      cells: { '11': '7', '12': '7' },
+    })
+  })
+
+  it('keeps the groups in menu order however they were split', () => {
+    const both = split(split(single('7'), sugar, menu), size, menu)
+    expect(both.groupIds).toEqual(['size', 'sugar'])
+    expect(both.cells).toEqual({
+      '11+31': '7',
+      '11+32': '7',
+      '12+31': '7',
+      '12+32': '7',
+    })
+  })
+
+  it('merges back to the cells at the standard choice', () => {
+    const both = by(['size', 'sugar'], {
+      '11+31': '5',
+      '11+32': '7',
+      '12+31': '9',
+      '12+32': '11',
+    })
+    expect(merge(both, 'sugar', menu)).toEqual({
+      groupIds: ['size'],
+      cells: { '11': '5', '12': '9' },
+    })
+    expect(merge(merge(both, 'sugar', menu), 'size', menu)).toEqual({
+      groupIds: [],
+      cells: { '': '5' },
+    })
+  })
+
+  it('leaves a value alone when the group is not one it is split by', () => {
+    const one = single('7')
+    expect(merge(one, 'size', menu)).toBe(one)
+    const bySize = split(one, size, menu)
+    expect(split(bySize, size, menu)).toBe(bySize)
+  })
+})
+
 describe('compile', () => {
   const menu = menuOf(size, extras, sugar)
 
@@ -103,14 +157,12 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: { fixed: WHIPPED },
-          amount: { fixed: '10' },
-          when: { groupId: 'extras', only: ['21'] },
+          item: single(WHIPPED),
+          amount: by(['extras'], { '21': '10', '22': '0' }),
         }),
         ingredient({
-          item: { fixed: CARAMEL },
-          amount: { fixed: '15' },
-          when: { groupId: 'extras', only: ['22'] },
+          item: single(CARAMEL),
+          amount: by(['extras'], { '21': '0', '22': '15' }),
         }),
       ]),
       menu
@@ -129,9 +181,13 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: { fixed: WHIPPED },
-          amount: { groupId: 'size', values: { '11': '10', '12': '15' } },
-          when: { groupId: 'extras', only: ['21'] },
+          item: single(WHIPPED),
+          amount: by(['size', 'extras'], {
+            '11+21': '10',
+            '12+21': '15',
+            '11+22': '0',
+            '12+22': '0',
+          }),
         }),
       ]),
       menu
@@ -150,8 +206,8 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: { fixed: SUGAR },
-          amount: { groupId: 'spoons', values: { '71': '5', '72': '10' } },
+          item: single(SUGAR),
+          amount: by(['spoons'], { '71': '5', '72': '10' }),
         }),
       ]),
       menuOf(spoons)
@@ -175,8 +231,8 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: { fixed: SUGAR },
-          amount: { groupId: 'spoons', values: { '71': '5', '72': '10' } },
+          item: single(SUGAR),
+          amount: by(['spoons'], { '71': '5', '72': '10' }),
         }),
       ]),
       menuOf(spoons)
@@ -190,8 +246,8 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: { fixed: COFFEE },
-          amount: { groupId: 'size', values: { '11': '7', '12': '10' } },
+          item: single(COFFEE),
+          amount: by(['size'], { '11': '7', '12': '10' }),
         }),
       ]),
       menu
@@ -213,12 +269,13 @@ describe('compile', () => {
     const draft = compile(
       state([
         ingredient({
-          item: {
-            fixed: '1',
-            groupIds: ['roast', 'spice'],
-            cells: { '41+51': '2', '41+52': null, '42+51': '1', '42+52': '3' },
-          },
-          amount: { fixed: '7' },
+          item: by(['roast', 'spice'], {
+            '41+51': '2',
+            '41+52': null,
+            '42+51': '1',
+            '42+52': '3',
+          }),
+          amount: single('7'),
         }),
       ]),
       menuOf(roast, spice)
@@ -229,6 +286,22 @@ describe('compile', () => {
     expect(deducts(draft, ['42', '52'])).toEqual({ '3': 7 })
     expect(deducts(draft, ['41', '52'])).toEqual({})
   })
+
+  it('takes nothing for a choice whose amount is nothing', () => {
+    const draft = compile(
+      state([
+        ingredient({
+          item: single(SUGAR),
+          amount: by(['sugar'], { '31': '0', '32': '5' }),
+        }),
+      ]),
+      menu
+    )
+
+    expect(deducts(draft, ['31'])).toEqual({})
+    expect(deducts(draft, [])).toEqual({})
+    expect(deducts(draft, ['32'])).toEqual({ [SUGAR]: 5 })
+  })
 })
 
 describe('reconstruct', () => {
@@ -237,9 +310,13 @@ describe('reconstruct', () => {
   it('reads back an add-on sized by the size group as the card that wrote it', () => {
     const cards = state([
       ingredient({
-        item: { fixed: WHIPPED },
-        amount: { groupId: 'size', values: { '11': '10', '12': '15' } },
-        when: { groupId: 'extras', only: ['21'] },
+        item: single(WHIPPED),
+        amount: by(['size', 'extras'], {
+          '11+21': '10',
+          '12+21': '15',
+          '11+22': '0',
+          '12+22': '0',
+        }),
       }),
     ])
     const read = reconstruct(compile(cards, menu), menu)
@@ -247,13 +324,16 @@ describe('reconstruct', () => {
     expect(read.custom).toEqual([])
     expect(read.ingredients).toHaveLength(1)
     const [card] = read.ingredients
-    expect(card.item).toEqual({ fixed: WHIPPED, groupIds: [], cells: {} })
+    expect(card.item).toEqual({ groupIds: [], cells: { '': WHIPPED } })
     expect(card.amount).toEqual({
-      fixed: '10',
-      groupId: 'size',
-      values: { '11': '10', '12': '15' },
+      groupIds: ['size', 'extras'],
+      cells: {
+        '11+21': '10',
+        '11+22': '0',
+        '12+21': '15',
+        '12+22': '0',
+      },
     })
-    expect(card.when).toEqual({ groupId: 'extras', only: ['21'] })
     expect(deducts(compile(read, menu), ['12', '21'])).toEqual({
       [WHIPPED]: 15,
     })
@@ -262,15 +342,17 @@ describe('reconstruct', () => {
   it('reads an add-on deducted for an option that is not the first', () => {
     const cards = state([
       ingredient({
-        item: { fixed: CARAMEL },
-        amount: { fixed: '15' },
-        when: { groupId: 'extras', only: ['22'] },
+        item: single(CARAMEL),
+        amount: by(['extras'], { '21': '0', '22': '15' }),
       }),
     ])
     const [card] = reconstruct(compile(cards, menu), menu).ingredients
 
-    expect(card.amount.fixed).toBe('15')
-    expect(card.when).toEqual({ groupId: 'extras', only: ['22'] })
+    expect(card.item).toEqual({ groupIds: [], cells: { '': CARAMEL } })
+    expect(card.amount).toEqual({
+      groupIds: ['extras'],
+      cells: { '21': '0', '22': '15' },
+    })
   })
 
   it('reads back a bag table over two groups', () => {
@@ -285,8 +367,8 @@ describe('reconstruct', () => {
     const cells = { '41+51': '2', '41+52': '4', '42+51': '1', '42+52': '3' }
     const cards = state([
       ingredient({
-        item: { fixed: '1', groupIds: ['roast', 'spice'], cells },
-        amount: { fixed: '7' },
+        item: by(['roast', 'spice'], cells),
+        amount: single('7'),
       }),
     ])
     const [card] = reconstruct(
@@ -294,13 +376,59 @@ describe('reconstruct', () => {
       menuOf(roast, spice)
     ).ingredients
 
-    expect(card.item).toEqual({
-      fixed: '1',
-      groupIds: ['roast', 'spice'],
-      cells,
+    expect(card.item).toEqual({ groupIds: ['roast', 'spice'], cells })
+    expect(card.amount).toEqual({ groupIds: [], cells: { '': '7' } })
+  })
+
+  it('reads an amount split by two groups at once, which the cards used to refuse', () => {
+    const cards = state([
+      ingredient({
+        item: single(SUGAR),
+        amount: by(['size', 'sugar'], {
+          '11+31': '0',
+          '11+32': '5',
+          '12+31': '0',
+          '12+32': '10',
+        }),
+      }),
+    ])
+    const saved = compile(cards, menu)
+
+    expect(deducts(saved, ['11', '31'])).toEqual({})
+    expect(deducts(saved, ['11', '32'])).toEqual({ [SUGAR]: 5 })
+    expect(deducts(saved, ['12', '32'])).toEqual({ [SUGAR]: 10 })
+
+    const read = reconstruct(saved, menu)
+    expect(read.custom).toEqual([])
+    expect(read.ingredients[0].amount).toEqual({
+      groupIds: ['size', 'sugar'],
+      cells: { '11+31': '0', '11+32': '5', '12+31': '0', '12+32': '10' },
     })
-    expect(card.amount).toEqual({ fixed: '7', groupId: null, values: {} })
-    expect(card.when).toEqual({ groupId: null, only: [] })
+  })
+
+  it('reads a group that changes the bag and whether it is taken at all', () => {
+    const cup = group('cup', 'Cup', [
+      ['81', 'Mug', true],
+      ['82', 'Finjan'],
+      ['83', 'Takeaway'],
+    ])
+    const cards = state([
+      ingredient({
+        item: by(['cup'], { '81': '200', '82': '201', '83': null }),
+        amount: by(['cup'], { '81': '1', '82': '1', '83': '0' }),
+      }),
+    ])
+    const one = menuOf(cup)
+    const saved = compile(cards, one)
+
+    expect(deducts(saved, ['81'])).toEqual({ '200': 1 })
+    expect(deducts(saved, ['82'])).toEqual({ '201': 1 })
+    expect(deducts(saved, ['83'])).toEqual({})
+
+    const read = reconstruct(saved, one)
+    expect(read.custom).toEqual([])
+    expect(deducts(compile(read, one), ['82'])).toEqual({ '201': 1 })
+    expect(deducts(compile(read, one), ['83'])).toEqual({})
   })
 
   it('repairs a recipe saved when the first add-on counted as the standard choice', () => {
@@ -335,9 +463,9 @@ describe('reconstruct', () => {
 
     const read = reconstruct(saved, menu)
     expect(read.custom).toEqual([])
-    expect(read.ingredients[0].when).toEqual({
-      groupId: 'extras',
-      only: ['21'],
+    expect(read.ingredients[0].amount).toEqual({
+      groupIds: ['extras'],
+      cells: { '21': '10', '22': '0' },
     })
 
     const repaired = compile(read, menu)
@@ -367,7 +495,10 @@ describe('reconstruct', () => {
     }
     const read = reconstruct({ slots: [legacy] }, menuOf(shot))
 
-    expect(read.ingredients[0].when).toEqual({ groupId: 'shot', only: ['61'] })
+    expect(read.ingredients[0].amount).toEqual({
+      groupIds: ['shot'],
+      cells: { '61': '7' },
+    })
     const repaired = compile(read, menuOf(shot))
     expect(deducts(repaired, [])).toEqual({})
     expect(deducts(repaired, ['61'])).toEqual({ [COFFEE]: 7 })
@@ -394,6 +525,30 @@ describe('reconstruct', () => {
 
     expect(read.ingredients).toEqual([])
     expect(read.custom).toEqual([cup])
+  })
+
+  it('keeps a rule naming an option the menu no longer has, rather than losing it', () => {
+    const stale: SlotDraft = {
+      key: 1,
+      stockItemId: COFFEE,
+      quantity: '7',
+      hasDefault: true,
+      groupIds: ['size'],
+      overrides: [
+        {
+          key: 2,
+          // the id a re-issued customization left behind
+          optionIds: ['999'],
+          stockItemId: null,
+          quantity: '14',
+          none: false,
+        },
+      ],
+    }
+    const read = reconstruct({ slots: [stale] }, menu)
+
+    expect(read.ingredients).toEqual([])
+    expect(read.custom).toEqual([stale])
   })
 })
 
