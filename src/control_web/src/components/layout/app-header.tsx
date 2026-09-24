@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { KeyRound, Languages, LogOut, Moon, Settings, ShieldCheck, Sun } from 'lucide-react'
+import { KeyRound, LogOut, Moon, Settings, ShieldCheck, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Wordmark } from '@/components/wordmark'
 import { authority, loginPageParams } from '@/config/oidc-config'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
 /**
@@ -24,7 +24,6 @@ import { useTheme } from '@/context/theme-provider'
 export function AppHeader() {
   const t = useT()
   const auth = useAuth()
-  const { language, setLanguage } = useLanguage()
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
@@ -42,15 +41,6 @@ export function AppHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='min-w-48 rounded-lg'>
-              <DropdownMenuItem
-                onSelect={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              >
-                <Languages className='size-4' />
-                <span className='flex-1'>{t('language')}</span>
-                <span className='text-muted-foreground'>
-                  {language === 'ar' ? 'العربية' : 'English'}
-                </span>
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() =>
                   setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -71,7 +61,7 @@ export function AppHeader() {
                 onSelect={() => {
                   // Back to this page once Keycloak is done (the callback reads it)
                   sessionStorage.setItem('auth_redirect', window.location.pathname + window.location.search)
-                  const { extraQueryParams } = loginPageParams(resolvedTheme, language)
+                  const { extraQueryParams } = loginPageParams(resolvedTheme, 'en')
                   auth.signinRedirect({ extraQueryParams: { ...extraQueryParams, kc_action: 'UPDATE_PASSWORD' } })
                 }}
               >
@@ -80,7 +70,7 @@ export function AppHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 {/* Keycloak's account console: the authenticator app and the signed-in devices */}
-                <a href={`${authority}/account/account-security/signing-in?kc_locale=${language}`} target='_blank' rel='noreferrer'>
+                <a href={`${authority}/account/account-security/signing-in?kc_locale=en`} target='_blank' rel='noreferrer'>
                   <ShieldCheck className='size-4' />
                   {t('securitySettings')}
                 </a>

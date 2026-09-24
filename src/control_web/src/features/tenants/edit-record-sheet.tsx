@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { allTimeZones, COUNTRIES, countryOf, CURRENCIES } from '@/lib/locale'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -75,7 +75,6 @@ export function EditRecordSheet({
 
 function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => void }) {
   const t = useT()
-  const language = useLanguage((s) => s.language)
   const queryClient = useQueryClient()
 
   const [name, setName] = useState(toLocalizedValue({ en: tenant.nameEn, ar: tenant.nameAr }))
@@ -212,7 +211,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             <SelectContent>
               {COUNTRIES.map((c) => (
                 <SelectItem key={c.code} value={c.code}>
-                  {c.name[language]}
+                  {c.name.en}
                 </SelectItem>
               ))}
             </SelectContent>

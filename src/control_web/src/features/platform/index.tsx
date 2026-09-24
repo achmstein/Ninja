@@ -36,7 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { megabytes, useFormat } from '@/lib/format'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import {
   billingStanding,
   isBusy,
@@ -101,7 +101,6 @@ export function PlatformPage() {
         : false,
   })
 
-  const language = useLanguage((s) => s.language)
   const running = (tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running')
   // Destroyed tenants are history: off the list unless asked for
   const [showDestroyed, setShowDestroyed] = useState(false)
@@ -161,7 +160,7 @@ export function PlatformPage() {
         isPending={fleetUpgrade.isPending}
         tenants={running.map((x) => ({
           slug: x.slug,
-          name: (language === 'ar' ? x.nameAr : x.nameEn) || x.nameEn,
+          name: x.nameEn || x.nameAr || x.slug,
           behind: x.update?.behind ?? false,
         }))}
         onConfirm={(imageTag, canary, slugs) => fleetUpgrade.mutate({ body: { imageTag, canary, slugs } })}
@@ -314,7 +313,6 @@ type TenantsTableProps = {
 /** Every tenant, newest first, with what its stack takes in memory. */
 function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
   const t = useT()
-  const language = useLanguage((s) => s.language)
 
   const memoryBySlug = new Map(
     usage.filter((u) => u.slug).map((u) => [u.slug, Number(u.memoryMb)])
@@ -358,9 +356,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
               </TableRow>
             ))}
           {tenants.map((tenant) => {
-            const name =
-              (language === 'ar' ? tenant.nameAr : tenant.nameEn) ||
-              tenant.nameEn
+            const name = tenant.nameEn || tenant.nameAr || tenant.slug
             const memory = memoryBySlug.get(tenant.slug)
             return (
               <TableRow key={tenant.slug}>

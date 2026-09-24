@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useT, type Language } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 import type { Scheme } from '@/lib/brand-slots'
 import type { BrandThemeInput } from '@/lib/brand-theme'
 import { Button } from '@/components/ui/button'

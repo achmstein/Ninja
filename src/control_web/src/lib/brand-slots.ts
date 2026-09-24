@@ -1,5 +1,5 @@
 import type { BrandWordmark } from '@/api/control'
-import type { Language } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 
 /**
  * The images a brand is made of, by slot: the square mark (light and dark)

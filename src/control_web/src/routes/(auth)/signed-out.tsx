@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useTheme } from '@/context/theme-provider'
-import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { LogIn } from 'lucide-react'
 import { useT } from '@/lib/i18n'
@@ -26,7 +25,6 @@ function SignedOut() {
   const t = useT()
   const auth = useAuth()
   const { resolvedTheme } = useTheme()
-  const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
 
   return (
@@ -51,7 +49,7 @@ function SignedOut() {
               size='lg'
               className='w-full'
               onClick={() =>
-                auth.signinRedirect(loginPageParams(resolvedTheme, language))
+                auth.signinRedirect(loginPageParams(resolvedTheme, 'en'))
               }
             >
               <LogIn className='me-2 h-4 w-4' />

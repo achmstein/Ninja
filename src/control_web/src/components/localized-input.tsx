@@ -1,5 +1,5 @@
 import { createContext, useContext, useId, useState } from 'react'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   InputGroup,
@@ -49,8 +49,7 @@ export function LocalizedFields({
   defaultLang?: Lang
   children: React.ReactNode
 }) {
-  const uiLang = useLanguage((s) => s.language)
-  const [lang, setLang] = useState<Lang>(defaultLang ?? uiLang)
+  const [lang, setLang] = useState<Lang>(defaultLang ?? 'en')
   return (
     <LangContext.Provider value={{ lang, setLang }}>
       {children}
@@ -60,8 +59,7 @@ export function LocalizedFields({
 
 function useLang(): [Lang, (lang: Lang) => void] {
   const shared = useContext(LangContext)
-  const uiLang = useLanguage((s) => s.language)
-  const [local, setLocal] = useState<Lang>(uiLang)
+  const [local, setLocal] = useState<Lang>('en')
   return shared ? [shared.lang, shared.setLang] : [local, setLocal]
 }
 

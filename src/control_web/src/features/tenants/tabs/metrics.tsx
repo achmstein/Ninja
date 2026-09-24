@@ -28,7 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { useLanguage, useLocale, useT } from '@/lib/i18n'
+import { useLocale, useT } from '@/lib/i18n'
 import { formatMoney } from '@/lib/locale'
 import { statusLabelKey, tenantStatus } from '@/lib/tenant'
 
@@ -40,7 +40,6 @@ const RANGES = [7, 30, 90] as const
  */
 export function MetricsTab({ tenant }: { tenant: TenantDetail }) {
   const t = useT()
-  const language = useLanguage((s) => s.language)
   const locale = useLocale()
   const [days, setDays] = useState<number>(30)
   const status = tenantStatus(tenant.status)
@@ -68,7 +67,7 @@ export function MetricsTab({ tenant }: { tenant: TenantDetail }) {
 
   const data = metrics.data
   const loading = metrics.isLoading
-  const money = (v: number | string | null | undefined) => formatMoney(v, currency, language)
+  const money = (v: number | string | null | undefined) => formatMoney(v, currency, 'en')
   const count = (v: number | string | null | undefined) =>
     new Intl.NumberFormat(locale).format(Number(v ?? 0))
   const series = (data?.series ?? []).map((d) => ({

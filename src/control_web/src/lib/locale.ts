@@ -1,4 +1,4 @@
-import type { Language } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 
 /**
  * The countries a café can be in, with what each one implies: its money,
@@ -12,31 +12,31 @@ export type Country = {
   timeZones: string[]
   dialCode: string
   language: Language
-  name: { en: string; ar: string }
+  name: { en: string }
 }
 
 export const COUNTRIES: Country[] = [
-  { code: 'EG', currency: 'EGP', timeZones: ['Africa/Cairo'], dialCode: '+20', language: 'ar', name: { en: 'Egypt', ar: 'مصر' } },
-  { code: 'SA', currency: 'SAR', timeZones: ['Asia/Riyadh'], dialCode: '+966', language: 'ar', name: { en: 'Saudi Arabia', ar: 'السعودية' } },
-  { code: 'AE', currency: 'AED', timeZones: ['Asia/Dubai'], dialCode: '+971', language: 'ar', name: { en: 'United Arab Emirates', ar: 'الإمارات' } },
-  { code: 'KW', currency: 'KWD', timeZones: ['Asia/Kuwait'], dialCode: '+965', language: 'ar', name: { en: 'Kuwait', ar: 'الكويت' } },
-  { code: 'QA', currency: 'QAR', timeZones: ['Asia/Qatar'], dialCode: '+974', language: 'ar', name: { en: 'Qatar', ar: 'قطر' } },
-  { code: 'BH', currency: 'BHD', timeZones: ['Asia/Bahrain'], dialCode: '+973', language: 'ar', name: { en: 'Bahrain', ar: 'البحرين' } },
-  { code: 'OM', currency: 'OMR', timeZones: ['Asia/Muscat'], dialCode: '+968', language: 'ar', name: { en: 'Oman', ar: 'عُمان' } },
-  { code: 'JO', currency: 'JOD', timeZones: ['Asia/Amman'], dialCode: '+962', language: 'ar', name: { en: 'Jordan', ar: 'الأردن' } },
-  { code: 'LB', currency: 'LBP', timeZones: ['Asia/Beirut'], dialCode: '+961', language: 'ar', name: { en: 'Lebanon', ar: 'لبنان' } },
-  { code: 'IQ', currency: 'IQD', timeZones: ['Asia/Baghdad'], dialCode: '+964', language: 'ar', name: { en: 'Iraq', ar: 'العراق' } },
-  { code: 'MA', currency: 'MAD', timeZones: ['Africa/Casablanca'], dialCode: '+212', language: 'ar', name: { en: 'Morocco', ar: 'المغرب' } },
-  { code: 'TN', currency: 'TND', timeZones: ['Africa/Tunis'], dialCode: '+216', language: 'ar', name: { en: 'Tunisia', ar: 'تونس' } },
-  { code: 'DZ', currency: 'DZD', timeZones: ['Africa/Algiers'], dialCode: '+213', language: 'ar', name: { en: 'Algeria', ar: 'الجزائر' } },
-  { code: 'LY', currency: 'LYD', timeZones: ['Africa/Tripoli'], dialCode: '+218', language: 'ar', name: { en: 'Libya', ar: 'ليبيا' } },
-  { code: 'SD', currency: 'SDG', timeZones: ['Africa/Khartoum'], dialCode: '+249', language: 'ar', name: { en: 'Sudan', ar: 'السودان' } },
-  { code: 'TR', currency: 'TRY', timeZones: ['Europe/Istanbul'], dialCode: '+90', language: 'en', name: { en: 'Türkiye', ar: 'تركيا' } },
-  { code: 'GB', currency: 'GBP', timeZones: ['Europe/London'], dialCode: '+44', language: 'en', name: { en: 'United Kingdom', ar: 'بريطانيا' } },
-  { code: 'DE', currency: 'EUR', timeZones: ['Europe/Berlin'], dialCode: '+49', language: 'en', name: { en: 'Germany', ar: 'ألمانيا' } },
-  { code: 'FR', currency: 'EUR', timeZones: ['Europe/Paris'], dialCode: '+33', language: 'en', name: { en: 'France', ar: 'فرنسا' } },
-  { code: 'US', currency: 'USD', timeZones: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'], dialCode: '+1', language: 'en', name: { en: 'United States', ar: 'أمريكا' } },
-  { code: 'CA', currency: 'CAD', timeZones: ['America/Toronto', 'America/Vancouver'], dialCode: '+1', language: 'en', name: { en: 'Canada', ar: 'كندا' } },
+  { code: 'EG', currency: 'EGP', timeZones: ['Africa/Cairo'], dialCode: '+20', language: 'ar', name: { en: 'Egypt' } },
+  { code: 'SA', currency: 'SAR', timeZones: ['Asia/Riyadh'], dialCode: '+966', language: 'ar', name: { en: 'Saudi Arabia' } },
+  { code: 'AE', currency: 'AED', timeZones: ['Asia/Dubai'], dialCode: '+971', language: 'ar', name: { en: 'United Arab Emirates' } },
+  { code: 'KW', currency: 'KWD', timeZones: ['Asia/Kuwait'], dialCode: '+965', language: 'ar', name: { en: 'Kuwait' } },
+  { code: 'QA', currency: 'QAR', timeZones: ['Asia/Qatar'], dialCode: '+974', language: 'ar', name: { en: 'Qatar' } },
+  { code: 'BH', currency: 'BHD', timeZones: ['Asia/Bahrain'], dialCode: '+973', language: 'ar', name: { en: 'Bahrain' } },
+  { code: 'OM', currency: 'OMR', timeZones: ['Asia/Muscat'], dialCode: '+968', language: 'ar', name: { en: 'Oman' } },
+  { code: 'JO', currency: 'JOD', timeZones: ['Asia/Amman'], dialCode: '+962', language: 'ar', name: { en: 'Jordan' } },
+  { code: 'LB', currency: 'LBP', timeZones: ['Asia/Beirut'], dialCode: '+961', language: 'ar', name: { en: 'Lebanon' } },
+  { code: 'IQ', currency: 'IQD', timeZones: ['Asia/Baghdad'], dialCode: '+964', language: 'ar', name: { en: 'Iraq' } },
+  { code: 'MA', currency: 'MAD', timeZones: ['Africa/Casablanca'], dialCode: '+212', language: 'ar', name: { en: 'Morocco' } },
+  { code: 'TN', currency: 'TND', timeZones: ['Africa/Tunis'], dialCode: '+216', language: 'ar', name: { en: 'Tunisia' } },
+  { code: 'DZ', currency: 'DZD', timeZones: ['Africa/Algiers'], dialCode: '+213', language: 'ar', name: { en: 'Algeria' } },
+  { code: 'LY', currency: 'LYD', timeZones: ['Africa/Tripoli'], dialCode: '+218', language: 'ar', name: { en: 'Libya' } },
+  { code: 'SD', currency: 'SDG', timeZones: ['Africa/Khartoum'], dialCode: '+249', language: 'ar', name: { en: 'Sudan' } },
+  { code: 'TR', currency: 'TRY', timeZones: ['Europe/Istanbul'], dialCode: '+90', language: 'en', name: { en: 'Türkiye' } },
+  { code: 'GB', currency: 'GBP', timeZones: ['Europe/London'], dialCode: '+44', language: 'en', name: { en: 'United Kingdom' } },
+  { code: 'DE', currency: 'EUR', timeZones: ['Europe/Berlin'], dialCode: '+49', language: 'en', name: { en: 'Germany' } },
+  { code: 'FR', currency: 'EUR', timeZones: ['Europe/Paris'], dialCode: '+33', language: 'en', name: { en: 'France' } },
+  { code: 'US', currency: 'USD', timeZones: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'], dialCode: '+1', language: 'en', name: { en: 'United States' } },
+  { code: 'CA', currency: 'CAD', timeZones: ['America/Toronto', 'America/Vancouver'], dialCode: '+1', language: 'en', name: { en: 'Canada' } },
 ]
 
 export const countryOf = (code: string) => COUNTRIES.find((c) => c.code === code)

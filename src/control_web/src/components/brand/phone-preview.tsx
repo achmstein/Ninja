@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Home, Moon, Receipt, Search, Sun, User } from 'lucide-react'
-import { useLanguage, useT, type Language } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 import { logoFor, wordmarkFor, type BrandImages, type Scheme } from '@/lib/brand-slots'
 import { brandTokens, ensureFontsLoaded, type BrandThemeInput } from '@/lib/brand-theme'
 import { formatMoney } from '@/lib/locale'
@@ -47,9 +48,8 @@ export function PreviewToggles({
 
 /** The preview's own language and scheme, starting from the app's. */
 export function usePreviewState() {
-  const uiLanguage = useLanguage((s) => s.language)
   const { resolvedTheme } = useTheme()
-  const [language, setLanguage] = useState<Language>(uiLanguage)
+  const [language, setLanguage] = useState<Language>('en')
   const [scheme, setScheme] = useState<Scheme>(resolvedTheme)
   return { language, scheme, setLanguage, setScheme }
 }

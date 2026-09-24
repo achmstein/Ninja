@@ -9,7 +9,6 @@ import {
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
-import { DirectionProvider } from './context/direction-provider'
 import { ThemeProvider } from './context/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 // Generated Routes
@@ -83,11 +82,9 @@ if (!rootElement.innerHTML) {
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <DirectionProvider>
               <TooltipProvider>
                 <RouterProvider router={router} />
               </TooltipProvider>
-            </DirectionProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </AuthProvider>

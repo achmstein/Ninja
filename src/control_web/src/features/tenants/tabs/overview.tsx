@@ -4,7 +4,7 @@ import type { TenantDetail } from '@/api/control'
 import { CopyButton } from '@/components/copy-button'
 import { Button } from '@/components/ui/button'
 import { useFormat } from '@/lib/format'
-import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { countryOf } from '@/lib/locale'
 import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tenant'
 import { UpdateStanding } from '../dialogs'
@@ -36,7 +36,6 @@ export function OverviewTab({
 }) {
   const t = useT()
   const format = useFormat()
-  const language = useLanguage((s) => s.language)
   const [editing, setEditing] = useState(false)
 
   const status = tenantStatus(tenant.status)
@@ -156,7 +155,7 @@ export function OverviewTab({
           <dt className={dtClass}>{t('plan')}</dt>
           <dd>{t(planLabelKey[record.plan])}</dd>
           <dt className={dtClass}>{t('country')}</dt>
-          <dd>{country?.name[language] ?? locale.country}</dd>
+          <dd>{country?.name.en ?? locale.country}</dd>
           <dt className={dtClass}>{t('currency')}</dt>
           <dd>{locale.currency}</dd>
           <dt className={dtClass}>{t('timeZone')}</dt>

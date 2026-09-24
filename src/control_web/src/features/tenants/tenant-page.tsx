@@ -50,7 +50,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
   canConvert,
@@ -112,7 +112,6 @@ function Loading() {
  */
 export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const t = useT()
-  const language = useLanguage((s) => s.language)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -225,7 +224,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
 
   const status = tenantStatus(tenant.status)
   const kind = tenantKind(tenant.kind)
-  const name = (language === 'ar' ? tenant.nameAr : tenant.nameEn) || tenant.nameEn
+  const name = tenant.nameEn || tenant.nameAr || tenant.slug
   const busy =
     isBusy(status) ||
     tenant.jobs.some((j) => j.lane === 'Stamp') ||

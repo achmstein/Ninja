@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { useLanguage, useT, type Language } from '@/lib/i18n'
+import { useT } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 import {
   COUNTRIES,
   CURRENCIES,
@@ -50,8 +51,8 @@ type LocaleFieldsProps = {
 }
 
 /** `EGP — ج.م` in Arabic; plain `USD` where the label is the code itself. */
-function currencyLabel(code: string, language: Language): string {
-  const label = CURRENCY_LABELS[code]?.[language]
+function currencyLabel(code: string): string {
+  const label = CURRENCY_LABELS[code]?.en
   return label && label !== code ? `${code} — ${label}` : code
 }
 
@@ -68,7 +69,6 @@ export function LocaleFields({
   onDefaultLanguage,
 }: LocaleFieldsProps) {
   const t = useT()
-  const language = useLanguage((s) => s.language)
   const country = countryOf(value.country)
 
   return (
@@ -88,7 +88,7 @@ export function LocaleFields({
           <SelectContent>
             {COUNTRIES.map((c) => (
               <SelectItem key={c.code} value={c.code}>
-                {c.name[language]}
+                {c.name.en}
               </SelectItem>
             ))}
           </SelectContent>
@@ -104,7 +104,7 @@ export function LocaleFields({
           <SelectContent>
             {CURRENCIES.map((code) => (
               <SelectItem key={code} value={code}>
-                {currencyLabel(code, language)}
+                {currencyLabel(code)}
               </SelectItem>
             ))}
           </SelectContent>
