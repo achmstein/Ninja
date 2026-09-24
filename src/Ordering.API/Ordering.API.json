@@ -1731,7 +1731,7 @@
           "Kitchen"
         ],
         "summary": "Remove a kitchen station (admin)",
-        "description": "The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order.",
+        "description": "The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order, and its unprinted tickets are dropped.",
         "operationId": "DeleteKitchenStation",
         "parameters": [
           {
@@ -2095,6 +2095,424 @@
           { }
         ]
       }
+    },
+    "/api/kitchen/connectors/pairing": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "Make a code to pair a print connector with this branch (admin)",
+        "description": "Good once, for ten minutes. The connector's tickets print in the language given.",
+        "operationId": "CreateConnectorPairing",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePairingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorPairingView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/kitchen/connectors": {
+      "get": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "The print connectors paired with this branch (staff)",
+        "description": "Each with the printers Windows has on its PC and when it last checked in.",
+        "operationId": "GetPrintConnectors",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintConnectorView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/kitchen/connectors/{connectorId}": {
+      "delete": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "Unpair a print connector (admin)",
+        "description": "Refused while a station prints on one of its printers. Its key stops working at once.",
+        "operationId": "DeletePrintConnector",
+        "parameters": [
+          {
+            "name": "connectorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/kitchen/connector/pair": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "Trade a pairing code for a connector key (print connector)",
+        "description": "Anonymous: the code is the proof. The key is returned once and never again.",
+        "operationId": "PairPrintConnector",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairConnectorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorPairedView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kitchen/connector/heartbeat": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "Check in, with the printers Windows has (print connector)",
+        "operationId": "PrintConnectorHeartbeat",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorHeartbeatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/kitchen/connector/jobs": {
+      "get": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "summary": "Tickets this connector can print (print connector)",
+        "description": "Its own stations' tickets, and those for network printers any device may print.",
+        "operationId": "GetPrintConnectorJobs",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KitchenTicket"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kitchen/connector/jobs/{jobId}/claim": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "operationId": "ClaimPrintConnectorJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/kitchen/connector/jobs/{jobId}/printed": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "operationId": "MarkPrintConnectorJobPrinted",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/kitchen/connector/jobs/{jobId}/failed": {
+      "post": {
+        "tags": [
+          "PrintConnector"
+        ],
+        "operationId": "MarkPrintConnectorJobFailed",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FailPrintJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2291,6 +2709,72 @@
           }
         }
       },
+      "ConnectorHeartbeatRequest": {
+        "required": [
+          "printers"
+        ],
+        "type": "object",
+        "properties": {
+          "printers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ConnectorPairedView": {
+        "required": [
+          "connectorId",
+          "key",
+          "branchId",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "connectorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "key": {
+            "type": "string"
+          },
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "ConnectorPairingView": {
+        "required": [
+          "code",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CreateOrderDraftCommand": {
         "required": [
           "buyerId",
@@ -2407,6 +2891,20 @@
             ]
           },
           "promoCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePairingRequest": {
+        "required": [
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "language": {
             "type": [
               "null",
               "string"
@@ -2638,6 +3136,21 @@
             ],
             "format": "int32",
             "default": 0
+          },
+          "connectorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "printerName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2685,6 +3198,21 @@
               "string"
             ],
             "format": "int32"
+          },
+          "connectorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "printerName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "isDefault": {
             "type": "boolean"
@@ -2734,6 +3262,21 @@
               "string"
             ],
             "format": "int32"
+          },
+          "connectorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "printerName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -3493,6 +4036,27 @@
           }
         }
       },
+      "PairConnectorRequest": {
+        "required": [
+          "code",
+          "machineName"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "machineName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PosOrderRequest": {
         "required": [
           "items"
@@ -3601,6 +4165,50 @@
           }
         }
       },
+      "PrintConnectorView": {
+        "required": [
+          "id",
+          "name",
+          "pairedAt",
+          "lastSeenAt",
+          "isOnline",
+          "printers"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pairedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isOnline": {
+            "type": "boolean"
+          },
+          "printers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "RateOrderRequest": {
         "required": [
           "ratingValue",
@@ -3643,6 +4251,9 @@
     },
     {
       "name": "Kitchen"
+    },
+    {
+      "name": "PrintConnector"
     }
   ]
 }

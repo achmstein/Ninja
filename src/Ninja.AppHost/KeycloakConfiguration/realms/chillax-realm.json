@@ -90,6 +90,10 @@
       {
         "name": "Cashier",
         "description": "Cashier role - runs the POS (sales, tickets, shifts) without back-office access"
+      },
+      {
+        "name": "Kitchen",
+        "description": "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else"
       }
     ]
   },

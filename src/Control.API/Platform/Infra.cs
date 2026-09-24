@@ -494,6 +494,19 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         var client = await AdminClientAsync(ct);
         var admin = $"{Base}/admin/realms/{realm}";
 
+        // Roles the template gained after this realm was made: a kitchen display's own account
+        using (var kitchen = await client.GetAsync($"{admin}/roles/Kitchen", ct))
+        {
+            if (kitchen.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/roles", new JsonObject
+                {
+                    ["name"] = "Kitchen",
+                    ["description"] = "Kitchen role - a kitchen display or print host: the board, ready, and the kitchen's printers, nothing else",
+                }, ct), $"the Kitchen role in {realm}", ct);
+            }
+        }
+
         // The mcp client scope, and its audience mapper kept on the current API host
         var scopes = await client.GetFromJsonAsync<JsonArray>($"{admin}/client-scopes", ct) ?? [];
         string? ScopeId(string name) => scopes.FirstOrDefault(s => s?["name"]?.GetValue<string>() == name)?["id"]?.GetValue<string>();

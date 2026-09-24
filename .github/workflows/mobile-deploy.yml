@@ -12,6 +12,7 @@ on:
           - client_app
           - pos_app
           - kds_app
+          - print_connector
       platform:
         description: 'Platform to build'
         required: true
@@ -303,6 +304,44 @@ jobs:
           source: "src/kds_app/build/apps-publish/*"
           target: /opt/ninja/platform/apps
           strip_components: 4
+
+  # The Windows print connector a café downloads from admin's Apps page,
+  # beside the till and kitchen APKs
+  build-print-connector:
+    # Windows only: the platform choice is for the phones and tablets
+    if: github.event.inputs.app == 'all' || github.event.inputs.app == 'print_connector'
+    runs-on: windows-latest
+    environment: platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish the connector
+        shell: pwsh
+        run: |
+          dotnet publish src/Ninja.PrintConnector -c Release -r win-x64 -o publish -p:Version=1.0.${{ github.event.inputs.build_number || github.run_number }}
+          New-Item -ItemType Directory -Force apps-publish | Out-Null
+          Copy-Item publish/ninja-print-connector.exe apps-publish/ninja-print-connector.exe
+
+      - name: Upload connector artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: print-connector-windows
+          path: apps-publish/*
+
+      - name: Publish to the platform's download page
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PLATFORM_SERVER_HOST }}
+          username: ${{ secrets.PLATFORM_SERVER_USER }}
+          key: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          source: "apps-publish/*"
+          target: /opt/ninja/platform/apps
+          strip_components: 1
 
   # ==========================================
   # iOS Builds (Fastlane + Match)

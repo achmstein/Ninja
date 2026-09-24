@@ -119,13 +119,13 @@ public static partial class OrdersApi
             .WithName("GetKitchenOrders")
             .WithSummary("Confirmed orders in the kitchen, for the kitchen display (staff)")
             .WithDescription("Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapPut("/{orderId:int}/ready", SetOrderReadyAsync)
             .WithName("SetOrderReady")
             .WithSummary("Mark a confirmed order ready in the kitchen, or bring it back (staff)")
             .WithDescription("From the pass: ready true marks every part on a screen done, false brings the order back to the board. Refused for an order made only at printers. Repeating the current state is a no-op.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapGet("/all", GetAllOrdersAsync)
             .WithName("GetAllOrders")

@@ -64,4 +64,32 @@ public class KitchenPrintJobRepository(OrderingContext context) : IKitchenPrintJ
 
         return claimed == 1;
     }
+
+    public Task DropUnprintedAsync(int stationId) =>
+        context.KitchenPrintJobs
+            .Where(j => j.StationId == stationId && j.PrintedAt == null)
+            .ExecuteDeleteAsync();
+}
+
+public class PrintConnectorRepository(OrderingContext context) : IPrintConnectorRepository
+{
+    public IUnitOfWork UnitOfWork => context;
+
+    public Task<PrintConnector?> GetAsync(int connectorId) =>
+        context.PrintConnectors.FirstOrDefaultAsync(c => c.Id == connectorId);
+
+    public Task<List<PrintConnector>> GetForBranchAsync(int branchId) =>
+        context.PrintConnectors.Where(c => c.BranchId == branchId).OrderBy(c => c.PairedAt).ToListAsync();
+
+    public void Add(PrintConnector connector) => context.PrintConnectors.Add(connector);
+
+    public void Remove(PrintConnector connector) => context.PrintConnectors.Remove(connector);
+
+    public void AddPairing(ConnectorPairing pairing) => context.ConnectorPairings.Add(pairing);
+
+    public Task<ConnectorPairing?> GetPairingAsync(string code)
+    {
+        var normalized = ConnectorPairing.Normalize(code);
+        return context.ConnectorPairings.FirstOrDefaultAsync(p => p.Code == normalized);
+    }
 }

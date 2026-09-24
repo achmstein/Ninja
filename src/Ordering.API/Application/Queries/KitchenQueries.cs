@@ -13,6 +13,9 @@ public record KitchenStationView
     public bool PrintsTickets { get; init; }
     public string? PrinterHost { get; init; }
     public int PrinterPort { get; init; }
+    /// <summary>A printer on a paired print connector, by its Windows name, instead of an address.</summary>
+    public int? ConnectorId { get; init; }
+    public string? PrinterName { get; init; }
     public bool IsDefault { get; init; }
     public int DisplayOrder { get; init; }
 
@@ -25,6 +28,8 @@ public record KitchenStationView
         PrintsTickets = s.PrintsTickets,
         PrinterHost = s.PrinterHost,
         PrinterPort = s.PrinterPort,
+        ConnectorId = s.ConnectorId,
+        PrinterName = s.PrinterName,
         IsDefault = s.IsDefault,
         DisplayOrder = s.DisplayOrder,
     };
@@ -41,6 +46,9 @@ public record KitchenTicket
     public LocalizedText StationName { get; init; } = new();
     public string? PrinterHost { get; init; }
     public int PrinterPort { get; init; }
+    /// <summary>Set when only this print connector can print it, on its Windows printer <see cref="PrinterName"/>.</summary>
+    public int? ConnectorId { get; init; }
+    public string? PrinterName { get; init; }
     public DateTime CreatedAt { get; init; }
     /// <summary>A device is printing it now; another should leave it alone until the claim lapses.</summary>
     public DateTime? ClaimedAt { get; init; }
@@ -138,6 +146,8 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                 // lets the waiting tickets through
                 PrinterHost = station.PrinterHost,
                 PrinterPort = station.PrinterPort,
+                ConnectorId = station.ConnectorId,
+                PrinterName = station.PrinterName,
                 CreatedAt = job.CreatedAt,
                 ClaimedAt = job.ClaimedAt,
                 Attempts = job.Attempts,

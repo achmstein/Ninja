@@ -42,6 +42,7 @@
     <Project Path="src/Loyalty.API/Loyalty.API.csproj" />
     <Project Path="src/Notification.API/Notification.API.csproj" />
     <Project Path="src/Ordering.API/Ordering.API.csproj" />
+    <Project Path="src/Ninja.PrintConnector/Ninja.PrintConnector.csproj" />
     <Project Path="src/Ordering.Domain/Ordering.Domain.csproj" />
     <Project Path="src/Ordering.Infrastructure/Ordering.Infrastructure.csproj" />
     <Project Path="src/pos_web/pos_web.esproj">

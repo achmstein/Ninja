@@ -102,6 +102,9 @@ public static class AuthenticationExtensions
             // Pos policy: what the till needs. Cashiers run sales, tickets and
             // shifts without carrying the full back-office Admin role.
             options.AddPolicy("Pos", policy => policy.RequireRole(ClaimsPrincipalExtensions.PosRoles).AddRequirements(branchAccess));
+            // Kitchen policy: the board, ready, and the kitchen's print queue — a kitchen
+            // display signs in with its own Kitchen account rather than a cashier's
+            options.AddPolicy("Kitchen", policy => policy.RequireRole(ClaimsPrincipalExtensions.KitchenRoles).AddRequirements(branchAccess));
         });
 
         return services;

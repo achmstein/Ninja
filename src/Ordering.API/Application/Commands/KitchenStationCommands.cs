@@ -17,17 +17,25 @@ public record SaveKitchenStationCommand(
     bool PrintsTickets,
     string? PrinterHost,
     int? PrinterPort,
-    int DisplayOrder) : IRequest<int?>;
+    int DisplayOrder,
+    int? ConnectorId = null,
+    string? PrinterName = null) : IRequest<int?>;
 
 /// <summary>
 /// Saves a station. A category is made at one station per branch, so a
 /// category another station holds is refused rather than silently moved.
 /// </summary>
-public class SaveKitchenStationCommandHandler(IKitchenStationRepository stations)
+public class SaveKitchenStationCommandHandler(IKitchenStationRepository stations, IPrintConnectorRepository connectors)
     : IRequestHandler<SaveKitchenStationCommand, int?>
 {
     public async Task<int?> Handle(SaveKitchenStationCommand command, CancellationToken cancellationToken)
     {
+        if (command.ConnectorId is { } connectorId
+            && (await connectors.GetAsync(connectorId))?.BranchId != command.BranchId)
+        {
+            throw new OrderingDomainException("That print connector is not paired with this branch.");
+        }
+
         var branchStations = await stations.GetForBranchAsync(command.BranchId);
 
         var taken = KitchenRouting.TakenCategories(branchStations, command.StationId, command.CategoryIds);
@@ -46,13 +54,14 @@ public class SaveKitchenStationCommandHandler(IKitchenStationRepository stations
             }
 
             existing.Update(command.Name, command.CategoryIds, command.ShowsOnScreen, command.PrintsTickets,
-                command.PrinterHost, command.PrinterPort, command.DisplayOrder);
+                command.PrinterHost, command.PrinterPort, command.DisplayOrder, command.ConnectorId, command.PrinterName);
             station = existing;
         }
         else
         {
             station = new KitchenStation(command.BranchId, command.Name, command.CategoryIds, command.ShowsOnScreen,
-                command.PrintsTickets, command.PrinterHost, command.PrinterPort, isDefault: false, command.DisplayOrder);
+                command.PrintsTickets, command.PrinterHost, command.PrinterPort, isDefault: false, command.DisplayOrder,
+                command.ConnectorId, command.PrinterName);
             stations.Add(station);
         }
 
@@ -69,7 +78,7 @@ public record DeleteKitchenStationCommand(int BranchId, int StationId) : IReques
 /// a station with work still on a screen stays until that work is done.
 /// Its categories fall back to the default station from the next order on.
 /// </summary>
-public class DeleteKitchenStationCommandHandler(IKitchenStationRepository stations)
+public class DeleteKitchenStationCommandHandler(IKitchenStationRepository stations, IKitchenPrintJobRepository jobs)
     : IRequestHandler<DeleteKitchenStationCommand, bool>
 {
     public async Task<bool> Handle(DeleteKitchenStationCommand command, CancellationToken cancellationToken)
@@ -90,6 +99,8 @@ public class DeleteKitchenStationCommandHandler(IKitchenStationRepository statio
             throw new OrderingDomainException("This station still has orders on its screen; finish them first.");
         }
 
+        // Paper for a printer that is no longer anyone's would wait a day for nothing
+        await jobs.DropUnprintedAsync(station.Id);
         stations.Remove(station);
         await stations.UnitOfWork.SaveEntitiesAsync(cancellationToken);
         return true;

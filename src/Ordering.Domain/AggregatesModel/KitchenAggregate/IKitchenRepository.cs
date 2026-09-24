@@ -32,4 +32,23 @@ public interface IKitchenPrintJobRepository : IRepository<KitchenPrintJob>
     /// asking at once, exactly one gets true.
     /// </summary>
     Task<bool> TryClaimAsync(int jobId, string deviceId, DateTime now);
+
+    /// <summary>The station is gone: its unprinted tickets have nowhere to print, so they go too.</summary>
+    Task DropUnprintedAsync(int stationId);
+}
+
+public interface IPrintConnectorRepository : IRepository<PrintConnector>
+{
+    Task<PrintConnector?> GetAsync(int connectorId);
+
+    Task<List<PrintConnector>> GetForBranchAsync(int branchId);
+
+    void Add(PrintConnector connector);
+
+    void Remove(PrintConnector connector);
+
+    void AddPairing(ConnectorPairing pairing);
+
+    /// <summary>The live code, normalized; null when none matches.</summary>
+    Task<ConnectorPairing?> GetPairingAsync(string code);
 }

@@ -62,6 +62,10 @@
     <!-- Version together with runtime (10.0.10: the floor ModelContextProtocol 2.2 needs; Microsoft.Extensions.AI 10.6 needed 10.0.8) -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.10" />
+    <PackageVersion Include="System.Drawing.Common" Version="10.0.10" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />

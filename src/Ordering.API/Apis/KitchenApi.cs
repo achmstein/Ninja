@@ -20,7 +20,7 @@ public static class KitchenApi
             .WithName("GetKitchenStations")
             .WithSummary("The branch's kitchen stations (staff)")
             .WithDescription("In display order. A branch that has none gets its default station, which makes everything on one screen.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapPost("/stations", CreateStationAsync)
             .WithName("CreateKitchenStation")
@@ -37,7 +37,7 @@ public static class KitchenApi
         api.MapDelete("/stations/{stationId:int}", DeleteStationAsync)
             .WithName("DeleteKitchenStation")
             .WithSummary("Remove a kitchen station (admin)")
-            .WithDescription("The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order.")
+            .WithDescription("The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order, and its unprinted tickets are dropped.")
             .RequireAuthorization("Admin");
 
         api.MapPost("/stations/{stationId:int}/test-print", TestPrintAsync)
@@ -49,24 +49,24 @@ public static class KitchenApi
             .WithName("GetKitchenPrintJobs")
             .WithSummary("Tickets waiting for a kitchen printer (staff)")
             .WithDescription("The branch's unprinted tickets from the last day, oldest first, each with its printer's address and the lines to print. A ticket with a live claim is being printed by another device.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapPost("/print-jobs/{jobId:int}/claim", ClaimPrintJobAsync)
             .WithName("ClaimKitchenPrintJob")
             .WithSummary("Take a ticket to print (print host)")
             .WithDescription("204 when this device has it; 409 when it is printed or another device holds it. A claim lapses after a minute.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapPost("/print-jobs/{jobId:int}/printed", MarkPrintedAsync)
             .WithName("MarkKitchenPrintJobPrinted")
             .WithSummary("Report a ticket printed (print host)")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         api.MapPost("/print-jobs/{jobId:int}/failed", MarkFailedAsync)
             .WithName("MarkKitchenPrintJobFailed")
             .WithSummary("Report the printer refused a ticket (print host)")
             .WithDescription("Lets the claim go so any device can try again; the error is kept for the till's warning.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         return api;
     }
@@ -78,7 +78,7 @@ public static class KitchenApi
             .WithName("SetOrderStationReady")
             .WithSummary("Mark a station's part of an order ready, or bring it back (staff)")
             .WithDescription("The order is ready once every part on a screen is. A part that only prints is never marked. Repeating the current state is a no-op.")
-            .RequireAuthorization("Pos");
+            .RequireAuthorization("Kitchen");
 
         orders.MapPost("/{orderId:int}/reprint", ReprintOrderAsync)
             .WithName("ReprintOrderKitchenTickets")
@@ -126,7 +126,7 @@ public static class KitchenApi
         {
             var id = await mediator.Send(new SaveKitchenStationCommand(
                 branchId, stationId, request.Name, request.CategoryIds ?? [], request.ShowsOnScreen, request.PrintsTickets,
-                request.PrinterHost, request.PrinterPort, request.DisplayOrder));
+                request.PrinterHost, request.PrinterPort, request.DisplayOrder, request.ConnectorId, request.PrinterName));
 
             if (id is null)
             {
@@ -263,7 +263,9 @@ public record KitchenStationRequest(
     bool PrintsTickets,
     string? PrinterHost,
     int? PrinterPort,
-    int DisplayOrder = 0);
+    int DisplayOrder = 0,
+    int? ConnectorId = null,
+    string? PrinterName = null);
 
 public record ClaimPrintJobRequest(string DeviceId);
 

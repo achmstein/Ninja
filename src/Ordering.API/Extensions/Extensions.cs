@@ -57,6 +57,7 @@ internal static class Extensions
         services.AddScoped<IKitchenQueries, KitchenQueries>();
         services.AddScoped<IKitchenStationRepository, KitchenStationRepository>();
         services.AddScoped<IKitchenPrintJobRepository, KitchenPrintJobRepository>();
+        services.AddScoped<IPrintConnectorRepository, PrintConnectorRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
 
         // Background service for pending order reminders

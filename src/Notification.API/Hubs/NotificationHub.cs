@@ -91,7 +91,8 @@ public class NotificationHub : Hub
     /// service requests, tickets). "Pos" = Admin, Owner or Cashier — the till
     /// runs its floor on these updates too.
     /// </summary>
-    [Authorize(Policy = "Pos")]
+    // Kitchen displays listen here too, on their own Kitchen account
+    [Authorize(Policy = "Kitchen")]
     public async Task JoinAdminGroup() =>
         await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
 

@@ -18,6 +18,9 @@ class KitchenStationEntityTypeConfiguration : IEntityTypeConfiguration<KitchenSt
         builder.Property(s => s.PrinterHost)
             .HasMaxLength(255);
 
+        builder.Property(s => s.PrinterName)
+            .HasMaxLength(255);
+
         builder.HasIndex(s => s.BranchId);
     }
 }
@@ -39,6 +42,43 @@ class OrderStationPartEntityTypeConfiguration : IEntityTypeConfiguration<OrderSt
 
         // Whether a station still has work waiting is asked by station
         builder.HasIndex(p => p.StationId);
+    }
+}
+
+class PrintConnectorEntityTypeConfiguration : IEntityTypeConfiguration<PrintConnector>
+{
+    public void Configure(EntityTypeBuilder<PrintConnector> builder)
+    {
+        builder.ToTable("printconnectors");
+
+        builder.Ignore(c => c.DomainEvents);
+
+        builder.Property(c => c.Id)
+            .UseHiLo("printconnectorseq");
+
+        builder.Property(c => c.Name).HasMaxLength(100);
+        builder.Property(c => c.KeyHash).HasMaxLength(64);
+        builder.Property(c => c.Language).HasMaxLength(2);
+
+        builder.HasIndex(c => c.BranchId);
+    }
+}
+
+class ConnectorPairingEntityTypeConfiguration : IEntityTypeConfiguration<ConnectorPairing>
+{
+    public void Configure(EntityTypeBuilder<ConnectorPairing> builder)
+    {
+        builder.ToTable("connectorpairings");
+
+        builder.Ignore(p => p.DomainEvents);
+
+        builder.Property(p => p.Id)
+            .UseHiLo("connectorpairingseq");
+
+        builder.Property(p => p.Code).HasMaxLength(8);
+        builder.Property(p => p.Language).HasMaxLength(2);
+
+        builder.HasIndex(p => p.Code).IsUnique();
     }
 }
 

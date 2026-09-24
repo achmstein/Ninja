@@ -30,5 +30,10 @@ var kitchen = app.NewVersionedApi("Kitchen");
 kitchen.MapKitchenApiV1()
        .RequireAuthorization();
 
+// The print connector signs with its own key; its endpoints say which need staff
+var connector = app.NewVersionedApi("PrintConnector");
+
+connector.MapPrintConnectorApiV1();
+
 app.UseDefaultOpenApi();
 app.Run();

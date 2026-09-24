@@ -30,6 +30,15 @@ public class KitchenStation : Entity, IAggregateRoot
 
     public int PrinterPort { get; private set; } = DefaultPrinterPort;
 
+    /// <summary>
+    /// Or: a printer Windows knows on a paired print connector, by name —
+    /// a USB printer on the counter PC, a driver-installed network one. Only
+    /// that connector prints it. Never together with <see cref="PrinterHost"/>.
+    /// </summary>
+    public int? ConnectorId { get; private set; }
+
+    public string? PrinterName { get; private set; }
+
     /// <summary>Takes every line no other station claims. One per branch.</summary>
     public bool IsDefault { get; private set; }
 
@@ -38,11 +47,11 @@ public class KitchenStation : Entity, IAggregateRoot
     protected KitchenStation() { }
 
     public KitchenStation(int branchId, LocalizedText name, IEnumerable<int> categoryIds, bool showsOnScreen, bool printsTickets,
-        string? printerHost, int? printerPort, bool isDefault, int displayOrder)
+        string? printerHost, int? printerPort, bool isDefault, int displayOrder, int? connectorId = null, string? printerName = null)
     {
         BranchId = branchId;
         IsDefault = isDefault;
-        Update(name, categoryIds, showsOnScreen, printsTickets, printerHost, printerPort, displayOrder);
+        Update(name, categoryIds, showsOnScreen, printsTickets, printerHost, printerPort, displayOrder, connectorId, printerName);
     }
 
     /// <summary>
@@ -54,7 +63,7 @@ public class KitchenStation : Entity, IAggregateRoot
             printerHost: null, printerPort: null, isDefault: true, displayOrder: 0);
 
     public void Update(LocalizedText name, IEnumerable<int> categoryIds, bool showsOnScreen, bool printsTickets,
-        string? printerHost, int? printerPort, int displayOrder)
+        string? printerHost, int? printerPort, int displayOrder, int? connectorId = null, string? printerName = null)
     {
         if (string.IsNullOrWhiteSpace(name.En) && string.IsNullOrWhiteSpace(name.Ar))
         {
@@ -67,9 +76,15 @@ public class KitchenStation : Entity, IAggregateRoot
         }
 
         var host = string.IsNullOrWhiteSpace(printerHost) ? null : printerHost.Trim();
-        if (printsTickets && host is null)
+        var windowsPrinter = string.IsNullOrWhiteSpace(printerName) ? null : printerName.Trim();
+        if (connectorId is not null && windowsPrinter is null)
         {
-            throw new OrderingDomainException("A station that prints needs its printer's address.");
+            throw new OrderingDomainException("Pick which of the print connector's printers to use.");
+        }
+        var onConnector = connectorId is not null;
+        if (printsTickets && host is null && !onConnector)
+        {
+            throw new OrderingDomainException("A station that prints needs its printer's address, or a printer on a print connector.");
         }
 
         var port = printerPort ?? DefaultPrinterPort;
@@ -83,9 +98,12 @@ public class KitchenStation : Entity, IAggregateRoot
         ShowsOnScreen = showsOnScreen;
         PrintsTickets = printsTickets;
         // The address is kept while printing is off, so switching it back on
-        // does not ask for it again
-        PrinterHost = host;
+        // does not ask for it again. A connector's printer replaces it: one
+        // printer per station, and only its owner prints to it.
+        PrinterHost = onConnector ? null : host;
         PrinterPort = port;
+        ConnectorId = connectorId;
+        PrinterName = onConnector ? windowsPrinter : null;
         DisplayOrder = displayOrder;
     }
 }
