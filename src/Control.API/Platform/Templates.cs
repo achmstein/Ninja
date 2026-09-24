@@ -1,9 +1,10 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Ninja.Control.API.Model;
+using Ninja.ServiceDefaults;
 
 namespace Ninja.Control.API.Platform;
 
@@ -281,6 +282,7 @@ public static partial class Templates
             sb.AppendLine($"      Tenant__Currency: \"{tenant.Currency}\"");
             sb.AppendLine($"      Tenant__TimeZone: \"{tenant.TimeZone}\"");
             sb.AppendLine($"      Tenant__DefaultLanguage: \"{tenant.DefaultLanguage}\"");
+            sb.AppendLine($"      Tenant__ArabicStyle: \"{tenant.ArabicStyle}\"");
 
             var db = service switch
             {
@@ -467,6 +469,8 @@ public static partial class Templates
         yield return ("/api/catalog/items/{id}/pic", "catalog", null, forwarded);
         yield return ("/api/catalog/{*any}", "catalog", ["1.0", "1", "2.0"], forwarded);
         yield return ("/api/orders/{*any}", "ordering", v1, none);
+        // The kitchen's stations and its printers' queue live in Ordering too
+        yield return ("/api/kitchen/{*any}", "ordering", v1, none);
         yield return ("/api/places/{*any}", "spaces", v1, none);
         yield return ("/api/reservations/{*any}", "spaces", v1, none);
         yield return ("/api/stays/{*any}", "spaces", v1, none);

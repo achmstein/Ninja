@@ -177,6 +177,9 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Tenant__Currency: \"SAR\"");
         StringAssert.Contains(yaml, "Tenant__Country: \"SA\"");
         StringAssert.Contains(yaml, "Tenant__DefaultLanguage: \"en\"");
+        // Which Arabic the cafe speaks travels with the rest of its locale, so
+        // a push notification reads the same as the screens it follows
+        Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__ArabicStyle: \"standard\"").Count);
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
         StringAssert.Contains(yaml, "external: true");
         StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__branch__DESTINATIONS__d1__ADDRESS: \"http://blue-branch-api:8080\"");
