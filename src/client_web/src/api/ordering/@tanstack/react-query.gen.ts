@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { assignOrderCustomer, cancelOrder, claimGuestOrders, confirmOrder, createOrder, createOrderDraft, createPosOrder, deleteOrder, getAllOrders, getKitchenOrders, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, type Options, rateOrder, rejectGuestOrder, setOrderReady } from '../sdk.gen';
-import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ConfirmOrderData, ConfirmOrderError, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteOrderData, DeleteOrderResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse } from '../types.gen';
+import { assignOrderCustomer, cancelOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteOrder, deletePrintConnector, getAllOrders, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, setOrderReady, setOrderStationReady, testPrintKitchenStation, updateKitchenStation } from '../sdk.gen';
+import type { AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderError, CreatePosOrderData, CreatePosOrderError, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -288,7 +288,7 @@ export const getKitchenOrdersQueryKey = (options: Options<GetKitchenOrdersData>)
 /**
  * Confirmed orders in the kitchen, for the kitchen display (staff)
  *
- * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. Kitchen-only state; customers never see it.
+ * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.
  */
 export const getKitchenOrdersOptions = (options: Options<GetKitchenOrdersData>) => queryOptions<GetKitchenOrdersResponse, AxiosError<DefaultError>, GetKitchenOrdersResponse, ReturnType<typeof getKitchenOrdersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -306,7 +306,7 @@ export const getKitchenOrdersOptions = (options: Options<GetKitchenOrdersData>) 
 /**
  * Mark a confirmed order ready in the kitchen, or bring it back (staff)
  *
- * Ready true when it is done, false to bring a ready order back to the board. Repeating the current state is a no-op. Never shown to the customer.
+ * From the pass: ready true marks every part on a screen done, false brings the order back to the board. Refused for an order made only at printers. Repeating the current state is a no-op.
  */
 export const setOrderReadyMutation = (options?: Partial<Options<SetOrderReadyData>>): UseMutationOptions<SetOrderReadyResponse, AxiosError<SetOrderReadyError>, Options<SetOrderReadyData>> => {
     const mutationOptions: UseMutationOptions<SetOrderReadyResponse, AxiosError<SetOrderReadyError>, Options<SetOrderReadyData>> = {
@@ -385,6 +385,386 @@ export const createOrderDraftMutation = (options?: Partial<Options<CreateOrderDr
     const mutationOptions: UseMutationOptions<CreateOrderDraftResponse, AxiosError<DefaultError>, Options<CreateOrderDraftData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await createOrderDraft({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Mark a station's part of an order ready, or bring it back (staff)
+ *
+ * The order is ready once every part on a screen is. A part that only prints is never marked. Repeating the current state is a no-op.
+ */
+export const setOrderStationReadyMutation = (options?: Partial<Options<SetOrderStationReadyData>>): UseMutationOptions<SetOrderStationReadyResponse, AxiosError<SetOrderStationReadyError>, Options<SetOrderStationReadyData>> => {
+    const mutationOptions: UseMutationOptions<SetOrderStationReadyResponse, AxiosError<SetOrderStationReadyError>, Options<SetOrderStationReadyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setOrderStationReady({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Print an order's kitchen tickets again (staff)
+ *
+ * Every station that printed its part gets its ticket again, marked REPRINT. Refused for an order nothing of which went to a printer.
+ */
+export const reprintOrderKitchenTicketsMutation = (options?: Partial<Options<ReprintOrderKitchenTicketsData>>): UseMutationOptions<ReprintOrderKitchenTicketsResponse, AxiosError<ReprintOrderKitchenTicketsError>, Options<ReprintOrderKitchenTicketsData>> => {
+    const mutationOptions: UseMutationOptions<ReprintOrderKitchenTicketsResponse, AxiosError<ReprintOrderKitchenTicketsError>, Options<ReprintOrderKitchenTicketsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await reprintOrderKitchenTickets({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Print a station's ticket for an order again (staff)
+ */
+export const reprintKitchenTicketMutation = (options?: Partial<Options<ReprintKitchenTicketData>>): UseMutationOptions<ReprintKitchenTicketResponse, AxiosError<ReprintKitchenTicketError>, Options<ReprintKitchenTicketData>> => {
+    const mutationOptions: UseMutationOptions<ReprintKitchenTicketResponse, AxiosError<ReprintKitchenTicketError>, Options<ReprintKitchenTicketData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await reprintKitchenTicket({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getKitchenStationsQueryKey = (options: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
+
+/**
+ * The branch's kitchen stations (staff)
+ *
+ * In display order. A branch that has none gets its default station, which makes everything on one screen.
+ */
+export const getKitchenStationsOptions = (options: Options<GetKitchenStationsData>) => queryOptions<GetKitchenStationsResponse, AxiosError<DefaultError>, GetKitchenStationsResponse, ReturnType<typeof getKitchenStationsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getKitchenStations({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getKitchenStationsQueryKey(options)
+});
+
+/**
+ * Add a kitchen station (admin)
+ *
+ * Refused when another station already makes one of its categories, when it neither shows nor prints, or when it prints without a printer address.
+ */
+export const createKitchenStationMutation = (options?: Partial<Options<CreateKitchenStationData>>): UseMutationOptions<CreateKitchenStationResponse, AxiosError<CreateKitchenStationError>, Options<CreateKitchenStationData>> => {
+    const mutationOptions: UseMutationOptions<CreateKitchenStationResponse, AxiosError<CreateKitchenStationError>, Options<CreateKitchenStationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createKitchenStation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Remove a kitchen station (admin)
+ *
+ * The default station cannot be removed, nor one with orders still on its screen. Its categories go to the default station from the next order, and its unprinted tickets are dropped.
+ */
+export const deleteKitchenStationMutation = (options?: Partial<Options<DeleteKitchenStationData>>): UseMutationOptions<DeleteKitchenStationResponse, AxiosError<DeleteKitchenStationError>, Options<DeleteKitchenStationData>> => {
+    const mutationOptions: UseMutationOptions<DeleteKitchenStationResponse, AxiosError<DeleteKitchenStationError>, Options<DeleteKitchenStationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteKitchenStation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Change a kitchen station (admin)
+ *
+ * Orders already in the kitchen keep the station as it was when they arrived.
+ */
+export const updateKitchenStationMutation = (options?: Partial<Options<UpdateKitchenStationData>>): UseMutationOptions<UpdateKitchenStationResponse, AxiosError<UpdateKitchenStationError>, Options<UpdateKitchenStationData>> => {
+    const mutationOptions: UseMutationOptions<UpdateKitchenStationResponse, AxiosError<UpdateKitchenStationError>, Options<UpdateKitchenStationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateKitchenStation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Queue a test page for a station's printer (admin)
+ */
+export const testPrintKitchenStationMutation = (options?: Partial<Options<TestPrintKitchenStationData>>): UseMutationOptions<TestPrintKitchenStationResponse, AxiosError<TestPrintKitchenStationError>, Options<TestPrintKitchenStationData>> => {
+    const mutationOptions: UseMutationOptions<TestPrintKitchenStationResponse, AxiosError<TestPrintKitchenStationError>, Options<TestPrintKitchenStationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testPrintKitchenStation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getKitchenPrintJobsQueryKey = (options: Options<GetKitchenPrintJobsData>) => createQueryKey('getKitchenPrintJobs', options);
+
+/**
+ * Tickets waiting for a kitchen printer (staff)
+ *
+ * The branch's unprinted tickets from the last day, oldest first, each with its printer's address and the lines to print. A ticket with a live claim is being printed by another device.
+ */
+export const getKitchenPrintJobsOptions = (options: Options<GetKitchenPrintJobsData>) => queryOptions<GetKitchenPrintJobsResponse, AxiosError<DefaultError>, GetKitchenPrintJobsResponse, ReturnType<typeof getKitchenPrintJobsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getKitchenPrintJobs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getKitchenPrintJobsQueryKey(options)
+});
+
+/**
+ * Take a ticket to print (print host)
+ *
+ * 204 when this device has it; 409 when it is printed or another device holds it. A claim lapses after a minute.
+ */
+export const claimKitchenPrintJobMutation = (options?: Partial<Options<ClaimKitchenPrintJobData>>): UseMutationOptions<ClaimKitchenPrintJobResponse, AxiosError<ClaimKitchenPrintJobError>, Options<ClaimKitchenPrintJobData>> => {
+    const mutationOptions: UseMutationOptions<ClaimKitchenPrintJobResponse, AxiosError<ClaimKitchenPrintJobError>, Options<ClaimKitchenPrintJobData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await claimKitchenPrintJob({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Report a ticket printed (print host)
+ */
+export const markKitchenPrintJobPrintedMutation = (options?: Partial<Options<MarkKitchenPrintJobPrintedData>>): UseMutationOptions<MarkKitchenPrintJobPrintedResponse, AxiosError<MarkKitchenPrintJobPrintedError>, Options<MarkKitchenPrintJobPrintedData>> => {
+    const mutationOptions: UseMutationOptions<MarkKitchenPrintJobPrintedResponse, AxiosError<MarkKitchenPrintJobPrintedError>, Options<MarkKitchenPrintJobPrintedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markKitchenPrintJobPrinted({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Report the printer refused a ticket (print host)
+ *
+ * Lets the claim go so any device can try again; the error is kept for the till's warning.
+ */
+export const markKitchenPrintJobFailedMutation = (options?: Partial<Options<MarkKitchenPrintJobFailedData>>): UseMutationOptions<MarkKitchenPrintJobFailedResponse, AxiosError<MarkKitchenPrintJobFailedError>, Options<MarkKitchenPrintJobFailedData>> => {
+    const mutationOptions: UseMutationOptions<MarkKitchenPrintJobFailedResponse, AxiosError<MarkKitchenPrintJobFailedError>, Options<MarkKitchenPrintJobFailedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markKitchenPrintJobFailed({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Make a code to pair a print connector with this branch (admin)
+ *
+ * Good once, for ten minutes. The connector's tickets print in the language given.
+ */
+export const createConnectorPairingMutation = (options?: Partial<Options<CreateConnectorPairingData>>): UseMutationOptions<CreateConnectorPairingResponse, AxiosError<DefaultError>, Options<CreateConnectorPairingData>> => {
+    const mutationOptions: UseMutationOptions<CreateConnectorPairingResponse, AxiosError<DefaultError>, Options<CreateConnectorPairingData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createConnectorPairing({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPrintConnectorsQueryKey = (options: Options<GetPrintConnectorsData>) => createQueryKey('getPrintConnectors', options);
+
+/**
+ * The print connectors paired with this branch (staff)
+ *
+ * Each with the printers Windows has on its PC and when it last checked in.
+ */
+export const getPrintConnectorsOptions = (options: Options<GetPrintConnectorsData>) => queryOptions<GetPrintConnectorsResponse, AxiosError<DefaultError>, GetPrintConnectorsResponse, ReturnType<typeof getPrintConnectorsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPrintConnectors({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPrintConnectorsQueryKey(options)
+});
+
+/**
+ * Unpair a print connector (admin)
+ *
+ * Refused while a station prints on one of its printers. Its key stops working at once.
+ */
+export const deletePrintConnectorMutation = (options?: Partial<Options<DeletePrintConnectorData>>): UseMutationOptions<DeletePrintConnectorResponse, AxiosError<DeletePrintConnectorError>, Options<DeletePrintConnectorData>> => {
+    const mutationOptions: UseMutationOptions<DeletePrintConnectorResponse, AxiosError<DeletePrintConnectorError>, Options<DeletePrintConnectorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deletePrintConnector({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Trade a pairing code for a connector key (print connector)
+ *
+ * Anonymous: the code is the proof. The key is returned once and never again.
+ */
+export const pairPrintConnectorMutation = (options?: Partial<Options<PairPrintConnectorData>>): UseMutationOptions<PairPrintConnectorResponse, AxiosError<PairPrintConnectorError>, Options<PairPrintConnectorData>> => {
+    const mutationOptions: UseMutationOptions<PairPrintConnectorResponse, AxiosError<PairPrintConnectorError>, Options<PairPrintConnectorData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await pairPrintConnector({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Check in, with the printers Windows has (print connector)
+ */
+export const printConnectorHeartbeatMutation = (options?: Partial<Options<PrintConnectorHeartbeatData>>): UseMutationOptions<PrintConnectorHeartbeatResponse, AxiosError<DefaultError>, Options<PrintConnectorHeartbeatData>> => {
+    const mutationOptions: UseMutationOptions<PrintConnectorHeartbeatResponse, AxiosError<DefaultError>, Options<PrintConnectorHeartbeatData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await printConnectorHeartbeat({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPrintConnectorJobsQueryKey = (options: Options<GetPrintConnectorJobsData>) => createQueryKey('getPrintConnectorJobs', options);
+
+/**
+ * Tickets this connector can print (print connector)
+ *
+ * Its own stations' tickets, and those for network printers any device may print.
+ */
+export const getPrintConnectorJobsOptions = (options: Options<GetPrintConnectorJobsData>) => queryOptions<GetPrintConnectorJobsResponse, AxiosError<DefaultError>, GetPrintConnectorJobsResponse, ReturnType<typeof getPrintConnectorJobsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPrintConnectorJobs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPrintConnectorJobsQueryKey(options)
+});
+
+export const claimPrintConnectorJobMutation = (options?: Partial<Options<ClaimPrintConnectorJobData>>): UseMutationOptions<ClaimPrintConnectorJobResponse, AxiosError<DefaultError>, Options<ClaimPrintConnectorJobData>> => {
+    const mutationOptions: UseMutationOptions<ClaimPrintConnectorJobResponse, AxiosError<DefaultError>, Options<ClaimPrintConnectorJobData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await claimPrintConnectorJob({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const markPrintConnectorJobPrintedMutation = (options?: Partial<Options<MarkPrintConnectorJobPrintedData>>): UseMutationOptions<MarkPrintConnectorJobPrintedResponse, AxiosError<DefaultError>, Options<MarkPrintConnectorJobPrintedData>> => {
+    const mutationOptions: UseMutationOptions<MarkPrintConnectorJobPrintedResponse, AxiosError<DefaultError>, Options<MarkPrintConnectorJobPrintedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markPrintConnectorJobPrinted({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const markPrintConnectorJobFailedMutation = (options?: Partial<Options<MarkPrintConnectorJobFailedData>>): UseMutationOptions<MarkPrintConnectorJobFailedResponse, AxiosError<DefaultError>, Options<MarkPrintConnectorJobFailedData>> => {
+    const mutationOptions: UseMutationOptions<MarkPrintConnectorJobFailedResponse, AxiosError<DefaultError>, Options<MarkPrintConnectorJobFailedData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markPrintConnectorJobFailed({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

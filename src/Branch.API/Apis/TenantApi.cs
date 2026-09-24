@@ -105,12 +105,14 @@ public static partial class TenantApi
         tenant.PrimaryColor = string.IsNullOrEmpty(color) ? null : color;
         tenant.CustomerUrl = string.IsNullOrEmpty(customerUrl) ? null : customerUrl;
         tenant.Theme = theme;
+        if (request.BusinessType is { Length: > 0 } business) tenant.BusinessType = business.Trim().ToLowerInvariant();
         if (locale is { } l)
         {
             tenant.Country = l.Country;
             tenant.Currency = l.Currency;
             tenant.TimeZone = l.TimeZone;
             tenant.DefaultLanguage = l.Language;
+            if (l.ArabicStyle is not null) tenant.ArabicStyle = l.ArabicStyle;
         }
         // An owner may switch an entitled module off, never an unentitled one on
         tenant.ApplyFeatures(request.Features);
@@ -313,6 +315,13 @@ public static partial class TenantApi
             return theme;
         }
 
+        theme.Mode = string.IsNullOrWhiteSpace(dto.Mode) ? null : dto.Mode.Trim().ToLowerInvariant();
+        if (theme.Mode is not null && !TenantTheme.Modes.Contains(theme.Mode))
+        {
+            error = $"The default theme must be one of {string.Join(", ", TenantTheme.Modes)}, or none to follow the device.";
+            return theme;
+        }
+
         theme.HeaderSize = string.IsNullOrWhiteSpace(dto.HeaderSize) ? null : dto.HeaderSize.Trim().ToLowerInvariant();
         if (theme.HeaderSize is not null && !TenantTheme.HeaderSizes.Contains(theme.HeaderSize))
         {
@@ -346,13 +355,15 @@ public static partial class TenantApi
         var currency = dto.Currency?.Trim().ToUpperInvariant() ?? "";
         var timeZone = dto.TimeZone?.Trim() ?? "";
         var language = dto.Language?.Trim().ToLowerInvariant() ?? "";
+        var arabic = string.IsNullOrWhiteSpace(dto.ArabicStyle) ? null : dto.ArabicStyle.Trim().ToLowerInvariant();
 
         if (!CountryCode().IsMatch(country)) error = "The country must be an ISO 3166-1 alpha-2 code.";
         else if (!CurrencyCode().IsMatch(currency)) error = "The currency must be an ISO 4217 code.";
         else if (!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _)) error = $"'{timeZone}' is not a known time zone.";
         else if (language is not ("ar" or "en")) error = "The language must be ar or en.";
+        else if (arabic is not (null or "standard" or "egyptian")) error = "The Arabic style must be standard or egyptian.";
 
-        return new(country, currency, timeZone, language);
+        return new(country, currency, timeZone, language, arabic);
     }
 
     private static void SetCache(HttpContext http, string? v)
@@ -369,9 +380,10 @@ public static partial class TenantApi
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language ("ar" or "en").</summary>
-public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language)
+/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the apps speak. Null on a request leaves it as it is.</param>
+public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null)
 {
-    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage);
+    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.EffectiveArabicStyle);
 }
 
 public record TenantIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
@@ -398,10 +410,11 @@ public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, Tenant
 
 /// <param name="Surface">The page's colour, light scheme; its hue tints the neutrals of both schemes.</param>
 /// <param name="Dark">The dark scheme's own seeds, when derived ones do not suit the brand.</param>
-public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark, string? HeaderSize = null)
+/// <param name="Mode">"light" or "dark" for someone who has not chosen; null follows the device.</param>
+public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark, string? HeaderSize = null, string? Mode = null)
 {
     public static TenantThemeDto From(TenantTheme t)
-        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface), t.HeaderSize);
+        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface), t.HeaderSize, t.Mode);
 }
 
 public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
@@ -428,7 +441,8 @@ public record TenantResponse(
     TenantFeatures Features,
     TenantFeatures Entitlements,
     TenantLocaleDto Locale,
-    long Version)
+    long Version,
+    string? BusinessType = null)
 {
     public static TenantResponse From(Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
@@ -457,11 +471,13 @@ public record TenantResponse(
             t.Features,
             t.Entitlements,
             TenantLocaleDto.From(t),
-            v);
+            v,
+            t.BusinessType);
     }
 }
 
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null);
+/// <param name="BusinessType">What kind of place it is; the control plane says so when it creates the café, null leaves it.</param>
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, TenantFeatures Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

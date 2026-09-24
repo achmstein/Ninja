@@ -39,6 +39,9 @@ public class BranchContext(DbContextOptions<BranchContext> options) : DbContext(
             entity.Property(e => e.Currency).HasMaxLength(3).IsRequired();
             entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
             entity.Property(e => e.DefaultLanguage).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.ArabicStyle).HasMaxLength(10);
+            entity.Property(e => e.BusinessType).HasMaxLength(20);
+            entity.Ignore(e => e.EffectiveArabicStyle);
             entity.OwnsOne(e => e.Theme, b =>
             {
                 b.ToJson();

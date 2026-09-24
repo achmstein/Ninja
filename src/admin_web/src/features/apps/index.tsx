@@ -1,4 +1,5 @@
-import { Copy, Download, Smartphone } from 'lucide-react'
+import { Copy, Download, Printer, Smartphone } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { QRCodeSVG } from 'qrcode.react'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
 
 /**
  * The native till and kitchen display, and how a tablet gets them: one
@@ -87,6 +89,39 @@ export function AppsPage() {
             </Card>
           ))}
         </div>
+
+        {/* The kitchen's printer on a Windows PC: a download here, a pairing link from the branch's kitchen */}
+        {features.kds && (
+          <Card>
+            <CardContent className='flex flex-col gap-3 pt-6'>
+              <div className='flex items-center gap-3'>
+                <div className='bg-muted grid size-10 place-items-center rounded-lg'>
+                  <Printer className='size-5' />
+                </div>
+                <div className='text-base font-semibold'>{t('appsConnectorTitle')}</div>
+              </div>
+              <p className='text-muted-foreground text-sm'>{t('appsConnectorAbout')}</p>
+              <div className='flex flex-wrap gap-2 pt-2'>
+                {appsUrl ? (
+                  <Button asChild>
+                    <a href={`${appsUrl}/${CONNECTOR_FILE}`}>
+                      <Download className='size-4' />
+                      {t('appsDownloadWindows')}
+                    </a>
+                  </Button>
+                ) : (
+                  <Button disabled title={t('appsNotPublishedHere')}>
+                    <Download className='size-4' />
+                    {t('appsDownloadWindows')}
+                  </Button>
+                )}
+                <Button variant='outline' asChild>
+                  <Link to='/branches'>{t('appsConnectorPair')}</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* The connect code: the app scans it (or the staff type the address) once, on first open */}
         <Card>

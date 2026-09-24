@@ -1,17 +1,31 @@
 import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChefHat, Monitor, Pencil, Plus, Printer, Trash2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ChefHat,
+  Monitor,
+  Pencil,
+  Plus,
+  Printer,
+  Trash2,
+} from 'lucide-react'
 import { type BranchResponse } from '@/api/branch'
 import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { type KitchenStationView } from '@/api/ordering'
+import {
+  type KitchenStationView,
+  type PrintConnectorView,
+} from '@/api/ordering'
 import {
   createKitchenStationMutation,
   deleteKitchenStationMutation,
   getKitchenStationsOptions,
+  getPrintConnectorsOptions,
   testPrintKitchenStationMutation,
   updateKitchenStationMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
+import { updateKitchenStation } from '@/api/ordering/sdk.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -39,6 +53,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { DeleteConfirmDialog } from '@/features/menu/components/delete-confirm-dialog'
+import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {
   branch: BranchResponse | null
@@ -75,6 +90,17 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   })
   const stations = stationsQuery.data ?? []
 
+  const connectorsQuery = useQuery({
+    ...getPrintConnectorsOptions({
+      ...scope,
+      query: { 'api-version': API_VERSION },
+    }),
+    enabled: branch != null,
+    // Online/offline is worth keeping current while the dialog is open
+    refetchInterval: 15_000,
+  })
+  const connectors = connectorsQuery.data ?? []
+
   const categoriesQuery = useQuery(
     listCategoriesOptions({ query: { 'api-version': API_VERSION } })
   )
@@ -90,6 +116,40 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
     if (!open) setEditing(null)
     onOpenChange(open)
   }
+
+  // Moving a station renumbers the list as it now reads, so the kitchen
+  // screens' picker and the tills show it in the same order
+  const queryClient = useQueryClient()
+  const reorder = useMutation({
+    mutationFn: async ({ from, to }: { from: number; to: number }) => {
+      const next = [...stations]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      for (const [index, station] of next.entries()) {
+        if (Number(station.displayOrder) === index) continue
+        await updateKitchenStation({
+          ...scope,
+          path: { stationId: Number(station.id) },
+          query: { 'api-version': API_VERSION },
+          body: {
+            name: station.name ?? { en: '' },
+            categoryIds: station.categoryIds ?? [],
+            showsOnScreen: station.showsOnScreen ?? false,
+            printsTickets: station.printsTickets ?? false,
+            printerHost: station.printerHost ?? null,
+            printerPort: Number(station.printerPort ?? 9100),
+            connectorId: station.connectorId == null ? null : Number(station.connectorId),
+            printerName: station.printerName ?? null,
+            displayOrder: index,
+          },
+          throwOnError: true,
+        })
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getKitchenStations' }] }),
+    onError: (e) => toast.error(refusal(e) ?? t('failedToSaveStation')),
+  })
 
   return (
     <Dialog open={branch != null} onOpenChange={close}>
@@ -114,6 +174,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
             branchId={branchId}
             station={editing === 'new' ? null : editing}
             stations={stations}
+            connectors={connectors}
             categoryName={categoryName}
             onDone={() => setEditing(null)}
           />
@@ -125,7 +186,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
         ) : (
           <>
             <ul className='divide-y rounded-lg border'>
-              {stations.map((station) => (
+              {stations.map((station, index) => (
                 <li
                   key={String(station.id)}
                   className='flex items-start justify-between gap-3 p-3'
@@ -149,7 +210,11 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                       {station.printsTickets && (
                         <span className='flex items-center gap-1' dir='ltr'>
                           <Printer className='h-3.5 w-3.5' />
-                          {station.printerHost}:{String(station.printerPort)}
+                          {station.printerName
+                            ? `${station.printerName} · ${
+                                connectors.find((c) => Number(c.id) === Number(station.connectorId))?.name ?? ''
+                              }`
+                            : `${station.printerHost}:${String(station.printerPort)}`}
                         </span>
                       )}
                     </div>
@@ -164,14 +229,34 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                             .join(' · ')}
                     </div>
                   </div>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    aria-label={t('editStation')}
-                    onClick={() => setEditing(station)}
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </Button>
+                  <div className='flex shrink-0 items-center'>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      aria-label={t('moveUp')}
+                      disabled={index === 0 || reorder.isPending}
+                      onClick={() => reorder.mutate({ from: index, to: index - 1 })}
+                    >
+                      <ArrowUp className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      aria-label={t('moveDown')}
+                      disabled={index === stations.length - 1 || reorder.isPending}
+                      onClick={() => reorder.mutate({ from: index, to: index + 1 })}
+                    >
+                      <ArrowDown className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      aria-label={t('editStation')}
+                      onClick={() => setEditing(station)}
+                    >
+                      <Pencil className='h-4 w-4' />
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -181,6 +266,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                 {t('addStation')}
               </Button>
             </DialogFooter>
+            <PrintConnectors branchId={branchId} connectors={connectors} />
           </>
         )}
       </DialogContent>
@@ -192,12 +278,14 @@ function StationForm({
   branchId,
   station,
   stations,
+  connectors,
   categoryName,
   onDone,
 }: {
   branchId: number
   station: KitchenStationView | null
   stations: KitchenStationView[]
+  connectors: PrintConnectorView[]
   categoryName: Map<number, string>
   onDone: () => void
 }) {
@@ -222,6 +310,15 @@ function StationForm({
   const [printerPort, setPrinterPort] = useState(
     String(station?.printerPort ?? 9100)
   )
+  // Where the paper comes out: 'network' (an address any device in the shop
+  // reaches) or `${connectorId}|${printerName}`, a printer Windows knows on
+  // a paired connector
+  const [target, setTarget] = useState(
+    station?.connectorId != null && station.printerName
+      ? `${station.connectorId}|${station.printerName}`
+      : 'network'
+  )
+  const onConnector = target !== 'network'
   const [error, setError] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -295,7 +392,7 @@ function StationForm({
       setError(t('stationNeedsOutput'))
       return
     }
-    if (printsTickets && !printerHost.trim()) {
+    if (printsTickets && !onConnector && !printerHost.trim()) {
       setError(t('printerAddressRequired'))
       return
     }
@@ -306,8 +403,10 @@ function StationForm({
       categoryIds,
       showsOnScreen,
       printsTickets,
-      printerHost: printerHost.trim() || null,
+      printerHost: onConnector ? null : printerHost.trim() || null,
       printerPort: Number(printerPort) || 9100,
+      connectorId: printsTickets && onConnector ? Number(target.split('|')[0]) : null,
+      printerName: printsTickets && onConnector ? target.slice(target.indexOf('|') + 1) : null,
       displayOrder: station?.displayOrder ?? stations.length,
     }
     const query = { 'api-version': API_VERSION }
@@ -369,6 +468,32 @@ function StationForm({
         </div>
 
         {printsTickets && (
+          <div className='space-y-1.5'>
+            <Label htmlFor='printer-target'>{t('printerTarget')}</Label>
+            <select
+              id='printer-target'
+              className='border-input bg-background h-9 w-full rounded-md border px-3 text-sm'
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+            >
+              <option value='network'>{t('networkPrinter')}</option>
+              {connectors.map((connector) => (
+                <optgroup key={String(connector.id)} label={connector.name ?? ''}>
+                  {(connector.printers ?? []).map((printer) => (
+                    <option key={printer} value={`${connector.id}|${printer}`}>
+                      {printer}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            {connectors.length === 0 && (
+              <p className='text-muted-foreground text-xs'>{t('pairConnectorForWindowsPrinters')}</p>
+            )}
+          </div>
+        )}
+
+        {printsTickets && !onConnector && (
           <div className='grid grid-cols-[1fr_6rem] gap-3'>
             <div className='space-y-1.5'>
               <Label htmlFor='printer-host'>{t('printerAddress')}</Label>

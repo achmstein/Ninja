@@ -3,7 +3,7 @@
 // (Egyptian Arabic included).
 //
 // Usage: npm run generate:i18n
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,6 +13,9 @@ const outFile = join(here, '..', 'src', 'lib', 'i18n.gen.ts')
 
 const en = JSON.parse(readFileSync(join(arbDir, 'app_en.arb'), 'utf8'))
 const ar = JSON.parse(readFileSync(join(arbDir, 'app_ar.arb'), 'utf8'))
+// Modern Standard Arabic, for a café that speaks it; app_ar.arb is Egyptian
+const standardFile = join(arbDir, 'app_ar_001.arb')
+const arStandard = existsSync(standardFile) ? JSON.parse(readFileSync(standardFile, 'utf8')) : {}
 
 // ICU plural, possibly embedded mid-message:
 // "{count} {count, plural, =1{item} other{items}}"
@@ -56,12 +59,21 @@ function parsePlural(message) {
 const keys = Object.keys(en).filter((k) => !k.startsWith('@'))
 const missingAr = []
 const entries = []
+const standardEntries = []
 
 for (const key of keys) {
   const enMessage = en[key]
   const arMessage = ar[key]
   if (typeof enMessage !== 'string') continue
   if (typeof arMessage !== 'string') missingAr.push(key)
+
+  const standardMessage = arStandard[key]
+  if (typeof standardMessage === 'string') {
+    const standardPlural = parsePlural(standardMessage)
+    standardEntries.push(
+      `  ${key}: ${JSON.stringify(standardPlural ? standardPlural.forms : standardMessage)},`
+    )
+  }
 
   const plural = parsePlural(enMessage)
   if (plural) {
@@ -94,6 +106,11 @@ export type Message =
 export const messages = {
 ${entries.join('\n')}
 } as const satisfies Record<string, Message>
+
+/** Modern Standard Arabic, read instead of \`ar\` when the café speaks it. */
+export const messagesArStandard: Partial<Record<keyof typeof messages, string | PluralForms>> = {
+${standardEntries.join('\n')}
+}
 `
 
 writeFileSync(outFile, output)

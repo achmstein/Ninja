@@ -1,3 +1,4 @@
+import { useCafeTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
 import { create } from 'zustand'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
@@ -5,7 +6,7 @@ import { type TenantFeatures, type TenantResponse, type TenantWordmark } from '@
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
 import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
-import { useLanguage, type Language } from '@/lib/i18n'
+import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
 import { draftedTheme, onDraftedTheme } from './preview'
 
@@ -114,6 +115,9 @@ export async function bootBrand(queryClient: QueryClient) {
 
 /** Head tags and theme tokens for this brand. */
 export function applyBrand(brand: Brand, language: Language) {
+  // Which Arabic the café speaks, and the light or dark a person who never chose starts in
+  useArabicStyle.getState().set(brand.locale?.arabicStyle)
+  useCafeTheme.getState().set(brand.theme?.mode)
   setLink('icon', brand.icons.favicon, 'image/png')
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)

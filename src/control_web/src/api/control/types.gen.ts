@@ -104,6 +104,8 @@ export type BrandWordmarks = {
     arDark: null | BrandWordmark;
 };
 
+export type BusinessType = 'CoffeeShop' | 'Restaurant' | 'GameStation' | 'Other';
+
 export type CapacityResponse = {
     at: string;
     memTotalMb: number | string;
@@ -162,6 +164,9 @@ export type CreateTenantRequest = {
     provision?: null | boolean;
     force?: null | boolean;
     addons?: null | Array<Module>;
+    businessType?: BusinessType;
+    arabicStyle?: null | string;
+    defaultTheme?: null | string;
 };
 
 export type ExtendRequest = {
@@ -433,6 +438,7 @@ export type TenantLocaleDto = {
     currency: string;
     timeZone: string;
     language: string;
+    arabicStyle?: string;
 };
 
 export type TenantMetrics = {

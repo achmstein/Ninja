@@ -101,5 +101,8 @@
   "kitchenPrintingHint": "This device prints each station's tickets on its printer. One device in the shop is enough; keep it on.",
   "kitchenTicketReprint": "REPRINT",
   "kitchenTicketTest": "TEST",
-  "kitchenTicketTestBody": "This station's printer works"
+  "kitchenTicketTestBody": "This station's printer works",
+  "kitchenPrinterStuck": "Kitchen tickets are not printing: {stations}",
+  "@kitchenPrinterStuck": {"placeholders": {"stations": {"type": "String"}}},
+  "kitchenPrinterStuckHint": "Check the printer is on, has paper and its address is right."
 }

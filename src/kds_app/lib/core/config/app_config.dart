@@ -84,7 +84,8 @@ class AppConfig {
 
   // Who may run the kitchen display — mirrors the backend "Pos" policy,
   // the same gate kds_web applies
-  static const List<String> posRoles = ['Admin', 'Owner', 'Cashier'];
+  /// Who may run the kitchen display: the till's staff, or its own Kitchen account
+  static const List<String> posRoles = ['Admin', 'Owner', 'Cashier', 'Kitchen'];
 
   // App info (the name comes from the tenant brand)
   static const String appVersion = '1.0.0';

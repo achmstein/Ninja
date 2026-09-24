@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { messages, type Message } from './i18n.gen'
+import { arStandard } from './i18n.ar-standard'
+import { messages, messagesArStandard, type Message } from './i18n.gen'
 
 export type Language = 'en' | 'ar'
 
@@ -2115,22 +2116,42 @@ const pluralRules: Record<Language, Intl.PluralRules> = {
   ar: new Intl.PluralRules('ar-EG'),
 }
 
+/**
+ * Which Arabic the café speaks, from its brand: the dictionary's own Arabic
+ * is Egyptian; Modern Standard lives in ./i18n.ar-standard and wins when
+ * the café chose it.
+ */
+export const useArabicStyle = create<{ standard: boolean; set: (style: string | null | undefined) => void }>()(
+  (set) => ({
+    standard: false,
+    set: (style) => set({ standard: style === 'standard' }),
+  })
+)
+
+function standardArabic(key: string, language: Language) {
+  return language === 'ar' && useArabicStyle.getState().standard
+    ? (arStandard[key] ?? (messagesArStandard as Record<string, string | Record<string, string>>)[key])
+    : undefined
+}
+
 function format(
   entry: Message,
   language: Language,
-  params?: TranslateParams
+  params?: TranslateParams,
+  key?: string
 ): string {
+  const standard = key ? standardArabic(key, language) : undefined
   let template: string
   if ('plural' in entry) {
     const count = Number(params?.[entry.plural] ?? 0)
-    const forms = entry[language]
+    const forms = typeof standard === 'object' ? standard : entry[language]
     template =
       forms[`=${count}`] ??
       forms[pluralRules[language].select(count)] ??
       forms.other ??
       ''
   } else {
-    template = entry[language] || entry.en
+    template = (typeof standard === 'string' ? standard : entry[language]) || entry.en
   }
   if (!params) return template
   return template.replace(/\{(\w+)\}/g, (whole, name) =>
@@ -2140,8 +2161,10 @@ function format(
 
 export function useT() {
   const language = useLanguage((s) => s.language)
+  // Re-render when the café's Arabic arrives with its brand
+  useArabicStyle((s) => s.standard)
   return (key: TranslationKey, params?: TranslateParams) =>
-    format(dictionary[key], language, params)
+    format(dictionary[key], language, params, key)
 }
 
 // For code living outside the React tree (query-cache error handlers)
@@ -2149,7 +2172,7 @@ export function translate(
   key: TranslationKey,
   params?: TranslateParams
 ): string {
-  return format(dictionary[key], useLanguage.getState().language, params)
+  return format(dictionary[key], useLanguage.getState().language, params, key)
 }
 
 // Both sides of a key at once. Printed cards are read by customers in either

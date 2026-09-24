@@ -95,6 +95,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
+    Locale('ar', '001'),
     Locale('en'),
   ];
 
@@ -589,6 +590,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This station\'s printer works'**
   String get kitchenTicketTestBody;
+
+  /// No description provided for @kitchenPrinterStuck.
+  ///
+  /// In en, this message translates to:
+  /// **'Kitchen tickets are not printing: {stations}'**
+  String kitchenPrinterStuck(String stations);
+
+  /// No description provided for @kitchenPrinterStuckHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the printer is on, has paper and its address is right.'**
+  String get kitchenPrinterStuckHint;
 }
 
 class _AppLocalizationsDelegate
@@ -609,6 +622,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'ar':
+      {
+        switch (locale.countryCode) {
+          case '001':
+            return AppLocalizationsAr001();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'ar':

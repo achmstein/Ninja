@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { preview } from '@/lib/preview'
 import { applyThemeColor } from '@/lib/brand-theme'
@@ -34,16 +35,30 @@ const initialState: ThemeProviderState = {
 
 const ThemeContext = createContext<ThemeProviderState>(initialState)
 
+/**
+ * The café's starting theme, from its brand: what a customer who never
+ * chose sees. Null follows the device.
+ */
+export const useCafeTheme = create<{ mode: 'light' | 'dark' | null; set: (mode: string | null | undefined) => void }>()(
+  (set) => ({
+    mode: null,
+    set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
+  })
+)
+
 export function ThemeProvider({
   children,
   defaultTheme = DEFAULT_THEME,
   storageKey = THEME_COOKIE_NAME,
   ...props
 }: ThemeProviderProps) {
-  const [theme, _setTheme] = useState<Theme>(
-    // The control panel's preview asks for a scheme; a real visit reads the cookie
-    () => preview.theme ?? ((getCookie(storageKey) as Theme) || defaultTheme)
+  // The control panel's preview asks for a scheme; a real visit reads the
+  // cookie, and a customer who never chose gets the café's starting theme
+  const [chosen, _setTheme] = useState<Theme | null>(
+    () => preview.theme ?? ((getCookie(storageKey) as Theme) || null)
   )
+  const cafe = useCafeTheme((s) => s.mode)
+  const theme: Theme = chosen ?? cafe ?? defaultTheme
 
   // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
   const resolvedTheme = useMemo((): ResolvedTheme => {
@@ -87,7 +102,7 @@ export function ThemeProvider({
 
   const resetTheme = () => {
     removeCookie(storageKey)
-    _setTheme(DEFAULT_THEME)
+    _setTheme(null)
   }
 
   const contextValue = {

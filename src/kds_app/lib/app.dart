@@ -180,7 +180,8 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
     return MaterialApp.router(
       title: ref.watch(brandProvider).name.en.isEmpty ? 'Kitchen' : '${ref.watch(brandProvider).name.en} Kitchen',
       debugShowCheckedModeBanner: false,
-      locale: locale,
+      // Standard Arabic is its own locale (ar_001); Egyptian stays plain ar
+      locale: locale.languageCode == 'ar' && ref.watch(brandProvider).speaksStandardArabic ? const Locale('ar', '001') : locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

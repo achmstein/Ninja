@@ -66,12 +66,19 @@ class TenantLocale {
   /// `ar` or `en`
   final String language;
 
+  /// `standard` or `egyptian`: which Arabic the app speaks
+  final String arabicStyle;
+
   const TenantLocale({
     this.country = 'EG',
     this.currency = 'EGP',
     this.timeZone = 'Africa/Cairo',
     this.language = 'ar',
+    this.arabicStyle = 'egyptian',
   });
+
+  /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
+  bool get speaksStandardArabic => arabicStyle == 'standard';
 
   static const egypt = TenantLocale();
 
@@ -87,6 +94,9 @@ class TenantLocale {
       currency: read('currency', egypt.currency).toUpperCase(),
       timeZone: read('timeZone', egypt.timeZone),
       language: read('language', egypt.language).toLowerCase(),
+      // Older stacks do not say: Egyptian for Egypt, Standard anywhere else
+      arabicStyle: read('arabicStyle', read('country', egypt.country).toUpperCase() == 'EG' ? 'egyptian' : 'standard')
+          .toLowerCase(),
     );
   }
 
@@ -95,6 +105,7 @@ class TenantLocale {
         'currency': currency,
         'timeZone': timeZone,
         'language': language,
+        'arabicStyle': arabicStyle,
       };
 
   @override
@@ -104,10 +115,11 @@ class TenantLocale {
           other.country == country &&
           other.currency == currency &&
           other.timeZone == timeZone &&
-          other.language == language;
+          other.language == language &&
+          other.arabicStyle == arabicStyle;
 
   @override
-  int get hashCode => Object.hash(country, currency, timeZone, language);
+  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle);
 }
 
 /// The tenant this build runs for: name, one brand color, a logo, its locale
@@ -125,6 +137,9 @@ class TenantBrand {
   /// Absolute URL of the English wide logo, the one paper prints
   final String? wordmarkUrl;
   final TenantLocale locale;
+
+  /// `light` or `dark` for someone who has not chosen; null follows the device
+  final String? defaultThemeMode;
   final TenantFeatures features;
   final int version;
 
@@ -134,6 +149,7 @@ class TenantBrand {
     this.logoUrl,
     this.wordmarkUrl,
     this.locale = TenantLocale.egypt,
+    this.defaultThemeMode,
     this.features = TenantFeatures.all,
     this.version = 0,
   });
@@ -158,7 +174,8 @@ class TenantBrand {
       primaryColorHex: _hex(json['primaryColor'] as String?),
       logoUrl: absolute(logo),
       wordmarkUrl: absolute(wordmark),
-      locale: TenantLocale.parse(json['locale']),
+      locale: TenantLocale.parse(json['locale']),
+      defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
@@ -173,6 +190,7 @@ class TenantBrand {
         logoUrl: json['logoUrl'] as String?,
         wordmarkUrl: json['wordmarkUrl'] as String?,
         locale: TenantLocale.parse(json['locale']),
+        defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : json['defaultThemeMode']),
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
@@ -185,6 +203,7 @@ class TenantBrand {
         'logoUrl': logoUrl,
         'wordmarkUrl': wordmarkUrl,
         'locale': locale.toJson(),
+        'defaultThemeMode': defaultThemeMode,
         'features': features.toJson(),
         'version': version,
       };
@@ -209,3 +228,6 @@ class TenantBrand {
     return RegExp(r'^#[0-9a-f]{6}$').hasMatch(v) ? v : null;
   }
 }
+
+/// `light` or `dark`, anything else follows the device
+String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;

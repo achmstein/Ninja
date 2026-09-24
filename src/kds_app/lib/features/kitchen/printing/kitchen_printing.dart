@@ -140,3 +140,40 @@ final kitchenPrintHostProvider = Provider<KitchenPrintHost>((ref) {
   ref.onDispose(host.dispose);
   return host;
 });
+
+/// Tickets that have waited past a minute for a kitchen printer: the printer
+/// is off or out of paper, its address is wrong, or no device in the shop
+/// is printing. What the kitchen is warned about, as the till is; polled,
+/// since nothing pushes "still not printed".
+class StuckKitchenTicketsNotifier extends Notifier<List<KitchenTicket>> {
+  static const patience = Duration(minutes: 1);
+  Timer? _poll;
+
+  @override
+  List<KitchenTicket> build() {
+    ref.watch(selectedBranchIdProvider);
+    _poll?.cancel();
+    _poll = Timer.periodic(AppConfig.kitchenPoll, (_) => refresh());
+    ref.onDispose(() => _poll?.cancel());
+    Future.microtask(refresh);
+    return const [];
+  }
+
+  Future<void> refresh() async {
+    if (ref.read(selectedBranchIdProvider) == null) return;
+    try {
+      final waiting = await ApiKitchenPrintQueue(ref.read(kitchenApiProvider)).pending();
+      final now = DateTime.now().toUtc();
+      if (!ref.mounted) return;
+      state = [
+        for (final ticket in waiting)
+          if (now.difference(ticket.createdAt) > patience) ticket,
+      ];
+    } catch (_) {
+      // Offline, or the queue unreachable: say nothing new
+    }
+  }
+}
+
+final stuckKitchenTicketsProvider =
+    NotifierProvider<StuckKitchenTicketsNotifier, List<KitchenTicket>>(StuckKitchenTicketsNotifier.new);

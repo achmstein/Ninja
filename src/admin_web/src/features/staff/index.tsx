@@ -29,7 +29,7 @@ import { ManageBranchesDialog } from './components/manage-branches-dialog'
 const columnHelper = createAppColumnHelper<Customer>()
 
 // Owners first, then admins, then cashiers
-const STAFF_ROLES = ['Owner', 'Admin', 'Cashier'] as const
+const STAFF_ROLES = ['Owner', 'Admin', 'Cashier', 'Kitchen'] as const
 const rank = (user: Customer) =>
   STAFF_ROLES.findIndex((role) => (user.realmRoles ?? []).includes(role))
 
@@ -43,11 +43,11 @@ export function StaffManagement() {
 
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
-  // Staff = users holding the Owner, Admin or Cashier realm role
+  // Staff = users holding the Owner, Admin, Cashier or Kitchen realm role
   const staffQuery = useQuery({
     queryKey: ['staff'],
     queryFn: () =>
-      customersService.getCustomers({ role: 'Admin,Owner,Cashier', max: 200 }),
+      customersService.getCustomers({ role: 'Admin,Owner,Cashier,Kitchen', max: 200 }),
   })
 
   const staff = useMemo(
@@ -71,7 +71,9 @@ export function StaffManagement() {
       ? t('owner')
       : role === 'Admin'
         ? t('adminRole')
-        : t('cashierRole')
+        : role === 'Kitchen'
+          ? t('kitchenRole')
+          : t('cashierRole')
 
   const columns = useMemo(
     () =>

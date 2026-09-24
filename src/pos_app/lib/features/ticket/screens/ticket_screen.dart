@@ -645,6 +645,11 @@ class _Header extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
+        // A paid table can still be waiting on the kitchen's paper
+        if (ticket.isSettled) ...[
+          KitchenReprintButton(ticket: ticket),
+          const SizedBox(width: 8),
+        ],
         if (ticket.isSettled)
           FBadge(
             variant: FBadgeVariant.secondary,

@@ -106,12 +106,16 @@ public sealed class Provisioner(
                     ["name"] = new JsonObject { ["en"] = tenant.NameEn, ["ar"] = tenant.NameAr },
                     ["primaryColor"] = tenant.PrimaryColor,
                     ["customerUrl"] = hosts.CustomerUrl,
-                    ["features"] = kept?["features"]?.DeepClone() ?? PlanCatalog.ToFeatures(PlanCatalog.Entitlements(tenant)),
-                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject(),
+                    // The business picks which of the plan's modules are on the first day
+                    ["features"] = kept?["features"]?.DeepClone()
+                        ?? PlanCatalog.ToFeatures(BusinessProfiles.Starting(tenant.BusinessType, PlanCatalog.Entitlements(tenant))),
+                    ["theme"] = kept?["theme"]?.DeepClone() ?? new JsonObject { ["mode"] = tenant.DefaultTheme },
                     ["locale"] = new JsonObject
                     {
                         ["country"] = tenant.Country, ["currency"] = tenant.Currency, ["timeZone"] = tenant.TimeZone, ["language"] = tenant.DefaultLanguage,
+                        ["arabicStyle"] = tenant.ArabicStyle,
                     },
+                    ["businessType"] = BusinessProfiles.Key(tenant.BusinessType),
                 };
                 var images = SeedImages(tenant);
                 await stack.SeedBrandAsync(tenant, brand, images, ct);

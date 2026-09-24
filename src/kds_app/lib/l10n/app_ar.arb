@@ -98,5 +98,7 @@
   "kitchenPrintingHint": "هذا الجهاز يطبع تذاكر كل محطة على طابعتها. يكفي جهاز واحد في المحل؛ اتركه يعمل.",
   "kitchenTicketReprint": "إعادة طباعة",
   "kitchenTicketTest": "تجربة",
-  "kitchenTicketTestBody": "طابعة هذه المحطة تعمل"
+  "kitchenTicketTestBody": "طابعة هذه المحطة تعمل",
+  "kitchenPrinterStuck": "تذاكر المطبخ لا تُطبع: {stations}",
+  "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح."
 }

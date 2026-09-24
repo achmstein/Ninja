@@ -584,6 +584,8 @@ export function TicketScreen({
             </span>
           </h1>
         </div>
+        {/* A paid table can still be waiting on the kitchen's paper */}
+        {isSettled && <KitchenReprintButton lines={ticket.lines ?? []} />}
         {isSettled ? (
           <Badge className='h-8 px-3 text-sm' variant='secondary'>
             {t('settledBadge')}

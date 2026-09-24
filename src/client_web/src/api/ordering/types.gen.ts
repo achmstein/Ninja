@@ -42,8 +42,28 @@ export type ClaimGuestOrdersResponse = {
     claimed: number | string;
 };
 
+export type ClaimPrintJobRequest = {
+    deviceId: string;
+};
+
 export type ConfirmOrderCommand = {
     orderNumber: number | string;
+};
+
+export type ConnectorHeartbeatRequest = {
+    printers: null | Array<string>;
+};
+
+export type ConnectorPairedView = {
+    connectorId: number | string;
+    key: string;
+    branchId: number | string;
+    language: string;
+};
+
+export type ConnectorPairingView = {
+    code: string;
+    expiresAt: string;
 };
 
 export type CreateOrderDraftCommand = {
@@ -67,6 +87,14 @@ export type CreateOrderRequest = {
     promoCode?: null | string;
 };
 
+export type CreatePairingRequest = {
+    language: null | string;
+};
+
+export type FailPrintJobRequest = {
+    error: null | string;
+};
+
 export type KitchenOrder = {
     orderNumber?: number | string;
     date?: string;
@@ -79,6 +107,7 @@ export type KitchenOrder = {
     customerName?: null | string;
     customerNote?: null | string;
     items?: Array<KitchenOrderItem>;
+    parts?: Array<KitchenOrderPart>;
 };
 
 export type KitchenOrderItem = {
@@ -86,6 +115,65 @@ export type KitchenOrderItem = {
     units?: number | string;
     customizationsDescription?: null | LocalizedText;
     specialInstructions?: null | string;
+    stationId?: null | number | string;
+};
+
+export type KitchenOrderPart = {
+    stationId?: number | string;
+    stationName?: LocalizedText;
+    showsOnScreen?: boolean;
+    printsTickets?: boolean;
+    readyAt?: null | string;
+};
+
+export type KitchenStationRequest = {
+    name: LocalizedText;
+    categoryIds: null | Array<number | string>;
+    showsOnScreen: boolean;
+    printsTickets: boolean;
+    printerHost: null | string;
+    printerPort: null | number | string;
+    displayOrder?: number | string;
+    connectorId?: null | number | string;
+    printerName?: null | string;
+};
+
+export type KitchenStationView = {
+    id?: number | string;
+    name?: LocalizedText;
+    categoryIds?: Array<number | string>;
+    showsOnScreen?: boolean;
+    printsTickets?: boolean;
+    printerHost?: null | string;
+    printerPort?: number | string;
+    connectorId?: null | number | string;
+    printerName?: null | string;
+    isDefault?: boolean;
+    displayOrder?: number | string;
+};
+
+export type KitchenTicket = {
+    jobId?: number | string;
+    stationId?: number | string;
+    stationName?: LocalizedText;
+    printerHost?: null | string;
+    printerPort?: number | string;
+    connectorId?: null | number | string;
+    printerName?: null | string;
+    createdAt?: string;
+    claimedAt?: null | string;
+    attempts?: number | string;
+    lastError?: null | string;
+    isReprint?: boolean;
+    isTest?: boolean;
+    orderNumber?: null | number | string;
+    confirmedAt?: null | string;
+    source?: null | string;
+    placeKind?: null | string;
+    placeName?: null | LocalizedText;
+    customerName?: null | string;
+    customerNote?: null | string;
+    items?: Array<KitchenOrderItem>;
 };
 
 export type LocalizedText = {
@@ -210,6 +298,11 @@ export type PaginatedResultOfOrderSummary = {
     hasPreviousPage?: boolean;
 };
 
+export type PairConnectorRequest = {
+    code: null | string;
+    machineName: null | string;
+};
+
 export type PosOrderRequest = {
     items: Array<BasketItem>;
     customerNote?: null | string;
@@ -227,6 +320,15 @@ export type PosOrderRequest = {
 
 export type PosOrderResponse = {
     orderId: number | string;
+};
+
+export type PrintConnectorView = {
+    id: number | string;
+    name: string;
+    pairedAt: string;
+    lastSeenAt: null | string;
+    isOnline: boolean;
+    printers: Array<string>;
 };
 
 export type RateOrderRequest = {
@@ -382,6 +484,10 @@ export type ConfirmOrderErrors = {
      * Forbidden
      */
     403: unknown;
+    /**
+     * Not Found
+     */
+    404: string;
 };
 
 export type ConfirmOrderError = ConfirmOrderErrors[keyof ConfirmOrderErrors];
@@ -421,6 +527,10 @@ export type CancelOrderErrors = {
      * Forbidden
      */
     403: unknown;
+    /**
+     * Not Found
+     */
+    404: string;
 };
 
 export type CancelOrderError = CancelOrderErrors[keyof CancelOrderErrors];
@@ -747,6 +857,7 @@ export type GetKitchenOrdersData = {
     body?: never;
     path?: never;
     query: {
+        stationId?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -965,3 +1076,816 @@ export type CreateOrderDraftResponses = {
 };
 
 export type CreateOrderDraftResponse = CreateOrderDraftResponses[keyof CreateOrderDraftResponses];
+
+export type SetOrderStationReadyData = {
+    body: SetOrderReadyRequest;
+    headers: {
+        'x-requestid': string;
+    };
+    path: {
+        orderId: number;
+        stationId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/stations/{stationId}/ready';
+};
+
+export type SetOrderStationReadyErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetOrderStationReadyError = SetOrderStationReadyErrors[keyof SetOrderStationReadyErrors];
+
+export type SetOrderStationReadyResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SetOrderStationReadyResponse = SetOrderStationReadyResponses[keyof SetOrderStationReadyResponses];
+
+export type ReprintOrderKitchenTicketsData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/reprint';
+};
+
+export type ReprintOrderKitchenTicketsErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type ReprintOrderKitchenTicketsError = ReprintOrderKitchenTicketsErrors[keyof ReprintOrderKitchenTicketsErrors];
+
+export type ReprintOrderKitchenTicketsResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ReprintOrderKitchenTicketsResponse = ReprintOrderKitchenTicketsResponses[keyof ReprintOrderKitchenTicketsResponses];
+
+export type ReprintKitchenTicketData = {
+    body?: never;
+    path: {
+        orderId: number;
+        stationId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/stations/{stationId}/reprint';
+};
+
+export type ReprintKitchenTicketErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type ReprintKitchenTicketError = ReprintKitchenTicketErrors[keyof ReprintKitchenTicketErrors];
+
+export type ReprintKitchenTicketResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ReprintKitchenTicketResponse = ReprintKitchenTicketResponses[keyof ReprintKitchenTicketResponses];
+
+export type GetKitchenStationsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/stations';
+};
+
+export type GetKitchenStationsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetKitchenStationsResponses = {
+    /**
+     * OK
+     */
+    200: Array<KitchenStationView>;
+};
+
+export type GetKitchenStationsResponse = GetKitchenStationsResponses[keyof GetKitchenStationsResponses];
+
+export type CreateKitchenStationData = {
+    body: KitchenStationRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/stations';
+};
+
+export type CreateKitchenStationErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CreateKitchenStationError = CreateKitchenStationErrors[keyof CreateKitchenStationErrors];
+
+export type CreateKitchenStationResponses = {
+    /**
+     * OK
+     */
+    200: KitchenStationView;
+};
+
+export type CreateKitchenStationResponse = CreateKitchenStationResponses[keyof CreateKitchenStationResponses];
+
+export type DeleteKitchenStationData = {
+    body?: never;
+    path: {
+        stationId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/stations/{stationId}';
+};
+
+export type DeleteKitchenStationErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteKitchenStationError = DeleteKitchenStationErrors[keyof DeleteKitchenStationErrors];
+
+export type DeleteKitchenStationResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteKitchenStationResponse = DeleteKitchenStationResponses[keyof DeleteKitchenStationResponses];
+
+export type UpdateKitchenStationData = {
+    body: KitchenStationRequest;
+    path: {
+        stationId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/stations/{stationId}';
+};
+
+export type UpdateKitchenStationErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateKitchenStationError = UpdateKitchenStationErrors[keyof UpdateKitchenStationErrors];
+
+export type UpdateKitchenStationResponses = {
+    /**
+     * OK
+     */
+    200: KitchenStationView;
+};
+
+export type UpdateKitchenStationResponse = UpdateKitchenStationResponses[keyof UpdateKitchenStationResponses];
+
+export type TestPrintKitchenStationData = {
+    body?: never;
+    path: {
+        stationId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/stations/{stationId}/test-print';
+};
+
+export type TestPrintKitchenStationErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type TestPrintKitchenStationError = TestPrintKitchenStationErrors[keyof TestPrintKitchenStationErrors];
+
+export type TestPrintKitchenStationResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type TestPrintKitchenStationResponse = TestPrintKitchenStationResponses[keyof TestPrintKitchenStationResponses];
+
+export type GetKitchenPrintJobsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/print-jobs';
+};
+
+export type GetKitchenPrintJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetKitchenPrintJobsResponses = {
+    /**
+     * OK
+     */
+    200: Array<KitchenTicket>;
+};
+
+export type GetKitchenPrintJobsResponse = GetKitchenPrintJobsResponses[keyof GetKitchenPrintJobsResponses];
+
+export type ClaimKitchenPrintJobData = {
+    body: ClaimPrintJobRequest;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/print-jobs/{jobId}/claim';
+};
+
+export type ClaimKitchenPrintJobErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type ClaimKitchenPrintJobError = ClaimKitchenPrintJobErrors[keyof ClaimKitchenPrintJobErrors];
+
+export type ClaimKitchenPrintJobResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ClaimKitchenPrintJobResponse = ClaimKitchenPrintJobResponses[keyof ClaimKitchenPrintJobResponses];
+
+export type MarkKitchenPrintJobPrintedData = {
+    body?: never;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/print-jobs/{jobId}/printed';
+};
+
+export type MarkKitchenPrintJobPrintedErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type MarkKitchenPrintJobPrintedError = MarkKitchenPrintJobPrintedErrors[keyof MarkKitchenPrintJobPrintedErrors];
+
+export type MarkKitchenPrintJobPrintedResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkKitchenPrintJobPrintedResponse = MarkKitchenPrintJobPrintedResponses[keyof MarkKitchenPrintJobPrintedResponses];
+
+export type MarkKitchenPrintJobFailedData = {
+    body: FailPrintJobRequest;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/print-jobs/{jobId}/failed';
+};
+
+export type MarkKitchenPrintJobFailedErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type MarkKitchenPrintJobFailedError = MarkKitchenPrintJobFailedErrors[keyof MarkKitchenPrintJobFailedErrors];
+
+export type MarkKitchenPrintJobFailedResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkKitchenPrintJobFailedResponse = MarkKitchenPrintJobFailedResponses[keyof MarkKitchenPrintJobFailedResponses];
+
+export type CreateConnectorPairingData = {
+    body: CreatePairingRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connectors/pairing';
+};
+
+export type CreateConnectorPairingErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreateConnectorPairingResponses = {
+    /**
+     * OK
+     */
+    200: ConnectorPairingView;
+};
+
+export type CreateConnectorPairingResponse = CreateConnectorPairingResponses[keyof CreateConnectorPairingResponses];
+
+export type GetPrintConnectorsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connectors';
+};
+
+export type GetPrintConnectorsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetPrintConnectorsResponses = {
+    /**
+     * OK
+     */
+    200: Array<PrintConnectorView>;
+};
+
+export type GetPrintConnectorsResponse = GetPrintConnectorsResponses[keyof GetPrintConnectorsResponses];
+
+export type DeletePrintConnectorData = {
+    body?: never;
+    path: {
+        connectorId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connectors/{connectorId}';
+};
+
+export type DeletePrintConnectorErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeletePrintConnectorError = DeletePrintConnectorErrors[keyof DeletePrintConnectorErrors];
+
+export type DeletePrintConnectorResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeletePrintConnectorResponse = DeletePrintConnectorResponses[keyof DeletePrintConnectorResponses];
+
+export type PairPrintConnectorData = {
+    body: PairConnectorRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/pair';
+};
+
+export type PairPrintConnectorErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+};
+
+export type PairPrintConnectorError = PairPrintConnectorErrors[keyof PairPrintConnectorErrors];
+
+export type PairPrintConnectorResponses = {
+    /**
+     * OK
+     */
+    200: ConnectorPairedView;
+};
+
+export type PairPrintConnectorResponse = PairPrintConnectorResponses[keyof PairPrintConnectorResponses];
+
+export type PrintConnectorHeartbeatData = {
+    body: ConnectorHeartbeatRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/heartbeat';
+};
+
+export type PrintConnectorHeartbeatResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type PrintConnectorHeartbeatResponse = PrintConnectorHeartbeatResponses[keyof PrintConnectorHeartbeatResponses];
+
+export type GetPrintConnectorJobsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/jobs';
+};
+
+export type GetPrintConnectorJobsResponses = {
+    /**
+     * OK
+     */
+    200: Array<KitchenTicket>;
+};
+
+export type GetPrintConnectorJobsResponse = GetPrintConnectorJobsResponses[keyof GetPrintConnectorJobsResponses];
+
+export type ClaimPrintConnectorJobData = {
+    body?: never;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/jobs/{jobId}/claim';
+};
+
+export type ClaimPrintConnectorJobErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type ClaimPrintConnectorJobResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ClaimPrintConnectorJobResponse = ClaimPrintConnectorJobResponses[keyof ClaimPrintConnectorJobResponses];
+
+export type MarkPrintConnectorJobPrintedData = {
+    body?: never;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/jobs/{jobId}/printed';
+};
+
+export type MarkPrintConnectorJobPrintedErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type MarkPrintConnectorJobPrintedResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkPrintConnectorJobPrintedResponse = MarkPrintConnectorJobPrintedResponses[keyof MarkPrintConnectorJobPrintedResponses];
+
+export type MarkPrintConnectorJobFailedData = {
+    body: FailPrintJobRequest;
+    path: {
+        jobId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/kitchen/connector/jobs/{jobId}/failed';
+};
+
+export type MarkPrintConnectorJobFailedErrors = {
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+};
+
+export type MarkPrintConnectorJobFailedResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkPrintConnectorJobFailedResponse = MarkPrintConnectorJobFailedResponses[keyof MarkPrintConnectorJobFailedResponses];

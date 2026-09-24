@@ -132,6 +132,15 @@ public static partial class ControlApi
         var locale = LocaleFields.Normalize(request.Country, request.Currency, request.TimeZone, request.DefaultLanguage, out var localeError);
         if (localeError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = localeError });
+        var arabicStyle = string.IsNullOrWhiteSpace(request.ArabicStyle)
+            // An Egyptian café speaks Egyptian unless told otherwise; everyone else, Standard
+            ? (locale.Country == "EG" ? "egyptian" : "standard")
+            : request.ArabicStyle.Trim().ToLowerInvariant();
+        if (arabicStyle is not ("standard" or "egyptian"))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The Arabic style must be standard or egyptian." });
+        var defaultTheme = string.IsNullOrWhiteSpace(request.DefaultTheme) ? null : request.DefaultTheme.Trim().ToLowerInvariant();
+        if (defaultTheme is not (null or "light" or "dark"))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The default theme must be light, dark, or none to follow the device." });
         var domain = TenantHosts.NormalizeCustomerDomain(request.CustomerDomain, options.Value, out var domainError);
         if (domainError is not null)
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = domainError });
@@ -154,6 +163,9 @@ public static partial class ControlApi
             TimeZone = locale.TimeZone,
             DefaultLanguage = locale.Language,
             PrimaryColor = string.IsNullOrEmpty(color) ? null : color,
+            BusinessType = request.BusinessType,
+            ArabicStyle = arabicStyle,
+            DefaultTheme = defaultTheme,
             CustomerDomain = domain,
             OwnerEmail = request.OwnerEmail.Trim().ToLowerInvariant(),
             ContactName = Clean(request.ContactName),
@@ -414,7 +426,10 @@ public record CreateTenantRequest(
     string? Notes = null,
     bool? Provision = true,
     bool? Force = null,
-    Module[]? Addons = null);
+    Module[]? Addons = null,
+    BusinessType BusinessType = BusinessType.Other,
+    string? ArabicStyle = null,
+    string? DefaultTheme = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -454,9 +469,10 @@ public record TenantSummary(string Slug, string NameEn, string? NameAr, TenantKi
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language.</summary>
-public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language)
+/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's apps speak.</param>
+public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string ArabicStyle = "standard")
 {
-    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage);
+    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.ArabicStyle);
 }
 
 public record StepDto(string Name, StepStatus Status, DateTimeOffset StartedAt, DateTimeOffset? FinishedAt, string? Output);

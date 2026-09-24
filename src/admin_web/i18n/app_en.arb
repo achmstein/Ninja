@@ -769,5 +769,44 @@
   "stationDeleted": "Station removed",
   "failedToSaveStation": "Could not save the station",
   "stationNeedsOutput": "Choose a kitchen screen, a printer, or both",
-  "printerAddressRequired": "Enter the printer's address"
+  "printerAddressRequired": "Enter the printer's address",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "somethingWentWrong": "Something went wrong",
+  "copy": "Copy",
+  "online": "Online",
+  "offline": "Offline",
+  "printConnectors": "Print connectors",
+  "pairWindowsPc": "Pair a Windows PC",
+  "connectorStepDownload": "On the PC next to the printer, download and run",
+  "connectorStepRun": "When it asks, paste this link. It installs itself and starts with Windows.",
+  "pairingLinkCopied": "Link copied",
+  "pairingLinkExpires": "Good once, until {time}",
+  "@pairingLinkExpires": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "noPrintConnectors": "No Windows PC prints for this branch yet. Tills and kitchen tablets can print to network printers without one.",
+  "noPrintersReported": "No printers reported yet",
+  "connectorRemoved": "Connector removed",
+  "printerTarget": "Printer",
+  "networkPrinter": "Network printer (IP address)",
+  "pairConnectorForWindowsPrinters": "To use a USB printer or one installed in Windows, pair a Windows PC below.",
+  "appsConnectorTitle": "Print connector for Windows",
+  "appsConnectorAbout": "Prints the kitchen's tickets on any printer a Windows PC in the shop has, USB or network, silently. Install it once on the PC next to the printer; it runs in the background and starts with Windows.",
+  "appsDownloadWindows": "Download for Windows",
+  "appsConnectorPair": "Pair it from Branches → Kitchen",
+  "kitchenRole": "Kitchen display",
+  "startingTheme": "Starting theme",
+  "startingThemeHint": "What a new customer or device starts in, until they choose their own.",
+  "followDevice": "Follow the device",
+  "themeLightOption": "Light",
+  "themeDarkOption": "Dark",
+  "arabicStyleLabel": "Arabic",
+  "arabicStyleLabelHint": "Which Arabic the apps speak to staff and customers.",
+  "arabicStandardOption": "Standard",
+  "arabicEgyptianOption": "Egyptian"
 }

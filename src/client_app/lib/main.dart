@@ -258,7 +258,8 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       title: brandName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      locale: locale,
+      // Standard Arabic is its own locale (ar_001); Egyptian stays plain ar
+      locale: locale.languageCode == 'ar' && brand.locale.speaksStandardArabic ? const Locale('ar', '001') : locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: _materialTheme(Brightness.light, locale, brand, brandFont),

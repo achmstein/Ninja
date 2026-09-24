@@ -71,6 +71,14 @@ import {
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
 import { LocaleFields } from './new-tenant-locale'
+import {
+  BusinessPicker,
+  LookFields,
+  SUGGESTED_MODULES,
+  type ArabicStyle,
+  type DefaultTheme,
+} from './new-tenant-business'
+import type { BusinessType } from '@/api/control'
 
 type SlotFiles = Partial<Record<ImageSlot, File>>
 
@@ -147,7 +155,14 @@ export function NewTenantPage() {
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [plan, setPlan] = useState<TenantPlanName>('Free')
-  const [addons, setAddons] = useState<ModuleName[]>([])
+  const [addons, setAddons] = useState<ModuleName[]>(SUGGESTED_MODULES.CoffeeShop)
+  const [addonsTouched, setAddonsTouched] = useState(false)
+  const [business, setBusiness] = useState<BusinessType>('CoffeeShop')
+  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
+    FIRST_COUNTRY.code === 'EG' ? 'egyptian' : 'standard'
+  )
+  const [arabicTouched, setArabicTouched] = useState(false)
+  const [defaultTheme, setDefaultTheme] = useState<DefaultTheme>('device')
   const plans = useQuery(getPlansOptions())
   const planRow = plans.data?.plans.find((p) => p.plan === plan)
   const included = new Set((planRow?.included ?? []).map(moduleName))
@@ -216,8 +231,16 @@ export function NewTenantPage() {
     if (!seedTouched) setSeed(SEED_DEFAULT[next])
   }
 
+  // The kind of place ticks the add-ons it usually needs, until someone picks their own
+  const pickBusiness = (next: BusinessType) => {
+    setBusiness(next)
+    if (!addonsTouched) setAddons(SUGGESTED_MODULES[next])
+  }
+
   const pickCountry = (country: Country) => {
     setCountryCode(country.code)
+    // An Egyptian café speaks Egyptian; anywhere else, Standard — until chosen
+    if (!arabicTouched) setArabicStyle(country.code === 'EG' ? 'egyptian' : 'standard')
     if (!currencyTouched) setCurrency(country.currency)
     if (!timeZoneTouched) setTimeZone(country.timeZones[0])
     if (!languageTouched) setDefaultLanguage(country.language)
@@ -246,6 +269,9 @@ export function NewTenantPage() {
       address: address.trim() || null,
       plan,
       addons: addons.filter((m) => !included.has(m)),
+      businessType: business,
+      arabicStyle,
+      defaultTheme: defaultTheme === 'device' ? null : defaultTheme,
       notes: notes.trim() || null,
       provision: true,
       force,
@@ -267,6 +293,16 @@ export function NewTenantPage() {
 
       <div className='grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]'>
         <form onSubmit={submit} className='flex min-w-0 flex-col gap-6'>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('businessType')}</CardTitle>
+            </CardHeader>
+            <CardContent className='grid gap-2'>
+              <BusinessPicker value={business} onChange={pickBusiness} />
+              <p className='text-muted-foreground text-xs'>{t('businessTypeHint')}</p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>{t('record')}</CardTitle>
@@ -433,7 +469,10 @@ export function NewTenantPage() {
                             <Checkbox
                               checked={isIncluded || addons.includes(m)}
                               disabled={isIncluded || kind === 'Demo'}
-                              onCheckedChange={(v) => setAddons((a) => (v === true ? [...a, m] : a.filter((x) => x !== m)))}
+                              onCheckedChange={(v) => {
+                                setAddonsTouched(true)
+                                setAddons((a) => (v === true ? [...a, m] : a.filter((x) => x !== m)))
+                              }}
                             />
                             {t(moduleLabelKey[m])}
                             {isIncluded && <span className='text-muted-foreground text-xs'>· {t('includedInPlan')}</span>}
@@ -477,6 +516,17 @@ export function NewTenantPage() {
                   setLanguageTouched(true)
                 }}
               />
+              <div className='mt-4'>
+                <LookFields
+                  arabicStyle={arabicStyle}
+                  onArabicStyle={(v) => {
+                    setArabicStyle(v)
+                    setArabicTouched(true)
+                  }}
+                  defaultTheme={defaultTheme}
+                  onDefaultTheme={setDefaultTheme}
+                />
+              </div>
             </CardContent>
           </Card>
 

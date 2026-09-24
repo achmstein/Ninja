@@ -73,6 +73,14 @@ namespace Ninja.Branch.API.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ArabicStyle")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("BusinessType")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasMaxLength(2)
@@ -260,6 +268,8 @@ namespace Ninja.Branch.API.Migrations
                             b1.Property<string>("FontLatin");
 
                             b1.Property<string>("HeaderSize");
+
+                            b1.Property<string>("Mode");
 
                             b1.Property<string>("Radius");
 

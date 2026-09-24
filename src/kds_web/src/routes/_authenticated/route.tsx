@@ -21,7 +21,8 @@ import { BrandMark } from '@/components/brand-mark'
 // Everything the kitchen calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. A kitchen screen signs
 // in with a cashier account.
-const ALLOWED_ROLES = ['Admin', 'Owner', 'Cashier']
+// A kitchen display may sign in with its own Kitchen account, or a cashier's
+const ALLOWED_ROLES = ['Admin', 'Owner', 'Cashier', 'Kitchen']
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedRoute,

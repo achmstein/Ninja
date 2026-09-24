@@ -76,6 +76,7 @@ export type TenantLocaleDto = {
     currency: string;
     timeZone: string;
     language: string;
+    arabicStyle?: null | string;
 };
 
 export type TenantResponse = {
@@ -94,6 +95,7 @@ export type TenantResponse = {
     entitlements: TenantFeatures;
     locale: TenantLocaleDto;
     version: number | string;
+    businessType?: null | string;
 };
 
 export type TenantThemeDarkDto = {
@@ -110,6 +112,7 @@ export type TenantThemeDto = {
     fontArabic: null | string;
     dark: null | TenantThemeDarkDto;
     headerSize?: null | string;
+    mode?: null | string;
 };
 
 export type TenantWordmark = {
@@ -153,6 +156,7 @@ export type UpdateTenantRequest = {
     features: TenantFeatures;
     theme?: null | TenantThemeDto;
     locale?: null | TenantLocaleDto;
+    businessType?: null | string;
 };
 
 export type GetBranchesData = {

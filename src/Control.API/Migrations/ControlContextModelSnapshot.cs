@@ -302,6 +302,10 @@ namespace Ninja.Control.API.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ArabicStyle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("AssistantSecret")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -310,6 +314,9 @@ namespace Ninja.Control.API.Migrations
                     b.Property<string>("BrokerPassword")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
+
+                    b.Property<int>("BusinessType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ContactName")
                         .HasMaxLength(80)
@@ -345,6 +352,9 @@ namespace Ninja.Control.API.Migrations
                         .IsRequired()
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
+
+                    b.Property<string>("DefaultTheme")
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("DestroyWarnedAt")
                         .HasColumnType("timestamp with time zone");

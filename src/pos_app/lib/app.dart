@@ -226,7 +226,8 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     return MaterialApp.router(
       title: ref.watch(brandProvider).name.en.isEmpty ? 'POS' : '${ref.watch(brandProvider).name.en} POS',
       debugShowCheckedModeBanner: false,
-      locale: locale,
+      // Standard Arabic is its own locale (ar_001); Egyptian stays plain ar
+      locale: locale.languageCode == 'ar' && ref.watch(brandProvider).locale.speaksStandardArabic ? const Locale('ar', '001') : locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

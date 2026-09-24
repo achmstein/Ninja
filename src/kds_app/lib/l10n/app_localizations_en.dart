@@ -274,4 +274,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kitchenTicketTestBody => 'This station\'s printer works';
+
+  @override
+  String kitchenPrinterStuck(String stations) {
+    return 'Kitchen tickets are not printing: $stations';
+  }
+
+  @override
+  String get kitchenPrinterStuckHint =>
+      'Check the printer is on, has paper and its address is right.';
 }

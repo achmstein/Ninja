@@ -93,6 +93,7 @@ type ThemeForm = {
   surface: string
   radius: string
   headerSize: string
+  mode: string
   fontLatin: string
   fontArabic: string
   darkPrimary: string
@@ -105,6 +106,7 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   surface: t.surface ?? '',
   radius: t.radius ?? '',
   headerSize: t.headerSize ?? '',
+  mode: t.mode ?? '',
   fontLatin: t.fontLatin ?? '',
   fontArabic: t.fontArabic ?? '',
   darkPrimary: t.dark?.primary ?? '',
@@ -121,6 +123,7 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     surface: orNull(f.surface),
     radius: f.radius || null,
     headerSize: f.headerSize || null,
+    mode: f.mode || null,
     fontLatin: f.fontLatin || null,
     fontArabic: f.fontArabic || null,
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
@@ -149,6 +152,7 @@ function BrandForm({ brand }: { brand: Brand }) {
   const t = useT()
   const queryClient = useQueryClient()
 
+  const [arabicStyle, setArabicStyle] = useState<string>(brand.locale.arabicStyle ?? 'egyptian')
   const [name, setName] = useState<LocalizedValue>(toLocalizedValue(brand.name))
   const [color, setColor] = useState(brand.primaryColor ?? '')
   const [theme, setTheme] = useState<ThemeForm>(toThemeForm(brand.theme))
@@ -208,6 +212,7 @@ function BrandForm({ brand }: { brand: Brand }) {
         customerUrl: customerUrl.trim() || null,
         features,
         theme: fromThemeForm(theme),
+        locale: { ...brand.locale, arabicStyle },
       },
     })
   }
@@ -313,6 +318,40 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                   <p className='text-muted-foreground text-xs'>{t('cornerRadiusHint')}</p>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-mode' className='text-xs'>
+                    {t('startingTheme')}
+                  </Label>
+                  <Select
+                    value={theme.mode || NONE}
+                    onValueChange={(v) => setTheme({ ...theme, mode: v === NONE ? '' : v })}
+                  >
+                    <SelectTrigger id='brand-mode' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>{t('followDevice')}</SelectItem>
+                      <SelectItem value='light'>{t('themeLightOption')}</SelectItem>
+                      <SelectItem value='dark'>{t('themeDarkOption')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('startingThemeHint')}</p>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='brand-arabic' className='text-xs'>
+                    {t('arabicStyleLabel')}
+                  </Label>
+                  <Select value={arabicStyle} onValueChange={setArabicStyle}>
+                    <SelectTrigger id='brand-arabic' className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='standard'>{t('arabicStandardOption')}</SelectItem>
+                      <SelectItem value='egyptian'>{t('arabicEgyptianOption')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground text-xs'>{t('arabicStyleLabelHint')}</p>
                 </div>
                 <div className='space-y-1.5'>
                   <Label htmlFor='brand-header' className='text-xs'>

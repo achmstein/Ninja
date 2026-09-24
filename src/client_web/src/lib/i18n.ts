@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { arStandard } from './i18n.ar-standard'
 import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
 import { preview } from '@/lib/preview'
 import type { LocalizedText } from '@/api/catalog'
-import { messages, type Message } from './i18n.gen'
+import { messages, messagesArStandard, type Message } from './i18n.gen'
 
 export type Language = 'en' | 'ar'
 
@@ -164,18 +165,38 @@ function applyDirection(language: Language) {
 
 export type TranslateParams = Record<string, string | number>
 
+/**
+ * Which Arabic the café speaks, from its brand: the dictionary's own Arabic
+ * is Egyptian; Modern Standard lives in ./i18n.ar-standard and wins when
+ * the café chose it.
+ */
+export const useArabicStyle = create<{ standard: boolean; set: (style: string | null | undefined) => void }>()(
+  (set) => ({
+    standard: false,
+    set: (style) => set({ standard: style === 'standard' }),
+  })
+)
+
+function standardArabic(key: string, language: Language) {
+  return language === 'ar' && useArabicStyle.getState().standard
+    ? (arStandard[key] ?? (messagesArStandard as Record<string, string | Record<string, string>>)[key])
+    : undefined
+}
+
 function format(
   entry: Message,
   language: Language,
-  params?: TranslateParams
+  params?: TranslateParams,
+  key?: string
 ): string {
+  const standard = key ? standardArabic(key, language) : undefined
   let template: string
   if ('plural' in entry) {
     const count = Number(params?.[entry.plural] ?? 0)
-    const forms = entry[language]
+    const forms = typeof standard === 'object' ? standard : entry[language]
     template = forms[`=${count}`] ?? forms.other ?? ''
   } else {
-    template = entry[language] || entry.en
+    template = (typeof standard === 'string' ? standard : entry[language]) || entry.en
   }
   if (!params) return template
   return template.replace(/\{(\w+)\}/g, (whole, name) =>
@@ -185,8 +206,10 @@ function format(
 
 export function useT() {
   const language = useLanguage((s) => s.language)
+  // Re-render when the café's Arabic arrives with its brand
+  useArabicStyle((s) => s.standard)
   return (key: TranslationKey, params?: TranslateParams) =>
-    format(dictionary[key], language, params)
+    format(dictionary[key], language, params, key)
 }
 
 // For code living outside the React tree (the toast adapter)
@@ -194,7 +217,7 @@ export function translate(
   key: TranslationKey,
   params?: TranslateParams
 ): string {
-  return format(dictionary[key], useLanguage.getState().language, params)
+  return format(dictionary[key], useLanguage.getState().language, params, key)
 }
 
 // A price in the tenant's currency, matching the mobile app ("12.00 EGP" / "12.00 ج.م"),

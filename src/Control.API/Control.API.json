@@ -3521,6 +3521,15 @@
           }
         }
       },
+      "BusinessType": {
+        "enum": [
+          "CoffeeShop",
+          "Restaurant",
+          "GameStation",
+          "Other"
+        ],
+        "default": "Other"
+      },
       "CapacityResponse": {
         "required": [
           "at",
@@ -3891,6 +3900,21 @@
             "items": {
               "$ref": "#/components/schemas/Module"
             }
+          },
+          "businessType": {
+            "$ref": "#/components/schemas/BusinessType"
+          },
+          "arabicStyle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultTheme": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5164,6 +5188,10 @@
           },
           "language": {
             "type": "string"
+          },
+          "arabicStyle": {
+            "type": "string",
+            "default": "standard"
           }
         }
       },

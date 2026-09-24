@@ -52,6 +52,23 @@ public class Tenant
     /// <summary>"ar" or "en": what the customer app opens in.</summary>
     public string DefaultLanguage { get; set; } = "ar";
 
+    /// <summary>
+    /// Which Arabic the apps speak: "standard" (Modern Standard Arabic) or
+    /// "egyptian". Null reads as Egyptian for an Egyptian café and Standard
+    /// anywhere else — what the tenant was made with before it was a choice.
+    /// </summary>
+    public string? ArabicStyle { get; set; }
+
+    public string EffectiveArabicStyle => ArabicStyle ?? (Country == "EG" ? "egyptian" : "standard");
+
+    /// <summary>
+    /// What kind of place it is — "coffee_shop", "restaurant", "game_station"
+    /// or "other" — chosen when the café was created. It picked the starting
+    /// switches and the kitchen's first station; nothing reads it after that
+    /// but the surfaces that describe the café.
+    /// </summary>
+    public string? BusinessType { get; set; }
+
     /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a café that only seats people.</summary>
     public bool ReservationsEnabled { get; set; } = true;
 
@@ -179,6 +196,14 @@ public class TenantTheme
 
     /// <summary>What the dark scheme must use instead of what is derived; null derives everything.</summary>
     public TenantThemeDark? Dark { get; set; }
+
+    public static readonly string[] Modes = ["light", "dark"];
+
+    /// <summary>
+    /// Light or dark for someone who has not chosen: every app starts in it
+    /// until the person picks their own. Null follows the device.
+    /// </summary>
+    public string? Mode { get; set; }
 }
 
 /// <summary>The dark scheme's own seeds, for a brand whose lifted colours do not suit it.</summary>

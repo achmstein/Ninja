@@ -104,6 +104,15 @@ public class Tenant
     /// <summary>The brand color seeded into the stack; the owner can change it there.</summary>
     public string? PrimaryColor { get; set; }
 
+    /// <summary>What kind of place it is: it picks the switches the stack starts with.</summary>
+    public Platform.BusinessType BusinessType { get; set; } = Platform.BusinessType.Other;
+
+    /// <summary>"standard" or "egyptian": which Arabic the café's apps speak.</summary>
+    public string ArabicStyle { get; set; } = "standard";
+
+    /// <summary>"light" or "dark" for someone who has not chosen; null follows the device.</summary>
+    public string? DefaultTheme { get; set; }
+
     /// <summary>A café's own customer host ("menu.cafe.com") once its DNS points here; null means {slug}.{platform domain}.</summary>
     public string? CustomerDomain { get; set; }
 

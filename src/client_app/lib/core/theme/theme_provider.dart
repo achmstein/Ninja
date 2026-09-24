@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../brand/brand_provider.dart';
 import '../brand/brand_theme.dart';
 import '../brand/tenant_brand.dart';
 
@@ -118,18 +119,32 @@ class ThemeState {
 class ThemeNotifier extends Notifier<ThemeState> {
   static const _themeKey = 'app_theme_mode';
 
+  /// The person picked light or dark themselves; the café's default no longer applies
+  bool _chosen = false;
+
   @override
   ThemeState build() {
+    // Until someone chooses, the app follows the café's starting theme
+    ref.listen(brandProvider.select((b) => b.defaultThemeMode), (_, mode) {
+      if (!_chosen) state = state.copyWith(themeMode: _cafeDefault(mode));
+    });
     _loadTheme();
     return const ThemeState();
   }
+
+  AppThemeMode _cafeDefault(String? mode) => switch (mode) {
+        'light' => AppThemeMode.light,
+        'dark' => AppThemeMode.dark,
+        _ => AppThemeMode.system,
+      };
 
   Future<void> _loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedTheme = prefs.getString(_themeKey);
 
-      AppThemeMode mode = AppThemeMode.system;
+      _chosen = savedTheme != null;
+      AppThemeMode mode = _cafeDefault(ref.read(brandProvider).defaultThemeMode);
       if (savedTheme != null) {
         mode = AppThemeMode.values.firstWhere(
           (e) => e.name == savedTheme,
@@ -144,6 +159,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
+    _chosen = true;
     state = state.copyWith(themeMode: mode);
 
     try {
