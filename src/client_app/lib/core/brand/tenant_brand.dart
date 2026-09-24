@@ -171,13 +171,26 @@ class TenantLocale {
   /// `standard` or `egyptian`: which Arabic the app speaks
   final String arabicStyle;
 
+  /// What a phone number looks like here, as the tenant sends it: the same
+  /// rule the sign-in page and the server check against.
+  final String phonePattern;
+
+  /// The shape to show in a phone field, e.g. `01xxxxxxxxx`
+  final String phonePlaceholder;
+
   const TenantLocale({
     this.country = 'EG',
     this.currency = 'EGP',
     this.timeZone = 'Africa/Cairo',
     this.language = 'ar',
     this.arabicStyle = 'egyptian',
+    this.phonePattern = r'^\+?[0-9]{7,15}$',
+    this.phonePlaceholder = '',
   });
+
+  /// Whether this is a number a cafe in that country would recognise.
+  bool isValidPhone(String phone) =>
+      RegExp(phonePattern).hasMatch(phone.trim());
 
   /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
   bool get speaksStandardArabic => arabicStyle == 'standard';
@@ -199,6 +212,8 @@ class TenantLocale {
       // Older stacks do not say: Egyptian for Egypt, Standard anywhere else
       arabicStyle: read('arabicStyle', read('country', egypt.country).toUpperCase() == 'EG' ? 'egyptian' : 'standard')
           .toLowerCase(),
+      phonePattern: read('phonePattern', egypt.phonePattern),
+      phonePlaceholder: read('phonePlaceholder', egypt.phonePlaceholder),
     );
   }
 
@@ -208,6 +223,8 @@ class TenantLocale {
         'timeZone': timeZone,
         'language': language,
         'arabicStyle': arabicStyle,
+        'phonePattern': phonePattern,
+        'phonePlaceholder': phonePlaceholder,
       };
 
   @override
@@ -218,10 +235,11 @@ class TenantLocale {
           other.currency == currency &&
           other.timeZone == timeZone &&
           other.language == language &&
-          other.arabicStyle == arabicStyle;
+          other.arabicStyle == arabicStyle &&
+          other.phonePattern == phonePattern;
 
   @override
-  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle);
+  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle, phonePattern);
 }
 
 /// The dark scheme's own seeds, for a brand whose lifted colours do not

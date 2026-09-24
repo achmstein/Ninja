@@ -1,3 +1,4 @@
+import { usePhoneRule } from '@/lib/brand'
 import { useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
@@ -5,7 +6,6 @@ import { toast } from '@/lib/toast'
 import {
   getMyProfile,
   updateProfile,
-  PHONE_PATTERN,
 } from '@/lib/services/identity'
 import { useT } from '@/lib/i18n'
 import {
@@ -27,6 +27,8 @@ import { Label } from '@/components/ui/label'
  */
 export function useProfileGate() {
   const auth = useAuth()
+  const phonePattern = usePhoneRule((s) => s.pattern)
+
   const [open, setOpen] = useState(false)
   const [initialName, setInitialName] = useState('')
   const [initialPhone, setInitialPhone] = useState('')
@@ -37,7 +39,7 @@ export function useProfileGate() {
     const profile = await getMyProfile().catch(() => null)
     const name = profile?.name?.trim() ?? ''
     const phone = profile?.phoneNumber?.trim() ?? ''
-    if (name && PHONE_PATTERN.test(phone)) return true
+    if (name && phonePattern.test(phone)) return true
 
     setInitialName(name || auth.user?.profile?.name || '')
     setInitialPhone(phone)
@@ -82,6 +84,8 @@ function ProfileGateDialog({
 }) {
   const t = useT()
   const [name, setName] = useState(initialName)
+  const phonePattern = usePhoneRule((s) => s.pattern)
+
   const [phone, setPhone] = useState(initialPhone)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -91,7 +95,7 @@ function ProfileGateDialog({
       setError(t('fillAllFields'))
       return
     }
-    if (!PHONE_PATTERN.test(phone.trim())) {
+    if (!phonePattern.test(phone.trim())) {
       setError(t('invalidPhone'))
       return
     }

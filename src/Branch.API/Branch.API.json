@@ -870,6 +870,14 @@
               "null",
               "string"
             ]
+          },
+          "phonePattern": {
+            "type": "string",
+            "default": ""
+          },
+          "phonePlaceholder": {
+            "type": "string",
+            "default": ""
           }
         }
       },

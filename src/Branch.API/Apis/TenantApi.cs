@@ -1,3 +1,4 @@
+﻿using Ninja.ServiceDefaults;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -380,10 +381,23 @@ public static partial class TenantApi
 }
 
 /// <summary>Country (ISO 3166-1), currency (ISO 4217), IANA time zone and the customer app's language ("ar" or "en").</summary>
-/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the apps speak. Null on a request leaves it as it is.</param>
-public record TenantLocaleDto(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null)
+/// <param name="ArabicStyle">"standard" or "egyptian": which Arabic the café's customers read. Null on a request leaves it as it is.</param>
+/// <param name="PhonePattern">The regex a phone number must match here, so the apps ask for what this country writes. Read-only: it follows the country.</param>
+/// <param name="PhonePlaceholder">The shape to show in a phone field, e.g. "01xxxxxxxxx". Read-only.</param>
+public record TenantLocaleDto(
+    string Country,
+    string Currency,
+    string TimeZone,
+    string Language,
+    string? ArabicStyle = null,
+    string PhonePattern = "",
+    string PhonePlaceholder = "")
 {
-    public static TenantLocaleDto From(Tenant t) => new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.EffectiveArabicStyle);
+    public static TenantLocaleDto From(Tenant t)
+    {
+        var phone = PhoneRules.For(t.Country);
+        return new(t.Country, t.Currency, t.TimeZone, t.DefaultLanguage, t.EffectiveArabicStyle, phone.Pattern, phone.Placeholder);
+    }
 }
 
 public record TenantIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);

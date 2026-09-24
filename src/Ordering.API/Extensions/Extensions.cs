@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Ninja.ServiceDefaults;
+using FluentValidation;
 
 internal static class Extensions
 {
@@ -49,6 +50,8 @@ internal static class Extensions
         // Register the command validators for the validator behavior (validators based on FluentValidation library)
         services.AddValidatorsFromAssemblyContaining<CancelOrderCommandValidator>();
 
+        // Where the café is: a phone number is read the way its country writes one
+        services.AddSingleton<TenantCountry>();
         services.AddScoped<IOrderQueries, OrderQueries>();
         services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
         services.AddScoped<IPlaceQueries, PlaceQueries>();

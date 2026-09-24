@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System.Text.RegularExpressions;
 using Ninja.ServiceDefaults;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -7,13 +7,6 @@ using Order = Ninja.Ordering.API.Application.Queries.Order;
 
 public static partial class OrdersApi
 {
-    /// <summary>
-    /// Egyptian mobile number — the same rule the apps enforce on the profile
-    /// phone, so a guest is asked for exactly what an account holder stores.
-    /// </summary>
-    [GeneratedRegex(@"^01[0-9]{9}$")]
-    private static partial Regex GuestPhoneRegex();
-
     public static RouteGroupBuilder MapOrdersApiV1(this IEndpointRouteBuilder app)
     {
         var api = app.MapGroup("api/orders").HasApiVersion(1.0);
@@ -189,7 +182,8 @@ public static partial class OrdersApi
                 return TypedResults.BadRequest("A name is required to order as a guest.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.GuestPhone) || !GuestPhoneRegex().IsMatch(request.GuestPhone))
+            // The same rule the realm and the apps use, for this café's country
+            if (!PhoneRules.IsValid(request.GuestPhone, services.Country.Code))
             {
                 return TypedResults.BadRequest("A valid phone number is required to order as a guest.");
             }

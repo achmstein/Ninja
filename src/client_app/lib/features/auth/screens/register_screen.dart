@@ -6,6 +6,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/brand/brand_provider.dart';
 
 /// Registration screen
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -51,8 +52,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // Egyptian phone validation: 01xxxxxxxxx (11 digits starting with 01)
-    if (!RegExp(r'^01[0-9]{9}$').hasMatch(phone)) {
+    if (!ref.read(brandProvider).locale.isValidPhone(phone)) {
       setState(() {
         _error = l10n.invalidPhone;
       });

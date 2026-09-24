@@ -77,6 +77,8 @@ export type TenantLocaleDto = {
     timeZone: string;
     language: string;
     arabicStyle?: null | string;
+    phonePattern?: string;
+    phonePlaceholder?: string;
 };
 
 export type TenantResponse = {

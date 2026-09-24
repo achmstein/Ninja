@@ -11,9 +11,6 @@ export type MyProfile = {
   phoneNumber?: string | null
 }
 
-// Egyptian mobile number, same rule as the mobile app
-export const PHONE_PATTERN = /^01[0-9]{9}$/
-
 export async function getMyProfile(): Promise<MyProfile> {
   const response = await apiClient.get<MyProfile>(`${BASE}/my-profile`)
   return response.data

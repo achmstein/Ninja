@@ -5,6 +5,7 @@ import '../auth/auth_service.dart';
 import '../../features/settings/providers/settings_provider.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
+import '../brand/brand_provider.dart';
 
 /// Ensures the user has a complete profile (name + phone) before proceeding.
 ///
@@ -88,8 +89,7 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
       return;
     }
 
-    // Egyptian phone validation
-    if (!widget.hasPhone && !RegExp(r'^01[0-9]{9}$').hasMatch(phone)) {
+    if (!widget.hasPhone && !ref.read(brandProvider).locale.isValidPhone(phone)) {
       setState(() => _error = l10n.invalidPhone);
       return;
     }

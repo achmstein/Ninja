@@ -1,4 +1,4 @@
-namespace Ninja.Ordering.API.Application.Validations;
+﻿namespace Ninja.Ordering.API.Application.Validations;
 
 /// <summary>
 /// Simplified validator for cafe orders.
@@ -6,12 +6,11 @@ namespace Ninja.Ordering.API.Application.Validations;
 /// </summary>
 public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {
-    // Egyptian mobile number — the same rule the apps enforce on the profile
-    // phone (client_web lib/services/identity.ts, client_app settings_service)
-    private const string GuestPhonePattern = @"^01[0-9]{9}$";
-
-    public CreateOrderCommandValidator(ILogger<CreateOrderCommandValidator> logger)
+    public CreateOrderCommandValidator(TenantCountry country, ILogger<CreateOrderCommandValidator> logger)
     {
+        // A guest's phone is read the way this café's country writes one
+        var guestPhonePattern = PhoneRules.For(country.Code).Pattern;
+
         // A signed-in order is identified by its user; a guest order stands on
         // the contact details left at checkout instead. A counter sale is
         // neither: staff keyed it in, the cashier's identity rides the request,
@@ -30,7 +29,7 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
             RuleFor(command => command.GuestName).NotEmpty();
             RuleFor(command => command.GuestPhone)
                 .NotEmpty()
-                .Matches(GuestPhonePattern)
+                .Matches(guestPhonePattern)
                 .WithMessage("A valid phone number is required to order as a guest.");
 
             // Loyalty is account-only: there is nothing to redeem against

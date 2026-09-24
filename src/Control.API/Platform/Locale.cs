@@ -1,19 +1,8 @@
 using System.Text.RegularExpressions;
 using Ninja.Control.API.Model;
+using Ninja.ServiceDefaults;
 
 namespace Ninja.Control.API.Platform;
-
-/// <summary>What a customer's phone number looks like in the tenant's country: the realm's registration form checks it.</summary>
-public static class PhoneRules
-{
-    public static (string Pattern, string Placeholder) For(string country) => country.ToUpperInvariant() switch
-    {
-        "EG" => ("^01[0-9]{9}$", "01xxxxxxxxx"),
-        "SA" or "AE" => ("^05[0-9]{8}$", "05xxxxxxxx"),
-        // Anywhere else: an international number, with or without its plus
-        _ => ("^\\+?[0-9]{7,15}$", "+xxxxxxxxxxx"),
-    };
-}
 
 /// <summary>The locale a tenant is created with, checked and normalised; what the request leaves out follows its country.</summary>
 public static partial class LocaleFields

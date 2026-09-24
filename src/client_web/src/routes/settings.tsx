@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { usePhoneRule } from '@/lib/brand'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
@@ -14,7 +15,6 @@ import {
   deleteAccount,
   getMyProfile,
   updateProfile,
-  PHONE_PATTERN,
 } from '@/lib/services/identity'
 import { useT } from '@/lib/i18n'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
@@ -257,6 +257,8 @@ function UpdateProfileDialog({
 }) {
   const t = useT()
   const [name, setName] = useState(initialName)
+  const phonePattern = usePhoneRule((s) => s.pattern)
+
   const [phone, setPhone] = useState(initialPhone)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -266,7 +268,7 @@ function UpdateProfileDialog({
       setError(t('fillAllFields'))
       return
     }
-    if (!PHONE_PATTERN.test(phone.trim())) {
+    if (!phonePattern.test(phone.trim())) {
       setError(t('invalidPhone'))
       return
     }

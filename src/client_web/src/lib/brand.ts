@@ -71,6 +71,25 @@ function writeCachedBrand(brand: Brand) {
  * call answers 503 { code: "paused" }. Set from the boot fetch, whenever it
  * lands; the app then shows a notice instead of a menu that cannot load.
  */
+/**
+ * What a phone number looks like where this café is. The tenant sends the
+ * rule with the rest of its locale, so the apps never carry one market's
+ * shape of their own; until it lands, anything a phone could be.
+ */
+export const usePhoneRule = create<{
+  pattern: RegExp
+  placeholder: string
+  set: (pattern?: string | null, placeholder?: string | null) => void
+}>((set) => ({
+  pattern: /^\+?[0-9]{7,15}$/,
+  placeholder: '',
+  set: (pattern, placeholder) =>
+    set({
+      pattern: pattern ? new RegExp(pattern) : /^\+?[0-9]{7,15}$/,
+      placeholder: placeholder ?? '',
+    }),
+}))
+
 export const usePaused = create<{ paused: boolean; set: (paused: boolean) => void }>((set) => ({
   paused: false,
   set: (paused) => set({ paused }),
@@ -124,6 +143,7 @@ export function applyBrand(brand: Brand, language: Language) {
   // Under a preview, the panel's unsaved seeds paint over the saved ones
   applyBrandTheme(draftedTheme() ?? brand)
   useCurrency.getState().set(brand.locale.currency)
+  usePhoneRule.getState().set(brand.locale.phonePattern, brand.locale.phonePlaceholder)
 }
 
 function setLink(rel: string, href: string, type?: string) {

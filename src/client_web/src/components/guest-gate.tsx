@@ -1,5 +1,5 @@
+import { usePhoneRule } from '@/lib/brand'
 import { useRef, useState } from 'react'
-import { PHONE_PATTERN } from '@/lib/services/identity'
 import { useGuestStore, type GuestContact } from '@/stores/guest-store'
 import { useT } from '@/lib/i18n'
 import {
@@ -24,13 +24,15 @@ import { Label } from '@/components/ui/label'
  */
 export function useGuestGate() {
   const [open, setOpen] = useState(false)
+  const phonePattern = usePhoneRule((s) => s.pattern)
+
   const contact = useGuestStore((s) => s.contact)
   const setContact = useGuestStore((s) => s.setContact)
   const resolver = useRef<((contact: GuestContact | null) => void) | null>(null)
 
   const ensureGuestDetails = async (): Promise<GuestContact | null> => {
     // A returning guest already gave these; don't ask on every round
-    if (contact?.name.trim() && PHONE_PATTERN.test(contact.phone.trim())) {
+    if (contact?.name.trim() && phonePattern.test(contact.phone.trim())) {
       return contact
     }
 
@@ -76,6 +78,8 @@ function GuestGateDialog({
 }) {
   const t = useT()
   const [name, setName] = useState(initialName)
+  const phonePattern = usePhoneRule((s) => s.pattern)
+
   const [phone, setPhone] = useState(initialPhone)
   const [error, setError] = useState<string | null>(null)
 
@@ -84,7 +88,7 @@ function GuestGateDialog({
       setError(t('fillAllFields'))
       return
     }
-    if (!PHONE_PATTERN.test(phone.trim())) {
+    if (!phonePattern.test(phone.trim())) {
       setError(t('invalidPhone'))
       return
     }

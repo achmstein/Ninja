@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../providers/settings_provider.dart';
+import '../../../core/brand/brand_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -323,7 +324,7 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
       return;
     }
 
-    if (!RegExp(r'^01[0-9]{9}$').hasMatch(phone)) {
+    if (!widget.ref.read(brandProvider).locale.isValidPhone(phone)) {
       setState(() => _error = widget.l10n.invalidPhone);
       return;
     }

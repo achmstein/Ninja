@@ -1,5 +1,6 @@
 ﻿namespace Ninja.Ordering.UnitTests.Application;
 
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -36,6 +37,17 @@ public class OrdersWebApiTest
         _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns(new OrderOwnership("a-buyer", null, 1));
     }
 
+    /// <summary>These fixtures use Egyptian numbers, so the rules are Egypt's.</summary>
+    private static readonly TenantCountry Egypt = CountryOf("EG");
+
+    /// <summary>A café that writes phone numbers another way.</summary>
+    private static readonly TenantCountry SaudiArabia = CountryOf("SA");
+
+    private static TenantCountry CountryOf(string code) =>
+        new(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Tenant:Country"] = code })
+            .Build());
+
     [TestMethod]
     public async Task Cancel_order_with_requestId_success()
     {
@@ -44,7 +56,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(true));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), orderServices);
 
         // Assert
@@ -58,7 +70,7 @@ public class OrdersWebApiTest
         _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns((OrderOwnership?)null);
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.CancelOrderAsync(Guid.NewGuid(), new CancelOrderCommand(1), orderServices);
 
         // Assert: not found, not a five hundred
@@ -72,7 +84,7 @@ public class OrdersWebApiTest
         _orderQueriesMock.GetOrderOwnershipAsync(Arg.Any<int>()).Returns((OrderOwnership?)null);
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.ConfirmOrderAsync(Guid.NewGuid(), new ConfirmOrderCommand(1), orderServices);
 
         // Assert
@@ -87,7 +99,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(true));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.CancelOrderAsync(Guid.Empty, new CancelOrderCommand(1), orderServices);
 
         // Assert
@@ -102,7 +114,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(true));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.ConfirmOrderAsync(Guid.NewGuid(), new ConfirmOrderCommand(1), orderServices);
 
         // Assert
@@ -117,7 +129,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(true));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.ConfirmOrderAsync(Guid.Empty, new ConfirmOrderCommand(1), orderServices);
 
         // Assert
@@ -132,7 +144,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(true));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.AssignOrderCustomerAsync(1, Guid.NewGuid(), new AssignOrderCustomerRequest(null, "Nadia"), orderServices);
 
         // Assert
@@ -147,7 +159,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(false));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.AssignOrderCustomerAsync(1, Guid.NewGuid(), new AssignOrderCustomerRequest("u1", "Nadia"), orderServices);
 
         // Assert
@@ -158,7 +170,7 @@ public class OrdersWebApiTest
     public async Task Assign_order_customer_without_a_name_is_rejected()
     {
         // Act - the name is what the bill line shows, account or not
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.AssignOrderCustomerAsync(1, Guid.NewGuid(), new AssignOrderCustomerRequest("u1", " "), orderServices);
 
         // Assert
@@ -176,7 +188,7 @@ public class OrdersWebApiTest
 #pragma warning restore NS5003
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.AssignOrderCustomerAsync(1, Guid.NewGuid(), new AssignOrderCustomerRequest(null, "Nadia"), orderServices);
 
         // Assert
@@ -203,7 +215,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(fakePaginatedResult));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrdersByUserAsync(new DefaultHttpContext(), 0, 10, null, null, orderServices);
 
         // Assert
@@ -231,7 +243,7 @@ public class OrdersWebApiTest
         httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = guestId;
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrdersByUserAsync(httpContext, 0, 10, null, null, orderServices);
 
         // Assert
@@ -248,7 +260,7 @@ public class OrdersWebApiTest
         _identityServiceMock.GetUserIdentity().Returns((string)null);
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrdersByUserAsync(new DefaultHttpContext(), 0, 10, null, null, orderServices);
 
         // Assert
@@ -273,7 +285,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult(fakeDynamicResult));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, new DefaultHttpContext(), orderServices);
 
         // Assert
@@ -297,7 +309,7 @@ public class OrdersWebApiTest
 #pragma warning restore NS5003
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, new DefaultHttpContext(), orderServices);
 
         // Assert
@@ -316,7 +328,7 @@ public class OrdersWebApiTest
             .Returns(Task.FromResult<OrderOwnership>(new OrderOwnership(Guid.NewGuid().ToString(), null, 1)));
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, new DefaultHttpContext(), orderServices);
 
         // Assert
@@ -342,7 +354,7 @@ public class OrdersWebApiTest
         httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = guestId;
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, httpContext, orderServices);
 
         // Assert
@@ -363,7 +375,7 @@ public class OrdersWebApiTest
         httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = Guid.NewGuid().ToString();
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, httpContext, orderServices);
 
         // Assert
@@ -389,7 +401,7 @@ public class OrdersWebApiTest
         if (branch is not null) claims.Add(new("branches", branch));
         var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test", "name", "role")) };
 
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, httpContext, orderServices);
 
         if (readable) Assert.IsInstanceOfType<Ok<Order>>(result.Result);
@@ -416,7 +428,7 @@ public class OrdersWebApiTest
         };
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetOrderAsync(fakeOrderId, httpContext, orderServices);
 
         // Assert
@@ -499,7 +511,7 @@ public class OrdersWebApiTest
         var request = GuestRequest(placeId: null) with { UserName = "Nadia" };
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, httpContext, orderServices);
 
         // Assert
@@ -557,7 +569,7 @@ public class OrdersWebApiTest
         var spoofed = GuestRequest() with { UserId = "someone-else", UserName = "Someone Else" };
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.CreateOrderAsync(Guid.NewGuid(), spoofed, httpContext, orderServices);
 
         // Assert
@@ -589,6 +601,41 @@ public class OrdersWebApiTest
             PlaceKind: placeId is null ? null : "Table",
             PlaceName: placeId is null ? null : "Table 7");
 
+    /// <summary>A café in Saudi Arabia takes the numbers its customers have.</summary>
+    [TestMethod]
+    public async Task A_guest_phone_is_read_the_way_the_cafes_country_writes_one()
+    {
+        _identityServiceMock.GetUserIdentity().Returns((string)null);
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
+        httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = "11111111-1111-1111-1111-111111111111";
+        _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
+            .Returns(Task.FromResult(42));
+        var riyadh = new OrderServices(
+            _mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, SaudiArabia, _loggerMock);
+
+        // The shape Saudi Arabia writes is taken
+        var saudi = await OrdersApi.CreateOrderAsync(
+            Guid.NewGuid(), GuestRequest(guestPhone: "0512345678"), httpContext, riyadh);
+        Assert.IsInstanceOfType<Ok>(saudi.Result);
+
+        // Egypt's is not, there
+        var egyptian = await OrdersApi.CreateOrderAsync(
+            Guid.NewGuid(), GuestRequest(guestPhone: "01012345678"), httpContext, riyadh);
+        Assert.IsInstanceOfType<BadRequest<string>>(egyptian.Result);
+    }
+
+    /// <summary>The same number, judged by the café it is given to.</summary>
+    [TestMethod]
+    public async Task An_egyptian_cafe_still_takes_an_egyptian_number()
+    {
+        var result = await CreateGuestOrderAsync(GuestRequest(guestPhone: "01012345678"));
+        Assert.IsInstanceOfType<Ok>(result.Result);
+
+        var saudiNumber = await CreateGuestOrderAsync(GuestRequest(guestPhone: "0512345678"));
+        Assert.IsInstanceOfType<BadRequest<string>>(saudiNumber.Result);
+    }
+
     private Task<Results<Ok, BadRequest<string>>> CreateGuestOrderAsync(
         CreateOrderRequest request,
         string? guestId = "11111111-1111-1111-1111-111111111111")
@@ -602,7 +649,7 @@ public class OrdersWebApiTest
             httpContext.Request.Headers[GuestHeaderExtensions.HeaderName] = guestId;
         }
 
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         return OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, httpContext, orderServices);
     }
 
@@ -618,7 +665,7 @@ public class OrdersWebApiTest
         httpContext.Request.Headers[BranchHeaderExtensions.HeaderName] = "1";
 
         // Act
-        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, _loggerMock);
+        var orderServices = new OrderServices(_mediatorMock, _orderQueriesMock, _identityServiceMock, _branchSettingsMock, _placesMock, Egypt, _loggerMock);
         var result = await OrdersApi.GetPendingOrdersAsync(httpContext, orderServices);
 
         // Assert
