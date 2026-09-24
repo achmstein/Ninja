@@ -3,6 +3,7 @@ import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -10,7 +11,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Section } from '@/components/section'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
 import { BranchOverrideSection } from './branch-override-section'
 import { CustomizationsSection } from './customizations-section'
 import { ItemDetailsForm } from './item-details-form'
@@ -31,10 +37,11 @@ type ItemSheetProps = {
 }
 
 /**
- * Everything about one menu item, in one place: details and photo, the
- * customizations customers pick from, what a sale takes out of stock, and
- * this branch's own price. A new item starts with details only and turns
- * into the full sheet once saved.
+ * Everything about one menu item, a tab per question: its details and photo,
+ * the customizations customers pick from, what a sale takes out of stock,
+ * and this branch's own price. Only the tab being read is built, so opening
+ * the sheet to change a price does not raise the recipe editor. A new item
+ * has only details to give until it is saved, so the rest wait, disabled.
  */
 export function ItemSheet({
   state,
@@ -51,6 +58,7 @@ export function ItemSheet({
       ? items.find((i) => toNumber(i.id) === state.itemId)
       : undefined
   const open = state?.mode === 'create' || !!item
+  const customizations = item?.customizations?.length ?? 0
 
   return (
     <Sheet
@@ -60,61 +68,103 @@ export function ItemSheet({
       }}
     >
       {/* 2xl: the recipe editor needs an option set and a stock item name side by side */}
-      <SheetContent className='sm:max-w-2xl'>
-        <SheetHeader>
-          <SheetTitle>
-            {item ? localized(item.name) : t('addMenuItem')}
-          </SheetTitle>
-        </SheetHeader>
+      <SheetContent className='overflow-hidden sm:max-w-2xl'>
+        <Tabs
+          // A different item starts on its details, not the tab last read
+          key={item ? String(item.id) : 'new'}
+          defaultValue='details'
+          className='flex min-h-0 flex-1 flex-col gap-0'
+        >
+          <SheetHeader>
+            <SheetTitle className='pe-8'>
+              {item ? localized(item.name) : t('addMenuItem')}
+            </SheetTitle>
+            <TabsList className='mt-1 w-full'>
+              <TabsTrigger value='details'>{t('details')}</TabsTrigger>
+              <TabsTrigger value='customizations' disabled={!item}>
+                {t('customizations')}
+                {customizations > 0 && (
+                  <Badge
+                    variant='secondary'
+                    className='h-5 min-w-5 rounded-full px-1.5 text-[11px] tabular-nums'
+                  >
+                    {customizations}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              {features.inventory && (
+                <TabsTrigger value='stock' disabled={!item}>
+                  {t('stock')}
+                </TabsTrigger>
+              )}
+              <TabsTrigger value='branch' disabled={!item}>
+                {t('thisBranch')}
+              </TabsTrigger>
+            </TabsList>
+          </SheetHeader>
 
-        {state?.mode === 'create' && (
-          <Section title={t('details')}>
-            <ItemDetailsForm
-              key='new'
-              item={null}
-              categories={categories}
-              defaultCategoryId={state.categoryId}
-              onSaved={(itemId) =>
-                onStateChange(itemId ? { mode: 'edit', itemId } : null)
-              }
-              onCancel={() => onStateChange(null)}
-            />
-          </Section>
-        )}
-
-        {item && (
-          <>
-            <Section title={t('details')}>
+          <TabsContent value='details' className='min-h-0 overflow-y-auto p-4'>
+            {item ? (
               <ItemDetailsForm
                 key={String(item.id)}
                 item={item}
                 categories={categories}
                 onSaved={() => {}}
               />
-            </Section>
-            <Section title={t('customizations')}>
-              <CustomizationsSection item={item} />
-            </Section>
-            {features.inventory && (
-              <Section title={t('stock')}>
-                <StockRuleSection item={item} />
-              </Section>
+            ) : (
+              <ItemDetailsForm
+                key='new'
+                item={null}
+                categories={categories}
+                defaultCategoryId={
+                  state?.mode === 'create' ? state.categoryId : undefined
+                }
+                onSaved={(itemId) =>
+                  onStateChange(itemId ? { mode: 'edit', itemId } : null)
+                }
+                onCancel={() => onStateChange(null)}
+              />
             )}
-            <Section title={t('thisBranch')}>
-              <BranchOverrideSection item={item} />
-            </Section>
-            <div className='mt-auto flex justify-end border-t p-4'>
-              <Button
-                type='button'
-                variant='ghost'
-                className='text-destructive hover:text-destructive'
-                onClick={() => onDelete(item)}
+          </TabsContent>
+
+          {item && (
+            <>
+              <TabsContent
+                value='customizations'
+                className='min-h-0 overflow-y-auto p-4'
               >
-                <Trash2 className='me-2 h-4 w-4' />
-                {t('deleteItem')}
-              </Button>
-            </div>
-          </>
+                <CustomizationsSection item={item} />
+              </TabsContent>
+              {features.inventory && (
+                <TabsContent
+                  value='stock'
+                  className='min-h-0 overflow-y-auto p-4'
+                >
+                  <StockRuleSection item={item} />
+                </TabsContent>
+              )}
+              <TabsContent
+                value='branch'
+                className='min-h-0 overflow-y-auto p-4'
+              >
+                <BranchOverrideSection item={item} />
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+
+        {item && (
+          <div className='flex justify-end border-t p-4'>
+            <Button
+              type='button'
+              variant='ghost'
+              className='text-destructive hover:text-destructive'
+              onClick={() => onDelete(item)}
+            >
+              <Trash2 className='me-2 h-4 w-4' />
+              {t('deleteItem')}
+            </Button>
+          </div>
         )}
       </SheetContent>
     </Sheet>
