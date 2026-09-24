@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CookingPot, Plus, SlidersHorizontal, X } from 'lucide-react'
+import { CookingPot, Plus, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -285,20 +285,21 @@ function IngredientCard({
     })
 
   return (
-    <Card className='gap-3'>
-      {/* The button lives here, not on a field row: on a row it either
-          shortens that row's chips or every row's */}
-      <CardHeader className='pb-0'>
+    <Card className='gap-3 pt-0'>
+      {/* Tucked into the corner rather than given a row: off a field row
+          so it shortens no chips, off the card's padding so it costs no
+          height. A bin, not an X: this deletes the ingredient. */}
+      <CardHeader className='px-2 pt-2 pb-0'>
         <CardAction>
           <Button
             type='button'
             variant='ghost'
             size='icon'
-            className='text-muted-foreground size-7'
+            className='text-muted-foreground hover:text-destructive size-7'
             aria-label={t('removeLine')}
             onClick={onRemove}
           >
-            <X />
+            <Trash2 />
           </Button>
         </CardAction>
       </CardHeader>
@@ -360,7 +361,6 @@ function IngredientCard({
             amountGroups.length > 0 && (
               <Cells
                 groups={amountGroups}
-                hint={t('zeroMeansNothing')}
                 render={(key) => (
                   <Quantity
                     value={spec.amount.cells[key] ?? ''}

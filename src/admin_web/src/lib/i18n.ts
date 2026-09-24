@@ -1038,7 +1038,6 @@ const webExtras = {
   always: { en: "Always", ar: "دائمًا" },
   onlyWith: { en: "Only with {group}", ar: "فقط مع {group}" },
   itemDecidedBelow: { en: "Decided by the choices below", ar: "يُحدَّد حسب الاختيارات أدناه" },
-  zeroMeansNothing: { en: "0 = nothing", ar: "0 = لا شيء" },
   amountDecidedBelow: { en: "Decided by the choice below", ar: "تُحدَّد حسب الاختيار أدناه" },
   whenDecidedBelow: { en: "Only for the ticked choices below", ar: "للاختيارات المحددة أدناه فقط" },
   customRulesCount: { plural: "count", en: {"=1":"1 custom rule","other":"{count} custom rules"}, ar: {"one":"قاعدة خاصة واحدة","two":"قاعدتان خاصتان","few":"{count} قواعد خاصة","many":"{count} قاعدة خاصة","other":"{count} قاعدة خاصة"} },
