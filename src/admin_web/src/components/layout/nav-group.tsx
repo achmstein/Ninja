@@ -27,9 +27,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
+import { checkIsActive } from './nav-active'
 import {
   type NavCollapsible,
-  type NavItem,
   type NavLink,
   type NavGroup as NavGroupProps,
 } from './types'
@@ -202,39 +202,5 @@ function SidebarMenuCollapsedDropdown({
         </DropdownMenuContent>
       </DropdownMenu>
     </SidebarMenuItem>
-  )
-}
-
-function checkIsActive(
-  href: string,
-  item: NavItem,
-  mainNav = false,
-  groupUrls: string[] = []
-) {
-  const path = href.split('?')[0]
-  return (
-    href === item.url || // /endpint?search=param
-    path === item.url || // endpoint
-    !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
-    // child pages without their own nav item (e.g. /rooms/history → Rooms),
-    // unless a sibling item claims the path or a longer prefix of it
-    // (e.g. /menu/categories, /inventory/history/purchases → History)
-    (typeof item.url === 'string' &&
-      item.url !== '/' &&
-      path.startsWith(`${item.url}/`) &&
-      !groupUrls.some(
-        (url) =>
-          url !== item.url && (path === url || path.startsWith(`${url}/`))
-      )) ||
-    // a collapsible section is active when any page under its first segment is
-    (mainNav &&
-      !!item.items &&
-      item.items.some((sub) => {
-        const subPath = String(sub.url)
-        return path === subPath || path.startsWith(`${subPath}/`)
-      })) ||
-    (mainNav &&
-      href.split('/')[1] !== '' &&
-      href.split('/')[1] === item?.url?.split('/')[1])
   )
 }
