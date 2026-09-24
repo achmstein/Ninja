@@ -776,7 +776,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Point camera at a room or table QR code';
 
   @override
-  String get invalidPhone => 'Please enter a valid phone number (01xxxxxxxxx).';
+  String get invalidPhone => 'Please enter a valid phone number.';
 
   @override
   String get completeYourInfo => 'Complete Your Info';

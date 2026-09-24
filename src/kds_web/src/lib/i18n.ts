@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { arStandard } from './i18n.ar-standard'
 
 export type Language = 'en' | 'ar'
 
@@ -16,83 +15,68 @@ type Message =
   | { plural: string; en: PluralForms; ar: PluralForms }
 
 // The whole kitchen-display dictionary. Same mechanism as pos_web's i18n.ts
-// (small zustand-backed dictionary, no framework). Egyptian Arabic, same
-// voice as the other apps: ترابيزة = table, اوضة = room.
+// (small zustand-backed dictionary, no framework), and the same voice as
+// the rest of the back office.
 const dictionary = {
   // Brand / chrome
-  appName: { en: 'Kitchen', ar: 'المطبخ' },
-  poweredBy: { en: 'Powered by', ar: 'بدعم من' },
-  kdsNotInPlan: { en: 'The kitchen display is not in your plan', ar: 'شاشة المطبخ مش في باقتك' },
-  kdsNotInPlanNote: { en: 'Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.', ar: 'الطلبات لسه بتوصل الكاشير زي الأول. اطلب من المنصة تضيف شاشة المطبخ لاشتراكك.' },
-  branches: { en: 'Branches', ar: 'الفروع' },
-  station: { en: 'Station', ar: 'المحطة' },
-  allStations: { en: 'All stations', ar: 'كل المحطات' },
-  signOut: { en: 'Sign out', ar: 'تسجيل الخروج' },
-  settings: { en: 'Settings', ar: 'الإعدادات' },
-  language: { en: 'Language', ar: 'اللغة' },
-  theme: { en: 'Theme', ar: 'المظهر' },
-  themeLight: { en: 'Light', ar: 'فاتح' },
-  themeDark: { en: 'Dark', ar: 'غامق' },
-  fullscreen: { en: 'Full screen', ar: 'ملء الشاشة' },
-  exitFullscreen: { en: 'Exit full screen', ar: 'اخرج من ملء الشاشة' },
-  installApp: { en: 'Install app', ar: 'نزّل التطبيق' },
-  installIosHint: {
-    en: 'On an iPad: tap Share in Safari, then "Add to Home Screen".',
-    ar: 'على الآيباد: دوس على Share في سفاري وبعدين "Add to Home Screen".',
-  },
+  appName: { en: "Kitchen", ar: "المطبخ" },
+  poweredBy: { en: "Powered by", ar: "بدعم من" },
+  kdsNotInPlan: { en: "The kitchen display is not in your plan", ar: "شاشة المطبخ ليست ضمن باقتك" },
+  kdsNotInPlanNote: { en: "Orders still reach the till as before. Ask the platform to add the kitchen display to your subscription.", ar: "ما زالت الطلبات تصل إلى الكاشير كما في السابق. اطلب من المنصة إضافة شاشة المطبخ إلى اشتراكك." },
+  branches: { en: "Branches", ar: "الفروع" },
+  station: { en: "Station", ar: "المحطة" },
+  allStations: { en: "All stations", ar: "كل المحطات" },
+  signOut: { en: "Sign out", ar: "تسجيل الخروج" },
+  settings: { en: "Settings", ar: "الإعدادات" },
+  language: { en: "Language", ar: "اللغة" },
+  theme: { en: "Theme", ar: "المظهر" },
+  themeLight: { en: "Light", ar: "فاتح" },
+  themeDark: { en: "Dark", ar: "داكن" },
+  fullscreen: { en: "Full screen", ar: "ملء الشاشة" },
+  exitFullscreen: { en: "Exit full screen", ar: "الخروج من ملء الشاشة" },
+  installApp: { en: "Install app", ar: "تثبيت التطبيق" },
+  installIosHint: { en: "On an iPad: tap Share in Safari, then \"Add to Home Screen\".", ar: "على الآيباد: اضغط على Share في سفاري، ثم \"Add to Home Screen\"." },
 
   // Auth
-  signInFailed: { en: 'Sign-in failed', ar: 'تسجيل الدخول فشل' },
-  redirectingToSignIn: {
-    en: 'Redirecting to sign in...',
-    ar: 'بنحولك لتسجيل الدخول...',
-  },
-  signedOutTitle: { en: 'Signed out', ar: 'تم تسجيل الخروج' },
-  signInAgain: { en: 'Sign in again', ar: 'سجل دخول تاني' },
-  backToBoard: { en: 'Back to the board', ar: 'ارجع للشاشة' },
-  accessDeniedTitle: { en: 'Access denied', ar: 'مفيش صلاحية' },
-  accessDeniedDescription: { en: 'No access.', ar: 'مفيش صلاحية.' },
-  noBranchTitle: { en: 'No branch assigned', ar: 'مفيش فرع متعين ليك' },
-  noBranchDescription: {
-    en: 'Ask the owner to assign a branch.',
-    ar: 'اطلب من المالك يعينك على فرع.',
-  },
-  retry: { en: 'Retry', ar: 'حاول تاني' },
+  signInFailed: { en: "Sign-in failed", ar: "فشل تسجيل الدخول" },
+  redirectingToSignIn: { en: "Redirecting to sign in...", ar: "جارٍ تحويلك إلى تسجيل الدخول..." },
+  signedOutTitle: { en: "Signed out", ar: "تم تسجيل الخروج" },
+  signInAgain: { en: "Sign in again", ar: "سجّل الدخول مرة أخرى" },
+  backToBoard: { en: "Back to the board", ar: "العودة إلى الشاشة" },
+  accessDeniedTitle: { en: "Access denied", ar: "لا توجد صلاحية" },
+  accessDeniedDescription: { en: "No access.", ar: "لا توجد صلاحية." },
+  noBranchTitle: { en: "No branch assigned", ar: "لم يُعيَّن لك فرع" },
+  noBranchDescription: { en: "Ask the owner to assign a branch.", ar: "اطلب من المالك تعيينك في فرع." },
+  retry: { en: "Retry", ar: "أعد المحاولة" },
 
   // Board
-  noOrders: { en: 'Nothing to prepare', ar: 'مفيش حاجة تتعمل' },
-  ready: { en: 'Ready', ar: 'جاهز' },
-  counter: { en: 'Counter', ar: 'الكاشير' },
-  pickup: { en: 'Pickup', ar: 'استلام' },
-  walkIn: { en: 'Walk-in', ar: 'زبون' },
-  soundBanner: { en: 'Enable sound', ar: 'شغّل الصوت' },
+  noOrders: { en: "Nothing to prepare", ar: "لا يوجد ما يُحضَّر" },
+  ready: { en: "Ready", ar: "جاهز" },
+  counter: { en: "Counter", ar: "الكاشير" },
+  pickup: { en: "Pickup", ar: "استلام" },
+  walkIn: { en: "Walk-in", ar: "زبون" },
+  soundBanner: { en: "Enable sound", ar: "شغّل الصوت" },
 
   // History
-  history: { en: 'History', ar: 'السجل' },
-  noHistory: { en: 'Nothing ready yet today', ar: 'لسه مفيش طلبات جاهزة النهارده' },
-  bringBack: { en: 'Bring back', ar: 'رجّعه' },
+  history: { en: "History", ar: "السجل" },
+  noHistory: { en: "Nothing ready yet today", ar: "لا توجد طلبات جاهزة اليوم بعد" },
+  bringBack: { en: "Bring back", ar: "إرجاع" },
 
   // Toasts
-  newOrderToast: { en: 'New order #{orderId}', ar: 'طلب جديد #{orderId}' },
-  newOrderToastFrom: {
-    en: 'New order #{orderId} from {name}',
-    ar: 'طلب جديد #{orderId} من {name}',
-  },
-  failedToUpdate: {
-    en: 'Could not update the order',
-    ar: 'معرفناش نحدث الطلب',
-  },
+  newOrderToast: { en: "New order #{orderId}", ar: "طلب جديد #{orderId}" },
+  newOrderToastFrom: { en: "New order #{orderId} from {name}", ar: "طلب جديد #{orderId} من {name}" },
+  failedToUpdate: { en: "Could not update the order", ar: "تعذّر تحديث الطلب" },
 
   // Toast titles
-  toastSuccess: { en: 'Success', ar: 'تم بنجاح' },
-  toastError: { en: 'Something went wrong', ar: 'في حاجة غلط' },
-  toastInfo: { en: 'Heads up', ar: 'خد بالك' },
-  toastWarning: { en: 'Warning', ar: 'تنبيه' },
+  toastSuccess: { en: "Success", ar: "تم بنجاح" },
+  toastError: { en: "Something went wrong", ar: "حدث خطأ" },
+  toastInfo: { en: "Heads up", ar: "انتبه" },
+  toastWarning: { en: "Warning", ar: "تنبيه" },
 
   // Errors / generic
-  somethingWentWrong: { en: 'Something went wrong!', ar: 'في حاجة غلط حصلت!' },
-  contentNotFound: { en: 'Content not found.', ar: 'المحتوى مش موجود.' },
-  sessionExpired: { en: 'Session expired!', ar: 'الجلسة خلصت!' },
+  somethingWentWrong: { en: "Something went wrong!", ar: "حدث خطأ ما!" },
+  contentNotFound: { en: "Content not found.", ar: "المحتوى غير موجود." },
+  sessionExpired: { en: "Session expired!", ar: "انتهت الجلسة!" },
 } satisfies Record<string, Message>
 
 export type TranslationKey = keyof typeof dictionary
@@ -137,40 +121,22 @@ const pluralRules: Record<Language, Intl.PluralRules> = {
   ar: new Intl.PluralRules('ar-EG'),
 }
 
-/**
- * Which Arabic the café speaks, from its brand: the dictionary's own Arabic
- * is Egyptian; Modern Standard lives in ./i18n.ar-standard and wins when
- * the café chose it.
- */
-export const useArabicStyle = create<{ standard: boolean; set: (style: string | null | undefined) => void }>()(
-  (set) => ({
-    standard: false,
-    set: (style) => set({ standard: style === 'standard' }),
-  })
-)
-
-function standardArabic(key: string, language: Language) {
-  return language === 'ar' && useArabicStyle.getState().standard ? arStandard[key] : undefined
-}
-
 function format(
   entry: Message,
   language: Language,
-  params?: TranslateParams,
-  key?: string
+  params?: TranslateParams
 ): string {
-  const standard = key ? standardArabic(key, language) : undefined
   let template: string
   if ('plural' in entry) {
     const count = Number(params?.[entry.plural] ?? 0)
-    const forms = typeof standard === 'object' ? standard : entry[language]
+    const forms = entry[language]
     template =
       forms[`=${count}`] ??
       forms[pluralRules[language].select(count)] ??
       forms.other ??
       ''
   } else {
-    template = (typeof standard === 'string' ? standard : entry[language]) || entry.en
+    template = entry[language] || entry.en
   }
   if (!params) return template
   return template.replace(/\{(\w+)\}/g, (whole, name) =>
@@ -180,10 +146,8 @@ function format(
 
 export function useT() {
   const language = useLanguage((s) => s.language)
-  // Re-render when the café's Arabic arrives with its brand
-  useArabicStyle((s) => s.standard)
   return (key: TranslationKey, params?: TranslateParams) =>
-    format(dictionary[key], language, params, key)
+    format(dictionary[key], language, params)
 }
 
 // For code living outside the React tree (query-cache error handlers)
@@ -191,7 +155,7 @@ export function translate(
   key: TranslationKey,
   params?: TranslateParams
 ): string {
-  return format(dictionary[key], useLanguage.getState().language, params, key)
+  return format(dictionary[key], useLanguage.getState().language, params)
 }
 
 // Picks the right side of a LocalizedText for the active language
@@ -204,8 +168,8 @@ export function useLocalized() {
 // Locale tag for date/number formatting
 /**
  * The BCP 47 tag every Intl formatter and toLocale*() call should use.
- * Egyptian Arabic keeps Arabic month and weekday names but, as everywhere
- * in Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
+ * Arabic keeps its own month and weekday names but, as everywhere in
+ * Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
  * 1,250 points read the same in both languages (owner's call).
  */
 export function useLocale(): string {

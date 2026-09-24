@@ -1,4 +1,4 @@
-using Ninja.EventBus.Abstractions;
+﻿using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
@@ -12,6 +12,7 @@ public class PlaceBecameAvailableIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
     IHubContext<NotificationHub> hubContext,
+    TenantArabic arabic,
     ILogger<PlaceBecameAvailableIntegrationEventHandler> logger) : IIntegrationEventHandler<PlaceBecameAvailableIntegrationEvent>
 {
     public async Task Handle(PlaceBecameAvailableIntegrationEvent @event)
@@ -35,8 +36,8 @@ public class PlaceBecameAvailableIntegrationEventHandler(
             {
                 var lang = group.Key;
                 var tokens = group.Select(s => s.FcmToken).ToList();
-                var title = NotificationMessages.RoomAvailableTitle.GetText(lang);
-                var body = NotificationMessages.RoomAvailableBody(@event.PlaceName, lang).GetText(lang);
+                var title = NotificationMessages.RoomAvailableTitle.For(arabic.Standard).GetText(lang);
+                var body = NotificationMessages.RoomAvailableBody(@event.PlaceName, lang).For(arabic.Standard).GetText(lang);
 
                 var result = await fcmService.SendBatchNotificationsAsync(
                     tokens,

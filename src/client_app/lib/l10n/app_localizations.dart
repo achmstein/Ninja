@@ -1518,7 +1518,7 @@ abstract class AppLocalizations {
   /// No description provided for @invalidPhone.
   ///
   /// In en, this message translates to:
-  /// **'Please enter a valid phone number (01xxxxxxxxx).'**
+  /// **'Please enter a valid phone number.'**
   String get invalidPhone;
 
   /// No description provided for @completeYourInfo.

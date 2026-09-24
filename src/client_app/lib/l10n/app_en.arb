@@ -410,7 +410,7 @@
   },
   "tableUnavailable": "This table is not available",
   "pointCameraAtRoomOrTableQr": "Point camera at a room or table QR code",
-  "invalidPhone": "Please enter a valid phone number (01xxxxxxxxx).",
+  "invalidPhone": "Please enter a valid phone number.",
   "completeYourInfo": "Complete Your Info",
   "orderingUnavailable": "Ordering is currently unavailable",
   "reservationsUnavailable": "Reservations are currently unavailable",

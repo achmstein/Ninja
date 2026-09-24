@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse } from '@/api/branch'
 import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
-import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
+import { useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
 
 /**
@@ -91,8 +91,6 @@ export async function bootBrand(queryClient: QueryClient) {
 
 /** Head tags and theme tokens: the café's icons everywhere; its theme only on the customer's surface. */
 export function applyBrand(brand: Brand, language: Language) {
-  // Which Arabic the café speaks, and the light or dark a person who never chose starts in
-  useArabicStyle.getState().set(brand.locale?.arabicStyle)
   useCafeTheme.getState().set(brand.theme?.mode)
   if (STAFF) {
     setLink('icon', brand.icons.favicon, 'image/png')

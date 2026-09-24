@@ -66,19 +66,12 @@ class TenantLocale {
   /// `ar` or `en`
   final String language;
 
-  /// `standard` or `egyptian`: which Arabic the app speaks
-  final String arabicStyle;
-
   const TenantLocale({
     this.country = 'EG',
     this.currency = 'EGP',
     this.timeZone = 'Africa/Cairo',
     this.language = 'ar',
-    this.arabicStyle = 'egyptian',
   });
-
-  /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
-  bool get speaksStandardArabic => arabicStyle == 'standard';
 
   static const egypt = TenantLocale();
 
@@ -94,9 +87,6 @@ class TenantLocale {
       currency: read('currency', egypt.currency).toUpperCase(),
       timeZone: read('timeZone', egypt.timeZone),
       language: read('language', egypt.language).toLowerCase(),
-      // Older stacks do not say: Egyptian for Egypt, Standard anywhere else
-      arabicStyle: read('arabicStyle', read('country', egypt.country).toUpperCase() == 'EG' ? 'egyptian' : 'standard')
-          .toLowerCase(),
     );
   }
 
@@ -105,7 +95,6 @@ class TenantLocale {
         'currency': currency,
         'timeZone': timeZone,
         'language': language,
-        'arabicStyle': arabicStyle,
       };
 
   @override
@@ -115,11 +104,10 @@ class TenantLocale {
           other.country == country &&
           other.currency == currency &&
           other.timeZone == timeZone &&
-          other.language == language &&
-          other.arabicStyle == arabicStyle;
+          other.language == language;
 
   @override
-  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle);
+  int get hashCode => Object.hash(country, currency, timeZone, language);
 }
 
 /// The tenant this build runs for: name, one brand color, a logo, its locale

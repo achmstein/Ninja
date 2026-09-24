@@ -5,51 +5,51 @@
   "branches": "الفروع",
   "signOut": "تسجيل الخروج",
   "settings": "الإعدادات",
-  "connectTitle": "ده كافيه مين؟",
-  "connectHint": "اكتب عنوان كافيهك، أو امسح الكود من صفحة التطبيقات في تطبيق الإدارة.",
-  "cafeAddress": "عنوان الكافيه",
+  "connectTitle": "ما اسم المقهى؟",
+  "connectHint": "أدخل عنوان المقهى، أو امسح الرمز من صفحة التطبيقات في تطبيق الإدارة.",
+  "cafeAddress": "عنوان المقهى",
   "connect": "اتصال",
-  "scanConnectCode": "امسح الكود",
-  "connectInvalidAddress": "ده مش عنوان.",
-  "connectUnreachable": "مفيش حاجة ردت على العنوان ده. اتأكد منه، وإن التابلت متصل بالنت.",
-  "connectNotACafe": "العنوان ده مش كافيه على ninja.",
-  "connectPaused": "الكافيه ده موقوف. صاحبه يقدر يشوف السبب في تطبيق الإدارة.",
-  "thisDevice": "الجهاز ده",
+  "scanConnectCode": "امسح الرمز",
+  "connectInvalidAddress": "هذا ليس عنوانًا صالحًا.",
+  "connectUnreachable": "لم يستجب أي شيء على هذا العنوان. تحقق منه، وتأكد أن الجهاز اللوحي متصل بالإنترنت.",
+  "connectNotACafe": "هذا العنوان ليس مقهى على ninja.",
+  "connectPaused": "هذا المقهى موقوف. يمكن لمالكه معرفة السبب من تطبيق الإدارة.",
+  "thisDevice": "هذا الجهاز",
   "connectedTo": "متصل بـ",
-  "changeCafe": "غيّر الكافيه",
-  "changeCafeConfirm": "هيسجّل خروج وينسى الكافيه ده. التابلت يبدأ من أول شاشة الاتصال.",
+  "changeCafe": "تغيير المقهى",
+  "changeCafeConfirm": "سيتم تسجيل الخروج ونسيان هذا المقهى، ويعود الجهاز اللوحي إلى شاشة الاتصال.",
   "language": "اللغة",
   "theme": "المظهر",
   "themeLight": "فاتح",
-  "themeDark": "غامق",
-  "signInFailed": "تسجيل الدخول فشل",
-  "redirectingToSignIn": "بنحولك لتسجيل الدخول...",
+  "themeDark": "داكن",
+  "signInFailed": "فشل تسجيل الدخول",
+  "redirectingToSignIn": "جارٍ التحويل إلى تسجيل الدخول...",
   "signedOutTitle": "تم تسجيل الخروج",
-  "signInAgain": "سجل دخول تاني",
-  "backToPos": "ارجع للكاشير",
-  "accessDeniedTitle": "مفيش صلاحية",
-  "accessDeniedDescription": "مفيش صلاحية.",
-  "openTickets": "الحسابات المفتوحة",
-  "noOpenTickets": "مفيش حسابات مفتوحة",
-  "noOpenTicketsHint": "افتح حساب جديد عشان تبدأ.",
-  "newTicket": "حساب جديد",
+  "signInAgain": "سجّل الدخول مرة أخرى",
+  "backToPos": "العودة إلى الكاشير",
+  "accessDeniedTitle": "لا توجد صلاحية",
+  "accessDeniedDescription": "لا توجد صلاحية.",
+  "openTickets": "الفواتير المفتوحة",
+  "noOpenTickets": "لا توجد فواتير مفتوحة",
+  "noOpenTicketsHint": "افتح فاتورة جديدة للبدء.",
+  "newTicket": "فاتورة جديدة",
   "newSale": "بيع جديد",
-  "addItems": "ضيف أصناف",
-  "addToTicket": "ضيف للحساب",
-  "itemsAddedToTicket": "اتضافوا للحساب",
-  "backToTicket": "ارجع للحساب",
+  "addItems": "إضافة أصناف",
+  "addToTicket": "إضافة إلى الفاتورة",
+  "itemsAddedToTicket": "أُضيفت إلى الفاتورة",
+  "backToTicket": "العودة إلى الفاتورة",
   "counter": "كاونتر",
-  "table": "ترابيزة",
-  "room": "اوضة",
-  "counterTicket": "حساب كاونتر",
-  "tableTicket": "حساب ترابيزة",
-  "chooseTable": "اختار الترابيزة",
-  "noTablesConfigured": "مفيش ترابيزات متضافة للفرع ده",
+  "table": "طاولة",
+  "room": "غرفة",
+  "counterTicket": "فاتورة كاونتر",
+  "tableTicket": "فاتورة طاولة",
+  "chooseTable": "اختر الطاولة",
+  "noTablesConfigured": "لا توجد طاولات مضافة لهذا الفرع",
   "customerName": "اسم العميل",
   "tabName": "اسم الحساب",
   "optional": "اختياري",
-  "openTicketAction": "افتح الحساب",
-  "linesCount": "{count, plural, one{صنف واحد} two{صنفين} few{{count} أصناف} other{{count} صنف}}",
+  "openTicketAction": "افتح الفاتورة",
+  "linesCount": "{count, plural, one{صنف واحد} two{صنفان} few{{count} أصناف} other{{count} صنف}}",
   "@linesCount": {
     "placeholders": {
       "count": {
@@ -57,7 +57,7 @@
       }
     }
   },
-  "pendingOrders": "في انتظار التأكيد",
+  "pendingOrders": "بانتظار التأكيد",
   "orderNumber": "طلب #{id}",
   "@orderNumber": {
     "placeholders": {
@@ -67,19 +67,19 @@
     }
   },
   "guest": "ضيف",
-  "confirmOrder": "أكّد",
+  "confirmOrder": "تأكيد",
   "guestFirstOrderHere": "أول طلب هنا",
-  "guestOrdersBefore": "{count} طلبات هنا قبل كده",
-  "nobodyAtTheTable": "مفيش حد على الترابيزة",
-  "guestTurnedAway": "اترفض لحد بكرة",
+  "guestOrdersBefore": "{count} طلبات سابقة هنا",
+  "nobodyAtTheTable": "لا أحد على الطاولة",
+  "guestTurnedAway": "مرفوض حتى الغد",
   "accountHolder": "حساب",
-  "cancelOrder": "ألغي الطلب",
-  "cancelOrderConfirm": "تلغي الطلب؟",
-  "keepOrder": "سيبه",
-  "orderConfirmed": "الطلب اتأكد",
-  "orderCancelled": "الطلب اتلغى",
-  "failedToConfirmOrder": "مقدرناش نأكد الطلب",
-  "failedToCancelOrder": "مقدرناش نلغي الطلب",
+  "cancelOrder": "إلغاء الطلب",
+  "cancelOrderConfirm": "إلغاء الطلب؟",
+  "keepOrder": "إبقاء الطلب",
+  "orderConfirmed": "تم تأكيد الطلب",
+  "orderCancelled": "تم إلغاء الطلب",
+  "failedToConfirmOrder": "تعذّر تأكيد الطلب",
+  "failedToCancelOrder": "تعذّر إلغاء الطلب",
   "newOrderToast": "طلب جديد #{orderId}",
   "@newOrderToast": {
     "placeholders": {
@@ -99,7 +99,7 @@
       }
     }
   },
-  "orderWaitingToast": "طلب #{orderId} مستني بقاله {minutes} دقيقة",
+  "orderWaitingToast": "الطلب #{orderId} بانتظار منذ {minutes} دقيقة",
   "@orderWaitingToast": {
     "placeholders": {
       "minutes": {
@@ -110,8 +110,8 @@
       }
     }
   },
-  "justNow": "دلوقتي",
-  "minutesAgo": "من {minutes} دقيقة",
+  "justNow": "الآن",
+  "minutesAgo": "منذ {minutes} دقيقة",
   "@minutesAgo": {
     "placeholders": {
       "minutes": {
@@ -119,7 +119,7 @@
       }
     }
   },
-  "hoursAgo": "من {hours} ساعة",
+  "hoursAgo": "منذ {hours} ساعة",
   "@hoursAgo": {
     "placeholders": {
       "hours": {
@@ -128,7 +128,7 @@
     }
   },
   "loyaltyDiscount": "خصم الولاء",
-  "ticketPendingOrders": "{count, plural, one{فيه طلب واحد للحساب ده مستني تأكيد} two{فيه طلبين للحساب ده مستنيين تأكيد} few{فيه {count} طلبات للحساب ده مستنيين تأكيد} other{فيه {count} طلب للحساب ده مستنيين تأكيد}}",
+  "ticketPendingOrders": "{count, plural, one{يوجد طلب واحد لهذه الفاتورة بانتظار التأكيد} two{يوجد طلبان لهذه الفاتورة بانتظار التأكيد} few{توجد {count} طلبات لهذه الفاتورة بانتظار التأكيد} other{يوجد {count} طلب لهذه الفاتورة بانتظار التأكيد}}",
   "@ticketPendingOrders": {
     "placeholders": {
       "count": {
@@ -136,14 +136,14 @@
       }
     }
   },
-  "settleWithPendingTitle": "لسه فيه طلب مستني",
-  "settleAnyway": "اقفل على أي حال",
+  "settleWithPendingTitle": "لا يزال هناك طلب بانتظار التأكيد",
+  "settleAnyway": "إغلاق على أي حال",
   "goBack": "رجوع",
-  "rooms": "الاوض",
-  "noRooms": "مفيش اوض متضافة للفرع ده",
+  "rooms": "الغرف",
+  "noRooms": "لا توجد غرف مضافة لهذا الفرع",
   "statusAvailable": "متاحة",
   "statusReserved": "محجوزة",
-  "underMaintenance": "في الصيانة",
+  "underMaintenance": "قيد الصيانة",
   "perHour": "/ساعة",
   "walkIn": "زيارة مباشرة",
   "reservedFor": "محجوزة لـ {name}",
@@ -154,7 +154,7 @@
       }
     }
   },
-  "expiresIn": "بينتهي في {countdown}",
+  "expiresIn": "ينتهي خلال {countdown}",
   "@expiresIn": {
     "placeholders": {
       "countdown": {
@@ -162,27 +162,27 @@
       }
     }
   },
-  "readyToStart": "جاهز للبدء",
+  "readyToStart": "جاهزة للبدء",
   "rate": "السعر",
-  "startSession": "إبدا الوقت",
-  "reserve": "احجز",
-  "roomReserved": "الأوضة اتحجزت",
-  "failedToReserveRoom": "معرفناش نحجز الأوضة",
+  "startSession": "بدء الوقت",
+  "reserve": "حجز",
+  "roomReserved": "تم حجز الغرفة",
+  "failedToReserveRoom": "تعذّر حجز الغرفة",
   "serviceRequests": "الطلبات",
-  "requestCallWaiter": "نداء الويتر",
-  "requestControllerChange": "تغيير الدراع",
-  "requestReceiptToPay": "هات الحساب",
-  "acknowledgeRequest": "استلمنا",
-  "failedToUpdateRequest": "معرفناش نحدث الطلب",
-  "newServiceRequestToast": "طلب جديد من أوضة",
+  "requestCallWaiter": "استدعاء النادل",
+  "requestControllerChange": "تغيير ذراع التحكم",
+  "requestReceiptToPay": "طلب الفاتورة",
+  "acknowledgeRequest": "تم الاستلام",
+  "failedToUpdateRequest": "تعذّر تحديث الطلب",
+  "newServiceRequestToast": "طلب جديد من غرفة",
   "startWalkInSession": "بدء جلسة فورية",
-  "sessionStarted": "الجلسة بدأت",
-  "failedToStartSession": "معرفناش نبدأ الجلسة",
-  "sessionRunning": "الوقت شغال",
-  "timeSoFar": "الوقت لحد دلوقتي",
-  "roomTimeRunning": "وقت الأوضة · شغال",
-  "inTheRoom": "اللي في الأوضة",
-  "billedHours": "الساعات المحسوبة",
+  "sessionStarted": "بدأت الجلسة",
+  "failedToStartSession": "تعذّر بدء الجلسة",
+  "sessionRunning": "الوقت جارٍ",
+  "timeSoFar": "الوقت حتى الآن",
+  "roomTimeRunning": "وقت الغرفة · جارٍ",
+  "inTheRoom": "في الغرفة",
+  "billedHours": "الساعات المحتسبة",
   "billedHoursFormat": "{hours} ساعة",
   "@billedHoursFormat": {
     "placeholders": {
@@ -191,10 +191,10 @@
       }
     }
   },
-  "billedSoFar": "اتحسب لحد دلوقتي",
+  "billedSoFar": "المحتسب حتى الآن",
   "endSessionButton": "إنهاء الوقت",
-  "endThisSession": "إنهاء الجلسة دي؟",
-  "endSessionBilledAt": "{hours} على الحساب.",
+  "endThisSession": "إنهاء هذه الجلسة؟",
+  "endSessionBilledAt": "{hours} على الفاتورة.",
   "@endSessionBilledAt": {
     "placeholders": {
       "hours": {
@@ -202,19 +202,19 @@
       }
     }
   },
-  "keepPlaying": "كمّلوا لعب",
-  "sessionEnded": "الجلسة خلصت",
-  "failedToEndSession": "معرفناش ننهي الجلسة",
-  "cancelSessionButton": "إلغاء من غير حساب",
-  "cancelThisSession": "تلغي الجلسة دي؟",
-  "cancelSessionHint": "من غير حساب.",
-  "sessionCancelled": "الجلسة اتلغت",
+  "keepPlaying": "متابعة اللعب",
+  "sessionEnded": "انتهت الجلسة",
+  "failedToEndSession": "تعذّر إنهاء الجلسة",
+  "cancelSessionButton": "إلغاء دون احتساب",
+  "cancelThisSession": "إلغاء هذه الجلسة؟",
+  "cancelSessionHint": "دون احتساب.",
+  "sessionCancelled": "تم إلغاء الجلسة",
   "cancelReservation": "إلغاء الحجز",
-  "cancelThisReservation": "إلغاء الحجز ده؟",
-  "reservationCancelled": "الحجز اتلغى",
-  "failedToCancelSession": "معرفناش نلغي",
-  "keepIt": "خليه",
-  "switchToModeQuestion": "التحويل لوضع {mode}؟",
+  "cancelThisReservation": "إلغاء هذا الحجز؟",
+  "reservationCancelled": "تم إلغاء الحجز",
+  "failedToCancelSession": "تعذّر الإلغاء",
+  "keepIt": "إبقاء",
+  "switchToModeQuestion": "التحويل إلى وضع {mode}؟",
   "@switchToModeQuestion": {
     "placeholders": {
       "mode": {
@@ -222,8 +222,8 @@
       }
     }
   },
-  "switchMode": "غيّر الوضع",
-  "keepCurrent": "خلي {mode}",
+  "switchMode": "تغيير الوضع",
+  "keepCurrent": "إبقاء {mode}",
   "@keepCurrent": {
     "placeholders": {
       "mode": {
@@ -231,19 +231,19 @@
       }
     }
   },
-  "rateChanged": "السعر اتغير",
-  "failedToChangeRate": "مقدرناش نغير السعر",
+  "rateChanged": "تم تغيير السعر",
+  "failedToChangeRate": "تعذّر تغيير السعر",
   "addCustomer": "إضافة عميل",
   "assignCustomer": "تعيين عميل",
-  "customerAdded": "اتضاف العميل",
+  "customerAdded": "تمت إضافة العميل",
   "customerAssigned": "تم تعيين العميل",
-  "failedToAddCustomer": "معرفناش نضيف العميل",
-  "failedToAssignCustomer": "معرفناش نعين العميل",
-  "memberRemove": "شيل العضو",
-  "memberRemoved": "العضو اتشال",
-  "failedToRemoveMember": "معرفناش نشيل العضو",
-  "settleWithSessionTitle": "الوقت لسه شغال",
-  "voidWithSessionTitle": "الوقت لسه شغال",
+  "failedToAddCustomer": "تعذّرت إضافة العميل",
+  "failedToAssignCustomer": "تعذّر تعيين العميل",
+  "memberRemove": "إزالة العضو",
+  "memberRemoved": "تمت إزالة العضو",
+  "failedToRemoveMember": "تعذّرت إزالة العضو",
+  "settleWithSessionTitle": "الوقت لا يزال جاريًا",
+  "voidWithSessionTitle": "الوقت لا يزال جاريًا",
   "subtotal": "المجموع قبل الإضافات",
   "serviceCharge": "خدمة {rate}%",
   "@serviceCharge": {
@@ -270,7 +270,7 @@
     }
   },
   "refundTicket": "استرجاع",
-  "refundTitle": "استرجاع على إيصال #{number}",
+  "refundTitle": "استرجاع على الإيصال #{number}",
   "@refundTitle": {
     "placeholders": {
       "number": {
@@ -278,7 +278,7 @@
       }
     }
   },
-  "refundHint": "الباقي {amount}",
+  "refundHint": "المتبقي {amount}",
   "@refundHint": {
     "placeholders": {
       "amount": {
@@ -286,7 +286,7 @@
       }
     }
   },
-  "leftToRefund": "{count, plural, one{باقي واحد} two{باقي اتنين} few{باقي {count}} other{باقي {count}}}",
+  "leftToRefund": "{count, plural, one{يتبقى واحد} two{يتبقى اثنان} few{يتبقى {count}} other{يتبقى {count}}}",
   "@leftToRefund": {
     "placeholders": {
       "count": {
@@ -294,9 +294,9 @@
       }
     }
   },
-  "refundEverything": "رجّع الكل",
-  "nothingLeftToRefund": "مفيش حاجة باقية تترجع على الإيصال ده",
-  "confirmRefund": "اعمل إشعار استرجاع · {amount}",
+  "refundEverything": "استرجاع الكل",
+  "nothingLeftToRefund": "لم يتبقَّ شيء للاسترجاع على هذا الإيصال",
+  "confirmRefund": "إصدار إشعار استرجاع · {amount}",
   "@confirmRefund": {
     "placeholders": {
       "amount": {
@@ -304,7 +304,7 @@
       }
     }
   },
-  "ticketRefunded": "اتعمل إشعار استرجاع #{number} بقيمة {amount}",
+  "ticketRefunded": "صدر إشعار الاسترجاع #{number} بقيمة {amount}",
   "@ticketRefunded": {
     "placeholders": {
       "amount": {
@@ -324,36 +324,36 @@
       }
     }
   },
-  "refundedSoFar": "مرتجع",
+  "refundedSoFar": "مسترجع",
   "breakdown": "التفاصيل",
-  "none": "مفيش",
-  "noOpenBills": "مفيش حسابات مفتوحة",
-  "openPlace": "افتح",
+  "none": "لا يوجد",
+  "noOpenBills": "لا توجد فواتير مفتوحة",
+  "openPlace": "فتح",
   "hidePlaces": "إخفاء الأماكن",
   "showPlaces": "إظهار الأماكن",
-  "searchPlaces": "دوّر على اوضة أو ترابيزة",
-  "noPlaceMatches": "مفيش حاجة بالاسم ده",
-  "everyPlaceHasABill": "كل الاوض والترابيزات عليها حسابات",
-  "tables": "الترابيزات",
+  "searchPlaces": "ابحث عن غرفة أو طاولة",
+  "noPlaceMatches": "لا توجد نتائج بهذا الاسم",
+  "everyPlaceHasABill": "جميع الغرف والطاولات عليها فواتير",
+  "tables": "الطاولات",
   "stations": "الألعاب",
   "time": "الوقت",
-  "billOnly": "شيك بس",
+  "billOnly": "الفاتورة فقط",
   "confirmHold": "تأكيد",
-  "holdConfirmed": "الحجز اتأكد",
-  "seatParty": "قعّدهم",
-  "partySeated": "اتقعدوا",
+  "holdConfirmed": "تم تأكيد الحجز",
+  "seatParty": "إجلاس",
+  "partySeated": "تم الإجلاس",
   "partyOf": "{count} أفراد",
-  "seatedSince": "من الساعة {time}",
-  "partyLeft": "الناس مشيوا",
-  "tableCleared": "الترابيزة اتفضّت",
-  "failedToClearTable": "معرفناش نفضّي الترابيزة",
-  "startsOnConfirm": "الوقت يبدأ لما تأكد",
-  "requestChangeOption": "عايز يحوّل {option}",
-  "freeTables": "ترابيزات فاضية",
-  "openBills": "الحسابات المفتوحة",
+  "seatedSince": "منذ الساعة {time}",
+  "partyLeft": "غادر الضيوف",
+  "tableCleared": "تم إخلاء الطاولة",
+  "failedToClearTable": "تعذّر إخلاء الطاولة",
+  "startsOnConfirm": "يبدأ الوقت عند التأكيد",
+  "requestChangeOption": "يطلب التحويل إلى {option}",
+  "freeTables": "طاولات شاغرة",
+  "openBills": "الفواتير المفتوحة",
   "allBills": "الكل",
-  "waitingToConfirm": "مستني تأكيد",
-  "idleForMinutes": "ساكن {count}د",
+  "waitingToConfirm": "بانتظار التأكيد",
+  "idleForMinutes": "خامل {count}د",
   "@idleForMinutes": {
     "placeholders": {
       "count": {
@@ -370,7 +370,7 @@
       }
     }
   },
-  "alreadyOnBill": "عليه حساب مفتوح · {where}",
+  "alreadyOnBill": "لديه فاتورة مفتوحة · {where}",
   "@alreadyOnBill": {
     "placeholders": {
       "where": {
@@ -378,8 +378,8 @@
       }
     }
   },
-  "findCustomer": "دور على عميل",
-  "ticketNumber": "حساب #{id}",
+  "findCustomer": "البحث عن عميل",
+  "ticketNumber": "فاتورة #{id}",
   "@ticketNumber": {
     "placeholders": {
       "id": {
@@ -387,19 +387,19 @@
       }
     }
   },
-  "ticketNotFound": "الحساب مش موجود",
+  "ticketNotFound": "الفاتورة غير موجودة",
   "backToFloor": "الصالة",
-  "emptyTicket": "مفيش أصناف على الحساب لسه",
+  "emptyTicket": "لا توجد أصناف في الفاتورة بعد",
   "total": "الإجمالي",
-  "settleAction": "اقفل الحساب",
-  "settledBadge": "متقفل",
+  "settleAction": "إغلاق الفاتورة",
+  "settledBadge": "مغلقة",
   "discount": "الخصم",
   "apply": "تطبيق",
-  "remove": "شيل",
+  "remove": "إزالة",
   "cancel": "إلغاء",
   "close": "إغلاق",
   "selectLines": "تحديد",
-  "moveLinesAction": "{count, plural, one{انقل بند واحد…} two{انقل بندين…} few{انقل {count} بنود…} other{انقل {count} بند…}}",
+  "moveLinesAction": "{count, plural, one{نقل بند واحد…} two{نقل بندين…} few{نقل {count} بنود…} other{نقل {count} بند…}}",
   "@moveLinesAction": {
     "placeholders": {
       "count": {
@@ -407,34 +407,34 @@
       }
     }
   },
-  "linesMoved": "البنود اتنقلت",
-  "moveTo": "انقل إلى",
-  "newBill": "حساب جديد",
-  "moveToBill": "انقل لحساب",
-  "searchBills": "دور في الحسابات المفتوحة",
-  "noBillsToMoveTo": "مفيش حسابات مفتوحة تانية",
+  "linesMoved": "تم نقل البنود",
+  "moveTo": "نقل إلى",
+  "newBill": "فاتورة جديدة",
+  "moveToBill": "نقل إلى فاتورة",
+  "searchBills": "البحث في الفواتير المفتوحة",
+  "noBillsToMoveTo": "لا توجد فواتير مفتوحة أخرى",
   "counterTabs": "حسابات الكاونتر",
-  "whoseRound": "الطلب ده لمين؟",
-  "usuals": "على مزاجه",
-  "someoneElse": "حد تاني",
-  "newTicketForPlace": "حساب جديد لنفس المكان",
-  "noOtherOpenTickets": "مفيش حسابات مفتوحة تانية",
+  "whoseRound": "لمن هذا الطلب؟",
+  "usuals": "المعتاد",
+  "someoneElse": "شخص آخر",
+  "newTicketForPlace": "فاتورة جديدة للمكان نفسه",
+  "noOtherOpenTickets": "لا توجد فواتير مفتوحة أخرى",
   "currentSale": "البيع الحالي",
-  "noItemsInCategory": "مفيش أصناف في القسم ده",
-  "unavailable": "مش متاح",
+  "noItemsInCategory": "لا توجد أصناف في هذا القسم",
+  "unavailable": "غير متاح",
   "required": "مطلوب",
   "quantity": "الكمية",
   "specialInstructionsOptional": "طلبات خاصة (اختياري)",
-  "addToOrder": "ضيف للأوردر",
-  "orderNoteOptional": "ملاحظة على الأوردر (اختياري)",
-  "chargeAction": "حاسب",
-  "clearSale": "امسح البيع",
-  "sendingToKitchen": "بيتبعت للمطبخ…",
-  "orderAlreadyPlaced": "الأوردر ده اتبعت قبل كده",
-  "ticketNotReadyYet": "الأوردر اتبعت — الحساب هيظهر في الصالة كمان شوية",
-  "chooseCustomer": "اختار العميل",
-  "removeCustomer": "شيل العميل",
-  "useNameAction": "استخدم \"{name}\"",
+  "addToOrder": "إضافة إلى الطلب",
+  "orderNoteOptional": "ملاحظة على الطلب (اختياري)",
+  "chargeAction": "تحصيل",
+  "clearSale": "مسح البيع",
+  "sendingToKitchen": "جارٍ الإرسال إلى المطبخ…",
+  "orderAlreadyPlaced": "تم إرسال هذا الطلب مسبقًا",
+  "ticketNotReadyYet": "أُرسل الطلب — ستظهر الفاتورة في الصالة بعد قليل",
+  "chooseCustomer": "اختر العميل",
+  "removeCustomer": "إزالة العميل",
+  "useNameAction": "استخدام \"{name}\"",
   "@useNameAction": {
     "placeholders": {
       "name": {
@@ -442,25 +442,25 @@
       }
     }
   },
-  "noAccountNeeded": "اسم بس — من غير حساب",
-  "searchCustomersPlaceholder": "الاسم أو الموبايل أو الإيميل",
-  "noCustomersFound": "مفيش عملاء طالعين بالبحث ده",
-  "settleTitle": "قفل الحساب",
+  "noAccountNeeded": "اسم فقط — دون حساب",
+  "searchCustomersPlaceholder": "الاسم أو رقم الجوال أو البريد الإلكتروني",
+  "noCustomersFound": "لا يوجد عملاء مطابقون لهذا البحث",
+  "settleTitle": "إغلاق الفاتورة",
   "payments": "المدفوعات",
-  "cash": "كاش",
-  "card": "كارت",
+  "cash": "نقدًا",
+  "card": "بطاقة",
   "instapay": "إنستاباي",
   "account": "على الحساب",
-  "whoseAccount": "حساب مين؟",
-  "whoseRounds": "دول بتوع مين؟",
-  "onCustomerTab": "اتحط على حساب العميل",
+  "whoseAccount": "حساب من؟",
+  "whoseRounds": "لمن هذه الطلبات؟",
+  "onCustomerTab": "أُضيف إلى حساب العميل",
   "amount": "المبلغ",
-  "addPayment": "ضيف دفعة",
-  "remaining": "الناقص",
+  "addPayment": "إضافة دفعة",
+  "remaining": "المتبقي",
   "changeDue": "الباقي",
-  "noPaymentsYet": "لسه مفيش مدفوعات",
-  "confirmSettle": "أكد واقفل",
-  "ticketSettled": "الحساب اتقفل",
+  "noPaymentsYet": "لا توجد مدفوعات بعد",
+  "confirmSettle": "تأكيد وإغلاق",
+  "ticketSettled": "تم إغلاق الفاتورة",
   "receiptNumber": "إيصال #{number}",
   "@receiptNumber": {
     "placeholders": {
@@ -469,11 +469,11 @@
       }
     }
   },
-  "print": "اطبع",
-  "openBill": "افتح الحساب",
+  "print": "طباعة",
+  "openBill": "فتح الفاتورة",
   "done": "تم",
   "customerDetails": "تفاصيل العميل",
-  "loyaltyPoints": "نقط الولاء",
+  "loyaltyPoints": "نقاط الولاء",
   "pointsBalance": "{points} نقطة",
   "@pointsBalance": {
     "placeholders": {
@@ -492,10 +492,10 @@
   },
   "tierBronze": "برونزي",
   "tierSilver": "فضي",
-  "tierGold": "دهبي",
+  "tierGold": "ذهبي",
   "tierPlatinum": "بلاتيني",
-  "notEnrolled": "مش مشترك في برنامج الولاء",
-  "joinsFromApp": "العميل بيشترك ويستخدم نقطه من الأبلكيشن.",
+  "notEnrolled": "غير مشترك في برنامج الولاء",
+  "joinsFromApp": "يشترك العميل ويستخدم نقاطه من التطبيق.",
   "tabBalance": "الحساب الآجل",
   "owesAmount": "عليه {amount}",
   "@owesAmount": {
@@ -505,7 +505,7 @@
       }
     }
   },
-  "creditAmount": "ليه {amount}",
+  "creditAmount": "له {amount}",
   "@creditAmount": {
     "placeholders": {
       "amount": {
@@ -513,9 +513,9 @@
       }
     }
   },
-  "settledUp": "مفيش عليه حاجة",
-  "noTab": "مفيش حساب آجل",
-  "thisBill": "الحساب ده {amount}",
+  "settledUp": "لا شيء مستحق عليه",
+  "noTab": "لا يوجد حساب آجل",
+  "thisBill": "هذه الفاتورة {amount}",
   "@thisBill": {
     "placeholders": {
       "amount": {
@@ -524,9 +524,9 @@
     }
   },
   "payTab": "سداد الحساب",
-  "topUp": "شحن رصيد",
-  "confirmTabPayment": "استلم",
-  "tabPaymentRecorded": "اتسجل سداد الحساب",
+  "topUp": "شحن الرصيد",
+  "confirmTabPayment": "استلام",
+  "tabPaymentRecorded": "تم تسجيل سداد الحساب",
   "tabPaymentSlip": "سداد حساب آجل",
   "tabPaymentNumber": "سداد #{number}",
   "@tabPaymentNumber": {
@@ -536,21 +536,21 @@
       }
     }
   },
-  "tabBalanceBefore": "الرصيد قبل",
+  "tabBalanceBefore": "الرصيد السابق",
   "newBalance": "الرصيد الجديد",
-  "failedToPayTab": "معرفناش نسجل السداد",
-  "tabPayments": "سداد حسابات آجلة",
-  "voidTicket": "إلغاء الحساب",
-  "confirmVoid": "ألغي الحساب",
-  "ticketVoided": "الحساب اتلغى",
-  "voidedBadge": "ملغي",
-  "voidedBy": "لغاه",
-  "discardTicket": "امسح الحساب",
-  "discardTicketTitle": "تمسح الحساب ده؟",
-  "confirmDiscard": "امسح",
-  "ticketDiscarded": "الحساب اتمسح",
-  "takingOrders": "بنستلم أوردرات",
-  "takingReservations": "بنستلم حجوزات",
+  "failedToPayTab": "تعذّر تسجيل السداد",
+  "tabPayments": "سداد الحسابات الآجلة",
+  "voidTicket": "إلغاء الفاتورة",
+  "confirmVoid": "إلغاء الفاتورة",
+  "ticketVoided": "تم إلغاء الفاتورة",
+  "voidedBadge": "ملغاة",
+  "voidedBy": "ألغاها",
+  "discardTicket": "حذف الفاتورة",
+  "discardTicketTitle": "حذف هذه الفاتورة؟",
+  "confirmDiscard": "حذف",
+  "ticketDiscarded": "تم حذف الفاتورة",
+  "takingOrders": "نستقبل الطلبات",
+  "takingReservations": "نستقبل الحجوزات",
   "paused": "متوقف",
   "shiftDetails": "تفاصيل الوردية",
   "shiftTitle": "الوردية",
@@ -562,76 +562,76 @@
       }
     }
   },
-  "noShiftChip": "مفيش وردية",
+  "noShiftChip": "لا توجد وردية",
   "shiftOpenBadge": "مفتوحة",
-  "shiftClosedBadge": "مقفولة",
+  "shiftClosedBadge": "مغلقة",
   "openShiftTitle": "فتح الوردية",
-  "openShiftAction": "افتح الوردية",
-  "openingFloat": "فكة أول الوردية",
-  "shiftOpened": "الوردية اتفتحت",
-  "noShiftOpen": "مفيش وردية مفتوحة",
-  "openedAt": "اتفتحت",
+  "openShiftAction": "فتح الوردية",
+  "openingFloat": "رصيد بداية الوردية",
+  "shiftOpened": "تم فتح الوردية",
+  "noShiftOpen": "لا توجد وردية مفتوحة",
+  "openedAt": "فُتحت",
   "openedBy": "فتحها",
-  "closedAt": "اتقفلت",
-  "closedBy": "قفلها",
-  "ticketsSettled": "حسابات اتقفلت",
+  "closedAt": "أُغلقت",
+  "closedBy": "أغلقها",
+  "ticketsSettled": "الفواتير المغلقة",
   "salesTotal": "إجمالي المبيعات",
-  "changeGiven": "باقي اتصرف",
+  "changeGiven": "الباقي المصروف",
   "tenderSplit": "حسب طريقة الدفع",
   "countColumn": "العدد",
-  "expectedInDrawer": "المفروض في الدرج",
+  "expectedInDrawer": "المتوقع في الدرج",
   "drawerMovements": "حركة الدرج",
-  "noMovements": "مفيش حركة على الدرج",
-  "payIn": "حط في الدرج",
-  "payOut": "اسحب من الدرج",
-  "payInsTotal": "اللي اتحط في الدرج",
-  "payOutsTotal": "اللي اتسحب من الدرج",
+  "noMovements": "لا توجد حركة على الدرج",
+  "payIn": "إيداع في الدرج",
+  "payOut": "سحب من الدرج",
+  "payInsTotal": "المودَع في الدرج",
+  "payOutsTotal": "المسحوب من الدرج",
   "reason": "السبب",
-  "movementRecorded": "الحركة اتسجلت",
-  "payOutFor": "عشان",
+  "movementRecorded": "تم تسجيل الحركة",
+  "payOutFor": "الغرض",
   "payOutSupplier": "مورد",
-  "payOutWage": "يومية / مرتب",
+  "payOutWage": "يومية / راتب",
   "payOutAdvance": "سلفة",
-  "payOutOther": "حاجة تانية",
+  "payOutOther": "أخرى",
   "payOutExpense": "مصروف",
   "payOutPartner": "شريك",
-  "payOutWho": "لمين؟",
+  "payOutWho": "لمن؟",
   "payOutWhichSupplier": "أي مورد؟",
   "payOutWhichPartner": "أي شريك؟",
-  "payOutWhatFor": "مصروف إيه؟",
-  "closeShiftTitle": "قفل الوردية",
-  "closeShiftAction": "اقفل الوردية",
-  "countedAmount": "الكاش اللي اتعد في الدرج",
-  "confirmCloseShift": "أكد واقفل الوردية",
-  "shiftClosed": "الوردية اتقفلت",
-  "expected": "المفروض",
+  "payOutWhatFor": "ما نوع المصروف؟",
+  "closeShiftTitle": "إغلاق الوردية",
+  "closeShiftAction": "إغلاق الوردية",
+  "countedAmount": "النقد المعدود في الدرج",
+  "confirmCloseShift": "تأكيد وإغلاق الوردية",
+  "shiftClosed": "تم إغلاق الوردية",
+  "expected": "المتوقع",
   "counted": "المعدود",
   "overShort": "العجز والزيادة",
   "drawerOver": "زيادة",
   "drawerShort": "عجز",
-  "drawerBalanced": "مظبوط",
-  "zReportTitle": "تقرير قفل الوردية",
+  "drawerBalanced": "مطابق",
+  "zReportTitle": "تقرير إغلاق الوردية",
   "xReportTitle": "تقرير الوردية",
-  "shiftHistory": "الورديات المقفولة",
-  "noClosedShifts": "مفيش ورديات مقفولة لسه",
+  "shiftHistory": "الورديات المغلقة",
+  "noClosedShifts": "لا توجد ورديات مغلقة بعد",
   "cashier": "الكاشير",
-  "previousPage": "اللي قبلها",
-  "nextPage": "اللي بعدها",
-  "shiftNotFound": "الوردية مش موجودة",
+  "previousPage": "السابق",
+  "nextPage": "التالي",
+  "shiftNotFound": "الوردية غير موجودة",
   "backToShift": "الوردية",
   "receipts": "الإيصالات",
   "searchReceiptNumber": "رقم الإيصال",
-  "noReceipts": "مفيش إيصالات لسه",
+  "noReceipts": "لا توجد إيصالات بعد",
   "availability": "التوفر",
-  "soldOut": "خلص",
-  "outOfStock": "خلص",
+  "soldOut": "نفد",
+  "outOfStock": "نفد",
   "available": "متاح",
-  "searchItems": "دوّر على الأصناف",
-  "noItemsMatch": "مفيش أصناف بالاسم ده",
-  "failedToUpdateAvailability": "معرفناش نحدث التوفر",
+  "searchItems": "البحث في الأصناف",
+  "noItemsMatch": "لا توجد أصناف بهذا الاسم",
+  "failedToUpdateAvailability": "تعذّر تحديث التوفر",
   "receiptDate": "التاريخ",
-  "receiptThanks": "شكراً لحضرتك!",
-  "taxNumber": "رقم ضريبي {number}",
+  "receiptThanks": "شكرًا لزيارتكم!",
+  "taxNumber": "الرقم الضريبي {number}",
   "@taxNumber": {
     "placeholders": {
       "number": {
@@ -640,49 +640,49 @@
     }
   },
   "toastSuccess": "تم بنجاح",
-  "toastError": "في حاجة غلط",
-  "toastInfo": "خد بالك",
+  "toastError": "حدث خطأ",
+  "toastInfo": "انتبه",
   "toastWarning": "تنبيه",
-  "retry": "حاول تاني",
-  "somethingWentWrong": "في حاجة غلط حصلت!",
-  "contentNotFound": "المحتوى مش موجود.",
-  "sessionExpired": "الجلسة خلصت!",
-  "email": "الإيميل",
-  "enterEmail": "اكتب الإيميل",
-  "password": "الباسورد",
-  "enterPassword": "اكتب الباسورد",
+  "retry": "إعادة المحاولة",
+  "somethingWentWrong": "حدث خطأ ما!",
+  "contentNotFound": "المحتوى غير موجود.",
+  "sessionExpired": "انتهت الجلسة!",
+  "email": "البريد الإلكتروني",
+  "enterEmail": "أدخل البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "enterPassword": "أدخل كلمة المرور",
   "signIn": "تسجيل الدخول",
   "error": "خطأ",
-  "invalidCredentials": "اليوزر أو الباسورد غلط. حاول تاني.",
-  "enterBothFields": "من فضلك اكتب اليوزر والباسورد.",
+  "invalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة. حاول مرة أخرى.",
+  "enterBothFields": "يرجى إدخال اسم المستخدم وكلمة المرور.",
   "customer": "العميل",
   "date": "التاريخ",
   "items": "العناصر",
-  "failedToSettle": "معرفناش نحصّل الحساب",
+  "failedToSettle": "تعذّر تحصيل الفاتورة",
   "customerNote": "ملاحظة العميل",
   "printer": "طابعة الإيصالات",
-  "printerHint": "طابعة 80 مم على شبكة الكافيه. الإيصال بيتطبع كصورة، فأي ماركة تنفع؛ والدرج بيفتح عن طريق الطابعة.",
+  "printerHint": "طابعة 80 مم على شبكة المقهى. يُطبع الإيصال كصورة، لذا تصلح أي علامة تجارية؛ ويُفتح الدرج عن طريق الطابعة.",
   "printerHost": "عنوان الطابعة",
-  "printerPort": "البورت",
+  "printerPort": "المنفذ",
   "save": "حفظ",
-  "printerSaved": "اتحفظت الطابعة",
+  "printerSaved": "تم حفظ الطابعة",
   "testPrint": "طباعة تجريبية",
-  "kickDrawer": "افتح الدرج",
-  "printed": "اتبعت للطابعة",
-  "printerNotConfigured": "مفيش طابعة متظبطة لسه. ضيفها من الإعدادات.",
-  "printerUnreachable": "مقدرناش نوصل للطابعة",
+  "kickDrawer": "فتح الدرج",
+  "printed": "أُرسل إلى الطابعة",
+  "printerNotConfigured": "لم يتم إعداد طابعة بعد. أضفها من الإعدادات.",
+  "printerUnreachable": "تعذّر الوصول إلى الطابعة",
   "testPrintTitle": "طباعة تجريبية",
-  "testPrintBody": "لو بتقرا ده، يبقى الكاشير بيطبع.",
+  "testPrintBody": "إذا كنت تقرأ هذا، فالكاشير يطبع بنجاح.",
   "kiosk": "وضع الكشك",
-  "kioskHint": "بيثبّت الكاشير على الشاشة فمفيش هوم ولا ريسنت ولا إشعارات. لو التابلت متظبط والتطبيق هو مالك الجهاز بيتقفل من غير سؤال؛ غير كده أندرويد بيسأل الأول وممكن يخرج بسحبة.",
-  "kioskDeviceOwner": "مالك الجهاز: الكاشير بيثبّت نفسه",
-  "kioskNotDeviceOwner": "مش مالك الجهاز: تثبيت شاشة أندرويد بس",
+  "kioskHint": "يثبّت الكاشير على الشاشة فلا تظهر الشاشة الرئيسية ولا التطبيقات الأخيرة ولا الإشعارات. إذا كان الجهاز اللوحي مُعدًّا والتطبيق هو مالك الجهاز، يُقفل دون سؤال؛ وإلا يطلب أندرويد التأكيد أولًا ويمكن الخروج منه بسحبة.",
+  "kioskDeviceOwner": "مالك الجهاز: الكاشير يثبّت نفسه",
+  "kioskNotDeviceOwner": "ليس مالك الجهاز: تثبيت شاشة أندرويد فقط",
   "kioskPinned": "مثبّت",
-  "kioskNotPinned": "مش مثبّت",
-  "startKiosk": "شغّل الكشك",
-  "stopKiosk": "اقفل الكشك",
-  "offline": "أوفلاين",
-  "offlineQueued": "{count, plural, =1{بيعة واحدة مستنية} =2{بيعتين مستنيين} few{{count} بيعات مستنية} other{{count} بيعة مستنية}}",
+  "kioskNotPinned": "غير مثبّت",
+  "startKiosk": "تشغيل الكشك",
+  "stopKiosk": "إيقاف الكشك",
+  "offline": "غير متصل",
+  "offlineQueued": "{count, plural, =1{عملية بيع واحدة معلّقة} =2{عمليتا بيع معلّقتان} few{{count} عمليات بيع معلّقة} other{{count} عملية بيع معلّقة}}",
   "@offlineQueued": {
     "placeholders": {
       "count": {
@@ -690,7 +690,7 @@
       }
     }
   },
-  "syncingSales": "{count, plural, =1{بنبعت بيعة واحدة…} =2{بنبعت بيعتين…} few{بنبعت {count} بيعات…} other{بنبعت {count} بيعة…}}",
+  "syncingSales": "{count, plural, =1{جارٍ إرسال عملية بيع واحدة…} =2{جارٍ إرسال عمليتي بيع…} few{جارٍ إرسال {count} عمليات بيع…} other{جارٍ إرسال {count} عملية بيع…}}",
   "@syncingSales": {
     "placeholders": {
       "count": {
@@ -698,7 +698,7 @@
       }
     }
   },
-  "offlineSalesFailed": "{count, plural, =1{بيعة واحدة محتاجة نظرة} =2{بيعتين محتاجين نظرة} few{{count} بيعات محتاجة نظرة} other{{count} بيعة محتاجة نظرة}}",
+  "offlineSalesFailed": "{count, plural, =1{عملية بيع واحدة تحتاج إلى مراجعة} =2{عمليتا بيع تحتاجان إلى مراجعة} few{{count} عمليات بيع تحتاج إلى مراجعة} other{{count} عملية بيع تحتاج إلى مراجعة}}",
   "@offlineSalesFailed": {
     "placeholders": {
       "count": {
@@ -706,13 +706,13 @@
       }
     }
   },
-  "offlineSales": "بيعات الأوفلاين",
-  "offlineSalesHint": "بيعات الكاونتر اللي اتعملت والشبكة واقعة. بتتبعت بالترتيب أول ما الشبكة ترجع؛ واللي السيرفر يرفضها بتفضل هنا مع السبب.",
-  "nothingQueued": "مفيش حاجة مستنية",
-  "retrySync": "حاول تاني",
-  "discardSale": "احذف",
-  "savedOffline": "اتحفظت على الكاشير",
-  "offlineNotAvailable": "مش متاح وإنت أوفلاين",
+  "offlineSales": "مبيعات دون اتصال",
+  "offlineSalesHint": "مبيعات الكاونتر التي تمت أثناء انقطاع الشبكة. تُرسل بالترتيب فور عودة الشبكة؛ وما يرفضه الخادم يبقى هنا مع السبب.",
+  "nothingQueued": "لا يوجد شيء معلّق",
+  "retrySync": "إعادة المحاولة",
+  "discardSale": "حذف",
+  "savedOffline": "حُفظت على الكاشير",
+  "offlineNotAvailable": "غير متاح دون اتصال",
   "provisionalReceipt": "نسخة الكاشير {number}",
   "@provisionalReceipt": {
     "placeholders": {
@@ -721,22 +721,22 @@
       }
     }
   },
-  "noBranchTitle": "مفيش فرع متعين ليك",
-  "noBranchDescription": "اطلب من المالك يعينك على فرع.",
-  "appVersion": "نسخة التطبيق",
-  "appVersionHint": "النسخ الجديدة بتيجي من صفحة التحميل بتاعة المنصة. التطبيق بيدوّر على نسخة جديدة أول ما يفتح وكل كام ساعة، وبيثبّتها لوحده أول ما يفتح، أو بالليل على تابلت الكشك. غير كده دوس تثبيت.",
-  "appVersionInstalled": "النسخة {version} (بناء {build})",
-  "updateUpToDate": "آخر نسخة",
-  "updateChecking": "بيدوّر على تحديث…",
-  "updateDownloading": "بينزّل التحديث… {percent}%",
-  "updateReady": "النسخة {version} جاهزة للتثبيت",
-  "updateInstalling": "بيثبّت… التطبيق هيفتح لوحده",
-  "updateNeedsPermission": "اسمح بالتثبيت من التطبيق ده في الإعدادات اللي أندرويد فتحها، وبعدين دوس تثبيت تاني",
-  "updateFailed": "مقدرناش ندوّر على تحديث",
-  "checkForUpdates": "دوّر على تحديث",
+  "noBranchTitle": "لم يُعيَّن لك فرع",
+  "noBranchDescription": "اطلب من المالك تعيينك على فرع.",
+  "appVersion": "إصدار التطبيق",
+  "appVersionHint": "تصل الإصدارات الجديدة من صفحة التنزيل الخاصة بالمنصة. يبحث التطبيق عن إصدار جديد عند فتحه وكل بضع ساعات، ويثبّته تلقائيًا عند الفتح، أو ليلًا على جهاز الكشك. وإلا فاضغط تثبيت.",
+  "appVersionInstalled": "الإصدار {version} (البناء {build})",
+  "updateUpToDate": "أحدث إصدار",
+  "updateChecking": "جارٍ البحث عن تحديث…",
+  "updateDownloading": "جارٍ تنزيل التحديث… {percent}%",
+  "updateReady": "الإصدار {version} جاهز للتثبيت",
+  "updateInstalling": "جارٍ التثبيت… سيُفتح التطبيق تلقائيًا",
+  "updateNeedsPermission": "اسمح بالتثبيت من هذا التطبيق في الإعدادات التي فتحها أندرويد، ثم اضغط تثبيت مرة أخرى",
+  "updateFailed": "تعذّر البحث عن تحديث",
+  "checkForUpdates": "البحث عن تحديث",
   "installUpdate": "تثبيت",
-  "orderDetailsFailed": "مقدرناش نجيب أصناف الطلب ده. تقدر برضه تأكده أو تلغيه.",
-  "printerTest": "جرّب الطابعة",
+  "orderDetailsFailed": "تعذّر جلب أصناف هذا الطلب. لا يزال بإمكانك تأكيده أو إلغاؤه.",
+  "printerTest": "اختبار الطابعة",
   "kitchenPrinting": "طباعة تذاكر المطبخ",
   "kitchenPrintingHint": "هذا الجهاز يطبع تذاكر كل محطة على طابعتها. يكفي جهاز واحد في المحل؛ اتركه يعمل.",
   "kitchenTicketReprint": "إعادة طباعة",

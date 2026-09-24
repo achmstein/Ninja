@@ -77,7 +77,8 @@ public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration
         // The stack's tenant, from the environment the stack was provisioned
         // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor,
         // Tenant__CustomerUrl, Tenant__Country, Tenant__Currency,
-        // Tenant__TimeZone, Tenant__DefaultLanguage); "Ninja" in Egypt until
+        // Tenant__TimeZone, Tenant__DefaultLanguage, Tenant__ArabicStyle);
+        // "Ninja" in Egypt until
         // someone says otherwise.
         if (!await context.Tenants.AnyAsync())
         {
@@ -92,6 +93,7 @@ public class BranchContextSeed(ILogger<BranchContextSeed> logger, IConfiguration
             if (section["Currency"] is { Length: > 0 } currency) tenant.Currency = currency.ToUpperInvariant();
             if (section["TimeZone"] is { Length: > 0 } timeZone) tenant.TimeZone = timeZone;
             if (section["DefaultLanguage"] is { Length: > 0 } language) tenant.DefaultLanguage = language.ToLowerInvariant();
+            if (section["ArabicStyle"] is { Length: > 0 } arabic) tenant.ArabicStyle = arabic.ToLowerInvariant();
             context.Tenants.Add(tenant);
             await context.SaveChangesAsync();
             logger.LogInformation("Seeded the tenant");

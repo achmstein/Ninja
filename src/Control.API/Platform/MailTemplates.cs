@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Text;
 using Ninja.Control.API.Model;
@@ -6,10 +6,11 @@ using Ninja.Control.API.Model;
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
-/// Every mail the platform sends, as plain strings in the apps' own voice
-/// (Egyptian Arabic, plain English), laid out the same way: a title, a few
-/// paragraphs, one link. The owner's language is the tenant's default; the
-/// ops mails are English. Nothing here talks to a server.
+/// Every mail the platform sends, as plain strings in the apps' own voice,
+/// laid out the same way: a title, a few paragraphs, one link. The owner
+/// reads the back office, so the language is the tenant's default and the
+/// Arabic is the back office's; the ops mails are English. Nothing here
+/// talks to a server.
 /// </summary>
 public static class MailTemplates
 {
@@ -38,15 +39,15 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         var password = t.OwnerInitialPassword is { } p
-            ? Pick(ar, $"Temporary password: {p} — you will be asked to change it the first time you sign in.", $"الباسورد المؤقت: {p} — هيتطلب منك تغيّره أول ما تدخل.")
-            : Pick(ar, "Sign in with the password you set.", "ادخل بالباسورد اللي انت عملته.");
+            ? Pick(ar, $"Temporary password: {p} — you will be asked to change it the first time you sign in.", $"كلمة المرور المؤقتة: {p} — سيُطلب منك تغييرها عند أول تسجيل دخول.")
+            : Pick(ar, "Sign in with the password you set.", "سجّل الدخول بكلمة المرور التي أنشأتها.");
         return Build(OwnerWelcomeName, t, t.OwnerEmail, mail,
-            Pick(ar, $"Welcome to {Name(t)}", $"أهلاً بيك في {Name(t)}"),
+            Pick(ar, $"Welcome to {Name(t)}", $"مرحبًا بك في {Name(t)}"),
             [
-                Pick(ar, $"{Name(t)} is up. Your admin app is where the menu, the tables, the staff and the look of the customer app are set.", $"{Name(t)} شغّال. تطبيق الإدارة هو اللي بتظبط منه المنيو والترابيزات والموظفين وشكل تطبيق العملاء."),
-                Pick(ar, $"Sign in as {t.OwnerEmail}.", $"ادخل بـ {t.OwnerEmail}."),
+                Pick(ar, $"{Name(t)} is up. Your admin app is where the menu, the tables, the staff and the look of the customer app are set.", $"{Name(t)} جاهز. من تطبيق الإدارة تضبط قائمة الطعام والطاولات والموظفين وشكل تطبيق العملاء."),
+                Pick(ar, $"Sign in as {t.OwnerEmail}.", $"سجّل الدخول بـ {t.OwnerEmail}."),
                 password,
-                Pick(ar, $"Your customers open the menu at {hosts.CustomerUrl}.", $"عملاءك بيفتحوا المنيو من {hosts.CustomerUrl}."),
+                Pick(ar, $"Your customers open the menu at {hosts.CustomerUrl}.", $"يفتح عملاؤك قائمة الطعام من {hosts.CustomerUrl}."),
             ],
             (Pick(ar, "Open the admin app", "افتح تطبيق الإدارة"), hosts.AdminUrl));
     }
@@ -55,10 +56,10 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         return Build(DemoExpiringName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)}: {Days(ar, daysLeft)} left on your demo", $"{Name(t)}: فاضل {Days(ar, daysLeft)} على الديمو"),
+            Pick(ar, $"{Name(t)}: {Days(ar, daysLeft)} left on your demo", $"{Name(t)}: بقي {Days(ar, daysLeft)} على النسخة التجريبية"),
             [
-                Pick(ar, $"Your demo of {Name(t)} stops in {Days(ar, daysLeft)}. Everything you set up stays for a week after that.", $"الديمو بتاع {Name(t)} هيقف بعد {Days(ar, daysLeft)}. كل اللي ظبطته هيفضل أسبوع بعدها."),
-                Pick(ar, "Reply to this mail to keep it going, or to move onto a plan.", "رد على الإيميل ده عشان نمدّه، أو تنقل على باقة."),
+                Pick(ar, $"Your demo of {Name(t)} stops in {Days(ar, daysLeft)}. Everything you set up stays for a week after that.", $"تتوقف النسخة التجريبية من {Name(t)} بعد {Days(ar, daysLeft)}. يبقى كل ما أعددته محفوظًا أسبوعًا بعدها."),
+                Pick(ar, "Reply to this mail to keep it going, or to move onto a plan.", "رُدّ على هذه الرسالة لتمديدها، أو للانتقال إلى إحدى الباقات."),
             ],
             (Pick(ar, "Open the admin app", "افتح تطبيق الإدارة"), hosts.AdminUrl),
             replyTo: mail.OpsTo);
@@ -68,10 +69,10 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         return Build(DemoStoppedName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)}: your demo has stopped", $"{Name(t)}: الديمو وقف"),
+            Pick(ar, $"{Name(t)}: your demo has stopped", $"{Name(t)}: توقفت النسخة التجريبية"),
             [
-                Pick(ar, $"The demo of {Name(t)} has reached its end and is paused. Nothing is lost yet: it is kept for {Days(ar, graceDays)}.", $"الديمو بتاع {Name(t)} خلص وقته واتوقف. لسه مفيش حاجة ضاعت: محفوظ {Days(ar, graceDays)}."),
-                Pick(ar, "Reply to this mail to bring it back or to move onto a plan.", "رد على الإيميل ده عشان نرجّعه أو تنقل على باقة."),
+                Pick(ar, $"The demo of {Name(t)} has reached its end and is paused. Nothing is lost yet: it is kept for {Days(ar, graceDays)}.", $"انتهت مدة النسخة التجريبية من {Name(t)} وتوقفت. لم يُفقد شيء بعد: تبقى محفوظة {Days(ar, graceDays)}."),
+                Pick(ar, "Reply to this mail to bring it back or to move onto a plan.", "رُدّ على هذه الرسالة لإعادتها أو للانتقال إلى إحدى الباقات."),
             ],
             null,
             replyTo: mail.OpsTo);
@@ -81,10 +82,10 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         return Build(DemoDestroyedSoonName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)}: the demo is deleted in {Days(ar, daysLeft)}", $"{Name(t)}: الديمو هيتمسح بعد {Days(ar, daysLeft)}"),
+            Pick(ar, $"{Name(t)}: the demo is deleted in {Days(ar, daysLeft)}", $"{Name(t)}: تُحذف النسخة التجريبية بعد {Days(ar, daysLeft)}"),
             [
-                Pick(ar, $"The stopped demo of {Name(t)} and everything in it will be deleted in {Days(ar, daysLeft)}.", $"الديمو المتوقف بتاع {Name(t)} وكل اللي فيه هيتمسح بعد {Days(ar, daysLeft)}."),
-                Pick(ar, "Reply to this mail before then to keep it.", "رد على الإيميل ده قبلها عشان نحتفظ بيه."),
+                Pick(ar, $"The stopped demo of {Name(t)} and everything in it will be deleted in {Days(ar, daysLeft)}.", $"ستُحذف النسخة التجريبية المتوقفة من {Name(t)} وكل ما فيها بعد {Days(ar, daysLeft)}."),
+                Pick(ar, "Reply to this mail before then to keep it.", "رُدّ على هذه الرسالة قبل ذلك للاحتفاظ بها."),
             ],
             null,
             replyTo: mail.OpsTo);
@@ -94,10 +95,10 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         return Build(SubscriptionPastDueName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)}: payment due", $"{Name(t)}: في دفعة مستحقة"),
+            Pick(ar, $"{Name(t)}: payment due", $"{Name(t)}: دفعة مستحقة"),
             [
-                Pick(ar, $"The subscription of {Name(t)} has run past its paid period. Everything keeps working until {Date(ar, graceEnds)}.", $"اشتراك {Name(t)} عدّى المدة المدفوعة. كل حاجة هتفضل شغّالة لحد {Date(ar, graceEnds)}."),
-                Pick(ar, "Reply to this mail to settle it, or if a payment is already on its way.", "رد على الإيميل ده عشان تسدد، أو لو الدفعة في الطريق."),
+                Pick(ar, $"The subscription of {Name(t)} has run past its paid period. Everything keeps working until {Date(ar, graceEnds)}.", $"تجاوز اشتراك {Name(t)} المدة المدفوعة. يستمر كل شيء في العمل حتى {Date(ar, graceEnds)}."),
+                Pick(ar, "Reply to this mail to settle it, or if a payment is already on its way.", "رُدّ على هذه الرسالة للسداد، أو إن كانت الدفعة في طريقها."),
             ],
             (Pick(ar, "Open the admin app", "افتح تطبيق الإدارة"), hosts.AdminUrl),
             replyTo: mail.OpsTo);
@@ -107,10 +108,10 @@ public static class MailTemplates
     {
         var ar = Arabic(t);
         return Build(SubscriptionSuspendedName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)} is paused", $"{Name(t)} اتوقف"),
+            Pick(ar, $"{Name(t)} is paused", $"{Name(t)} متوقف"),
             [
-                Pick(ar, $"{Name(t)} is paused: the menu, the till and the admin app are off until the subscription is settled. Nothing is lost.", $"{Name(t)} متوقف: المنيو والكاشير وتطبيق الإدارة واقفين لحد ما الاشتراك يتسدد. مفيش حاجة ضاعت."),
-                Pick(ar, "Reply to this mail to settle it and everything comes back within minutes.", "رد على الإيميل ده عشان تسدد وكل حاجة هترجع في دقايق."),
+                Pick(ar, $"{Name(t)} is paused: the menu, the till and the admin app are off until the subscription is settled. Nothing is lost.", $"{Name(t)} متوقف: قائمة الطعام ونقطة البيع وتطبيق الإدارة متوقفة حتى يُسدَّد الاشتراك. لم يُفقد شيء."),
+                Pick(ar, "Reply to this mail to settle it and everything comes back within minutes.", "رُدّ على هذه الرسالة للسداد ويعود كل شيء خلال دقائق."),
             ],
             null,
             replyTo: mail.OpsTo);
@@ -121,9 +122,9 @@ public static class MailTemplates
         var ar = Arabic(t);
         var money = $"{amount.ToString("0.##", CultureInfo.InvariantCulture)} {currency}";
         return Build(PaymentReceivedName, t, t.OwnerEmail, mail,
-            Pick(ar, $"{Name(t)}: payment received", $"{Name(t)}: وصلتنا الدفعة"),
+            Pick(ar, $"{Name(t)}: payment received", $"{Name(t)}: تم استلام الدفعة"),
             [
-                Pick(ar, $"Thank you. {money} received for {Name(t)}; the subscription is paid through {Date(ar, periodEnd)}.", $"شكراً. وصلنا {money} لـ {Name(t)}؛ الاشتراك مدفوع لحد {Date(ar, periodEnd)}."),
+                Pick(ar, $"Thank you. {money} received for {Name(t)}; the subscription is paid through {Date(ar, periodEnd)}.", $"شكرًا لك. استلمنا {money} لـ {Name(t)}؛ الاشتراك مدفوع حتى {Date(ar, periodEnd)}."),
                 reference is null ? null : Pick(ar, $"Reference: {reference}", $"المرجع: {reference}"),
             ],
             null);
@@ -216,7 +217,7 @@ public static class MailTemplates
     private static string Pick(bool ar, string en, string arabic) => ar ? arabic : en;
 
     private static string Days(bool ar, int n) => ar
-        ? n switch { 1 => "يوم", 2 => "يومين", <= 10 => $"{n} أيام", _ => $"{n} يوم" }
+        ? n switch { 1 => "يوم واحد", 2 => "يومان", <= 10 => $"{n} أيام", _ => $"{n} يومًا" }
         : n == 1 ? "1 day" : $"{n} days";
 
     private static string Date(bool ar, DateTimeOffset d) => d.ToString("d MMMM yyyy", ar ? Egypt : CultureInfo.InvariantCulture);

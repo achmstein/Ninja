@@ -1,6 +1,7 @@
-using Ninja.EventBus.Abstractions;
+﻿using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
+using Ninja.Notification.API.Localization;
 using Ninja.Notification.API.Model;
 using Ninja.Notification.API.Services;
 using Microsoft.AspNetCore.SignalR;

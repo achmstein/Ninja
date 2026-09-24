@@ -1,4 +1,4 @@
-using Ninja.EventBus.Abstractions;
+﻿using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
 using Ninja.Notification.API.Model;

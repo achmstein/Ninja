@@ -1,4 +1,4 @@
-using Ninja.Notification.API.Hubs;
+﻿using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
 using Ninja.Notification.API.Model;

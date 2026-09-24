@@ -1,4 +1,4 @@
-using Ninja.EventBus.Abstractions;
+﻿using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
@@ -12,6 +12,7 @@ public class ReservationCancelledIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
     IHubContext<NotificationHub> hubContext,
+    TenantArabic arabic,
     ILogger<ReservationCancelledIntegrationEventHandler> logger) : IIntegrationEventHandler<ReservationCancelledIntegrationEvent>
 {
     public async Task Handle(ReservationCancelledIntegrationEvent @event)
@@ -110,8 +111,8 @@ public class ReservationCancelledIntegrationEventHandler(
             foreach (var subscription in customerSubscriptions)
             {
                 var lang = subscription.PreferredLanguage;
-                var title = NotificationMessages.YourReservationCancelledTitle.GetText(lang);
-                var body = NotificationMessages.YourReservationCancelledBody(@event.PlaceName, lang).GetText(lang);
+                var title = NotificationMessages.YourReservationCancelledTitle.For(arabic.Standard).GetText(lang);
+                var body = NotificationMessages.YourReservationCancelledBody(@event.PlaceName, lang).For(arabic.Standard).GetText(lang);
 
                 var success = await fcmService.SendNotificationAsync(
                     subscription.FcmToken,

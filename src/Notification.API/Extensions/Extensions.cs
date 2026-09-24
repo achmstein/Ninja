@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Ninja.Notification.API.Localization;
 using Ninja.Notification.API.IntegrationEvents.EventHandling;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Services;
@@ -19,6 +20,9 @@ public static class Extensions
 
         // Add database seeder
         builder.Services.AddMigration<NotificationContext, NotificationContextSeed>();
+
+        // Which Arabic this cafe speaks, stamped beside the rest of its locale
+        builder.Services.AddSingleton<TenantArabic>();
 
         // Add FCM service
         builder.Services.AddSingleton<IFcmService, FcmService>();

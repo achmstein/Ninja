@@ -768,7 +768,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'وجه الكاميرا على كود الاوضة أو الترابيزة';
 
   @override
-  String get invalidPhone => 'دخل رقم موبايل صحيح (01xxxxxxxxx).';
+  String get invalidPhone => 'دخل رقم موبايل صحيح.';
 
   @override
   String get completeYourInfo => 'كمّل بياناتك';
@@ -942,9 +942,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   AppLocalizationsAr001() : super('ar_001');
 
   @override
-  String get done => 'تم';
-
-  @override
   String get signIn => 'تسجيل الدخول';
 
   @override
@@ -963,9 +960,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get confirmPassword => 'تأكيد كلمة المرور';
 
   @override
-  String get name => 'الاسم';
-
-  @override
   String get enterEmail => 'أدخل البريد الإلكتروني';
 
   @override
@@ -978,16 +972,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get confirmYourPassword => 'أكّد كلمة المرور';
 
   @override
-  String get yourDisplayName => 'اسمك';
-
-  @override
   String get orContinueWith => 'أو تابع باستخدام';
-
-  @override
-  String get google => 'جوجل';
-
-  @override
-  String get apple => 'أبل';
 
   @override
   String get dontHaveAccount => 'ليس لديك حساب؟ ';
@@ -997,9 +982,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get createAccount => 'إنشاء حساب';
-
-  @override
-  String get guestUser => 'زائر';
 
   @override
   String get enterBothEmailAndPassword =>
@@ -1038,16 +1020,10 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get success => 'تم بنجاح';
 
   @override
-  String get error => 'خطأ';
-
-  @override
   String get cancel => 'إلغاء';
 
   @override
   String get delete => 'حذف';
-
-  @override
-  String get clear => 'مسح';
 
   @override
   String get retry => 'حاول مرة أخرى';
@@ -1062,9 +1038,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get menu => 'القائمة';
 
   @override
-  String get rooms => 'احجز';
-
-  @override
   String get yourRoom => 'غرفتك';
 
   @override
@@ -1072,14 +1045,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get yourStation => 'جهازك';
-
-  @override
-  String optionRateFormat(String option, String rate) {
-    return '$option $rate';
-  }
-
-  @override
-  String get perHourShort => '/ساعة';
 
   @override
   String get startTimeNow => 'ابدأ الوقت الآن';
@@ -1100,12 +1065,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get profile => 'الملف الشخصي';
-
-  @override
-  String get youTab => 'أنت';
-
-  @override
-  String get cart => 'السلة';
 
   @override
   String get settings => 'الإعدادات';
@@ -1131,16 +1090,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get yourCartIsEmpty => 'سلتك فارغة';
 
   @override
-  String get orderNoteOptional => 'ملاحظة (اختياري)';
-
-  @override
-  String get anySpecialRequests => 'أي طلبات خاصة';
-
-  @override
   String get useLoyaltyPoints => 'استخدم النقاط';
-
-  @override
-  String get pts => 'نقطة';
 
   @override
   String get subtotal => 'المجموع الفرعي';
@@ -1150,9 +1100,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get promoCode => 'رمز الخصم';
-
-  @override
-  String get apply => 'تطبيق';
 
   @override
   String get removePromo => 'إزالة الرمز';
@@ -1176,9 +1123,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get promoBelowMinimum => 'قيمة الطلب أقل من الحد الأدنى للرمز';
 
   @override
-  String get total => 'الإجمالي';
-
-  @override
   String get placeOrder => 'تأكيد الطلب';
 
   @override
@@ -1189,14 +1133,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get failedToPlaceOrder => 'تعذّر تأكيد الطلب';
-
-  @override
-  String noteWithText(String notes) {
-    return '$notes';
-  }
-
-  @override
-  String get yourRating => 'تقييمك: ';
 
   @override
   String get rateThisOrder => 'قيّم هذا الطلب';
@@ -1229,9 +1165,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get billRequestSent => 'تم إرسال طلب الفاتورة';
 
   @override
-  String get reserved => 'محجوزة';
-
-  @override
   String get cancelReservation => 'إلغاء الحجز';
 
   @override
@@ -1259,33 +1192,13 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get fifteenMinutesToArrive => 'لديك 10 دقائق للوصول';
 
   @override
-  String reserveRoomName(String roomName) {
-    return 'احجز $roomName';
-  }
-
-  @override
   String get reserveNow => 'احجز الآن';
 
   @override
   String get roomReservedSuccess => 'تم الحجز! لديك 10 دقائق للوصول.';
 
   @override
-  String get roomReservedSuccessQr => 'تم الحجز!';
-
-  @override
   String get failedToReserveRoom => 'تعذّر الحجز';
-
-  @override
-  String get available => 'متاحة';
-
-  @override
-  String get occupied => 'مشغولة';
-
-  @override
-  String get maintenance => 'صيانة';
-
-  @override
-  String get statusReserved => 'محجوزة';
 
   @override
   String get statusActive => 'نشط';
@@ -1295,20 +1208,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get statusCancelled => 'ملغى';
-
-  @override
-  String hourlyRateFormat(String rate) {
-    return '$rate/ساعة';
-  }
-
-  @override
-  String get sessions => 'الحجوزات';
-
-  @override
-  String get previousSessions => 'حجوزاتي السابقة';
-
-  @override
-  String get favorites => 'المفضلة';
 
   @override
   String get about => 'حول التطبيق';
@@ -1322,19 +1221,10 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get notifications => 'الإشعارات';
 
   @override
-  String get orderStatusUpdates => 'تحديثات الطلب';
-
-  @override
-  String get promotionsAndOffers => 'العروض';
-
-  @override
   String get appearance => 'المظهر';
 
   @override
   String get theme => 'السمة';
-
-  @override
-  String get account => 'الحساب';
 
   @override
   String get changePassword => 'تغيير كلمة المرور';
@@ -1349,67 +1239,22 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get failedToDeleteAccount => 'تعذّر حذف الحساب';
 
   @override
-  String get light => 'فاتح';
-
-  @override
   String get dark => 'داكن';
-
-  @override
-  String get systemDefault => 'تلقائي';
-
-  @override
-  String get language => 'اللغة';
-
-  @override
-  String get english => 'English';
 
   @override
   String get arabic => 'العربية';
 
   @override
-  String priceAdjustmentPlus(String price) {
-    return '(+$price)';
-  }
-
-  @override
-  String priceAdjustmentMinus(String price) {
-    return '(-$price)';
-  }
-
-  @override
-  String basePrice(String price) {
-    return 'السعر: $price';
-  }
-
-  @override
-  String get specialInstructions => 'ملاحظات';
-
-  @override
   String get anySpecialRequestsOptional => 'هل لديك طلبات خاصة؟';
 
   @override
-  String get required => 'مطلوب';
-
-  @override
   String get outOfStock => 'نفدت الكمية';
-
-  @override
-  String get loyaltyRewards => 'مكافآت الولاء';
-
-  @override
-  String get recentActivity => 'النشاط الأخير';
 
   @override
   String get noLoyaltyAccountYet => 'ليس لديك حساب ولاء بعد';
 
   @override
   String get noTransactionsYet => 'لا توجد معاملات بعد';
-
-  @override
-  String get charge => 'رسوم';
-
-  @override
-  String get payment => 'دفع';
 
   @override
   String posReceipt(int number) {
@@ -1424,11 +1269,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   @override
   String posTabPayment(int number) {
     return 'سداد الحساب #$number';
-  }
-
-  @override
-  String byPerson(String name) {
-    return 'بواسطة $name';
   }
 
   @override
@@ -1447,9 +1287,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get creditBalance => 'رصيدك الدائن';
-
-  @override
-  String get transactions => 'المعاملات';
 
   @override
   String get failedToLoadTransactions => 'تعذّر تحميل المعاملات';
@@ -1472,41 +1309,15 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get viewHistory => 'عرض السجل';
 
   @override
-  String lifetimePoints(String points) {
-    return '$points إجمالي';
-  }
-
-  @override
   String pointsToNextTier(String points, String tier) {
     return '$points نقطة للوصول إلى $tier';
   }
-
-  @override
-  String get rateYourOrder => 'قيّم طلبك';
-
-  @override
-  String get yourReviewOptional => 'رأيك (اختياري)';
-
-  @override
-  String get shareYourExperience => 'شاركنا تجربتك...';
 
   @override
   String get submitRating => 'إرسال التقييم';
 
   @override
   String get ratingPoor => 'سيئ';
-
-  @override
-  String get ratingFair => 'مقبول';
-
-  @override
-  String get ratingGood => 'جيد';
-
-  @override
-  String get ratingVeryGood => 'جيد جداً';
-
-  @override
-  String get ratingExcellent => 'ممتاز';
 
   @override
   String get newPassword => 'كلمة المرور الجديدة';
@@ -1529,18 +1340,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
       'تعذّر تغيير كلمة المرور. حاول مرة أخرى.';
 
   @override
-  String get tierBronze => 'برونزي';
-
-  @override
-  String get tierSilver => 'فضي';
-
-  @override
-  String get tierGold => 'ذهبي';
-
-  @override
-  String get tierPlatinum => 'بلاتيني';
-
-  @override
   String get noFavoritesYet => 'لا توجد مفضلة بعد';
 
   @override
@@ -1553,33 +1352,10 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get noSessionsYet => 'لا توجد حجوزات بعد';
 
   @override
-  String durationLabel(String duration) {
-    return '$duration';
-  }
-
-  @override
   String get phoneNumber => 'رقم الهاتف';
 
   @override
   String get enterPhoneNumber => 'أدخل رقم الهاتف';
-
-  @override
-  String get transactionTypePurchase => 'شراء';
-
-  @override
-  String get transactionTypeBonus => 'مكافأة';
-
-  @override
-  String get transactionTypeReferral => 'إحالة';
-
-  @override
-  String get transactionTypePromotion => 'عرض';
-
-  @override
-  String get transactionTypeRedemption => 'استبدال';
-
-  @override
-  String get transactionTypeAdjustment => 'تعديل';
 
   @override
   String pointsEarnedFromOrder(String orderId) {
@@ -1592,15 +1368,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String get customizable => 'قابل للتخصيص';
-
-  @override
   String get failedToJoinSession => 'تعذّر الانضمام إلى الغرفة';
-
-  @override
-  String memberCountFormat(int count) {
-    return '$count أعضاء';
-  }
 
   @override
   String get pleaseWaitBeforeRequest =>
@@ -1634,37 +1402,13 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get failedToLeaveSession => 'تعذّرت مغادرة الغرفة';
 
   @override
-  String get updateProfile => 'تعديل الملف الشخصي';
-
-  @override
-  String get profileUpdatedSuccessfully => 'تم تحديث البيانات بنجاح';
-
-  @override
   String get failedToUpdateProfile => 'تعذّر تحديث البيانات. حاول مرة أخرى.';
 
   @override
   String get callUs => 'اتصل بنا';
 
   @override
-  String get mostPopular => 'الأكثر طلباً';
-
-  @override
   String get yourUsuals => 'طلباتك المعتادة';
-
-  @override
-  String get fastOrder => 'طلب سريع';
-
-  @override
-  String get fastOrderPlaced => 'تم الطلب!';
-
-  @override
-  String get confirm => 'تأكيد';
-
-  @override
-  String get offer => 'عرض';
-
-  @override
-  String get specialOffers => 'عروض مميزة';
 
   @override
   String get playerModeSingle => 'فردي';
@@ -1707,7 +1451,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
       'وجّه الكاميرا نحو رمز الغرفة أو الطاولة';
 
   @override
-  String get invalidPhone => 'أدخل رقم هاتف صحيحًا (01xxxxxxxxx).';
+  String get invalidPhone => 'أدخل رقم هاتف صحيحًا.';
 
   @override
   String get completeYourInfo => 'أكمل بياناتك';
@@ -1725,21 +1469,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get noSessionsToday => 'لا توجد حجوزات اليوم';
 
   @override
-  String hoursShort(num count) {
-    return '$countس';
-  }
-
-  @override
-  String minutesShort(int count) {
-    return '$countد';
-  }
-
-  @override
-  String secondsShort(int count) {
-    return '$countث';
-  }
-
-  @override
   String get leaveRoomQuestion => 'هل تريد مغادرة الغرفة؟';
 
   @override
@@ -1755,65 +1484,16 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get cannotBeUndone => 'لا يمكن التراجع عن هذا الإجراء.';
 
   @override
-  String get paid => 'مدفوع';
-
-  @override
-  String get unpaid => 'غير مدفوع';
-
-  @override
-  String get onYourTab => 'على حسابك';
-
-  @override
-  String get back => 'رجوع';
-
-  @override
   String get refunded => 'مسترد';
 
   @override
   String get voided => 'ملغى';
 
   @override
-  String receiptShort(int number) {
-    return '#$number';
-  }
-
-  @override
-  String get receipt => 'الإيصال';
-
-  @override
-  String receiptNumber(int number) {
-    return 'إيصال #$number';
-  }
-
-  @override
   String get receiptUnavailable => 'الإيصال غير متاح';
 
   @override
-  String serviceCharge(String rate) {
-    return 'خدمة $rate%';
-  }
-
-  @override
-  String vat(String rate) {
-    return 'ضريبة $rate%';
-  }
-
-  @override
-  String vatIncluded(String rate) {
-    return 'شامل ضريبة $rate%';
-  }
-
-  @override
-  String get discount => 'الخصم';
-
-  @override
   String get cash => 'نقدًا';
-
-  @override
-  String get card => 'بطاقة';
-
-  @override
-  String get instapay => 'إنستاباي';
 
   @override
   String creditNote(int number) {
@@ -1821,18 +1501,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   }
 
   @override
-  String get changeDue => 'الباقي';
-
-  @override
-  String taxNumber(String number) {
-    return 'الرقم الضريبي $number';
-  }
-
-  @override
   String get receiptThanks => 'شكرًا لزيارتك!';
-
-  @override
-  String get receiptDate => 'التاريخ';
 
   @override
   String get bills => 'الفواتير';
@@ -1856,12 +1525,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String timeSoFar(String place) {
     return 'وقت $place حتى الآن';
   }
-
-  @override
-  String get atTheCounter => 'من الكاشير';
-
-  @override
-  String get yourRounds => 'طلباتك';
 
   @override
   String get billTotal => 'إجمالي الفاتورة';

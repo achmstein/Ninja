@@ -1,4 +1,4 @@
-using Ninja.EventBus.Abstractions;
+﻿using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
@@ -12,6 +12,7 @@ public class OrderCancelledIntegrationEventHandler(
     NotificationContext context,
     IFcmService fcmService,
     IHubContext<NotificationHub> hubContext,
+    TenantArabic arabic,
     ILogger<OrderCancelledIntegrationEventHandler> logger) : IIntegrationEventHandler<OrderStatusChangedToCancelledIntegrationEvent>
 {
     public async Task Handle(OrderStatusChangedToCancelledIntegrationEvent @event)
@@ -40,8 +41,8 @@ public class OrderCancelledIntegrationEventHandler(
                 foreach (var subscription in subscriptions)
                 {
                     var lang = subscription.PreferredLanguage;
-                    var title = NotificationMessages.OrderCancelledTitle.GetText(lang);
-                    var body = NotificationMessages.OrderCancelledBody(@event.OrderId).GetText(lang);
+                    var title = NotificationMessages.OrderCancelledTitle.For(arabic.Standard).GetText(lang);
+                    var body = NotificationMessages.OrderCancelledBody(@event.OrderId).For(arabic.Standard).GetText(lang);
 
                     var success = await fcmService.SendNotificationAsync(
                         subscription.FcmToken,

@@ -121,14 +121,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Six kinds for a pay-out, nothing to pick until one that names someone is tapped
-    for (final kind in ['مورد', 'يومية / مرتب', 'سلفة', 'مصروف', 'شريك', 'حاجة تانية']) {
+    for (final kind in ['مورد', 'يومية / راتب', 'سلفة', 'مصروف', 'شريك', 'أخرى']) {
       expect(find.text(kind), findsOneWidget);
     }
-    expect(find.text('لمين؟'), findsNothing);
+    expect(find.text('لمن؟'), findsNothing);
 
-    await tester.tap(find.text('يومية / مرتب'));
+    await tester.tap(find.text('يومية / راتب'));
     await tester.pumpAndSettle();
-    expect(find.text('لمين؟'), findsOneWidget);
+    expect(find.text('لمن؟'), findsOneWidget);
     // A daily worker's balance shows; a negative one is flagged; a monthly employee's is absent
     expect(find.text('320.00 ج.م'), findsOneWidget);
     expect(find.text('عليه 50.00 ج.م'), findsOneWidget);
@@ -138,7 +138,7 @@ void main() {
     // Picking writes the reason; the amount comes off the keypad
     await tester.tap(find.text('أحمد سعيد'));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(TextField, 'يومية / مرتب أحمد سعيد'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'يومية / راتب أحمد سعيد'), findsOneWidget);
     // (no '0': the empty amount box shows one too)
     for (final digit in ['3', '2', '5']) {
       await tester.tap(find.text(digit));
@@ -146,8 +146,8 @@ void main() {
     }
 
     // The dialog scrolls; the submit button sits below the keypad and the list
-    await tester.ensureVisible(find.widgetWithText(FButton, 'اسحب من الدرج'));
-    await tester.tap(find.widgetWithText(FButton, 'اسحب من الدرج'));
+    await tester.ensureVisible(find.widgetWithText(FButton, 'سحب من الدرج'));
+    await tester.tap(find.widgetWithText(FButton, 'سحب من الدرج'));
     await tester.pumpAndSettle();
 
     final sent = shifts.sent!;
@@ -157,7 +157,7 @@ void main() {
     expect(sent.employeeId, 1);
     expect(sent.employeeName, 'أحمد سعيد');
     expect(sent.supplierId, isNull);
-    expect(sent.reason, 'يومية / مرتب أحمد سعيد');
+    expect(sent.reason, 'يومية / راتب أحمد سعيد');
     expect(sent.toJson()['kind'], 2);
   });
 
@@ -179,8 +179,8 @@ void main() {
     expect(find.widgetWithText(TextField, 'كهرباء'), findsOneWidget);
     await tester.tap(find.text('9'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.widgetWithText(FButton, 'اسحب من الدرج'));
-    await tester.tap(find.widgetWithText(FButton, 'اسحب من الدرج'));
+    await tester.ensureVisible(find.widgetWithText(FButton, 'سحب من الدرج'));
+    await tester.tap(find.widgetWithText(FButton, 'سحب من الدرج'));
     await tester.pumpAndSettle();
     expect(shifts.sent!.kind, CashMovementKind.expense);
     expect(shifts.sent!.categoryId, 1);
@@ -190,7 +190,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('شريك'), findsOneWidget);
-    expect(find.text('حاجة تانية'), findsOneWidget);
+    expect(find.text('أخرى'), findsOneWidget);
     expect(find.text('مورد'), findsNothing);
     expect(find.text('سلفة'), findsNothing);
   });

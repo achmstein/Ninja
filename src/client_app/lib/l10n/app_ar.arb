@@ -243,7 +243,7 @@
   },
   "tableUnavailable": "الترابيزة دي مش متاحة",
   "pointCameraAtRoomOrTableQr": "وجه الكاميرا على كود الاوضة أو الترابيزة",
-  "invalidPhone": "دخل رقم موبايل صحيح (01xxxxxxxxx).",
+  "invalidPhone": "دخل رقم موبايل صحيح.",
   "completeYourInfo": "كمّل بياناتك",
   "orderingUnavailable": "الطلبات مش متاحة دلوقتي",
   "reservationsUnavailable": "الحجوزات مش متاحة دلوقتي",

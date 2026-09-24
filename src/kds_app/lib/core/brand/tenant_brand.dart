@@ -64,9 +64,6 @@ class TenantBrand {
   final TenantFeatures features;
   final int version;
 
-  /// `standard` or `egyptian`: which Arabic the display speaks
-  final String arabicStyle;
-
   /// `light` or `dark` for a display nobody has set; null keeps the kitchen's own default
   final String? defaultThemeMode;
 
@@ -76,12 +73,8 @@ class TenantBrand {
     this.logoUrl,
     this.features = TenantFeatures.all,
     this.version = 0,
-    this.arabicStyle = 'egyptian',
     this.defaultThemeMode,
   });
-
-  /// Modern Standard Arabic is the `ar_001` locale, Egyptian the plain `ar`
-  bool get speaksStandardArabic => arabicStyle == 'standard';
 
   /// What shows until anything is known: a neutral name, no color, no logo,
   /// every feature on
@@ -98,7 +91,6 @@ class TenantBrand {
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
           : TenantFeatures.all,
       version: (json['version'] as num?)?.toInt() ?? 0,
-      arabicStyle: _arabic(json['locale'] is Map ? json['locale'] as Map : const {}),
       defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
     );
   }
@@ -112,7 +104,6 @@ class TenantBrand {
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,
         version: (json['version'] as num?)?.toInt() ?? 0,
-        arabicStyle: json['arabicStyle'] == 'standard' ? 'standard' : 'egyptian',
         defaultThemeMode: _mode(json['defaultThemeMode']),
       );
 
@@ -122,7 +113,6 @@ class TenantBrand {
         'logoUrl': logoUrl,
         'features': features.toJson(),
         'version': version,
-        'arabicStyle': arabicStyle,
         'defaultThemeMode': defaultThemeMode,
       };
 
@@ -149,10 +139,3 @@ class TenantBrand {
 
 /// `light` or `dark`, anything else leaves the default
 String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;
-
-/// Older stacks do not say: Egyptian for Egypt, Standard anywhere else
-String _arabic(Map<dynamic, dynamic> locale) {
-  final style = locale['arabicStyle'];
-  if (style == 'standard' || style == 'egyptian') return style as String;
-  return (locale['country'] as String?)?.toUpperCase() == 'EG' || locale['country'] == null ? 'egyptian' : 'standard';
-}
