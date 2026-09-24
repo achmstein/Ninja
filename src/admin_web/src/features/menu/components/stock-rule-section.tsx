@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CookingPot,
   Info,
+  MoreHorizontal,
   Package,
   Sparkles,
   X,
@@ -26,6 +27,21 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
 import {
   Popover,
   PopoverContent,
@@ -132,8 +148,6 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
     <Button
       type='button'
       variant='outline'
-      size='sm'
-      className='text-primary'
       disabled={propose.isPending}
       onClick={askAssistant}
     >
@@ -186,86 +200,121 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
 
   if (!recipe) {
     return (
-      <div className='space-y-3'>
-        <p className='text-muted-foreground text-sm'>{t('notTrackedHint')}</p>
-        <div className='flex flex-wrap gap-2'>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={isPending}
-            onClick={() =>
-              trackByUnit(catalogItemId, {
-                en: item.name?.en ?? '',
-                ar: item.name?.ar ?? null,
-              }).catch(() => {
-                // toasted by useInventoryActions
-              })
-            }
-          >
-            {isPending ? (
-              <Spinner className='me-2' />
-            ) : (
-              <Package className='me-2 h-4 w-4' />
-            )}
-            {t('sellAsUnit')}
-          </Button>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => setEditing(true)}
-          >
-            <CookingPot className='me-2 h-4 w-4' />
-            {t('usesIngredients')}
-          </Button>
-          {proposeButton}
-        </div>
+      <>
+        <Empty className='border border-dashed'>
+          <EmptyHeader>
+            <EmptyMedia variant='icon'>
+              <Package />
+            </EmptyMedia>
+            <EmptyTitle>{t('notTrackedHint')}</EmptyTitle>
+            <EmptyDescription>{t('notTrackedDescription')}</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent className='flex-row flex-wrap justify-center'>
+            <Button
+              type='button'
+              variant='outline'
+              disabled={isPending}
+              onClick={() =>
+                trackByUnit(catalogItemId, {
+                  en: item.name?.en ?? '',
+                  ar: item.name?.ar ?? null,
+                }).catch(() => {
+                  // toasted by useInventoryActions
+                })
+              }
+            >
+              {isPending ? (
+                <Spinner className='me-2' />
+              ) : (
+                <Package className='me-2 h-4 w-4' />
+              )}
+              {t('sellAsUnit')}
+            </Button>
+            <Button type='button' onClick={() => setEditing(true)}>
+              <CookingPot className='me-2 h-4 w-4' />
+              {t('usesIngredients')}
+            </Button>
+            {proposeButton}
+          </EmptyContent>
+        </Empty>
         {reviewSheet}
-      </div>
+      </>
     )
   }
 
   return (
-    <div className='space-y-3'>
-      {unitLine ? (
-        <p className='text-sm'>
-          {t('soldAsUnit')}{' '}
-          <Link
-            to='/inventory'
-            search={{ item: toNumber(unitLine.stockItemId) }}
-            className='font-medium underline-offset-4 hover:underline'
-          >
-            {localized(unitLine.name)}
-          </Link>
-        </p>
-      ) : (
+    <div className='flex flex-col gap-4'>
+      {/* The actions lead: a recipe can run long, and the button that edits
+          it must not sit past the end of it */}
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <h3 className='flex items-center gap-2 text-sm font-medium'>
+          {unitLine ? (
+            <>
+              <Package className='text-muted-foreground h-4 w-4' />
+              {t('soldAsUnit')}{' '}
+              <Link
+                to='/inventory'
+                search={{ item: toNumber(unitLine.stockItemId) }}
+                className='underline-offset-4 hover:underline'
+              >
+                {localized(unitLine.name)}
+              </Link>
+            </>
+          ) : (
+            <>
+              <CookingPot className='text-muted-foreground h-4 w-4' />
+              {t('usesIngredients')}
+            </>
+          )}
+        </h3>
+        <div className='flex items-center gap-2'>
+          <Button type='button' size='sm' onClick={() => setEditing(true)}>
+            <CookingPot className='me-2 h-4 w-4' />
+            {unitLine ? t('usesIngredientsInstead') : t('editRecipe')}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='size-8'
+                aria-label={t('moreActions')}
+              >
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuGroup>
+                {assistAvailable && (
+                  <DropdownMenuItem
+                    disabled={propose.isPending}
+                    onSelect={askAssistant}
+                  >
+                    <Sparkles />
+                    {t('proposeRecipe')}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  variant='destructive'
+                  onSelect={() => setStopOpen(true)}
+                >
+                  <X />
+                  {t('stopTracking')}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {!unitLine && (
         <>
           <RecipeSummary recipe={recipe} menu={menu} stock={stock} />
           <DeductionPreview lines={recipe.lines} menu={menu} stock={stock} />
         </>
       )}
       <CostAndMargin item={item} />
-      <div className='flex flex-wrap gap-2'>
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          onClick={() => setEditing(true)}
-        >
-          <CookingPot className='me-2 h-4 w-4' />
-          {unitLine ? t('usesIngredientsInstead') : t('editRecipe')}
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='text-muted-foreground'
-          onClick={() => setStopOpen(true)}
-        >
-          <X className='me-2 h-4 w-4' />
-          {t('stopTracking')}
-        </Button>
-        {proposeButton}
-      </div>
       {reviewSheet}
 
       <ConfirmDialog

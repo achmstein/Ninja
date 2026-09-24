@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { CookingPot, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -327,7 +327,6 @@ function IngredientCard({
             itemGroups.length > 0 && (
               <Cells
                 groups={itemGroups}
-                hint={t('guessHint')}
                 render={(key) => (
                   <Combobox
                     value={spec.item.cells[key] ?? null}
@@ -444,13 +443,14 @@ function Cells({
   render,
 }: {
   groups: MenuGroup[]
-  hint: string
+  /** Only where the cells cannot say it themselves */
+  hint?: string
   render: (key: string) => React.ReactNode
 }) {
   return (
     <div className='flex flex-col gap-2'>
       <Grid groups={groups} render={render} />
-      <p className='text-muted-foreground text-xs'>{hint}</p>
+      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
   )
 }
@@ -468,7 +468,9 @@ function Grid({
       <div className='grid gap-3 sm:grid-cols-2'>
         {group.options.map((o) => (
           <div key={o.id} className='flex items-center gap-3'>
-            <Label className='text-muted-foreground w-24 shrink-0 truncate font-normal'>
+            {/* Not truncate: with Label's leading-none its overflow-hidden
+                cuts the tail off an Arabic letter */}
+            <Label className='text-muted-foreground w-24 shrink-0 leading-normal font-normal'>
               {o.label}
             </Label>
             <div className='min-w-0 flex-1'>{render(optionSetKey([o.id]))}</div>

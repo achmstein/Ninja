@@ -10,7 +10,6 @@ import {
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useDirection } from '@/context/direction-provider'
-import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -34,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
+import { InfoTip } from '@/components/info-tip'
 import { formatQuantity, unitLabel } from '@/features/inventory/format'
 import {
   draftKey,
@@ -707,25 +707,30 @@ export function DeductionPreview({
   }
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className='rounded-lg border'
+    >
       <CollapsibleTrigger asChild>
         <Button
           type='button'
           variant='ghost'
-          size='sm'
-          className='text-muted-foreground h-7 px-2'
+          className='h-auto w-full justify-between px-3 py-2.5 font-normal'
         >
-          <FlaskConical className='me-1 h-3.5 w-3.5' />
-          {t('tryIt')}
+          <span className='flex items-center gap-2 text-sm font-medium'>
+            <FlaskConical className='text-muted-foreground h-4 w-4' />
+            {t('tryIt')}
+          </span>
           <ChevronDown
             className={cn(
-              'ms-1 h-3.5 w-3.5 transition-transform',
+              'text-muted-foreground h-4 w-4 transition-transform',
               open && 'rotate-180'
             )}
           />
         </Button>
       </CollapsibleTrigger>
-      <CollapsibleContent className='mt-2 space-y-3 rounded-lg border p-3'>
+      <CollapsibleContent className='space-y-3 border-t p-3'>
         <div className='space-y-2'>
           {menu.groups.map((group) => {
             const inGroup = group.options

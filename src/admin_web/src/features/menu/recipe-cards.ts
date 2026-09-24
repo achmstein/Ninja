@@ -1,4 +1,4 @@
-﻿import {
+import {
   draftKey,
   optionSetKey,
   type OverrideDraft,
