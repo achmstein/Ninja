@@ -1,4 +1,4 @@
-import {
+﻿import {
   draftKey,
   optionSetKey,
   type OverrideDraft,
@@ -162,6 +162,56 @@ export function combos(groups: MenuGroup[]): MenuOption[][] {
       acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
     [[]]
   )
+}
+
+/**
+ * Whether a bag could be the one for a combination: a bag whose name names
+ * no choice of a group fits every cell of it ("\u0628\u0646 \u062a\u0631\u0643\u064a" fits both roasts),
+ * and one that names a choice fits only that choice's cells.
+ */
+function fits(
+  item: ShelfItem,
+  combo: MenuOption[],
+  groups: MenuGroup[]
+): boolean {
+  const names = item.names.map(fold)
+  return groups.every((group, index) => {
+    const claimed = group.options.find((o) =>
+      o.names.some((n) => names.some((m) => m.includes(fold(n))))
+    )
+    return !claimed || claimed.id === combo[index].id
+  })
+}
+
+/**
+ * Split an item onto these groups, filling each cell from the bag's name.
+ * A plain resplit copies one bag into every cell, which reads as six
+ * shelves all holding the same bag; here a cell whose bag cannot belong to
+ * it is guessed again, and one whose bag could belong is left alone \u2014 so a
+ * bag the admin picked, and a bag that serves every choice, both survive.
+ */
+export function resplitItem(
+  varying: Varying<string | null>,
+  groupIds: readonly string[],
+  menu: MenuOptions,
+  ingredients: ShelfItem[]
+): Varying<string | null> {
+  const next = resplit(varying, groupIds, menu)
+  const groups = next.groupIds
+    .map((id) => menu.groups.find((g) => g.id === id))
+    .filter((g): g is MenuGroup => Boolean(g))
+  if (groups.length === 0) return next
+
+  const cells = { ...next.cells }
+  for (const combo of combos(groups)) {
+    const key = optionSetKey(combo.map((o) => o.id))
+    const held = cells[key]
+    const bag = held ? ingredients.find((i) => i.value === held) : undefined
+    if (bag && !fits(bag, combo, groups)) {
+      cells[key] = guessCell(bag, combo, groups, ingredients)
+    }
+  }
+  return { ...next, cells }
 }
 
 /**

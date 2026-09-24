@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   draftLines,
+  optionSetKey,
   resolve,
   type RecipeDraft,
   type SlotDraft,
@@ -10,7 +11,9 @@ import {
   compile,
   guessCell,
   merge,
+  ONE,
   reconstruct,
+  resplitItem,
   single,
   split,
   type BuilderState,
@@ -549,6 +552,122 @@ describe('reconstruct', () => {
 
     expect(read.ingredients).toEqual([])
     expect(read.custom).toEqual([stale])
+  })
+})
+
+describe('resplitItem', () => {
+  const roast = group('roast', '\u0627\u0644\u062a\u062d\u0645\u064a\u0635', [
+    ['41', '\u0641\u0627\u062a\u062d'],
+    ['42', '\u0648\u0633\u0637', true],
+    ['43', '\u063a\u0627\u0645\u0642'],
+  ])
+  const spice = group(
+    'spice',
+    '\u0627\u0644\u062a\u062d\u0648\u064a\u062c\u0629',
+    [
+      ['51', '\u0633\u0627\u062f\u0629', true],
+      ['52', '\u0645\u062d\u0648\u062c'],
+    ]
+  )
+  const menu = menuOf(roast, spice)
+  const shelf = [
+    {
+      value: '1',
+      names: [
+        '\u0628\u0646 \u062a\u0631\u0643\u064a \u0648\u0633\u0637 \u0633\u0627\u062f\u0629',
+      ],
+    },
+    {
+      value: '2',
+      names: [
+        '\u0628\u0646 \u062a\u0631\u0643\u064a \u0641\u0627\u062a\u062d \u0633\u0627\u062f\u0629',
+      ],
+    },
+    {
+      value: '3',
+      names: [
+        '\u0628\u0646 \u062a\u0631\u0643\u064a \u063a\u0627\u0645\u0642 \u0633\u0627\u062f\u0629',
+      ],
+    },
+  ]
+
+  it('guesses a bag per choice instead of repeating the one picked', () => {
+    const out = resplitItem(single<string | null>('1'), ['roast'], menu, shelf)
+
+    expect(out.groupIds).toEqual(['roast'])
+    expect(out.cells[optionSetKey(['41'])]).toBe('2')
+    expect(out.cells[optionSetKey(['42'])]).toBe('1')
+    expect(out.cells[optionSetKey(['43'])]).toBe('3')
+  })
+
+  it('leaves a cell empty when the shelf has nothing for it', () => {
+    const out = resplitItem(single<string | null>('1'), ['spice'], menu, shelf)
+
+    expect(out.cells[optionSetKey(['51'])]).toBe('1')
+    // No spiced bag on the shelf, so the cell asks to be filled
+    expect(out.cells[optionSetKey(['52'])]).toBeNull()
+  })
+
+  it('keeps a bag that serves every choice', () => {
+    // One sack of beans, named for no roast and no spice
+    const plus = [
+      ...shelf,
+      { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] },
+    ]
+
+    const out = resplitItem(single<string | null>('9'), ['roast'], menu, plus)
+
+    expect(Object.values(out.cells)).toEqual(['9', '9', '9'])
+  })
+
+  it('keeps a bag the admin picked when another group is added', () => {
+    const plus = [
+      ...shelf,
+      { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] },
+    ]
+    const picked = by<string | null>(['roast'], {
+      [optionSetKey(['41'])]: '9',
+      [optionSetKey(['42'])]: '1',
+      [optionSetKey(['43'])]: '3',
+    })
+
+    const out = resplitItem(picked, ['roast', 'spice'], menu, plus)
+
+    // The sack under \u0641\u0627\u062a\u062d names no choice, so it belongs under both spices
+    expect(out.cells[optionSetKey(['41', '51'])]).toBe('9')
+    expect(out.cells[optionSetKey(['41', '52'])]).toBe('9')
+  })
+
+  it('corrects a bag whose name contradicts the cell it sits in', () => {
+    const wrong = by<string | null>(['roast'], {
+      [optionSetKey(['41'])]: '3',
+      [optionSetKey(['42'])]: '1',
+      [optionSetKey(['43'])]: '3',
+    })
+
+    const out = resplitItem(wrong, ['roast'], menu, shelf)
+
+    // \u063a\u0627\u0645\u0642 beans under \u0641\u0627\u062a\u062d cannot be right; the \u0641\u0627\u062a\u062d bag is
+    expect(out.cells[optionSetKey(['41'])]).toBe('2')
+  })
+
+  it('does nothing to guess when no bag is picked yet', () => {
+    const out = resplitItem(single<string | null>(null), ['roast'], menu, shelf)
+
+    expect(Object.values(out.cells).every((v) => v === null)).toBe(true)
+  })
+
+  it('merges back to the standard choice when a group is unticked', () => {
+    const split = resplitItem(
+      single<string | null>('1'),
+      ['roast'],
+      menu,
+      shelf
+    )
+    const out = resplitItem(split, [], menu, shelf)
+
+    expect(out.groupIds).toEqual([])
+    expect(out.cells[ONE]).toBe('1')
   })
 })
 

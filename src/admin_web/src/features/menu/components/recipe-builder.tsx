@@ -1,17 +1,10 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { CookingPot, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -37,7 +30,7 @@ import {
 } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
-import { formatQuantity, unitLabel } from '@/features/inventory/format'
+import { unitLabel } from '@/features/inventory/format'
 import {
   optionSetKey,
   type RecipeDraft,
@@ -51,6 +44,7 @@ import {
   ONE,
   reconstruct,
   resplit,
+  resplitItem,
   type BuilderState,
   type IngredientSpec,
   type Varying,
@@ -267,27 +261,16 @@ function IngredientCard({
   // An item is decided by exclusive choices only: a sale can carry several
   // options of an add-on group at once, so it cannot name one bag
   const exclusive = menu.groups.filter((g) => !g.allowMultiple)
-  const baseId = Object.values(spec.item.cells).find((v) => v) ?? null
-  const base = baseId ? byValue.get(baseId) : undefined
-  const unit = base?.unit ?? ''
+  // The unit that labels every amount field, blank unless the bags picked
+  // so far agree on one
+  const picked = Object.values(spec.item.cells).filter((v) => v !== null)
+  const units = new Set(picked.map((v) => byValue.get(v)?.unit))
+  const unit = units.size === 1 ? (byValue.get(picked[0])?.unit ?? '') : ''
   const itemGroups = groupsOf(spec.item, menu)
   const amountGroups = groupsOf(spec.amount, menu)
 
-  // Splitting the item: the cells it gains are guessed from the base bag's name
-  const setItemGroups = (groupIds: string[]) => {
-    const next = resplit(spec.item, groupIds, menu)
-    const groups = groupsOf(next, menu)
-    const cells = { ...next.cells }
-    if (base) {
-      for (const combo of combos(groups)) {
-        const key = optionSetKey(combo.map((o) => o.id))
-        if (!cells[key]) {
-          cells[key] = guessCell(base, combo, groups, ingredients)
-        }
-      }
-    }
-    onChange({ item: { ...next, cells } })
-  }
+  const setItemGroups = (groupIds: string[]) =>
+    onChange({ item: resplitItem(spec.item, groupIds, menu, ingredients) })
 
   // One bag picked in any cell: the empty cells are guessed from its name
   const setItemCell = (key: string, value: string | null) => {
@@ -311,33 +294,22 @@ function IngredientCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className='truncate'>
-          {base?.label ?? (
-            <span className='text-muted-foreground font-normal'>
-              {t('pickStockItem')}
-            </span>
-          )}
-        </CardTitle>
-        <CardAction className='flex items-center gap-2'>
-          <AmountBadge amount={spec.amount} unit={unit} />
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            className='size-8'
-            aria-label={t('removeLine')}
-            onClick={onRemove}
-          >
-            <X />
-          </Button>
-        </CardAction>
-      </CardHeader>
-
       <CardContent className='flex flex-col gap-6'>
         <FieldRow
           label={t('whichItem')}
           groups={exclusive}
+          action={
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='size-8'
+              aria-label={t('removeLine')}
+              onClick={onRemove}
+            >
+              <X />
+            </Button>
+          }
           split={spec.item.groupIds}
           onSplit={setItemGroups}
           control={
@@ -409,30 +381,6 @@ function IngredientCard({
   )
 }
 
-/** The amount at a glance: one number, or the range the choices cover */
-function AmountBadge({
-  amount,
-  unit,
-}: {
-  amount: Varying<string>
-  unit: string
-}) {
-  const t = useT()
-  const values = Object.values(amount.cells)
-    .map(toNumber)
-    .filter((n) => n > 0)
-  if (values.length === 0) return null
-  const low = Math.min(...values)
-  const high = Math.max(...values)
-  return (
-    <Badge variant='secondary' className='tabular-nums'>
-      {low === high
-        ? formatQuantity(String(low), unit, t)
-        : `${low}–${high} ${unitLabel(unit, t)}`}
-    </Badge>
-  )
-}
-
 /**
  * One answer: its label, the chips that split it, the control when it is
  * one value, and the cells when it is not.
@@ -444,6 +392,7 @@ function FieldRow({
   onSplit,
   control,
   cells,
+  action,
 }: {
   label: string
   groups: MenuGroup[]
@@ -451,32 +400,37 @@ function FieldRow({
   onSplit: (groupIds: string[]) => void
   control: React.ReactNode
   cells: React.ReactNode
+  /** Sits past the chips, clear of them, so it reads as the card's own */
+  action?: React.ReactNode
 }) {
   const t = useT()
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex flex-wrap items-center justify-between gap-x-4 gap-y-2'>
-        <Label className='text-sm'>{label}</Label>
-        {groups.length > 0 && (
-          <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-muted-foreground text-xs'>
-              {t('splitBy')}
-            </span>
-            <ToggleGroup
-              type='multiple'
-              variant='outline'
-              size='sm'
-              value={split}
-              onValueChange={onSplit}
-            >
-              {groups.map((group) => (
-                <ToggleGroupItem key={group.id} value={group.id}>
-                  {group.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-        )}
+      <div className='flex items-start gap-2'>
+        <div className='flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-2'>
+          <Label className='text-sm'>{label}</Label>
+          {groups.length > 0 && (
+            <div className='flex flex-wrap items-center gap-2'>
+              <span className='text-muted-foreground text-xs'>
+                {t('splitBy')}
+              </span>
+              <ToggleGroup
+                type='multiple'
+                variant='outline'
+                size='sm'
+                value={split}
+                onValueChange={onSplit}
+              >
+                {groups.map((group) => (
+                  <ToggleGroupItem key={group.id} value={group.id}>
+                    {group.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+          )}
+        </div>
+        {action}
       </div>
       {cells || <div className='max-w-sm'>{control}</div>}
     </div>
