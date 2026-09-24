@@ -50,5 +50,36 @@ public static class Housekeeping
         var shift = await cashier.CurrentShiftAsync(ct);
         if (shift is not null)
             await cashier.CloseShiftAsync(shift.Id, shift.ExpectedInDrawer, ct);
+
+        await ResetKitchenAsync(day, ct);
+    }
+
+    /// <summary>
+    /// One kitchen again: no paper waiting, and only the default station, which
+    /// makes everything. A scenario that split the kitchen and failed half way
+    /// must not leave the next one routing coffee to a bar.
+    /// </summary>
+    private static async Task ResetKitchenAsync(DaySetup day, CancellationToken ct)
+    {
+        var kitchen = day.Kitchen;
+
+        foreach (var ticket in await kitchen.PrintJobsAsync(ct))
+        {
+            if (await kitchen.ClaimAsync(ticket.JobId, "e2e-housekeeping", ct))
+                await kitchen.PrintedAsync(ticket.JobId, ct);
+        }
+
+        foreach (var station in await kitchen.StationsAsync(ct))
+        {
+            if (station.IsDefault)
+                continue;
+            // A station with work on its screen stays until the work is done
+            foreach (var order in await kitchen.BoardAsync(ct, station.Id))
+            {
+                if (order.ReadyAt is null)
+                    await kitchen.MarkStationReadyAsync(order.OrderNumber, station.Id, ct);
+            }
+            await day.Owner.DeleteStationAsync(station.Id, ct);
+        }
     }
 }

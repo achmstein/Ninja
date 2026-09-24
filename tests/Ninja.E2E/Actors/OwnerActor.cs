@@ -34,6 +34,22 @@ public sealed class OwnerActor(ApiClient api)
         }, ct);
 
     /// <summary>void-dialog.tsx</summary>
+    /// <summary>admin_web kitchen-dialog.tsx: a station making these categories, on a screen, a printer, or both.</summary>
+    public Task<KitchenStation> CreateStationAsync(string name, int[] categoryIds, bool screen, string? printerHost, CancellationToken ct)
+        => Api.PostAsync<KitchenStation>("/api/kitchen/stations", new
+        {
+            name = new { en = name, ar = name },
+            categoryIds,
+            showsOnScreen = screen,
+            printsTickets = printerHost is not null,
+            printerHost,
+        }, ct);
+
+    public async Task DeleteStationAsync(int stationId, CancellationToken ct)
+    {
+        using var r = await Api.DeleteAsync($"/api/kitchen/stations/{stationId}", ct);
+    }
+
     public async Task VoidAsync(int ticketId, string reason, CancellationToken ct)
     {
         using var r = await Api.PostAsync($"/api/tickets/{ticketId}/void", new { reason }, ct);

@@ -101,9 +101,20 @@ public sealed record OrderItemView(LocalizedText ProductName, int Units, double 
 
 public sealed record OrderView(int OrderNumber, string Status, string Source, int? PlaceId, int? SessionId, List<OrderItemView> OrderItems, decimal Total);
 
-public sealed record KitchenOrder(int OrderNumber, DateTime? ConfirmedAt, DateTime? ReadyAt, string Source, string? CustomerName, List<KitchenOrderItem> Items);
+public sealed record KitchenOrder(int OrderNumber, DateTime? ConfirmedAt, DateTime? ReadyAt, string Source, string? CustomerName, List<KitchenOrderItem> Items,
+    List<KitchenOrderPart>? Parts = null);
 
-public sealed record KitchenOrderItem(LocalizedText ProductName, int Units);
+public sealed record KitchenOrderItem(LocalizedText ProductName, int Units, int? StationId = null);
+
+/// <summary>One station's share of an order, as the pass shows it.</summary>
+public sealed record KitchenOrderPart(int StationId, LocalizedText StationName, bool ShowsOnScreen, bool PrintsTickets, DateTime? ReadyAt);
+
+public sealed record KitchenStation(int Id, LocalizedText Name, List<int> CategoryIds, bool ShowsOnScreen, bool PrintsTickets,
+    string? PrinterHost, int PrinterPort, bool IsDefault);
+
+/// <summary>A ticket waiting for a kitchen printer, with the station's lines of its order.</summary>
+public sealed record KitchenTicket(int JobId, int StationId, LocalizedText StationName, string? PrinterHost, int PrinterPort,
+    bool IsReprint, bool IsTest, int? OrderNumber, DateTime? ClaimedAt, int Attempts, List<KitchenOrderItem> Items);
 
 // --- Spaces ------------------------------------------------------------------
 
