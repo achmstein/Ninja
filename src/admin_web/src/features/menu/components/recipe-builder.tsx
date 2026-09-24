@@ -4,7 +4,7 @@ import { useT } from '@/lib/i18n'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Empty,
   EmptyContent,
@@ -217,20 +217,12 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
         </Alert>
       )}
 
-      <div className='flex flex-wrap items-center gap-4'>
+      {/* No standing way into the slots editor: it is the older model, and
+          the alert above is the only thing that still needs it */}
+      <div>
         <Button type='button' variant='outline' size='sm' onClick={add}>
           <Plus />
           {t('addIngredient')}
-        </Button>
-        <Button
-          type='button'
-          variant='link'
-          size='sm'
-          className='text-muted-foreground h-auto p-0'
-          onClick={() => setAdvanced(true)}
-        >
-          <SlidersHorizontal />
-          {t('advancedEditor')}
         </Button>
       </div>
     </div>
@@ -293,23 +285,28 @@ function IngredientCard({
     })
 
   return (
-    <Card>
+    <Card className='gap-3'>
+      {/* The button lives here, not on a field row: on a row it either
+          shortens that row's chips or every row's */}
+      <CardHeader className='pb-0'>
+        <CardAction>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='text-muted-foreground size-7'
+            aria-label={t('removeLine')}
+            onClick={onRemove}
+          >
+            <X />
+          </Button>
+        </CardAction>
+      </CardHeader>
+
       <CardContent className='flex flex-col gap-6'>
         <FieldRow
           label={t('whichItem')}
           groups={exclusive}
-          action={
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              className='size-8'
-              aria-label={t('removeLine')}
-              onClick={onRemove}
-            >
-              <X />
-            </Button>
-          }
           split={spec.item.groupIds}
           onSplit={setItemGroups}
           control={
@@ -391,7 +388,6 @@ function FieldRow({
   onSplit,
   control,
   cells,
-  action,
 }: {
   label: string
   groups: MenuGroup[]
@@ -399,37 +395,32 @@ function FieldRow({
   onSplit: (groupIds: string[]) => void
   control: React.ReactNode
   cells: React.ReactNode
-  /** Sits past the chips, clear of them, so it reads as the card's own */
-  action?: React.ReactNode
 }) {
   const t = useT()
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex items-start gap-2'>
-        <div className='flex flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-2'>
-          <Label className='text-sm'>{label}</Label>
-          {groups.length > 0 && (
-            <div className='flex flex-wrap items-center gap-2'>
-              <span className='text-muted-foreground text-xs'>
-                {t('splitBy')}
-              </span>
-              <ToggleGroup
-                type='multiple'
-                variant='outline'
-                size='sm'
-                value={split}
-                onValueChange={onSplit}
-              >
-                {groups.map((group) => (
-                  <ToggleGroupItem key={group.id} value={group.id}>
-                    {group.label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-          )}
-        </div>
-        {action}
+      <div className='flex flex-wrap items-center justify-between gap-x-4 gap-y-2'>
+        <Label className='text-sm'>{label}</Label>
+        {groups.length > 0 && (
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='text-muted-foreground text-xs'>
+              {t('splitBy')}
+            </span>
+            <ToggleGroup
+              type='multiple'
+              variant='outline'
+              size='sm'
+              value={split}
+              onValueChange={onSplit}
+            >
+              {groups.map((group) => (
+                <ToggleGroupItem key={group.id} value={group.id}>
+                  {group.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        )}
       </div>
       {cells || <div className='max-w-sm'>{control}</div>}
     </div>

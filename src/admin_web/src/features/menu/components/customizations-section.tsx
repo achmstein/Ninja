@@ -630,6 +630,7 @@ function GroupEditor({
                 Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
             )
             .map((option) => ({
+              id: option.id === undefined ? undefined : Number(option.id),
               name: toLocalizedValue(option.name),
               priceAdjustment: Number(option.priceAdjustment ?? 0),
               isDefault: option.isDefault ?? false,

@@ -7,6 +7,11 @@ namespace Ninja.Catalog.API.Infrastructure;
 /// </remarks>
 public class CatalogContext : DbContext
 {
+    /// <summary>
+    /// EF fills the sets below on construction, which the compiler cannot
+    /// see; saying so lets a test build a context without naming each one.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]
     public CatalogContext(DbContextOptions<CatalogContext> options, IConfiguration configuration) : base(options)
     {
     }

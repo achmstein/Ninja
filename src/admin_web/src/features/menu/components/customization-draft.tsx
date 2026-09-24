@@ -12,6 +12,9 @@ import {
 } from '@/components/localized-input'
 
 export type OptionRow = {
+  /** What the recipes name. Absent on a row that has not been saved yet;
+   *  sending it back is what lets an edit keep the rules pointing at it */
+  id?: number
   name: LocalizedValue
   priceAdjustment: number
   isDefault: boolean
@@ -59,6 +62,7 @@ export function bodyFromDraft(
     options: draft.options
       .filter((option) => option.name.en.trim())
       .map((option, index) => ({
+        ...(option.id ? { id: option.id } : {}),
         name: fromLocalizedValue(option.name),
         priceAdjustment: option.priceAdjustment,
         isDefault: option.isDefault,

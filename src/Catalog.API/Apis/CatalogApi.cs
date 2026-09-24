@@ -1010,18 +1010,41 @@ public static class CatalogApi
         customization.AllowMultiple = customizationToUpdate.AllowMultiple;
         customization.DisplayOrder = customizationToUpdate.DisplayOrder;
 
-        // Replace options
-        services.Context.CustomizationOptions.RemoveRange(customization.Options);
-        customization.Options.Clear();
+        // An option's id is what a recipe's rules name, so an option that
+        // survives an edit must keep it: replacing the lot would leave every
+        // recipe on this item pointing at ids that no longer exist.
+        var kept = customizationToUpdate.Options
+            .Where(o => o.Id != 0)
+            .Select(o => o.Id)
+            .ToHashSet();
+
+        foreach (var gone in customization.Options.Where(o => !kept.Contains(o.Id)).ToList())
+        {
+            services.Context.CustomizationOptions.Remove(gone);
+            customization.Options.Remove(gone);
+        }
 
         foreach (var option in customizationToUpdate.Options)
         {
-            customization.Options.Add(new CustomizationOption(option.Name)
+            var existing = option.Id != 0
+                ? customization.Options.FirstOrDefault(o => o.Id == option.Id)
+                : null;
+
+            if (existing is null)
             {
-                PriceAdjustment = option.PriceAdjustment,
-                IsDefault = option.IsDefault,
-                DisplayOrder = option.DisplayOrder
-            });
+                customization.Options.Add(new CustomizationOption(option.Name)
+                {
+                    PriceAdjustment = option.PriceAdjustment,
+                    IsDefault = option.IsDefault,
+                    DisplayOrder = option.DisplayOrder
+                });
+                continue;
+            }
+
+            existing.Name = option.Name;
+            existing.PriceAdjustment = option.PriceAdjustment;
+            existing.IsDefault = option.IsDefault;
+            existing.DisplayOrder = option.DisplayOrder;
         }
 
         await services.Context.SaveChangesAsync();
