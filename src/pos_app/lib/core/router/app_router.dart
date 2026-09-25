@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app.dart' show rootNavigatorKey;
 import '../auth/auth_service.dart';
 import '../brand/brand_mark.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/pos_shell.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/availability/screens/availability_screen.dart';
@@ -16,33 +17,62 @@ import '../../features/shifts/screens/shift_history_screen.dart';
 import '../../features/shifts/screens/shift_screen.dart';
 import '../../features/ticket/screens/ticket_screen.dart';
 
-/// Splash screen shown while checking authentication
+/// What shows while the till reads its session and café: Ninja's own
+/// chrome, as control_web's splash draws it (the café's mark takes over once
+/// it is known). Dark whatever the device's theme, in the connect screen's
+/// colours, so a tablet not yet connected goes from one to the other
+/// without a flash; the native launch splash before it is drawn to match
+/// (src/scripts/generate-app-icons.mjs).
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
-  static const _bgColor = Color(0xFF18181B);
+  static const _background = Color(0xFF18181B);
+  static const _ink = Color(0xFFFAFAFA);
+  static const _muted = Color(0xFFA1A1AA);
+  static const _line = Color(0xFF3F3F46);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bgColor,
+    return const Scaffold(
+      backgroundColor: _background,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const PlatformWordmark(size: 64, color: Colors.white),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
-            ),
-          ],
+        child: _SplashBody(
+          lockup: PlatformLockup(label: 'POS', color: _ink, labelColor: _muted, lineColor: _line),
+          muted: _muted,
         ),
       ),
+    );
+  }
+}
+
+/// The lockup, and under it a small spinner and what the app is doing
+class _SplashBody extends StatelessWidget {
+  final Widget lockup;
+  final Color muted;
+
+  const _SplashBody({required this.lockup, required this.muted});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = AppLocalizations.of(context)?.starting ?? 'Starting…';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        lockup,
+        const SizedBox(height: 32),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(color: muted, strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(color: muted, fontSize: 14)),
+          ],
+        ),
+      ],
     );
   }
 }

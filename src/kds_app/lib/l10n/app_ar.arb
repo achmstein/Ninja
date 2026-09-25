@@ -100,5 +100,6 @@
   "kitchenTicketTest": "تجربة",
   "kitchenTicketTestBody": "طابعة هذه المحطة تعمل",
   "kitchenPrinterStuck": "تذاكر المطبخ لا تُطبع: {stations}",
-  "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح."
+  "kitchenPrinterStuckHint": "تأكد أن الطابعة تعمل وبها ورق وأن عنوانها صحيح.",
+  "starting": "جاري التشغيل…"
 }

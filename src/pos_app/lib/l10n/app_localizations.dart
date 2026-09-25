@@ -2893,6 +2893,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many links just now, try again in a minute'**
   String get tooManyLinks;
+
+  /// No description provided for @starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get starting;
 }
 
 class _AppLocalizationsDelegate

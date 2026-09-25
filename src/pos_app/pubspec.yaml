@@ -106,9 +106,10 @@ flutter:
         - asset: assets/fonts/OriginalSurfer-Regular.ttf
 
 # The launcher icon is the platform's N mark on its dark tile, and the
-# splash its wordmark on the same tile (both drawn from the bundled Original
-# Surfer face): one build serves every café, and the café takes over inside
-# once the tablet is connected to it. The icon files are drawn by
+# splash control_web's `ninja | POS` lockup in the connect screen's dark, whatever
+# the device's theme (both drawn from the bundled Original Surfer face): one
+# build serves every café, and the café takes over inside once the tablet is
+# connected to it. The icon files are drawn by
 # src/scripts/generate-app-icons.mjs (which also draws the admin web's tile
 # for this app). After that, regenerate with
 #   dart run flutter_launcher_icons && dart run flutter_native_splash:create
@@ -126,6 +127,9 @@ flutter_native_splash:
 
   fullscreen: true
 
+  # Android 12+ shows only a centred icon, cut to a 192 dp circle: the lockup
+  # is drawn small enough to sit inside it (so it reads smaller than on older
+  # Androids), on the same background
   android_12:
     color: "#18181B"
     image: assets/images/ninja_splash_android12.png
