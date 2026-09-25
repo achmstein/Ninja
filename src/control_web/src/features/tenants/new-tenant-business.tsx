@@ -90,28 +90,28 @@ export function LookFields({
   const t = useT()
   return (
     <div className='grid gap-4 sm:grid-cols-2'>
-      <div className='grid gap-2'>
+      <div className='grid min-w-0 gap-2'>
         <Label>{t('arabicStyle')}</Label>
         <ToggleGroup
           type='single'
           variant='outline'
           value={arabicStyle}
           onValueChange={(v) => v && onArabicStyle(v as ArabicStyle)}
-          className='justify-start'
+          className='flex-wrap justify-start'
         >
           <ToggleGroupItem value='standard'>{t('arabicStandard')}</ToggleGroupItem>
           <ToggleGroupItem value='egyptian'>{t('arabicEgyptian')}</ToggleGroupItem>
         </ToggleGroup>
         <p className='text-muted-foreground text-xs'>{t('arabicStyleHint')}</p>
       </div>
-      <div className='grid gap-2'>
+      <div className='grid min-w-0 gap-2'>
         <Label>{t('defaultTheme')}</Label>
         <ToggleGroup
           type='single'
           variant='outline'
           value={defaultTheme}
           onValueChange={(v) => v && onDefaultTheme(v as DefaultTheme)}
-          className='justify-start'
+          className='flex-wrap justify-start'
         >
           <ToggleGroupItem value='device'>{t('themeDevice')}</ToggleGroupItem>
           <ToggleGroupItem value='light'>{t('themeLight')}</ToggleGroupItem>

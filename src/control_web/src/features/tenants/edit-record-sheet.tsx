@@ -70,7 +70,7 @@ export function EditRecordSheet({
   const t = useT()
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side='right' className='w-full sm:max-w-md'>
+      <SheetContent side='right' className='w-full sm:max-w-3xl'>
         <SheetHeader>
           <SheetTitle>{t('editRecord')}</SheetTitle>
           <SheetDescription className='sr-only'>{t('editRecord')}</SheetDescription>
@@ -165,9 +165,16 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
 
   return (
     <>
-      <form id={FORM_ID} onSubmit={submit} className='flex flex-1 flex-col gap-4 overflow-y-auto px-4'>
-        <LocalizedInput id='record-name' label={t('name')} value={name} onChange={setName} autoFocus />
-        <div className='grid gap-2'>
+      {/* Two columns once there is room: the long fields span both, the short ones pair up */}
+      <form
+        id={FORM_ID}
+        onSubmit={submit}
+        className='grid flex-1 content-start gap-4 overflow-y-auto px-4 sm:grid-cols-2'
+      >
+        <div className='min-w-0 sm:col-span-2'>
+          <LocalizedInput id='record-name' label={t('name')} value={name} onChange={setName} autoFocus />
+        </div>
+        <div className='grid min-w-0 gap-2 sm:col-span-2'>
           <Label htmlFor='record-business'>{t('businessType')}</Label>
           <BusinessPicker id='record-business' value={business} onChange={setBusiness} />
           <p className='text-muted-foreground text-xs'>{t('businessTypeRecordHint')}</p>
@@ -202,7 +209,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
-        <div className='grid gap-2'>
+        <div className='grid gap-2 sm:col-span-2'>
           <Label htmlFor='record-address'>{t('address')}</Label>
           <Textarea id='record-address' rows={2} value={address} onChange={(e) => setAddress(e.target.value)} />
         </div>
@@ -221,7 +228,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             </SelectContent>
           </Select>
         </div>
-        <div className='grid gap-2'>
+        <div className='grid gap-2 sm:col-span-2'>
           <Label htmlFor='record-notes'>{t('notes')}</Label>
           <Textarea id='record-notes' rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
@@ -241,7 +248,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
           </Select>
         </div>
         <div className='grid grid-cols-2 gap-4'>
-          <div className='grid gap-2'>
+          <div className='grid min-w-0 gap-2'>
             <Label htmlFor='record-currency'>{t('currency')}</Label>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger id='record-currency' className='w-full'>
@@ -256,7 +263,7 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
               </SelectContent>
             </Select>
           </div>
-          <div className='grid gap-2'>
+          <div className='grid min-w-0 gap-2'>
             <Label htmlFor='record-language'>{t('defaultLanguage')}</Label>
             <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
               <SelectTrigger id='record-language' className='w-full'>
@@ -284,12 +291,14 @@ function RecordForm({ tenant, onClose }: { tenant: TenantDetail; onClose: () => 
             </SelectContent>
           </Select>
         </div>
-        <LookFields
-          arabicStyle={arabicStyle}
-          onArabicStyle={setArabicStyle}
-          defaultTheme={defaultTheme}
-          onDefaultTheme={setDefaultTheme}
-        />
+        <div className='min-w-0 sm:col-span-2'>
+          <LookFields
+            arabicStyle={arabicStyle}
+            onArabicStyle={setArabicStyle}
+            defaultTheme={defaultTheme}
+            onDefaultTheme={setDefaultTheme}
+          />
+        </div>
       </form>
       <SheetFooter className='flex-row justify-end'>
         <Button type='button' variant='outline' onClick={onClose}>
