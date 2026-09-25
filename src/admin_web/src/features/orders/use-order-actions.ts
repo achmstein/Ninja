@@ -20,6 +20,8 @@ export function useOrderActions() {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getAllOrders' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getPendingOrders' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrder' }] })
+    // A guest's count and spend move with their orders
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getGuests' }] })
   }
 
   const confirmOrder = useMutation({

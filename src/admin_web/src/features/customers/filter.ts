@@ -1,7 +1,10 @@
 import { type TenantFeatures } from '@/api/branch'
 
-/** The customer list's two narrowed views, each belonging to a module. */
-export type CustomerFilter = 'owing' | 'members'
+/**
+ * The customer list's narrowed views: two belong to a module, and the
+ * guests — people who ordered without an account — are always there.
+ */
+export type CustomerFilter = 'owing' | 'members' | 'guests'
 
 /**
  * Which view the page may actually show. A link saved before the plan

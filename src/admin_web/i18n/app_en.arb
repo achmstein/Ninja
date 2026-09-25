@@ -813,5 +813,22 @@
   "guestOrdersAnywhere": "Guests can order from anywhere",
   "guestOrdersAnywhereHint": "Without an account and away from a table — from home or on the way, to collect at the counter. Off, a guest orders from the table they scanned.",
   "noPlacesTitle": "A cloud kitchen has no tables",
-  "noPlacesDescription": "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage."
+  "noPlacesDescription": "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage.",
+  "guests": "Guests",
+  "guestBadge": "Guest",
+  "noGuestsFound": "No guests found",
+  "noGuestsHint": "People who order without an account show up here, one for each phone number they leave.",
+  "selectGuest": "Pick a guest",
+  "guestOrderCount": "{count} {count, plural, =1{order} other{orders}}",
+  "@guestOrderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totalSpent": "Total spent",
+  "firstOrder": "First order",
+  "lastOrder": "Last order",
+  "guestNoAccount": "Ordered without an account. If they sign in on the same device, their orders move to their account."
 }

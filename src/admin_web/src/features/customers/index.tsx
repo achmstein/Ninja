@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { Search, Users } from 'lucide-react'
+import { Search, UserRound, Users } from 'lucide-react'
+import { getGuests } from '@/api/ordering'
+import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -17,9 +20,10 @@ import { accountsService } from '@/features/accounts/services/accounts-service'
 import { tierNameKeys } from '@/features/loyalty/components/tier-name'
 import { useLoyaltyAccounts } from '@/features/loyalty/hooks/use-loyalty'
 import { tierColors } from '@/features/loyalty/types'
-import { formatEgp } from '@/features/orders/status'
+import { formatEgp, relativeTime } from '@/features/orders/status'
 import { CustomerPanel } from './components/customer-panel'
 import { CustomerStats } from './components/customer-stats'
+import { GuestPanel } from './components/guest-panel'
 import { customersKeys, useCustomerCount } from './hooks/use-customers'
 import { customersService } from './services/customers-service'
 import { getCustomerDisplayName } from './types'
@@ -36,7 +40,9 @@ const STAFF_ROLES = 'Admin,Owner,Cashier'
 type Row = {
   id: string
   name: string
-  sub?: string
+  sub?: React.ReactNode
+  /** Marks someone who ordered without an account */
+  guest?: boolean
   /** End-side figure: a tab balance or a points balance */
   figure?: React.ReactNode
 }
@@ -45,7 +51,9 @@ type Row = {
  * Customers as a master-detail split: everyone on the start side (the
  * directory, or just those who owe, or just loyalty members), one person's
  * hub on the end side. Points and tab balances ride along on the rows so
- * the list already answers "who owes" and "who is a member".
+ * the list already answers "who owes" and "who is a member". The guests —
+ * people who ordered without an account, gathered by Ordering from their
+ * orders — are a view of their own, with their orders on the end side.
  */
 export function Customers() {
   const t = useT()
@@ -56,9 +64,13 @@ export function Customers() {
   const features = useFeatures()
   // A view whose module is off (a /loyalty or /accounts link from before) is the whole list
   const filter = allowedFilter(search.filter, features)
+  const guestsView = filter === 'guests'
+  const [nowMs] = useState(() => Date.now())
 
   const select = (customer: string | undefined) =>
     navigate({ search: (prev) => ({ ...prev, customer }) })
+  const selectGuest = (guest: string | undefined) =>
+    navigate({ search: (prev) => ({ ...prev, guest }) })
   const setFilter = (next: CustomerFilter | undefined) =>
     navigate({ search: (prev) => ({ ...prev, filter: next }) })
 
@@ -94,6 +106,32 @@ export function Customers() {
     enabled: !filter,
   })
   const count = useCustomerCount(query || undefined)
+
+  // Guests, paged the same way; Ordering folds their orders into one row
+  // per phone number, most recent first
+  const guests = useInfiniteQuery({
+    queryKey: [{ _id: 'getGuests' }, 'infinite', query],
+    queryFn: async ({ pageParam }) => {
+      const { data } = await getGuests({
+        query: {
+          'api-version': API_VERSION,
+          pageIndex: pageParam,
+          pageSize: PAGE_SIZE,
+          search: query || undefined,
+        },
+        throwOnError: true,
+      })
+      return data
+    },
+    initialPageParam: 0,
+    getNextPageParam: (last) =>
+      last.hasNextPage ? Number(last.pageIndex ?? 0) + 1 : undefined,
+    enabled: guestsView,
+  })
+  const guestRows = useMemo(
+    () => guests.data?.pages.flatMap((page) => page.items ?? []) ?? [],
+    [guests.data]
+  )
 
   const rows = useMemo<Row[]>(() => {
     const q = query.toLowerCase()
@@ -138,6 +176,27 @@ export function Customers() {
           ),
         }))
     }
+    if (filter === 'guests') {
+      return guestRows.map((g) => ({
+        id: g.key ?? '',
+        name: g.name || t('guestBadge'),
+        guest: true,
+        sub: (
+          <>
+            {g.phone && <span dir='ltr'>{g.phone}</span>}
+            {' · '}
+            {t('guestOrderCount', { count: Number(g.orderCount ?? 0) })}
+            {' · '}
+            {relativeTime(g.lastOrderAt, nowMs, t, locale)}
+          </>
+        ),
+        figure: (
+          <span className='text-xs font-medium tabular-nums'>
+            {formatEgp(g.totalSpent)}
+          </span>
+        ),
+      }))
+    }
     if (filter === 'members') {
       return (members.data ?? [])
         .filter(
@@ -164,21 +223,32 @@ export function Customers() {
     accounts.data,
     members.data,
     directory.data,
+    guestRows,
+    nowMs,
     balanceById,
     memberById,
     t,
   ])
 
   const listQuery =
-    filter === 'owing' ? accounts : filter === 'members' ? members : directory
+    filter === 'owing'
+      ? accounts
+      : filter === 'members'
+        ? members
+        : guestsView
+          ? guests
+          : directory
+  // The directory and the guests load a page at a time
+  const paged = guestsView ? guests : directory
+  const pages = !filter || guestsView
   const owingCount = (accounts.data ?? []).filter((a) => a.balance > 0).length
 
-  // Fetch the next directory page when the sentinel scrolls into view
+  // Fetch the next page when the sentinel scrolls into view
   const sentinel = useRef<HTMLDivElement>(null)
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = directory
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = paged
   useEffect(() => {
     const node = sentinel.current
-    if (!node || filter || !hasNextPage) return
+    if (!node || !pages || !hasNextPage) return
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting) && !isFetchingNextPage) {
@@ -189,7 +259,7 @@ export function Customers() {
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [filter, hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [pages, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const allFilters: {
     value: CustomerFilter | undefined
@@ -199,6 +269,14 @@ export function Customers() {
     { value: undefined, label: t('all'), count: count.data },
     { value: 'owing', label: t('owing'), count: owingCount },
     { value: 'members', label: t('members'), count: members.data?.length },
+    {
+      value: 'guests',
+      label: t('guests'),
+      count:
+        guests.data?.pages[0]?.totalCount != null
+          ? Number(guests.data.pages[0].totalCount)
+          : undefined,
+    },
   ]
   // The owing and members views follow the tabs and loyalty switches
   const filters = allFilters.filter(
@@ -262,11 +340,20 @@ export function Customers() {
                   <Skeleton key={i} className='mb-2 h-14 rounded-md' />
                 ))
               ) : rows.length === 0 ? (
-                <EmptyState
-                  compact
-                  icon={Users}
-                  title={t('noCustomersFound')}
-                />
+                guestsView ? (
+                  <EmptyState
+                    compact
+                    icon={UserRound}
+                    title={t('noGuestsFound')}
+                    description={query ? undefined : t('noGuestsHint')}
+                  />
+                ) : (
+                  <EmptyState
+                    compact
+                    icon={Users}
+                    title={t('noCustomersFound')}
+                  />
+                )
               ) : (
                 rows.map((row) => (
                   <button
@@ -274,12 +361,21 @@ export function Customers() {
                     type='button'
                     className={cn(
                       'hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-start text-sm',
-                      row.id === search.customer && 'sm:bg-muted'
+                      row.id ===
+                        (guestsView ? search.guest : search.customer) &&
+                        'sm:bg-muted'
                     )}
-                    onClick={() => select(row.id)}
+                    onClick={() =>
+                      guestsView ? selectGuest(row.id) : select(row.id)
+                    }
                   >
                     <div className='min-w-0 flex-1'>
-                      <div className='truncate font-medium'>{row.name}</div>
+                      <div className='flex items-center gap-2'>
+                        <span className='truncate font-medium'>{row.name}</span>
+                        {row.guest && (
+                          <Badge variant='outline'>{t('guestBadge')}</Badge>
+                        )}
+                      </div>
                       {row.sub && (
                         <div className='text-muted-foreground truncate text-xs'>
                           {row.sub}
@@ -290,7 +386,7 @@ export function Customers() {
                   </button>
                 ))
               )}
-              {!filter && (
+              {pages && (
                 <div
                   ref={sentinel}
                   className='flex h-8 items-center justify-center'
@@ -302,7 +398,22 @@ export function Customers() {
           )}
         </div>
 
-        {search.customer ? (
+        {guestsView ? (
+          search.guest ? (
+            <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border sm:static sm:z-auto sm:rounded-lg'>
+              <GuestPanel
+                key={search.guest}
+                guestKey={search.guest}
+                guest={guestRows.find((g) => g.key === search.guest)}
+                onBack={() => selectGuest(undefined)}
+              />
+            </div>
+          ) : (
+            <div className='bg-card hidden w-full flex-1 flex-col justify-center rounded-lg border sm:flex'>
+              <EmptyState icon={UserRound} title={t('selectGuest')} />
+            </div>
+          )
+        ) : search.customer ? (
           <div className='bg-background absolute inset-0 z-50 flex w-full flex-1 flex-col border sm:static sm:z-auto sm:rounded-lg'>
             <CustomerPanel
               key={search.customer}
