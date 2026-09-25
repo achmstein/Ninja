@@ -813,5 +813,18 @@
   "guestOrdersAnywhere": "Guests can order from anywhere",
   "guestOrdersAnywhereHint": "Without an account and away from a table — from home or on the way, to collect at the counter. Off, a guest orders from the table they scanned.",
   "noPlacesTitle": "A cloud kitchen has no tables",
-  "noPlacesDescription": "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage."
+  "noPlacesDescription": "Guests order ahead and collect at the counter, so there are no rooms, tables or QR codes to manage.",
+  "alreadyACustomer": "Already a customer",
+  "openCustomer": "Open customer",
+  "didYouMean": "Did you mean?",
+  "phoneLike": "Enter a number like {placeholder}",
+  "addedAtCounter": "Added at the counter",
+  "sendAppLink": "Send app link",
+  "appLinkTitle": "App link for {name}",
+  "appLinkHint": "They scan it with their phone camera to set an email and password. It works once.",
+  "appLinkUntil": "Works until {time}",
+  "sendOnWhatsApp": "Send on WhatsApp",
+  "copyLink": "Copy link",
+  "appLinkMessage": "Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}",
+  "customerAdded": "Customer added"
 }

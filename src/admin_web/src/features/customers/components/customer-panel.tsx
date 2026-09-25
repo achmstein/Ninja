@@ -66,6 +66,8 @@ import {
   type Customer,
 } from '../types'
 import { useFeatures } from '@/lib/brand'
+import { AddedAtCounterBadge } from './counter-customer'
+import { useSendAppLink } from './use-send-app-link'
 
 type CustomerPanelProps = {
   customerId: string
@@ -115,6 +117,7 @@ function CustomerHub({
   const queryClient = useQueryClient()
   const name = getCustomerDisplayName(customer)
   const [toggleOpen, setToggleOpen] = useState(false)
+  const appLink = useSendAppLink(customer)
 
   const toggleEnabled = useMutation({
     mutationFn: () => customersService.toggleEnabled(customer.id),
@@ -152,6 +155,7 @@ function CustomerHub({
               {!customer.enabled && (
                 <Badge variant='destructive'>{t('disabled')}</Badge>
               )}
+              {customer.addedAtCounter && <AddedAtCounterBadge />}
             </div>
             <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
               {[customer.phoneNumber, customer.email]
@@ -196,6 +200,7 @@ function CustomerHub({
                 {t('viewAllOrders')}
               </Link>
             </DropdownMenuItem>
+            {appLink.item}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant={customer.enabled ? 'destructive' : 'default'}
@@ -230,6 +235,7 @@ function CustomerHub({
         isLoading={toggleEnabled.isPending}
         handleConfirm={() => toggleEnabled.mutate()}
       />
+      {appLink.dialog}
     </div>
   )
 }

@@ -12,6 +12,8 @@ export interface Customer {
   phoneNumber?: string
   /** Branch ids a staff account may work in (Owners hold all) */
   branches?: number[]
+  /** Added at the till by name and phone, not yet claimed in the app */
+  addedAtCounter?: boolean
 }
 
 export interface CustomerParams {

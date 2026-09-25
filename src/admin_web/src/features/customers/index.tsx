@@ -18,6 +18,10 @@ import { tierNameKeys } from '@/features/loyalty/components/tier-name'
 import { useLoyaltyAccounts } from '@/features/loyalty/hooks/use-loyalty'
 import { tierColors } from '@/features/loyalty/types'
 import { formatEgp } from '@/features/orders/status'
+import {
+  AddCustomerButton,
+  AddedAtCounterBadge,
+} from './components/counter-customer'
 import { CustomerPanel } from './components/customer-panel'
 import { CustomerStats } from './components/customer-stats'
 import { customersKeys, useCustomerCount } from './hooks/use-customers'
@@ -39,6 +43,7 @@ type Row = {
   sub?: string
   /** End-side figure: a tab balance or a points balance */
   figure?: React.ReactNode
+  addedAtCounter?: boolean
 }
 
 /**
@@ -156,6 +161,7 @@ export function Customers() {
       name: getCustomerDisplayName(c),
       sub: c.phoneNumber || c.email,
       figure: figureFor(c.id),
+      addedAtCounter: c.addedAtCounter,
     }))
   }, [
     filter,
@@ -209,7 +215,10 @@ export function Customers() {
 
   return (
     <Main fixed>
-      <PageHeader title={t('customers')}>
+      <PageHeader
+        title={t('customers')}
+        actions={<AddCustomerButton onOpenCustomer={select} />}
+      >
         <CustomerStats />
       </PageHeader>
 
@@ -280,6 +289,7 @@ export function Customers() {
                   >
                     <div className='min-w-0 flex-1'>
                       <div className='truncate font-medium'>{row.name}</div>
+                      {row.addedAtCounter && <AddedAtCounterBadge />}
                       {row.sub && (
                         <div className='text-muted-foreground truncate text-xs'>
                           {row.sub}
