@@ -156,7 +156,7 @@ class _TodaySessionsList extends StatelessWidget {
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: sessions.length,
-            separatorBuilder: (_, __) => Divider(height: 1, color: colors.border),
+            separatorBuilder: (_, _) => Divider(height: 1, color: colors.border),
             itemBuilder: (context, index) => SessionTile(
               session: sessions[index],
               currentUserId: currentUserId,

@@ -513,81 +513,82 @@ class _ItemCustomizationSheetState
     final money = ref.watch(moneyProvider);
     final selectedId = selectedIds.isNotEmpty ? selectedIds.first : null;
 
-    return Column(
-      children: customization.options.map((option) {
-        final isSelected = selectedId == option.id;
-        final priceText = option.priceAdjustment > 0
-            ? ' ${l10n.priceAdjustmentPlus(money(option.priceAdjustment))}'
-            : option.priceAdjustment < 0
-                ? ' ${l10n.priceAdjustmentMinus(money(option.priceAdjustment.abs()))}'
-                : '';
+    return RadioGroup<int>(
+      groupValue: selectedId,
+      onChanged: (value) {
+        setState(() {
+          if (value != null) {
+            _selectedOptions[customization.id] = [value];
+          } else if (!customization.isRequired) {
+            _selectedOptions.remove(customization.id);
+          }
+        });
+      },
+      child: Column(
+        children: customization.options.map((option) {
+          final isSelected = selectedId == option.id;
+          final priceText = option.priceAdjustment > 0
+              ? ' ${l10n.priceAdjustmentPlus(money(option.priceAdjustment))}'
+              : option.priceAdjustment < 0
+                  ? ' ${l10n.priceAdjustmentMinus(money(option.priceAdjustment.abs()))}'
+                  : '';
 
-        return InkWell(
-          onTap: option.isOutOfStock
-              ? null
-              : () {
-                  setState(() {
-                    if (isSelected && !customization.isRequired) {
-                      _selectedOptions.remove(customization.id);
-                    } else {
-                      _selectedOptions[customization.id] = [option.id];
-                    }
-                  });
-                },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Radio<int>(
-                    value: option.id,
-                    groupValue: selectedId,
-                    onChanged: option.isOutOfStock
-                        ? null
-                        : (value) {
-                            setState(() {
-                              if (value != null) {
-                                _selectedOptions[customization.id] = [value];
-                              } else if (!customization.isRequired) {
-                                _selectedOptions.remove(customization.id);
-                              }
-                            });
-                          },
-                    activeColor: colors.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppText(
-                    option.name.getText(locale),
-                    style: TextStyle(
-                      color: option.isOutOfStock ? colors.mutedForeground : colors.foreground,
-                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+          return InkWell(
+            onTap: option.isOutOfStock
+                ? null
+                : () {
+                    setState(() {
+                      if (isSelected && !customization.isRequired) {
+                        _selectedOptions.remove(customization.id);
+                      } else {
+                        _selectedOptions[customization.id] = [option.id];
+                      }
+                    });
+                  },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Radio<int>(
+                      value: option.id,
+                      enabled: !option.isOutOfStock,
+                      activeColor: colors.primary,
                     ),
                   ),
-                ),
-                if (option.isOutOfStock)
-                  AppText(
-                    l10n.outOfStock,
-                    style: TextStyle(color: colors.mutedForeground, fontSize: 13),
-                  )
-                else if (priceText.isNotEmpty)
-                  AppText(
-                    priceText,
-                    style: TextStyle(
-                      color: option.priceAdjustment > 0
-                          ? colors.mutedForeground
-                          : AppTheme.successColor,
-                      fontSize: 13,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppText(
+                      option.name.getText(locale),
+                      style: TextStyle(
+                        color: option.isOutOfStock ? colors.mutedForeground : colors.foreground,
+                        fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                      ),
                     ),
                   ),
-              ],
+                  if (option.isOutOfStock)
+                    AppText(
+                      l10n.outOfStock,
+                      style: TextStyle(color: colors.mutedForeground, fontSize: 13),
+                    )
+                  else if (priceText.isNotEmpty)
+                    AppText(
+                      priceText,
+                      style: TextStyle(
+                        color: option.priceAdjustment > 0
+                            ? colors.mutedForeground
+                            : AppTheme.successColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 

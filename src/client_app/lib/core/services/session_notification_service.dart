@@ -114,12 +114,12 @@ class SessionNotificationService {
     final accessToken = await _ref.read(authServiceProvider.notifier).getAccessToken();
     final branchId = _ref.read(selectedBranchIdProvider);
     final sessionContext = <String, dynamic>{
-      if (accessToken != null) 'accessToken': accessToken,
+      'accessToken': ?accessToken,
       'apiBaseUrl': AppConfig.notificationsApiUrl,
       'sessionId': session.id,
       'placeId': session.placeId,
       'placeKind': session.placeKind.wireName,
-      if (branchId != null) 'branchId': branchId,
+      'branchId': ?branchId,
       'placeNameEn': session.placeName.en,
       if (session.placeName.ar != null) 'placeNameAr': session.placeName.ar,
     };

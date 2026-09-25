@@ -58,7 +58,7 @@ class SplashScreen extends ConsumerWidget {
 /// Listenable that notifies GoRouter when auth state changes
 class _AuthNotifier extends ChangeNotifier {
   _AuthNotifier(Ref ref) {
-    ref.listen(authServiceProvider, (_, __) => notifyListeners());
+    ref.listen(authServiceProvider, (_, _) => notifyListeners());
   }
 }
 

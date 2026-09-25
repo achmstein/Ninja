@@ -67,7 +67,7 @@ class ApiNotificationRepository implements NotificationRepository {
         data: {
           'fcmToken': fcmToken,
           'preferredLanguage': preferredLanguage,
-          if (branchId != null) 'branchId': branchId,
+          'branchId': ?branchId,
         },
       ).timeout(const Duration(seconds: 5));
 
