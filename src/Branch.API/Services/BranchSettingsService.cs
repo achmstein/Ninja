@@ -61,6 +61,12 @@ public class BranchSettingsService(
         }
     }
 
+    /// <summary>
+    /// A new branch's flags, as they start: until this goes out Ordering has
+    /// no row for the branch and takes every café-wide setting it carries as off.
+    /// </summary>
+    public Task PublishNewAsync(Model.Branch branch) => PublishAsync(branch);
+
     private async Task PublishAsync(Model.Branch branch)
     {
         // Whether a guest may order away from a table is the café's, not the

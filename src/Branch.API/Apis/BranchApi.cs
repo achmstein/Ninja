@@ -72,6 +72,7 @@ public static class BranchApi
 
     public static async Task<Created<BranchResponse>> CreateBranch(
         BranchContext context,
+        BranchSettingsService settings,
         CreateBranchRequest request)
     {
         var branch = new Model.Branch
@@ -91,6 +92,8 @@ public static class BranchApi
 
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
+        // Ordering, Spaces and Notification learn of a branch only through its settings event
+        await settings.PublishNewAsync(branch);
 
         var response = new BranchResponse(branch.Id, branch.Name, branch.Address, branch.Phone, branch.TaxNumber, branch.ReceiptFooter, branch.IsActive, branch.DisplayOrder, branch.DayStartTime.ToString("HH:mm"), branch.DayEndTime.ToString("HH:mm"), branch.IsOrderingEnabled, branch.IsReservationsEnabled, branch.RequireSignInForTableOrders);
         return TypedResults.Created($"/api/branches/{branch.Id}", response);
