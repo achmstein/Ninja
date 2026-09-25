@@ -39,19 +39,25 @@ const splashes = {
 const dp = 4;
 const fonts = path.join(src, 'pos_app/assets/fonts');
 
-// A line of text at `pt` dp, trimmed to its ink
+// A line of text at `pt` dp, trimmed to its ink across but keeping the font's line box up and down, so lines
+// centre on each other as they do on the page rather than on their ink (the j's tail would pull `ninja` down)
 const text = async (markup, font, fontfile, pt) => {
-  const { data } = await sharp({
+  const { data, info } = await sharp({
     text: { text: markup, font: `${font} ${pt}`, fontfile: path.join(fonts, fontfile), dpi: 72 * dp, rgba: true },
   }).png().toBuffer({ resolveWithObject: true });
-  const trimmed = await sharp(data).trim().png().toBuffer({ resolveWithObject: true });
-  return { input: trimmed.data, width: trimmed.info.width, height: trimmed.info.height };
+  const { info: ink } = await sharp(data).trim().toBuffer({ resolveWithObject: true });
+  const input = await sharp(data)
+    .extract({ left: -ink.trimOffsetLeft, top: 0, width: ink.width, height: info.height })
+    .png()
+    .toBuffer();
+  return { input, width: ink.width, height: info.height };
 };
 
 // The lockup on a transparent canvas just big enough for it, each part centred on one line as flex items-center does
 const lockup = async ({ ink, line, muted }, label) => {
   const name = await text(`<span foreground="${ink}">ninja</span>`, 'Original Surfer', 'OriginalSurfer-Regular.ttf', 48);
-  const tracking = Math.round(14 * 0.2 * 1024); // Pango units: 1/1024 pt
+  // Pango units (1/1024) of a point at 72 dpi, so at `dp` times that
+  const tracking = Math.round(14 * 0.2 * dp * 1024);
   const caps = await text(
     `<span foreground="${muted}" weight="500" letter_spacing="${tracking}">${label}</span>`,
     'Inter', 'Inter-Medium.ttf', 14);
