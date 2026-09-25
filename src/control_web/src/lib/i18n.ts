@@ -150,6 +150,7 @@ const dictionary = {
   tagCurrentHint: "Current",
   otherTag: "Other tag…",
   whichTenants: "Which tenants",
+  searchTenants: "Find a tenant by name or slug",
   onlyBehind: "Only those behind",
   everyone: "Everyone",
   behindCount: { plural: "count", forms: {"one":"1 behind","other":"{count} behind"} },

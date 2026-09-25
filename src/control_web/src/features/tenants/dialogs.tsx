@@ -214,6 +214,10 @@ export function FleetUpgradeDialog({
   const [tag, setTag] = useState('')
   const [chosen, setChosen] = useState<string[]>([])
   const [canary, setCanary] = useState<string>('none')
+  // With many cafés the list is found, not scrolled
+  const [find, setFind] = useState('')
+  const needle = find.trim().toLowerCase()
+  const listed = needle ? tenants.filter((x) => x.name.toLowerCase().includes(needle) || x.slug.includes(needle)) : tenants
 
   // Opened: the newest release if there is one, else the platform's default; the tenants behind, else everyone
   const defaultTag = updates.data?.newestRelease ?? updates.data?.knownTags[0] ?? ''
@@ -255,8 +259,11 @@ export function FleetUpgradeDialog({
                 </Button>
               </div>
             </div>
+            {tenants.length > 6 && (
+              <Input value={find} onChange={(e) => setFind(e.target.value)} placeholder={t('searchTenants')} aria-label={t('searchTenants')} />
+            )}
             <div className='grid max-h-48 gap-1 overflow-y-auto rounded-md border p-2'>
-              {tenants.map((x) => (
+              {listed.map((x) => (
                 <label key={x.slug} className='flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted/50'>
                   <Checkbox checked={chosen.includes(x.slug)} onCheckedChange={(v) => toggle(x.slug, v === true)} />
                   <span className='truncate'>{x.name}</span>
