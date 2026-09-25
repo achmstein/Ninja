@@ -33,9 +33,11 @@ export function BottomNav() {
 
   return (
     <nav className='bg-background/95 fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t backdrop-blur md:hidden'>
-      {/* Fixed h-14 so the menu's cart strip can anchor at exactly this
-            bar's top edge (intrinsic height varied by a few px) */}
-      <div className='flex h-14 items-stretch justify-around pb-[env(safe-area-inset-bottom)]'>
+      {/* A fixed 3.5rem of tabs so the menu's cart strip can anchor at exactly
+          this bar's top edge (intrinsic height varied by a few px), plus the
+          home indicator's inset under them: the box is border-box, so an
+          inset padded inside a bare h-14 squeezed the tabs on an iPhone */}
+      <div className='flex h-[calc(3.5rem+env(safe-area-inset-bottom))] items-stretch justify-around pb-[env(safe-area-inset-bottom)]'>
         {tabs.map(({ to, key, icon, ...rest }) => {
           // No places to book, no tab: the chip is the table's door
           if (key === 'rooms' && !visitTab.visible) return null

@@ -405,7 +405,7 @@ function CartPage() {
     // → total → button) pushed to the screen bottom when the cart is short.
     // min-h fills the viewport; -mb-20 cancels the root <main>'s pb-20 (that
     // clearance was for the fixed bar this page no longer has).
-    <div className='-mb-20 flex min-h-[calc(100svh-env(safe-area-inset-top))] flex-col gap-4 p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:mb-0 md:grid md:min-h-0 md:grid-cols-[1fr_360px] md:items-start md:pb-4'>
+    <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] flex min-h-[calc(100svh-env(safe-area-inset-top))] flex-col gap-4 p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:mb-0 md:grid md:min-h-0 md:grid-cols-[1fr_360px] md:items-start md:pb-4'>
       <div className='flex flex-col gap-3'>
         <div className='flex items-center gap-2 pt-2'>
           <Button

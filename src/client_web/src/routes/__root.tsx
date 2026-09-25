@@ -39,7 +39,7 @@ function RootLayout() {
           <div className='bg-background fixed inset-x-0 top-0 z-50 h-[env(safe-area-inset-top)]' />
           <AppHeader />
           <MobileTopBar />
-          <main className='mx-auto w-full max-w-lg flex-1 pb-20 md:max-w-6xl md:pb-8'>
+          <main className='mx-auto w-full max-w-lg flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:max-w-6xl md:pb-8'>
             <Outlet />
           </main>
           <BottomNav />
