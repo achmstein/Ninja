@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { getGuestsOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
 import { loyaltyService } from '@/features/loyalty/services/loyalty-service'
 import { customersKeys } from '../hooks/use-customers'
 import {
@@ -102,6 +104,21 @@ export function AddCustomerDialog({
       : undefined
   const match = conflict ?? current?.match ?? null
   const similar = (lookup.data?.similar ?? []).filter((c) => c.id !== match?.id)
+  // Someone who ordered without an account left this number: not a
+  // customer yet, so nothing blocks creating them, but the name they gave
+  // is worth knowing (making them a customer keeps their orders as they are)
+  const guests = useQuery({
+    ...getGuestsOptions({
+      query: { 'api-version': API_VERSION, search: lookupPhone, pageSize: 5 },
+    }),
+    enabled: open && lookupPhone.length > 0 && !!current?.phoneValid,
+    staleTime: 10_000,
+  })
+  const guest = match
+    ? undefined
+    : guests.data?.items?.find(
+        (g) => !!g.phone && normalizePhone(g.phone, country) === lookupPhone
+      )
   const phoneInvalid =
     digits.length >= MIN_PHONE_DIGITS &&
     current !== undefined &&
@@ -167,6 +184,31 @@ export function AddCustomerDialog({
               <p className='text-destructive text-xs'>
                 {t('phoneLike', { placeholder })}
               </p>
+            )}
+            {guest && (
+              <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm'>
+                <span className='min-w-0'>
+                  <span className='text-muted-foreground block text-xs'>
+                    {t('orderedAsGuest')}
+                  </span>
+                  <span className='block truncate font-medium'>
+                    {guest.name || t('guestBadge')}
+                  </span>
+                  <span className='text-muted-foreground text-xs'>
+                    {t('guestOrderCount', { count: Number(guest.orderCount ?? 0) })}
+                  </span>
+                </span>
+                {guest.name && !name.trim() && (
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setName(guest.name ?? '')}
+                  >
+                    {t('useGuestName')}
+                  </Button>
+                )}
+              </div>
             )}
             {match && (
               <MatchCard

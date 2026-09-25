@@ -843,5 +843,7 @@
   "totalSpent": "Total spent",
   "firstOrder": "First order",
   "lastOrder": "Last order",
-  "guestNoAccount": "Ordered without an account. If they sign in on the same device, their orders move to their account."
+  "guestNoAccount": "Ordered without an account. If they sign in on the same device, their orders move to their account.",
+  "orderedAsGuest": "Ordered before as a guest",
+  "useGuestName": "Use this name"
 }

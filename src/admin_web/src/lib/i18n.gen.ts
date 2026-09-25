@@ -605,4 +605,6 @@ export const messages = {
   firstOrder: { en: "First order", ar: "أول طلب" },
   lastOrder: { en: "Last order", ar: "آخر طلب" },
   guestNoAccount: { en: "Ordered without an account. If they sign in on the same device, their orders move to their account.", ar: "طلب دون حساب. إذا سجّل الدخول من الجهاز نفسه تنتقل طلباته إلى حسابه." },
+  orderedAsGuest: { en: "Ordered before as a guest", ar: "طلب من قبل كزائر" },
+  useGuestName: { en: "Use this name", ar: "استخدم هذا الاسم" },
 } as const satisfies Record<string, Message>
