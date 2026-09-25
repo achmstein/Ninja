@@ -301,6 +301,9 @@ public static partial class Templates
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
                     AppendChatModel(sb, tenant, platform);
+                    // Uploaded pictures are written under the content root; without a volume an upgrade loses them
+                    sb.AppendLine("    volumes:");
+                    sb.AppendLine($"      - \"{TenantNaming.PicsVolume(slug)}:/app/Pics\"");
                     break;
                 case "inventory":
                 case "finance":
@@ -383,6 +386,7 @@ public static partial class Templates
         sb.AppendLine("    external: true");
         sb.AppendLine("volumes:");
         sb.AppendLine($"  {TenantNaming.UploadsVolume(slug)}: {{}}");
+        sb.AppendLine($"  {TenantNaming.PicsVolume(slug)}: {{}}");
         return sb.ToString();
     }
 

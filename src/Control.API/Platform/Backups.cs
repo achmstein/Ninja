@@ -27,6 +27,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
 {
     private const string Manifest = "manifest.json";
     private const string Uploads = "uploads.tar.gz";
+    private const string Pics = "pics.tar.gz";
 
     /// <summary>The platform's own backups live beside the tenants' under a name no slug can take (_ is not a slug character).</summary>
     public const string PlatformSlug = "_platform";
@@ -74,6 +75,23 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
                 }
             }
             if (!hasUploads) File.Delete(Path.Combine(dir, Uploads));
+
+            // The menu's pictures, from catalog's own volume: files beside the uploads, restored with them
+            var hasPics = true;
+            await using (var archive = File.Create(Path.Combine(dir, Pics)))
+            {
+                var result = await shell.RunAsync("docker",
+                    ["run", "--rm", "-v", $"{TenantNaming.PicsVolumeOnDocker(tenant.Slug)}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."],
+                    null, null, archive, ct);
+                if (!result.Ok)
+                {
+                    // A stack created before catalog had a volume has none until its next upgrade
+                    logger.LogWarning("{Slug}: no pictures archived: {Output}", tenant.Slug, result.Output);
+                    hasPics = false;
+                }
+            }
+            if (!hasPics) File.Delete(Path.Combine(dir, Pics));
+            hasUploads |= hasPics;
 
             var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), TenantNaming.Databases, hasUploads, tenant.ImageTag, Sha256: await ChecksumsAsync(dir, ct));
             await File.WriteAllTextAsync(Path.Combine(dir, Manifest), JsonSerializer.Serialize(info, Json), ct);
@@ -265,13 +283,19 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     /// <summary>The uploads into <paramref name="into"/>'s volume, which exists once its stack is up.</summary>
     public async Task<bool> RestoreUploadsAsync(string fromSlug, string id, Tenant into, CancellationToken ct)
     {
-        var archive = Path.Combine(Dir(fromSlug, id), Uploads);
+        var restored = await RestoreArchiveAsync(Path.Combine(Dir(fromSlug, id), Uploads), TenantNaming.UploadsVolumeOnDocker(into.Slug), "uploads", ct);
+        restored |= await RestoreArchiveAsync(Path.Combine(Dir(fromSlug, id), Pics), TenantNaming.PicsVolumeOnDocker(into.Slug), "pictures", ct);
+        return restored;
+    }
+
+    private async Task<bool> RestoreArchiveAsync(string archive, string volume, string what, CancellationToken ct)
+    {
         if (!File.Exists(archive)) return false;
         await using var file = File.OpenRead(archive);
         var result = await shell.RunAsync("docker",
-            ["run", "-i", "--rm", "-v", $"{TenantNaming.UploadsVolumeOnDocker(into.Slug)}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"],
+            ["run", "-i", "--rm", "-v", $"{volume}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"],
             null, file, Stream.Null, ct);
-        if (!result.Ok) throw new InvalidOperationException($"uploads: {result.Output}");
+        if (!result.Ok) throw new InvalidOperationException($"{what}: {result.Output}");
         return true;
     }
 

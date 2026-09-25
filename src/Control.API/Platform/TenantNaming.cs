@@ -85,6 +85,11 @@ public static partial class TenantNaming
     /// <summary>The volume as docker names it: compose prefixes the project, so anything outside the compose file (a backup) must too.</summary>
     public static string UploadsVolumeOnDocker(string slug) => $"{Project(slug)}_{UploadsVolume(slug)}";
 
+    /// <summary>The menu's pictures: catalog keeps them on disk, so they must outlive its container.</summary>
+    public static string PicsVolume(string slug) => $"{slug}-catalog-pics";
+
+    public static string PicsVolumeOnDocker(string slug) => $"{Project(slug)}_{PicsVolume(slug)}";
+
     /// <summary>A URL-safe secret of 32 characters.</summary>
     public static string NewSecret()
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_');

@@ -476,6 +476,11 @@ public static class CatalogApi
         }
 
         var path = GetFullPath(environment.ContentRootPath, item.PictureFileName);
+        // The row can outlive its file (a container replaced without its volume): no picture, not a 500
+        if (!File.Exists(path))
+        {
+            return TypedResults.NotFound();
+        }
 
         string imageFileExtension = Path.GetExtension(item.PictureFileName) ?? string.Empty;
         string mimetype = GetImageMimeTypeFromImageFileExtension(imageFileExtension);

@@ -168,6 +168,9 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "Tenant__ApiUrl: \"https://api.blue.ninja.app\"");
         StringAssert.Contains(yaml, "Tenant__AppsUrl: \"https://ninja.app/apps\"");
         StringAssert.Contains(yaml, "blue-branch-uploads:/app/uploads");
+        // Catalog writes the menu's pictures under its content root; an upgrade must not take them with the container
+        StringAssert.Contains(yaml, "blue-catalog-pics:/app/Pics");
+        StringAssert.Contains(yaml, "  blue-catalog-pics: {}");
         StringAssert.Contains(yaml, "CatalogOptions__PicBaseUrl: \"https://api.blue.ninja.app\"");
         // Every service plants its own tables from the same profile; a stamp is never tenant one
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Seed__Profile: \"sample\"").Count);

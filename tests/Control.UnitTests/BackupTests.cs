@@ -94,6 +94,20 @@ public sealed class BackupTests
     }
 
     [TestMethod]
+    public async Task A_backup_archives_the_menus_pictures_and_a_restore_puts_them_back()
+    {
+        var backup = await _backups.CreateAsync(new Tenant { Slug = "blue" }, CancellationToken.None);
+
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("ninja-blue_blue-catalog-pics:/from:ro")));
+        Assert.IsTrue(backup.Sha256!.ContainsKey("pics.tar.gz"));
+        _shell.Commands.Clear();
+
+        await _backups.RestoreUploadsAsync("blue", backup.Id, new Tenant { Slug = "red" }, CancellationToken.None);
+
+        Assert.IsTrue(_shell.Commands.Any(c => c.Contains("ninja-red_red-catalog-pics:/to")));
+    }
+
+    [TestMethod]
     public async Task The_platform_backup_dumps_controldb_and_keycloak_under_its_own_name()
     {
         var info = await _backups.CreatePlatformAsync(CancellationToken.None);
