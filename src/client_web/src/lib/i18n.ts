@@ -23,8 +23,14 @@ const webExtras = {
   },
   // Guest checkout: web only. The mobile app always signs in first, so these
   // have no ARB counterpart to share.
-  orderAsGuest: { en: 'Order as guest', ar: 'اطلب كضيف' },
+  orderAsGuest: { en: 'Order as guest', ar: 'اطلب كزائر' },
   signInInstead: { en: 'Sign in instead', ar: 'أو سجل دخول' },
+  // The profile of someone who ordered as a guest: who they gave, and that it is not an account
+  orderingAsGuest: { en: "You're ordering as a guest", ar: 'انت بتطلب كزائر' },
+  guestSignInPrompt: {
+    en: 'Sign in to keep your orders and earn points',
+    ar: 'سجل دخول عشان تحتفظ بطلباتك وتجمع نقط',
+  },
   // Shown when a guest has no table: ordering without one means ordering
   // ahead, which needs an account
   tableOrdersNeedAccount: {
@@ -53,7 +59,7 @@ const webExtras = {
   },
   signInForBills: {
     en: 'Sign in to see your bills, or order as a guest',
-    ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كضيف',
+    ar: 'سجل دخول عشان تشوف حسابك، أو اطلب كزائر',
   },
   continueWithGoogle: { en: 'Continue with Google', ar: 'جوجل' },
   continueWithApple: { en: 'Continue with Apple', ar: 'أبل' },

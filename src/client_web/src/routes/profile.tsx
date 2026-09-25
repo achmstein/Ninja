@@ -42,6 +42,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { BalanceCard } from '@/components/balance-card'
 import { SignInOptions } from '@/components/sign-in-options'
+import { useGuestStore } from '@/stores/guest-store'
 import { TileAnchor, TileButton, TileLink } from '@/components/tile-row'
 import { useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
 import { BrandMark, BrandWordmark } from '@/components/brand-mark'
@@ -62,6 +63,8 @@ const tierKeys: Record<string, TranslationKey> = {
 function ProfilePage() {
   const t = useT()
   const auth = useAuth()
+  // What a guest gave at their last checkout, remembered in this browser
+  const guestContact = useGuestStore((s) => s.contact)
   const features = useFeatures()
   const branch = useSelectedBranch()
   const [aboutOpen, setAboutOpen] = useState(false)
@@ -117,6 +120,24 @@ function ProfilePage() {
               {myProfileQuery.data.phoneNumber}
             </div>
           )}
+        </div>
+      ) : guestContact ? (
+        // Someone who already ordered as a guest: the name and phone they gave, marked as a guest
+        <div className='flex flex-col items-center gap-1 pt-2 text-center'>
+          <div className='bg-muted flex h-20 w-20 items-center justify-center rounded-full'>
+            <span className='text-3xl font-semibold'>{guestContact.name[0]?.toUpperCase()}</span>
+          </div>
+          <div className='max-w-[18rem] truncate pt-3 text-xl font-bold'>{guestContact.name}</div>
+          <div className='text-muted-foreground truncate text-sm' dir='ltr'>
+            {guestContact.phone}
+          </div>
+          <Badge variant='secondary' className='mt-1'>
+            {t('orderingAsGuest')}
+          </Badge>
+          <p className='text-muted-foreground pt-2 text-sm'>{t('guestSignInPrompt')}</p>
+          <div className='w-full max-w-sm pt-2'>
+            <SignInOptions />
+          </div>
         </div>
       ) : (
         <div className='flex flex-col items-center gap-2 pt-2 text-center'>
