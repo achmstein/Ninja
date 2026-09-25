@@ -90,9 +90,17 @@ public static partial class TenantNaming
 
     public static string PicsVolumeOnDocker(string slug) => $"{Project(slug)}_{PicsVolume(slug)}";
 
-    /// <summary>A URL-safe secret of 32 characters.</summary>
+    /// <summary>
+    /// A URL-safe secret of 32 characters that never starts with '-': the
+    /// same secrets go on rabbitmqctl's command line, which would read one
+    /// starting with a dash as an option and refuse the user.
+    /// </summary>
     public static string NewSecret()
-        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_');
+    {
+        const string letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        var secret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_');
+        return secret[0] is '-' or '_' ? letters[RandomNumberGenerator.GetInt32(letters.Length)] + secret[1..] : secret;
+    }
 
     /// <summary>A first password an owner can type from a demo email: 12 characters, no look-alikes.</summary>
     public static string NewPassword()

@@ -24,6 +24,23 @@ public sealed class TenantNamingTests
         Assert.IsTrue(TenantNaming.IsValidSlug(drill), drill);
     }
 
+    /// <summary>
+    /// The same secrets go on rabbitmqctl's command line (add_user,
+    /// change_password), which reads a word starting with '-' as an option
+    /// and refuses the user. One in 64 base64url strings starts with one.
+    /// </summary>
+    [TestMethod]
+    public void A_secret_never_starts_with_a_dash_and_stays_32_url_safe_characters()
+    {
+        for (var i = 0; i < 20_000; i++)
+        {
+            var secret = TenantNaming.NewSecret();
+            Assert.HasCount(32, secret);
+            Assert.IsFalse(secret.StartsWith('-'), secret);
+            Assert.IsTrue(secret.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'), secret);
+        }
+    }
+
     [TestMethod]
     public void The_role_and_the_broker_user_are_the_slug_with_a_suffix_no_slug_can_carry()
     {
