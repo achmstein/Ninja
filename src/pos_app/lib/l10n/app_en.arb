@@ -378,14 +378,6 @@
     }
   },
   "newTab": "New tab",
-  "onCustomerTabHint": "On {name}'s tab",
-  "@onCustomerTabHint": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "alreadyOnBill": "Already has a bill open · {where}",
   "@alreadyOnBill": {
     "placeholders": {

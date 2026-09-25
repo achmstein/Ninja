@@ -13,6 +13,8 @@ import { apiClient } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { NewCustomerDialog } from '@/features/customer/new-customer-dialog'
 import { customerName, type IdentityCustomer } from '@/features/customer/counter-customers'
@@ -69,12 +71,19 @@ type CustomerDialogProps = {
   quickPicks?: { id: string; name: string }[]
   /** The dialog's title; "Choose customer" unless it is a plain lookup. */
   titleKey?: TranslationKey
+  /**
+   * Accounts that cannot be picked, each with where their bill is: opening
+   * a new bill, whoever already has one running shows greyed out with it —
+   * one person, one bill.
+   */
+  busy?: ReadonlyMap<string, string>
 }
 
 /**
- * Attach-a-customer search for loyalty accrual and on-account settling.
- * Debounced Keycloak search; admins are excluded server-side so staff
- * accounts never end up as "customers" on a sale.
+ * Attach-a-customer search for loyalty accrual and on-account settling —
+ * the one picker behind "Choose customer" on the sale pad and in the
+ * new-bill dialog. Debounced Keycloak search; admins are excluded
+ * server-side so staff accounts never end up as "customers" on a sale.
  */
 export function CustomerDialog({
   open,
@@ -83,6 +92,7 @@ export function CustomerDialog({
   accountsOnly = false,
   quickPicks = [],
   titleKey = 'chooseCustomer',
+  busy,
 }: CustomerDialogProps) {
   const t = useT()
   const [term, setTerm] = useState('')
@@ -125,6 +135,11 @@ export function CustomerDialog({
   // Someone the till does not know yet, by name and phone: an account made
   // here, found again by their number next time
   const pickNew = (customer: IdentityCustomer) => {
+    const onBill = busy?.get(customer.id)
+    if (onBill) {
+      toast.error(t('alreadyOnBill', { where: onBill }))
+      return
+    }
     setAdding(false)
     onSelect({
       id: customer.id,
@@ -227,12 +242,18 @@ export function CustomerDialog({
             </div>
           ) : (
             <div className='flex flex-col'>
-              {users.map((user) => (
+              {users.map((user) => {
+                const onBill = busy?.get(user.id)
+                return (
                 <div key={user.id} className='flex items-center gap-1'>
                 <button
                   type='button'
+                  disabled={!!onBill}
                   onClick={() => pick(user)}
-                  className='hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start'
+                  className={cn(
+                    'hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start',
+                    'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent'
+                  )}
                 >
                   <User className='text-muted-foreground size-5 shrink-0' />
                   <span className='min-w-0'>
@@ -244,7 +265,11 @@ export function CustomerDialog({
                         ranges={matchRanges(displayName(user), term)}
                       />
                     </span>
-                    {user.phoneNumber ? (
+                    {onBill ? (
+                      <span className='text-muted-foreground block truncate text-sm'>
+                        {t('alreadyOnBill', { where: onBill })}
+                      </span>
+                    ) : user.phoneNumber ? (
                       <span className='text-muted-foreground block truncate text-sm'>
                         <Highlight
                           text={user.phoneNumber}
@@ -279,7 +304,8 @@ export function CustomerDialog({
                   <Info className='text-muted-foreground size-5' />
                 </Button>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

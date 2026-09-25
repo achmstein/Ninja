@@ -6,7 +6,6 @@ import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -20,8 +19,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
 import '../../catalog/services/catalog_service.dart';
-import '../../customers/dialogs/customer_card_dialog.dart';
-import '../../customers/providers/customer_providers.dart';
 import '../../orders/services/order_service.dart';
 import '../../places/models/place.dart';
 import '../../places/providers/places_provider.dart';
@@ -40,6 +37,7 @@ import '../providers/sale_provider.dart';
 import '../pending_ticket_customer.dart';
 import '../widgets/cart_line_row.dart';
 import '../widgets/customer_dialog.dart';
+import '../widgets/customer_field.dart';
 import '../widgets/customize_dialog.dart';
 import '../widgets/item_tile.dart';
 
@@ -685,81 +683,29 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           const SizedBox(height: 8),
                         ],
                         if (customer != null)
-                          Container(
-                            padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(FIcons.user, size: 16),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: (customer.id ?? '').isNotEmpty
-                                      // An account: tap for the card — points and tab at a glance
-                                      ? FTappable(
-                                          onPress: () => showCustomerCard(context, id: customer.id!, name: customer.name, phone: customer.phone, addedAtCounter: customer.addedAtCounter),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(customer.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                                              _CustomerPointsLine(userId: customer.id!),
-                                            ],
-                                          ),
-                                        )
-                                      : Text(customer.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                                ),
-                                SizedBox.square(
-                                  dimension: 40,
-                                  child: FButton.icon(
-                                    variant: FButtonVariant.ghost,
-                                    onPress: () => ref.read(saleProvider.notifier).setCustomer(null),
-                                    child: const Icon(FIcons.x, size: 16),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          SelectedCustomerChip(
+                            customer: customer,
+                            onRemove: () => ref.read(saleProvider.notifier).setCustomer(null),
                           )
                         else if (!showChips)
-                          SizedBox(
-                            height: 48,
-                            child: FButton(
-                              variant: FButtonVariant.outline,
-                              onPress: () async {
-                                // Adding to a room's bill: the people in the
-                                // room are the first choice for whose round
-                                // this is, and somebody picked from the
-                                // search who is not in the room yet joins the
-                                // roster right here — the cashier is telling
-                                // us they are there, and their share of the
-                                // time will need a tab at settle
-                                final roster = roomSession?.roster ?? const <({String id, String name})>[];
-                                final picked = await showCustomerDialog(context, quickPicks: roster);
-                                if (picked == null || !context.mounted) return;
-                                ref.read(saleProvider.notifier).setCustomer(picked);
-                                final id = picked.id;
-                                if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
-                                  StayActions(ref, context).addMember(roomSession.id, id, picked.name);
-                                }
-                              },
-                              prefix: const Icon(FIcons.userPlus, size: 20),
-                              child: Text.rich(
-                                TextSpan(
-                                  text: l10n.chooseCustomer,
-                                  style: theme.typography.base.forButton,
-                                  children: [
-                                    TextSpan(
-                                      text: ' (${l10n.optional})',
-                                      style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                          ChooseCustomerButton(
+                            onPress: () async {
+                              // Adding to a room's bill: the people in the
+                              // room are the first choice for whose round
+                              // this is, and somebody picked from the
+                              // search who is not in the room yet joins the
+                              // roster right here — the cashier is telling
+                              // us they are there, and their share of the
+                              // time will need a tab at settle
+                              final roster = roomSession?.roster ?? const <({String id, String name})>[];
+                              final picked = await showCustomerDialog(context, quickPicks: roster);
+                              if (picked == null || !context.mounted) return;
+                              ref.read(saleProvider.notifier).setCustomer(picked);
+                              final id = picked.id;
+                              if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
+                                StayActions(ref, context).addMember(roomSession.id, id, picked.name);
+                              }
+                            },
                           ),
                       ],
                     ),
@@ -826,33 +772,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
           ),
       ],
     );
-  }
-}
-
-/// The attached customer's points under their name — information only:
-/// points are earned and spent in the customer app, the till never touches
-/// them. Quiet while offline or until the read lands.
-class _CustomerPointsLine extends ConsumerWidget {
-  final String userId;
-  const _CustomerPointsLine({required this.userId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(featuresProvider).loyalty) return const SizedBox.shrink();
-    if (!ref.watch(onlineProvider)) return const SizedBox.shrink();
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    final loyalty = ref.watch(loyaltyAccountProvider(userId));
-    final text = loyalty.when(
-      loading: () => null,
-      error: (_, _) => null,
-      data: (account) => account == null ? l10n.notEnrolled : l10n.pointsBalance(account.pointsBalance),
-    );
-    if (text == null) return const SizedBox.shrink();
-    return Text(text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]));
   }
 }
 

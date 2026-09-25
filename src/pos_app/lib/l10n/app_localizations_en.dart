@@ -642,11 +642,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTab => 'New tab';
 
   @override
-  String onCustomerTabHint(String name) {
-    return 'On $name\'s tab';
-  }
-
-  @override
   String alreadyOnBill(String where) {
     return 'Already has a bill open · $where';
   }

@@ -1208,12 +1208,6 @@ abstract class AppLocalizations {
   /// **'New tab'**
   String get newTab;
 
-  /// No description provided for @onCustomerTabHint.
-  ///
-  /// In en, this message translates to:
-  /// **'On {name}\'s tab'**
-  String onCustomerTabHint(String name);
-
   /// No description provided for @alreadyOnBill.
   ///
   /// In en, this message translates to:

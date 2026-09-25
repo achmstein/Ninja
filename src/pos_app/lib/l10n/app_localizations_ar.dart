@@ -648,11 +648,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newTab => 'حساب جديد';
 
   @override
-  String onCustomerTabHint(String name) {
-    return 'على حساب $name';
-  }
-
-  @override
   String alreadyOnBill(String where) {
     return 'لديه فاتورة مفتوحة · $where';
   }

@@ -362,14 +362,6 @@
     }
   },
   "newTab": "حساب جديد",
-  "onCustomerTabHint": "على حساب {name}",
-  "@onCustomerTabHint": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "alreadyOnBill": "لديه فاتورة مفتوحة · {where}",
   "@alreadyOnBill": {
     "placeholders": {

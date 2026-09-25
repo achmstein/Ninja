@@ -297,7 +297,6 @@ const dictionary = {
   preferenceLoaded: { en: "Usual", ar: "المعتاد" },
   someoneElse: { en: "Someone else", ar: "شخص آخر" },
   onCustomerTab: { en: "On the customer's tab", ar: "أُضيف إلى حساب العميل" },
-  onCustomerTabHint: { en: "On {name}'s tab", ar: "على حساب {name}" },
   alreadyOnBill: { en: "Already has a bill open · {where}", ar: "لديه فاتورة مفتوحة · {where}" },
   amount: { en: "Amount", ar: "المبلغ" },
   addPayment: { en: "Add payment", ar: "أضف دفعة" },

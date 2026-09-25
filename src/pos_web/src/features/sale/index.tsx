@@ -9,9 +9,7 @@ import {
   Plus,
   Sparkles,
   Trash2,
-  User,
   UserPlus,
-  X,
 } from 'lucide-react'
 import {
   listCategoriesOptions,
@@ -27,14 +25,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  CustomerCard,
-  type CardCustomer,
-} from '@/features/customer/customer-card'
-import { useLoyalty } from '@/features/customer/use-customer-card'
+  ChooseCustomerButton,
+  SelectedCustomer,
+} from '@/features/customer/selected-customer'
 import { stayRoster } from '@/features/places/status'
 import { useStay, useStayActions } from '@/features/places/use-places'
 import { API_VERSION, apiClient } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -174,24 +170,6 @@ function CartLineRow({
  * opening a counter one, and the cashier lands back on the ticket with
  * nothing to pay yet.
  */
-/**
- * The attached customer's points under their name — information only:
- * points are earned and spent in the customer app, the till never touches
- * them. Quiet when they never joined.
- */
-function CustomerPointsLine({ userId }: { userId: string }) {
-  const t = useT()
-  const { account, notEnrolled } = useLoyalty(userId)
-  if (!account && !notEnrolled) return null
-  return (
-    <span className='text-muted-foreground block truncate text-xs tabular-nums'>
-      {notEnrolled
-        ? t('notEnrolled')
-        : t('pointsBalance', { points: toNumber(account?.pointsBalance) })}
-    </span>
-  )
-}
-
 function readLastCustomer(
   key: string | null,
 ): { id: string; name: string } | null {
@@ -207,7 +185,6 @@ function readLastCustomer(
 export function SalePad({ ticketId }: { ticketId?: number }) {
   const addingToTicket = ticketId !== undefined
   const t = useT()
-  const features = useFeatures()
   const localized = useLocalized()
   const money = useMoney()
   const language = useLanguage((s) => s.language)
@@ -237,7 +214,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     null,
   )
   const [customerOpen, setCustomerOpen] = useState(false)
-  const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
 
   // Adding to a room's bill: the people in the room are the first choice
   // for whose round this is, and somebody picked from the search who is not
@@ -766,58 +742,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </div>
           )}
           {customer ? (
-            <div className='bg-accent/50 flex items-center justify-between gap-1 rounded-lg py-1 ps-3'>
-              {customer.id ? (
-                /* An account: tap for the card — points and tab at a glance */
-                <button
-                  type='button'
-                  className='flex min-w-0 flex-1 items-center gap-2 text-start'
-                  onClick={() =>
-                    setCardFor({
-                      id: customer.id!,
-                      name: customer.name,
-                      phone: customer.phone,
-                    })
-                  }
-                >
-                  <User className='size-4 shrink-0' />
-                  <span className='min-w-0'>
-                    <span className='block truncate font-medium'>
-                      {customer.name}
-                    </span>
-                    {features.loyalty && (
-                      <CustomerPointsLine userId={customer.id} />
-                    )}
-                  </span>
-                </button>
-              ) : (
-                <span className='flex min-w-0 items-center gap-2'>
-                  <User className='size-4 shrink-0' />
-                  <span className='truncate font-medium'>{customer.name}</span>
-                </span>
-              )}
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-10 shrink-0'
-                aria-label={t('removeCustomer')}
-                onClick={() => setCustomer(null)}
-              >
-                <X className='size-4' />
-              </Button>
-            </div>
+            <SelectedCustomer
+              customer={customer}
+              onRemove={() => setCustomer(null)}
+            />
           ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
-            <Button
-              variant='outline'
-              className='h-12 w-full gap-2 text-base'
-              onClick={() => setCustomerOpen(true)}
-            >
-              <UserPlus className='size-5' />
-              {t('chooseCustomer')}
-              <span className='text-muted-foreground font-normal'>
-                ({t('optional')})
-              </span>
-            </Button>
+            <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
           )}
         </div>
 
@@ -871,10 +801,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         onOpenChange={setCustomerOpen}
         onSelect={pickCustomer}
         quickPicks={roster}
-      />
-      <CustomerCard
-        customer={cardFor}
-        onOpenChange={(open) => !open && setCardFor(null)}
       />
 
       {/* Blocking wait: the sale is committed, nothing else may be touched

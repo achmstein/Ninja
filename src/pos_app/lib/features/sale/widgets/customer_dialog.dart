@@ -6,6 +6,7 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_dialog.dart';
+import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/phone.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
@@ -16,8 +17,9 @@ import '../models/sale_line.dart';
 const _searchDebounce = Duration(milliseconds: 300);
 const _minSearchLength = 2;
 
-/// Attach-a-customer search for loyalty accrual and on-account settling.
-/// Debounced Keycloak search; the typed name is offered first because most
+/// Attach-a-customer search for loyalty accrual and on-account settling —
+/// the one picker behind "Choose customer" on the sale pad and in the
+/// new-bill dialog. Debounced Keycloak search; the typed name is offered first because most
 /// people at a table have no account and the waiters know them by name.
 /// With [accountsOnly] there is no name shortcut: for the room roster, a
 /// member is a tab the bill can go on, and a bare name is nobody.
@@ -25,15 +27,19 @@ const _minSearchLength = 2;
 /// sale is for a room; most of the time the person is already there, so
 /// this is one tap instead of a search.
 /// [title] replaces "Choose customer" for a plain lookup.
+/// [busy] are accounts that cannot be picked, each with where their bill
+/// is: opening a new bill, whoever already has one running shows greyed
+/// out with it — one person, one bill.
 Future<SaleCustomer?> showCustomerDialog(
   BuildContext context, {
   bool accountsOnly = false,
   List<({String id, String name})> quickPicks = const [],
   String? title,
+  Map<String, String> busy = const {},
 }) {
   return showPosDialog<SaleCustomer>(
     context,
-    builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title),
+    builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
   );
 }
 
@@ -41,7 +47,8 @@ class _CustomerDialog extends ConsumerStatefulWidget {
   final bool accountsOnly;
   final List<({String id, String name})> quickPicks;
   final String? title;
-  const _CustomerDialog({this.accountsOnly = false, this.quickPicks = const [], this.title});
+  final Map<String, String> busy;
+  const _CustomerDialog({this.accountsOnly = false, this.quickPicks = const [], this.title, this.busy = const {}});
 
   @override
   ConsumerState<_CustomerDialog> createState() => _CustomerDialogState();
@@ -109,7 +116,13 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
     final typed = _term.text.trim();
     final asPhone = looksLikePhone(typed);
     final added = await showNewCustomerDialog(context, name: asPhone ? '' : typed, phone: asPhone ? typed : '');
-    if (added != null && mounted) _pick(added);
+    if (added == null || !mounted) return;
+    final onBill = widget.busy[added.id];
+    if (onBill != null) {
+      showPosToast(context, PosToastType.error, AppLocalizations.of(context)!.alreadyOnBill(onBill));
+      return;
+    }
+    _pick(added);
   }
 
   @override
@@ -268,19 +281,25 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                     itemCount: _users.length,
                     itemBuilder: (context, index) {
                       final user = _users[index];
+                      final onBill = widget.busy[user.id];
                       return Row(
                         children: [
                           Expanded(
                             child: FTappable(
-                              onPress: () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter)),
-                              builder: (context, states, child) => Container(
-                                constraints: const BoxConstraints(minHeight: 56),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                                  borderRadius: BorderRadius.circular(10),
+                              onPress: onBill != null
+                                  ? null
+                                  : () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter)),
+                              builder: (context, states, child) => Opacity(
+                                opacity: onBill == null ? 1 : 0.6,
+                                child: Container(
+                                  constraints: const BoxConstraints(minHeight: 56),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: child,
                                 ),
-                                child: child,
                               ),
                               child: Row(
                                 children: [
@@ -298,7 +317,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                           overflow: TextOverflow.ellipsis,
                                           style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
                                         ),
-                                        if (user.contact case final contact?)
+                                        if (onBill != null)
+                                          Text(l10n.alreadyOnBill(onBill), maxLines: 1, overflow: TextOverflow.ellipsis, style: muted)
+                                        else if (user.contact case final contact?)
                                           Text.rich(
                                             TextSpan(
                                               children: highlightSpans(
