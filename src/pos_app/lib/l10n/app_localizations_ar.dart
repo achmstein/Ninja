@@ -805,8 +805,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noAccountNeeded => 'اسم فقط — دون حساب';
 
   @override
-  String get searchCustomersPlaceholder =>
-      'الاسم أو رقم الجوال أو البريد الإلكتروني';
+  String get searchCustomersPlaceholder => 'الاسم أو رقم الموبايل أو الإيميل';
 
   @override
   String get noCustomersFound => 'لا يوجد عملاء مطابقون لهذا البحث';
@@ -1530,7 +1529,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get newCustomerName => 'الاسم';
 
   @override
-  String get newCustomerPhone => 'رقم الجوال';
+  String get newCustomerPhone => 'رقم الموبايل';
 
   @override
   String get createCustomer => 'إضافة العميل';
@@ -1568,7 +1567,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appLinkHint =>
-      'يمسحه بكاميرا جواله ليضيف بريدًا إلكترونيًا وكلمة مرور. يعمل مرة واحدة فقط.';
+      'يمسحه بكاميرا موبايله ليضيف بريدًا إلكترونيًا وكلمة مرور. يعمل مرة واحدة فقط.';
 
   @override
   String appLinkUntil(String time) {
