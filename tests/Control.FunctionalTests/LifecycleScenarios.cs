@@ -27,7 +27,7 @@ public sealed class LifecycleScenarios
             new[] { "credentials", "databases", "broker", "realm", "stack", "edge", "health", "brand", "entitlements", "owner", "broker-lockdown" },
             tenant.Steps.Select(s => s.Name).ToArray());
         Assert.IsTrue(tenant.Steps.All(s => s.Status == StepStatus.Done));
-        CollectionAssert.AreEqual(new[] { "catalog", "ordering", "spaces", "sales", "identity", "loyalty", "notification", "accounts", "branch" }, tenant.Services.ToArray());
+        CollectionAssert.AreEqual(new[] { "catalog", "ordering", "spaces", "sales", "identity", "loyalty", "notification", "accounts", "branch", "assistant" }, tenant.Services.ToArray());
         Assert.Contains($"{slug}.ninja.test", tenant.Hosts.Customer, "the customer host is the slug under the platform's domain");
 
         var shell = ControlPlane.Factory.Shell.Commands;

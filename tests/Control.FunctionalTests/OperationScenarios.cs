@@ -122,7 +122,7 @@ public sealed class OperationScenarios
         await api.SettledAsync(slug);
 
         var health = await api.HealthAsync(slug);
-        CollectionAssert.AreEqual(new[] { "catalog", "ordering", "spaces", "sales", "identity", "loyalty", "notification", "accounts", "branch" }, health.Select(h => h.Service).ToArray());
+        CollectionAssert.AreEqual(new[] { "catalog", "ordering", "spaces", "sales", "identity", "loyalty", "notification", "accounts", "branch", "assistant" }, health.Select(h => h.Service).ToArray());
         Assert.IsTrue(health.All(h => h.Ok), "the dry-run gateway answers for every stamped service");
 
         using var logs = await api.RawAsync(HttpMethod.Get, $"/api/control/tenants/{slug}/logs?service=loyalty&tail=10");
