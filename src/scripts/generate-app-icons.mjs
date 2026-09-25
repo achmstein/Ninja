@@ -21,19 +21,18 @@ const apps = { pos: '#18181B', kds: '#EA580C' };
 // Original Surfer at 48 px, a 1 px hairline 28 px tall 16 px either side, and the
 // app's name in 14 px Inter Medium caps tracked 0.2em. The native splash can't use
 // the fonts, so it is drawn here at xxxhdpi (4 px to the dp), in each reading's
-// colours: the till follows the device (the app's slate theme, light and dark),
-// the kitchen is black. The in-app splash (core/router/app_router.dart) draws the
+// colours: the till in its connect screen's (so an unconnected tablet goes from
+// one to the other without a flash), the kitchen on black, both whatever the
+// device's theme. The in-app splash (core/router/app_router.dart) draws the
 // same lockup with the bundled fonts once Flutter is up.
 const splashes = {
   pos: {
     label: 'POS',
-    light: { background: '#FFFFFF', ink: '#020618', line: '#E2E8F0', muted: '#62748E' },
-    // The dark theme's border is white at 10%; over the background that is this
-    dark: { background: '#020618', ink: '#F8FAFC', line: '#1C1F2F', muted: '#90A1B9' },
+    colours: { background: '#18181B', ink: '#FAFAFA', line: '#3F3F46', muted: '#A1A1AA' },
   },
   kds: {
     label: 'KDS',
-    light: { background: '#000000', ink: '#FFFFFF', line: '#3F3F46', muted: '#A1A1AA' },
+    colours: { background: '#000000', ink: '#FFFFFF', line: '#3F3F46', muted: '#A1A1AA' },
   },
 };
 const dp = 4;
@@ -116,14 +115,10 @@ for (const [app, background] of Object.entries(apps)) {
   // The adaptive foreground: launchers show the middle 66% and keep a 61% circle whatever the mask, so the N's ink
   // (37% of the layer) fills most of what shows and its corners stay inside the circle
   await sharp(Buffer.from(tile(1024, null, 0.7))).png().toFile(path.join(images, 'ninja_foreground.png'));
-  // The splash, one pair per reading (`_dark` for the till's dark one): before Android 12 drawn centred at its
-  // own size, read as xxxhdpi; from Android 12 in the icon's slot
-  const { label, ...readings } = splashes[app];
-  for (const [reading, colours] of Object.entries(readings)) {
-    const suffix = reading === 'dark' ? '_dark' : '';
-    await (await splash(colours, label)).toFile(path.join(images, `ninja_splash${suffix}.png`));
-    await (await android12(colours, label)).toFile(path.join(images, `ninja_splash_android12${suffix}.png`));
-  }
+  // The splash: before Android 12 drawn centred at its own size, read as xxxhdpi; from Android 12 in the icon's slot
+  const { label, colours } = splashes[app];
+  await (await splash(colours, label)).toFile(path.join(images, 'ninja_splash.png'));
+  await (await android12(colours, label)).toFile(path.join(images, 'ninja_splash_android12.png'));
   // The admin web's tile, as a small SVG
   const tiles = path.join(src, 'admin_web/public/apps');
   fs.mkdirSync(tiles, { recursive: true });

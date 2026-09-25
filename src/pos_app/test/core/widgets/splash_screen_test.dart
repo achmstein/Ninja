@@ -23,7 +23,7 @@ Widget _app(Locale locale, AppThemeMode mode) => MaterialApp(
     );
 
 void main() {
-  testWidgets('the till opens on the ninja | POS lockup, saying it is starting', (tester) async {
+  testWidgets("the till opens on the ninja | POS lockup in the connect screen's dark, even in a light theme", (tester) async {
     await tester.pumpWidget(_app(const Locale('en'), AppThemeMode.light));
 
     expect(find.text('ninja'), findsOneWidget);
@@ -31,10 +31,10 @@ void main() {
     expect(find.text('Starting…'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-    expect(scaffold.backgroundColor, const Color(0xFFFFFFFF));
+    expect(scaffold.backgroundColor, const Color(0xFF18181B));
   });
 
-  testWidgets('in Arabic the lockup stays Latin, left to right, and dark follows the theme', (tester) async {
+  testWidgets("in Arabic the lockup stays Latin, left to right, and a dark theme keeps the connect screen's dark", (tester) async {
     await tester.pumpWidget(_app(const Locale('ar'), AppThemeMode.dark));
 
     expect(find.text('جاري التشغيل…'), findsOneWidget);
@@ -42,6 +42,6 @@ void main() {
     final pos = tester.getCenter(find.text('POS'));
     expect(ninja.dx, lessThan(pos.dx));
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
-    expect(scaffold.backgroundColor, const Color(0xFF020618));
+    expect(scaffold.backgroundColor, const Color(0xFF18181B));
   });
 }

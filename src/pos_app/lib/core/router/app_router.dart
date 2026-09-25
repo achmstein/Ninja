@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app.dart' show rootNavigatorKey;
 import '../auth/auth_service.dart';
@@ -20,26 +19,26 @@ import '../../features/ticket/screens/ticket_screen.dart';
 
 /// What shows while the till reads its session and café: Ninja's own
 /// chrome, as control_web's splash draws it (the café's mark takes over once
-/// it is known). The app's theme, so light by default and dark with the
-/// device; the native launch splash before it is drawn to match
+/// it is known). Dark whatever the device's theme, in the connect screen's
+/// colours, so a tablet not yet connected goes from one to the other
+/// without a flash; the native launch splash before it is drawn to match
 /// (src/scripts/generate-app-icons.mjs).
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
+  static const _background = Color(0xFF18181B);
+  static const _ink = Color(0xFFFAFAFA);
+  static const _muted = Color(0xFFA1A1AA);
+  static const _line = Color(0xFF3F3F46);
+
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return Scaffold(
-      backgroundColor: colors.background,
+    return const Scaffold(
+      backgroundColor: _background,
       body: Center(
         child: _SplashBody(
-          lockup: PlatformLockup(
-            label: 'POS',
-            color: colors.foreground,
-            labelColor: colors.mutedForeground,
-            lineColor: colors.border,
-          ),
-          muted: colors.mutedForeground,
+          lockup: PlatformLockup(label: 'POS', color: _ink, labelColor: _muted, lineColor: _line),
+          muted: _muted,
         ),
       ),
     );
