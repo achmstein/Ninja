@@ -14,10 +14,7 @@ export function useKeyboardInset(enabled = true) {
 
   useEffect(() => {
     const vv = window.visualViewport
-    if (!enabled || !vv) {
-      setInset(0)
-      return
-    }
+    if (!enabled || !vv) return
 
     const update = () => {
       const covered = window.innerHeight - (vv.height + vv.offsetTop)
@@ -34,5 +31,6 @@ export function useKeyboardInset(enabled = true) {
     }
   }, [enabled])
 
-  return inset
+  // Switched off, the last reading is stale rather than reset, so answer 0
+  return enabled ? inset : 0
 }
