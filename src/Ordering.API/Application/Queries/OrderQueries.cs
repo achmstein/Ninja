@@ -349,10 +349,22 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         DateTime? toDate = null,
         int? sessionId = null,
         string? search = null,
-        string? sort = null)
+        string? sort = null,
+        string? guest = null)
     {
         var query = context.Orders.AsNoTracking().Include(o => o.Buyer)
             .Where(o => o.BranchId == branchId);
+
+        // A guest is a phone number across devices, which only the directory
+        // can tell: resolve their orders there, then list them like any other
+        if (!string.IsNullOrWhiteSpace(guest))
+        {
+            var guestOrderIds = (await LoadGuestOrderRowsAsync(branchId))
+                .Where(r => GuestDirectory.KeyFor(r.GuestId, r.GuestPhone) == guest)
+                .Select(r => r.OrderId)
+                .ToList();
+            query = query.Where(o => guestOrderIds.Contains(o.Id));
+        }
 
         if (sessionId.HasValue)
             query = query.Where(o => o.SessionId == sessionId.Value);
@@ -450,6 +462,42 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             TotalCount = totalCount
         };
     }
+
+    public async Task<PaginatedResult<GuestSummary>> GetGuestsAsync(int branchId, int pageIndex, int pageSize, string? search = null)
+    {
+        // Grouped in memory, as the stats are: telling who is the same guest
+        // means normalizing phone numbers, which SQL would do badly, and a
+        // branch's guest orders are a narrow projection
+        var guests = GuestDirectory.Aggregate(await LoadGuestOrderRowsAsync(branchId), search);
+
+        return new PaginatedResult<GuestSummary>
+        {
+            Items = guests.Skip(pageIndex * pageSize).Take(pageSize).ToList(),
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            TotalCount = guests.Count
+        };
+    }
+
+    /// <summary>
+    /// The branch's guest orders that are still a guest's: an order a guest
+    /// claimed by signing in has a buyer now, and is the account's.
+    /// </summary>
+    private async Task<List<GuestOrderRow>> LoadGuestOrderRowsAsync(int branchId)
+        => await context.Orders
+            .AsNoTracking()
+            .Where(o => o.BranchId == branchId)
+            .Where(GuestDirectory.IsUnclaimedGuestOrder)
+            .Select(o => new GuestOrderRow(
+                o.Id,
+                o.GuestId!,
+                o.GuestName,
+                o.GuestPhone,
+                o.OrderDate,
+                o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Cancelled,
+                // The total the order list shows for the same order
+                Math.Max(0, (double)(o.OrderItems.Sum(oi => oi.UnitPrice * oi.Units - oi.Discount) - o.PromoDiscount) - o.LoyaltyDiscount)))
+            .ToListAsync();
 
     public async Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes)
     {

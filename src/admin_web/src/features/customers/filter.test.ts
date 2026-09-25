@@ -24,6 +24,11 @@ describe('the list a link asks for', () => {
     expect(allowedFilter('owing', { tabs: true, loyalty: false })).toBe('owing')
   })
 
+  it('is the guests whatever the plan: ordering without an account needs no module', () => {
+    expect(allowedFilter('guests', { tabs: false, loyalty: false })).toBe('guests')
+    expect(allowedFilter('guests', both)).toBe('guests')
+  })
+
   it('is the whole list for a café with neither', () => {
     expect(allowedFilter('owing', { tabs: false, loyalty: false })).toBeUndefined()
     expect(allowedFilter('members', { tabs: false, loyalty: false })).toBeUndefined()

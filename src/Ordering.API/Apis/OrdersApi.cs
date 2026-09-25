@@ -125,6 +125,14 @@ public static partial class OrdersApi
             .WithSummary("Get all orders paginated (admin)")
             .RequireAuthorization("Admin");
 
+        // People who order without an account have no customer record; the
+        // back office finds them here, gathered from the orders they left
+        api.MapGet("/guests", GetGuestsAsync)
+            .WithName("GetGuests")
+            .WithSummary("Guests who ordered without an account (admin)")
+            .WithDescription("One row per phone number left at guest checkout at the branch, from orders no account has claimed: the latest name and phone, how many orders went ahead and what they came to (cancelled orders left out), and the first and last order time. Most recent first. Search matches a name or the phone. A row's key filters GetAllOrders to that guest's orders.")
+            .RequireAuthorization("Admin");
+
         api.MapGet("/stats", GetOrderStatsAsync)
             .WithName("GetOrderStats")
             .WithSummary("Get aggregated order statistics (admin)")
@@ -836,6 +844,7 @@ public static partial class OrdersApi
         int? sessionId = null,
         string? search = null,
         string? sort = null,
+        string? guest = null,
         [AsParameters] OrderServices services = default!)
     {
         var branchId = httpContext.GetRequiredBranchId();
@@ -846,8 +855,20 @@ public static partial class OrdersApi
             : status.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var orders = await services.Queries.GetAllOrdersAsync(
-            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId, search, sort);
+            pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId, search, sort, guest);
         return TypedResults.Ok(orders);
+    }
+
+    public static async Task<Ok<PaginatedResult<GuestSummary>>> GetGuestsAsync(
+        HttpContext httpContext,
+        int pageIndex = 0,
+        int pageSize = 20,
+        string? search = null,
+        [AsParameters] OrderServices services = default!)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        var guests = await services.Queries.GetGuestsAsync(branchId, pageIndex, pageSize, search);
+        return TypedResults.Ok(guests);
     }
 
     public static async Task<Ok<OrderStats>> GetOrderStatsAsync(

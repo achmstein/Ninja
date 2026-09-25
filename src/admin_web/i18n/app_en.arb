@@ -826,5 +826,22 @@
   "sendOnWhatsApp": "Send on WhatsApp",
   "copyLink": "Copy link",
   "appLinkMessage": "Hi {name}, your points at {cafe} are waiting. Set up your account here (works for 30 minutes): {url}",
-  "customerAdded": "Customer added"
+  "customerAdded": "Customer added",
+  "guests": "Guests",
+  "guestBadge": "Guest",
+  "noGuestsFound": "No guests found",
+  "noGuestsHint": "People who order without an account show up here, one for each phone number they leave.",
+  "selectGuest": "Pick a guest",
+  "guestOrderCount": "{count} {count, plural, =1{order} other{orders}}",
+  "@guestOrderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totalSpent": "Total spent",
+  "firstOrder": "First order",
+  "lastOrder": "Last order",
+  "guestNoAccount": "Ordered without an account. If they sign in on the same device, their orders move to their account."
 }

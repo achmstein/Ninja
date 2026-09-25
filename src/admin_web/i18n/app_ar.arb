@@ -635,5 +635,15 @@
   "sendOnWhatsApp": "إرسال عبر واتساب",
   "copyLink": "نسخ الرابط",
   "appLinkMessage": "مرحبًا {name}، نقاطك في {cafe} بانتظارك. أنشئ حسابك من هنا (صالح لمدة 30 دقيقة): {url}",
-  "customerAdded": "تمت إضافة العميل"
+  "customerAdded": "تمت إضافة العميل",
+  "guests": "الزوار",
+  "guestBadge": "زائر",
+  "noGuestsFound": "لا يوجد زوار",
+  "noGuestsHint": "يظهر هنا من يطلب دون حساب، زائر لكل رقم هاتف يتركه.",
+  "selectGuest": "اختر زائرًا",
+  "guestOrderCount": "{count} {count, plural, =1{طلب} other{طلبات}}",
+  "totalSpent": "إجمالي الإنفاق",
+  "firstOrder": "أول طلب",
+  "lastOrder": "آخر طلب",
+  "guestNoAccount": "طلب دون حساب. إذا سجّل الدخول من الجهاز نفسه تنتقل طلباته إلى حسابه."
 }
