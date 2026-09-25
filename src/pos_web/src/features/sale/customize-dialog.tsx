@@ -349,9 +349,10 @@ function CustomizeForm({
         />
       </div>
 
+      {/* A long list of options scrolls on a phone; the add stays in reach */}
       <Button
         size='lg'
-        className='h-14 w-full justify-between px-5 text-lg'
+        className='h-14 w-full justify-between px-5 text-lg max-sm:sticky max-sm:bottom-0 max-sm:shadow-[0_0_0_0.75rem_var(--background)]'
         disabled={item.isAvailable === false || missingRequired}
         onClick={add}
       >

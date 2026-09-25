@@ -151,7 +151,9 @@ export function CustomerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='flex max-h-[85svh] flex-col gap-4 sm:max-w-md'>
+      {/* On a phone the picker takes the whole height: the results get the
+          room between the search box and the buttons, and scroll there */}
+      <DialogContent className='flex max-h-[85svh] flex-col gap-4 max-sm:h-[calc(100svh-1.5rem)] max-sm:overflow-hidden sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='text-xl'>{t(titleKey)}</DialogTitle>
         </DialogHeader>
@@ -205,7 +207,7 @@ export function CustomerDialog({
           </Button>
         )}
 
-        <div className='-mx-2 flex-1 overflow-y-auto'>
+        <div className='-mx-2 min-h-0 flex-1 overflow-y-auto'>
           {search.length === 0 ? null : isFetching && users.length === 0 ? (
             <div className='flex flex-col'>
               {Array.from({ length: 5 }).map((_, i) => (
