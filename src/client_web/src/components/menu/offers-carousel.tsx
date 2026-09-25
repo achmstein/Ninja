@@ -5,11 +5,14 @@ import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { itemPictureUrl } from './item-card'
+import { cn } from '@/lib/utils'
 
 interface OffersCarouselProps {
   items: CatalogItemDto[]
   onCustomize: (item: CatalogItemDto) => void
   orderingEnabled: boolean
+  /** False for a style without photos: the cards are text */
+  photos?: boolean
 }
 
 /** Horizontal rail of compact offer cards (mobile's Special Offers section). */
@@ -17,6 +20,7 @@ export function OffersCarousel({
   items,
   onCustomize,
   orderingEnabled,
+  photos = true,
 }: OffersCarouselProps) {
   const t = useT()
   const localized = useLocalized()
@@ -44,25 +48,27 @@ export function OffersCarousel({
   return (
     <section className='flex flex-col gap-2'>
       <h2 className='text-sm font-semibold'>{t('specialOffers')}</h2>
-      <div className='no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4'>
+      <div className='no-scrollbar -mx-4 -my-3 flex snap-x gap-3 overflow-x-auto px-4 py-3'>
         {items.map((item) => (
           <div
             key={String(item.id)}
-            className='bg-card text-card-foreground relative w-36 shrink-0 snap-start overflow-hidden rounded-xl border shadow-sm'
+            className='surface text-card-foreground relative w-36 shrink-0 snap-start overflow-hidden rounded-xl'
           >
             <button
               type='button'
               className='block w-full text-start'
               onClick={() => orderingEnabled && handleAdd(item)}
             >
-              <ImageWithFallback
-                src={item.pictureUri ? itemPictureUrl(item.id) : null}
-                className='aspect-square w-full'
-                fallbackIcon={
-                  <Utensils className='text-muted-foreground/40 h-8 w-8' />
-                }
-              />
-              <div className='flex flex-col gap-0.5 p-2'>
+              {photos && (
+                <ImageWithFallback
+                  src={item.pictureUri ? itemPictureUrl(item.id) : null}
+                  className='aspect-square w-full'
+                  fallbackIcon={
+                    <Utensils className='text-muted-foreground/40 h-8 w-8' />
+                  }
+                />
+              )}
+              <div className={cn('flex flex-col gap-0.5 p-2', !photos && 'pb-11')}>
                 <span className='truncate text-sm font-semibold'>
                   {localized(item.name)}
                 </span>
@@ -77,7 +83,7 @@ export function OffersCarousel({
             {orderingEnabled && (
               <Button
                 size='icon'
-                className='absolute end-2 bottom-2 size-7 rounded-full'
+                className='absolute end-2 bottom-2 size-7 rounded-(--radius-round)'
                 aria-label={t('addToCart')}
                 onClick={() => handleAdd(item)}
               >

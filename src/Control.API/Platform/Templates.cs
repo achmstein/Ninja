@@ -328,6 +328,12 @@ public static partial class Templates
                         if (services.Contains(target))
                             sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;
+                case "sales":
+                    // Pay at table: the key the café's provider secrets are sealed with, and where the provider calls back
+                    sb.AppendLine("      Payments__Key: \"${PAYMENTS_KEY}\"");
+                    sb.AppendLine($"      Payments__CallbackBaseUrl: \"{hosts.ApiUrl}\"");
+                    sb.AppendLine($"      Payments__ReturnBaseUrl: \"{hosts.CustomerUrl}\"");
+                    break;
                 case "tenant":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
                     if (!string.IsNullOrEmpty(tenant.NameAr)) sb.AppendLine($"      Tenant__Name__Ar: \"{Yaml(tenant.NameAr)}\"");
@@ -368,6 +374,9 @@ public static partial class Templates
             // A blocked route answers before anything a catch-all could say about the same path
             if (cluster == "tenant" && transforms.Any(t => t.Any(kv => kv.Item1 == "PathSet" && kv.Item2 == ModuleOffPath)))
                 sb.AppendLine($"      {r}__ORDER: \"-1\"");
+            // ...and a path that must pass anyway answers before the block
+            else if (PlanCatalog.AlwaysOpen.Any(o => o.Path == path && !entitled.Contains(o.Module)))
+                sb.AppendLine($"      {r}__ORDER: \"-2\"");
             if (versions is not null)
             {
                 sb.AppendLine($"      {r}__MATCH__QUERYPARAMETERS__0__NAME: \"api-version\"");
@@ -404,6 +413,7 @@ public static partial class Templates
             $"BROKER_PASSWORD={tenant.BrokerPassword}",
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
             $"ASSISTANT_SECRET={tenant.AssistantSecret}",
+            $"PAYMENTS_KEY={tenant.PaymentsKey}",
             // The shared key reaches only the stacks whose plan includes the assistant: one café's compromise is not every café's
             $"GEMINI_API_KEY={(platform.AssistantFor(tenant) ? platform.GeminiApiKey : "")}",
             "",
@@ -483,6 +493,9 @@ public static partial class Templates
         yield return ("/api/stays/{*any}", "spaces", v1, none);
         yield return ("/api/tickets/{*any}", "sales", v1, none);
         yield return ("/api/shifts/{*any}", "sales", v1, none);
+        // Paying at the table; the provider's callback carries no api-version and is never blocked
+        yield return ("/api/sales/payments/paymob/callback", "sales", null, none);
+        yield return ("/api/sales/payments/{*any}", "sales", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);
         yield return ("/api/payroll/{*any}", "payroll", v1, none);
         yield return ("/api/finance/{*any}", "finance", v1, none);

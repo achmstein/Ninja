@@ -46,6 +46,7 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
             {
                 b.ToJson();
                 b.OwnsOne(t => t.Dark);
+                b.OwnsOne(t => t.Layout, l => l.Ignore(x => x.IsEmpty));
             });
             // A dictionary cannot be an owned JSON type; it is one jsonb document
             entity.Property(e => e.Images)

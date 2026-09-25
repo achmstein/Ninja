@@ -15,6 +15,8 @@ import 'core/auth/auth_service.dart';
 import 'core/brand/brand_provider.dart';
 import 'core/brand/brand_theme.dart';
 import 'core/brand/tenant_brand.dart';
+import 'core/brand/brand_style.dart';
+import 'core/brand/styles.dart';
 import 'core/providers/branch_provider.dart';
 import 'core/providers/current_place_provider.dart';
 import 'core/providers/locale_provider.dart';
@@ -233,7 +235,9 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     final locale = ref.watch(localeProvider);
     final brand = ref.watch(brandProvider);
     final brandName = ref.watch(brandNameProvider);
-    final brandFont = brandFontFor(brand.theme, locale);
+    // The style's defaults fill whatever seed the café left unset
+    final brandFont = brandFontFor(withStyleDefaults(brand.theme), locale);
+    final themeMode = themeState.effectiveMode(brand);
 
     if (authState.isAuthenticated && !_wasAuthenticated) {
       _wasAuthenticated = true;
@@ -264,9 +268,9 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       supportedLocales: AppLocalizations.supportedLocales,
       theme: _materialTheme(Brightness.light, locale, brand, brandFont),
       darkTheme: _materialTheme(Brightness.dark, locale, brand, brandFont),
-      themeMode: themeState.themeMode == AppThemeMode.light
+      themeMode: themeMode == AppThemeMode.light
           ? ThemeMode.light
-          : themeState.themeMode == AppThemeMode.dark
+          : themeMode == AppThemeMode.dark
               ? ThemeMode.dark
               : ThemeMode.system,
       builder: (context, child) {
@@ -298,6 +302,8 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       tabBarTheme: const TabBarThemeData(
         overlayColor: WidgetStatePropertyAll(Colors.transparent),
       ),
+      // The brand's style: its layout, headings and the measures they move
+      extensions: [BrandStyle.fromTheme(brand.theme)],
     );
     if (brandFont == null) return theme;
     return theme.copyWith(textTheme: GoogleFonts.getTextTheme(brandFont, theme.textTheme));

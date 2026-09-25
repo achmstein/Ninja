@@ -22,6 +22,7 @@ import { BranchSwitcher } from './branch-switcher'
 import { SignInSheet } from './sign-in-options'
 import { useFeatures } from '@/lib/brand'
 import { BrandWordmark } from '@/components/brand-mark'
+import { useBrandLayout } from '@/lib/brand-layout'
 
 // Mobile IA: primary nav is Menu / Places / Bills; everything else lives
 // under Profile. The places link is named after the visit.
@@ -43,6 +44,8 @@ export function AppHeader() {
   const count = useCart((s) => cartCount(s.lines))
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const [signInOpen, setSignInOpen] = useState(false)
+  // Centred, the brand takes the middle and the links move to the start
+  const centered = useBrandLayout().header === 'center'
 
   const name =
     auth.user?.profile?.name || auth.user?.profile?.preferred_username || ''
@@ -57,13 +60,26 @@ export function AppHeader() {
   // the menu page (see MobileTopBar)
   return (
     <header className='bg-background/95 sticky top-0 z-40 hidden border-b backdrop-blur md:block'>
-      <div className='mx-auto flex h-(--header-h) w-full max-w-6xl items-center gap-2 px-4'>
-        <Link to='/' className='flex shrink-0 items-center gap-2'>
+      <div
+        className={cn(
+          'mx-auto h-(--header-h) w-full max-w-6xl items-center gap-2 px-4',
+          centered ? 'grid grid-cols-[1fr_auto_1fr]' : 'flex'
+        )}
+      >
+        <Link
+          to='/'
+          className={cn('flex shrink-0 items-center gap-2', centered && 'col-start-2 row-start-1')}
+        >
           <BrandWordmark />
         </Link>
 
         {/* Desktop navigation */}
-        <nav className='ms-6 hidden items-center gap-1 md:flex'>
+        <nav
+          className={cn(
+            'hidden items-center gap-1 md:flex',
+            centered ? 'col-start-1 row-start-1' : 'ms-6'
+          )}
+        >
           {navLinks.map(({ to, key, exact }) => {
             // No places to book, no link: the chip is the table's door
             if (key === 'rooms' && !visitTab.visible) return null
@@ -85,7 +101,7 @@ export function AppHeader() {
           })}
         </nav>
 
-        <div className='ms-auto flex items-center gap-1'>
+        <div className={cn('ms-auto flex items-center gap-1', centered && 'col-start-3 row-start-1')}>
           {/* The table is one tap away on a tablet at the table too */}
           <DestinationChip />
           <BranchSwitcher />

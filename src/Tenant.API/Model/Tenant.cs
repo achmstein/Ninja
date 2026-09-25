@@ -100,6 +100,13 @@ public class Tenant
     public bool KdsEnabled { get; set; } = true;
 
     /// <summary>
+    /// Guests pay or split the bill online through the café's own payment
+    /// account. Off until the owner turns it on: it is no use before the
+    /// café's payment keys are in.
+    /// </summary>
+    public bool PayAtTableEnabled { get; set; }
+
+    /// <summary>
     /// What the café's plan allows, set by the control plane: an owner may
     /// switch an entitled module off, never an unentitled one on. All on by
     /// default, so a stack nobody has told otherwise (the dev host, a stack
@@ -121,9 +128,11 @@ public class Tenant
 
     public bool KdsEntitled { get; set; } = true;
 
-    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled);
+    public bool PayAtTableEntitled { get; set; } = true;
 
-    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled);
+    public TenantFeatures Features => new(ReservationsEnabled, TimeBillingEnabled, LoyaltyEnabled, TabsEnabled, InventoryEnabled, FinanceEnabled, PayrollEnabled, KdsEnabled, PayAtTableEnabled);
+
+    public TenantFeatures Entitlements => new(ReservationsEntitled, TimeBillingEntitled, LoyaltyEntitled, TabsEntitled, InventoryEntitled, FinanceEntitled, PayrollEntitled, KdsEntitled, PayAtTableEntitled);
 
     /// <summary>The switches as the owner asked for them, clamped to what the plan allows.</summary>
     public void ApplyFeatures(TenantFeatures requested)
@@ -137,6 +146,7 @@ public class Tenant
         FinanceEnabled = f.Finance;
         PayrollEnabled = f.Payroll;
         KdsEnabled = f.Kds;
+        PayAtTableEnabled = f.PayAtTable;
     }
 
     /// <summary>What the plan allows from now on; whatever was switched on beyond it goes off.</summary>
@@ -150,6 +160,7 @@ public class Tenant
         FinanceEntitled = entitled.Finance;
         PayrollEntitled = entitled.Payroll;
         KdsEntitled = entitled.Kds;
+        PayAtTableEntitled = entitled.PayAtTable;
         ApplyFeatures(Features);
     }
 
@@ -213,6 +224,51 @@ public class TenantTheme
     /// until the person picks their own. Null follows the device.
     /// </summary>
     public string? Mode { get; set; }
+
+    /// <summary>
+    /// The looks the customer apps know how to wear: each dresses the same
+    /// screens differently (how an item, the categories and the header are
+    /// laid out, the buttons, the surfaces, the spacing). The café's own
+    /// seeds win over a style's defaults.
+    /// </summary>
+    public static readonly string[] Styles = ["classic", "minimal", "bold", "cozy", "night"];
+
+    /// <summary>One of <see cref="Styles"/>; null is "classic", the look every café had before styles.</summary>
+    public string? Style { get; set; }
+
+    /// <summary>Parts the café dresses its own way instead of as the style does; null keeps the style's choice for all.</summary>
+    public TenantLayout? Layout { get; set; }
+}
+
+/// <summary>
+/// One choice per part of the customer app; a null part is the style's.
+/// The allowed values are fixed lists, as the surfaces draw only these.
+/// </summary>
+public class TenantLayout
+{
+    public static readonly string[] MenuItems = ["row", "card", "compact", "hero"];
+    public static readonly string[] CategoryStyles = ["chips", "tabs", "rail"];
+    public static readonly string[] Headers = ["left", "center", "banner"];
+    public static readonly string[] ButtonStyles = ["pill", "rounded", "square"];
+    public static readonly string[] Surfaces = ["flat", "outlined", "shadow"];
+    public static readonly string[] Densities = ["airy", "comfortable", "compact"];
+
+    /// <summary>How an item shows on the menu: a row with a thumbnail, a photo card, text only, or a wide photo.</summary>
+    public string? MenuItem { get; set; }
+
+    /// <summary>Chips that scroll, underlined tabs, or a side list on wide screens (chips on a phone).</summary>
+    public string? Categories { get; set; }
+
+    /// <summary>The brand at the start, centred, or over the cover image.</summary>
+    public string? Header { get; set; }
+
+    public string? Buttons { get; set; }
+
+    public string? Surface { get; set; }
+
+    public string? Density { get; set; }
+
+    public bool IsEmpty => (MenuItem ?? Categories ?? Header ?? Buttons ?? Surface ?? Density) is null;
 }
 
 /// <summary>The dark scheme's own seeds, for a brand whose lifted colours do not suit it.</summary>
@@ -226,13 +282,15 @@ public class TenantThemeDark
     public string? Surface { get; set; }
 }
 
-/// <summary>The eight switches, as the surfaces read them and as the plan allows them.</summary>
-public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+/// <summary>The nine switches, as the surfaces read them and as the plan allows them.</summary>
+/// <param name="PayAtTable">Last and defaulted: a caller older than pay at table does not send it, and it stays off.</param>
+public record TenantFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false)
 {
     /// <summary>On only where both this and <paramref name="entitled"/> are.</summary>
     public TenantFeatures Clamp(TenantFeatures entitled) => new(
         Reservations && entitled.Reservations, TimeBilling && entitled.TimeBilling, Loyalty && entitled.Loyalty, Tabs && entitled.Tabs,
-        Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds);
+        Inventory && entitled.Inventory, Finance && entitled.Finance, Payroll && entitled.Payroll, Kds && entitled.Kds,
+        PayAtTable && entitled.PayAtTable);
 }
 
 /// <summary>One uploaded image: when it last changed (ticks, the cache key of its URL) and its size after trimming, so a surface can reserve the box.</summary>
@@ -259,7 +317,13 @@ public static class TenantImageSlots
     public const string WordmarkAr = "wordmark-ar";
     public const string WordmarkArDark = "wordmark-ar-dark";
 
-    public static readonly string[] All = [Logo, LogoDark, WordmarkEn, WordmarkEnDark, WordmarkAr, WordmarkArDark];
+    /// <summary>A wide photo behind the header of the styles that have a banner, around 1600×600.</summary>
+    public const string Cover = "cover";
+
+    public static readonly string[] All = [Logo, LogoDark, WordmarkEn, WordmarkEnDark, WordmarkAr, WordmarkArDark, Cover];
+
+    /// <summary>Photos rather than drawings: kept as JPEG, never trimmed.</summary>
+    public static bool IsPhoto(string slot) => slot == Cover;
 
     public static bool IsKnown(string slot) => Array.IndexOf(All, slot) >= 0;
 

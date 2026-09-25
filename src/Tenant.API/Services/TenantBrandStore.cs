@@ -44,6 +44,8 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
 
     private const int MaxLogoSide = 1024;
     private const int MaxWordmarkSide = 1600;
+    private const int MaxPhotoSide = 2000;
+    private const int PhotoQuality = 82;
     private const int MaxUploadBytes = 5 * 1024 * 1024;
 
     private string Root => options.Value.Path ?? System.IO.Path.Combine(environment.ContentRootPath, "uploads");
@@ -52,7 +54,9 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
 
     public bool Exists(string fileName) => File.Exists(PathOf(fileName));
 
-    public static string FileOf(string slot) => $"{slot}.png";
+    public static string FileOf(string slot) => TenantImageSlots.IsPhoto(slot) ? $"{slot}.jpg" : $"{slot}.png";
+
+    public static string ContentTypeOf(string slot) => TenantImageSlots.IsPhoto(slot) ? "image/jpeg" : "image/png";
 
     public string PathOfSlot(string slot) => PathOf(FileOf(slot));
 
@@ -75,6 +79,15 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
 
         using (decoded)
         {
+            if (TenantImageSlots.IsPhoto(slot))
+            {
+                // A photo has no margins to trim and is far lighter as JPEG
+                using var photo = FitWithin(decoded, MaxPhotoSide);
+                Directory.CreateDirectory(Root);
+                await File.WriteAllBytesAsync(PathOfSlot(slot), EncodeJpeg(photo), ct);
+                return (photo.Width, photo.Height, null);
+            }
+
             var isMark = TenantImageSlots.IsMark(slot);
             using var trimmed = TrimTransparent(decoded);
             using var image = FitWithin(trimmed, isMark ? MaxLogoSide : MaxWordmarkSide);
@@ -182,6 +195,13 @@ public sealed class TenantBrandStore(IWebHostEnvironment environment, IOptions<T
     {
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
+    }
+
+    private static byte[] EncodeJpeg(SKBitmap bitmap)
+    {
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Jpeg, PhotoQuality);
         return data.ToArray();
     }
 

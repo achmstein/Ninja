@@ -3,7 +3,7 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What a café can be sold: the eight switches Tenant.API keeps, as modules.</summary>
+/// <summary>What a café can be sold: the nine switches Tenant.API keeps, as modules.</summary>
 public enum Module
 {
     /// <summary>Booking a place ahead or holding it on the way: any place the owner opens to it, with or without a clock.</summary>
@@ -16,6 +16,8 @@ public enum Module
     Finance,
     Payroll,
     Kds,
+    /// <summary>Guests pay or split the bill online, through the café's own Paymob account. An add-on on every plan.</summary>
+    PayAtTable,
 }
 
 /// <summary>
@@ -49,7 +51,8 @@ public static class PlanCatalog
     {
         [TenantPlan.Free] = new HashSet<Module> { Module.Kds },
         [TenantPlan.Starter] = new HashSet<Module> { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds },
-        [TenantPlan.Pro] = All,
+        // Pay at table goes through the café's own payment account: bought on its own, whatever the plan
+        [TenantPlan.Pro] = All.Except([Module.PayAtTable]).ToHashSet(),
     };
 
     /// <summary>
@@ -73,11 +76,25 @@ public static class PlanCatalog
         (Module.TimeBilling, "/api/places/{id}/walk-in"),
         (Module.TimeBilling, "/api/places/{id}/join"),
         (Module.TimeBilling, "/api/places/{id}/stays"),
+        (Module.PayAtTable, "/api/sales/payments/{*any}"),
+        (Module.PayAtTable, "/api/tickets/{id}/pay"),
+        (Module.PayAtTable, "/api/tickets/{id}/pay/{*any}"),
+    ];
+
+    /// <summary>
+    /// Paths under a module's routes that answer whatever the plan says: the
+    /// payment provider's callback for a payment made before a downgrade (or
+    /// before the owner switched the module off) must still land. The gateway
+    /// puts them ahead of the block.
+    /// </summary>
+    public static readonly IReadOnlyList<(Module Module, string Path)> AlwaysOpen =
+    [
+        (Module.PayAtTable, "/api/sales/payments/paymob/callback"),
     ];
 
     public static IReadOnlySet<Module> Included(TenantPlan plan) => IncludedByPlan[plan];
 
-    /// <summary>What may be bought on top of the plan: anything it does not include (nothing on Pro).</summary>
+    /// <summary>What may be bought on top of the plan: anything it does not include (only pay at table on Pro).</summary>
     public static IReadOnlySet<Module> AddonsAvailable(TenantPlan plan) => All.Except(Included(plan)).ToHashSet();
 
     /// <summary>Included plus add-ons; everything for a demo.</summary>

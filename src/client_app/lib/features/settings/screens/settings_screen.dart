@@ -10,6 +10,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../providers/settings_provider.dart';
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/brand/styles.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -23,6 +24,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsState = ref.watch(settingsProvider);
     final themeState = ref.watch(themeProvider);
+    // A style that keeps the page dark leaves nothing to choose
+    final forcedDark = ref.watch(brandProvider.select((b) => b.theme.preset.forceDark));
     final authState = ref.watch(authServiceProvider);
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -95,6 +98,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         // The web's ThemeSwitch, inline: three icons, the
                         // current one filled, no sheet to open
+                        if (!forcedDark)
                         FTile(
                           prefix: const Icon(FIcons.palette),
                           title: AppText(l10n.theme),

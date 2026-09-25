@@ -9,9 +9,10 @@ import {
   uploadTenantImageMutation,
 } from '@/api/tenant/@tanstack/react-query.gen'
 import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
-import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
+import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'
+import { fromLayoutForm, toLayoutForm, type LayoutForm } from '@/lib/layout-form'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -45,8 +46,9 @@ import { PageHeader } from '@/components/page-header'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { LivePreview } from '@/components/brand/live-preview'
 import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
+import { StylePicker } from '@/components/brand/style-picker'
 
-const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean }[] = [
+const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPlaces?: boolean; addon?: boolean }[] = [
   // Both hang off a place: a cloud kitchen, with none, is not offered them
   { key: 'reservations', label: 'featureReservations', needsPlaces: true },
   { key: 'timeBilling', label: 'featureTimeBilling', needsPlaces: true },
@@ -56,9 +58,11 @@ const FEATURE_ROWS: { key: keyof TenantFeatures; label: TranslationKey; needsPla
   { key: 'finance', label: 'featureFinance' },
   { key: 'payroll', label: 'featurePayroll' },
   { key: 'kds', label: 'featureKds' },
+  // An add-on on every plan: not offered at all until it is bought
+  { key: 'payAtTable', label: 'featurePayAtTable', addon: true },
 ]
 
-/** The two slots every café fills, then the four variants behind a disclosure. */
+/** The two slots every café fills and the cover photo, then the four variants behind a disclosure. */
 const MAIN_SLOTS: { slot: ImageSlot; label: TranslationKey }[] = [
   { slot: 'logo', label: 'brandLogo' },
   { slot: 'wordmark-en', label: 'brandWordmarkEn' },
@@ -90,6 +94,9 @@ function problemDetail(e: unknown): string | undefined {
 }
 
 type ThemeForm = {
+  /** Null until a style is picked: a café that never chose stays on classic without saying so */
+  style: string | null
+  layout: LayoutForm
   accent: string
   surface: string
   radius: string
@@ -103,6 +110,8 @@ type ThemeForm = {
 }
 
 const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
+  style: t.style ?? null,
+  layout: toLayoutForm(t.layout),
   accent: t.accent ?? '',
   surface: t.surface ?? '',
   radius: t.radius ?? '',
@@ -128,6 +137,8 @@ const fromThemeForm = (f: ThemeForm): TenantThemeDto => {
     fontLatin: f.fontLatin || null,
     fontArabic: f.fontArabic || null,
     dark: dark.primary || dark.accent || dark.surface ? dark : null,
+    style: f.style,
+    layout: fromLayoutForm(f.layout),
   }
 }
 
@@ -189,12 +200,14 @@ function BrandForm({ brand }: { brand: Brand }) {
     (uploadImage.isPending && uploadImage.variables?.path.slot) ||
     (deleteImage.isPending && deleteImage.variables?.path.slot) ||
     null
-  const imageSlot = ({ slot, label }: { slot: ImageSlot; label: TranslationKey }) => (
+  const imageSlot = ({ slot, label, hint }: { slot: ImageSlot; label: TranslationKey; hint?: TranslationKey }) => (
     <ImageSlotField
       key={slot}
       label={t(label)}
+      hint={hint && t(hint)}
       src={imageOf(brand, slot)?.url ?? null}
       square={isMark(slot)}
+      photo={isPhoto(slot)}
       busy={busySlot === slot}
       onUpload={(file) => uploadImage.mutate({ path: { slot }, body: { file } })}
       onRemove={() => deleteImage.mutate({ path: { slot } })}
@@ -261,6 +274,8 @@ function BrandForm({ brand }: { brand: Brand }) {
             />
 
             <div className='grid gap-6 sm:grid-cols-2'>{MAIN_SLOTS.map(imageSlot)}</div>
+            {/* Only the banner header shows it */}
+            {imageSlot({ slot: 'cover', label: 'brandCover', hint: 'brandCoverHint' })}
 
             <Collapsible>
               <CollapsibleTrigger asChild>
@@ -273,6 +288,13 @@ function BrandForm({ brand }: { brand: Brand }) {
                 {VARIANT_SLOTS.map(imageSlot)}
               </CollapsibleContent>
             </Collapsible>
+
+            <StylePicker
+              style={theme.style}
+              layout={theme.layout}
+              onStyleChange={(style) => setTheme({ ...theme, style })}
+              onLayoutChange={(layout) => setTheme({ ...theme, layout })}
+            />
 
             <div className='space-y-3'>
               <Label>{t('brandTheme')}</Label>
@@ -444,7 +466,11 @@ function BrandForm({ brand }: { brand: Brand }) {
             <div className='space-y-2'>
               <Label>{t('features')}</Label>
               <div className='divide-y rounded-lg border'>
-                {FEATURE_ROWS.filter((row) => !row.needsPlaces || !cloudKitchen).map((row) => {
+                {FEATURE_ROWS.filter(
+                  (row) =>
+                    (!row.needsPlaces || !cloudKitchen) &&
+                    (!row.addon || brand.entitlements?.[row.key] === true)
+                ).map((row) => {
                   // What the plan allows: a module outside it stays off, and says why
                   const entitled = brand.entitlements?.[row.key] ?? true
                   return (
@@ -528,15 +554,21 @@ function BrandForm({ brand }: { brand: Brand }) {
 /** One image slot: the picture (or an empty tile), upload, remove. */
 function ImageSlotField({
   label,
+  hint,
   src,
   square,
+  photo,
   busy,
   onUpload,
   onRemove,
 }: {
   label: string
+  /** A line under the slot on the size it wants and where it shows */
+  hint?: string
   src: string | null
   square?: boolean
+  /** A photo is cropped to fill a wider tile */
+  photo?: boolean
   busy: boolean
   onUpload: (file: File) => void
   onRemove: () => void
@@ -551,7 +583,7 @@ function ImageSlotField({
           type='button'
           className={cn(
             'bg-muted hover:bg-muted/80 flex h-20 shrink-0 items-center justify-center overflow-hidden rounded-md border',
-            square ? 'w-20' : 'w-40'
+            square ? 'w-20' : photo ? 'w-52' : 'w-40'
           )}
           onClick={() => input.current?.click()}
           disabled={busy}
@@ -560,7 +592,7 @@ function ImageSlotField({
           {busy ? (
             <Spinner />
           ) : src ? (
-            <img src={src} alt='' className='h-full w-full object-contain p-1' />
+            <img src={src} alt='' className={cn('h-full w-full', photo ? 'object-cover' : 'object-contain p-1')} />
           ) : (
             <ImagePlus className='text-muted-foreground h-6 w-6' />
           )}
@@ -601,6 +633,7 @@ function ImageSlotField({
           }}
         />
       </div>
+      {hint && <p className='text-muted-foreground text-xs'>{hint}</p>}
     </div>
   )
 }

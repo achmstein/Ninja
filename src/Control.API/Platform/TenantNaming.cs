@@ -22,6 +22,9 @@ public static partial class TenantNaming
     /// </summary>
     public static readonly (string From, string To)[] RenamedDatabases = [("branchdb", "tenantdb")];
 
+    /// <summary>Tenants whose tenantdb was put right by hand after the rename: carrying an old backup over it would undo that.</summary>
+    public static readonly string[] CarriedByHand = ["akti"];
+
     /// <summary>Every service a stack can run, as image suffix → compose service suffix; PlanCatalog.Services says which a plan does.</summary>
     public static readonly string[] Services =
     [

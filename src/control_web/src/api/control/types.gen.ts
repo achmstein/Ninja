@@ -42,6 +42,7 @@ export type BrandDto = {
     locale: BrandLocale;
     version: number | string;
     entitlements?: null | BrandFeatures;
+    cover?: null | BrandWordmark;
 };
 
 export type BrandFeatures = {
@@ -53,6 +54,7 @@ export type BrandFeatures = {
     finance: boolean;
     payroll: boolean;
     kds: boolean;
+    payAtTable?: boolean;
 };
 
 export type BrandIcons = {
@@ -61,6 +63,15 @@ export type BrandIcons = {
     maskable512: string;
     appleTouch: string;
     favicon: string;
+};
+
+export type BrandLayout = {
+    menuItem: null | string;
+    categories: null | string;
+    header: null | string;
+    buttons: null | string;
+    surface: null | string;
+    density: null | string;
 };
 
 export type BrandLocale = {
@@ -85,6 +96,8 @@ export type BrandTheme = {
     dark: null | BrandThemeDark;
     headerSize?: null | string;
     mode?: null | string;
+    style?: null | string;
+    layout?: null | BrandLayout;
 };
 
 export type BrandThemeDark = {
@@ -261,7 +274,7 @@ export type MetricsTopItem = {
     revenue: number | string;
 };
 
-export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds';
+export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'PayAtTable';
 
 export type OperatorInvitedResponse = {
     id: string;

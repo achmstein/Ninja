@@ -61,6 +61,7 @@ export type TenantFeatures = {
     finance: boolean;
     payroll: boolean;
     kds: boolean;
+    payAtTable?: boolean;
 };
 
 export type TenantIcons = {
@@ -69,6 +70,15 @@ export type TenantIcons = {
     maskable512: string;
     appleTouch: string;
     favicon: string;
+};
+
+export type TenantLayoutDto = {
+    menuItem: null | string;
+    categories: null | string;
+    header: null | string;
+    buttons: null | string;
+    surface: null | string;
+    density: null | string;
 };
 
 export type TenantLocaleDto = {
@@ -99,6 +109,7 @@ export type TenantResponse = {
     version: number | string;
     businessType?: null | string;
     guestOrdersAnywhere?: boolean;
+    cover?: null | TenantWordmark;
 };
 
 export type TenantThemeDarkDto = {
@@ -116,6 +127,8 @@ export type TenantThemeDto = {
     dark: null | TenantThemeDarkDto;
     headerSize?: null | string;
     mode?: null | string;
+    style?: null | string;
+    layout?: null | TenantLayoutDto;
 };
 
 export type TenantWordmark = {

@@ -66,6 +66,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.IdentitySecret).HasMaxLength(128).IsRequired().HasConversion(secret);
             entity.Property(e => e.ControlSecret).HasMaxLength(128).IsRequired().HasConversion(secret);
             entity.Property(e => e.AssistantSecret).HasMaxLength(128).IsRequired().HasConversion(secret);
+            entity.Property(e => e.PaymentsKey).HasMaxLength(128).IsRequired().HasConversion(secret);
             entity.Property(e => e.DbPassword).HasMaxLength(128).HasConversion(optionalSecret);
             entity.Property(e => e.BrokerPassword).HasMaxLength(128).HasConversion(optionalSecret);
             entity.Property(e => e.ImageTag).HasMaxLength(64).IsRequired();

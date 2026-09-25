@@ -326,7 +326,7 @@
         "tags": [
           "Tenant"
         ],
-        "summary": "Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo",
+        "summary": "Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover; the icons are cut from the logo",
         "operationId": "UploadTenantImage",
         "parameters": [
           {
@@ -814,6 +814,10 @@
           },
           "kds": {
             "type": "boolean"
+          },
+          "payAtTable": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -841,6 +845,55 @@
           },
           "favicon": {
             "type": "string"
+          }
+        }
+      },
+      "TenantLayoutDto": {
+        "required": [
+          "menuItem",
+          "categories",
+          "header",
+          "buttons",
+          "surface",
+          "density"
+        ],
+        "type": "object",
+        "properties": {
+          "menuItem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categories": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "header": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "buttons": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "surface": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "density": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -985,6 +1038,16 @@
           "guestOrdersAnywhere": {
             "type": "boolean",
             "default": false
+          },
+          "cover": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
           }
         }
       },
@@ -1077,6 +1140,22 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "style": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "layout": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantLayoutDto"
+              }
             ]
           }
         }

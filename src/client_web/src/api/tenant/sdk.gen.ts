@@ -125,7 +125,7 @@ export const deleteTenantImage = <ThrowOnError extends boolean = false>(options:
 export const getTenantImage = <ThrowOnError extends boolean = false>(options: Options<GetTenantImageData, ThrowOnError>): RequestResult<unknown, GetTenantImageErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetTenantImageErrors, ThrowOnError>({ url: '/api/tenant/images/{slot}', ...options });
 
 /**
- * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo
+ * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover; the icons are cut from the logo
  */
 export const uploadTenantImage = <ThrowOnError extends boolean = false>(options: Options<UploadTenantImageData, ThrowOnError>): RequestResult<UploadTenantImageResponses, UploadTenantImageErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantImageResponses, UploadTenantImageErrors, ThrowOnError>({
     ...formDataBodySerializer,

@@ -5,7 +5,8 @@ import type { Language } from '@/lib/language'
  * The images a brand is made of, by slot: the square mark (light and dark)
  * and the wide wordmark per language, each with a dark version. A missing
  * slot falls back on the surfaces: dark to light, Arabic to English, the
- * wordmark to the mark and the name.
+ * wordmark to the mark and the name. The cover is a photo, not a mark: the
+ * banner header sits over it.
  */
 export const IMAGE_SLOTS = [
   'logo',
@@ -14,6 +15,7 @@ export const IMAGE_SLOTS = [
   'wordmark-en-dark',
   'wordmark-ar',
   'wordmark-ar-dark',
+  'cover',
 ] as const
 
 export type ImageSlot = (typeof IMAGE_SLOTS)[number]
@@ -23,6 +25,9 @@ export const MAIN_SLOTS: ImageSlot[] = ['logo', 'wordmark-en']
 export const VARIANT_SLOTS: ImageSlot[] = ['logo-dark', 'wordmark-en-dark', 'wordmark-ar', 'wordmark-ar-dark']
 
 export const isMark = (slot: ImageSlot) => slot.startsWith('logo')
+
+/** A photo (cropped to fill), where the other slots are marks shown whole. */
+export const isPhoto = (slot: ImageSlot) => slot === 'cover'
 
 export type Scheme = 'light' | 'dark'
 
@@ -36,6 +41,8 @@ export type BrandImages = {
     ar: BrandWordmark | null
     arDark: BrandWordmark | null
   }
+  /** The wide photo the banner header sits over */
+  cover?: string | null
 }
 
 export function wordmarkFor(images: BrandImages | undefined, language: Language, scheme: Scheme): BrandWordmark | null {
@@ -72,6 +79,8 @@ export function imageOf(images: BrandImages, slot: ImageSlot): string | null {
       return images.wordmarks.ar?.url ?? null
     case 'wordmark-ar-dark':
       return images.wordmarks.arDark?.url ?? null
+    case 'cover':
+      return images.cover ?? null
   }
 }
 
@@ -96,5 +105,6 @@ export function imagesFromUrls(urls: Partial<Record<ImageSlot, string | null>>, 
       ar: wide('wordmark-ar'),
       arDark: wide('wordmark-ar-dark'),
     },
+    cover: urls.cover ?? null,
   }
 }

@@ -40,10 +40,11 @@ public sealed class PlatformScenarios
         CollectionAssert.AreEquivalent(Enum.GetValues<Module>(), plans.Modules);
         var free = plans.Plans.Single(p => p.Plan == TenantPlan.Free);
         CollectionAssert.AreEqual(new[] { Module.Kds }, free.Included);
-        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll }, free.Addons);
+        CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Inventory, Module.Finance, Module.Payroll, Module.PayAtTable }, free.Addons);
         var pro = plans.Plans.Single(p => p.Plan == TenantPlan.Pro);
-        CollectionAssert.AreEquivalent(Enum.GetValues<Module>(), pro.Included);
-        Assert.IsEmpty(pro.Addons, "there is nothing to add to everything");
+        CollectionAssert.AreEquivalent(Enum.GetValues<Module>().Where(m => m != Module.PayAtTable).ToArray(), pro.Included);
+        CollectionAssert.AreEqual(new[] { Module.PayAtTable }, pro.Addons, "pay at table is bought on its own, whatever the plan");
+        Assert.IsTrue(plans.Plans.All(p => !p.Included.Contains(Module.PayAtTable) && p.Addons.Contains(Module.PayAtTable)), "an add-on on every plan, included in none");
     }
 
     [TestMethod]

@@ -68,7 +68,7 @@ public sealed class SubscriptionScenarios
 
         var subscription = await api.SubscriptionAsync(slug);
         CollectionAssert.AreEquivalent(new[] { Module.Reservations, Module.TimeBilling, Module.Loyalty, Module.Tabs, Module.Kds }, subscription.Entitlements);
-        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll }, subscription.AddonsAvailable);
+        CollectionAssert.AreEquivalent(new[] { Module.Inventory, Module.Finance, Module.Payroll, Module.PayAtTable }, subscription.AddonsAvailable);
         Assert.IsTrue(ControlPlane.Factory.Shell.Commands.Any(c => c.Contains($"compose -p ninja-{slug} up -d --remove-orphans")), "the containers that left the plan go as orphans");
     }
 
@@ -132,7 +132,7 @@ public sealed class SubscriptionScenarios
         var started = await api.SettledAsync(slug);
         Assert.AreEqual(TenantStatus.Running, started.Status, started.LastError);
         CollectionAssert.AreEqual(new[] { "start:Done", "queues:Done", "health:Done", "entitlements:Done" }, Steps(started));
-        Assert.AreEqual("everything", started.Steps.Single(s => s.Name == "entitlements").Output);
+        Assert.AreEqual("reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds", started.Steps.Single(s => s.Name == "entitlements").Output, "everything but pay at table, an add-on on every plan");
     }
 
     [TestMethod]

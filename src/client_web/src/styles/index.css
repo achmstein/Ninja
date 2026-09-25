@@ -95,6 +95,62 @@ body[data-scroll-locked][data-scroll-locked] {
   padding-inline-end: var(--removed-body-scroll-bar-size, 0px) !important;
 }
 
+/* ---- Styles (lib/styles.ts, lib/brand-layout.ts): the parts the page
+   wears are data attributes on <html>. Each rule only moves a token; the
+   components read the tokens, so classic (no rule matches) is unchanged. */
+
+/* Buttons: pills everywhere, or nearly square; "rounded" is the seed's */
+:root[data-buttons='pill'] {
+  --radius-button: 9999px;
+  --radius-pill: 9999px;
+}
+:root[data-buttons='square'] {
+  --radius-button: 0.125rem;
+  --radius-pill: 0.125rem;
+  --radius-round: 0.25rem;
+}
+
+/* Surfaces: a tonal fill with no edges, or lifted with no border (a hairline on dark, where shadows vanish) */
+:root[data-surface='flat'] {
+  --surface-bg: var(--muted);
+  --surface-border: 0px;
+  --surface-shadow: none;
+}
+:root[data-surface='shadow'] {
+  --surface-border: 0px;
+  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
+}
+:root.dark[data-surface='shadow'] {
+  --surface-border: 1px;
+  --surface-shadow: none;
+}
+
+/* Density: every spacing a style can move scales by this */
+:root[data-density='airy'] {
+  --space: 1.35;
+}
+:root[data-density='compact'] {
+  --space: 0.7;
+}
+
+/* A card, a tile, a panel: whatever the style calls a surface */
+@utility surface {
+  background-color: var(--surface-bg);
+  border: var(--surface-border) solid var(--border);
+  box-shadow: var(--surface-shadow);
+}
+
+/* Section and page headings as the style sets them; the size is the element's, scaled */
+@utility heading {
+  font-family: var(--font-heading, var(--font-latin)), var(--font-arabic), system-ui, sans-serif;
+  font-weight: var(--heading-weight);
+  text-transform: var(--heading-transform);
+  letter-spacing: var(--heading-tracking);
+}
+:root[dir='rtl'] .heading {
+  font-family: var(--font-heading, var(--font-arabic)), var(--font-arabic), var(--font-latin), system-ui, sans-serif;
+}
+
 @utility no-scrollbar {
   &::-webkit-scrollbar {
     display: none;

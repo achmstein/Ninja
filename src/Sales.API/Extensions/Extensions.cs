@@ -59,6 +59,7 @@ public static class Extensions
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();
+        services.AddScoped<ITenantFeaturesQueries, TenantFeaturesQueries>();
 
         // Tickets are assembled from the bus and announce themselves back on it
         builder.AddRabbitMqEventBus("eventbus")
@@ -70,6 +71,8 @@ public static class Extensions
             .AddSubscription<ReservationCancelledIntegrationEvent, ReservationCancelledIntegrationEventHandler>()
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
             .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
+            // Whether guests may pay at the table: Sales keeps its own copy of the switch
+            .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));
     }
@@ -81,6 +84,7 @@ public static class Extensions
 [JsonSerializable(typeof(SessionCompletedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
+[JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]

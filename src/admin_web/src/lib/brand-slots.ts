@@ -5,7 +5,8 @@ import type { Language } from '@/lib/i18n'
  * The images a brand is made of, by slot: the square mark (light and dark)
  * and the wide wordmark per language, each with a dark version. A missing
  * slot falls back on the surfaces: dark to light, Arabic to English, the
- * wordmark to the mark and the name.
+ * wordmark to the mark and the name. The cover is a photo, not a mark: the
+ * banner header sits over it.
  */
 export const IMAGE_SLOTS = [
   'logo',
@@ -14,11 +15,15 @@ export const IMAGE_SLOTS = [
   'wordmark-en-dark',
   'wordmark-ar',
   'wordmark-ar-dark',
+  'cover',
 ] as const
 
 export type ImageSlot = (typeof IMAGE_SLOTS)[number]
 
 export const isMark = (slot: ImageSlot) => slot.startsWith('logo')
+
+/** A photo (cropped to fill), where the other slots are marks shown whole. */
+export const isPhoto = (slot: ImageSlot) => slot === 'cover'
 
 export type Scheme = 'light' | 'dark'
 
@@ -62,5 +67,7 @@ export function imageOf(brand: TenantResponse, slot: ImageSlot): { url: string; 
       return wide(w.ar)
     case 'wordmark-ar-dark':
       return wide(w.arDark)
+    case 'cover':
+      return wide(brand.cover)
   }
 }

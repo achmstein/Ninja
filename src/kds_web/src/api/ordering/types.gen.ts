@@ -95,6 +95,16 @@ export type FailPrintJobRequest = {
     error: null | string;
 };
 
+export type GuestSummary = {
+    key?: string;
+    name?: null | string;
+    phone?: null | string;
+    orderCount?: number | string;
+    totalSpent?: number | string;
+    firstOrderAt?: string;
+    lastOrderAt?: string;
+};
+
 export type KitchenOrder = {
     orderNumber?: number | string;
     date?: string;
@@ -286,6 +296,16 @@ export type OrderSummary = {
     customerNote?: null | string;
     items?: null | Array<Orderitem>;
     isMine?: boolean;
+};
+
+export type PaginatedResultOfGuestSummary = {
+    items?: Array<GuestSummary>;
+    pageIndex?: number | string;
+    pageSize?: number | string;
+    totalCount?: number | string;
+    totalPages?: number | string;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
 };
 
 export type PaginatedResultOfOrderSummary = {
@@ -946,6 +966,7 @@ export type GetAllOrdersData = {
         sessionId?: number | string;
         search?: string;
         sort?: string;
+        guest?: string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -973,6 +994,41 @@ export type GetAllOrdersResponses = {
 };
 
 export type GetAllOrdersResponse = GetAllOrdersResponses[keyof GetAllOrdersResponses];
+
+export type GetGuestsData = {
+    body?: never;
+    path?: never;
+    query: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        search?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/guests';
+};
+
+export type GetGuestsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetGuestsResponses = {
+    /**
+     * OK
+     */
+    200: PaginatedResultOfGuestSummary;
+};
+
+export type GetGuestsResponse = GetGuestsResponses[keyof GetGuestsResponses];
 
 export type GetOrderStatsData = {
     body?: never;

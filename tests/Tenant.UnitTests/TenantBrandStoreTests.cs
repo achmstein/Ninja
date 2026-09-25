@@ -137,6 +137,24 @@ public sealed class TenantBrandStoreTests
     }
 
     [TestMethod]
+    public async Task Cover_is_a_photo_kept_whole_as_jpeg_within_its_cap()
+    {
+        // A 3000×1000 image with transparent margins: a photo is not trimmed, only brought within 2000 px
+        var (width, height, error) = await _store.SaveAsync(TenantImageSlots.Cover, PngFile(3000, 1000, SKRect.Create(500, 200, 1000, 400)), CancellationToken.None);
+
+        Assert.IsNull(error);
+        Assert.AreEqual(2000, width);
+        Assert.AreEqual(666, height);
+        Assert.EndsWith(".jpg", _store.PathOfSlot(TenantImageSlots.Cover));
+        Assert.AreEqual("image/jpeg", TenantBrandStore.ContentTypeOf(TenantImageSlots.Cover));
+        using (var codec = SKCodec.Create(_store.PathOfSlot(TenantImageSlots.Cover)))
+            Assert.AreEqual(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
+
+        _store.Delete(TenantImageSlots.Cover);
+        Assert.IsFalse(_store.HasImage(TenantImageSlots.Cover));
+    }
+
+    [TestMethod]
     public async Task Dark_mark_does_not_touch_the_icons()
     {
         await _store.SaveAsync(TenantImageSlots.Logo, PngFile(64, 64, SKRect.Create(0, 0, 64, 64)), CancellationToken.None);

@@ -23,7 +23,7 @@ public static partial class ControlApi
     {
         api.MapGet("/tenants/{slug}/brand", GetBrand).WithName("GetTenantBrand").WithSummary("The brand as the running stack serves it; image URLs point at the customer host").RequireAuthorization("Platform");
         api.MapPut("/tenants/{slug}/brand", UpdateBrand).WithName("UpdateTenantBrand").WithSummary("Change the name, colors, theme, customer URL or feature switches on the running stack").RequireAuthorization("Platform");
-        api.MapPut("/tenants/{slug}/brand/images/{slot}", UploadBrandImage).WithName("UploadTenantBrandImage").WithSummary("Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark").RequireAuthorization("Platform").DisableAntiforgery();
+        api.MapPut("/tenants/{slug}/brand/images/{slot}", UploadBrandImage).WithName("UploadTenantBrandImage").WithSummary("Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover").RequireAuthorization("Platform").DisableAntiforgery();
         api.MapDelete("/tenants/{slug}/brand/images/{slot}", DeleteBrandImage).WithName("DeleteTenantBrandImage").WithSummary("Remove one image from the running stack").RequireAuthorization("Platform");
 
         api.MapGet("/tenants/{slug}/seed-images", ListSeedImages).WithName("ListTenantSeedImages").WithSummary("The slots with an image waiting for the next provision").RequireAuthorization("Platform");
@@ -183,13 +183,29 @@ public record BrandWordmark(string Url, int Width, int Height)
 public record BrandWordmarks(BrandWordmark? En, BrandWordmark? EnDark, BrandWordmark? Ar, BrandWordmark? ArDark);
 
 /// <param name="Mode">light or dark for someone who has not chosen; null follows the device. The record edits it; the Brand tab sends it back as it came.</param>
-public record BrandTheme(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, BrandThemeDark? Dark, string? HeaderSize = null, string? Mode = null);
+/// <param name="Style">classic, minimal, bold, cozy or night; null is classic.</param>
+/// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice.</param>
+public record BrandTheme(
+    string? Accent,
+    string? Surface,
+    string? Radius,
+    string? FontLatin,
+    string? FontArabic,
+    BrandThemeDark? Dark,
+    string? HeaderSize = null,
+    string? Mode = null,
+    string? Style = null,
+    BrandLayout? Layout = null);
+
+/// <summary>One choice per part of the customer app; null is the style's. The stack validates the values.</summary>
+public record BrandLayout(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
 
 public record BrandThemeDark(string? Primary, string? Accent, string? Surface);
 
 public record BrandIcons(string Icon192, string Icon512, string Maskable512, string AppleTouch, string Favicon);
 
-public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds);
+/// <param name="PayAtTable">Last and defaulted: a stack older than pay at table does not send it.</param>
+public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false);
 
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
 public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null);
@@ -208,13 +224,16 @@ public record BrandDto(
     BrandLocale Locale,
     long Version,
     // Null from a stack older than plans: everything is entitled there
-    BrandFeatures? Entitlements = null)
+    BrandFeatures? Entitlements = null,
+    // The banner header's photo; null when none is uploaded or the stack is older than styles
+    BrandWordmark? Cover = null)
 {
     public BrandDto OnCustomerHost(string origin) => this with
     {
         LogoUrl = LogoUrl is null ? null : BrandWordmark.Absolute(origin, LogoUrl),
         LogoDarkUrl = LogoDarkUrl is null ? null : BrandWordmark.Absolute(origin, LogoDarkUrl),
         Wordmarks = new(Wordmarks.En?.OnHost(origin), Wordmarks.EnDark?.OnHost(origin), Wordmarks.Ar?.OnHost(origin), Wordmarks.ArDark?.OnHost(origin)),
+        Cover = Cover?.OnHost(origin),
         Icons = new(
             BrandWordmark.Absolute(origin, Icons.Icon192),
             BrandWordmark.Absolute(origin, Icons.Icon512),

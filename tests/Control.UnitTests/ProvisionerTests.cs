@@ -201,6 +201,20 @@ public sealed class ProvisionerTests
         Assert.IsFalse(RestoredIntoTenantDb(), "what was written since is not overwritten");
     }
 
+    /// <summary>A tenant put right by hand is never carried over, even with a backup that holds branchdb.</summary>
+    [TestMethod]
+    public async Task A_tenant_restored_by_hand_keeps_its_tenantdb()
+    {
+        _tenant.Slug = "akti";
+        await _context.SaveChangesAsync();
+        Directory.CreateDirectory(Path.Combine(_root, "akti"));
+
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+
+        Assert.AreEqual("tenantdb restored by hand; left as it is", CarryOutput());
+        Assert.IsFalse(_shell.Commands.Any(c => c.Contains("pg_restore") && c.Contains("akti_tenantdb")));
+    }
+
     /// <summary>A tenant upgraded before the carry step lost branchdb to the retired step: its newest backup that has it brings the data back.</summary>
     [TestMethod]
     public async Task A_tenant_whose_branch_database_is_gone_gets_it_back_from_the_newest_backup_holding_it()

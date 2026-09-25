@@ -12,6 +12,19 @@
   /* The header and the wordmark in it; the brand's header size seed raises both */
   --header-h: 3.5rem;
   --wordmark-h: 1.75rem;
+  /* The style's parts (lib/styles.ts), at classic's values; index.css moves
+   * them per data-* attribute on <html>, so classic is exactly as before */
+  --radius-button: calc(var(--radius) - 2px);
+  /* Round add buttons and steppers: circles, unless the style squares its buttons */
+  --radius-round: 9999px;
+  --surface-bg: var(--card);
+  --surface-border: 1px;
+  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --space: 1;
+  --heading-weight: 700;
+  --heading-scale: 1;
+  --heading-transform: none;
+  --heading-tracking: 0em;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);

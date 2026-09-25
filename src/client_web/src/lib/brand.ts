@@ -7,7 +7,8 @@ import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
 import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
-import { applyBrandTheme } from './brand-theme'
+import { applyBrandTheme, type BrandThemeInput } from './brand-theme'
+import { applyBrandLayout } from './brand-layout'
 import { draftedTheme, onDraftedTheme } from './preview'
 
 /**
@@ -32,6 +33,7 @@ export const ALL_FEATURES: TenantFeatures = {
   finance: true,
   payroll: true,
   kds: true,
+  payAtTable: true,
 }
 
 export const brandQueryOptions = () => ({
@@ -141,9 +143,15 @@ export function applyBrand(brand: Brand, language: Language) {
   setLink('apple-touch-icon', brand.icons.appleTouch)
   setLink('manifest', `/api/tenant/manifest?app=${APP}&lang=${language}`)
   // Under a preview, the panel's unsaved seeds paint over the saved ones
-  applyBrandTheme(draftedTheme() ?? brand)
+  paint(draftedTheme() ?? brand)
   useCurrency.getState().set(brand.locale.currency)
   usePhoneRule.getState().set(brand.locale.phonePattern, brand.locale.phonePlaceholder)
+}
+
+/** The seeds as tokens and the style as the page's layout, together, so a draft moves both. */
+function paint(input: BrandThemeInput | null | undefined) {
+  applyBrandTheme(input)
+  applyBrandLayout(input)
 }
 
 function setLink(rel: string, href: string, type?: string) {
@@ -170,7 +178,7 @@ export function useBrandEffects() {
     applyBrand(brand, language)
     writeCachedBrand(brand)
   }, [brand, language])
-  useEffect(() => onDraftedTheme((input) => applyBrandTheme(input ?? brand)), [brand])
+  useEffect(() => onDraftedTheme((input) => paint(input ?? brand)), [brand])
 }
 
 /** The tenant's name in the current language. */

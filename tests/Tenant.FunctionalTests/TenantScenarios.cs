@@ -28,9 +28,9 @@ public static class Suite
 /// <summary>What the apps read off the wire; named here so a change in the API's shape fails a test.</summary>
 public record TenantView(LocalizedView Name, string? PrimaryColor, string? CustomerUrl, FeaturesView Features, FeaturesView Entitlements, long Version);
 public record LocalizedView(string En, string? Ar);
-public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+public record FeaturesView(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false)
 {
-    public static FeaturesView All => new(true, true, true, true, true, true, true, true);
+    public static FeaturesView All => new(true, true, true, true, true, true, true, true, true);
 }
 
 /// <summary>
@@ -90,6 +90,43 @@ public sealed class TenantScenarios
         Assert.Contains("English name", detail);
     }
 
+    private record ThemeView(string? Radius, string? Style, LayoutView? Layout);
+    private record LayoutView(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
+    private record StyledView(ThemeView Theme, long Version);
+
+    private static object Styled(object? theme)
+        => new { name = new { en = "Chillax", ar = "تشيلاكس" }, primaryColor = "#112233", features = FeaturesView.All, theme };
+
+    [TestMethod]
+    public async Task The_owner_picks_a_style_and_dresses_single_parts_otherwise()
+    {
+        await ResetAsync();
+        var anyone = Suite.TenantApi.AsAnonymous();
+
+        var classic = await anyone.GetAsync<StyledView>(Tenant);
+        Assert.IsNull(classic.Theme.Style, "a café that never chose is classic, as every café looked before styles");
+        Assert.IsNull(classic.Theme.Layout);
+
+        await Owner.PutAsync<StyledView>(Tenant, Styled(new { radius = "lg", style = " Bold ", layout = new { menuItem = "row", density = "AIRY" } }));
+        var saved = await anyone.GetAsync<StyledView>(Tenant);
+        Assert.AreEqual("bold", saved.Theme.Style, "trimmed and lower-cased like every other seed");
+        Assert.AreEqual(new LayoutView("row", null, null, null, null, "airy"), saved.Theme.Layout, "only the parts chosen are kept; the rest are the style's");
+        Assert.AreEqual("lg", saved.Theme.Radius, "the café's own seeds stand beside the style");
+
+        // A layout that chooses nothing is no layout
+        var cleared = await Owner.PutAsync<StyledView>(Tenant, Styled(new { style = "cozy", layout = new { menuItem = "" } }));
+        Assert.AreEqual("cozy", cleared.Theme.Style);
+        Assert.IsNull(cleared.Theme.Layout);
+
+        var (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { style = "neon" }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("classic, minimal, bold, cozy, night", detail);
+
+        (status, detail) = await Owner.RefusedAsync(HttpMethod.Put, Tenant, Styled(new { layout = new { header = "floating" } }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("header layout", detail);
+    }
+
     [TestMethod]
     public async Task The_plan_clamps_the_switches_and_an_owner_never_turns_on_what_is_not_in_it()
     {
@@ -108,6 +145,7 @@ public sealed class TenantScenarios
         Assert.IsFalse(asked.Features.Finance);
         Assert.IsFalse(asked.Features.Payroll);
         Assert.IsTrue(asked.Features.Loyalty, "what the plan includes is the owner's to turn");
+        Assert.IsFalse(asked.Features.PayAtTable, "pay at table is an add-on the plan did not bring");
 
         // And an owner may always switch an entitled module off
         var off = await Owner.PutAsync<TenantView>(Tenant, Update(starter with { Loyalty = false }));

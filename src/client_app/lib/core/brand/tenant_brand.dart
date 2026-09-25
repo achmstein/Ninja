@@ -1,4 +1,5 @@
 import 'dart:ui' show Brightness, Color, Locale;
+import 'package:flutter/foundation.dart' show mapEquals;
 import '../models/localized_text.dart';
 
 /// The switches a tenant can turn off. Every one is on until the brand is
@@ -13,6 +14,11 @@ class TenantFeatures {
   final bool payroll;
   final bool kds;
 
+  /// Guests pay or split the bill online. An add-on the café buys and turns
+  /// on, so off until the brand says otherwise (and when a stack older than
+  /// it says nothing).
+  final bool payAtTable;
+
   const TenantFeatures({
     this.reservations = true,
     this.timeBilling = true,
@@ -22,6 +28,7 @@ class TenantFeatures {
     this.finance = true,
     this.payroll = true,
     this.kds = true,
+    this.payAtTable = false,
   });
 
   static const all = TenantFeatures();
@@ -36,6 +43,7 @@ class TenantFeatures {
         finance: json['finance'] as bool? ?? true,
         payroll: json['payroll'] as bool? ?? true,
         kds: json['kds'] as bool? ?? true,
+        payAtTable: json['payAtTable'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -47,6 +55,7 @@ class TenantFeatures {
         'finance': finance,
         'payroll': payroll,
         'kds': kds,
+        'payAtTable': payAtTable,
       };
 
   @override
@@ -60,10 +69,11 @@ class TenantFeatures {
           other.inventory == inventory &&
           other.finance == finance &&
           other.payroll == payroll &&
-          other.kds == kds;
+          other.kds == kds &&
+          other.payAtTable == payAtTable;
 
   @override
-  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds);
+  int get hashCode => Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, payAtTable);
 }
 
 /// The wide logo for headers and sign-in. [width] and [height] are the
@@ -99,6 +109,10 @@ class TenantWordmark {
   @override
   int get hashCode => Object.hash(url, width, height);
 }
+
+/// The cover photo: the same shape as a wordmark (an absolute, versioned
+/// URL and its pixel size), so the banner can reserve its box
+typedef TenantCover = TenantWordmark;
 
 /// The wide lockups by language and scheme. A missing one falls back: the
 /// dark to the light, Arabic to English, and to the mark and the name when
@@ -303,7 +317,39 @@ class TenantTheme {
   /// The dark scheme's own seeds, when derived ones do not suit the brand
   final TenantThemeDark? dark;
 
-  const TenantTheme({this.accentHex, this.surfaceHex, this.radius, this.headerSize, this.fontLatin, this.fontArabic, this.dark});
+  /// The style the customer app wears (see styles.dart): `classic`,
+  /// `minimal`, `bold`, `cozy` or `night`; null (or one this build does not
+  /// know) is classic
+  final String? style;
+
+  /// The parts the café dressed its own way over its style (`menuItem`,
+  /// `categories`, `header`, `buttons`, `surface`, `density`), as sent;
+  /// null leaves every part to the style. Resolved by `resolveLayout`.
+  final Map<String, String>? layout;
+
+  const TenantTheme({
+    this.accentHex,
+    this.surfaceHex,
+    this.radius,
+    this.headerSize,
+    this.fontLatin,
+    this.fontArabic,
+    this.dark,
+    this.style,
+    this.layout,
+  });
+
+  TenantTheme copyWith({String? radius, String? headerSize, String? fontLatin, String? fontArabic}) => TenantTheme(
+        accentHex: accentHex,
+        surfaceHex: surfaceHex,
+        radius: radius ?? this.radius,
+        headerSize: headerSize ?? this.headerSize,
+        fontLatin: fontLatin ?? this.fontLatin,
+        fontArabic: fontArabic ?? this.fontArabic,
+        dark: dark,
+        style: style,
+        layout: layout,
+      );
 
   static const headerSizes = ['sm', 'md', 'lg'];
 
@@ -325,7 +371,20 @@ class TenantTheme {
       fontLatin: font('fontLatin'),
       fontArabic: font('fontArabic'),
       dark: TenantThemeDark.parse(json['dark']),
+      style: font('style')?.toLowerCase(),
+      layout: _layout(json['layout']),
     );
+  }
+
+  /// The string parts of a layout object; anything else is no layout
+  static Map<String, String>? _layout(Object? json) {
+    if (json is! Map) return null;
+    final parts = <String, String>{
+      for (final entry in json.entries)
+        if (entry.key is String && entry.value is String && (entry.value as String).isNotEmpty)
+          entry.key as String: entry.value as String,
+    };
+    return parts.isEmpty ? null : parts;
   }
 
   static TenantTheme parse(Object? json) => json is Map<String, dynamic> ? TenantTheme.fromJson(json) : neutral;
@@ -338,6 +397,8 @@ class TenantTheme {
         'fontLatin': fontLatin,
         'fontArabic': fontArabic,
         'dark': dark?.toJson(),
+        'style': style,
+        'layout': layout,
       };
 
   Color? get accent => _color(accentHex);
@@ -352,10 +413,14 @@ class TenantTheme {
           other.radius == radius &&
           other.fontLatin == fontLatin &&
           other.fontArabic == fontArabic &&
-          other.dark == dark;
+          other.headerSize == headerSize &&
+          other.dark == dark &&
+          other.style == style &&
+          mapEquals(other.layout, layout);
 
   @override
-  int get hashCode => Object.hash(accentHex, surfaceHex, radius, fontLatin, fontArabic, dark);
+  int get hashCode => Object.hash(
+      accentHex, surfaceHex, radius, fontLatin, fontArabic, headerSize, dark, style, Object.hashAllUnordered(layout?.entries.map((e) => '${e.key}=${e.value}') ?? const []));
 }
 
 /// The tenant this build runs for: name, brand color, logo, wordmark, theme
@@ -375,6 +440,9 @@ class TenantBrand {
 
   /// The wide logos; the mark and the name stand in for a missing one
   final TenantWordmarks wordmarks;
+
+  /// The café's cover photo, for the banner header; null when there is none
+  final TenantCover? cover;
   final TenantTheme theme;
   final TenantLocale locale;
 
@@ -389,6 +457,7 @@ class TenantBrand {
     this.logoUrl,
     this.logoDarkUrl,
     this.wordmarks = TenantWordmarks.none,
+    this.cover,
     this.theme = TenantTheme.neutral,
     this.locale = TenantLocale.egypt,
     this.defaultThemeMode,
@@ -410,8 +479,10 @@ class TenantBrand {
       logoUrl: logo == null ? null : _absolute(logo, baseUrl),
       logoDarkUrl: logoDark == null ? null : _absolute(logoDark, baseUrl),
       wordmarks: TenantWordmarks.parse(json['wordmarks'], baseUrl: baseUrl),
+      cover: TenantCover.parse(json['cover'], baseUrl: baseUrl),
       theme: TenantTheme.parse(json['theme']),
-      locale: TenantLocale.parse(json['locale']),
+      locale: TenantLocale.parse(json['locale']),
+
       defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
       features: json['features'] is Map<String, dynamic>
           ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
@@ -428,6 +499,7 @@ class TenantBrand {
         logoUrl: json['logoUrl'] as String?,
         logoDarkUrl: json['logoDarkUrl'] as String?,
         wordmarks: TenantWordmarks.parse(json['wordmarks']),
+        cover: TenantCover.parse(json['cover']),
         theme: TenantTheme.parse(json['theme']),
         locale: TenantLocale.parse(json['locale']),
         defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : json['defaultThemeMode']),
@@ -443,6 +515,7 @@ class TenantBrand {
         'logoUrl': logoUrl,
         'logoDarkUrl': logoDarkUrl,
         'wordmarks': wordmarks.toJson(),
+        'cover': cover?.toJson(),
         'theme': theme.toJson(),
         'locale': locale.toJson(),
         'defaultThemeMode': defaultThemeMode,
@@ -475,13 +548,14 @@ class TenantBrand {
           other.logoUrl == logoUrl &&
           other.logoDarkUrl == logoDarkUrl &&
           other.wordmarks == wordmarks &&
+          other.cover == cover &&
           other.theme == theme &&
           other.locale == locale &&
           other.features == features &&
           other.version == version;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, theme, locale, features, version);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

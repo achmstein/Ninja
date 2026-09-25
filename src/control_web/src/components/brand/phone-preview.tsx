@@ -5,6 +5,7 @@ import type { Language } from '@/lib/language'
 import { logoFor, wordmarkFor, type BrandImages, type Scheme } from '@/lib/brand-slots'
 import { brandTokens, ensureFontsLoaded, type BrandThemeInput } from '@/lib/brand-theme'
 import { formatMoney } from '@/lib/locale'
+import { resolveLayout } from '@/lib/styles'
 import { useTheme } from '@/context/theme-provider'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -73,6 +74,8 @@ export function PhonePreview({
 }) {
   const t = useT()
   const tokens = brandTokens(draft)
+  // Only the menu item's shape, roughly: the live preview is where the style shows in full
+  const menuItem = resolveLayout(draft.theme).menuItem
   useEffect(() => ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic }), [tokens.fontLatin, tokens.fontArabic])
 
   const name = (language === 'ar' ? draft.name.ar : draft.name.en) || draft.name.en || draft.name.ar || ''
@@ -122,16 +125,31 @@ export function PhonePreview({
             <Badge variant='outline'>{t('previewFood')}</Badge>
             <Badge variant='outline'>{t('previewOffers')}</Badge>
           </div>
-          {items.map((item) => (
-            <Card key={item.name} className='flex-row items-center gap-3 p-3'>
-              <div className='bg-muted aspect-square w-14 shrink-0 rounded-md' />
-              <div className='min-w-0 flex-1'>
-                <div className='truncate text-sm font-medium'>{item.name}</div>
-                <div className='text-muted-foreground text-xs'>{formatMoney(item.price, draft.currency, language)}</div>
-              </div>
-              <Button size='sm'>{t('previewAdd')}</Button>
-            </Card>
-          ))}
+          <div className={cn(menuItem === 'card' ? 'grid grid-cols-2 gap-3' : 'space-y-3')}>
+            {items.map((item) =>
+              menuItem === 'card' || menuItem === 'hero' ? (
+                <Card key={item.name} className='gap-2 overflow-hidden p-0 pb-3'>
+                  <div className={cn('bg-muted w-full', menuItem === 'hero' ? 'aspect-[2/1]' : 'aspect-square')} />
+                  <div className='flex items-center gap-2 px-3'>
+                    <div className='min-w-0 flex-1'>
+                      <div className='truncate text-sm font-medium'>{item.name}</div>
+                      <div className='text-muted-foreground text-xs'>{formatMoney(item.price, draft.currency, language)}</div>
+                    </div>
+                    {menuItem === 'hero' && <Button size='sm'>{t('previewAdd')}</Button>}
+                  </div>
+                </Card>
+              ) : (
+                <Card key={item.name} className='flex-row items-center gap-3 p-3'>
+                  {menuItem === 'row' && <div className='bg-muted aspect-square w-14 shrink-0 rounded-md' />}
+                  <div className='min-w-0 flex-1'>
+                    <div className='truncate text-sm font-medium'>{item.name}</div>
+                    <div className='text-muted-foreground text-xs'>{formatMoney(item.price, draft.currency, language)}</div>
+                  </div>
+                  <Button size='sm'>{t('previewAdd')}</Button>
+                </Card>
+              )
+            )}
+          </div>
         </div>
         <div className='bg-card text-muted-foreground flex items-center justify-around border-t px-2 py-2 text-[10px]'>
           <span className='text-primary flex flex-col items-center gap-0.5'><Home className='size-4' />{t('previewHome')}</span>

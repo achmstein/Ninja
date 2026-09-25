@@ -33,6 +33,7 @@ public sealed class TemplatesTests
         OwnerEmail = "owner@blue.test",
         IdentitySecret = "identity-secret-1234567890123456",
         ControlSecret = "control-secret-12345678901234567",
+        PaymentsKey = "payments-key-12345678901234567890",
         DbPassword = "db-password-123456789012345678",
         BrokerPassword = "broker-password-1234567890123456",
     };
@@ -156,6 +157,10 @@ public sealed class TemplatesTests
         // Its own role and broker user, never the platform's superuser or guest
         StringAssert.Contains(yaml, "Username=blue_app;Password=${DB_PASSWORD};Database=blue_catalogdb");
         StringAssert.Contains(yaml, "amqp://blue_app:${BROKER_PASSWORD}@eventbus:5672/blue");
+
+        // The key to the café's payment provider secrets reaches Sales alone
+        Assert.AreEqual(1, Regex.Matches(yaml, @"\$\{PAYMENTS_KEY\}").Count);
+        StringAssert.Contains(yaml, "Payments__Key: \"${PAYMENTS_KEY}\"");
         Assert.IsFalse(yaml.Contains("Username=postgres"));
         Assert.IsFalse(yaml.Contains("amqp://guest"));
         Assert.IsFalse(yaml.Contains("POSTGRES_PASSWORD"));
@@ -259,6 +264,7 @@ public sealed class TemplatesTests
         StringAssert.Contains(env, "BROKER_PASSWORD=broker-password-1234567890123456");
         StringAssert.Contains(env, "IDENTITY_SECRET=identity-secret-1234567890123456");
         StringAssert.Contains(env, "GEMINI_API_KEY=k");
+        StringAssert.Contains(env, "PAYMENTS_KEY=payments-key-12345678901234567890");
         Assert.IsFalse(env.Contains("POSTGRES_PASSWORD"), "the superuser password must not reach a tenant folder");
         Assert.IsFalse(env.Contains("RABBIT_PASSWORD"));
     }

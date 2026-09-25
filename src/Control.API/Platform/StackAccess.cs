@@ -8,10 +8,10 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>The six images a brand is made of, named as the stack names them.</summary>
+/// <summary>The images a brand is made of, named as the stack names them: six drawings and the cover photo.</summary>
 public static class BrandImageSlots
 {
-    public static readonly string[] All = ["logo", "logo-dark", "wordmark-en", "wordmark-en-dark", "wordmark-ar", "wordmark-ar-dark"];
+    public static readonly string[] All = ["logo", "logo-dark", "wordmark-en", "wordmark-en-dark", "wordmark-ar", "wordmark-ar-dark", "cover"];
 
     public static bool IsKnown(string slot) => Array.IndexOf(All, slot) >= 0;
 }
@@ -196,7 +196,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
             features[key] = (features[key]?.GetValue<bool>() ?? false) && (entitled[key]?.GetValue<bool>() ?? true);
     }
 
-    /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on.</summary>
+    /// <summary>What a stack answers before anyone has branded it: the seed values, no images, every switch on but pay at table (which waits for the café's payment keys).</summary>
     public static JsonObject NeutralBrand(Tenant tenant, TenantHosts hosts) => new()
     {
         ["name"] = new JsonObject { ["en"] = tenant.NameEn, ["ar"] = tenant.NameAr },
@@ -218,12 +218,12 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
         ["entitlements"] = new JsonObject
         {
             ["reservations"] = true, ["timeBilling"] = true, ["loyalty"] = true, ["tabs"] = true,
-            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
+            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true, ["payAtTable"] = true,
         },
         ["features"] = new JsonObject
         {
             ["reservations"] = true, ["timeBilling"] = true, ["loyalty"] = true, ["tabs"] = true,
-            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true,
+            ["inventory"] = true, ["finance"] = true, ["payroll"] = true, ["kds"] = true, ["payAtTable"] = false,
         },
         ["locale"] = new JsonObject
         {

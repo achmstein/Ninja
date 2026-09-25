@@ -417,6 +417,11 @@ namespace Ninja.Control.API.Migrations
                     b.Property<DateTimeOffset?>("PastDueNotifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("PaymentsKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");

@@ -18,6 +18,8 @@
  * seeds.
  */
 
+import { presetOf, styleOf, withStyleDefaults, type LayoutOverrides } from './styles'
+
 const STYLE_ID = 'brand-theme'
 const FONT_LINK_ID = 'brand-font'
 
@@ -40,6 +42,10 @@ export type BrandThemeInput = {
     fontArabic?: string | null
     /** What the dark scheme must use instead of what is derived */
     dark?: BrandThemeDark | null
+    /** classic, minimal, bold, cozy or night (lib/styles.ts); its defaults fill the seeds left unset */
+    style?: string | null
+    /** Parts of the customer app dressed otherwise than the style does */
+    layout?: LayoutOverrides | null
   } | null
 }
 
@@ -316,6 +322,8 @@ export type BrandTokens = {
   /** The families to load, when the tenant chose them. */
   fontLatin: string | null
   fontArabic: string | null
+  /** A family only headings use, when the style has one. */
+  fontHeading: string | null
 }
 
 const knownFont = (value: string | null | undefined, list: readonly string[]) =>
@@ -329,7 +337,8 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   for (const [role, value] of Object.entries(colors.light)) light[VAR_OF[role as keyof SchemeColors]] = oklch(value)
   for (const [role, value] of Object.entries(colors.dark)) dark[VAR_OF[role as keyof SchemeColors]] = oklch(value)
 
-  const theme = input?.theme
+  // The style's defaults fill whatever seed the café left unset
+  const theme = withStyleDefaults(input?.theme)
   if (theme?.radius && RADII[theme.radius]) {
     light['--radius'] = RADII[theme.radius]
     light['--radius-pill'] = PILL_RADII[theme.radius]
@@ -344,7 +353,19 @@ export function brandTokens(input: BrandThemeInput | null | undefined): BrandTok
   if (fontLatin) light['--font-latin'] = `'${fontLatin}'`
   if (fontArabic) light['--font-arabic'] = `'${fontArabic}'`
 
-  return { light, dark, fontLatin, fontArabic }
+  // Headings as the style sets them; classic leaves the stylesheet's
+  let fontHeading: string | null = null
+  if (styleOf(theme) !== 'classic') {
+    const h = presetOf(theme).headings
+    fontHeading = h.font
+    if (h.font) light['--font-heading'] = `'${h.font}'`
+    light['--heading-weight'] = String(h.weight)
+    light['--heading-scale'] = String(h.scale)
+    light['--heading-transform'] = h.uppercase ? 'uppercase' : 'none'
+    light['--heading-tracking'] = `${h.tracking}em`
+  }
+
+  return { light, dark, fontLatin, fontArabic, fontHeading }
 }
 
 // ---------------------------------------------------------------- contrast
@@ -414,7 +435,7 @@ export function fontStylesheetUrl(family: string): string {
 }
 
 /** Loads the tenant's families once; a family already on the page is left alone, a dropped one is removed. */
-export function ensureFontsLoaded(families: { latin: string | null; arabic: string | null }) {
+export function ensureFontsLoaded(families: { latin: string | null; arabic: string | null; heading?: string | null }) {
   for (const [script, family] of Object.entries(families)) {
     const id = `${FONT_LINK_ID}-${script}`
     const existing = document.getElementById(id) as HTMLLinkElement | null
@@ -449,7 +470,7 @@ export function applyBrandTheme(input: BrandThemeInput | null | undefined) {
   applyThemeColor(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
   const existing = document.getElementById(STYLE_ID)
   const tokens = brandTokens(input)
-  ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic })
+  ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic, heading: tokens.fontHeading })
   const css = brandThemeCss(input)
   if (!css) {
     existing?.remove()

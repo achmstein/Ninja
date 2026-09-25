@@ -131,6 +131,12 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<bool>("LoyaltyEntitled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("PayAtTableEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PayAtTableEntitled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("PayrollEnabled")
                         .HasColumnType("boolean");
 
@@ -276,6 +282,8 @@ namespace Ninja.Tenant.API.Migrations
 
                             b1.Property<string>("Radius");
 
+                            b1.Property<string>("Style");
+
                             b1.Property<string>("Surface");
 
                             b1.HasKey("TenantId");
@@ -286,6 +294,30 @@ namespace Ninja.Tenant.API.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("TenantId");
+
+                            b1.OwnsOne("Ninja.Tenant.API.Model.TenantLayout", "Layout", b2 =>
+                                {
+                                    b2.Property<int>("TenantThemeTenantId");
+
+                                    b2.Property<string>("Buttons");
+
+                                    b2.Property<string>("Categories");
+
+                                    b2.Property<string>("Density");
+
+                                    b2.Property<string>("Header");
+
+                                    b2.Property<string>("MenuItem");
+
+                                    b2.Property<string>("Surface");
+
+                                    b2.HasKey("TenantThemeTenantId");
+
+                                    b2.ToTable("Tenants");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("TenantThemeTenantId");
+                                });
 
                             b1.OwnsOne("Ninja.Tenant.API.Model.TenantThemeDark", "Dark", b2 =>
                                 {
@@ -306,6 +338,8 @@ namespace Ninja.Tenant.API.Migrations
                                 });
 
                             b1.Navigation("Dark");
+
+                            b1.Navigation("Layout");
                         });
 
                     b.Navigation("Name")

@@ -340,12 +340,12 @@ public sealed record CatalogItem(int Id, LocalizedText Name, decimal Price, int 
 public sealed record BranchView(int Id, LocalizedText Name, bool IsActive, bool IsOrderingEnabled, bool IsReservationsEnabled);
 
 /// <summary>The café's switches, as every surface reads them at boot (Tenant.API's TenantFeatures).</summary>
-public sealed record FeatureSwitches(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds)
+public sealed record FeatureSwitches(bool Reservations, bool TimeBilling, bool Loyalty, bool Tabs, bool Inventory, bool Finance, bool Payroll, bool Kds, bool PayAtTable = false)
 {
     public FeatureSwitches With(bool? reservations = null, bool? timeBilling = null, bool? loyalty = null, bool? tabs = null,
-        bool? inventory = null, bool? finance = null, bool? payroll = null, bool? kds = null)
+        bool? inventory = null, bool? finance = null, bool? payroll = null, bool? kds = null, bool? payAtTable = null)
         => new(reservations ?? Reservations, timeBilling ?? TimeBilling, loyalty ?? Loyalty, tabs ?? Tabs,
-            inventory ?? Inventory, finance ?? Finance, payroll ?? Payroll, kds ?? Kds);
+            inventory ?? Inventory, finance ?? Finance, payroll ?? Payroll, kds ?? Kds, payAtTable ?? PayAtTable);
 }
 
 /// <summary>

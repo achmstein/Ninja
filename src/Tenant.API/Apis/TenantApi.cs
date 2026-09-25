@@ -45,7 +45,7 @@ public static partial class TenantApi
 
         api.MapPut("/images/{slot}", UploadImage)
             .WithName("UploadTenantImage")
-            .WithSummary("Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo")
+            .WithSummary("Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover; the icons are cut from the logo")
             .RequireAuthorization("Owner")
             .DisableAntiforgery();
 
@@ -201,7 +201,7 @@ public static partial class TenantApi
             return TypedResults.NotFound();
 
         SetCache(http, v);
-        return TypedResults.PhysicalFile(store.PathOfSlot(slot), "image/png");
+        return TypedResults.PhysicalFile(store.PathOfSlot(slot), TenantBrandStore.ContentTypeOf(slot));
     }
 
     public static async Task<Results<PhysicalFileHttpResult, FileContentHttpResult, NotFound>> GetIcon(
@@ -337,7 +337,45 @@ public static partial class TenantApi
         theme.FontLatin = Font(dto.FontLatin, TenantTheme.LatinFonts, "Latin", out error);
         if (error is not null) return theme;
         theme.FontArabic = Font(dto.FontArabic, TenantTheme.ArabicFonts, "Arabic", out error);
+        if (error is not null) return theme;
+
+        theme.Style = OneOf(dto.Style, TenantTheme.Styles, "style", out error);
+        if (error is not null) return theme;
+        theme.Layout = NormalizeLayout(dto.Layout, out error);
         return theme;
+    }
+
+    /// <summary>Each part checked against its list; a layout that chooses nothing is none.</summary>
+    private static TenantLayout? NormalizeLayout(TenantLayoutDto? dto, out string? error)
+    {
+        error = null;
+        if (dto is null) return null;
+        var layout = new TenantLayout();
+        (string? Value, string[] Allowed, string Label, Action<string?> Set)[] parts =
+        [
+            (dto.MenuItem, TenantLayout.MenuItems, "menu item layout", v => layout.MenuItem = v),
+            (dto.Categories, TenantLayout.CategoryStyles, "categories layout", v => layout.Categories = v),
+            (dto.Header, TenantLayout.Headers, "header layout", v => layout.Header = v),
+            (dto.Buttons, TenantLayout.ButtonStyles, "button shape", v => layout.Buttons = v),
+            (dto.Surface, TenantLayout.Surfaces, "surface", v => layout.Surface = v),
+            (dto.Density, TenantLayout.Densities, "density", v => layout.Density = v),
+        ];
+        foreach (var (value, allowed, label, set) in parts)
+        {
+            set(OneOf(value, allowed, label, out error));
+            if (error is not null) return layout;
+        }
+        return layout.IsEmpty ? null : layout;
+    }
+
+    /// <summary>Trimmed and lower-cased, null for none, an error for anything outside the list.</summary>
+    private static string? OneOf(string? value, string[] allowed, string label, out string? error)
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var normalized = value.Trim().ToLowerInvariant();
+        if (!allowed.Contains(normalized)) error = $"The {label} must be one of {string.Join(", ", allowed)}.";
+        return normalized;
     }
 
     /// <summary>The family as the allowlist spells it, null for none, an error for a family the surfaces cannot load.</summary>
@@ -429,11 +467,35 @@ public record TenantWordmarks(TenantWordmark? En, TenantWordmark? EnDark, Tenant
 /// <param name="Surface">The page's colour, light scheme; its hue tints the neutrals of both schemes.</param>
 /// <param name="Dark">The dark scheme's own seeds, when derived ones do not suit the brand.</param>
 /// <param name="Mode">"light" or "dark" for someone who has not chosen; null follows the device.</param>
-public record TenantThemeDto(string? Accent, string? Surface, string? Radius, string? FontLatin, string? FontArabic, TenantThemeDarkDto? Dark, string? HeaderSize = null, string? Mode = null)
+/// <param name="Style">classic, minimal, bold, cozy or night: how the customer apps are dressed; null is classic.</param>
+/// <param name="Layout">Parts dressed otherwise than the style does; null keeps the style's choice for every part.</param>
+public record TenantThemeDto(
+    string? Accent,
+    string? Surface,
+    string? Radius,
+    string? FontLatin,
+    string? FontArabic,
+    TenantThemeDarkDto? Dark,
+    string? HeaderSize = null,
+    string? Mode = null,
+    string? Style = null,
+    TenantLayoutDto? Layout = null)
 {
     public static TenantThemeDto From(TenantTheme t)
-        => new(t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic, t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface), t.HeaderSize, t.Mode);
+        => new(
+            t.Accent, t.Surface, t.Radius, t.FontLatin, t.FontArabic,
+            t.Dark is null ? null : new(t.Dark.Primary, t.Dark.Accent, t.Dark.Surface),
+            t.HeaderSize, t.Mode, t.Style,
+            t.Layout is { IsEmpty: false } l ? new(l.MenuItem, l.Categories, l.Header, l.Buttons, l.Surface, l.Density) : null);
 }
+
+/// <param name="MenuItem">row, card, compact or hero.</param>
+/// <param name="Categories">chips, tabs or rail.</param>
+/// <param name="Header">left, center or banner (over the cover image).</param>
+/// <param name="Buttons">pill, rounded or square.</param>
+/// <param name="Surface">flat, outlined or shadow.</param>
+/// <param name="Density">airy, comfortable or compact.</param>
+public record TenantLayoutDto(string? MenuItem, string? Categories, string? Header, string? Buttons, string? Surface, string? Density);
 
 public record TenantThemeDarkDto(string? Primary, string? Accent, string? Surface);
 
@@ -461,7 +523,8 @@ public record TenantResponse(
     TenantLocaleDto Locale,
     long Version,
     string? BusinessType = null,
-    bool GuestOrdersAnywhere = false)
+    bool GuestOrdersAnywhere = false,
+    TenantWordmark? Cover = null)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"]);
@@ -492,7 +555,8 @@ public record TenantResponse(
             TenantLocaleDto.From(t),
             v,
             t.BusinessType,
-            t.GuestOrdersAnywhere);
+            t.GuestOrdersAnywhere,
+            TenantWordmark.From(t, TenantImageSlots.Cover));
     }
 }
 

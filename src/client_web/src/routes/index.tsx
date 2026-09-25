@@ -14,7 +14,14 @@ import { Input } from '@/components/ui/input'
 import { InstallBanner } from '@/components/install-banner'
 import { CategoryRail, type MenuSection } from '@/components/menu/category-rail'
 import { CustomizeDialog } from '@/components/menu/customize-dialog'
-import { ItemRow, ItemRowSkeleton } from '@/components/menu/item-card'
+import {
+  MenuItem,
+  MenuItemSkeleton,
+  menuListClass,
+} from '@/components/menu/item-card'
+import { MenuBanner } from '@/components/menu-banner'
+import { useBrandLayout } from '@/lib/brand-layout'
+import { cn } from '@/lib/utils'
 import { OffersCarousel } from '@/components/menu/offers-carousel'
 import { useFavorites } from '@/components/menu/use-favorites'
 import { useMyTopItems } from '@/components/menu/use-my-top-items'
@@ -36,6 +43,10 @@ function MenuPage() {
   const localized = useLocalized()
   const branch = useSelectedBranch()
   const orderingEnabled = branch?.isOrderingEnabled ?? true
+  // How the café's style lays the menu out (lib/styles.ts)
+  const layout = useBrandLayout()
+  const variant = layout.menuItem
+  const sideRail = layout.categories === 'rail'
 
   const [search, setSearch] = useState('')
   const [activeSection, setActiveSection] = useState('')
@@ -168,8 +179,9 @@ function MenuPage() {
     : []
 
   const renderRow = (item: CatalogItemDto) => (
-    <ItemRow
+    <MenuItem
       key={String(item.id)}
+      variant={variant}
       item={item}
       isFavorite={favorites.has(Number(item.id))}
       canFavorite={canToggle}
@@ -180,7 +192,12 @@ function MenuPage() {
   )
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
+    <div className='flex flex-col gap-[calc(1rem*var(--space))] p-4'>
+      {/* Wide screens show the cover here; a phone has it in its top bar */}
+      {layout.header === 'banner' && (
+        <MenuBanner className='hidden min-h-52 rounded-3xl md:flex' />
+      )}
+
       {!orderingEnabled && (
         <div className='bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg p-3 text-sm font-medium'>
           <Ban className='h-4 w-4 shrink-0' />
@@ -193,7 +210,7 @@ function MenuPage() {
       <div className='relative'>
         <Search className='text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2' />
         <Input
-          className='rounded-full pe-9 ps-9'
+          className='rounded-(--radius-round) pe-9 ps-9'
           placeholder={t('searchMenu')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -211,9 +228,9 @@ function MenuPage() {
       </div>
 
       {isLoading ? (
-        <div className='flex flex-col'>
+        <div className={variant === 'row' ? 'flex flex-col' : menuListClass(variant)}>
           {[...Array(8)].map((_, i) => (
-            <ItemRowSkeleton key={i} />
+            <MenuItemSkeleton key={i} variant={variant} />
           ))}
         </div>
       ) : term ? (
@@ -222,7 +239,7 @@ function MenuPage() {
             {t('noItemsAvailable')}
           </p>
         ) : (
-          <div className='md:grid md:grid-cols-2 md:gap-x-10'>
+          <div className={menuListClass(variant)}>
             {searchResults.map(renderRow)}
           </div>
         )
@@ -232,9 +249,20 @@ function MenuPage() {
             items={offerItems}
             onCustomize={setCustomizeItem}
             orderingEnabled={orderingEnabled}
+            photos={variant !== 'compact'}
           />
 
+          {/* Beside a side rail on a wide screen the sections take the
+              second column; otherwise this wrapper is not a box at all */}
+          <div
+            className={cn(
+              sideRail
+                ? 'flex flex-col gap-[calc(1rem*var(--space))] md:grid md:grid-cols-[12rem_minmax(0,1fr)] md:gap-x-8'
+                : 'contents'
+            )}
+          >
           <CategoryRail
+            variant={layout.categories}
             sections={sections}
             activeId={activeSection || sections[0]?.id || ''}
             onSelect={(id) => {
@@ -246,6 +274,13 @@ function MenuPage() {
             }}
           />
 
+          <div
+            className={cn(
+              sideRail
+                ? 'flex flex-col gap-[calc(1rem*var(--space))] md:col-start-2 md:row-start-1'
+                : 'contents'
+            )}
+          >
           {sections.map((section) => (
             <section
               key={section.id}
@@ -253,15 +288,25 @@ function MenuPage() {
               // Rest exactly under the sticky rail: its own offset (the
               // safe-area inset on mobile, the brand's header on desktop) plus
               // the rail's 3.25rem. The flat 128px this replaces overshot, and
-              // the surplus showed the previous category's last row
-              className='flex scroll-mt-[calc(env(safe-area-inset-top)_+_3.25rem)] flex-col md:scroll-mt-[calc(var(--header-h)_+_3.25rem)]'
+              // the surplus showed the previous category's last row. Beside a
+              // side rail there is only the header above
+              className={cn(
+                'flex scroll-mt-[calc(env(safe-area-inset-top)_+_3.25rem)] flex-col',
+                sideRail
+                  ? 'md:scroll-mt-[calc(var(--header-h)_+_1rem)]'
+                  : 'md:scroll-mt-[calc(var(--header-h)_+_3.25rem)]'
+              )}
             >
-              <h2 className='pt-2 pb-1 text-base font-bold'>{section.label}</h2>
-              <div className='md:grid md:grid-cols-2 md:gap-x-10'>
+              <h2 className='heading pt-2 pb-[calc(0.25rem*var(--space))] text-[calc(1rem*var(--heading-scale))]'>
+                {section.label}
+              </h2>
+              <div className={menuListClass(variant)}>
                 {section.items.map(renderRow)}
               </div>
             </section>
           ))}
+          </div>
+          </div>
         </>
       )}
 

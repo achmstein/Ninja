@@ -215,7 +215,7 @@ export const getTenantImageOptions = (options: Options<GetTenantImageData>) => q
 });
 
 /**
- * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo
+ * Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover; the icons are cut from the logo
  */
 export const uploadTenantImageMutation = (options?: Partial<Options<UploadTenantImageData>>): UseMutationOptions<UploadTenantImageResponse, AxiosError<UploadTenantImageError>, Options<UploadTenantImageData>> => {
     const mutationOptions: UseMutationOptions<UploadTenantImageResponse, AxiosError<UploadTenantImageError>, Options<UploadTenantImageData>> = {

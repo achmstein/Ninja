@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { preview } from '@/lib/preview'
 import { applyThemeColor } from '@/lib/brand-theme'
+import { useForcedDark } from '@/lib/brand-layout'
 
 type Theme = 'dark' | 'light' | 'system'
 export type ResolvedTheme = Exclude<Theme, 'system'>
@@ -58,7 +59,9 @@ export function ThemeProvider({
     () => preview.theme ?? ((getCookie(storageKey) as Theme) || null)
   )
   const cafe = useCafeTheme((s) => s.mode)
-  const theme: Theme = chosen ?? cafe ?? defaultTheme
+  // A style that lives at night is dark for everyone, the preview included
+  const forcedDark = useForcedDark()
+  const theme: Theme = forcedDark ? 'dark' : (chosen ?? cafe ?? defaultTheme)
 
   // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
   const resolvedTheme = useMemo((): ResolvedTheme => {

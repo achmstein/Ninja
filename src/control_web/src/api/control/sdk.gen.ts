@@ -193,7 +193,7 @@ export const deleteTenantBrandImage = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark
+ * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover
  */
 export const uploadTenantBrandImage = <ThrowOnError extends boolean = false>(options: Options<UploadTenantBrandImageData, ThrowOnError>): RequestResult<UploadTenantBrandImageResponses, UploadTenantBrandImageErrors, ThrowOnError> => (options.client ?? client).put<UploadTenantBrandImageResponses, UploadTenantBrandImageErrors, ThrowOnError>({
     ...formDataBodySerializer,

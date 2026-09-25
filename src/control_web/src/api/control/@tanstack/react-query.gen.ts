@@ -398,7 +398,7 @@ export const deleteTenantBrandImageMutation = (options?: Partial<Options<DeleteT
 };
 
 /**
- * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark
+ * Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover
  */
 export const uploadTenantBrandImageMutation = (options?: Partial<Options<UploadTenantBrandImageData>>): UseMutationOptions<UploadTenantBrandImageResponse, AxiosError<UploadTenantBrandImageError>, Options<UploadTenantBrandImageData>> => {
     const mutationOptions: UseMutationOptions<UploadTenantBrandImageResponse, AxiosError<UploadTenantBrandImageError>, Options<UploadTenantBrandImageData>> = {

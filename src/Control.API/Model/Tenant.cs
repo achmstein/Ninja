@@ -162,6 +162,14 @@ public class Tenant
     public string AssistantSecret { get; set; } = "";
 
     /// <summary>
+    /// The key Sales encrypts the café's payment provider secrets with. It
+    /// lives here and in the stack's .env, never in the café's database, so a
+    /// backup of that database holds the provider keys only as ciphertext.
+    /// Filled by the credentials step for stacks stamped before there was one.
+    /// </summary>
+    public string PaymentsKey { get; set; } = "";
+
+    /// <summary>
     /// The stack's own database role and broker user passwords ({slug}_app on
     /// both). Null while the stack still runs on the shared credentials it was
     /// stamped with before there were any of its own; the credentials step

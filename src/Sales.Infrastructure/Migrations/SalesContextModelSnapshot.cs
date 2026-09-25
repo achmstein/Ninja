@@ -709,6 +709,22 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("requests", "sales");
                 });
 
+            modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.TenantFeatures", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PayAtTable")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tenantfeatures", "sales");
+                });
+
             modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.CashMovement", b =>
                 {
                     b.HasOne("Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.Shift", null)

@@ -103,6 +103,8 @@ public static partial class ControlApi
             DefaultLanguage = source.DefaultLanguage,
             IdentitySecret = TenantNaming.NewSecret(),
             ControlSecret = TenantNaming.NewSecret(),
+            // The restored sales database holds the provider secrets under the source's key
+            PaymentsKey = source.PaymentsKey,
             ImageTag = options.Value.DefaultImageTag,
             RestoreFrom = $"{slug}/{id}",
         };

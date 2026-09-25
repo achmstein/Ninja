@@ -213,6 +213,8 @@ public sealed class Provisioner(
             tenant.BrokerPassword ??= TenantNaming.NewSecret();
             // Stamped before the owner's assistant existed: the realm step hands the realm this secret
             if (string.IsNullOrEmpty(tenant.AssistantSecret)) tenant.AssistantSecret = TenantNaming.NewSecret();
+            // Stamped before pay at table: Sales gets its key for the provider secrets on this stamp
+            if (string.IsNullOrEmpty(tenant.PaymentsKey)) tenant.PaymentsKey = TenantNaming.NewSecret();
             await context.SaveChangesAsync(ct);
             await databases.EnsureRoleAsync(TenantNaming.DbRole(tenant.Slug), tenant.DbPassword, ct);
             await broker.EnsureUserAsync(TenantNaming.BrokerUser(tenant.Slug), tenant.BrokerPassword, ct);
@@ -360,6 +362,12 @@ public sealed class Provisioner(
                 if (File.Exists(marker))
                 {
                     said.Add($"{to} carried before");
+                    continue;
+                }
+                if (TenantNaming.CarriedByHand.Contains(tenant.Slug))
+                {
+                    await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} restored by hand", ct);
+                    said.Add($"{to} restored by hand; left as it is");
                     continue;
                 }
                 var source = await backups.CarryAsync(tenant, from, to, ct);

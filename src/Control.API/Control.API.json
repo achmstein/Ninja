@@ -1018,7 +1018,7 @@
         "tags": [
           "Control"
         ],
-        "summary": "Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark",
+        "summary": "Replace one image on the running stack: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar, wordmark-ar-dark or cover",
         "operationId": "UploadTenantBrandImage",
         "parameters": [
           {
@@ -3244,6 +3244,16 @@
                 "$ref": "#/components/schemas/BrandFeatures"
               }
             ]
+          },
+          "cover": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandWordmark"
+              }
+            ]
           }
         }
       },
@@ -3283,6 +3293,10 @@
           },
           "kds": {
             "type": "boolean"
+          },
+          "payAtTable": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -3310,6 +3324,55 @@
           },
           "favicon": {
             "type": "string"
+          }
+        }
+      },
+      "BrandLayout": {
+        "required": [
+          "menuItem",
+          "categories",
+          "header",
+          "buttons",
+          "surface",
+          "density"
+        ],
+        "type": "object",
+        "properties": {
+          "menuItem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categories": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "header": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "buttons": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "surface": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "density": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3421,6 +3484,22 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "style": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "layout": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BrandLayout"
+              }
             ]
           }
         }
@@ -4376,7 +4455,8 @@
           "Inventory",
           "Finance",
           "Payroll",
-          "Kds"
+          "Kds",
+          "PayAtTable"
         ]
       },
       "OperatorInvitedResponse": {
