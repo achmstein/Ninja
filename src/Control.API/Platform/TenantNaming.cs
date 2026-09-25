@@ -15,20 +15,10 @@ public static partial class TenantNaming
     ];
 
     /// <summary>
-    /// What a retired service left on the shared Postgres and broker: the
-    /// database and the durable queue Branch.API had before it became
-    /// Tenant.API. An upgrade drops them once the new stack answers; gone
-    /// twice is nothing.
-    /// </summary>
-    public static readonly string[] RetiredDatabases = ["branchdb"];
-
-    public static readonly string[] RetiredQueues = ["Branch"];
-
-    /// <summary>
     /// A service renamed with its data: Branch.API became Tenant.API with the
     /// same tables and migration history, so branchdb's data is tenantdb's.
-    /// The carry step of an upgrade copies it over once, before the retired
-    /// step drops the old database.
+    /// The carry step of an upgrade copies it over once, from the old
+    /// database or the newest backup that holds it.
     /// </summary>
     public static readonly (string From, string To)[] RenamedDatabases = [("branchdb", "tenantdb")];
 

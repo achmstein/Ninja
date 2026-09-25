@@ -342,23 +342,6 @@ public sealed class Provisioner(
         }, ct);
 
     /// <summary>
-    /// The databases and queues of services that no longer exist
-    /// (<see cref="TenantNaming.RetiredDatabases"/>, <see cref="TenantNaming.RetiredQueues"/>):
-    /// run only after the new stack answers, so a failed upgrade that rolls
-    /// back still finds what the old one used.
-    /// </summary>
-    private Task<string> RetiredStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
-        => Step(tenant, runId, "retired", async () =>
-        {
-            var vhost = TenantNaming.VHost(tenant.Slug);
-            foreach (var db in TenantNaming.RetiredDatabases)
-                await databases.DropDatabaseAsync(TenantNaming.Database(tenant.Slug, db), ct);
-            foreach (var queue in TenantNaming.RetiredQueues)
-                await broker.DeleteQueueAsync(vhost, queue, ct);
-            return $"dropped {string.Join(", ", TenantNaming.RetiredDatabases.Select(db => TenantNaming.Database(tenant.Slug, db)))}; {string.Join(", ", TenantNaming.RetiredQueues)} off vhost {vhost}";
-        }, ct);
-
-    /// <summary>
     /// A renamed service's data into its new database (<see cref="TenantNaming.RenamedDatabases"/>),
     /// once per tenant: from the old database while it exists, else from the
     /// newest backup holding it (an upgrade that dropped it before this step
@@ -544,7 +527,6 @@ public sealed class Provisioner(
             await StackStepAsync(tenant, runId, "stack", ct);
             await HealthStepAsync(tenant, runId, ct);
             await BrokerLockdownStepAsync(tenant, runId, ct);
-            await RetiredStepAsync(tenant, runId, ct);
 
             tenant.Status = TenantStatus.Running;
             await context.SaveChangesAsync(ct);
