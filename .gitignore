@@ -519,8 +519,8 @@ ios-signing/
 src/Catalog.API/Pics/[0-9]*_[0-9]*.*
 src/Catalog.API/Pics/bundle_[0-9]*_[0-9]*.*
 
-# Tenant logo and icons written by Branch.API in dev
-src/Branch.API/uploads/
+# Tenant logo and icons written by Tenant.API in dev
+src/Tenant.API/uploads/
 
 # Local platform run: built web apps, rendered realm, secrets
 deploy/platform/local/web/

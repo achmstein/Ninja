@@ -52,7 +52,7 @@ class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
       await ref.read(shiftsRepositoryProvider).openShift(amount, requestId: _requestId);
       ref.read(currentShiftProvider.notifier).refresh();
       // Opening the shift turned the branch's taking-orders / reservations
-      // flags on (through Branch.API)
+      // flags on (through Tenant.API)
       ref.read(branchProvider.notifier).refresh();
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.shiftOpened);

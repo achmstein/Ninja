@@ -14,7 +14,7 @@ public static class KnownEvents
 
     public static readonly Choreography[] Catalog =
     [
-        new("BranchSettingsChanged", "Branch", ["Ordering", "Spaces", "Notification"]),
+        new("BranchSettingsChanged", "Tenant", ["Ordering", "Spaces", "Notification"]),
         new("CashMoved", "Sales", ["Finance"]),
         new("CashPaidOut", "Sales", ["Payroll"]),
         new("CatalogItemAvailabilityChanged", "Catalog", ["Notification"]),
@@ -50,13 +50,13 @@ public static class KnownEvents
         new("SessionMemberJoined", "Spaces", ["Notification"]),
         new("SessionPaid", "Spaces", ["Notification"]),
         new("SessionStarted", "Spaces", ["Sales", "Notification"]),
-        new("ShiftClosed", "Sales", ["Branch"]),
-        new("ShiftOpened", "Sales", ["Branch", "Payroll"]),
+        new("ShiftClosed", "Sales", ["Tenant"]),
+        new("ShiftOpened", "Sales", ["Tenant", "Payroll"]),
         new("StockConsumed", "Inventory", ["Finance"]),
         new("StockLow", "Inventory", ["Notification"]),
         new("TabPaymentRecorded", "Sales", ["Accounts"]),
-        new("TenantFeaturesChanged", "Branch", ["Spaces"]),
-        new("TenantSettingsChanged", "Branch", ["Ordering"]),
+        new("TenantFeaturesChanged", "Tenant", ["Spaces"]),
+        new("TenantSettingsChanged", "Tenant", ["Ordering"]),
         new("TicketRefunded", "Sales", ["Finance", "Loyalty", "Accounts"]),
         new("TicketSettled", "Sales", ["Finance", "Accounts", "Notification"]),
         new("TicketUpdated", "Sales", ["Notification"]),

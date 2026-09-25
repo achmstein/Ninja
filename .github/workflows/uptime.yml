@@ -38,7 +38,7 @@ jobs:
             echo "::error::DOWN $url -> HTTP $code"
             failed=1
           }
-          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts tenant; do
             probe "https://api.chillax.site/health/$svc"
           done
           for host in app admin pos kds; do

@@ -1,4 +1,4 @@
-import { type TenantFeatures } from '@/api/branch'
+import { type TenantFeatures } from '@/api/tenant'
 
 /**
  * The customer list's narrowed views: two belong to a module, and the

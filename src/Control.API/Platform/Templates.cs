@@ -264,6 +264,7 @@ public static partial class Templates
         {
             var name = TenantNaming.Service(slug, service);
             sb.AppendLine($"  {name}:");
+            // Releases before Branch.API became Tenant.API have no ninja-tenant image: a stack cannot be rolled back past the rename
             sb.AppendLine($"    image: \"{platform.ImageRegistry}-{service}:{tenant.ImageTag}\"");
             sb.AppendLine("    restart: \"unless-stopped\"");
             AppendLimits(sb, platform.MemoryFor(service), platform.ServiceCpus, platform);
@@ -323,11 +324,11 @@ public static partial class Templates
                     sb.AppendLine("      Assistant__TokenExchange__ClientSecret: \"${ASSISTANT_SECRET}\"");
                     // It calls the other services by their Aspire names; service discovery reads these. A service the plan
                     // leaves out gets no line, so its name does not resolve and the tools say "not in this cafe's plan".
-                    foreach (var target in new[] { "branch", "sales", "finance", "inventory", "ordering", "payroll", "catalog" })
+                    foreach (var target in new[] { "tenant", "sales", "finance", "inventory", "ordering", "payroll", "catalog" })
                         if (services.Contains(target))
                             sb.AppendLine($"      services__{target}-api__http__0: \"http://{TenantNaming.Service(slug, target)}:8080\"");
                     break;
-                case "branch":
+                case "tenant":
                     sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
                     if (!string.IsNullOrEmpty(tenant.NameAr)) sb.AppendLine($"      Tenant__Name__Ar: \"{Yaml(tenant.NameAr)}\"");
                     if (!string.IsNullOrEmpty(tenant.PrimaryColor)) sb.AppendLine($"      Tenant__PrimaryColor: \"{tenant.PrimaryColor}\"");
@@ -365,7 +366,7 @@ public static partial class Templates
             sb.AppendLine($"      {r}__MATCH__PATH: \"{path}\"");
             sb.AppendLine($"      {r}__CLUSTERID: \"{cluster}\"");
             // A blocked route answers before anything a catch-all could say about the same path
-            if (cluster == "branch" && transforms.Any(t => t.Any(kv => kv.Item1 == "PathSet" && kv.Item2 == ModuleOffPath)))
+            if (cluster == "tenant" && transforms.Any(t => t.Any(kv => kv.Item1 == "PathSet" && kv.Item2 == ModuleOffPath)))
                 sb.AppendLine($"      {r}__ORDER: \"-1\"");
             if (versions is not null)
             {
@@ -490,8 +491,8 @@ public static partial class Templates
         yield return ("/api/notifications/{*any}", "notification", null, none);
         yield return ("/hub/{*any}", "notification", null, none);
         yield return ("/api/accounts/{*any}", "accounts", v1, none);
-        yield return ("/api/branches/{*any}", "branch", null, none);
-        yield return ("/api/tenant/{*any}", "branch", null, forwarded);
+        yield return ("/api/branches/{*any}", "tenant", null, none);
+        yield return ("/api/tenant/{*any}", "tenant", null, forwarded);
         // The owner's MCP server and its OAuth protected-resource document (RFC 9728), path-aware and at the root
         yield return ("/mcp", "assistant", null, forwarded);
         yield return ("/mcp/{*any}", "assistant", null, forwarded);
@@ -501,13 +502,13 @@ public static partial class Templates
             yield return ($"/health/{service}", service, null, [[("PathSet", "/health")]]);
     }
 
-    /// <summary>Where the gateway sends a request for a module the plan does not include: Branch.API answers 402.</summary>
+    /// <summary>Where the gateway sends a request for a module the plan does not include: Tenant.API answers 402.</summary>
     internal const string ModuleOffPath = "/api/tenant/module-off";
 
     /// <summary>
     /// The same table with a module that is not entitled taken out: its
     /// routes keep their paths (never a duplicate template) but point at
-    /// Branch.API's 402 page, and Reservations and Time billing additionally
+    /// Tenant.API's 402 page, and Reservations and Time billing additionally
     /// block their place routes one by one, since /api/places itself serves
     /// tables and stations. A module's own service (inventory, finance,
     /// payroll, loyalty, accounts) is not stamped at all when the module is
@@ -531,7 +532,7 @@ public static partial class Templates
     }
 
     private static (string, string, string[]?, (string, string)[][]) Block(string path, Module module)
-        => (path, "branch", null, [[("PathSet", ModuleOffPath)], [("QueryValueParameter", "module"), ("Set", PlanCatalog.Key(module))]]);
+        => (path, "tenant", null, [[("PathSet", ModuleOffPath)], [("QueryValueParameter", "module"), ("Set", PlanCatalog.Key(module))]]);
 
     private static string Yaml(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
 }

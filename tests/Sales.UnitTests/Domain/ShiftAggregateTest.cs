@@ -39,7 +39,7 @@ public class ShiftAggregateTest
     [TestMethod]
     public void Opening_and_closing_announce_themselves()
     {
-        // Branch.API turns the branch flags on and off from these two events
+        // Tenant.API turns the branch flags on and off from these two events
         var shift = new Shift(branchId: 1, openingFloat: 0, openedBy: "cashier");
 
         var opened = shift.DomainEvents!.OfType<ShiftOpenedDomainEvent>().Single();

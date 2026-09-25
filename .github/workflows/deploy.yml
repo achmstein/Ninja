@@ -133,7 +133,7 @@ jobs:
           sed -i 's/^LOYALTY_API_PORT=$/LOYALTY_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^NOTIFICATION_API_PORT=$/NOTIFICATION_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^ACCOUNTS_API_PORT=$/ACCOUNTS_API_PORT=8080/' deploy-artifacts/.env
-          sed -i 's/^BRANCH_API_PORT=$/BRANCH_API_PORT=8080/' deploy-artifacts/.env
+          sed -i 's/^TENANT_API_PORT=$/TENANT_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^SALES_API_PORT=$/SALES_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^INVENTORY_API_PORT=$/INVENTORY_API_PORT=8080/' deploy-artifacts/.env
           sed -i 's/^PAYROLL_API_PORT=$/PAYROLL_API_PORT=8080/' deploy-artifacts/.env
@@ -145,7 +145,7 @@ jobs:
           # names the images itself, so these are unused today; fill them with
           # the same references so the guard below passes and they are right
           # should a future Aspire start reading them.
-          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch assistant; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts tenant assistant; do
             upper=$(echo "$svc" | tr a-z A-Z)
             sed -i "s|^${upper}_API_IMAGE=$|${upper}_API_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${svc}:latest|" deploy-artifacts/.env
           done
@@ -254,7 +254,7 @@ jobs:
             return 1
           }
           failed=0
-          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch assistant; do
+          for svc in catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts tenant assistant; do
             check "https://api.chillax.site/health/$svc" || failed=1
           done
           for host in app admin pos kds; do

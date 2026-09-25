@@ -15,7 +15,7 @@ using Ninja.ServiceDefaults;
 
 /// <summary>
 /// Whether a guest may order from anywhere is the café's: one row Ordering
-/// keeps from Branch.API's event, read for every branch — including one
+/// keeps from Tenant.API's event, read for every branch — including one
 /// Ordering has no settings row for yet.
 /// </summary>
 [TestClass]

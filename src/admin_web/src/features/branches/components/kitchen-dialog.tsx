@@ -11,7 +11,7 @@ import {
   Printer,
   Trash2,
 } from 'lucide-react'
-import { type BranchResponse } from '@/api/branch'
+import { type BranchResponse } from '@/api/tenant'
 import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import {
   type KitchenStationView,

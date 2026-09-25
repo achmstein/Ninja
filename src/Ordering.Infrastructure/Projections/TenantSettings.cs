@@ -3,7 +3,7 @@ namespace Ninja.Ordering.Infrastructure.Projections;
 
 /// <summary>
 /// Ordering's own copy of the café's settings — the ones that are the café's
-/// and not any one branch's — kept up to date from Branch.API's
+/// and not any one branch's — kept up to date from Tenant.API's
 /// TenantSettingsChangedIntegrationEvent. One row for the stack. No row means
 /// the stack has never said, and every setting reads as off, as it always has.
 /// </summary>

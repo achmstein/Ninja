@@ -1018,7 +1018,7 @@ app.MapPut("/api/identity/users/{userId}/toggle-enabled", async (string userId, 
 // Owner: replace a staff account's whole branch set. Stored on the Keycloak
 // user attribute `branches` and issued as the `branches` claim; it reaches
 // the user's token on its next refresh (the access token lives 2 h), so no
-// forced logout. Ids are not validated against Branch.API (services never
+// forced logout. Ids are not validated against Tenant.API (services never
 // call each other): clients pick from the branch list, and an id that is no
 // branch never matches anything.
 app.MapPut("/api/identity/users/{userId}/branches", async (string userId, SetBranchesRequest request, KeycloakAdmin keycloak) =>

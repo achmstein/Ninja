@@ -150,7 +150,7 @@ public sealed class TemplatesTests
         }
         StringAssert.Contains(yaml, "  blue-gateway:");
         // No bare service name that another tenant's stack would also register on the shared network
-        Assert.IsFalse(Regex.IsMatch(yaml, @"^  (catalog|ordering|branch)-api:", RegexOptions.Multiline));
+        Assert.IsFalse(Regex.IsMatch(yaml, @"^  (catalog|ordering|tenant)-api:", RegexOptions.Multiline));
         Assert.IsFalse(Regex.IsMatch(yaml, @"^  mobile-bff:", RegexOptions.Multiline));
 
         // Its own role and broker user, never the platform's superuser or guest
@@ -188,7 +188,14 @@ public sealed class TemplatesTests
         Assert.AreEqual(TenantNaming.Services.Length, Regex.Matches(yaml, "Tenant__ArabicStyle: \"standard\"").Count);
         StringAssert.Contains(yaml, "ConnectionStrings__chatModel");
         StringAssert.Contains(yaml, "external: true");
-        StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__branch__DESTINATIONS__d1__ADDRESS: \"http://blue-branch-api:8080\"");
+        StringAssert.Contains(yaml, "REVERSEPROXY__CLUSTERS__tenant__DESTINATIONS__d1__ADDRESS: \"http://blue-tenant-api:8080\"");
+        // The café's own service is Tenant.API, on its own database; the assistant calls it by its Aspire name
+        StringAssert.Contains(yaml, "image: \"ghcr.io/achmstein/ninja-tenant:");
+        StringAssert.Contains(yaml, "ConnectionStrings__tenantdb: \"Host=");
+        StringAssert.Contains(yaml, "Database=blue_tenantdb;");
+        StringAssert.Contains(yaml, "services__tenant-api__http__0: \"http://blue-tenant-api:8080\"");
+        StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH");
+        Assert.IsFalse(Regex.IsMatch(yaml, "branch-api|ninja-branch|branchdb"), "nothing runs under the old service's name");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH: \"/api/catalog/items/{id}/pic\"");
         // The forwarded-headers transform is one object with two keys; YARP rejects HeaderPrefix on its own
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__TRANSFORMS__0__X-Forwarded: \"Set\"");

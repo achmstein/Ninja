@@ -1,4 +1,4 @@
-import type { BranchResponse } from '@/api/branch'
+import type { BranchResponse } from '@/api/tenant'
 import { dayStartHour, isOvernightShift } from './branch'
 
 /**

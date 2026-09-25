@@ -11,7 +11,7 @@ const services = [
   ['spaces', '../Spaces.API/Spaces.API.json'],
   ['accounts', '../Accounts.API/Accounts.API.json'],
   ['loyalty', '../Loyalty.API/Loyalty.API.json'],
-  ['branch', '../Branch.API/Branch.API.json'],
+  ['tenant', '../Tenant.API/Tenant.API.json'],
   ['sales', '../Sales.API/Sales.API.json'],
   ['inventory', '../Inventory.API/Inventory.API.json'],
   ['payroll', '../Payroll.API/Payroll.API.json'],

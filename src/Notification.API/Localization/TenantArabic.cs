@@ -4,7 +4,7 @@ namespace Ninja.Notification.API.Localization;
 /// Which Arabic this cafe speaks. Notification.API runs one container per
 /// tenant, so the style arrives as configuration (Tenant__ArabicStyle) the
 /// control plane stamps beside the rest of the tenant's locale. The rule
-/// for an unset style is Branch.API's: Egypt speaks Egyptian, everywhere
+/// for an unset style is Tenant.API's: Egypt speaks Egyptian, everywhere
 /// else speaks Standard.
 /// </summary>
 public sealed class TenantArabic

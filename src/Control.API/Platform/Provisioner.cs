@@ -253,7 +253,7 @@ public sealed class Provisioner(
             return "every service answers";
         }, ct);
 
-    /// <summary>What the plan allows, into Branch.API, which clamps the switches to it; a restore keeps its saved switches within that.</summary>
+    /// <summary>What the plan allows, into Tenant.API, which clamps the switches to it; a restore keeps its saved switches within that.</summary>
     private Task<string> EntitlementsStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "entitlements", async () =>
         {
@@ -266,7 +266,7 @@ public sealed class Provisioner(
     /// The plan changed: the stack is re-stamped from what it entitles now.
     /// The gateway recreates on its new routes; a module's service that left
     /// the plan goes as an orphan and its queue is dropped; one that joined is
-    /// created (compose pulls an image the box has not seen). Then Branch.API
+    /// created (compose pulls an image the box has not seen). Then Tenant.API
     /// is told. A stack that is not running gets the stack on its next start,
     /// the queues now: the broker is up regardless.
     /// </summary>

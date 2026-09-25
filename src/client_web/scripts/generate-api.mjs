@@ -9,7 +9,7 @@ const services = [
   ['ordering', '../Ordering.API/Ordering.API.json'],
   ['spaces', '../Spaces.API/Spaces.API.json'],
   ['loyalty', '../Loyalty.API/Loyalty.API.json'],
-  ['branch', '../Branch.API/Branch.API.json'],
+  ['tenant', '../Tenant.API/Tenant.API.json'],
   ['accounts', '../Accounts.API/Accounts.API.json'],
   ['sales', '../Sales.API/Sales.API.json'],
 ]

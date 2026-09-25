@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBrand, useBrandName } from '@/lib/brand'

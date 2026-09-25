@@ -311,7 +311,7 @@ public sealed class OciImageRegistry(IHttpClientFactory httpClientFactory, IOpti
         return (manifest, digest);
     }
 
-    /// <summary>ghcr.io/achmstein/ninja + branch → (ghcr.io, achmstein/ninja-branch); no host (images built on the box) → nothing to ask.</summary>
+    /// <summary>ghcr.io/achmstein/ninja + tenant → (ghcr.io, achmstein/ninja-tenant); no host (images built on the box) → nothing to ask.</summary>
     private (string? Host, string Repository) Split(string service)
     {
         var image = $"{options.Value.ImageRegistry}-{service}";

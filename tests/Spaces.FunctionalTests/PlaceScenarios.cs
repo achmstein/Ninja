@@ -30,7 +30,7 @@ public static class Suite
     }
 
     /// <summary>
-    /// What the café's plan allows, as Branch.API's event would have left
+    /// What the café's plan allows, as Tenant.API's event would have left
     /// it: the projection Spaces keeps and reads, written here directly so a
     /// scenario is about the rule and not about the broker.
     /// </summary>

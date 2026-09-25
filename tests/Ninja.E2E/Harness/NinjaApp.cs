@@ -141,7 +141,7 @@ public sealed class NinjaApp : IAsyncLifetime
                         last = ex.Message;
                         return false;
                     }
-                }, $"BFF routing at {BffBaseAddress} to catalog-api and branch-api", ct, TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(1));
+                }, $"BFF routing at {BffBaseAddress} to catalog-api and tenant-api", ct, TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(1));
             }
             catch (TimeoutException ex)
             {

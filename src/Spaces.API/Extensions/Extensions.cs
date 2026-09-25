@@ -62,7 +62,7 @@ public static class Extensions
         builder.Services.AddHostedService<ReservationExpiryService>();
 
         builder.AddRabbitMqEventBus("eventbus")
-            // Branch.API's flags, projected locally: a branch with reservations
+            // Tenant.API's flags, projected locally: a branch with reservations
             // paused refuses customer reservations without a call across services
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             // The café's switches, projected locally: a place is only given a rate or opened to

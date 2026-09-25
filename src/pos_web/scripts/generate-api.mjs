@@ -12,7 +12,7 @@ const services = [
   ['spaces', '../Spaces.API/Spaces.API.json'],
   ['ordering', '../Ordering.API/Ordering.API.json'],
   ['catalog', '../Catalog.API/Catalog.API.json'],
-  ['branch', '../Branch.API/Branch.API.json'],
+  ['tenant', '../Tenant.API/Tenant.API.json'],
   // Read-only on the till: a customer's points and tab balance on their card
   ['loyalty', '../Loyalty.API/Loyalty.API.json'],
   ['accounts', '../Accounts.API/Accounts.API.json'],

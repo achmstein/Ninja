@@ -74,7 +74,7 @@ internal static class Extensions
         eventBus.AddSubscription<OrderStockConfirmedIntegrationEvent, OrderStockConfirmedIntegrationEventHandler>();
         eventBus.AddSubscription<OrderStockRejectedIntegrationEvent, OrderStockRejectedIntegrationEventHandler>();
 
-        // Branch.API's flags, projected locally so a paused branch refuses
+        // Tenant.API's flags, projected locally so a paused branch refuses
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
 

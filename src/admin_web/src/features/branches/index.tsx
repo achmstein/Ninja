@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChefHat, MapPin, Pencil, Phone, Plus, Receipt } from 'lucide-react'
-import { type BranchResponse } from '@/api/branch'
+import { type BranchResponse } from '@/api/tenant'
 import {
   getAllBranchesOptions,
   updateBranchSettingsMutation,
-} from '@/api/branch/@tanstack/react-query.gen'
+} from '@/api/tenant/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

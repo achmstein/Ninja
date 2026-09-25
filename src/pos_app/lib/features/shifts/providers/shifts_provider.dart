@@ -64,7 +64,7 @@ final closedShiftsProvider = FutureProvider.autoDispose.family<List<ShiftView>, 
 });
 
 /// The branch's two customer-facing switches, taking orders and taking
-/// reservations, read off the branch list and flipped through Branch.API.
+/// reservations, read off the branch list and flipped through Tenant.API.
 /// The shift drives them automatically (open → both on, close → both off);
 /// flipping one by hand is the mid-day pause — the kitchen is swamped, a
 /// room is being cleaned. Ordering and Spaces enforce them server-side for

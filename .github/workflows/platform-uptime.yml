@@ -52,7 +52,7 @@ jobs:
           # The admin console must not be reachable from a runner
           probe "https://auth.$PLATFORM_DOMAIN/admin/master/console/" 403
           for host in $(echo "$PROBE_HOSTS" | tr ',' ' '); do
-            for svc in catalog ordering branch; do
+            for svc in catalog ordering tenant; do
               probe "https://$host/health/$svc"
             done
           done

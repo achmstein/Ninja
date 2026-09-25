@@ -20,14 +20,14 @@ public sealed class TenantContext(NinjaApiClient api, IMemoryCache cache)
 
     public async Task<ApiResult<TenantSnapshot>> LoadAsync(CancellationToken ct)
     {
-        var branches = await api.GetAsync<List<BranchResponse>>("branch-api", "/api/branches/all", null, ct);
+        var branches = await api.GetAsync<List<BranchResponse>>("tenant-api", "/api/branches/all", null, ct);
         if (!branches.IsOk)
             return ApiResult<TenantSnapshot>.Fail(branches.Error!, branches.Status);
 
         var locale = await cache.GetOrCreateAsync(LocaleKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            var tenant = await api.GetAsync<TenantResponse>("branch-api", "/api/tenant", null, ct);
+            var tenant = await api.GetAsync<TenantResponse>("tenant-api", "/api/tenant", null, ct);
             if (!tenant.IsOk || tenant.Value?.Locale is null)
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30);

@@ -194,7 +194,7 @@ public record BrandFeatures(bool Reservations, bool TimeBilling, bool Loyalty, b
 /// <param name="ArabicStyle">standard or egyptian; null leaves the stack's.</param>
 public record BrandLocale(string Country, string Currency, string TimeZone, string Language, string? ArabicStyle = null);
 
-/// <summary>The stack's brand (Branch.API's tenant response) as the control app reads it, with every image URL made absolute on the customer host.</summary>
+/// <summary>The stack's brand (Tenant.API's tenant response) as the control app reads it, with every image URL made absolute on the customer host.</summary>
 public record BrandDto(
     BrandText Name,
     string? PrimaryColor,

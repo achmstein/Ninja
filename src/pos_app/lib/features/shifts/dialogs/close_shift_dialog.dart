@@ -59,7 +59,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
       final z = await ref.read(shiftsRepositoryProvider).closeShift(widget.shift.id, amount, requestId: _requestId);
       ref.read(currentShiftProvider.notifier).refresh();
       ref.invalidate(closedShiftsProvider);
-      // Closing the shift turned the branch's flags off (through Branch.API)
+      // Closing the shift turned the branch's flags off (through Tenant.API)
       ref.read(branchProvider.notifier).refresh();
       if (!mounted) return;
       setState(() => _result = z);

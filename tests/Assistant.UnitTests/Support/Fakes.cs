@@ -109,13 +109,13 @@ public sealed class Bench
     /// <summary>Two branches: Nasr City (day starts 17:00) and Maadi (midnight), Cairo, pounds.</summary>
     public Bench WithTenant()
     {
-        Handler.OnJson("GET", "branch-api/api/branches/all", _ => new object[]
+        Handler.OnJson("GET", "tenant-api/api/branches/all", _ => new object[]
         {
             new { id = 1, name = new { en = "Nasr City", ar = "مدينة نصر" }, isActive = true, displayOrder = 1, dayStartTime = "17:00", dayEndTime = "05:00", isOrderingEnabled = true, isReservationsEnabled = true },
             new { id = 2, name = new { en = "Maadi", ar = "المعادي" }, isActive = true, displayOrder = 2, dayStartTime = "00:00", dayEndTime = "23:59", isOrderingEnabled = false, isReservationsEnabled = true },
             new { id = 3, name = new { en = "Old Zamalek", ar = "الزمالك" }, isActive = false, displayOrder = 3, dayStartTime = "00:00", dayEndTime = "23:59", isOrderingEnabled = false, isReservationsEnabled = false },
         });
-        Handler.OnJson("GET", "branch-api/api/tenant", _ => new
+        Handler.OnJson("GET", "tenant-api/api/tenant", _ => new
         {
             name = new { en = "Chillax", ar = "تشيلاكس" },
             locale = new { country = "EG", currency = "EGP", timeZone = "Africa/Cairo", language = "ar" },

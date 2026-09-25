@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { parseDay, presetWindow, type DayWindow } from '@/lib/business-day'
 import { type RangeKey, type RangeSearch } from '@/lib/search-schemas'
@@ -14,7 +14,7 @@ type Options = {
  * The business-day window behind a report or history page, resolved from
  * the URL's preset (or custom days) and the active branch's DayStart/DayEnd.
  * The APIs only take UTC bounds; the SPA owns the calendar, so no service
- * ever has to ask Branch.API what a day is.
+ * ever has to ask Tenant.API what a day is.
  */
 export function useTillWindow(
   search: RangeSearch,

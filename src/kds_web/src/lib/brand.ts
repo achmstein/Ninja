@@ -1,8 +1,8 @@
 import { useCafeTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
-import { type TenantFeatures, type TenantResponse } from '@/api/branch'
-import { getTenantOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
+import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme } from './brand-theme'
 

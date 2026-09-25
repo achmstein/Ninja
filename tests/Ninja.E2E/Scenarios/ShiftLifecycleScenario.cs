@@ -7,7 +7,7 @@ namespace Ninja.E2E.Scenarios;
 
 /// <summary>
 /// A cashier's custody of the drawer from open to close: the branch opens
-/// for business with the shift (Branch.API), the cashier is marked present
+/// for business with the shift (Tenant.API), the cashier is marked present
 /// (Payroll), the drawer arithmetic follows every cash movement, and the
 /// Z report freezes the verdict when the branch closes again.
 /// </summary>
@@ -34,7 +34,7 @@ public sealed class ShiftLifecycleScenario(NinjaApp app, DaySetup day) : Scenari
         Assert.Equal(500m, shift.ExpectedInDrawer);
         Assert.Empty(shift.Movements);
 
-        await ExpectAsync("Branch.API turned the trading flags on", async () =>
+        await ExpectAsync("Tenant.API turned the trading flags on", async () =>
         {
             var branch = (await Cashier.BranchesAsync(Ct)).Single(b => b.Id == 1);
             Assert.True(branch.IsOrderingEnabled);
@@ -133,7 +133,7 @@ public sealed class ShiftLifecycleScenario(NinjaApp app, DaySetup day) : Scenari
         Assert.Equal(z.ExpectedCash, stored.ExpectedCash);
         Assert.Equal(z.OverShort, stored.OverShort);
 
-        await ExpectAsync("Branch.API turned the trading flags off", async () =>
+        await ExpectAsync("Tenant.API turned the trading flags off", async () =>
         {
             var branch = (await Cashier.BranchesAsync(Ct)).Single(b => b.Id == 1);
             Assert.False(branch.IsOrderingEnabled);

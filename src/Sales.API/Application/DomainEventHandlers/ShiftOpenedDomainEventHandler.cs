@@ -5,7 +5,7 @@ namespace Ninja.Sales.API.Application.DomainEventHandlers;
 
 /// <summary>
 /// Opening the shift opens the branch: the event goes through the outbox so
-/// Branch.API flips the flags only once the shift row is committed.
+/// Tenant.API flips the flags only once the shift row is committed.
 /// </summary>
 public class ShiftOpenedDomainEventHandler(
     ISalesIntegrationEventService integrationEvents,

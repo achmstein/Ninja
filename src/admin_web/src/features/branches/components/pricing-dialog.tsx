@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Receipt } from 'lucide-react'
-import { type BranchResponse } from '@/api/branch'
+import { type BranchResponse } from '@/api/tenant'
 import { type PricingView } from '@/api/sales'
 import {
   getBranchPricingOptions,

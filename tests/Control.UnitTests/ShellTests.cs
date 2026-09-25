@@ -25,7 +25,7 @@ public sealed class ShellTests
     public void A_compose_progress_line_that_ended_in_error_stands_in_when_the_daemon_said_nothing()
         => Assert.AreEqual(
             "Container ninja-blue-catalog-api-1 Error dependency failed to start",
-            ShellException.Summarize(" Container ninja-blue-postgres-1 Started \n Container ninja-blue-catalog-api-1 Error dependency failed to start\n Container ninja-blue-branch-api-1 Waiting \n"));
+            ShellException.Summarize(" Container ninja-blue-postgres-1 Started \n Container ninja-blue-catalog-api-1 Error dependency failed to start\n Container ninja-blue-tenant-api-1 Waiting \n"));
 
     [TestMethod]
     public void An_error_line_loses_its_label_and_a_lone_line_comes_back_as_it_is()

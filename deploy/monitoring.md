@@ -9,7 +9,7 @@ Every API answers `/health` in every environment: one word, `Healthy`, `Degraded
 The BFF exposes each one on the public edge as `https://api.chillax.site/health/<service>`:
 
 ```
-catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts branch
+catalog ordering spaces sales inventory payroll finance identity loyalty notification accounts tenant
 ```
 
 Try one: `curl -i https://api.chillax.site/health/sales`.

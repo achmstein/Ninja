@@ -142,7 +142,7 @@ public sealed class WriteToolsTests
     public async Task Pausing_ordering_patches_the_branch_settings()
     {
         var bench = new Bench().WithTenant();
-        bench.Handler.OnJson("PATCH", "branch-api/api/branches/1/settings", _ => new { id = 1, name = new { en = "Nasr City" }, isActive = true, isOrderingEnabled = false, isReservationsEnabled = true });
+        bench.Handler.OnJson("PATCH", "tenant-api/api/branches/1/settings", _ => new { id = 1, name = new { en = "Nasr City" }, isActive = true, isOrderingEnabled = false, isReservationsEnabled = true });
         var tools = Tools(bench);
 
         var preview = Bench.JsonOf(await tools.PauseOnlineOrdering(true, "Nasr", "r2", false, CancellationToken.None));
@@ -151,7 +151,7 @@ public sealed class WriteToolsTests
         var done = Bench.JsonOf(await tools.PauseOnlineOrdering(true, "Nasr", "r2", true, CancellationToken.None));
         Assert.AreEqual("paused", done.GetProperty("onlineOrdering").GetString());
         var patch = bench.Handler.Requests.Single(r => r.Method == HttpMethod.Patch);
-        Assert.AreEqual("http://branch-api/api/branches/1/settings", patch.Url.ToString());
+        Assert.AreEqual("http://tenant-api/api/branches/1/settings", patch.Url.ToString());
         StringAssert.Contains(patch.Body, "\"isOrderingEnabled\":false");
     }
 }

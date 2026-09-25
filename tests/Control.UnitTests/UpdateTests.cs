@@ -22,8 +22,8 @@ public sealed class UpdateTests
     [TestMethod]
     public void A_service_on_another_image_than_its_tag_points_to_is_behind()
     {
-        var running = new Dictionary<string, string> { ["catalog"] = "sha256:old", ["branch"] = "sha256:same" };
-        var newest = new Dictionary<string, string[]> { ["catalog"] = ["sha256:new"], ["branch"] = ["sha256:same"], ["sales"] = ["sha256:x"] };
+        var running = new Dictionary<string, string> { ["catalog"] = "sha256:old", ["tenant"] = "sha256:same" };
+        var newest = new Dictionary<string, string[]> { ["catalog"] = ["sha256:new"], ["tenant"] = ["sha256:same"], ["sales"] = ["sha256:x"] };
 
         var update = UpdateMath.Assess("latest", running, s => newest.GetValueOrDefault(s), null);
 
@@ -115,13 +115,13 @@ public sealed class UpdateTests
     // blue's catalog runs an older image than the box's catalog:local; red runs what the box has; the gateway is not ours to version
     private const string Inspect =
         "ninja-blue\tblue-catalog-api\tsha256:catalog-old\n" +
-        "ninja-blue\tblue-branch-api\tsha256:branch-1\n" +
+        "ninja-blue\tblue-tenant-api\tsha256:tenant-1\n" +
         "ninja-blue\tblue-gateway\tsha256:yarp\n" +
         "ninja-red\tred-catalog-api\tsha256:catalog-1\n";
 
     private const string Images =
         "ninja-catalog:local\tsha256:catalog-1\n" +
-        "ninja-branch:local\tsha256:branch-1\n";
+        "ninja-tenant:local\tsha256:tenant-1\n";
 
     [TestMethod]
     public async Task Images_built_on_the_box_are_compared_to_what_the_containers_run()
@@ -146,19 +146,19 @@ public sealed class UpdateTests
     {
         var registryImages =
             "ghcr.io/x/ninja-catalog:latest\tsha256:catalog-1\n" +
-            "ghcr.io/x/ninja-branch:latest\tsha256:branch-1\n";
+            "ghcr.io/x/ninja-tenant:latest\tsha256:tenant-1\n";
         var (cache, registry, _) = Cache(new PlatformOptions { PullImages = true, ImageRegistry = "ghcr.io/x/ninja" }, "latest", Inspect, registryImages);
         foreach (var service in TenantNaming.Services)
-            registry.Images[service] = new() { ["latest"] = service == "branch" ? "sha256:branch-2" : "sha256:catalog-1", ["v2026.9.21"] = "sha256:r" };
+            registry.Images[service] = new() { ["latest"] = service == "tenant" ? "sha256:tenant-2" : "sha256:catalog-1", ["v2026.9.21"] = "sha256:r" };
         // One service missed the older release build: it is not a release of the platform
         registry.Images["sales"]["v2026.9.1"] = "sha256:s";
         registry.Images["catalog"]["v2026.9.1"] = "sha256:s";
 
         var snapshot = await cache.RefreshAsync(CancellationToken.None);
 
-        // red's catalog matches the registry; blue's catalog is old and its branch is behind the registry although it matches the box
+        // red's catalog matches the registry; blue's catalog is old and its tenant service is behind the registry although it matches the box
         Assert.IsFalse(snapshot.Tenants["red"].Behind);
-        CollectionAssert.AreEqual(new[] { "catalog", "branch" }, snapshot.Tenants["blue"].Services.ToArray());
+        CollectionAssert.AreEqual(new[] { "catalog", "tenant" }, snapshot.Tenants["blue"].Services.ToArray());
         CollectionAssert.AreEqual(new[] { "v2026.9.21" }, snapshot.Releases.ToArray());
         Assert.AreEqual("v2026.9.21", snapshot.NewestRelease);
     }

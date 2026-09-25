@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type BranchResponse } from '@/api/branch'
+import { type BranchResponse } from '@/api/tenant'
 import {
   createBranchMutation,
   updateBranchMutation,
-} from '@/api/branch/@tanstack/react-query.gen'
+} from '@/api/tenant/@tanstack/react-query.gen'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

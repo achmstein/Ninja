@@ -136,7 +136,7 @@ public sealed class DryRunStackProxy(IOptions<PlatformOptions> options) : IStack
             return Json(brand);
         }
 
-        // What Branch.API does with the plan: the entitlements are kept and the switches clamped to them
+        // What Tenant.API does with the plan: the entitlements are kept and the switches clamped to them
         if (path == "/api/tenant/entitlements" && method == HttpMethod.Put && content is not null)
         {
             var brand = BrandOf(tenant);

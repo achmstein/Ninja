@@ -271,7 +271,7 @@ public static partial class OrdersApi
 
         var branchId = httpContext.GetRequiredBranchId();
 
-        // The branch's pause switch (Branch.API's IsOrderingEnabled, projected
+        // The branch's pause switch (Tenant.API's IsOrderingEnabled, projected
         // here): off between shifts and whenever the till pauses orders.
         // Customer and guest orders stop; POS orders come through
         // CreatePosOrderAsync and are never gated.

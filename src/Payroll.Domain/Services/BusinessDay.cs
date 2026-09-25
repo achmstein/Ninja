@@ -4,7 +4,7 @@ namespace Ninja.Payroll.Domain.Services;
 /// <summary>
 /// The café's day, as attendance and wages count it: a shift that opens in
 /// the evening and pays a wage at 02:00 is still yesterday's. The branch's
-/// own day window lives in Branch.API; until it travels on an event this
+/// own day window lives in Tenant.API; until it travels on an event this
 /// uses the tenant's local time (<see cref="TenantClock"/>) with an
 /// early-morning cutoff, which matches how the café runs.
 /// </summary>

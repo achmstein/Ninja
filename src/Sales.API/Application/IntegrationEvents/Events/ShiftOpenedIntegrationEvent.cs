@@ -3,7 +3,7 @@ using Ninja.EventBus.Events;
 namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
-/// A drawer shift was opened at a branch. Branch.API takes this as "open for
+/// A drawer shift was opened at a branch. Tenant.API takes this as "open for
 /// business" and switches the branch's ordering and reservation flags on.
 /// </summary>
 /// <remarks>

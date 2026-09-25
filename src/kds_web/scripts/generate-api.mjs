@@ -10,7 +10,7 @@ import { createClient } from '@hey-api/openapi-ts'
 
 const services = [
   ['ordering', '../Ordering.API/Ordering.API.json'],
-  ['branch', '../Branch.API/Branch.API.json'],
+  ['tenant', '../Tenant.API/Tenant.API.json'],
 ]
 
 for (const [name, input] of services) {

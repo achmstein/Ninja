@@ -156,7 +156,7 @@ public sealed class WriteTools(TenantContext tenant, NinjaApiClient api, AuditLo
         if (!confirm)
             return ToolResults.Ok(new { preview, requestId, nextStep = NextStep });
 
-        var result = await api.SendAsync<BranchResponse>(HttpMethod.Patch, "branch-api", $"/api/branches/{target.Id}/settings", target.Id,
+        var result = await api.SendAsync<BranchResponse>(HttpMethod.Patch, "tenant-api", $"/api/branches/{target.Id}/settings", target.Id,
             new UpdateBranchSettingsRequest(!paused, null, null), null, ct);
         audit.Write(User, "pause_online_ordering", new { paused, branch = target.Id, requestId },
             result.IsOk ? $"ordering={(result.Value!.IsOrderingEnabled ? "on" : "paused")}" : result.Error!);

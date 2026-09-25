@@ -21,7 +21,7 @@
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.RabbitMQ.Client" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.StackExchange.Redis" Version="$(AspireVersion)" />
-    <!-- The tenant's logo and the PWA icons cut from it (Branch.API) -->
+    <!-- The tenant's logo and the PWA icons cut from it (Tenant.API) -->
     <PackageVersion Include="SkiaSharp" Version="3.119.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" />
     <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.0">

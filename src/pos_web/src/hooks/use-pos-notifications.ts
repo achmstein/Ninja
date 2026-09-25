@@ -148,7 +148,7 @@ export function usePosNotifications() {
     const invalidateBranches = () => refresh('getBranches')
 
     // Opening or closing the shift (and the header pause toggles) flip the
-    // branch's taking-orders / taking-reservations flags in Branch.API; the
+    // branch's taking-orders / taking-reservations flags in Tenant.API; the
     // header toggles read them off the branch list
     connection.on('BranchSettingsChanged', () => {
       invalidateBranches()

@@ -68,7 +68,7 @@ public record TenderTotal(string Tender, decimal Amount, int Count);
 /// <summary>
 /// Settled sales over a caller-chosen window — the business-day report when
 /// the caller passes the branch's day window (the SPA fetches the window from
-/// Branch.API; Sales never asks another service, per D5b).
+/// Tenant.API; Sales never asks another service, per D5b).
 /// </summary>
 public record RangeReport
 {

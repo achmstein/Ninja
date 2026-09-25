@@ -42,6 +42,18 @@ public sealed class TenantNamingTests
     }
 
     [TestMethod]
+    public void The_cafes_own_service_is_tenant_with_its_own_database_and_queue()
+    {
+        CollectionAssert.Contains(TenantNaming.Services, "tenant");
+        CollectionAssert.DoesNotContain(TenantNaming.Services, "branch");
+        CollectionAssert.Contains(TenantNaming.Databases, "tenantdb");
+        CollectionAssert.DoesNotContain(TenantNaming.Databases, "branchdb");
+        Assert.AreEqual("blue-tenant-api", TenantNaming.Service("blue", "tenant"));
+        Assert.AreEqual("Tenant", TenantNaming.Queue("tenant"), "Tenant.API's EventBus:SubscriptionClientName");
+        Assert.AreEqual("blue_tenantdb", TenantNaming.Database("blue", "tenantdb"));
+    }
+
+    [TestMethod]
     public void The_role_and_the_broker_user_are_the_slug_with_a_suffix_no_slug_can_carry()
     {
         Assert.AreEqual("blue-bottle_app", TenantNaming.DbRole("blue-bottle"));

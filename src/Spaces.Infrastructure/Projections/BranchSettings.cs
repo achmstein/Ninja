@@ -3,8 +3,8 @@ namespace Ninja.Spaces.Infrastructure.Projections;
 
 /// <summary>
 /// Spaces' own copy of a branch's operational flags, kept up to date from
-/// Branch.API's BranchSettingsChangedIntegrationEvent — Spaces never calls
-/// Branch.API. No row means the branch has never been heard of and is treated
+/// Tenant.API's BranchSettingsChangedIntegrationEvent — Spaces never calls
+/// Tenant.API. No row means the branch has never been heard of and is treated
 /// as open (fail-open), so a fresh deployment never refuses reservations for
 /// want of an event.
 /// </summary>

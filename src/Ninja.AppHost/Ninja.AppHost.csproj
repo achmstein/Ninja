@@ -30,7 +30,7 @@
     <ProjectReference Include="..\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Loyalty.API\Loyalty.API.csproj" />
     <ProjectReference Include="..\Notification.API\Notification.API.csproj" />
-    <ProjectReference Include="..\Branch.API\Branch.API.csproj" />
+    <ProjectReference Include="..\Tenant.API\Tenant.API.csproj" />
     <ProjectReference Include="..\Assistant.API\Assistant.API.csproj" />
     <ProjectReference Include="..\Control.API\Control.API.csproj" />
   </ItemGroup>

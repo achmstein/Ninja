@@ -156,7 +156,7 @@ The tenant's Subscription tab sets both. What a café is entitled to is
 enforced twice: its gateway answers `402 {"type":"module-off"}` on a
 module's routes (`/api/inventory/*`, `/api/finance/*`, `/api/payroll/*`,
 `/api/loyalty/*`, `/api/accounts/*`, and for Spaces `/api/stays/*` with the
-room-only place routes), and its Branch.API clamps the owner's feature
+room-only place routes), and its Tenant.API clamps the owner's feature
 switches so an unentitled module can never be switched on; the admin app
 shows those switches locked with "not in your plan". Changing the
 subscription re-stamps the stack: the gateway recreates on its new routes,

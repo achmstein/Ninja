@@ -132,7 +132,7 @@ internal static class Extensions
         IResourceBuilder<ProjectResource> loyaltyApi,
         IResourceBuilder<ProjectResource> notificationApi,
         IResourceBuilder<ProjectResource> accountsApi,
-        IResourceBuilder<ProjectResource> branchApi,
+        IResourceBuilder<ProjectResource> tenantApi,
         IResourceBuilder<ProjectResource> assistantApi,
         IResourceBuilder<TKeycloak> keycloak) where TKeycloak : IResourceWithEndpoints
     {
@@ -212,11 +212,11 @@ internal static class Extensions
             yarp.AddRoute("/api/accounts/{*any}", accountsCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
-            // Branch routes
-            var branchCluster = yarp.AddCluster(branchApi);
-            yarp.AddRoute("/api/branches/{*any}", branchCluster);
+            // The café's own service: its branches, and the brand, settings and uploads
+            var tenantCluster = yarp.AddCluster(tenantApi);
+            yarp.AddRoute("/api/branches/{*any}", tenantCluster);
             // The brand, icons and manifest: read by <link> and <img> tags, so no api-version
-            yarp.AddRoute("/api/tenant/{*any}", branchCluster)
+            yarp.AddRoute("/api/tenant/{*any}", tenantCluster)
                 .WithTransformXForwarded();
 
             // The owner's MCP server, and the OAuth document (RFC 9728) a chat
@@ -241,7 +241,7 @@ internal static class Extensions
                 ("catalog", catalogCluster), ("ordering", orderingCluster), ("spaces", spacesCluster),
                 ("sales", salesCluster), ("inventory", inventoryCluster), ("payroll", payrollCluster),
                 ("finance", financeCluster), ("identity", identityCluster), ("loyalty", loyaltyCluster),
-                ("notification", notificationCluster), ("accounts", accountsCluster), ("branch", branchCluster),
+                ("notification", notificationCluster), ("accounts", accountsCluster), ("tenant", tenantCluster),
                 ("assistant", assistantCluster),
             })
             {

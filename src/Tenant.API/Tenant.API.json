@@ -1,0 +1,1346 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Tenant.API | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/branches": {
+      "get": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "List active branches",
+        "operationId": "GetBranches",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "Create a branch",
+        "operationId": "CreateBranch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/branches/all": {
+      "get": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "List all branches including inactive",
+        "operationId": "GetAllBranches",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/branches/{id}": {
+      "put": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "Update a branch",
+        "operationId": "UpdateBranch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The branch ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/branches/{branchId}/settings": {
+      "patch": {
+        "tags": [
+          "Branches"
+        ],
+        "summary": "Update branch operational settings (ordering, reservations)",
+        "operationId": "UpdateBranchSettings",
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "path",
+            "description": "The branch ID",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBranchSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tenant": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The tenant's name, color, logo URLs and feature switches",
+        "operationId": "GetTenant",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Change the name, the brand color or the feature switches (within what the plan allows)",
+        "operationId": "UpdateTenant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tenant/entitlements": {
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The modules the café's plan allows; a switch outside them goes off. The control plane only",
+        "operationId": "SetTenantEntitlements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantFeatures"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tenant/images/{slot}": {
+      "put": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Replace one image: logo, logo-dark, wordmark-en, wordmark-en-dark, wordmark-ar or wordmark-ar-dark; the icons are cut from the logo",
+        "operationId": "UploadTenantImage",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "Remove one image; the surfaces fall back (dark to light, Arabic to English, the wordmark to the mark and the name)",
+        "operationId": "DeleteTenantImage",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "One image as PNG, transparent margins trimmed",
+        "operationId": "GetTenantImage",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "description": "Cache key; any value makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/tenant/icons/{name}": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "One of icon-192.png, icon-512.png, maskable-512.png, apple-touch-icon.png, favicon.png",
+        "operationId": "GetTenantIcon",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "description": "Cache key; any value makes the answer immutable",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "description": "The platform's own neutral icon, for the staff apps",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/tenant/manifest": {
+      "get": {
+        "tags": [
+          "Tenant"
+        ],
+        "summary": "The web app manifest for one surface, in the tenant's name",
+        "operationId": "GetTenantManifest",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "query",
+            "description": "client, admin, pos or kds",
+            "schema": {
+              "type": "string",
+              "default": "client"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "description": "en or ar",
+            "schema": {
+              "type": "string",
+              "default": "en"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BranchResponse": {
+        "required": [
+          "id",
+          "name",
+          "address",
+          "phone",
+          "taxNumber",
+          "receiptFooter",
+          "isActive",
+          "displayOrder",
+          "dayStartTime",
+          "dayEndTime",
+          "isOrderingEnabled",
+          "isReservationsEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "address": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "displayOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "dayStartTime": {
+            "type": "string"
+          },
+          "dayEndTime": {
+            "type": "string"
+          },
+          "isOrderingEnabled": {
+            "type": "boolean"
+          },
+          "isReservationsEnabled": {
+            "type": "boolean"
+          },
+          "requireSignInForTableOrders": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "CreateBranchRequest": {
+        "required": [
+          "name",
+          "address",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "address": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "dayStartTime": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dayEndTime": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isOrderingEnabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "isReservationsEnabled": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
+      "LocalizedText": {
+        "type": "object",
+        "properties": {
+          "en": {
+            "type": "string"
+          },
+          "ar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TenantAuth": {
+        "required": [
+          "authority"
+        ],
+        "type": "object",
+        "properties": {
+          "authority": {
+            "type": "string"
+          }
+        }
+      },
+      "TenantFeatures": {
+        "required": [
+          "reservations",
+          "timeBilling",
+          "loyalty",
+          "tabs",
+          "inventory",
+          "finance",
+          "payroll",
+          "kds"
+        ],
+        "type": "object",
+        "properties": {
+          "reservations": {
+            "type": "boolean"
+          },
+          "timeBilling": {
+            "type": "boolean"
+          },
+          "loyalty": {
+            "type": "boolean"
+          },
+          "tabs": {
+            "type": "boolean"
+          },
+          "inventory": {
+            "type": "boolean"
+          },
+          "finance": {
+            "type": "boolean"
+          },
+          "payroll": {
+            "type": "boolean"
+          },
+          "kds": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TenantIcons": {
+        "required": [
+          "icon192",
+          "icon512",
+          "maskable512",
+          "appleTouch",
+          "favicon"
+        ],
+        "type": "object",
+        "properties": {
+          "icon192": {
+            "type": "string"
+          },
+          "icon512": {
+            "type": "string"
+          },
+          "maskable512": {
+            "type": "string"
+          },
+          "appleTouch": {
+            "type": "string"
+          },
+          "favicon": {
+            "type": "string"
+          }
+        }
+      },
+      "TenantLocaleDto": {
+        "required": [
+          "country",
+          "currency",
+          "timeZone",
+          "language"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "arabicStyle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phonePattern": {
+            "type": "string",
+            "default": ""
+          },
+          "phonePlaceholder": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      },
+      "TenantResponse": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "auth",
+          "apiUrl",
+          "appsUrl",
+          "logoUrl",
+          "logoDarkUrl",
+          "wordmarks",
+          "theme",
+          "icons",
+          "features",
+          "entitlements",
+          "locale",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "auth": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantAuth"
+              }
+            ]
+          },
+          "apiUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appsUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoDarkUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "wordmarks": {
+            "$ref": "#/components/schemas/TenantWordmarks"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/TenantThemeDto"
+          },
+          "icons": {
+            "$ref": "#/components/schemas/TenantIcons"
+          },
+          "features": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "entitlements": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/TenantLocaleDto"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "businessType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestOrdersAnywhere": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "TenantThemeDarkDto": {
+        "required": [
+          "primary",
+          "accent",
+          "surface"
+        ],
+        "type": "object",
+        "properties": {
+          "primary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "surface": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TenantThemeDto": {
+        "required": [
+          "accent",
+          "surface",
+          "radius",
+          "fontLatin",
+          "fontArabic",
+          "dark"
+        ],
+        "type": "object",
+        "properties": {
+          "accent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "surface": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "radius": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fontLatin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fontArabic": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantThemeDarkDto"
+              }
+            ]
+          },
+          "headerSize": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TenantWordmark": {
+        "required": [
+          "url",
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "TenantWordmarks": {
+        "required": [
+          "en",
+          "enDark",
+          "ar",
+          "arDark"
+        ],
+        "type": "object",
+        "properties": {
+          "en": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
+          },
+          "enDark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
+          },
+          "ar": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
+          },
+          "arDark": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantWordmark"
+              }
+            ]
+          }
+        }
+      },
+      "UpdateBranchRequest": {
+        "required": [
+          "name",
+          "address",
+          "phone",
+          "isActive",
+          "displayOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "address": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "displayOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "taxNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "receiptFooter": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            ]
+          },
+          "dayStartTime": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dayEndTime": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isOrderingEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isReservationsEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "requireSignInForTableOrders": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "UpdateBranchSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "isOrderingEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isReservationsEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "requireSignInForTableOrders": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "UpdateTenantRequest": {
+        "required": [
+          "name",
+          "primaryColor",
+          "customerUrl",
+          "features"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "features": {
+            "$ref": "#/components/schemas/TenantFeatures"
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantThemeDto"
+              }
+            ]
+          },
+          "locale": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TenantLocaleDto"
+              }
+            ]
+          },
+          "businessType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guestOrdersAnywhere": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Branches"
+    },
+    {
+      "name": "Tenant"
+    }
+  ]
+}

@@ -14,7 +14,7 @@ namespace Ninja.Control.AcceptanceTests;
 public sealed class PlanShapeAcceptance : AcceptanceTest
 {
     private static readonly TimeSpan Patience = TimeSpan.FromMinutes(10);
-    private static readonly string[] Always = ["branch", "catalog", "gateway", "identity", "notification", "ordering", "sales", "spaces"];
+    private static readonly string[] Always = ["catalog", "gateway", "identity", "notification", "ordering", "sales", "spaces", "tenant"];
     private static readonly string[] StarterServices = [.. Always, "accounts", "loyalty"];
     private static readonly string[] ProServices = [.. StarterServices, "finance", "inventory", "payroll"];
 

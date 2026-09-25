@@ -50,11 +50,11 @@ public sealed class SubscriptionTests
     }
 
     [TestMethod]
-    public void The_features_object_spells_the_switches_the_way_branch_api_does()
+    public void The_features_object_spells_the_switches_the_way_tenant_api_does()
     {
         var features = PlanCatalog.ToFeatures(PlanCatalog.Entitlements(TenantPlan.Starter, [], TenantKind.Customer));
         Assert.IsTrue(features["reservations"]!.GetValue<bool>());
-        Assert.IsTrue(features["timeBilling"]!.GetValue<bool>(), "camelCase, the way System.Text.Json spells Branch.API's record");
+        Assert.IsTrue(features["timeBilling"]!.GetValue<bool>(), "camelCase, the way System.Text.Json spells Tenant.API's record");
         Assert.IsFalse(features["inventory"]!.GetValue<bool>());
         CollectionAssert.AreEquivalent(new[] { "reservations", "timeBilling", "loyalty", "tabs", "inventory", "finance", "payroll", "kds" }, features.Select(f => f.Key).ToArray());
     }
@@ -65,10 +65,10 @@ public sealed class SubscriptionTests
         var tenant = Customer(TenantPlan.Starter);
         var yaml = Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform);
 
-        // Inventory is not in Starter: same path, Branch.API's page, the module named, first in line
+        // Inventory is not in Starter: same path, Tenant.API's page, the module named, first in line
         var inventory = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/inventory/\{\*any\}""").Groups[1].Value;
         Assert.IsFalse(string.IsNullOrEmpty(inventory), "the inventory path is still routed");
-        Assert.Contains($"{inventory}__CLUSTERID: \"branch\"", yaml);
+        Assert.Contains($"{inventory}__CLUSTERID: \"tenant\"", yaml);
         Assert.Contains($"{inventory}__ORDER: \"-1\"", yaml);
         Assert.Contains($"{inventory}__TRANSFORMS__0__PathSet: \"/api/tenant/module-off\"", yaml);
         Assert.Contains($"{inventory}__TRANSFORMS__1__QueryValueParameter: \"module\"", yaml);
@@ -118,10 +118,10 @@ public sealed class SubscriptionTests
         Assert.Contains("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml);
         Assert.Contains("__MATCH__PATH: \"/api/places/available\"", yaml);
         var reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
-        Assert.Contains($"{reservations}__CLUSTERID: \"branch\"", yaml);
+        Assert.Contains($"{reservations}__CLUSTERID: \"tenant\"", yaml);
         Assert.Contains($"{reservations}__TRANSFORMS__1__Set: \"reservations\"", yaml);
         var stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
-        Assert.Contains($"{stays}__CLUSTERID: \"branch\"", yaml);
+        Assert.Contains($"{stays}__CLUSTERID: \"tenant\"", yaml);
         Assert.Contains($"{stays}__TRANSFORMS__1__Set: \"timeBilling\"", yaml);
         var places = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/places/\{\*any\}""").Groups[1].Value;
         Assert.Contains($"{places}__CLUSTERID: \"spaces\"", yaml, "tables and stations live under /api/places");
@@ -136,7 +136,7 @@ public sealed class SubscriptionTests
         Assert.Contains($"{reservations}__CLUSTERID: \"spaces\"", yaml, "bookings go through");
         Assert.DoesNotContain("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml, "the reservable switch is not blocked");
         var stays = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/stays/\{\*any\}""").Groups[1].Value;
-        Assert.Contains($"{stays}__CLUSTERID: \"branch\"", yaml, "the clock is not in the plan");
+        Assert.Contains($"{stays}__CLUSTERID: \"tenant\"", yaml, "the clock is not in the plan");
         Assert.Contains("__MATCH__PATH: \"/api/places/{id}/tariff\"", yaml);
 
         var gaming = Customer(TenantPlan.Free, Module.TimeBilling);
@@ -145,7 +145,7 @@ public sealed class SubscriptionTests
         Assert.Contains($"{stays}__CLUSTERID: \"spaces\"", yaml, "the clock goes through");
         Assert.DoesNotContain("__MATCH__PATH: \"/api/places/{id}/tariff\"", yaml);
         reservations = Regex.Match(yaml, @"REVERSEPROXY__ROUTES__(route\d+)__MATCH__PATH: ""/api/reservations/\{\*any\}""").Groups[1].Value;
-        Assert.Contains($"{reservations}__CLUSTERID: \"branch\"", yaml, "bookings are not in the plan");
+        Assert.Contains($"{reservations}__CLUSTERID: \"tenant\"", yaml, "bookings are not in the plan");
         Assert.Contains("__MATCH__PATH: \"/api/places/{id}/reservable\"", yaml);
     }
 

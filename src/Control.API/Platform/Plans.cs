@@ -3,7 +3,7 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>What a café can be sold: the eight switches Branch.API keeps, as modules.</summary>
+/// <summary>What a café can be sold: the eight switches Tenant.API keeps, as modules.</summary>
 public enum Module
 {
     /// <summary>Booking a place ahead or holding it on the way: any place the owner opens to it, with or without a clock.</summary>
@@ -104,7 +104,7 @@ public static class PlanCatalog
     public static Module[] NormalizeAddons(TenantPlan plan, IEnumerable<Module> addons)
         => addons.Where(a => !Included(plan).Contains(a)).Distinct().OrderBy(a => a).ToArray();
 
-    /// <summary>{ reservations, timeBilling, loyalty, … } as Branch.API's TenantFeatures spells them.</summary>
+    /// <summary>{ reservations, timeBilling, loyalty, … } as Tenant.API's TenantFeatures spells them.</summary>
     public static JsonObject ToFeatures(IReadOnlySet<Module> entitled)
     {
         var o = new JsonObject();

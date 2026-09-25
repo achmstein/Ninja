@@ -13,7 +13,7 @@ namespace Ninja.Control.API.Platform;
 /// </summary>
 public static class StackSettings
 {
-    /// <summary>The fields Branch.API's PUT /api/tenant reads; the rest of its answer is its own.</summary>
+    /// <summary>The fields Tenant.API's PUT /api/tenant reads; the rest of its answer is its own.</summary>
     private static readonly string[] Writable = ["name", "primaryColor", "customerUrl", "features", "theme", "locale"];
 
     /// <summary>The brand the stack would keep, with the record's settings on it.</summary>

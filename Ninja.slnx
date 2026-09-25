@@ -8,7 +8,7 @@
       <Deploy />
     </Project>
     <Project Path="src/Assistant.API/Assistant.API.csproj" />
-    <Project Path="src/Branch.API/Branch.API.csproj" />
+    <Project Path="src/Tenant.API/Tenant.API.csproj" />
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
     <Project Path="src/Control.API/Control.API.csproj" />
     <Project Path="src/Ninja.AI/Ninja.AI.csproj" />
@@ -66,7 +66,7 @@
     <Project Path="tests/Ordering.FunctionalTests/Ordering.FunctionalTests.csproj" />
     <Project Path="tests/Accounts.UnitTests/Accounts.UnitTests.csproj" />
     <Project Path="tests/Assistant.UnitTests/Assistant.UnitTests.csproj" />
-    <Project Path="tests/Branch.UnitTests/Branch.UnitTests.csproj" />
+    <Project Path="tests/Tenant.UnitTests/Tenant.UnitTests.csproj" />
     <Project Path="tests/Control.UnitTests/Control.UnitTests.csproj" />
     <Project Path="tests/Control.FunctionalTests/Control.FunctionalTests.csproj" />
     <Project Path="tests/Control.AcceptanceTests/Control.AcceptanceTests.csproj" />
@@ -75,7 +75,7 @@
     <Project Path="tests/Loyalty.FunctionalTests/Loyalty.FunctionalTests.csproj" />
     <Project Path="tests/Notification.FunctionalTests/Notification.FunctionalTests.csproj" />
     <Project Path="tests/Notification.UnitTests/Notification.UnitTests.csproj" />
-    <Project Path="tests/Branch.FunctionalTests/Branch.FunctionalTests.csproj" />
+    <Project Path="tests/Tenant.FunctionalTests/Tenant.FunctionalTests.csproj" />
     <Project Path="tests/Spaces.FunctionalTests/Spaces.FunctionalTests.csproj" />
     <Project Path="tests/Sales.FunctionalTests/Sales.FunctionalTests.csproj" />
     <Project Path="tests/Inventory.FunctionalTests/Inventory.FunctionalTests.csproj" />

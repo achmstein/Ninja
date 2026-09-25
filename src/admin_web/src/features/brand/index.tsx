@@ -2,12 +2,12 @@ import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, ImagePlus, Lock, X } from 'lucide-react'
 import { AxiosError } from 'axios'
-import { type TenantFeatures, type TenantThemeDto } from '@/api/branch'
+import { type TenantFeatures, type TenantThemeDto } from '@/api/tenant'
 import {
   deleteTenantImageMutation,
   updateTenantMutation,
   uploadTenantImageMutation,
-} from '@/api/branch/@tanstack/react-query.gen'
+} from '@/api/tenant/@tanstack/react-query.gen'
 import { brandQueryKey, defaultCustomerOrigin, useBrand, useCustomerOrigin, useIsCloudKitchen, type Brand } from '@/lib/brand'
 import { imageOf, isMark, type ImageSlot } from '@/lib/brand-slots'
 import { ARABIC_FONTS, LATIN_FONTS, RADII } from '@/lib/brand-theme'

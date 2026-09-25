@@ -14,6 +14,7 @@ builder.AddForwardedHeaders();
 
 // Docker Compose deployment configuration
 builder.AddDockerComposeEnvironment("ninja")
+    // Tenant.API's uploads (the café's logo and icons); the volume was named when the service was Branch.API
     .ConfigureComposeFile(file => file.AddVolume(new Aspire.Hosting.Docker.Resources.ServiceNodes.Volume { Name = "branch-uploads" }));
 
 // Container registry prefix for GHCR images
@@ -44,7 +45,7 @@ var inventoryDb = postgres.AddDatabase("inventorydb");
 var payrollDb = postgres.AddDatabase("payrolldb");
 var financeDb = postgres.AddDatabase("financedb");
 var loyaltyDb = postgres.AddDatabase("loyaltydb");
-var branchDb = postgres.AddDatabase("branchdb");
+var tenantDb = postgres.AddDatabase("tenantdb");
 var controlDb = postgres.AddDatabase("controldb");
 var notificationDb = postgres.AddDatabase("notificationdb");
 
@@ -183,13 +184,13 @@ var accountsApi = builder.AddProject<Projects.Accounts_API>("accounts-api")
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax");
 
-var branchApi = builder.AddProject<Projects.Branch_API>("branch-api")
-    .WithReference(branchDb).WaitFor(branchDb)
+var tenantApi = builder.AddProject<Projects.Tenant_API>("tenant-api")
+    .WithReference(tenantDb).WaitFor(tenantDb)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(keycloak)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax")
-    // The tenant this stack is provisioned for; seeded once into branchdb.
+    // The tenant this stack is provisioned for; seeded once into tenantdb.
     // Dev is Chillax, tenant one; a stamp gets its own values from its env.
     .WithEnvironment("Tenant__Name__En", builder.Configuration["Tenant:Name:En"] ?? "Chillax")
     .WithEnvironment("Tenant__Name__Ar", builder.Configuration["Tenant:Name:Ar"] ?? "تشيلاكس")
@@ -207,7 +208,7 @@ var assistantSecret = builder.AddParameter("assistant-secret",
     secret: true);
 var assistantApi = builder.AddProject<Projects.Assistant_API>("assistant-api")
     .WithReference(keycloak)
-    .WithReference(branchApi).WithReference(salesApi).WithReference(financeApi).WithReference(inventoryApi)
+    .WithReference(tenantApi).WithReference(salesApi).WithReference(financeApi).WithReference(inventoryApi)
     .WithReference(orderingApi).WithReference(payrollApi).WithReference(catalogApi)
     .WithEnvironment("Identity__Url", keycloakRealmUrl)
     .WithEnvironment("Keycloak__Realm", "chillax")
@@ -230,7 +231,7 @@ else
 // stamped stack gets all of it from the control plane.
 var seedProfile = builder.Configuration["Seed:Profile"] ?? "chillax";
 foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
-                            financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi })
+                            financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, tenantApi })
 {
     api.WithEnvironment("Seed__Profile", seedProfile)
        .WithEnvironment("Tenant__Country", builder.Configuration["Tenant:Country"] ?? "EG")
@@ -282,14 +283,14 @@ if (isTestMode)
     // once the migration hosted service has migrated and seeded (Kestrel is
     // the last hosted service to start), so "healthy" means "ready to use".
     foreach (var api in new[] { catalogApi, spacesApi, salesApi, inventoryApi, payrollApi,
-                                financeApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi })
+                                financeApi, loyaltyApi, notificationApi, accountsApi, tenantApi, assistantApi })
     {
         api.WithHttpHealthCheck("/health", endpointName: "http");
     }
 
     // The dashboard is off under test; keep the OTLP exporters off too.
     foreach (var api in new[] { catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi,
-                                financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi })
+                                financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, tenantApi, assistantApi })
     {
         api.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "");
     }
@@ -329,9 +330,9 @@ notificationApi.PublishAsDockerComposeService((resource, service) =>
 });
 ConfigureApiService(accountsApi, "accounts");
 ConfigureApiService(assistantApi, "assistant");
-branchApi.PublishAsDockerComposeService((resource, service) =>
+tenantApi.PublishAsDockerComposeService((resource, service) =>
 {
-    service.Image = $"{ImageRegistry}-branch:latest";
+    service.Image = $"{ImageRegistry}-tenant:latest";
     service.Restart = "unless-stopped";
     // The tenant's logo and icons outlive the container
     service.AddVolume(new Aspire.Hosting.Docker.Resources.ServiceNodes.Volume
@@ -363,10 +364,10 @@ var mobileBff = builder.AddYarp("mobile-bff")
     })
     // Ensure Kestrel accepts HTTP/1.1 on port 5000
     .WithEnvironment("Kestrel__EndpointDefaults__Protocols", "Http1AndHttp2")
-    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, branchApi, assistantApi, keycloak);
+    .ConfigureMobileBffRoutes(catalogApi, orderingApi, spacesApi, salesApi, inventoryApi, payrollApi, financeApi, identityApi, loyaltyApi, notificationApi, accountsApi, tenantApi, assistantApi, keycloak);
 
 // The host a till on this machine connects to (adb reverse puts it on the tablet's localhost too)
-branchApi.WithEnvironment("Tenant__ApiUrl", mobileBff.GetEndpoint("http"));
+tenantApi.WithEnvironment("Tenant__ApiUrl", mobileBff.GetEndpoint("http"));
 
 // The MCP endpoint exactly as an owner types it into a connector: through the
 // BFF. The protected resource metadata names it and every token must carry it.

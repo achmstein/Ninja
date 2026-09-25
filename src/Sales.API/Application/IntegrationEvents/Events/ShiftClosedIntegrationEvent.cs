@@ -3,7 +3,7 @@ using Ninja.EventBus.Events;
 namespace Ninja.Sales.API.Application.IntegrationEvents.Events;
 
 /// <summary>
-/// The drawer shift was closed. Branch.API switches the branch's ordering and
+/// The drawer shift was closed. Tenant.API switches the branch's ordering and
 /// reservation flags off — the counterpart of <see cref="ShiftOpenedIntegrationEvent"/>
 /// — and Notification pushes the figures to the owner's devices as the day's
 /// digest. They are the Z report's: sales and bills, the tender split, the

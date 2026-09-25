@@ -11,14 +11,14 @@ public static partial class TenantNaming
     public static readonly string[] Databases =
     [
         "accountsdb", "catalogdb", "orderingdb", "spacesdb", "salesdb", "inventorydb",
-        "payrolldb", "financedb", "loyaltydb", "branchdb", "notificationdb",
+        "payrolldb", "financedb", "loyaltydb", "tenantdb", "notificationdb",
     ];
 
     /// <summary>Every service a stack can run, as image suffix → compose service suffix; PlanCatalog.Services says which a plan does.</summary>
     public static readonly string[] Services =
     [
         "catalog", "ordering", "spaces", "sales", "inventory", "payroll",
-        "finance", "identity", "loyalty", "notification", "accounts", "branch",
+        "finance", "identity", "loyalty", "notification", "accounts", "tenant",
         // The owner's MCP server: no database, no bus, every plan
         "assistant",
     ];
@@ -80,6 +80,7 @@ public static partial class TenantNaming
 
     public static string Gateway(string slug) => $"{slug}-gateway";
 
+    /// <summary>Tenant.API's uploads (the café's logo and icons). Named when the service was Branch.API, and left as it was.</summary>
     public static string UploadsVolume(string slug) => $"{slug}-branch-uploads";
 
     /// <summary>The volume as docker names it: compose prefixes the project, so anything outside the compose file (a backup) must too.</summary>

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { getBranchClaim, isOwner } from '@/config/oidc-config'
 
 /**

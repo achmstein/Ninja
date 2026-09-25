@@ -3,8 +3,8 @@ namespace Ninja.Ordering.Infrastructure.Projections;
 
 /// <summary>
 /// Ordering's own copy of a branch's operational flags, kept up to date from
-/// Branch.API's BranchSettingsChangedIntegrationEvent — Ordering never calls
-/// Branch.API. No row means the branch has never been heard of and is treated
+/// Tenant.API's BranchSettingsChangedIntegrationEvent — Ordering never calls
+/// Tenant.API. No row means the branch has never been heard of and is treated
 /// as open (fail-open), so a fresh deployment never refuses orders for want
 /// of an event.
 /// </summary>
@@ -19,7 +19,7 @@ public class BranchSettings
     /// <summary>
     /// Ordering to a table needs an account at this branch: a guest may still
     /// browse, but only a signed-in customer can put an order on a table.
-    /// Branch.API's flag, projected here where CreateOrder can read it.
+    /// Tenant.API's flag, projected here where CreateOrder can read it.
     /// </summary>
     public bool RequireSignInForTableOrders { get; set; }
 

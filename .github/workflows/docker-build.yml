@@ -34,7 +34,7 @@ jobs:
       loyalty: ${{ steps.changes.outputs.loyalty }}
       notification: ${{ steps.changes.outputs.notification }}
       accounts: ${{ steps.changes.outputs.accounts }}
-      branch: ${{ steps.changes.outputs.branch }}
+      tenant: ${{ steps.changes.outputs.tenant }}
       assistant: ${{ steps.changes.outputs.assistant }}
       control: ${{ steps.changes.outputs.control }}
       shared: ${{ steps.changes.outputs.shared }}
@@ -87,8 +87,8 @@ jobs:
               - 'src/Accounts.API/**'
               - 'src/Accounts.Domain/**'
               - 'src/Accounts.Infrastructure/**'
-            branch:
-              - 'src/Branch.API/**'
+            tenant:
+              - 'src/Tenant.API/**'
             control:
               - 'src/Control.API/**'
             shared:
@@ -522,7 +522,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
+
   build-assistant:
     needs: detect-changes
     if: |
@@ -664,12 +664,12 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-branch:
+  build-tenant:
     needs: detect-changes
     if: |
       github.ref_type == 'tag' ||
-      github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || contains(github.event.inputs.services, 'branch')) ||
-      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.branch == 'true' || needs.detect-changes.outputs.shared == 'true')
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.services == 'all' || contains(github.event.inputs.services, 'tenant')) ||
+      github.event_name != 'workflow_dispatch' && (needs.detect-changes.outputs.tenant == 'true' || needs.detect-changes.outputs.shared == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -694,7 +694,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-branch
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-tenant
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
@@ -705,7 +705,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: src/Branch.API/Dockerfile
+          file: src/Tenant.API/Dockerfile
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

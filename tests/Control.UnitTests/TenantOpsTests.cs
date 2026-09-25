@@ -18,9 +18,9 @@ public sealed class TenantOpsTests
         Assert.IsNull(fromArray[1].Health, "an empty health is none");
         Assert.AreEqual(1, fromArray[1].ExitCode);
 
-        const string lines = """{"Name":"a","Service":"blue-sales-api","State":"running","Status":"Up"}""" + "\n" + "garbage\n" + """{"Name":"b","Service":"blue-branch-api","State":"running","Status":"Up"}""" + "\n";
+        const string lines = """{"Name":"a","Service":"blue-sales-api","State":"running","Status":"Up"}""" + "\n" + "garbage\n" + """{"Name":"b","Service":"blue-tenant-api","State":"running","Status":"Up"}""" + "\n";
         var fromLines = ComposePs.Parse(lines);
-        CollectionAssert.AreEqual(new[] { "blue-branch-api", "blue-sales-api" }, fromLines.Select(c => c.Service).ToList());
+        CollectionAssert.AreEqual(new[] { "blue-sales-api", "blue-tenant-api" }, fromLines.Select(c => c.Service).ToList());
 
         Assert.AreEqual(0, ComposePs.Parse("  ").Count);
     }

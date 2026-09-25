@@ -12,7 +12,7 @@ import 'package:ninja_client/core/brand/tenant_brand.dart';
 import 'package:ninja_client/core/models/localized_text.dart';
 import 'package:ninja_client/main.dart';
 
-/// The tenant answering like Branch.API's GET /api/tenant
+/// The tenant answering like Tenant.API's GET /api/tenant
 class _Tenant implements TenantRepository {
   final TenantBrand brand;
 

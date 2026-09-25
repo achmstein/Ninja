@@ -8,7 +8,7 @@ class BranchSettingsEntityTypeConfiguration : IEntityTypeConfiguration<BranchSet
     {
         builder.ToTable("branchsettings");
 
-        // Keyed by Branch.API's id — never generated here
+        // Keyed by Tenant.API's id — never generated here
         builder.HasKey(b => b.BranchId);
         builder.Property(b => b.BranchId).ValueGeneratedNever();
     }

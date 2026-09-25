@@ -69,7 +69,7 @@ public class Shift : Entity, IAggregateRoot
         OpenedBy = openedBy;
         OpenedByUserId = string.IsNullOrWhiteSpace(openedByUserId) ? null : openedByUserId;
 
-        // The branch opens for business with the drawer: Branch.API turns
+        // The branch opens for business with the drawer: Tenant.API turns
         // the ordering and reservation flags on off this event
         AddDomainEvent(new ShiftOpenedDomainEvent(this));
     }

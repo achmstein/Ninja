@@ -503,7 +503,7 @@ public class OrdersWebApiTest
     public async Task Create_guest_order_without_a_destination_is_taken_where_the_cafe_allows_it()
     {
         // Arrange - the café takes guests' orders from anywhere, to collect;
-        // the setting is Ordering's projection of Branch.API's café settings
+        // the setting is Ordering's projection of Tenant.API's café settings
         _tenantSettingsMock.AllowsGuestOrdersAnywhereAsync().Returns(true);
         _mediatorMock.Send(Arg.Any<IdentifiedCommand<CreateOrderCommand, int>>(), default)
             .Returns(Task.FromResult(42));
@@ -577,7 +577,7 @@ public class OrdersWebApiTest
     public async Task Create_order_is_refused_while_the_branch_is_not_taking_orders()
     {
         // Arrange - the shift is closed or the till paused orders; the flag is
-        // Ordering's own projection of Branch.API's
+        // Ordering's own projection of Tenant.API's
         _branchSettingsMock.IsOrderingEnabledAsync(1).Returns(false);
 
         // Act

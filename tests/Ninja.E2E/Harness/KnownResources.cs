@@ -15,7 +15,7 @@ public static class KnownResources
     public static readonly string[] Apis =
     [
         "catalog-api", "ordering-api", "spaces-api", "sales-api", "inventory-api", "payroll-api",
-        "finance-api", "identity-api", "loyalty-api", "notification-api", "accounts-api", "branch-api",
+        "finance-api", "identity-api", "loyalty-api", "notification-api", "accounts-api", "tenant-api",
         // The owner's MCP server
         "assistant-api",
         // The platform's own control plane rides along in dry-run mode
@@ -25,7 +25,7 @@ public static class KnownResources
     public static readonly string[] Databases =
     [
         "accountsdb", "catalogdb", "orderingdb", "spacesdb", "salesdb", "inventorydb",
-        "payrolldb", "financedb", "loyaltydb", "branchdb", "notificationdb", "controldb",
+        "payrolldb", "financedb", "loyaltydb", "tenantdb", "notificationdb", "controldb",
     ];
 
     /// <summary>Databases whose context maps the IntegrationEventLog outbox table.</summary>
@@ -36,7 +36,7 @@ public static class KnownResources
 
     public static readonly string[] Queues =
     [
-        "Accounts", "Branch", "Catalog", "Finance", "Identity", "Inventory",
-        "Loyalty", "Notification", "Ordering", "Payroll", "Sales", "Spaces",
+        "Accounts", "Catalog", "Finance", "Identity", "Inventory",
+        "Loyalty", "Notification", "Ordering", "Payroll", "Sales", "Spaces", "Tenant",
     ];
 }

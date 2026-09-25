@@ -26,7 +26,7 @@ namespace Ordering.Infrastructure.Migrations
                 });
 
             // The café's setting rode on every branch's row; the latest one
-            // said it last. Branch.API says it again when it starts, and that
+            // said it last. Tenant.API says it again when it starts, and that
             // is newer than any branch row, so this only bridges the gap.
             migrationBuilder.Sql("""
                 INSERT INTO ordering.tenantsettings ("Id", "GuestOrdersAnywhere", "UpdatedAt")

@@ -6,13 +6,13 @@ namespace Ninja.E2E.Scenarios;
 
 /// <summary>
 /// A café on a smaller plan. The switches a plan does not include go off in
-/// Branch.API, the change rides the bus, and the services that own a module
+/// Tenant.API, the change rides the bus, and the services that own a module
 /// stop taking what is not in it — Spaces keeps its own copy of the
 /// switches and never calls Branch to ask.
 ///
 /// The gateway's 402 page and the control plane clamping a switch to the
 /// plan are not here: the AppHost has no per-tenant gateway and no
-/// control-plane client in its realm. Branch.FunctionalTests drives the
+/// control-plane client in its realm. Tenant.FunctionalTests drives the
 /// entitlements push and the module-off page; Control.AcceptanceTests
 /// stamps a real Starter café. What this scenario proves is the half in
 /// between: the switch, the event, and the service that obeys it.

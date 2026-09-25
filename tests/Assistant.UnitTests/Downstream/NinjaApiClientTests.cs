@@ -27,13 +27,13 @@ public sealed class NinjaApiClientTests
     public async Task Branch_api_gets_no_api_version_and_no_branch_header_when_none_is_given()
     {
         var bench = new Bench();
-        bench.Handler.OnJson("GET", "branch-api/api/tenant", _ => new { locale = new { currency = "EGP" } });
+        bench.Handler.OnJson("GET", "tenant-api/api/tenant", _ => new { locale = new { currency = "EGP" } });
 
-        var r = await bench.Api.GetAsync<TenantResponse>("branch-api", "/api/tenant", null, CancellationToken.None);
+        var r = await bench.Api.GetAsync<TenantResponse>("tenant-api", "/api/tenant", null, CancellationToken.None);
 
         Assert.IsTrue(r.IsOk, r.Error);
         var seen = bench.Handler.Requests.Single();
-        Assert.AreEqual("http://branch-api/api/tenant", seen.Url.ToString());
+        Assert.AreEqual("http://tenant-api/api/tenant", seen.Url.ToString());
         Assert.IsNull(seen.Branch);
     }
 

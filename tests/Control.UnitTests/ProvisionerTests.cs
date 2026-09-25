@@ -205,7 +205,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual(TenantStatus.Running, _tenant.Status);
     }
 
-    /// <summary>A plan that changes while the stack is down rewrites the files and drops the queues now; the start applies the shape and tells Branch.API.</summary>
+    /// <summary>A plan that changes while the stack is down rewrites the files and drops the queues now; the start applies the shape and tells Tenant.API.</summary>
     [TestMethod]
     public async Task A_plan_change_while_stopped_waits_for_the_start_to_take_the_containers_down()
     {
@@ -225,7 +225,7 @@ public sealed class ProvisionerTests
         Assert.AreEqual(10, _broker.DeletedQueues.Count, "the start drops them again; gone twice is nothing");
     }
 
-    /// <summary>Stop and start on a plan: the shape holds, and the start tells Branch.API once the stack answers.</summary>
+    /// <summary>Stop and start on a plan: the shape holds, and the start tells Tenant.API once the stack answers.</summary>
     [TestMethod]
     public async Task A_stop_and_a_start_keep_the_plans_shape()
     {
@@ -285,6 +285,36 @@ public sealed class ProvisionerTests
         var reused = _context.Steps.OrderByDescending(s => s.Id).First(s => s.Name == "backup");
         StringAssert.StartsWith(reused.Output, "reusing");
         Assert.AreEqual("v2", _tenant.PreviousImageTag);
+    }
+
+    /// <summary>
+    /// A service that leaves the compose file (a module out of the plan, or
+    /// Branch.API now that it is Tenant.API) must not keep running beside it:
+    /// every up the control plane runs on a stack takes the orphans with it.
+    /// </summary>
+    [TestMethod]
+    public async Task Every_up_on_a_stack_takes_its_orphans_with_it()
+    {
+        _platform.PullImages = true;
+        await _provisioner.UpgradeAsync(_tenant.Id, "v2", null, CancellationToken.None);
+        await _provisioner.RollbackAsync(_tenant.Id, CancellationToken.None);
+        await _provisioner.SecureAsync(_tenant.Id, rotate: false, CancellationToken.None);
+        await OnPlanAsync(TenantPlan.Starter);
+        await _provisioner.EntitlementsAsync(_tenant.Id, CancellationToken.None);
+        await _provisioner.ComposeAsync(_tenant.Id, "stop", CancellationToken.None);
+        await _provisioner.ComposeAsync(_tenant.Id, "start", CancellationToken.None);
+
+        var ups = _shell.Commands.Where(c => c.Contains("compose -p ninja-blue up")).ToList();
+        Assert.IsGreaterThanOrEqualTo(5, ups.Count, string.Join("\n", ups));
+        foreach (var up in ups)
+            Assert.Contains("--remove-orphans", up);
+
+        // What the upgrade stamped runs the café's own service under its new name, and nothing under the old
+        var compose = ComposeOnDisk();
+        Assert.Contains("  blue-tenant-api:", compose);
+        Assert.Contains("Database=blue_tenantdb;", compose);
+        Assert.DoesNotContain("branch-api", compose);
+        Assert.DoesNotContain("ninja-branch", compose);
     }
 
     [TestMethod]

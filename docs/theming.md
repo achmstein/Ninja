@@ -50,7 +50,7 @@ stay neutral. This is the pattern every surface follows, and why.
    show them before a save. A seed that fails is still saved, since the
    owner decides, but never silently.
 7. **Tokens are data, applied before first paint.** The theme is JSON on
-   `GET /api/tenant` (Branch.API `TenantTheme`, jsonb), cached in the
+   `GET /api/tenant` (Tenant.API `TenantTheme`, jsonb), cached in the
    browser and on the device, and injected as one `<style>` after
    `styles/theme.css`, so the neutral file is never edited and the tenant's
    values win in both `:root` and `.dark`. The `theme-color` meta follows the
@@ -63,7 +63,7 @@ stay neutral. This is the pattern every surface follows, and why.
 
 | Piece | Path |
 |---|---|
-| Seeds and allowlists | `src/Branch.API/Model/Tenant.cs` (`TenantTheme`, `TenantThemeDark`), validated in `Apis/TenantApi.cs` `NormalizeTheme` |
+| Seeds and allowlists | `src/Tenant.API/Model/Tenant.cs` (`TenantTheme`, `TenantThemeDark`), validated in `Apis/TenantApi.cs` `NormalizeTheme` |
 | Token generator (web) | `src/{control,admin,client,pos,kds}_web/src/lib/brand-theme.ts`, one file copied, tested in `admin_web/src/lib/brand-theme.test.ts` |
 | Token generator (Flutter) | `src/client_app/lib/core/brand/brand_theme.dart`, tested in `test/widget_test.dart` |
 | Neutral theme | `src/client_web/src/styles/theme.css` (`--font-latin`, `--font-arabic`, the shadcn variables), Forui's zinc in the app |

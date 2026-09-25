@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { type BranchResponse } from '@/api/branch'
-import { getBranchesOptions } from '@/api/branch/@tanstack/react-query.gen'
+import { type BranchResponse } from '@/api/tenant'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 
 // Branch helpers mirroring the mobile app's Branch model

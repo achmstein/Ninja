@@ -64,7 +64,7 @@ public class ReservePlaceCommandHandler(
             throw new SpacesDomainException("This place cannot be reserved");
 
         // The branch must be taking reservations — off between shifts and
-        // whenever the till pauses them (Branch.API's flag, projected here).
+        // whenever the till pauses them (Tenant.API's flag, projected here).
         // Staff take one regardless.
         if (!request.IsStaff && !await branchSettings.IsReservationsEnabledAsync(place.BranchId))
         {
